@@ -1,0 +1,22 @@
+**Use (a), the folder-level reading. All listed replay families are reads.** Both three-month runs supplied product libraries and also drove changes. For example, D199 used a missed story about a national lab buying servers to explain why v29 dropped whole articles and to change what the system kept. [D199](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2568) · [D667](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9460) · [Run plan §1.2](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:82)
+
+- **(a), folder level.** Within the scored span, exclude articles v29 read from 07-20 through 08-24 and articles v34 read from 07-20 through 08-28. Earlier-corpus runs can add exclusions through 08-15. The split tests and smoke test can add exclusions on 08-29 and 08-30.
+- **(b), article level.** Exempting the two production replays themselves would keep 07-20 through 08-28 eligible, less articles used in decisions, derived research, or other reads. The 08-29 and 08-30 tests still count. Under either reading, 08-31 through 09-20 is beyond these folders’ reach, and the full census determines eligibility.
+
+I used decision records and run notes only, with no article-ID search and no paid calls.
+
+```jsonl
+{"folder":"poc/data/english-2026-10-25","class":"read","reason":"Staged English rebuild with review before each next stage. D169 still records the service on the older sealed library.","record":"D164, lines 2313–2315; D169, line 2349"}
+{"folder":"english-groups*, english-jev*, english-v23-jev, english-v23-llm","class":"read","reason":"Grouping iterations and matching comparisons, including the Jev and generative matching trials.","record":"English data manifest, lines 20–27; D165–D169"}
+{"folder":"english-v25-admission*, english-v26-collision-r4, english-v29-theme-r5","class":"read","reason":"Tests of which questions open, whether questions merge, and how themes affect judgements. Default adoption followed measurement.","record":"D184, lines 2468–2470; D190, lines 2498–2501; D195–D196, lines 2544–2549"}
+{"folder":"pinned-shared-2026-10-27/arm-v29-shared","class":"read","reason":"Validation of a new matching rule using fixed extraction answers.","record":"D197, line 2556"}
+{"folder":"old-2026-10-23-run1, run2, run3b, run3c","class":"read","reason":"Superseded build attempts. The run notes tie the third-run restarts to fixes for rejected source material.","record":"docs/poc/pipeline-plan-history-2026-10-25.zh.md, lines 131, 170–180"}
+{"folder":"poc/data/replay.log and sealed-2026-10-24-run3-through-{0728,0815}","class":"read","reason":"D63 sealed and continued the library after a cost review. D151 then used stored article cases and July 27 and August judgement examples to change prompts.","record":"D63, lines 1687–1689; D151, lines 2191–2192; pipeline plan history, lines 42–46 and 184–188"}
+{"folder":"hivemind-no-preseed-evidence-review/poc/data/split-v3-prod-0829-0830*","class":"read","reason":"Two-day configuration trial against an earlier split run through the production entry point.","record":"Both folders’ predictions.md, lines 3–9"}
+{"folder":"hivemind-no-preseed-evidence-review/poc/data/v117-one-day-smoke-2026-11-05","class":"read","reason":"One-day end-to-end smoke test.","record":"docs/CURRENT_STATE.md, line 114"}
+{"folder":"english-v29-nvda-3m-2026-10-27 and snapshots","class":"read","reason":"The API served its 0736 snapshot. D198 changed judging using run results, and D199 used a missed article to change extraction.","record":"service-3m-2026-10-27/api.log, line 4; D466, lines 5243–5245; D198–D199"}
+{"folder":"english-v34-nvda-3m-2026-10-28, sealed and served copies","class":"read","reason":"D358 confirms production use. Run cases drove the output-cap increase and library fixes. The served ledger also has rows removed from the seal.","record":"D205, lines 2620–2622; D358, lines 3792–3796"}
+{"folder":"docs/research/2026-10-28-quality-review/","class":"read","reason":"Derived research counts under either reading.","record":"D358, line 3793; run plan §1.2 item 4"}
+```
+
+**Choice (a).** D667 makes the absence of a cited tuning case a condition for exempting the whole folder. Reading (b) would preserve more dates, but an article can shape a change through a sample or an aggregate finding without being named. The folder-level reading gives D665’s claim of unread weeks the firmer basis.

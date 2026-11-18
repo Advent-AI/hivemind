@@ -1,0 +1,17 @@
+**The seed-label stop condition has fired.** Record the separation as a provisional candidate, but do not call it a sound contract for the unseeded path yet. The next task is to finish its unseeded failure-and-reader contract at $0; that does not require designing the selection call or sending a model request.
+
+The filing stop has **not** fired as worded: the expected homes can be expressed under the existing decisions, and the synthetic two-item case shows how D360’s split can survive the current narrowing check. Your distinction between “expressible” and “not produced by this edge rule” is fair. The table is a hand reading of ten cases, though, not an independently settled reference. In particular, D207’s permission to file the company-wide outlook under total revenue does not alone prove that it cannot also bear on the segment; keep that expected-home judgement open to review. [Filing contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-selection/filing_contract.py)
+
+For the seed label, I agree: do not assign `last_end` a meaning from its spelling. The stop applies to the seeded reading and to comparisons against a seed edge until its meaning is decided. It does not automatically prevent a separately bounded unseeded design.
+
+The unseeded contract still has three concrete gaps:
+
+- **A conflict is detected by the proof helper, not yet recorded by the production path.** `propose()` returns `conflicting label`; the test checks that return and the row count. It does not show how the actual matching/writer path refuses, records and resumes that conflict. The design also still describes a cycle as a dropped note, whereas PRD 06 says to refuse it and request correction. Those behaviors need one explicit contract. [Seam](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-selection/separated_edges.py)
+- **Old unseeded rows and product readers remain unexercised.** The 395 rows match the stated historical marks, but no proof shows their meaning through the service, search, bundle and idea readers. A build that changes what an edge means must preserve their as-of behavior or refuse an ambiguous row.
+- **The everyday unseeded boundaries are not yet closed:** a target closing or gaining a successor, a waiting target being resolved, a duplicate or conflict across articles, and a theme already visible through the theme block. The design lists these as unexercised; that is honest, but it prevents a build-ready claim.
+
+For the **next task**, complete those unseeded state-by-event and reader contracts, then exercise the actual writer and affected readers on scratch stores with a normal edge, a conflicting label, a cycle, a closed or successor target, and an old marked row. Include failure and resume; require the conflict to be observable rather than silently dropped. **Stop** if the existing decisions do not determine the transition or historical meaning; record the conflict for council rather than inventing a rule. Keep the seed-label question separate and unresolved.
+
+No selection-call design or paid test follows now. The two proofs remain useful evidence about the cases they exercised; they are not acceptance of the dependency slice or a choice between systems.
+
+Council position: record the seed-label stop and the bounded filing finding; keep separation provisional; finish the unseeded failure-and-reader contract at $0 before calling it sound, with no selection design or send.

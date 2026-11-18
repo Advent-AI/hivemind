@@ -1,0 +1,8 @@
+Reading every eligible article is faithful to D665. It changes how the matter list is built, while leaving the 20-matter minimum and verdict rules intact. D667 froze the 40-per-week plan, so record this as a narrow amendment before opening any census hits or articles. No comparison output has been seen. [D665](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9411) · [D667](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9465) · [Amendment brief](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/amend-census-brief.md:15)
+
+Before the census starts, write down two details:
+
+- **Freeze August 31–September 20 as the candidate scoring window.** The earlier replay dates justify that conservative boundary. They do not prove which individual articles were read. The full exposure census still decides which articles survive within the window. [Folder review](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/classify-codex.md:3) · [D667 exposure rule](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9468)
+- **Make the longer warm-up explicit in the shared input.** Both systems start empty July 1 and replay the same July 1–August 30 history. Apply the exposure filter to the scored window. Keep the September 20 cutoff, and have each family merge across all batches and weeks before reconciling and counting matters. If fewer than 20 remain, stop before any paid send. [Shared input](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:91) · [Matter census and cutoff](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:105)
+
+AGREE

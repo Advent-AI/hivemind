@@ -1,0 +1,9 @@
+**Not yet.** The reader and cleanup corrections address the round-137 findings, but the writer still reports some SQLite failures as though a reader held the store.
+
+`truncate_checkpoint` turns **every** `sqlite3.OperationalError` into `False`; after three, the stop reason says a reader held the store. `leave_wal` likewise turns every `OperationalError` into `'wal'`, and the normal-end record says a reader held it. A disk I/O error can therefore be reported as reader contention, despite the contract saying those cases are kept distinct. Preserve or report the actual failure separately from a confirmed busy checkpoint, and test both paths. [Checkpoint and WAL exit](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:217), [normal-end record](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:490).
+
+On the unidentified SQLite trigger: **do not claim it is fixed or understood.** The moved-store case violates the contract’s stated operating precondition, and the revised stop no longer needs to read that moved store to record the last completed day. That makes the unknown trigger an explicit limit on this test case, rather than by itself a reason to block proof 10. The misleading classification of *other* operational errors, however, needs correction before accepting 4b. [Recorded finding](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:532).
+
+I inspected the changes and saved mutant results; I did not rerun the suites. Once the failure reasons are distinguished, designing proof 10 around the real API and MCP paths is the right next step.
+
+CONSENSUS: no, because SQLite I/O failures can still be recorded as reader contention.

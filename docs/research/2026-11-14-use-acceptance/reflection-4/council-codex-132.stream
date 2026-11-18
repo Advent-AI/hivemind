@@ -1,0 +1,272 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 132: slice 4a's stop path and WAL start, specified (`live-service/OPERATING-CONTRACT.md`, the new section "The writer's start, stops and end")
+
+1. **WAL before anything is written:**
+   - The writer creates the file empty and exclusively, opens it with `sqlite3`, sets `journal_mode=wal` and checks the pragma answers
+     `wal` (refusing otherwise), sets `journal_size_limit`, and closes.
+   - Only then does it call `store.open_db`, whose schema writes are in WAL mode, the mode being kept in the file.
+   - A test reads the mode back after `open_db` and after the first day.
+2. **The stop path through the real launcher:**
+   - `ladder_adapter.WriterStopped(reason, last_completed_day)` is an `Exception` that `run_stage_b.resendable` does not accept.
+   - Before raising it, `replay` writes `adapter-counts.json` with the reason and the last completed day.
+   - The launcher's existing branch for a stop no resend can change then applies: `limit.stop(reason)`, the attempt recorded, the
+     draw `incomplete`, no redo, every later launch stopped. It is never recorded as complete.
+   - The store keeps every completed day, because the stop comes before a day or after a day's checkpoint.
+   - A stop before the first day leaves an empty store, recorded incomplete.
+   - Tests through `run_stage_b.send` with the existing fake judge: low space before the first day, low space before the third day
+     (last completed day the second), and three failed checkpoints. Each checks the record, the state, no redo, the store's last
+     completed day and the counts file.
+3. **Its end:** `journal_mode=delete` tried with a short busy timeout. With readers it keeps WAL and records it. Tested both ways.
+4. **The limit is stated:** no writer lock until 4b. 4a's proofs are on isolated test stores and do not make a live run, or preflight
+   beside one, safe. P1 stays unresolved.
+
+End with `CONSENSUS: yes` (build 4a) or `CONSENSUS: no, because …`.
+
+codex
+I’ll read the new start and stop section against the launcher’s actual failure handling, then check the boundary between isolated proofs and live use.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n \"writer's start|WriterStopped|journal_mode|stop path|no writer lock\" docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -100
+nl -ba clean-arch/step4-2026-11-10/stage_b/run_stage_b.py | sed -n '32,55p;75,125p'
+nl -ba src/hivemind/views/store.py | sed -n '54,70p'
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+198:     - so the snapshot script, and preflight's own copy, set `journal_mode=delete` on the copy before anyone reads it.
+200:     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+395:## The writer's start, stops and end (slice 4a; council rounds 131 and 132)
+401:  2. it opens it with `sqlite3`, sets `journal_mode=wal` and **checks that the pragma answers `wal`**, refusing to start otherwise;
+408:- **The stop:** `ladder_adapter.WriterStopped(reason, last_completed_day)`, an `Exception` that `run_stage_b.resendable` does not
+429:**Its end.** After the last day the writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store,
+   341	  directly, as `_bundles` already skips it. So a question and its choices created after that day are never returned.
+   342	- **The structural check** reads every function of `service`, `bundle`, `search` and `idea` with a date parameter (`as_of`,
+   343	  `to_day`). Each must either call `resolve_bound` (or `resolve_range`) or be named in the check's list of internal helpers.
+   344	  - A function in neither, or a bound resolved by `or default_as_of(...)`, fails the suite.
+   345	  - The check's own mutant (a new public function without the call) must fail it.
+   346	
+   347	**The response, per channel.**
+   348	
+   349	| Channel | First day not completed | Bound after the last completed day | Range start not before its end |
+   350	|---|---|---|---|
+   351	| API | 503 `{"error": "the store's first day has not completed"}` | 409 `{"error": "day not completed", "requested": X, "last_completed_day": Y}` | 409 `{"error": "range start after its end", "start": S, "end": T}` |
+   352	| MCP tools | a tool error whose message carries the same fields | the same | the same |
+   353	| Streamed Idea route | the status and body, before any header | the same | — |
+   354	
+   355	- `error_response` returns `(status, payload)`. The three new exceptions get the payloads above, and every other error keeps
+   356	  `{"error": message}`. `_answer` and `_stream_answer` send the payload as given.
+   357	- **The streamed route, in one transaction:**
+   358	  - it opens its connections, begins the read transaction and resolves the bound and first-day check;
+   359	  - **only then** does it send its 200 headers and run the Idea work in the same transaction, which it ends after;
+   360	  - a refusal is sent as a normal status and body before any header.
+   361	  - The Idea work includes model calls, so this transaction lasts the whole request, up to minutes. That is within row 5's
+   362	    one-request rule, and it holds back a checkpoint that long.
+   363	
+   364	**Callers.**
+   365	
+   366	- **The page, when its live library read succeeds:** it sends only days from the served dataset (`library.getDay()` to `/ideas`;
+   367	  the returned `card.idea.as_of` to `/thesis-bundles`). These are never after the last completed day.
+   368	- **The page, when its live library read fails:**
+   369	  - it keeps its embedded snapshot silently (as `thesis-ui.md` specifies), and that snapshot's day can be later than the service's
+   370	    last completed day;
+   371	  - `/ideas` is then refused with 409, and the page shows its existing Idea error naming no day;
+   372	  - this is documented here and tested; it is not claimed impossible.
+   373	- **MCP clients and direct API users with a later date:**
+   374	  - on the running product's store, they would get an error naming 2026-08-28 instead of today's half-processed 2026-08-29 (99
+   375	    evidence records, 117 links);
+   376	  - on a finished store, they would get an error instead of today's identical answer.
+   377	  - This is the behaviour change, recorded for Alex.
+   378	- **Not deployed:** no running service is restarted. D439 does not authorize a deploy, and the change reaches the running product
+   379	  only on a restart, which is on Alex's page.
+   380	
+   381	**Proofs added to the plan (2b to 2e):**
+   382	
+   383	- 2b. The structural check, and its mutant.
+   384	- 2c. Each public function called directly with a future bound, an omitted one and a past one, on the four store states (finished,
+   385	  partial, first day, empty with tables) and a copy of the served store's state. Each call's actual output or error is compared
+   386	  with the expected one: today's recorded output where the rule keeps it, the named refusal where the rule changes it.
+   387	- 2c′. `view_bundle` and `not_judged` called directly for a view created after the resolved day are refused (404). `days()` on an
+   388	  empty store returns `[]` as today.
+   389	- 2d. The ranges: a start after its end is refused for both; equality reads as before (`changes` empty, `history` that day).
+   390	- 2e. The streamed route on a first-day store and with a future date: a status before any header. With a writer committing during
+   391	  an Idea request, the request's data are the state at its start.
+   392	- 2f. The page verifier (`poc/ui/verify-*.mjs`): live read successful, then the Idea call succeeds; live read failed with a later
+   393	  embedded day, then the Idea error shows and nothing else breaks.
+   394	
+   395	## The writer's start, stops and end (slice 4a; council rounds 131 and 132)
+   396	
+   397	**Opening in WAL mode before anything is written.**
+   398	
+   399	- `store.open_db` creates tables and commits as it opens, so WAL is set before it:
+   400	  1. the writer creates the store file empty and exclusively (create-new);
+   401	  2. it opens it with `sqlite3`, sets `journal_mode=wal` and **checks that the pragma answers `wal`**, refusing to start otherwise;
+   402	  3. it sets `journal_size_limit` (64 MB) and closes;
+   403	  4. only then does it open the store through `store.open_db`, which writes its schema in WAL mode (the mode is kept in the file).
+   404	- A test reads the mode back after `open_db` and after the first day.
+   405	
+   406	**Stops, through the real launcher (`run_stage_b.send`).**
+   407	
+   408	- **The stop:** `ladder_adapter.WriterStopped(reason, last_completed_day)`, an `Exception` that `run_stage_b.resendable` does not
+   409	  accept.
+   410	- **Where it is raised:** in `replay`, before a day when the free space is below 20 times the store's size (main file and `-wal`), or
+   411	  when the truncating checkpoint after a completed day has failed for 3 consecutive days. Before raising, `replay` writes
+   412	  `adapter-counts.json` with the stop's reason and the last completed day, so the partial result is on disk.
+   413	- **What the launcher does with it:** its existing handling of a stop no resend can change:
+   414	  - `limit.stop(reason)`;
+   415	  - the attempt recorded with its reason;
+   416	  - the draw's state `incomplete`;
+   417	  - no redo, and every later launch stopped.
+   418	  - It is never recorded as complete.
+   419	- **The store keeps every completed day,** because the stop comes before a day starts or after a day's checkpoint. Readers keep
+   420	  serving the last completed day.
+   421	- **A stop before the first day** leaves the store empty (its tables, no step), which readers read as an empty store, and is recorded
+   422	  `incomplete` with its reason.
+   423	- **Tests through `run_stage_b.send` with the fake judge:**
+   424	  - low space before the first day;
+   425	  - low space before the third day (the last completed day is the second);
+   426	  - three failed checkpoints;
+   427	  - in each case: the record, the draw's state, no redo, the store's last completed day, and the counts file's reason.
+   428	
+   429	**Its end.** After the last day the writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store,
+   430	it stays in WAL mode and "stopped in order, WAL kept" is recorded in `adapter-counts.json`. Tested with and without a reader.
+   431	
+   432	**Limit of 4a, stated:** until slice 4b the writer takes no lock. 4a's proofs run on isolated test stores and do not make a live run,
+   433	or preflight beside one, safe. P1 stays unresolved.
+   434	
+   435	## Not covered
+   436	
+   437	- Resuming a stopped live store.
+   438	- The Idea planner on a new-system ledger.
+   439	- A long-running service's restart and monitoring.
+   440	- The page's note when its live read fails, which is Alex's presentation choice.
+    32	def resendable(error):
+    33	    """A stop a second send can change, because it comes from the model's answer or the network: the judge's refusal of one
+    34	    judgement twice, an answer that does not fit the schema, or a transport failure."""
+    35	    from hivemind import model
+    36	    from hivemind.views import judging
+    37	    return isinstance(error, (judging.JudgementRefused, model.SchemaError, model.TransportError))
+    38	
+    39	
+    40	class AlreadyRunning(Exception):
+    41	    pass
+    42	
+    43	
+    44	def send(root, transport=None, sleep=None, *, runs=None, cap_usd=None, inputs_of=None, shared=None):
+    45	    """Run the send while holding an exclusive lock on `<root>/launch.lock`: a second launch while one runs is refused, so two
+    46	    processes never spend against the same balance."""
+    47	    import fcntl
+    48	    root = Path(root)
+    49	    root.mkdir(parents=True, exist_ok=True)
+    50	    with open(root / 'launch.lock', 'w') as lock:
+    51	        try:
+    52	            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    53	        except BlockingIOError:
+    54	            raise AlreadyRunning(f'another launch holds {root / "launch.lock"}; this one sends nothing')
+    55	        return _send(root, transport, sleep, runs, cap_usd, inputs_of or {}, shared)
+    75	        record['spent usd (ledger)'] = round(ladder_adapter.ledger_total(root / 'spend.jsonl'), 4)
+    76	        record_path.write_text(json.dumps(record, indent=1) + '\n')
+    77	
+    78	    def end(run, reason):
+    79	        record[run]['state'] = 'incomplete'
+    80	        record['stopped'] = reason
+    81	        limit.stop(reason)
+    82	        save()
+    83	        return record
+    84	
+    85	    for run in runs:
+    86	        entry = record.setdefault(run, {'attempts': []})
+    87	        if entry.get('state') == 'complete':
+    88	            continue
+    89	        for folder_name in (f'draw-{run}', f'draw-{run}-redo'):
+    90	            if (root / folder_name).exists():
+    91	                if not any(attempt['folder'] == folder_name for attempt in entry['attempts']):
+    92	                    # a folder with no recorded outcome: the process that wrote it ended mid-replay (a crash); it is never resumed
+    93	                    entry['attempts'].append({'folder': folder_name, 'stopped': 'the process ended without recording an outcome (a crash)'})
+    94	                    save()
+    95	                if folder_name.endswith('-redo'):
+    96	                    return end(run, f'{run} incomplete: its redo did not finish')
+    97	                continue
+    98	            try:
+    99	                runner = ladder_adapter.replay(run, root / folder_name, transport=transport, limit=limit, inputs=inputs_of.get(run))
+   100	            except BaseException as error:              # a second send only where it can differ
+   101	                attempt = {'folder': folder_name, 'stopped': f'{type(error).__name__}: {error}', 'traceback': traceback.format_exc()[-2000:]}
+   102	                if not isinstance(error, (Exception, SystemExit)):
+   103	                    entry['attempts'].append(attempt)
+   104	                    save()
+   105	                    raise
+   106	                if isinstance(error, ladder_adapter.budget.OverBudget):
+   107	                    reason = limit.stopped or f'the spending cap: {error}'
+   108	                elif folder_name.endswith('-redo') or not resendable(error):
+   109	                    reason = f'{run} incomplete: {type(error).__name__}'
+   110	                else:
+   111	                    reason = None
+   112	                if reason is not None:
+   113	                    limit.stop(reason)                  # the stop is on disk before the attempt is: a crash between them cannot lead to a redo
+   114	                    entry['attempts'].append(attempt)
+   115	                    return end(run, reason)
+   116	                entry['attempts'].append(attempt)
+   117	                save()
+   118	                continue
+   119	            entry['attempts'].append({'folder': folder_name, 'judgements': runner.counts['judgements'],
+   120	                                      'views': runner.counts['views written from a ladder']})
+   121	            if runner.counts['judgements'] == 0:      # design §8: a draw with no judgement is incomplete
+   122	                return end(run, f'{run} incomplete: no judgement')
+   123	            entry['state'] = 'complete'
+   124	            save()
+   125	            break
+    54	
+    55	def open_db(path):
+    56	    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    57	    conn = sqlite3.connect(path)
+    58	    conn.row_factory = sqlite3.Row
+    59	    for name, columns in TABLES.items():
+    60	        conn.execute(f'create table if not exists {name} ({columns})')
+    61	        conn.execute(f"create trigger if not exists {name}_no_update before update on {name} begin select raise(abort, 'append-only'); end")
+    62	        conn.execute(f"create trigger if not exists {name}_no_delete before delete on {name} begin select raise(abort, 'append-only'); end")
+    63	    for statement in INDEXES:
+    64	        conn.execute(statement)
+    65	    ensure_writable_columns(conn)
+    66	    conn.execute("create virtual table if not exists views_fts using fts5(view_id unindexed, text, tokenize='trigram')")
+    67	    conn.execute("create virtual table if not exists groups_fts using fts5(group_id unindexed, text, tokenize='trigram')")
+    68	    conn.execute('create index if not exists members_view on thesis_group_members(view_id)')
+    69	    conn.commit()
+    70	    return conn
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import sqlite3; a=sqlite3.connect(\"file:limitcheck?mode=memory&cache=shared\",uri=True); b=sqlite3.connect(\"file:limitcheck?mode=memory&cache=shared\",uri=True); print(\"initial\", a.execute(\"pragma journal_size_limit\").fetchone()[0], b.execute(\"pragma journal_size_limit\").fetchone()[0]); a.execute(\"pragma journal_size_limit=67108864\"); print(\"after\", a.execute(\"pragma journal_size_limit\").fetchone()[0], b.execute(\"pragma journal_size_limit\").fetchone()[0])'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+initial 32768 32768
+after 67108864 67108864
+
+web search: 
+web search: site:sqlite.org journal_size_limit pragma persists connection database
+codex
+**Not yet.** The revised design closes the earlier outcome and WAL-mode gaps, but it attributes behavior to the existing launcher that the code does not have.
+
+For a non-retryable `WriterStopped`, the launcher currently records the detailed exception in the **attempt**, but calls `limit.stop()` with the generic reason `"<run> incomplete: WriterStopped"`. If the contract requires the actual low-space or checkpoint reason as the run’s stop reason, specify the small launcher change and assert that exact reason in both the attempt and the run-level record. [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:98), [proposed stop](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:406).
+
+The WAL start proof should also read back **both** `journal_mode` and `journal_size_limit` on the connection returned by `store.open_db`. The design sets the limit on an initial connection and closes it; its proposed test currently checks only the mode after reopening. If the limit is not retained on the writer’s connection, set it there and verify it. SQLite describes the limit as the value used when a journal or WAL is reset. [SQLite pragma documentation](https://sqlite.org/pragma.html#pragma_journal_size_limit), [start design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:397).
+
+The isolated-test limitation is stated correctly: 4a does not authorize live operation or concurrent preflight.
+
+CONSENSUS: no, because the launcher’s actual stop reason and the reopened writer connection’s size limit need to be included in the design and proof.
+tokens used
+3,521,139
+**Not yet.** The revised design closes the earlier outcome and WAL-mode gaps, but it attributes behavior to the existing launcher that the code does not have.
+
+For a non-retryable `WriterStopped`, the launcher currently records the detailed exception in the **attempt**, but calls `limit.stop()` with the generic reason `"<run> incomplete: WriterStopped"`. If the contract requires the actual low-space or checkpoint reason as the run’s stop reason, specify the small launcher change and assert that exact reason in both the attempt and the run-level record. [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:98), [proposed stop](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:406).
+
+The WAL start proof should also read back **both** `journal_mode` and `journal_size_limit` on the connection returned by `store.open_db`. The design sets the limit on an initial connection and closes it; its proposed test currently checks only the mode after reopening. If the limit is not retained on the writer’s connection, set it there and verify it. SQLite describes the limit as the value used when a journal or WAL is reset. [SQLite pragma documentation](https://sqlite.org/pragma.html#pragma_journal_size_limit), [start design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:397).
+
+The isolated-test limitation is stated correctly: 4a does not authorize live operation or concurrent preflight.
+
+CONSENSUS: no, because the launcher’s actual stop reason and the reopened writer connection’s size limit need to be included in the design and proof.

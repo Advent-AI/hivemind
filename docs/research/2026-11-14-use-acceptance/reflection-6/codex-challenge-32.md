@@ -1,0 +1,5 @@
+**Send the diagnostic under the registered design.** The three requested corrections are present: the [whole-request audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-3.md>) records the inherited conflicts, the [launcher](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py>) compares transport serialization, and [M10](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/mutants.txt>) now fails an assertion.
+
+Keep the $3.40 cap and treat a stopped draw as **not measured**. A positive result would be evidence on these selected, exposed topics—not a gate pass or adoption. Report the shared quotation and due-day issues alongside the result.
+
+CONSENSUS: send the bounded Astra–A2 diagnostic.

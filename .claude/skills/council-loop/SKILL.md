@@ -25,7 +25,7 @@ AGENTS.md governs every step. This file only orders the steps and records the tr
 - **Constraints and out of scope.** Alex's decided contract for the step, frozen files, and modules not taken up.
 - **Budget.** The cost ceiling per probe and per whole-bench run, from published rates (`hivemind.model.PRICES`).
 
-## 1. Census on stored data ($0 model; blind readers)
+## 1. Census on stored data (no model cost; blind readers)
 
 Before any idea, count what is wrong, by class, on stored runs.
 - **Method:** compare the current system with the reference on identical inputs. Readers see both outputs reduced to one shape,
@@ -139,7 +139,7 @@ the line and re-diagnose; never add an arm to cover it (AGENTS §7.3).
 
 ## Traps already paid for
 
-- **Relaxing a signed rule on reader judgment.** Readers called an existing $6.3bn arrangement "core"; the frozen gold marks it not
+- **Relaxing a signed rule on reader judgment.** Readers called an existing 6.3-billion-dollar arrangement "core"; the frozen gold marks it not
   kept (D250 boundary 1). The relaxed rule let 10 noise items in. Check the gold before relaxing.
 - **Tuning on probe differences inside sampling noise** (K3 against K4). Stop and run the whole bench instead.
 - **One draw read as stable.** Two draws of the same configuration shared 188 of 214 helpful hits.
@@ -170,7 +170,7 @@ the line and re-diagnose; never add an arm to cover it (AGENTS §7.3).
 - **A truncated printout miscounts anchors.** A printer that cut summaries at 120 characters hid a margin figure inside combined
   items; the control was called 0/6 when it was 5/6. Count an anchor by searching passages and summaries for the figure.
 - **A design gate is not a prompt audit.** Eight design rounds passed, and the arm's text still kept wider than Alex's ruling, linked
-  narrower than his ruling and widened "big matter". Walk each of Alex's rulings through the changed request at $0 before any send.
+  narrower than his ruling and widened "big matter". Walk each of Alex's rulings through the changed request at no cost before any send.
 - **One rare bundle of a widely repeated statement cascades.** One Step 1 record holding both a report and the company's denial (1 in 9
   samples) turned six later denials into wrong merges. Read wrong merges for one shared original before blaming the comparator, and
   fix the unit at Step 1 ("one party's statement per item"), not with a probability cut.

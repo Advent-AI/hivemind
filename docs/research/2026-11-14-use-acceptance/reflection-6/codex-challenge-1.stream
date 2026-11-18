@@ -1,0 +1,430 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 1 to your cold read
+
+**Your one step is already largely done.** I checked the record before agreeing:
+
+- `docs/research/2026-11-14-use-acceptance/carried-library/RESULT.md` and `OWN-READ.md` (D559–D561): the same 11 articles read with
+  last week's library and from empty, by two reader families.
+  - The carried read re-opened none of the 4 held questions, and opened none on a held matter.
+  - It filed 27 statements under held questions: right 17, wrong 2, unsure 2, split 6.
+  - The largest gap both families name in both conditions is **questions on the company's own numbers** (the $108bn quarterly outlook,
+    the 70% fiscal-2028 growth, the gross-margin cut, customer concentration). The figures were mostly kept, and the questions were not
+    opened. That is the standing product rule (D382, D384), and Alex ruled on it in D505: such figures reach the judgements of related
+    questions.
+- `docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md` (D609, D610): of those figures on the carried fortnight, 5 bearing
+  statements were undelivered on 3 questions. A blind second reader predicted none would move an answer.
+- `clean-arch/e2e-comparison-2026-11-13/opening-review/OPENING-REVIEW.md`: the July opening losses were small, scattered breaches with
+  substantial ambiguity.
+
+So a source-to-answer audit of the carried fortnight would re-measure settled ground. Correct me if you read these differently.
+
+**My counter-proposal: measure gate 1's stick before anything else is built for it** (AGENTS §7.1: "the criterion's null estimated, a
+conjunction over many items fails by chance").
+
+Your own rates outside the 44 (about 3.8%, 3.3% and 1.4% per send on lines 1, 3 and 4) say a zero-fault pass on 131 sends is not a
+dependable target for the current step. What they cannot say is whether *any* answer set would pass under these readers.
+
+**The test, at $0 in API terms:**
+
+- **The reference set.** On about 20 stored topics outside the 44, have a strong independent writer produce reference answer choices
+  with the same inputs and the same schema. Fresh read-only Codex sessions and Claude subagents, each told to write the best possible
+  ladder by the reader brief's own rules, are subscription work, not paid API calls.
+- **Blind mixing.** Mix the references blind with the stored frozen-step answers of the same topics.
+- **Reading.** Have the same two families read them with the gate form.
+
+**The decision rule, written before:**
+
+- **If the references' settled fault rate on lines 1, 3 and 4 combined is at least 2% a send,** gate 1's zero-fault lines are not
+  reachable by any writer under these readers.
+  - The council records that, reversibly, as evidence for Alex's gate (it does not change his gate).
+  - It moves production work to the gates that can move.
+- **If the references score near 0% while the frozen step scores about 8%,** the step has real headroom.
+  - The next step is a new version of the answer-choice step, developed on topics outside the 44 against the references' patterns.
+  - It is measured once on the 44.
+
+**Asked:**
+
+1. Is the audit really settled by the files above, or does something remain that would move a decision?
+2. Is the stick measurement the right ONE step? Name its flaws (reference writers sharing the readers' families, topic choice,
+   leakage), or give a better step.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check whether the earlier carried-library work actually leaves a decision-changing gap, then test the proposed control against the gate’s rules and sample size.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D426|fifth|44|Stage A|controls|null' clean-arch/step4-2026-11-10/DESIGN.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/carried-library/OWN-READ.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/carried-library/RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Gate 1's reading, repeated: result (D568), 2026-11-16, $0
+
+Second reading: `poc/data/clean-carried-run-2026-11-16/stage-a-reread/` (packets and key byte-identical to the first; fresh first
+readers and third readers of both families; every row valid, every ruling present; its own report `report.txt`). Comparison:
+`compare_readings.py` → `comparison.txt` (tested beforehand, `compare-selftest.txt`).
+
+## What the comparison shows
+
+| | Unresolved counted for the answer | Unresolved counted against it |
+|---|---|---|
+| Line verdicts, first / second | 1, 2, 3, 5 missed and 4 met in both | the same |
+| Line 1 (Q) failing sends | 3 / 2: both 2, first only 1 (`clean-1` pass 3) | 5 / 2: both 2, first only 3 (`clean-1` p3; `clean-3` p2, p3) |
+| Line 2 (L) failing sends | 7 / 7: the same 7 | 7 / 7: the same 7 |
+| Line 3 (R) failing sends | 4 / 5: both 4, second only 1 (`clean-4` pass 2) | 7 / 5: both 5, first only 2 (`clean-3` p2, p3) |
+| Line 5 (topics right of 13) | 7 / 7 (by written choices 6 / 6) | 5 / 5 (4 / 4) |
+| Q, L, R values that changed | 2 of 108 | 5 of 108 |
+| Dispute share | 25 / 16 of 281 | the same |
+
+The three `clean-3` changes under the second treatment are points the first reading's two third readers left unresolved. Controls
+(author-checked): five of six read as expected in both readings; the Q fault on `clean-1` pass 3 (the unnamed lab) held in the
+second reading (its Claude-family third reader read the focus line as naming the lab's support).
+
+## What it shows and does not
+
+- Shows: on these 39 sends, read again by the same method and families from identical packets, every line's verdict is the same and
+  most failing sends recur; line 2's seven are identical. The misses of this reading are not an artefact of one reading session.
+- Does not show: which reading is right, how much of the nine readings' misses the method causes elsewhere, or anything about
+  independent readers (same families, same order).
+
+## Found while reading the result: which marks reach a reader of the product
+
+`not_judged` (line 2's mark L) and an event's reference (XR) are stored in `clean_ladders.checked_answer`; no judging request
+shows them (the judge's request is built from the view, its rungs and its evidence: `src/hivemind/views/judging.py`) and the
+product's page and service do not read them (searched `src/` and `poc/ui/`: no reader of `clean_ladders`, `checked_answer` or
+`not_judged`). The marks that reach a reader are the question and the rungs (Q, R), the due day (D, W) and the figure ranges (X).
+Recounted on the first reading's per-topic map (`carried-run/faults-by-topic.txt`) without L and XR, line 5 would read 9 or 7 of
+13 (needed 11): gate 1 would still be missed; that recount is a reading of stored marks, not a change of any line.
+
+ succeeded in 0ms:
+8:round is now four reviewers, one angle each (AGENTS §11): the request audited blind, the contract, the three tables, Stage A
+12:fixtures, checks and writes. The fifth round (`id` to `ij`, on version 29) again had seven; two of its angles found no new defect or one count to correct.
+15:the step does. Version 30 answers the fifth round; whether to go on reviewing, or to build with the open corner cases as tests,
+20:(Stage A against his lines, with no paid control) and D401 (once a review finds nothing serious, build and send Stage A, capped at
+30:Stage A (`stage_a/`: the runner, the accounting, the readers' packets, the collection of readings); Stage A has been sent.
+34:**Version 32 (2026-11-10): after Stage A, an event is answered in three outcomes (D408 to D411).** Stage A missed every one
+36:and the event answers are changed first, checked at no cost and reviewed, before the same Stage A is run once more (D408); an
+41:earlier versions, §5.2.1 is what the code does.** The first Stage A's code and request are kept with its result
+44:**Scope of the build.** The ladder step (§5 to §7) and Stage A. Stage B (§8) is an outline of what the dry runs established; its
+47:**Where it stands (2026-11-10, D425, D426).** Four Stage A runs; the fourth is the step as it stands. Lines 2 and 6 are met,
+49:**Stage A has not passed.** A second look by the model at its own answer was tested and is not adopted (D425). By Alex's word
+50:the step is not tuned further on the 44 theses and the preparation of Stage B opens on it, as an exception to "only when
+51:Stage A meets its lines" below: the review of Stage B's forms and lines and the $0 baseline reading (§8). No paid Stage B
+52:send without his word again (D426).
+67:- **The next implementation step.** Build the ladder step alone and test it alone (Stage A, §8). The frozen judge runs over its
+68:  ladders only when Stage A meets its lines (Stage B).
+84:shared_quantity 13, policy_stage 8; period null 0. Every period is a sentence; 5 of the 34 contain an ISO date, which in 3 is a date to check on and in 2 only
+153:- In the unseeded draws 144, 119 and 86 links went to theses that matched no ruler question and were dropped unjudged: the system's own
+172:| D378; PRD 11, E3 and E4 | The sealed split ran a separate call that wrote questions with ladders: a ladder present in 21 of 44 on one request, inverted ladders, a band that missed its bounds, a rung holding no value. "Checks, not wording, are the part to port." E4 records the judge's refusal class with a judging version only Alex opens. |
+187:  this departs from D38, an open defect; the part `outcome` names is not proven to be the bet an analyst would pick. Stage A's
+197:  the favourable end unclear for 6 of 6 company number questions, so a registered direction can still be wrong. Stage A measures
+204:**D400. Stage A is read against Alex's lines, with no paid control arm** (Alex, 2026-11-10: "同意：不设对照，线按提议"). An exception
+205:to AGENTS §7.3 for this first measurement. Stage A does not show the step is better than production, and every report says so.
+207:**D401. After a review that finds nothing serious, the ladder step is built and Stage A sent without asking again,** capped at $3
+213:  ("an unlisted theme waits for a company item"); for a company item no decision says it. Its cost is counted in Stage A.
+219:  judges it by mark N like any other refusal. None of the 34 has a null period.
+256:- **Schema (strict):** `ladder/candidate-schema.json` (draft). Either `no_ladder` is a reason and `ladder` is null, or `ladder` is
+257:  complete and `no_ladder` is null. Inside `ladder` exactly one of two answer shapes is filled: `event` (the condition under which the event has happened and,
+258:  or null, the condition under which it is ruled out; §5.2.1, D409; before version 32, `yes_no` and five `states`); `figure` (a
+315:| an event with three or four natural outcomes has no rule or example | unchanged, as in production; a known gap (§9), measured in Stage A |
+341:| a figure's reference had to carry a value, so an expectation given in words alone had to be dropped or given an invented number | first answered by excluding such words, which the fourth audit found narrower than D260 and D398; now the words are kept with a null value (below) |
+351:| a figure's reference limited to a stated number drops an expectation the article gives in words; D260 and D398 decide no such exclusion | the reference keeps the item's words; its value is the number the item states, or null when it states none. Code checks the middle range only when a value is given, which is D398's own wording ("a stated reference value"), and writes the reference into the middle rung only then |
+358:| the request asks for the number the item states and also for a number within the limits; an item that states a number outside them leaves no answer the check accepts | the request says to leave the value null in that case; the words are kept |
+412:**Why.** Stage A (`stage_a/result/RESULT.md`): five states written by the model for a company's event were faulted by both
+424:| `event.ruled_out` | the model | the condition under which the event as a whole stands ruled out on the due day although it has not happened: decided against, or formally abandoned or withdrawn, after the item's day; null only when nothing can rule it out before the due day |
+426:| rung 2, `Ruled out` (only when a condition is given) | code | that condition, then "This rung holds when that, or any other decision against the event of rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after <the article's day> and stands on <due day>, and only when rung 1 does not." The scope governs the model's own sentence too (changed after the second Stage A, below) |
+469:**After the second Stage A: the scope governs the model's own sentence (`stage_a/result-2/RESULT.md`; `dryrun14/`).**
+493:  against or abandoned, not its merely being still awaited, and is null only when nothing can rule it out; and that each can
+534:**Why.** In both Stage A runs the reference is the mark both readers fail most on figures (10 ladders in the second): an
+542:| `reference.value`, `value_to` | one number or null | the number; for a stated range its lower end, with `value_to` its upper end; `value_to` null otherwise |
+543:| check 6 | a figure's value lies in the middle range | the value lies in the middle range; for a stated range, the middle range runs from at or below its lower end to at or above its upper end; `value_to` is null or greater than `value`; `last_reported` on an event is refused |
+568:- *"Otherwise reference is null"* now covers an event whose article gives a reported number and no expectation.
+590:`probe-direction-2026-11-10/RESULT.md`). Eleven of the 44 theses draw a company's figure; nine are amounts the company
+660:### 5.2.5 After the third Stage A: four rules of Alex's, each tested alone (D416 to D421; built; measured in the fourth Stage A)
+662:The third Stage A met line 6 and missed lines 1 to 3 (`stage_a/result-3/RESULT.md`). Alex kept the lines and ruled four
+671:| D416 | "先小额验证这个改法" | an event's `ruled_out` is `by_whom` (the company, authority, court or party whose decision it would be) and `decision` (one full sentence naming them and what they decide against the event as a whole, or that they abandon or withdraw it); null only when no one's decision can rule the event out; the event paragraph, its three examples, the closing check's event sentence, the schema. Code shows the judge the decision as the second rung's first sentence, as before, and checks that neither part is empty (`ladder_step.ruling_out_of`); it reads the earlier one-sentence shape too, for stored runs | the first trial failed its registered stop on the French kind, before D420 existed (`probe-d416-d418-2026-11-10/RESULT.md`); the second, after D420, alone: no stop fired (`probe-d421c-2026-11-10/RESULT.md`). On the six product-deadline theses, the two trials together: no wait written as the ruling out in 36 typed answers against 9 in 36 answers of the one-sentence shape sent in the same minutes |
+693:1. **Shape.** Exactly one of `no_ladder` and `ladder` is null, and inside `ladder` exactly one of `event` and `figure` is not
+694:   null (§5.2.1). A figure's `ranges` are exactly five: four or six is a refusal, counted here and nowhere else (§5.2).
+759:   Stage A measures it: code reports every written company figure whose `outcome` or question the old pattern matches, beside
+773:   **Corrected after Stage A's send.** As first built, the check asked that the quote's normalised text occur whole inside the
+774:   repaired passage (the Step 1 runner's `preserves_quote`). Stage A showed it refusing the article's own words: where the
+789:   nine answers in Stage A, each read and each a true instance. "The Article 232 tariffs" is not matched. One wording it does not
+790:   catch was seen once in Stage A ("at the item date"): mark Q owns the rule, and the check is not widened on one instance.
+796:   full stop, as Stage A met it, and one between two words (accepted, the article's passage written); a left-out "not", a moved
+800:   states, under the number rule of check 4, or null. When a figure's reference has a value, it must lie in the middle range
+802:   reference is null or has no value, the ladder is recorded as "no reference figure" and its ranges are the model's estimate.
+831:   When a figure's reference has no value, or is null, its middle rung's condition is its interval followed by
+861:     in full, its token counts, and its result (a ladder, a `no_ladder`, or refused with the reasons). Stage A writes the record
+869:about whether a ladder is right. Every property of substance is a reader's mark in Stage A, and the marks are a closed set: Q (the
+881:| the outcome names several things, none the main one | return `no_ladder` | `no_ladder` a reason, `ladder` null | records it; readers judge it (N) |
+896:unique; Stage A, which reads theses of several draws, writes no `clean_ladders` and keys its files by case (§8). The ladder record is a row
+905:| `question`; `looks_at` := the thesis's `outcome` (with `object_id`, the three texts of `views_fts`) | `views`, `views_fts` | the judge prompt: `question` after the header, and `looks_at` inside it as `focus "…"` (`judging.py` line 123), which Stage A's packet shows as `focus`; other views' theme lines | production's matching search (`views_fts`); production's extraction request (`store.views_open_at_day_start`; `views_for_prompt` has no caller). The clean Step 1 reads its own library state, never these |
+910:| rung `lo`, `hi` (the nearest floats, check 4) | `rungs` | none on this path: Stage A's counts and the report read the exact decimals of `checked_answer`, and readers see a figure's ranges as the conditions' text | `matching.ladder_direction`; the frozen scorer; the product's pages (`bundle.py` line 45) |
+931:| `rungs` | check 7's rows in position order: `label`, `condition`, and for a figure `lo` and `hi` as floats, null at the open end; an event's rungs carry no `lo` or `hi` |
+941:| `view_id` | `v<N>` | null | null |
+943:| `reason` | null | the model's reason | null; the reasons are in the outcome record |
+944:| `reference_status` | a figure: `reference figure`, `last reported figure` (D411) or `no reference figure` (check 6); otherwise null | null | null |
+945:| `checked_answer` | the accepted answer as JSON, numbers as the model wrote them, `reference.words` replaced by the article's passage | the answer as given: the reason, and `ladder` null | null |
+958:  from a clean thesis to its views (`self.views`, `self.mapping`; `adapter.py` lines 144–145); its link writer drops a link to
+999:| opened | a send would pass the spending cap | the limit refuses it before it is sent (`OverBudget`); the run stops with a non-zero exit and nothing is skipped. The cap is never raised (AGENTS §9); in Stage A the result reads NOT MEASURED and goes to Alex | nothing for this article's theses |
+1005:| any | Step 1 opens a second thesis for the same bet (its identity miss) | the second thesis gets its own ladder and is judged apart; no merge here. Stage A does not count duplicates: its form judges each item on its own, and a duplicate is Step 1's identity miss, outside this step | a second row and view |
+1030:| a quarterly company figure is not a view (a pattern over `looks_at` and question) | production applies it to a company candidate that is not an event (`sift` lines 625–627). Not ported as code: the pattern matches Q1 to Q4, "quarter" wherever it is not the start of "quarterly report", and half-year revenue wordings, and a question on this path names its settling material, quarterly reports for 14 of 34 theses; a risk, measured in Stage A (check 5). The rule is the request's refusal case, read by mark N, and a ladder written for a quarter or a half-year fails mark Y |
+1034:| `check_bounds`, which production applies only to a candidate carrying a typed key (`sift` line 644) | applied to every figure, plus the open bottom range |
+1038:| what no check proves, here or in production | that an event's states cover every outcome, that the question is the thesis's, that the direction and the ranges are sensible: Stage A's readers judge these |
+1046:### Dry run of the Stage A reading ($0): done in this review
+1050:repository until both readers had answered). Two readers of different families marked them blind with the Stage A form
+1070:  `ladder/examples.json` were rewritten later (fifth and sixth dry runs).
+1071:  Five states that cover every outcome are hard to write even by hand, so mark R on five-state ladders is a risk for Stage A that these
+1074:  Stage A's 132 answers would be about 35 minutes read one after another. Real answers with their full articles may take longer;
+1112:sound. Under Stage A's rule it would go to the third reader. 
+1115:- Eight refusals on made-up theses of other companies, read with the one Stage A form (`ladder/stage-a-reader-brief.md`): one
+1125:**Fourth and fifth dry runs ($0;** `dryrun4/`, `dryrun5/`**): the form's mark L, and five-state ladders.**
+1180:  "sound" answers are not reliably sound: readers found faults I had not planted in the first, second, fifth, sixth, seventh,
+1189:### Stage A: the ladder step alone (D401: sent after a review that finds nothing serious; capped at $3; priced from tokens before the send)
+1194:  draw and thesis id, written `u1/clean-3` (the draws `u1`, `u2`, `u3`; the acceptance run `acc`): 44 cases. A send is one case in
+1201:- **A stop is not restarted.** The Stage A folder is created once and refused if it exists, as a replay's run folder is. If the
+1204:  from one process to another. A new Stage A is a new folder, on his word, under a cap he sets. Three reviews in a row found a
+1206:- **One stop for all workers.** Sends run from a pool. Stage A's limit is the adapter's (`budget.Budget`: the same reserve, the
+1228:- **No paid control arm (D400), and what Stage A cannot say.** Versions 2 to 12 sent v74i's sentences beside the candidate. Each review
+1230:  relate to its bounds, how its answer is checked). Without it, Stage A measures the candidate against the lines below and its own
+1234:  the exception for this measurement (D400), and every report of Stage A carries this limit.
+1288:    states one, and no number the article does not state. It is null only when the article states no expectation
+1307:- **Three outcomes of a send** (a send is one thesis in one of the three passes), all in the denominators (44 theses × 3 sends):
+1329:     sends are ladders sound and complete on the firm marks. At least 35 of the 44 theses are right, and at least 28 of the 44
+1362:    MEASURED, line 4 reads "no refusal occurred", and line 5 is read as it stands, none of the 44 being right.
+1434:### Stage B: the frozen judge on the system's own ladders (after Stage A; about $0.3 a draw, an estimate)
+1440:- **Run:** the candidate's first send of Stage A for each of the 34 theses, fixed before any result is read; the adapter's new
+1514:  no worse than the baseline's does not prove the new ladders sound: Stage A's marks, the control of line 3 and my own read of the
+1524:  thing, that line still names the parts the question leaves out. Stage A's readers see it and judge the question against it;
+1533:  in the fifth dry run; whether the model applies it is what Stage A measures, with mark R on this shape reported apart. If it
+1543:  price from tokens under the $3 cap; the readers' folders and the form in place. No further word from Alex is needed for Stage A
+
+ succeeded in 0ms:
+# Claude's own read of the 22 answers, stored before any reader's answer (2026-11-16, about 22:20 PST)
+
+Run: `poc/data/clean-carried-library-2026-11-16/reads/` (22 of 22 complete, one call each, ledger $0.427 of $1.00). Layout:
+`read_probe.py` → `reads-layout.json`. Every answer read beside its article's kept statements and the topics it opened.
+
+## The frozen reading (DESIGN.md), as written
+
+| Labelled case (October topic) | Empty read | Carried read | Mark |
+|---|---|---|---|
+| Supply commitments (art. 9), same question | opened its own commitments question | no new question; the $279bn filed under September clean-2 | as intended |
+| Hugging Face (art. 30), same question | opened its own closing question | no new question; filed under September clean-6 | as intended |
+| Rubin's ramp (art. 76), same question | opened "ramp on schedule or slip into 2027" | no new question; both Rubin statements filed under September clean-4 | as intended |
+| Capital spending 2026 and 2027 (art. 15), same question for 2026 | opened a 2026 question (five companies) and a Rubin question | no new question; the $800bn / $1.3tn sentence filed under clean-5, Rubin under clean-4 | as intended; 2027 opened in neither read |
+| The lease guarantee (art. 9), related | opened "the SB Energy guarantee exposure" | filed under September clean-1 (the total) | no second question; a signed guarantee is part of the total (D390) |
+| The loss-share support (art. 76), related | opened "credit support to customers' financing" | filed under clean-1 | no second question |
+| The U.S. licence (art. 35), unresolved | opened nothing | two statements filed under clean-3 (Blackwell sales to China) | right home, I think |
+| Global AI spending (art. 206), unresolved | opened "global AI spending = 2.5% of U.S. GDP in 2027" | no question; Goldman's figure filed under clean-5 (the big five's spending) | a neighbouring home, arguable |
+| Memory prices (art. 12), absent | **opened nothing** | opened an HBM/DRAM 2027 price question | carried opened, empty did not |
+| Groq's rack (art. 119), absent | opened the rack question and a DOJ/FTC action question | opened the rack question only; lawsuit and probe kept, filed nowhere | the DOJ/FTC question lost: worth it? unsure |
+| B200 rental price (art. 173), absent | opened | opened | same |
+| Reflection AI (art. 200), absent | opened (sign) | opened (sign and complete) | same matter |
+| Equity-investment commitments (art. 235), absent | opened a guarantee-exposure and an equity-commitments question | **no question**; the $25bn commitments, the $99bn balance and the net purchases filed under clean-1 | clean-1's own outcome names "versus the equity investments it has made", so the filing follows the topic as written; a question the empty read opened is not opened |
+
+**By the rule written before the run:** re-opened the same question in 0 of 4 same-question cases (fails at 2); the matter's
+statements filed under the existing question in 4 of 4, as many as the empty read kept (1, 1, 2, 1 against 1, 1, 2, 1);
+absent cases opened: empty 4 (Groq, B200, Reflection, equity commitments), carried 4 (memory, Groq, B200, Reflection), of the
+empty read's four the carried read opens three (fails at two or fewer). **It supports going on.**
+
+## Counts (one draw; not the rule)
+
+| | empty | carried |
+|---|---|---|
+| topics opened | 16 | 4 |
+| statements kept | 74 | 72 |
+| statements filed under some question | 34 | 37 |
+| statements filed nowhere | 40 | 35 |
+
+## What I would flag for the readers
+
+1. The equity-investment commitments: not opened with a library present, because the existing topic was written as "credit
+   support versus equity investments". The September topic's two-thing shape carries over: a library passes its faults on.
+2. The DOJ/FTC question on the Groq deal: opened only from empty; the stored October run did not open it either.
+3. Homes I am unsure of: Goldman's global AI spending under the big five's spending (206 e6); customers' share of receivables
+   under credit support (173 e3); the CFO's 70% growth under supply commitments (206 e3, which D508's readers counted as
+   bearing on that question).
+4. The empty reads themselves differ from the stored October run (article 12 opened nothing, 35 nothing, 15 a 2026-only
+   question): the run-to-run variation D559 found, again.
+
+**Not shown by this:** final answers; any rate; whether the carried library's own questions are good (they are one week of
+the same system from empty); what happens over many weeks.
+
+## Correction after the council (round 4, `../reflection-4/council-codex-4.md`)
+
+"It supports going on" above is wrong by the rule as written: its positive condition needs the absent cases to open as in
+the empty read, and the carried read opened three of the empty read's four. The result sits between the positive condition
+and the failure line and is reported as it is (`RESULT.md`).
+
+ succeeded in 0ms:
+# The small comparison of D559: the same 11 articles read from a kept library and from empty (D561), 2026-11-16
+
+**Answer: on these 11 selected articles, the read with last week's library re-opened none of the four questions it already
+held and filed the identified facts under them; it opened 4 questions where the read from empty opened 16, none of them on a
+matter the library held (both reader families). It opened three of the four missing matters the empty read opened (not the
+equity-investment commitments), so by the rule written before the run the result sits between "supports going on" and
+"fails", and is reported as it is. One draw; nothing about final answers.**
+
+Run: `poc/data/clean-carried-library-2026-11-16/` (22 of 22 reads complete, one call each, no resend; ledger $0.427 of $1.00).
+Design and proofs: `DESIGN.md`, `proofs/`. My own read stored before the readers': `OWN-READ.md`. Readers (two families,
+blind to which read had the library in so far as the packet allows: the library shown is part of a read): `brief-readers.md`,
+`codex-readers.jsonl`, `claude-readers.jsonl`; tally `tally_readers.py` → `tally-readers.txt`.
+
+## The rule written before the run
+
+| Line | Result |
+|---|---|
+| Re-opens a held question in two or more of the four same-question cases | **0 of 4** (supply commitments, Hugging Face, Rubin's ramp, 2026 spending) |
+| Drops the matter's statements where the empty read kept them, in two or more | **0 of 4** by my own reading before the readers (`OWN-READ.md`): 1, 1, 2, 1 statements filed under the held question against 1, 1, 2, 1 kept by the empty read; the readers judged the homes, not a fact-by-fact comparison. Article 15's sentence holds both $800bn for 2026 and $1.3tn for 2027; it went under the 2026 question, and 2027 is tracked by neither read |
+| Opens two or fewer of the absent cases the empty read opens | opens **3 of the empty read's 4** (Groq's rack, the B200 price, Reflection AI; not the equity commitments), plus memory prices, which the empty read did not open |
+| Supports going on only if, besides the two lines above, the absent cases open as in the empty read | **not met** (3 of 4); not failed either: between the two, reported as it is |
+
+## What the readers say (both families unless split)
+
+| | Empty | Carried |
+|---|---|---|
+| Questions opened | 16 | 4 |
+| Of them, on a matter the library shown already held | 0 (no library) | **0** |
+| Worth holding | 12 yes; 3 yes/unsure; 1 yes/no (global AI spending as a share of U.S. GDP) | 1 yes; 3 yes/unsure (memory prices, Groq's rack, the B200 price) |
+| Statements filed under a held question | n/a | 27: right 17, wrong 2, unsure 2, split 6 |
+| Reader-listed entries of a matter deserving a question that the read neither opened nor held (both families' lists added per article and read; names not merged, so not distinct matters) | 25 | 18 |
+
+**The two homes both families call wrong:** customers' share of NVIDIA's receivables filed under the credit-support total
+(article 173); the CFO's 70% growth outlook filed under supply commitments (article 206; D508's readers had counted the same
+kind of statement as bearing on that question, so the line is disputed across readings).
+
+**What the carried read lost:** a question on a DOJ or FTC action against the Groq deal (opened from empty; the stored October
+run did not open it either; one family names it missing for the carried read, the other did not mark its worth above
+"unsure"). The equity-investment commitments were not opened; their facts went under the held credit-support question, whose
+own outcome reads "versus the equity investments it has made", and both families call those four homes right: the held
+question's scope carries into the filing, and the separate equity-commitments question the empty read opened was not opened.
+
+**A gap the readers name in both conditions:** questions on the company's own numbers. The Claude-family reader names the
+$108bn quarterly outlook, the 70% growth outlook for fiscal 2028 and the gross-margin outlook cut to 72-73% on several
+articles; the Codex-family reader names gross margins and memory costs, 2028 growth, customer concentration and the funding
+of investments and payouts. These are missing questions, not missing facts: the figures were mostly kept, and in the carried
+read the $108bn outlook was filed under the China question. It is the standing product rule (D382, D384) and the item Alex
+ruled on (D505: such figures should reach the judgements of related questions), not something this test changes.
+
+## Limits
+
+Everything above is one read of these articles from a fixed library, not behaviour over a changing library. One draw; 11 articles chosen because they opened topics (not a sample of the week); a seven-topic library one week old,
+itself opened from empty; the step's read of each article from a fixed library (no carry-over between articles); no
+matching, answer choices or judging run. The empty reads differ from the stored October run of the same articles (12 and 35
+opened nothing; 15 opened a 2026-only question): run-to-run variation, one draw each.
+
+ succeeded in 0ms:
+# The company's own figures on the carried fortnight: where they went (D609's trace), 2026-11-16, $0
+
+**Material:** the stored carried fortnight (`poc/data/clean-carried-run-2026-11-16/`), with its Step 1 trace, the Step 3 library
+(`step2/library.json`), the writer's store and all 95 judging requests.
+
+## Identity, by code (`trace_figures.py` → `trace-output.txt`, `pairs.jsonl`, `groups.txt`)
+
+- **Population:** every kept statement whose party is NVIDIA and which carries any figure, with no measure list: 325 statements.
+  - All 325 match a store record (0 unmatched).
+  - They fall in 88 repeat groups.
+- **Against the 12 judged questions:** 3,773 fact-question pairs available by each question's last judgement.
+  - Of these, 3,534 never reached that question: 835 because they were linked to another question, and 2,699 because they were
+    linked to none.
+  - Most are about matters other than the question. Code makes no claim about bearing.
+
+## Bearing, read by hand (`groups.txt`, then each candidate's source quote and the question's last request)
+
+**49 of the 88 groups are linked to no question.** They are the company's own results: revenue, net income, margins, EPS, buybacks,
+dividends, cash flow. None of the 12 questions asks about them; under D382 and D384, figures are evidence, not questions. So they
+have no home in this library: a matter of which questions exist (D559, gate 4), not of delivery.
+
+**Bearing and not delivered: 5 statements on 3 questions over 2 matters.**
+
+| Question | Statement | In the last request? | What kept it away (the library's own record) |
+|---|---|---|---|
+| v12, a residual-value guarantee finalized | e990: Nvidia "could carry a residual-value guarantee of no more than 25%" | partly: Morningstar's estimate of 25% is shown | **Step 3's look-back rule:** linked to v1 on 2026-10-03, and a group that arrived under another question is not reconsidered for a question opened later (D514) |
+| v12 | e995: Nvidia "previously provided a residual-value guarantee" for SB Energy's Ohio financing (S&P, Moody's; no figure, read because it shares e990's day and link) | no | the same look-back rule |
+| v5 and v9, top-five hyperscalers' data-center capex (2026, 2027) | e489: NVIDIA's projected share of their IT capex, 11% to 44% by 2027 | no | **model judgements:** Step 1 linked it to nothing while v5 was open; the look-back judge said no for v9 |
+| v5 and v9 | e648: sales to the largest cloud companies, $49 billion in a quarter | no | the same two judgements |
+| v5 and v9 | e767: hyperscale revenues $48.71 billion, +117% | no | the same |
+
+Weaker leads, not counted: revenue per gigawatt for the U.S. gigawatt question (v10), and the 45% consensus beside the 70% growth
+outlook for the Vera Rubin question (v4).
+
+## The independent second reader (`brief-second-reader.md` → `codex-second-reader.jsonl`; key outside the repository)
+
+A fresh Codex session read the three questions' last requests and 14 statements blind, with a negative control (a dividend raise) and
+a positive control (a statement already shown) per question.
+
+- **Controls:** all three negatives "does not bear"; all three positives "already in the request".
+- **Candidates:**
+  - every one "bears", agreeing with my own reading (`own-read-before-reader.md`);
+  - "not in the request", except e990, "partly";
+  - **every one "unlikely" to move the answer.** For example, e995: "a relevant precedent, but the request already favors a finalized
+    guarantee."
+  - The fortnight's reading 4 found the same: confidence only.
+
+## What it gives (D609's criterion)
+
+- **Delivery of the company's own figures is largely established where they bear.** The bearing groups are linked and shown: the
+  credit-support, purchase-commitment, Vera Rubin, export, memory and Hugging Face figures.
+- **The undelivered bearing ones are few** (5 statements on 3 questions). **They come from two mechanisms:**
+  - Step 3's look-back boundary, a code rule;
+  - the model's link judgements.
+- **Neither reader predicts any of them would move an answer.**
+- **This closes the company-figure repair route.** The look-back boundary now has a third instance: the fresh week's MIIT stop order
+  (D508) and v12's two here. Its effect on an answer is still not shown (D511 was inconclusive). D517's reason not to widen it
+  ("reach and effect not established") is narrowed on reach and unchanged on effect.
+- **The 49 homeless groups are the opening question, not delivery.** Under Alex's D382 and D384 they get no question of their own.
+
+codex
+**I withdraw my proposed audit:** your reading is right, and a blinded control for gate 1 is the better next step—but its result cannot prove that *any* writer can or cannot pass.
+
+1. **The audit is largely done.** The 11-article comparison already examined carried versus empty starts, and the fortnight trace followed the company figures through to the judges. The latter found five relevant undelivered statements on three questions, with neither reader predicting an answer change. The DOJ/FTC and equity-commitment cases remain uncertain, but I cannot point to an unexamined shared mechanism that makes another broad audit the best next decision. The studies are small, so “closed” means closed as a next repair route, not proven absent in production. [Carried-library result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/carried-library/RESULT.md), [delivery trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md)
+
+2. **Yes: measure the reading method next, with a narrower decision rule.** The existing repeat showed the same gate verdict twice, but not whether its marks were correct; five of six controls were read as expected. A blinded comparison with independently written answers can investigate that missing validity question. [Repeated reading](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md)
+
+   The proposed test needs these corrections:
+
+   - **Twenty reference answers cannot establish a 2% fault rate.** One fault is 5%; zero faults still leaves substantial uncertainty. Topics and repeated sends are clustered, so they cannot be treated as 131 independent trials.
+   - **A reference fault does not prove the gate impossible.** The writer may have made a real mistake. Conversely, agreement between model families can reflect a shared misreading. Each settled fault needs an independent source-and-rule review, with genuine answer errors separated from reader errors and unresolved cases.
+   - **Prevent leakage and cherry-picking.** Fix the outside-44 topic selection and stored input packets before writing; include the different question and refusal types. Writers must not see stored answers, previous marks or one another’s work. Blind references and frozen answers together, including author and order; include known wrong and sound controls. Reader-family overlap remains a limitation.
+   - **Use the full gate accounting.** Include line 2 and the topic-level lines as well as 1, 3 and 4; otherwise a writer could look strong by refusing difficult questions or omitting parts. Pass each reference through the same schema, code checks and rendered packet as the frozen answers.
+   - **Do not promise another test on the 44.** D426 explicitly says no fifth Stage A and no further tuning on them. A new version can be opened by council under D439, but a later measurement needs its own decision consistent with that stop. [D426](/Users/lchingen/hivemind/docs/DECISIONS.md:770)
+
+   **Decision-moving result:** a confirmed reader error on a sound reference, or a clear, repeated difference favouring sound references on the same topics, identifies whether the next investigation should address reading validity or step design. **Close this control:** the sample yields no independently confirmed reader error and no interpretable difference; report its uncertainty rather than declaring the gate reachable or unreachable. Subscription sessions have no API charge, but their time and any actual charges should still be recorded.
+
+**CONSENSUS: Run the blinded outside-44 reference control at $0 in API spending, with the safeguards and narrower conclusions above; leave the gate and D426 unchanged.**
+tokens used
+110,528
+**I withdraw my proposed audit:** your reading is right, and a blinded control for gate 1 is the better next step—but its result cannot prove that *any* writer can or cannot pass.
+
+1. **The audit is largely done.** The 11-article comparison already examined carried versus empty starts, and the fortnight trace followed the company figures through to the judges. The latter found five relevant undelivered statements on three questions, with neither reader predicting an answer change. The DOJ/FTC and equity-commitment cases remain uncertain, but I cannot point to an unexamined shared mechanism that makes another broad audit the best next decision. The studies are small, so “closed” means closed as a next repair route, not proven absent in production. [Carried-library result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/carried-library/RESULT.md), [delivery trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md)
+
+2. **Yes: measure the reading method next, with a narrower decision rule.** The existing repeat showed the same gate verdict twice, but not whether its marks were correct; five of six controls were read as expected. A blinded comparison with independently written answers can investigate that missing validity question. [Repeated reading](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md)
+
+   The proposed test needs these corrections:
+
+   - **Twenty reference answers cannot establish a 2% fault rate.** One fault is 5%; zero faults still leaves substantial uncertainty. Topics and repeated sends are clustered, so they cannot be treated as 131 independent trials.
+   - **A reference fault does not prove the gate impossible.** The writer may have made a real mistake. Conversely, agreement between model families can reflect a shared misreading. Each settled fault needs an independent source-and-rule review, with genuine answer errors separated from reader errors and unresolved cases.
+   - **Prevent leakage and cherry-picking.** Fix the outside-44 topic selection and stored input packets before writing; include the different question and refusal types. Writers must not see stored answers, previous marks or one another’s work. Blind references and frozen answers together, including author and order; include known wrong and sound controls. Reader-family overlap remains a limitation.
+   - **Use the full gate accounting.** Include line 2 and the topic-level lines as well as 1, 3 and 4; otherwise a writer could look strong by refusing difficult questions or omitting parts. Pass each reference through the same schema, code checks and rendered packet as the frozen answers.
+   - **Do not promise another test on the 44.** D426 explicitly says no fifth Stage A and no further tuning on them. A new version can be opened by council under D439, but a later measurement needs its own decision consistent with that stop. [D426](/Users/lchingen/hivemind/docs/DECISIONS.md:770)
+
+   **Decision-moving result:** a confirmed reader error on a sound reference, or a clear, repeated difference favouring sound references on the same topics, identifies whether the next investigation should address reading validity or step design. **Close this control:** the sample yields no independently confirmed reader error and no interpretable difference; report its uncertainty rather than declaring the gate reachable or unreachable. Subscription sessions have no API charge, but their time and any actual charges should still be recorded.
+
+**CONSENSUS: Run the blinded outside-44 reference control at $0 in API spending, with the safeguards and narrower conclusions above; leave the gate and D426 unchanged.**

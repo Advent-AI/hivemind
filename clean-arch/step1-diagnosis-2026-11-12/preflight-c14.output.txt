@@ -1,0 +1,46 @@
+# Preflight of the c14 probe on the final wording ($0), 2026-11-12
+d1-capex-open          step  42: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-capex-repeat-a      step  85: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-capex-repeat-b      step  90: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-population          step  66: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-kyber               step  45: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-credit-model        step   1: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-memory              step  56: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d1-ohio                step   8: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-capex-open          step  42: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-capex-repeat-a      step  85: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-capex-repeat-b      step  90: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-population          step  66: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-kyber               step  45: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-credit-model        step   1: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-memory              step  56: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d2-ohio                step   8: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-capex-open          step  42: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-capex-repeat-a      step  85: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-capex-repeat-b      step  90: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-population          step  66: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-kyber               step  45: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-credit-model        step   1: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-memory              step  56: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+d3-ohio                step   8: c8 arm equals the stored sent_request; other fields equal: True; c14 text longer by 206 chars; stored answer passes
+24 of 24 stored answers pass under the c14 request; 0 skipped
+synthetic two-year answer passes every runner check: new theses 2, unlinked []
+## Request bytes and key order
+For every state the probe asserts both `adapted_c8 == sent_request` and `json.dumps(adapted_c8) == json.dumps(sent_request)`: the c8
+arm sends production's stored sent request with the same keys in the same order (model, messages, max_tokens, response_format,
+reasoning_effort). The c14 arm is the same adapter applied to the same built request with two texts replaced; its key order is
+the c8 arm's. The request bytes are checked directly, which is stronger than inferring them from an answer's key order; after the send, the
+c8 arm's answers' key order is compared with the stored production answers' (`raw_response`) as well.
+
+## scripts/preflight.py (AGENTS §5)
+Run on 2026-11-12 with its defaults (`scripts-preflight.output.txt`, exit 0; C judged 170, refused 0, skipped 2 "request not in
+this archive"; D 43 enum values, 0 missing). Its scope is production's extraction v74i and judging-v7 ("It replays the answers of
+the versions the code builds"); it does not cover clean Step 1. The clean Step 1 equivalent, as for arm c9 (round log §49: "395 stored answers judged under the c9
+schema, 0 refusals"), is above: the 24 stored c8 answers through the runner's checks under the c14 request, 0 refused, 0 skipped.
+
+## The probe's answer handling, tested at $0 with a fake transport (2026-11-12)
+- a valid answer: one call, outcome "valid";
+- an answer cut at the output limit, then a valid one: two calls ("cut at the output limit", "valid"), the runner's format rule;
+- an answer with a duplicate thesis id: one call, "refused by the runner checks: thesis local IDs must be nonempty and unique", not resent;
+- a provider refusal: one call, "refused", not resent.
+Each record is written to records.jsonl as it returns.

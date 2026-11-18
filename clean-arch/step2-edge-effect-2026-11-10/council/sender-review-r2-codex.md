@@ -1,0 +1,24 @@
+**NOT READY:** the reader can stop on a malformed answer instead of reporting it, and the stated worst-case cost excludes retries. I also found no evidence in the supplied probe records that the required preflight was run.
+
+For example, if the judge returns valid JSON containing an invalid `pushes` entry, the reader detects the schema error but then tries to unpack that invalid entry. It can stop before producing the required “not decided” verdict.
+
+**A. Earlier findings**
+
+- **Historical bytes — not serious for this diagnostic, with a wording limit.** The archive stores sorted request JSON, so it cannot establish the original HTTP body. The current check confirms the saved canonical request and today’s serialized reconstruction; the listed files’ timestamps and clean tracked status support that reconstruction as a reasonable stand-in for a small diagnostic. The conclusion that the order **is** the historical order is stronger than those facts prove: files could have changed and later been restored, and the archive has no wire capture. Say it is *consistent with* the historical order. Answer-key order is a useful additional comparison, not proof of request bytes. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:46), [check](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:77), [transport](/Users/lchingen/hivemind/src/hivemind/model.py:126).
+- **Unfinished round — not serious; closed.** The protocol now identifies the 14 other requests at that level and explicitly says the remainder was not built. That matches the saved report. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:28), [report](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation/counterfactual-report.json).
+- **Reading rule and generalization — not serious; closed in the rule.** The protocol requires three accepted answers in each arm, treats mixed results as undecided, and limits the conclusion to this relation and sample. `verdict()` implements those combinations correctly. The separate malformed-answer defect below affects whether the reader reaches that verdict. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:59), [verdict](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:52).
+
+**B–C. Current findings**
+
+1. **Serious — a refused answer can crash the reader.** After `check_schema` returns errors, [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:176) still accesses the answer as if it had the required shape. A JSON array, a `pushes` entry missing `push`, or a non-string `implied_outcome` can raise before the row and verdict are printed. The protocol promises to report refused answers and exclude them. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61). For well-formed accepted answers, I found no path in `verdict()` that prints a conclusion outside the stated rule.
+
+2. **Serious — $0.0665 is not the worst-case cost of the stated send.** That figure covers one attempt for each of six requests, while the budget wrapper permits up to three attempts per request. On the wrapper’s own reserve estimate, three attempts for each would be approximately **$0.1995**, still below the $0.25 cap. The cap is enforced per invocation, but the protocol’s worst-case claim understates the authorized send’s possible cost. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:52), [cost calculation](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:115), [retry and reservation](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63).
+
+3. **Serious — required preflight has no demonstrated completion.** The rules require `scripts/preflight.py` before any paid run, including reporting skipped rows and refusals. I found no preflight result in the supplied protocol or probe output records. The successful `judge_probe.py check` is narrower and does not establish that requirement was met. This is an evidence gap, not a claim that nobody ran it elsewhere. [AGENTS.md](/Users/lchingen/hivemind/AGENTS.md:172).
+
+4. **Not serious — request comparison is narrower than its wording.** `check` compares the current saved files successfully, including the substantive user-text difference. Its comparison does not independently rule out an extra top-level key or changed user-message metadata in a modified counterfactual file. The actual files inspected support the protocol’s claim; the check alone is narrower. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:85).
+
+No files were edited and no network request was sent. The offline `check` passed for the specified replay folder.
+
+NOT READY — serious findings 1, 2, and 3.
+

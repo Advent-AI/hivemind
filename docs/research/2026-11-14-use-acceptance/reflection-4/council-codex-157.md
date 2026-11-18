@@ -1,0 +1,12 @@
+Version 3 needs one more correction before the scratch build. Its period key and partial-result design are clearer, but the written contract still has contradictions and leaves the frozen control comparison underspecified.
+
+- **Fix the key throughout.** §0b specifies `(thesis_id, period)`, while §1 still specifies `(thesis_id, view_id)`. The former is needed to identify refused years.
+- **Do not silently extend the frozen control mapping.** The present [control reader](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control_theses.py:72) maps one thesis to one ruler question. A split can produce two candidate views, but the design must say how each is matched to a frozen question, what happens to an unmatched year, and how duplicates and denominators are counted. Until that is reviewed, report the split as a diagnostic rather than claim it is measurable by the unchanged control line.
+- **Make failure reasons truthful.** A model refusal can supply a reason; two invalid answers may not supply a valid refusal reason. Specify what the surviving view shows in each case, without presenting a validation failure as the model’s explanation.
+- **Reconcile the verdict and budget.** §0b adds hard-mark vetoes and two countings, but §3 still gives the older verdict. Make one rule authoritative, including unresolved marks. The listed population is **13 topics**, whereas the spend calculation uses 14. A $0.40 ledger is a ceiling only if reservations, retries, concurrency and over-reserve charges are specified and tested; the average cost per call does not establish it.
+
+The reader inventory should also include [stage_b_count.py](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/stage_b_count.py:151), which counts ladder rows, and the stored-data scripts that fetch one row by thesis. State whether each is applicable to the new store or must refuse it.
+
+The D397 departure can be brought to the council as a concrete reversible proposal. The record and scratch build should follow once the design states exactly what is being decided.
+
+CONSENSUS: no, because the key, frozen-control mapping, partial-failure display and measurement contract still need reconciliation.

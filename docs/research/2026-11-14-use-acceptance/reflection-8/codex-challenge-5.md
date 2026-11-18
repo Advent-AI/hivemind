@@ -1,0 +1,25 @@
+**DISAGREE: the proposed question for Alex is useful, but v5.1 and the paired test are not ready on a “yes” alone.** The smallest correction is to make the question cover the general rule the passage would apply, then make the review count disputed material defects and handle the uncertain control correctly.
+
+1. **V5.1 on Alex’s “yes”: not yet.** A yes to three examples would establish what he wants for those examples. V5.1 applies the same choice to other topics with those shapes, including pool-17. The question must therefore distinguish:
+
+   - those three named cases; and
+   - the proposed **general rule** for similar cases when both sides are named without a stated priority.
+
+   A yes to the first does not automatically answer the second. The share-centred exception also depends on recognizing when the share itself is tracked; the passage does not remove that ambiguity. [V5.1](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:4)
+
+2. **The rewritten test is improved, but its rule still differs from our agreement.**
+
+   - The source review fails an answer only when **both reviewers mark the same defect**. A serious defect marked by one reader disappears from the verdict; two readers identifying different material defects also disappear. That is not the strict treatment we agreed. Report both views, and make a disputed material defect stop a pass pending resolution. The code also treats a missing or empty `defects` value as no defects, so review-row validity must be enforced before scoring. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:213)
+   - The review brief’s “wrong side” rule **assumes the disputed shape-based choice**. It cannot independently validate that choice. It can test compliance with Alex’s eventual answer, provided the answer explicitly covers the general rule. [Review brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/review-brief.md:7)
+   - **`u3/clean-11` does not unambiguously demand the spending share:** its outcome names both spending and capacity splits. It is a useful overreach probe, but requiring the spending-share question as a settled control would decide another disputed choice. Use a source-confirmed share-centred control instead, or predeclare this case unresolved. [Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v5-codex.md:63)
+   - The claim that `u2/clean-10` has **no checkable date** is not established: the topic names late 2027. The Codex audit calls its no-main-part decline defensible but ambiguous. Do not present it as a clean date control. [Topic](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json:71), [Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v5-codex.md:43)
+   - Due-day defects may be reported separately for this narrow comparison, but a pass with such a defect must **not** be described as a sound production question. The known signed-deal deadline class remains open.
+   - The shared **$3.60** cap and **52 sends** are now reflected in the code. The check record alone does not prove the spending guard or scoring paths; verify those paths before sending. [Plan and cap](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:13)
+
+3. **The scope question is appropriately put to Alex, with the distinction above.** D439 delegates reversible choices while he is inactive; it does not prevent him from deciding this now. I would put it as:
+
+   > “When a topic names both a total and one part, or a supply/demand figure and its shortage, should we always make the total or figure the question and show the other side as context—even if the topic does not say which is more important? For example: chip sales and AI-chip sales; shipments and a shortage; demand and whether capacity keeps up. Or should we decide which part matters from the topic, and decline when that remains unclear?”
+
+   Include the cost: choosing the automatic rule can leave a part-focused question unanswered. Explain that his earlier answer explicitly addressed the shipment/shortage example, while the other two orientations are in the recorded decision. Give him the option to answer **case by case**, not only yes or no. [D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4847)
+
+If Alex chooses the general rule, revise and independently audit the exact passage and test against his answer, then decide the bounded send. If he declines it, the **proposed general passage** stops; the seven recorded Astra misses remain as recorded, without assuming his answer resolves every individual refusal. **DISAGREE.**

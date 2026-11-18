@@ -1,0 +1,371 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 122: row 3's product-facing contract (`live-service/OPERATING-CONTRACT.md`, the new section before "Not covered")
+
+1. **`view_bundle` and every direct path:**
+   - Every public function with a date resolves it at entry through `resolve_bound`:
+     - `service`: 8 functions;
+     - `bundle`: `not_judged`, `view_bundle`, `days`, `thesis_bundles`, `library`;
+     - `idea.read_idea` and `search.search`.
+   - Nested calls pass resolved bounds, and the resolver is idempotent. Internal helpers refuse `None`.
+   - The structural check reads every function with an `as_of` or `to_day` parameter and fails any that neither calls the resolver
+     nor is a listed helper. It has its own mutant.
+   - Proof 2c calls each public function directly, including `view_bundle` with no date as `mock_data.py` does, on four store
+     states plus a copy of the served store's state.
+2. **The page's fallback:**
+   - When the live library read fails, the page keeps its embedded day, which can be later than the service's last completed day,
+     so `/ideas` is refused with 409 and the page shows its existing Idea error.
+   - This is documented and tested (proof 2f), not claimed impossible.
+3. **The streamed route in one transaction:** connections opened, the transaction begun and the bound resolved, then the headers,
+   then the Idea work in the same transaction. A refusal is a normal status and body before any header. The transaction lasts the
+   request (model calls included), within row 5. Proof 2e covers both refusals before headers, and a writer committing during an
+   Idea request.
+4. **Errors and the empty store:**
+   - `error_response` returns `(status, payload)`, with the two structured payloads specified (409 with requested and last completed
+     day; 409 for a range start with both bounds; 503 for the first day). Every other error keeps `{"error": message}`.
+   - `days_completed` present with no steps and no completed day reads as today.
+   - Range equality: refused for `changes`, which excludes its start; allowed for `history`, which includes it (proof 2d).
+
+End with `CONSENSUS: yes` (the code may be written, starting with the resolver and its check) or `CONSENSUS: no, because …`.
+
+codex
+I’ll read the new section against the actual direct callers and transaction helpers, then check whether the proposed tests make the behavior unambiguous.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -125
+rg -n 'def [a-zA-Z_]+\\(.*(as_of|to_day)|view_bundle\\(|bundle.days\\(|not_judged\\(' src/hivemind scripts clean-arch --glob '*.py' | head -120
+nl -ba src/hivemind/bundle.py | sed -n '35,85p;98,110p;160,190p;210,230p'
+rg -n 'def read_snapshot|begin\\b|read_idea\\(' scripts/hivemind_api.py src/hivemind/bundle.py src/hivemind/idea.py
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   217	   within the timeout.
+   218	7. **A crash:** the writer is killed after committed writes mid-day.
+   219	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+   220	   - The search index and the text sent to the embedding service (recorded by a fake transport) equal the backup's.
+   221	   - The partial day's rows are present in the file and invisible to every route and to the index.
+   222	8. **Copies:**
+   223	   - a backup taken while the writer commits passes an integrity check;
+   224	   - preflight refuses a store whose writer holds the lock, opened by its own path or by a symlink to it;
+   225	   - a store with a hard link elsewhere is refused by every entry point;
+   226	   - a crashed writer's store with committed data still in its WAL: a copy through a symlink equals a copy through the own path;
+   227	   - preflight arriving just before the writer: whichever takes the lock first wins. A writer finding preflight's lock refuses to
+   228	     start and writes nothing; preflight finding the writer's lock refuses to copy;
+   229	   - the store's path replaced after preflight's `stat` and before its open, and again during its copy: each is detected, the
+   230	     copy discarded and the request refused;
+   231	   - the writer's path replaced between its create and its open: the writer refuses;
+   232	   - the lock folder unwritable: both refuse and name it;
+   233	   - a held lock file deleted and recreated by hand: a second process can lock the new file, so exclusion is broken until the
+   234	     holder's next check. The writer rechecks its lock file's identity before each day and stops if it changed; preflight rechecks
+   235	     after its copy and discards it. The test shows detection at those points, not prevention;
+   236	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   237	     and every historical input it accepts today;
+   238	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   239	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   240	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   241	8b. **The index:**
+   242	   - a refresh that fails after one successful batch leaves the published day and the search results unchanged;
+   243	   - a retry with the same target completes and advances the day;
+   244	   - a retry after another day has completed reuses exactly the staged rows whose four key parts match;
+   245	   - two stores at the same path with the same first sequence and day but different identities: no staged row of the first is
+   246	     reused for the second, and no published vector of the first is used for the second;
+   247	   - a store restored from an earlier snapshot, with the same identity but a published day after its last completed day: its
+   248	     published vectors are not used until a refresh;
+   249	   - a restored store with the same identity and published day but one view's text changed: that view's vector is not used, and
+   250	     search runs lexically and says so.
+   251	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   252	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   253	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   254	   the last completed day. After the day completes, the index is extended to it, and search names the index's day until then.
+   255	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   256	   same answers before and after `resolve_bound` is introduced.
+   257	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   258	
+   259	## Row 3's product-facing contract (council rounds 120 to 122; A1, clamping, withdrawn)
+   260	
+   261	**The rule.**
+   262	
+   263	- **On every store with a `days_completed` table**, finished or not, partial rows or not, an explicit upper bound later than the last
+   264	  completed day is refused. The same date gets the same answer whenever it is asked.
+   265	- An omitted bound gives the last completed day, as today.
+   266	- **Steps but no completed day:** refused as the first day.
+   267	- **`days_completed` present with no steps and no completed day** (an empty new store): read as today. An omitted bound gives what
+   268	  `default_as_of` gives today (none), and an explicit bound passes.
+   269	- **A legacy ledger without the tables:** read as today.
+   270	- **Ranges:**
+   271	  - `changes(since, to)` excludes its start, so a `since` on or after the resolved `to` is refused;
+   272	  - `history(from, to)` includes its start, so a `from` after the resolved `to` is refused and `from` equal to `to` passes.
+   273	
+   274	**The owner, and what the structural check enforces.**
+   275	
+   276	- `service.resolve_bound(conn, bound)` raises `FirstDayNotCompleted` or `BoundNotCompleted(requested, last_completed_day)` and is
+   277	  idempotent: a bound it has already passed passes again.
+   278	- **Every public function that takes a date resolves it at its entry through `resolve_bound`:**
+   279	  - `service`: `summaries`, `views`, `view`, `evidence`, `history`, `record`, `changes`, `evaluate`;
+   280	  - `bundle`: `not_judged`, `view_bundle`, `days`, `thesis_bundles`, `library`;
+   281	  - `idea.read_idea` and `search.search`.
+   282	- Nested calls pass a resolved bound, which resolves again unchanged. That covers `view_bundle` called directly with no date (as
+   283	  `scripts/mock_data.py` does), or from `_bundles` and `idea.read_idea`.
+   284	- **Internal helpers that take a date** (`dependencies`, `dependants`, `evidence_record`, `is_open_as_of`, `state_as_of`, `visible`,
+   285	  `_bundles`, …) receive a resolved bound and refuse `None`.
+   286	- **The structural check** reads every function of `service`, `bundle`, `search` and `idea` with a date parameter (`as_of`,
+   287	  `to_day`). Each must either call `resolve_bound` or be named in the check's list of internal helpers, which refuse `None`.
+   288	  - A function in neither, or a bound resolved by `or default_as_of(...)`, fails the suite.
+   289	  - The check's own mutant (a new public function without the call) must fail it.
+   290	
+   291	**The response, per channel.**
+   292	
+   293	| Channel | First day not completed | Bound after the last completed day | Range start not before its end |
+   294	|---|---|---|---|
+   295	| API | 503 `{"error": "the store's first day has not completed"}` | 409 `{"error": "day not completed", "requested": X, "last_completed_day": Y}` | 409 `{"error": "range start not before its end", "start": S, "end": T}` |
+   296	| MCP tools | a tool error whose message carries the same fields | the same | the same |
+   297	| Streamed Idea route | the status and body, before any header | the same | — |
+   298	
+   299	- `error_response` returns `(status, payload)`. The two new exceptions get the payloads above, and every other error keeps
+   300	  `{"error": message}`. `_answer` and `_stream_answer` send the payload as given.
+   301	- **The streamed route, in one transaction:**
+   302	  - it opens its connections, begins the read transaction and resolves the bound and first-day check;
+   303	  - **only then** does it send its 200 headers and run the Idea work in the same transaction, which it ends after;
+   304	  - a refusal is sent as a normal status and body before any header.
+   305	  - The Idea work includes model calls, so this transaction lasts the whole request, up to minutes. That is within row 5's
+   306	    one-request rule, and it holds back a checkpoint that long.
+   307	
+   308	**Callers.**
+   309	
+   310	- **The page, when its live library read succeeds:** it sends only days from the served dataset (`library.getDay()` to `/ideas`;
+   311	  the returned `card.idea.as_of` to `/thesis-bundles`). These are never after the last completed day.
+   312	- **The page, when its live library read fails:**
+   313	  - it keeps its embedded snapshot silently (as `thesis-ui.md` specifies), and that snapshot's day can be later than the service's
+   314	    last completed day;
+   315	  - `/ideas` is then refused with 409, and the page shows its existing Idea error naming no day;
+   316	  - this is documented here and tested; it is not claimed impossible.
+   317	- **MCP clients and direct API users with a later date:**
+   318	  - on the running product's store, they would get an error naming 2026-08-28 instead of today's half-processed 2026-08-29 (99
+   319	    evidence records, 117 links);
+   320	  - on a finished store, they would get an error instead of today's identical answer.
+   321	  - This is the behaviour change, recorded for Alex.
+   322	- **Not deployed:** no running service is restarted. D439 does not authorize a deploy, and the change reaches the running product
+   323	  only on a restart, which is on Alex's page.
+   324	
+   325	**Proofs added to the plan (2b to 2e):**
+   326	
+   327	- 2b. The structural check, and its mutant.
+   328	- 2c. Each public function called directly with a future bound, an omitted one and a past one, on the four store states: finished,
+   329	  partial, first day, and empty with tables. A copy of the served store's state is included.
+   330	- 2d. The ranges: `changes` with `since` equal to its end is refused; `history` with `from` equal to `to` passes.
+   331	- 2e. The streamed route on a first-day store and with a future date: a status before any header. With a writer committing during
+   332	  an Idea request, the request's data are the state at its start.
+   333	- 2f. The page verifier (`poc/ui/verify-*.mjs`): live read successful, then the Idea call succeeds; live read failed with a later
+   334	  embedded day, then the Idea error shows and nothing else breaks.
+   335	
+   336	## Not covered
+   337	
+   338	- Resuming a stopped live store.
+   339	- The Idea planner on a new-system ledger.
+   340	- A long-running service's restart and monitoring.
+   341	- The page's note when its live read fails, which is Alex's presentation choice.
+scripts/hivemind_mcp.py:56:def thesis_library(as_of: str = '') -> dict:
+scripts/hivemind_mcp.py:63:def thesis_bundles(view_ids: list[str], as_of: str = '') -> dict:
+scripts/hivemind_mcp.py:70:def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+scripts/hivemind_mcp.py:78:def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+scripts/hivemind_mcp.py:84:def view(view_id: str, as_of: str = '') -> dict:
+scripts/hivemind_mcp.py:95:def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+scripts/hivemind_mcp.py:102:def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+scripts/hivemind_mcp.py:109:def record(view_id: str, as_of: str = '') -> dict:
+scripts/hivemind_mcp.py:116:def changes(since_day: str, to_day: str = '') -> list:
+scripts/hivemind_mcp.py:122:def evaluate(view_id: str, comparator: str, value_usd: float, as_of: str = '') -> dict:
+src/hivemind/idea.py:48:def full_payload(text, as_of, parts, candidates, idea_rows):
+src/hivemind/idea.py:55:def lean_payload(text, as_of, parts, candidates, idea_rows):
+src/hivemind/idea.py:106:def object_list(ledger, as_of, aliases=None):
+src/hivemind/idea.py:119:def judged(ledger, view_id, as_of, detailed=False):
+src/hivemind/idea.py:130:def brief(ledger, results, as_of, detailed=False):
+src/hivemind/idea.py:142:def related_views(ledger, view_ids, as_of, exclude=()):
+src/hivemind/idea.py:215:def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliases=None, semantic=True, transport=None, bundles=True, embed=search.openai_embeddings, on_progress=None):
+src/hivemind/idea.py:227:            'reading': None, 'evaluation': None, 'related': [], 'views': [], 'days': bundle.days(ledger, as_of),
+src/hivemind/idea.py:383:        card['views'] = [bundle.view_bundle(ledger, item_of, view_id, as_of) for view_id in [c['view_id'] for c in chosen] + [r['view_id'] for r in related]]
+scripts/mock_data.py:31:    out = {'objects': args.objects, 'views': [bundle.view_bundle(views_db, item_of, view_id) for view_id in ids], 'days': bundle.days(views_db)}
+src/hivemind/search.py:221:def search(ledger, index, query, k=10, as_of=None, include_closed=False, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, aliases=None, semantic=True):
+src/hivemind/idea_composite.py:42:def bind_dispositions(answer, selected, records, as_of):
+src/hivemind/idea_composite.py:70:def bind_outcome(answer, selected, records, as_of):
+src/hivemind/idea_composite.py:103:def bind_endpoints(answer, selected, records, as_of, theses):
+src/hivemind/idea_composite.py:128:def bind_weighted(answer, selected, records, as_of, theses):
+src/hivemind/idea_composite.py:177:def bind_positive(answer, selected, records, as_of, theses):
+src/hivemind/idea_composite.py:222:def bind_adoption(answer, selected, records, as_of, theses, schema):
+src/hivemind/idea_composite.py:293:def bind(plan, selected, records, as_of):
+src/hivemind/service.py:53:def visible(conn, seq, as_of):
+src/hivemind/service.py:60:def view_exists(conn, record, as_of):
+src/hivemind/service.py:64:def is_open_as_of(conn, view_id, as_of):
+src/hivemind/service.py:71:def state_as_of(conn, view_id, as_of):
+src/hivemind/service.py:87:def summaries(conn, as_of=None, include_closed=False):
+src/hivemind/service.py:106:def views(conn, object_id=None, as_of=None, include_closed=False):
+src/hivemind/service.py:120:def dependencies(conn, view_id, as_of):
+src/hivemind/service.py:135:def dependants(conn, view_id, as_of):
+src/hivemind/service.py:142:def view(conn, view_id, as_of=None, record=None):
+src/hivemind/service.py:166:def evidence_record(conn, evidence_id, as_of, arrived_seq=None):
+src/hivemind/service.py:180:def evidence(conn, view_id, as_of=None, tier=None):
+src/hivemind/service.py:199:def history(conn, view_id, from_day=None, to_day=None):
+src/hivemind/service.py:255:def record(conn, view_id, as_of=None):
+src/hivemind/service.py:269:def changes(conn, since_day, to_day=None):
+src/hivemind/service.py:463:def evaluate(conn, view_id, comparator, value_usd, as_of=None):
+src/hivemind/bundle.py:41:def _visible(views_db, seq, as_of):
+src/hivemind/bundle.py:65:def not_judged(views_db, view_id, created_seq, as_of=None):
+src/hivemind/bundle.py:98:def view_bundle(views_db, item_of, view_id, as_of=None):
+src/hivemind/bundle.py:166:            'not_judged': not_judged(views_db, view_id, v['created_seq'], as_of),
+src/hivemind/bundle.py:170:def days(views_db, as_of=None):
+src/hivemind/bundle.py:175:def _bundles(views_db, items_db, view_ids, as_of=None, coverage='selection'):
+src/hivemind/bundle.py:187:        records.append(view_bundle(views_db, lookup, view_id, as_of))
+src/hivemind/bundle.py:192:def research_groups(conn, view_ids, as_of):
+src/hivemind/bundle.py:211:def thesis_bundles(views_db, items_db, view_ids, as_of=None):
+src/hivemind/bundle.py:217:def library(views_db, items_db, as_of=None):
+    35	            row = items_db.execute('select title, publisher, publisher_type, category, publication_day, source_uri from items where input_id=?', (input_id,)).fetchone() if items_db is not None else None
+    36	            cache[input_id] = dict(row) if row else {'title': input_id, 'publisher': '', 'publisher_type': '', 'category': '', 'publication_day': '', 'source_uri': ''}
+    37	        return cache[input_id]
+    38	    return item_of
+    39	
+    40	
+    41	def _visible(views_db, seq, as_of):
+    42	    return as_of is None or service.visible(views_db, seq, as_of)
+    43	
+    44	
+    45	def ladder_row(views_db, view_id):
+    46	    """The view's ladder as the new system's writer stored it (`clean_ladders`, written in the view's own call): the parsed
+    47	    ladder; 'no table' for a store without that table (a legacy ledger); 'no row' when the store has the table and no row for the
+    48	    view. A row that is not readable JSON with a ladder, or two rows for one view, is refused."""
+    49	    if not views_db.execute("select 1 from sqlite_master where type='table' and name='clean_ladders'").fetchone():
+    50	        return 'no table'
+    51	    rows = views_db.execute('select checked_answer from clean_ladders where view_id=?', (view_id,)).fetchall()
+    52	    if not rows:
+    53	        return 'no row'
+    54	    if len(rows) > 1:
+    55	        raise ValueError(f'{view_id}: {len(rows)} ladder rows for one view')
+    56	    try:
+    57	        ladder = json.loads(rows[0][0])['ladder']
+    58	    except (TypeError, ValueError, KeyError) as error:
+    59	        raise ValueError(f'{view_id}: its ladder row holds no readable ladder ({error!r})')
+    60	    if not isinstance(ladder, dict):
+    61	        raise ValueError(f'{view_id}: its ladder row holds no readable ladder')
+    62	    return ladder
+    63	
+    64	
+    65	def not_judged(views_db, view_id, created_seq, as_of=None):
+    66	    """D397: the parts of a topic its one judged question leaves out, with their reasons, from the view's ladder row. None for a
+    67	    legacy ledger, for a view with no row, and before the view's creation at as_of; [] when the row lists none. A malformed row,
+    68	    or two rows for one view, is refused."""
+    69	    if as_of is not None and not _visible(views_db, created_seq, as_of):
+    70	        return None
+    71	    ladder = ladder_row(views_db, view_id)
+    72	    if ladder in ('no table', 'no row'):
+    73	        return None
+    74	    parts = ladder.get('not_judged')
+    75	    if not isinstance(parts, list) or not all(isinstance(p, dict) and isinstance(p.get('part'), str) and isinstance(p.get('why'), str) for p in parts):
+    76	        raise ValueError(f'{view_id}: its parts not judged are not a list of {{part, why}} texts')
+    77	    return [{'part': p['part'], 'why': p['why']} for p in parts]
+    78	
+    79	
+    80	def answer_shape(views_db, view_id):
+    81	    """(shape, favourable end) of the view's answer choices, as the page needs them to read the stored labels without inventing a
+    82	    direction (page-contract/DESIGN.md): (None, None) for a legacy ledger; ('unrecorded', None) for a view with no row in a store
+    83	    that has rows; ('event', None) or ('figure', 'higher' | 'lower' | 'n/a') from the row. Not suppressed before creation: it says
+    84	    how to read the labels, which are shown as they are."""
+    85	    ladder = ladder_row(views_db, view_id)
+    98	def view_bundle(views_db, item_of, view_id, as_of=None):
+    99	    v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   100	    if v is None:
+   101	        raise KeyError(view_id)
+   102	    columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
+   103	    bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
+   104	    rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
+   105	    switches = [dict(r) for r in views_db.execute('select open, reason, after_seq from view_switches where view_id=? order by id', (view_id,))
+   106	                if _visible(views_db, r['after_seq'], as_of)]
+   107	    for switch in switches:
+   108	        switch['day'] = service.day_of_seq(views_db, switch['after_seq'])
+   109	    judgements = []
+   110	    for j in views_db.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+   160	    return {'view_id': view_id, 'object': v['object_id'], 'kind': v['kind'], 'looks_at': v['looks_at'], 'question': v['question'],
+   161	            'due_day': v['due_day'], 'year': v['year'], 'identity': identity, 'successions': successions,
+   162	            'created_seq': v['created_seq'], 'created_day': service.day_of_seq(views_db, v['created_seq']),
+   163	            'created_from': {'title': created['title'], 'publisher': created['publisher'], 'category': created['category']},
+   164	            'rungs': rungs, 'open': not any(not s['open'] for s in switches), 'switches': switches,
+   165	            'judgements': judgements, 'evidence': evidence, 'dependencies': dependencies, 'dependants': dependants,
+   166	            'not_judged': not_judged(views_db, view_id, v['created_seq'], as_of),
+   167	            **dict(zip(('answer_shape', 'favourable_end'), answer_shape(views_db, view_id)))}
+   168	
+   169	
+   170	def days(views_db, as_of=None):
+   171	    """The completed days the front end's time axis runs over, up to as_of."""
+   172	    return [r[0] for r in views_db.execute('select day from days_completed order by day') if as_of is None or r[0] <= as_of]
+   173	
+   174	
+   175	def _bundles(views_db, items_db, view_ids, as_of=None, coverage='selection'):
+   176	    """Complete, dated UI inputs for caller-selected theses; no search, model call or ledger write."""
+   177	    as_of = as_of or service.default_as_of(views_db)
+   178	    date.fromisoformat(as_of)
+   179	    if not isinstance(view_ids, list) or not view_ids or any(not isinstance(id, str) or not id for id in view_ids):
+   180	        raise ValueError('thesis_bundles needs a non-empty list of view ids')
+   181	    lookup = item_lookup(items_db)
+   182	    records = []
+   183	    for view_id in dict.fromkeys(view_ids):
+   184	        row = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   185	        if row is None or not service.view_exists(views_db, row, as_of):
+   186	            raise KeyError(f'{view_id} is not available as of {as_of}')
+   187	        records.append(view_bundle(views_db, lookup, view_id, as_of))
+   188	    return {'as_of': as_of, 'days': days(views_db, as_of), 'views': records,
+   189	            'coverage': coverage, 'groups': research_groups(views_db, view_ids, as_of)}
+   190	
+   210	
+   211	def thesis_bundles(views_db, items_db, view_ids, as_of=None):
+   212	    """Selected complete thesis records, pinned to one read transaction."""
+   213	    with read_snapshot(views_db, items_db):
+   214	        return _bundles(views_db, items_db, view_ids, as_of)
+   215	
+   216	
+   217	def library(views_db, items_db, as_of=None):
+   218	    """All theses, including closed ones, and stored groups; no search or model call."""
+   219	    with read_snapshot(views_db, items_db):
+   220	        as_of = as_of or service.default_as_of(views_db)
+   221	        if not as_of:
+   222	            raise ValueError('The library has no completed day; supply as_of')
+   223	        date.fromisoformat(as_of)
+   224	        view_ids = [r['view_id'] for r in views_db.execute('select * from views order by created_seq, rowid')
+   225	                    if service.view_exists(views_db, r, as_of)]
+   226	        if not view_ids:
+   227	            return {'as_of': as_of, 'days': days(views_db, as_of), 'views': [], 'coverage': 'library', 'groups': []}
+   228	        return _bundles(views_db, items_db, view_ids, as_of, coverage='library')
+src/hivemind/idea.py:215:def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliases=None, semantic=True, transport=None, bundles=True, embed=search.openai_embeddings, on_progress=None):
+scripts/hivemind_api.py:150:            return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
+src/hivemind/bundle.py:14:def read_snapshot(*connections):
+src/hivemind/bundle.py:20:                conn.execute('begin')
+
+codex
+**Not yet.** The new section answers the page fallback and streaming questions, but two direct-call cases still conflict with the stated behavior.
+
+1. **Resolving the date does not by itself hide a future-created view.** `view_bundle` fetches the view and its answer choices before filtering dated records. A direct call for a view created after the resolved day could therefore return the question and choices. Specify that it refuses a view not visible at that day, as `_bundles` already does, and test a direct call before creation. The same question applies to direct `not_judged` calls. [Direct bundle](/Users/lchingen/hivemind/src/hivemind/bundle.py:98), [bundle selection](/Users/lchingen/hivemind/src/hivemind/bundle.py:175).
+
+2. **An empty store’s resolved bound can be `None`, while the helpers are required to refuse `None`.** For example, `days()` currently returns an empty list on an empty store; passing the resolver’s `None` into a helper that refuses it would not preserve that behavior. Specify how the empty-store path ends before dated helpers are called, or how a resolved “no day” is represented. Test actual outputs and errors per function, rather than only calling each function. [Contract, empty store and helpers](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:263), [current `days`](/Users/lchingen/hivemind/src/hivemind/bundle.py:170).
+
+Also specify the exception used for an invalid range. The section names two exceptions for first-day and future-bound cases, but requires a third distinct 409 payload for a range; it does not say how that payload reaches `error_response`. The earlier row still says lower bounds are unaffected and should be updated to match the new range rule. [Contract, exceptions and responses](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:274), [earlier row 3](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:50).
+
+The streaming transaction and page fallback are now stated and have named tests. The change still requires no service restart as part of this build.
+
+CONSENSUS: no, because direct view visibility, the empty-store `None` path, and range-error ownership need to be specified before coding.
+tokens used
+3,221,757
+**Not yet.** The new section answers the page fallback and streaming questions, but two direct-call cases still conflict with the stated behavior.
+
+1. **Resolving the date does not by itself hide a future-created view.** `view_bundle` fetches the view and its answer choices before filtering dated records. A direct call for a view created after the resolved day could therefore return the question and choices. Specify that it refuses a view not visible at that day, as `_bundles` already does, and test a direct call before creation. The same question applies to direct `not_judged` calls. [Direct bundle](/Users/lchingen/hivemind/src/hivemind/bundle.py:98), [bundle selection](/Users/lchingen/hivemind/src/hivemind/bundle.py:175).
+
+2. **An empty store’s resolved bound can be `None`, while the helpers are required to refuse `None`.** For example, `days()` currently returns an empty list on an empty store; passing the resolver’s `None` into a helper that refuses it would not preserve that behavior. Specify how the empty-store path ends before dated helpers are called, or how a resolved “no day” is represented. Test actual outputs and errors per function, rather than only calling each function. [Contract, empty store and helpers](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:263), [current `days`](/Users/lchingen/hivemind/src/hivemind/bundle.py:170).
+
+Also specify the exception used for an invalid range. The section names two exceptions for first-day and future-bound cases, but requires a third distinct 409 payload for a range; it does not say how that payload reaches `error_response`. The earlier row still says lower bounds are unaffected and should be updated to match the new range rule. [Contract, exceptions and responses](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:274), [earlier row 3](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:50).
+
+The streaming transaction and page fallback are now stated and have named tests. The change still requires no service restart as part of this build.
+
+CONSENSUS: no, because direct view visibility, the empty-store `None` path, and range-error ownership need to be specified before coding.

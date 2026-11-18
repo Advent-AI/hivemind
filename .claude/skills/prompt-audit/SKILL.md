@@ -38,7 +38,7 @@ print(json.dumps({k: v.get('description') for k, v in req['response_format']['js
 PY
 ```
 
-## 2. Produce the failure lists (all $0, on the stored draws)
+## 2. Produce the failure lists (all at no model cost, on the stored draws)
 
 | List | Script | What it gives |
 |---|---|---|

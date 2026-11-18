@@ -42,10 +42,70 @@ def _visible(views_db, seq, as_of):
     return as_of is None or service.visible(views_db, seq, as_of)
 
 
+def ladder_row(views_db, view_id):
+    """The view's ladder as the new system's writer stored it (`clean_ladders`, written in the view's own call): the parsed
+    ladder; 'no table' for a store without that table (a legacy ledger); 'no row' when the store has the table and no row for the
+    view. A row that is not readable JSON with a ladder, or two rows for one view, is refused."""
+    if not views_db.execute("select 1 from sqlite_master where type='table' and name='clean_ladders'").fetchone():
+        return 'no table'
+    rows = views_db.execute('select checked_answer from clean_ladders where view_id=?', (view_id,)).fetchall()
+    if not rows:
+        return 'no row'
+    if len(rows) > 1:
+        raise ValueError(f'{view_id}: {len(rows)} ladder rows for one view')
+    try:
+        ladder = json.loads(rows[0][0])['ladder']
+    except (TypeError, ValueError, KeyError) as error:
+        raise ValueError(f'{view_id}: its ladder row holds no readable ladder ({error!r})')
+    if not isinstance(ladder, dict):
+        raise ValueError(f'{view_id}: its ladder row holds no readable ladder')
+    return ladder
+
+
+def not_judged(views_db, view_id, created_seq, as_of=None):
+    """D397: the parts of a topic its one judged question leaves out, with their reasons, from the view's ladder row. None for a
+    legacy ledger, for a view with no row, and before the view's creation at as_of; [] when the row lists none. A malformed row,
+    or two rows for one view, is refused. Called directly for a view not visible at the resolved bound, it refuses the view
+    (OPERATING-CONTRACT.md, row 3), so a question created after that day is never returned."""
+    as_of = service.resolve_bound(views_db, as_of, unfiltered=True)
+    if as_of is not None and not _visible(views_db, created_seq, as_of):
+        raise KeyError(f'{view_id} is not available as of {as_of}')
+    ladder = ladder_row(views_db, view_id)
+    if ladder in ('no table', 'no row'):
+        return None
+    parts = ladder.get('not_judged')
+    if not isinstance(parts, list) or not all(isinstance(p, dict) and isinstance(p.get('part'), str) and isinstance(p.get('why'), str) for p in parts):
+        raise ValueError(f'{view_id}: its parts not judged are not a list of {{part, why}} texts')
+    return [{'part': p['part'], 'why': p['why']} for p in parts]
+
+
+def answer_shape(views_db, view_id):
+    """(shape, favourable end) of the view's answer choices, as the page needs them to read the stored labels without inventing a
+    direction (page-contract/DESIGN.md): (None, None) for a legacy ledger; ('unrecorded', None) for a view with no row in a store
+    that has rows; ('event', None) or ('figure', 'higher' | 'lower' | 'n/a') from the row. Not suppressed before creation: it says
+    how to read the labels, which are shown as they are."""
+    ladder = ladder_row(views_db, view_id)
+    if ladder == 'no table':
+        return None, None
+    if ladder == 'no row':
+        return 'unrecorded', None
+    if ladder.get('event'):
+        return 'event', None
+    figure = ladder.get('figure')
+    if isinstance(figure, dict) and figure.get('favourable_end') in ('higher', 'lower', 'n/a'):
+        return 'figure', figure['favourable_end']
+    raise ValueError(f'{view_id}: its ladder row is neither an event nor a figure with a favourable end')
+
+
 def view_bundle(views_db, item_of, view_id, as_of=None):
+    """One view's complete record as of the bound (resolved; an omitted bound on a store with no completed day reads every
+    record, as before). A view not visible at the bound is refused (OPERATING-CONTRACT.md, row 3)."""
+    as_of = service.resolve_bound(views_db, as_of, unfiltered=True)
     v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
     if v is None:
         raise KeyError(view_id)
+    if as_of is not None and not service.view_exists(views_db, v, as_of):
+        raise KeyError(f'{view_id} is not available as of {as_of}')
     columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
     bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
     rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
@@ -109,17 +169,20 @@ def view_bundle(views_db, item_of, view_id, as_of=None):
             'created_seq': v['created_seq'], 'created_day': service.day_of_seq(views_db, v['created_seq']),
             'created_from': {'title': created['title'], 'publisher': created['publisher'], 'category': created['category']},
             'rungs': rungs, 'open': not any(not s['open'] for s in switches), 'switches': switches,
-            'judgements': judgements, 'evidence': evidence, 'dependencies': dependencies, 'dependants': dependants}
+            'judgements': judgements, 'evidence': evidence, 'dependencies': dependencies, 'dependants': dependants,
+            'not_judged': not_judged(views_db, view_id, v['created_seq'], as_of),
+            **dict(zip(('answer_shape', 'favourable_end'), answer_shape(views_db, view_id)))}
 
 
 def days(views_db, as_of=None):
     """The completed days the front end's time axis runs over, up to as_of."""
+    as_of = service.resolve_bound(views_db, as_of, unfiltered=True)
     return [r[0] for r in views_db.execute('select day from days_completed order by day') if as_of is None or r[0] <= as_of]
 
 
 def _bundles(views_db, items_db, view_ids, as_of=None, coverage='selection'):
-    """Complete, dated UI inputs for caller-selected theses; no search, model call or ledger write."""
-    as_of = as_of or service.default_as_of(views_db)
+    """Complete, dated UI inputs for caller-selected theses; no search, model call or ledger write. Its bound is already resolved
+    by its caller (`thesis_bundles`, `library`)."""
     date.fromisoformat(as_of)
     if not isinstance(view_ids, list) or not view_ids or any(not isinstance(id, str) or not id for id in view_ids):
         raise ValueError('thesis_bundles needs a non-empty list of view ids')
@@ -156,13 +219,13 @@ def research_groups(conn, view_ids, as_of):
 def thesis_bundles(views_db, items_db, view_ids, as_of=None):
     """Selected complete thesis records, pinned to one read transaction."""
     with read_snapshot(views_db, items_db):
-        return _bundles(views_db, items_db, view_ids, as_of)
+        return _bundles(views_db, items_db, view_ids, service.resolve_bound(views_db, as_of))
 
 
 def library(views_db, items_db, as_of=None):
     """All theses, including closed ones, and stored groups; no search or model call."""
     with read_snapshot(views_db, items_db):
-        as_of = as_of or service.default_as_of(views_db)
+        as_of = service.resolve_bound(views_db, as_of)
         if not as_of:
             raise ValueError('The library has no completed day; supply as_of')
         date.fromisoformat(as_of)

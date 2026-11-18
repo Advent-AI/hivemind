@@ -1,0 +1,11 @@
+**CONSENSUS: start the audit from the narrower D436 relationship, not the description-first draft.**
+
+1. **The accounts strengthen the mechanism, but do not prove it.** All three explanations are consistent with Astra treating several named outcomes as lacking a main one unless one is explicitly prioritized. The pool-17 continuation also says the earlier refusal was too strict. That is useful evidence about these three refusals; it does not establish that every topic joined by “and” will be declined, or that the retained sentence was the sole cause.
+
+   One correction to the account summary: acc/clean-8 **paraphrased** the instruction; it declined to quote it verbatim. The other two quoted the refusal clause. [Accounts](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/account-output.json)
+
+2. **The description-first draft should not be the starting candidate.** “The main one is what the topic’s description asks” conflicts with D397’s direction to judge what the **outcome** names as tracked. “None of them asked first” introduces a first-mentioned priority. D631 considered and rejected a description-priority rule as unconfirmed, and the later review found cases where it would override the outcome. [D397](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [D631](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8527), [D635](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8618)
+
+   Start with D436’s **one bet seen from two sides**, using its total-and-part and shipment-and-shortage cases as the source. Do not automatically treat every part or every condition as a second side: that relationship still has to hold for the topic. Preserve the outcome as the source of what is tracked, list the other side, and retain justified refusals for genuinely parallel questions.
+
+The $0 audit should test that narrower direction against the complete request and D631’s boundary cases. If it cannot express the distinction without adding an unsupported priority rule, stop the draft and return that precise boundary to the council. **CONSENSUS.**

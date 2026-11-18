@@ -1,0 +1,528 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 163: your round-162 findings, fixed (`splitting/PROBE-PREP.md`)
+
+1. **The 44.** Your finding held, and was wider than the two C2 topics: a census shows 7 of the 13 topics were among the 44 (M, four
+   C1, both C2).
+   - The probe now draws only from outside the 44, and `stage-b` is gone from its sources.
+   - The check refuses any topic whose description is one of the 44's (tested; its mutant is caught).
+   - **C1** is re-derived by the same rule over topics outside the 44, allowing event ladders too: fortnight c1/clean-11, c1/clean-9 and
+     c1/clean-13, and July c3/clean-5, c2/clean-5 and c1/clean-7. Three of them have both years open.
+   - **C2** comes from the two topics outside the 44 that both blind readers of the D436 reading called one bet with a second side:
+     July c3/clean-7 (commodity DRAM) and c2/clean-10 (custom-ASIC against GPU purchases).
+   - **M** is dropped. Its only stored instance is one of the 44, and the limit is stated.
+   - **Both plants** now come from stored ladders outside the 44: fortnight c1/clean-9 rewritten to 2026, and July c3/clean-7 with
+     "commodity" dropped.
+   - The population is 12 topics.
+2. **Retries.**
+   - At most 72 and 216 calls, so 216 and 648 attempts with the transport's three tries.
+   - The worst-case sum is $2.94 and $8.94 if every attempt were at its worst, with resends estimated as the request plus an answer at
+     the output cap.
+   - Each attempt is reserved at its own worst cost before it is sent, so the caps ($0.15 and $0.25) stop an arm first, and a stopped
+     arm is NOT MEASURED.
+   - Expected about $0.10.
+3. **Exact population.**
+   - `counts` refuses an arm whose sends are not every topic and pass exactly once, including a duplicate row.
+   - The reading must hold exactly the items its sends give (derived again by `reading_rows`), each once, and the key exactly those, or
+     it is void.
+   - Tested: a send filed twice; an extra item; a missing item.
+4. **Stated:**
+   - yearly items reveal their arm. Arm names are hidden, and C1 items of both arms are read alike.
+   - A failed count is negative whatever the reading, because the counts do not depend on readers. The plant check still runs when the
+     reading is scored.
+
+**Checks:**
+- the probe check passes on the 12 topics;
+- 18 probe tests and 52 build tests;
+- the suite (346), the new system's folders (261) and the frozen checks pass;
+- mutants 36 of 36. Three were caught only after a test was added: a T topic passing with one success, unshuffled third-reader marks,
+  and a topic of the 44 not refused.
+
+**Asked:** send the probe now (both arms, three sends each, same day, under the $0.40 caps, about $10 left of D439's ceiling), or name
+what must change first.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the revised population, retry calculation and exact-population checks, then check that the replacement plants and reading still exercise the intended boundaries.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/PROBE-PREP.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/split-brief.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The split probe's reading: what this brief adds to `stage-a-reader-brief.md`
+
+Read `stage-a-reader-brief.md` first. Mark every item by that brief. This brief adds one thing to read and two fields to return.
+
+## Items asked for one year of a topic
+
+Some items carry `split`: `{"asked_year": "2026", "asked_separately": "2027"}`. Their topic asks one quantity for two years. The step
+was asked for `asked_year` only, and the other year is asked as its own question.
+
+- For these items, read the thesis as asking `asked_year` only. The other year is not a part this question leaves out, so it is not
+  owed in `not_judged` (`L`).
+- Asking one of the two years is not a fault of `Q`.
+- Every other part of the topic's wording that the question leaves out is still owed, as the brief says.
+
+Items with `split: null` are read exactly as the brief says.
+
+## Two more fields, on every item
+
+| field | values | the mark |
+|---|---|---|
+| `BY` | `yes`, `no`, `cannot_tell` | `yes` when the question asks the value for a year that the thesis names only as a base or a point of comparison (for example, the thesis asks 2027's spending against 2026's, and the question asks 2026's). Decide it from the thesis's own wording, for an item with `split` too: a `split` item whose thesis asks the value of both years does not ask a base year, and one whose thesis names `asked_year` only as a base or comparison does. `no` otherwise. |
+| `LQ` | `yes`, `no`, `cannot_tell` | `yes` when the question measures something wider or different from what the thesis asks, because it drops a limit the thesis's wording sets (a group, a product, a region, a measure's basis) and does not list it in `not_judged`. For example, the thesis asks server DRAM prices and the question asks DRAM prices. `no` otherwise. |
+
+When either field is `yes`, `why` names the year or the limit dropped.
+
+ succeeded in 0ms:
+# The split probe's $0 preparation (council round 161 → round 162), 2026-11-16
+
+Nothing has been sent. The frozen answer-choice step's files are unchanged.
+
+## The population (12 topics outside the 44; `probe_split.TOPICS`, fixed before any send)
+
+Round 162 found the first population used the 44, on which D426 stopped tuning the step. A census showed 7 of its 13 topics were
+among them (M, four C1, both C2), not only the two named. Every topic, and both plants, now comes from outside the 44, and the check
+refuses a topic of the 44 by description (`descriptions_of_the_44`).
+
+| Group | Topics | Rule |
+|---|---|---|
+| T | week 10-06 c1/clean-12 (global AI capex 2026 and 2027), c1/clean-4 (the five largest hyperscalers' capex 2026 and 2027) | the two stored one-quantity-two-open-years topics, declined in every stored send |
+| C1 | fortnight c1/clean-11, c1/clean-9 and c1/clean-13; July c3/clean-5, c2/clean-5 and c1/clean-7 | census topics outside the 44 naming exactly two years, every stored send a ladder for one of them, most sends first. Derived again by code, and 3 of the 6 have both years open (c1/clean-9, c1/clean-13, c3/clean-5) |
+| C2 | July c3/clean-7 (commodity DRAM, with the shortage and graphics memory as second sides), c2/clean-10 (custom-ASIC against GPU purchases) | the two topics outside the 44 that both blind readers of the D436 reading called one bet with a second side |
+| C3 | July c1/clean-2 (the Intel stake), c1/clean-11 (Firmus) | the guards |
+| M | none | the several-products memory topic's only stored instance is one of the 44. The probe does not exercise that path (a stated limit) |
+
+## The check (`probe_split.py check` → `check-output.txt`, `check-passed.json`)
+
+- **12 of 12** frozen requests equal their stored first request (sha256), with keys in the same order.
+- **12 of 12** split first requests differ from the frozen one only in the schema's `no_ladder` and the system text's decline list
+  (exactly `ladder_split.SYSTEM_REPLACEMENTS`). Each yearly re-ask differs from the split first request only by the yearly line.
+- The **7** stored frozen ladders among them pass the step's checks.
+- On both T topics, a synthetic split decline fits the schema and passes the checks. Three mutants are refused: an ended year, a
+  split named again in a yearly re-ask, and stray periods.
+- **Spend:**
+  - at most 72 calls in the frozen arm and 216 in the split arm (a send, its one resend, and two yearly re-asks each resent);
+  - with the transport's three attempts a call, at most 216 and 648 attempts;
+  - the sum of their worst-case reserves, if every attempt were made at its worst: $2.94 and $8.94 (resends estimated as the
+    request plus an answer at the output cap, 16,000 tokens at 4 bytes a token);
+  - caps of $0.15 and $0.25 (together $0.40). Each attempt is reserved at its own worst cost before it is sent, so an arm stops at
+    its cap, and a stopped arm is NOT MEASURED;
+  - a guard stops every later attempt once an answer costs more than its reserve;
+  - the stored charges of this step average $0.0008 a call (at most $0.0017), so the probe is expected near $0.10.
+  - The bound holds while every charge stays within its reserve.
+
+## The reading and the verdict (DESIGN.md v4 §3, §0b item 4, §0c item 3)
+
+- **`reading_split.py`** builds one Stage A run folder of the items:
+  - every yearly ladder of T and M, each with `split: {asked_year, asked_separately}`;
+  - every C1 ladder of both arms, with `split: null`;
+  - two plants made from stored frozen ladders outside the 44: `plant|1` asks the base year (fortnight c1/clean-9's 2027 question
+    rewritten for 2026, given as a yearly item), and `plant|2` drops a limit (July c3/clean-7's "commodity DRAM" asked as "DRAM").
+  - The key sits outside the repository. Item order is shuffled, and arms are not named.
+- **The briefs:** `stage-a-reader-brief.md` plus `split-brief.md`. `split-brief.md` explains how a yearly item is read, and adds `BY`
+  (asks a base year) and `LQ` (drops a limit). `split-third-reader-brief.md` and `reading_split.py disputes` give the third readers the
+  `BY` and `LQ` points, marks shown as a and b. The gate marks' disputes use Stage A's own collector.
+- **`score_split.py`:**
+  - **the counts** (T at least 2 of 3 each; no control naming the case or changing kind). They refuse an arm without every topic and
+    pass exactly once.
+  - **then the reading's vetoes,** under both countings of unresolved points. The reading must hold exactly the items its sends give,
+    and the key exactly those, or it is void.
+  - **The verdict** is lead, negative, inconclusive or void. A failed count is negative whatever the reading.
+  - **A stated limit:** yearly items exist only in the split arm and carry `split`, so readers can tell those items' arm. Arm names are
+    hidden, and C1 items of both arms are read alike.
+
+## Proofs
+
+- **Tests:** 18 for the probe (`test_split_probe.py`: the send of both arms through the real runners with a fake transport, the
+  refusal of a changed request, the counts, the reading, the verdicts and the third readers' packet), and 52 for the build.
+- **The whole suite passes:** 346 tests, 261 in the new system's folders, and the frozen checks.
+- **Mutants: 36 of 36** (`all-mutants.txt`). Three were missed at first, and each was caught once a test was added:
+  - a T topic passing with one success;
+  - the third readers seeing which family marked what;
+  - the check not refusing a topic of the 44.
+- **A gap closed:** the made-up yearly answers had written units outside the schema (`USD billion`). The fake model had skipped the
+  schema check that `model.call` makes, so this was never caught. Every made-up answer is now checked against the schema
+  (`test_every_made_up_answer_fits_the_schema_production_validates_against`), and the probe's synthetic split is too.
+- **The prompt audit:** `PROMPT-AUDIT.md`, five blind rounds, the last with no finding the change introduced.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 3 'PLANTS|plants\\(|plant\\|2|commodity|C2' docs/research/2026-11-14-use-acceptance/splitting/reading_split.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+6-the repository. The plants are stored frozen ladders edited in one way each, with the field a reader must mark `yes`:
+7-- `plant|1` asks the base year: a stored 2027 ladder of a topic that tracks 2027 with 2026 as context, rewritten for 2026 and given
+8-  as that topic's 2026 yearly item (`BY`);
+9:- `plant|2` drops a limit: a stored commodity-DRAM ladder whose question asks DRAM prices (`LQ`).
+10-
+11-  python3 reading_split.py <probe data folder> <key folder outside the repository>
+12-  python3 reading_split.py disputes <reading folder> <key path>        # the third readers' BY and LQ packet
+--
+31-READ_BOTH_ARMS = ('C1',)
+32-ITEMS_A_PACKET = build_reader_packets.ITEMS_A_PACKET
+33-SHUFFLE_SEED = 20261117
+34:PLANTS = {   # plant: (source, stored case, the edit, the field a reader must mark yes); stored frozen ladders outside the 44
+35-    'plant|1': ('fortnight', 'c1/clean-9', ('base year', '2027', '2026'), 'BY'),
+36:    'plant|2': ('july', 'c3/clean-7', ('limit dropped', 'commodity DRAM', 'DRAM'), 'LQ'),
+37-}
+38-
+39-
+--
+57-    return value
+58-
+59-
+60:def plants():
+61-    """(rows, cases, expected): the two planted items as outcome rows of pass 1, their cases, and the field each must be marked yes."""
+62-    rows, cases, expected = [], [], {}
+63-    topics = {f'{source}:{name}': case for _, source, name, case in probe_split.load_topics()}
+64:    for plant, (source, name, edit, field) in PLANTS.items():
+65-        stored = copy.deepcopy(probe_split.stored_first(source, name))
+66-        if stored['status'] != 'ladder':
+67-            raise SystemExit(f'{plant}: the stored send of {source}:{name} wrote no ladder')
+--
+106-            elif group in READ_BOTH_ARMS and row['status'] == 'ladder':
+107-                rows.append(dict(row, split=None))
+108-                cases[row['case']] = dict(topics[topic], case=row['case'])
+109:    planted, planted_cases, _ = plants()
+110-    rows += planted
+111-    cases.update({case['case']: case for case in planted_cases})
+112-    return rows, cases
+--
+138-        (reading / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+139-    key_folder.mkdir(parents=True, exist_ok=True)
+140-    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+141:    (key_folder / 'plants-expected.json').write_text(json.dumps(plants()[2], indent=1) + '\n')
+142-    if sorted(map(tuple, key.values())) != sorted((row['case'], row['pass']) for row in rows) or len(set(map(tuple, key.values()))) != len(rows):
+143-        raise SystemExit('check failed: not every item is in the key exactly once')
+144-    yearly = sum(1 for row in rows if row['split'] and not row['case'].startswith('plant|'))
+145:    print(f'{len(rows)} items in {len(packets)} packets: {yearly} yearly, {len(rows) - yearly - len(PLANTS)} C1, {len(PLANTS)} plants')
+146-    return reading
+147-
+148-
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 4 'TOPICS =|c1_by_rule|44|attempt|worst|exact|def counts|def load_reading|def verdict|expected' docs/research/2026-11-14-use-acceptance/splitting/{probe_split.py,score_split.py}" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-56-def kind(row):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-57-    return {'ladder': 'ladder', 'split': 'split'}.get(row['status'], 'no ladder')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-58-
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-59-
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:60:def counts(probe_folder):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-61-    groups = reading_split.group_of()
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:62:    expected = {(topic, n) for topic in groups for n in probe_split.PASSES}
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-63-    sends = {}
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-64-    for arm in probe_split.ARMS:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-65-        rows = reading_split.rows_of(Path(probe_folder) / arm)
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-66-        keys = [(row['case'].split('|', 1)[1], row['pass']) for row in rows]
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:67:        if len(keys) != len(set(keys)) or set(keys) != expected or any(not row['case'].startswith(f'{arm}|') for row in rows):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:68:            raise SystemExit(f'NOT SCORED: the {arm} arm does not hold every topic and pass exactly once ({len(keys)} rows, '
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:69:                             f'{len(set(keys))} distinct, {len(expected)} expected)')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-70-        sends[arm] = dict(zip(keys, rows))
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-71-    out = {'T': {}, 'controls': {}, 'M': {}}
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-72-    for topic, group in groups.items():
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-73-        split_rows = [sends['split'][(topic, n)] for n in probe_split.PASSES]
+--
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-115-    return [(send, field) for send in outcomes if not send[0].startswith('plant|') for field in FIELDS
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-116-            if needs_ruling(readers['reader 1'][send][field], readers['reader 2'][send][field])]
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-117-
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-118-
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:119:def load_reading(probe_folder, reading, key_path, plants_path):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-120-    """Everything the verdict reads; raises SystemExit('VOID: …') for an incomplete or invalid reading or a missed plant. The reading
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:121:    must hold exactly the items its sends give (reading_split.reading_rows), each once, and the key exactly those items."""
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-122-    derived = sorted((row['case'], row['pass']) for row in reading_split.reading_rows(probe_folder)[0])
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-123-    held = sorted((row['case'], row['pass']) for row in collector.outcomes_of(reading))
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-124-    keyed = sorted(tuple(send) for send in json.loads(Path(key_path).read_text()).values())
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-125-    if held != derived or keyed != derived:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:126:        raise SystemExit(f'VOID: the reading holds {len(held)} items and the key {len(keyed)}, not exactly the {len(derived)} its sends give')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-127-    key, item_of, outcomes, readers, problems = collector.read_rows(reading, key_path)
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-128-    for reader in collector.FAMILIES:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-129-        for send in outcomes:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-130-            row = readers[reader].get(send)
+--
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-132-                problems[reader]['rows'].append((item_of[send], send, f'BY and LQ are each one of {FIELD_VALUES}'))
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-133-    bad = {reader: found['rows'] or found['unreadable lines'] for reader, found in problems.items() if found['rows'] or found['unreadable lines']}
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-134-    if bad:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-135-        raise SystemExit(f'VOID: rows missing or not valid: {bad}')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:136:    expected = json.loads(Path(plants_path).read_text())
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:137:    if set(expected) != set(reading_split.PLANTS) or any((plant, 1) not in outcomes for plant in expected):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-138-        raise SystemExit('VOID: the plants are not the ones reading_split.py builds')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:139:    missed = [(plant, reader) for plant, entry in expected.items() for reader in collector.FAMILIES
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:140:              if readers[reader][(plant, 1)][entry['field']] != entry['expected']]
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-141-    if missed:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-142-        raise SystemExit(f'VOID: a plant was missed: {missed}')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-143-    both = sorted(collector.FAMILIES.values())
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-144-    families = collector.third_reader_families(reading)
+--
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-202-                found_vetoes.append((case, pass_number, sorted(new)))
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-203-    return found_vetoes
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-204-
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-205-
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:206:def verdict(probe_folder, key_folder):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-207-    counted = counts(probe_folder)
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-208-    print(json.dumps(counted, indent=1))
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-209-    if not counted['pass']:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-210-        return 'negative', counted, None
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-211-    try:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py:212:        loaded = load_reading(probe_folder, Path(probe_folder) / 'reading', Path(key_folder) / 'key.json', Path(key_folder) / 'plants-expected.json')
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-213-    except SystemExit as stop:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-214-        if str(stop).startswith('VOID'):
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-215-            print(stop)
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py-216-            return 'void', counted, None
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-3-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-4-`check` ($0) builds every request with the production builder and requires:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-5-- the population as fixed below, C1 derived again from the two-year census by its written rule;
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-6-- each control request equal to the topic's stored first request (sha256 over sorted keys) and its keys in the stored order;
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:7:- each split first request equal to the control except the schema's `no_ladder` and the system text's decline list (exactly
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-8-  `ladder_split.SYSTEM_REPLACEMENTS`), and each yearly re-ask equal to the split first
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-9-  request except the yearly line after the closing text;
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-10-- every stored control answer that wrote answer choices accepted by the step's checks; a synthetic split refusal of each T topic
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-11-  accepted, and mutants (an ended year, a split named again in a yearly re-ask, stray periods) refused;
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:12:- the spend: the most calls the arms can make, the sum of their worst-case reserves, the stored charges of the same step, and each
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-13-  arm's cap (together $0.40).
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-14-It then writes a record binding the code and request files, the population and every request's sha256.
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-15-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-16-`send` rebuilds every request, refuses unless each equals the record, and sends the frozen arm through Stage A's runner and the split
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-17-arm through `run_split` (the same runner with the split step), each under its own cap of the answer-choice runner's limit, behind a
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:18:guard that stops every later attempt once an answer costs more than its reserve.
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-19-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-20-  python3 probe_split.py check
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-21-  python3 probe_split.py send <new data folder>
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-22-"""
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-42-import stage_a  # noqa: E402
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-43-from hivemind import extraction, model, universe  # noqa: E402
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-44-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-45-DATA = ROOT / 'poc/data'
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:46:SOURCES = {   # source: (its cases files, its stored Stage A folder holding the frozen step's sends of those cases); none is the 44 (D426)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-47-    'fortnight': ([DATA / 'clean-carried-run-2026-11-16/c1/cases/cases.json'], DATA / 'clean-carried-run-2026-11-16/stage-a'),
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-48-    'week-10-06': ([DATA / 'clean-second-week-2026-11-15/week-continued/c1/cases/cases.json'], DATA / 'clean-second-week-2026-11-15/week-continued/stage-a'),
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-49-    'july': ([DATA / f'clean-e2e-full-2026-11-13/c{n}/cases/cases.json' for n in (1, 2, 3)], DATA / 'clean-e2e-full-2026-11-13/stage-a'),
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-50-}
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:51:THE_44 = STAGE_A / 'cases.json'          # the theses D426 stopped tuning the step on: no topic of the probe is one of them
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:52:# The population (DESIGN.md v4 §3, narrowed by round 162 to topics outside the 44), fixed before any send:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-53-# - T: the two stored topics asking one quantity for two open years, declined in every stored send (DESIGN-REVIEW.md, "The cases");
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:54:# - C1: by the rule in `c1_by_rule` (stored topics outside the 44 naming exactly two years, every stored send a ladder for one of
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-55-#   them, most stored sends first), at least two of them with both years open on the item's day;
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:56:# - C2: the two topics outside the 44 that both blind readers of the D436 reading called one bet with a second side
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-57-#   (unlisted-parts/d436-reading/RESULT.md: commodity DRAM with the shortage and graphics memory; custom-ASIC against GPU purchases);
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-58-# - C3: the guards, the Intel stake and Firmus.
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:59:# - M (the several-products memory topic) is left out: its only stored instance is one of the 44.
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:60:TOPICS = {
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-61-    'T': [('week-10-06', 'c1/clean-12'), ('week-10-06', 'c1/clean-4')],
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-62-    'C1': [('fortnight', 'c1/clean-11'), ('fortnight', 'c1/clean-9'), ('fortnight', 'c1/clean-13'), ('july', 'c3/clean-5'),
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-63-           ('july', 'c2/clean-5'), ('july', 'c1/clean-7')],
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-64-    'C2': [('july', 'c3/clean-7'), ('july', 'c2/clean-10')],
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-72-CODE_FILES = [LADDER / 'ladder_split.py', LADDER / 'ladder_step.py', LADDER / 'candidate-system.txt', LADDER / 'candidate-closing.txt',
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-73-              LADDER / 'candidate-schema.json', STAGE_A / 'stage_a.py', Path(__file__)]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-74-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-75-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:76:def descriptions_of_the_44():
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:77:    return {case['thesis']['description'] for case in json.loads(THE_44.read_text())}
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-78-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-79-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:80:def c1_by_rule():
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:81:    """C1's written rule over the two-year census: topics outside the 44 naming exactly two years whose every stored send wrote a
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-82-    ladder (a figure or an event), most stored sends first (ties in census order), each found once in the probe's sources; the
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-83-    first six."""
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:84:    excluded, candidates = descriptions_of_the_44(), []
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-85-    for order, line in enumerate(CENSUS.read_text().splitlines()):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-86-        topic = json.loads(line)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-87-        if topic['description'] in excluded:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-88-            continue
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-186-def check():
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-187-    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-188-    texts = {arm: texts_of(arm) for arm in ARMS}
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-189-    failures = []
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:190:    derived = c1_by_rule()
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-191-    if derived != TOPICS['C1']:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-192-        failures.append(f'C1 by its rule is {derived}, not the fixed list')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-193-    topics = load_topics()
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:194:    in_44 = [f'{source}:{name}' for _, source, name, case in topics if case['thesis']['description'] in descriptions_of_the_44()]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:195:    if in_44:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:196:        failures.append(f'topics that are among the 44 (D426): {in_44}')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-197-    census = {json.loads(line)['description']: json.loads(line)['years'] for line in CENSUS.read_text().splitlines()}
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-198-    both_open = [name for group, _, name, case in topics if group == 'C1' and census[case['thesis']['description']] == open_years(case, research_list)]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-199-    print(f'C1 whose two named years are both open on the item\'s day (census years): {both_open}')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-200-    if len(both_open) < 2:
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-223-            yearly_ok = yearly_ok and body == split and first_user.count(texts['split']['closing']) == 1 and \
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-224-                yearly_user == first_user.replace(texts['split']['closing'], texts['split']['closing'] + line)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-225-        answer_state = f"stored send '{stored['status']}'"
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-226-        if stored['status'] == 'ladder':
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:227:            reasons, _ = frozen_check(case, research_list)(ladder_step.parse_exactly(stored['requests'][-1]['answer_text']))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-228-            judged += 1
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-229-            answer_state = 'stored ladder accepted' if reasons == [] else f'STORED LADDER REFUSED: {reasons}'
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-230-        print(f'{group:3} {source}:{name:13} control equals stored: {same}; split differs only in no_ladder and the system decline list: {only_schema}; '
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-231-              f'yearly re-asks differ only by the line: {yearly_ok}; {answer_state}')
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-235-        check_for = split_check_for(case, research_list)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-236-        this, following = open_years(case, research_list)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-237-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-238-        def answer(no_ladder):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:239:            return ladder_step.parse_exactly(json.dumps({'no_ladder': no_ladder, 'ladder': None}))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-240-        synthetic = answer({'case': ladder_split.SPLIT_CASE, 'reason': 'one quantity for each year', 'periods': [this, following]})
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-241-        valid = model.check_schema(json.loads(json.dumps(synthetic, default=float)), texts['split']['schema']) + check_for(None)(synthetic)[0]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-242-        ended = check_for(None)(answer({'case': ladder_split.SPLIT_CASE, 'reason': 'x', 'periods': [str(int(this) - 1), this]}))[0]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-243-        again = check_for(this)(answer({'case': ladder_split.SPLIT_CASE, 'reason': 'x', 'periods': [this, following]}))[0]
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-247-        if valid or not (ended and again and stray):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-248-            failures.append(f'synthetic or mutant answers of {source}:{name}')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-249-    sends = len(topics) * len(PASSES)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-250-    calls = {'frozen': sends * 2, 'split': sends * 2 * 3}          # a send and its one resend; the split adds two yearly re-asks, each resent
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:251:    attempts = {arm: count * budget.ATTEMPTS for arm, count in calls.items()}   # each call tried up to three times on a transport failure
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-252-    output_bytes = 4 * stage_a.SETTING.max_output_tokens          # an estimate of the previous answer a resend carries (4 bytes a token)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-253-    rate_in = model.PRICES[stage_a.SETTING.model][0]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-254-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:255:    def worst_first_and_resend(request):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:256:        first = budget.worst_cost(request)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-257-        return first + first + output_bytes * rate_in / 1e6       # the resend: the same request, the previous answer and its reasons appended
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:258:    worst = {'frozen': 0.0, 'split': 0.0}
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-259-    for *_, case in topics:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:260:        worst['frozen'] += worst_first_and_resend(built(case, texts['frozen'], research_list))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:261:        worst['split'] += worst_first_and_resend(built(case, texts['split'], research_list))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-262-        this, following = open_years(case, research_list)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-263-        for year, other in ((this, following), (following, this)):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:264:            worst['split'] += worst_first_and_resend(built(case, texts['split'], research_list, yearly_closing(texts['split'], year, other)))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:265:    worst = {arm: value * len(PASSES) * budget.ATTEMPTS for arm, value in worst.items()}
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:266:    print(f'topics {len(topics)}; stored ladders judged {judged}; sends {sends} an arm; most calls {calls}, most attempts with transport '
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:267:          f'retries {attempts}; the sum of worst-case reserves if every attempt were made at its worst (resends estimated with an answer '
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:268:          f'of {stage_a.SETTING.max_output_tokens} tokens at 4 bytes a token) {{{", ".join(f"{a}: ${w:.2f}" for a, w in worst.items())}}}; '
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:269:          f'caps {CAPS} (${sum(CAPS.values()):.2f}). Every attempt is reserved at its own worst cost before it is sent, so an arm stops '
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-270-          f'at its cap (NOT MEASURED), and the caps hold while every charge stays within its reserve')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-271-    if failures or len(topics) != sum(len(entries) for entries in TOPICS.values()):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-272-        raise SystemExit(f'CHECK FAILED: {failures}')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-273-    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': requests_of(topics, research_list)}, indent=1) + '\n')
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-279-    """`stage_a.run` with the split step: the same folder layout, limit, archives, labels and outcome rows; a split send's row adds
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-280-    `periods` and `children` (each year's outcome with its view, built as Stage A builds one)."""
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-281-    folder = Path(folder)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-282-    folder.mkdir(parents=True, exist_ok=False)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:283:    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-284-    checksum = hashlib.sha256(json.dumps({'system': texts['system'], 'closing': texts['closing'], 'schema': texts['schema'],
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-285-                                          'setting': [stage_a.SETTING.model, stage_a.SETTING.reasoning_effort, stage_a.SETTING.max_output_tokens]},
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-286-                                         ensure_ascii=False).encode()).hexdigest()[:16]
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-287-    call_config = SimpleNamespace(provider='openai', version='clean-ladder-split-probe', checksum=checksum)
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-334-    return written, limit, len(jobs)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-335-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-336-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-337-class BreachGuard:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:338:    """The transport each attempt goes through. An answer whose reported cost is above its attempt's worst-case reserve is returned
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:339:    (so the ledger charges it), and no new attempt is sent after it: each raises `stage_a.Stopped`."""
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-340-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-341-    def __init__(self, transport=None):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:342:        self.transport = transport or (lambda provider, request: model.openai_transport(provider, request, max_attempts=1))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-343-        self.breaches, self.lock = [], threading.Lock()
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-344-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-345-    def __call__(self, provider, request):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-346-        with self.lock:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-347-            if self.breaches:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:348:                raise stage_a.Stopped('a breach of an attempt reserve was seen')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-349-        response = self.transport(provider, request)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:350:        charged, reserve = budget.cost(request, response), budget.worst_cost(request)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-351-        if charged is not None and charged > reserve:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-352-            with self.lock:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-353-                self.breaches.append((round(charged, 6), round(reserve, 6)))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-354-        return response
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-358-    reserves, out = {}, []
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-359-    for line in Path(spend_path).read_text().splitlines():
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-360-        entry = json.loads(line)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-361-        if 'reserve' in entry:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:362:            reserves[entry['attempt']] = entry['reserve']
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:363:        elif entry['charge'] > reserves[entry['attempt']] + 1e-12:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:364:            out.append((entry['attempt'], entry['charge'], reserves[entry['attempt']]))
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-365-    return out
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-366-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-367-
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-368-def send(folder, *, transport=None):
+--
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-380-        written, limit, job_count = runner(cases, PASSES, folder / arm, CAPS[arm], research_list=research_list, texts=texts, transport=guard)
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-381-        (folder / arm / 'cases.json').write_text(json.dumps(cases, ensure_ascii=False, indent=1) + '\n')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-382-        known, in_full, _ = stage_a.ledger_total(folder / arm / 'spend.jsonl')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-383-        over = over_reserve(folder / arm / 'spend.jsonl')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:384:        print(f'{arm}: {len(written)} of {job_count} sends have an outcome; spent ${known + in_full:.4f}; attempts charged above their reserve: {len(over)}')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-385-        if over or guard.breaches:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-386-            raise SystemExit(f'{arm} BREACH: ledger {over}; seen at the transport {guard.breaches}')
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-387-        if limit.stopped or len(written) != job_count:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py-388-            raise SystemExit(f'{arm} STOPPED: {limit.stop_reason}. NOT MEASURED.')
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '60,94p' docs/research/2026-11-14-use-acceptance/splitting/reading_split.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+def plants():
+    """(rows, cases, expected): the two planted items as outcome rows of pass 1, their cases, and the field each must be marked yes."""
+    rows, cases, expected = [], [], {}
+    topics = {f'{source}:{name}': case for _, source, name, case in probe_split.load_topics()}
+    for plant, (source, name, edit, field) in PLANTS.items():
+        stored = copy.deepcopy(probe_split.stored_first(source, name))
+        if stored['status'] != 'ladder':
+            raise SystemExit(f'{plant}: the stored send of {source}:{name} wrote no ladder')
+        answer, view = stored['answer'], stored['view']
+        split = None
+        kind, before, after = edit
+        if kind == 'base year':
+            if view['year'] != before or before not in view['question']:
+                raise SystemExit(f'{plant}: the stored ladder of {name} is not a {before} question')
+            answer, view = replace_year(answer, before, after), replace_year(view, before, after)
+            split = {'asked_year': after, 'asked_separately': before}
+        else:
+            if before not in view['question']:
+                raise SystemExit(f'{plant}: the stored question of {name} does not name {before}')
+            view = dict(view, question=view['question'].replace(before, after))
+            answer = copy.deepcopy(answer)
+            answer['ladder']['question'] = answer['ladder']['question'].replace(before, after)
+        rows.append(dict(stored, case=plant, **{'pass': 1}, answer=answer, view=view, split=split))
+        cases.append(dict(topics[f'{source}:{name}'], case=plant))
+        expected[plant] = {'field': field, 'expected': 'yes'}
+    return rows, cases, expected
+
+
+def reading_rows(probe_folder):
+    """(rows, cases): every item to read as an outcome row (with `split`), and a case under each row's name."""
+    groups, topics = group_of(), {f'{source}:{name}': case for _, source, name, case in probe_split.load_topics()}
+    rows, cases = [], {}
+    for arm in probe_split.ARMS:
+        for row in rows_of(Path(probe_folder) / arm):
+            topic = row['case'].split('|', 1)[1]
+
+exec
+/opt/homebrew/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 python3 -c \"import sys;sys.path.insert(0,'docs/research/2026-11-14-use-acceptance/splitting');import reading_split; rows,cases,expected=reading_split.plants();print([(r['case'],r['view']['question'],r['answer']['ladder']['not_judged']) for r in rows]);print([(c['case'],c['thesis']['description'],c['thesis']['outcome']) for c in cases])\"" in /Users/lchingen/hivemind
+ succeeded in 19ms:
+[('plant|1', 'How much will the five largest AI hyperscalers spend in total on data centers in calendar 2026, as shown by their capex disclosures and reported 2026 results?', [{'part': 'The comparison with the $1.3 trillion Nvidia projects for calendar 2026', 'why': 'The tracked outcome is the hyperscalers’ actual combined spending, not whether it matches Nvidia’s projection.'}, {'part': 'The comparison with the nearly $800 billion expected for calendar 2026', 'why': 'That is spending for a different calendar year, not the 2026 figure being judged.'}]), ('plant|2', 'What will the percentage change be in DRAM contract prices from the end of 2025 to the Q4 2026 price level, as established by TrendForce/DRAMeXchange contract-price releases?', [{'part': 'whether the DRAM shortage that has forced NVIDIA to revive an older graphics card persists through calendar 2026', 'why': 'The tracked outcome names DRAM contract-price direction and magnitude; shortage persistence is a separate event.'}])]
+[('plant|1', 'How much will the five largest AI hyperscalers spend in total on data centers in calendar 2027?', "The big five AI hyperscalers' combined calendar-2027 data-center capital expenditure, versus the $1.3 trillion Nvidia projects for next year (as cited in the item) and the nearly $800 billion expected for calendar 2026."), ('plant|2', "Will commodity DRAM (and by extension graphics memory) contract prices rise further through calendar 2026, deepening the memory shortage that is raising GPU makers' memory input costs?", 'Direction and magnitude of commodity DRAM/graphics memory contract prices over calendar 2026, and whether the shortage that has forced NVIDIA to revive an older graphics card persists through the year.')]
+
+codex
+The population and retry corrections address the round-162 findings. I would fix **one remaining reading-integrity gap** before sending.
+
+[The scorer](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/score_split.py:119) compares the derived reading, saved reading and key by `(case, pass)` identifiers. That catches missing, extra and duplicate items, but an item with the correct identifier and altered question, ladder or `split` metadata can still pass. The readers could then grade something other than the send.
+
+Before the send, compare the **content** of each saved reading item and packet with the item rebuilt from the sends, including both plants and their frozen expected marks. Add a test that changes a question or year while retaining its identifier and makes the reading void; catch a mutant that omits the content check.
+
+The revised cost calculation is an estimate, as stated; the per-attempt reservations are the operating guard, conditional on charges staying within reserve. The loss of M and the inferable arm on yearly items are material limits to report with the result. A count failure may be reported as negative independently of the reading, with any missed plant reported if the reading is conducted.
+
+CONSENSUS: no, because the reading’s item content is not yet bound to the sends and plants.
+tokens used
+4,259,023
+The population and retry corrections address the round-162 findings. I would fix **one remaining reading-integrity gap** before sending.
+
+[The scorer](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/score_split.py:119) compares the derived reading, saved reading and key by `(case, pass)` identifiers. That catches missing, extra and duplicate items, but an item with the correct identifier and altered question, ladder or `split` metadata can still pass. The readers could then grade something other than the send.
+
+Before the send, compare the **content** of each saved reading item and packet with the item rebuilt from the sends, including both plants and their frozen expected marks. Add a test that changes a question or year while retaining its identifier and makes the reading void; catch a mutant that omits the content check.
+
+The revised cost calculation is an estimate, as stated; the per-attempt reservations are the operating guard, conditional on charges staying within reserve. The loss of M and the inferable arm on yearly items are material limits to report with the result. A count failure may be reported as negative independently of the reading, with any missed plant reported if the reading is conducted.
+
+CONSENSUS: no, because the reading’s item content is not yet bound to the sends and plants.

@@ -29,7 +29,7 @@ from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import config, extraction, model, testdb, universe, vocabulary  # noqa: E402
+from hivemind import config, extraction, live_lock, model, testdb, universe, vocabulary  # noqa: E402
 from hivemind.views import judging, matching  # noqa: E402
 
 SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA, 'judge': judging.schema_for(judging.SUPPORTED_VERSIONS[0])}
@@ -180,6 +180,43 @@ def shown_for_record(archive_conn, rec, decisions):
     return None
 
 
+def locked_copy(path, scratch):
+    """A store copied for preflight (live-service/OPERATING-CONTRACT.md, row 7): its writer lock taken without waiting, so a store being
+    written is refused with the snapshot route named; the path checked on both sides of the open and after the copy; the copy made by
+    SQLite's backup API from a read-only source and taken out of WAL mode; the lock released."""
+    held = live_lock.acquire(path)
+    try:
+        source = sqlite3.connect(f'file:{held.real_path}?mode=ro', uri=True)
+        try:
+            live_lock.verify(held)
+            target = sqlite3.connect(scratch)
+            try:
+                source.backup(target)
+                live_lock.leave_wal_mode(target)
+            finally:
+                target.close()
+        finally:
+            source.close()
+        live_lock.verify(held)
+    except BaseException:
+        for leftover in (scratch, scratch + '-journal', scratch + '-wal', scratch + '-shm'):
+            if os.path.exists(leftover):
+                os.remove(leftover)                  # what was copied from a path that changed is discarded
+        raise
+    finally:
+        live_lock.release(held)
+
+
+def store_copies(views_paths):
+    """One locked copy of each store (`locked_copy`), made before any part reads it; parts C and E read these, never the stores."""
+    copies = []
+    for path in views_paths:
+        copy = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
+        locked_copy(path, copy)
+        copies.append(copy)
+    return copies
+
+
 def part_c(archive_conn, views_paths, uni):
     reasons, examples = collections.Counter(), collections.defaultdict(list)
     judged = refused_records = 0
@@ -188,7 +225,7 @@ def part_c(archive_conn, views_paths, uni):
         ledger_judged, skipped = 0, collections.Counter()
         # matching.check writes suggested themes to the review pool, so it runs on a scratch copy, never on the real file
         scratch = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
-        shutil.copy(path, scratch)
+        shutil.copy(path, scratch)                  # `path` is already preflight's own locked copy (`store_copies`), never a live store
         conn = sqlite3.connect(scratch)
         conn.row_factory = sqlite3.Row
         for rec in conn.execute('select input_id, call_no, shown_json, decisions_json, request_sha256 from match_records order by id'):
@@ -301,8 +338,9 @@ def main():
     uni = universe.load(args.universe)
     print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
     part_a(archive_conn)
-    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, views_paths, uni), part_d()]
-    part_e(views_paths)          # informational for unkeyed ledgers; judged counts are reported per ledger
+    copies = store_copies(views_paths)
+    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, copies, uni), part_d()]
+    part_e(copies)          # informational for unkeyed ledgers; judged counts are reported per ledger
     if min(counts) == 0:
         print('\nUNEXERCISED: a check judged no case')
         sys.exit(1)

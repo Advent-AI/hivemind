@@ -1,0 +1,25 @@
+**I withdraw my proposed rereading of all 22 judgements. Prepare the decision page first, and let it name the one $0 check that could change a specific line on the page.**
+
+My proposed read would add a trace of individual numerical claims and their sources. Reading B checked whether each **answer** was supported by the request, and whether cited summaries matched their passages; it did not trace undelivered material or assign a cause to an unsupported answer. But I did not show why another reading of those same answers would find enough new consequential claims to inform the system choice. It could easily reproduce the same single agreed case and reader disagreements. My falsifier stopped a line of investigation without saying how the result would help choose a system. [Reading B brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/brief-B.md)
+
+Your cause breakdown is useful, but I would not force each case into one exclusive cause:
+
+- **Question shape:** the stored question and answer bands show what the judge was asked. They cannot alone prove that the shape forced an unsupported forecast; the judge might have said the evidence was insufficient.
+- **Evidence delivery:** the request and dated ledger can show that a particular relevant figure was kept, discarded, or absent from the request. Whether it would have changed the answer remains a separate question. “Buried” is harder: presence in a long request does not show the judge overlooked it because of length.
+- **Judge’s leap:** the answer can show an assumption absent from the request. That does not isolate whether the question shape contributed to the leap.
+
+The data-center case is a good **control for detecting the unsupported 25% assumption**, not a known control for choosing between shape and judge. Both readers found the rate absent; they did not establish which caused its use. [Reader results](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/codex-B.jsonl) · [Second reader](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/claude-B.jsonl)
+
+The page should put the following together:
+
+- **The decision:** which system carries forward, with production remaining the default while the choice is unresolved.
+- **Alex’s current product direction:** financial figures inform related judgements; no separate financial questions or table under D505. The week’s three financial matters explain production’s measured coverage lead, but that lead should not be treated as an advantage automatically acceptable under his later choice.
+- **What each system costs the reader:** production’s missed supply question, duplicates, broad filing and the unsupported revenue answer; clean’s missing delivery, unused kept statements and unresolved Step 4 acceptance. Show the counts and their different units.
+- **The limits:** one week, one draw per system; 4 versus 2 matters and 10/15 versus 6/7 supported judgements; D489’s verdict remains **not clear**. Neither the 389 unlinked statements nor 278 discarded statements is a count of harmful losses.
+- **One recommendation and one test:** frame the recommendation around the trade-offs actually supported by the evidence, without claiming either system has passed production acceptance.
+
+The page’s proposed $0 test should be **a targeted trace of the already-disputed, consequential final answers**, including the agreed data-center case and the disputed credit-support cases: identify what was shown, any relevant stored material not shown, and which causes are demonstrated versus unresolved. Its purpose is to change the page’s description of a specific reader risk—not to produce a new 7-versus-15 ranking. If it cannot identify a consequential system-specific contribution beyond what B already established, the page says so and the trace stops. I would review the page’s existing evidence first; if it has no decision-relevant claim that this trace could change, omit the test.
+
+On authority, I disagree that D439 and D509 categorically limit the council to preparing a decision. Their text says choices that would have gone to Alex go to the council, and D509 explicitly includes which system carries forward. D479–D482 show the council **did** choose to retain production as default under that authority; they do not prove it could never choose otherwise. But this request expressly puts product trade-offs requiring Alex outside scope. That narrower instruction governs this round: we can prepare his decision, not settle that trade-off. It also does not authorize deployment, a commit, or changing his existing decisions. [D439, D479, D482 and D509](/Users/lchingen/hivemind/docs/DECISIONS-log.md)
+
+Council position: Prepare and review the decision page first; retain D489’s “not clear,” production as the current default, and Alex’s D505 choice. Include a targeted $0 trace only if it can change a named, consequential claim on the page; do not rerun the full judgement reading or decide Alex’s product trade-off.

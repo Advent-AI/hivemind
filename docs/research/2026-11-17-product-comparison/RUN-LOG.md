@@ -1,0 +1,24 @@
+# Run log: the release comparison (D665, D666)
+
+One dated row per event and check, with numbers. Newest last.
+
+| When (2026-11-17) | Stage | Event | Numbers / outcome |
+|---|---|---|---|
+| — | plan | RUN-PLAN v1 written; council review started (Codex thread 01a1ebfe…, one Claude reviewer) | — |
+| 2026-11-17 | plan | Round 1: Codex NOT READY (5 points), Claude reviewer NOT READY (5 changes); every point checked against code (`triage-1.md`) | Blockers confirmed: Step 1 limits 300 calls / 8 h; ladder still luna; production ignores exclusions; judge stops at the last article; 15 s/article estimate wrong (measured 26–34 s) |
+| 2026-11-17 | plan | Census of inputs: 1,976 articles (357 warm-up, 1,619 scored); Step 1 failures in stored traces: 4 of 2,549, all dropped connections before the 11-15 network retry, 0 of 624 after | — |
+| 2026-11-17 | plan | RUN-PLAN v2 written (census moved to stage 0, company figures counted in N with the subgroup printed beside, exposure narrowing named, five code changes, rebased estimates); round 2 sent (Codex thread, fresh Claude reviewer) | — |
+| 2026-11-17 | plan | Round 2: Codex NOT READY, Claude reviewer NOT READY (7 changes); retry, binary-search and cost-curve findings checked against code and stored runs; lessons in ROUND-LOG.md; structural rule adopted (prose review stops at design level; build-level checked at the stage-0 freeze review) | — |
+| 2026-11-17 | plan | RUN-PLAN v3 written; round 3 sent (Codex thread, fresh Claude reviewer) | — |
+| 2026-11-17 | plan | Rounds 3–10: v3 to v9 (design-level review only from round 3; build-level items in freeze-review-notes.md). Claude reviewer READY at v7; Codex READY at round 10 on v9 and the decision text | D667 recorded (log, index, CURRENT_STATE) |
+| 2026-11-17 | stage 0 | Replay folders classified before any hit: two blind readers (Codex, Claude) both chose folder level, all 12 folders reads; frozen `stage0/replay-folders.json` (sha 0aa44d48…) | scored window by date: 08-31..09-20 (3 weeks, 720 articles before the census) |
+| 2026-11-17 | stage 0 | Census sample amended (D668, Codex AGREE): every kept article in the window; warm-up 07-01..08-30 unfiltered | — |
+| 2026-11-17 | stage 0 | Exposure census (`stage0/exposure_census.py`, 6 controls passed; 2 min; checkout, 5 worktrees, backups): under D667's frozen rule **720 of 720** window articles are reads | kept 0. Strict cause: superseded corpus states in the backups, two run-local corpus copies, `poc/corpus/items.sqlite`, and corpus-wide code-only censuses (source-loss, source-lineage) touch every article |
+| 2026-11-17 | stage 0 | Content-use look ($0, after the hits, not adopted): the week of 08-31 was processed end to end by the old system's seven-day runs (no-preseed worktree, 2026-11-05); 09-07 and 09-14 partly by the new system's 11-09 acceptance run and Step 2 councils | a property rule by folder misclassified gold and reader folders, so it is not usable; plan trigger "N < 20 at the census" → Alex |
+| 2026-11-17 | stage 0 | D669 (Alex: "只排除真被读过的，比9/7–9/20"): read rule in `stage0/classify_reads.py` keeps **414 of 502** (09-07: 172 of 229; 09-14: 242 of 273); not-read locations: 8 storage, 18 pool lists, 14 code-only (all in the source-loss and source-provenance censuses); council check sent | — |
+| 2026-11-17 | stage 0 | Code D (`stage0/stage_a_astra.py`): 4 tests pass; 2 mutants caught as predicted (transport check off → a request reached the transport; build check off → 2 drifted requests sent); worst-case reserve $0.864 an astra attempt | `mutants-stage-a-astra.txt` |
+| 2026-11-17 | stage 0 | Codes A, C, D (launcher side) and E in `run_fresh.py` (+ `run_stage_b.py` forwards end_day): 33 launcher tests pass (30 existing + 3 new); 5 in-memory mutants caught as predicted, control passes | `mutants-run-fresh.txt`; open: a run_stage_b test for the end-day pass-through and the trailing-day proof |
+| 2026-11-17 | stage 0 | Read-rule check (Codex + Claude checker): 4 reader-shown articles added as reads (confirmed in the council sessions); 37 bulk-viewer-only articles kept excluded (split, safer course); **410 kept, frozen** (`stage0/kept-articles.json`, 172 + 238) | D670 |
+| 2026-11-17 | stage 0 | Matter census launched: 410 kept articles in 11 batches (35,35,35,35,32,40,40,40,40,40,38), two families, 22 closed sessions; Codex memory probe: no memory | prompts hashed in stage0/census/prompts.sha256 |
+| 2026-11-17 | stage 0 | Census reading done: 22 sessions, 0 void; Codex 164 questions (93 batch matters), Claude 205 (95); spot-read batch 07 side by side (well aligned) | — |
+| 2026-11-17 | stage 0 | Census merge → reconcile → 94 third-reader sessions → 38 entries; Codex council check found same-bet duplicates and an over-merge; dedup (both families) + blind adjudication of 10 pairs (20 sessions) | **N = 32** (7 company figures), `stage0/census/matters.json` frozen (D671); 2 split pairs disclosed |

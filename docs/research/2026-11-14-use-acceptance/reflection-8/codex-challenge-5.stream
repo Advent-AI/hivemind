@@ -1,0 +1,924 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e8ee-437f-74a3-ad0a-8edcbde0e3b3
+--------
+user
+# Deep council, round 5: v5.1, the paired rule rewritten as you asked, and the one disputed point
+
+## The v5 audits
+- **Codex auditor (`narrow-d436/audit-v5-codex.md`): NOT SOUND.** The same point as v3: "do not infer priority from a total-and-part or supply-and-shortage
+  shape". On everything else it was satisfied:
+  - u3/clean-11 stays asked as the share;
+  - none of the boundary cases is decided, with investment commitments "plausible overreach, not certain";
+  - all six controls decline (u2/clean-10 "reasonable, with that ambiguity stated").
+- **Claude-family auditor (`audit-v5-claude.md`): SOUND,** with two optional wording fixes, now taken in v5.1 (`edit.json`):
+  - "one of these second sides of the same bet" makes the three shapes a closed set;
+  - the example's sales become a steel mill's tonnes shipped.
+
+## What is left: one question of scope, which is Alex's
+- **Does D436 make the total, the volume or the demand the question for its three named shapes when the outcome names both sides without saying which is
+  main?**
+- His own words covered only the HBM shipments-and-shortage case: "算一个题"; option text "第二件事作为同一题的背景留着…都是同一个押注的不同侧面".
+- The other two orientations are the recorder's Decided line. The PREREAD's main and second labels agree with all three.
+- **Four Codex-family auditors** (v1, v2, v3, v5) read D436 as not licensing a shape-based choice. **Three Claude-family auditors** read it as licensing one
+  for these three shapes.
+- You (round 4) said not to require an explicit main label, because that "could reproduce the refusal".
+- **My proposal:** put exactly this to Alex as one yes/no with the three pairs, since he is active. Plan the paired send on his "yes". On a "no", the
+  passage is void and the line-4 class stays recorded against his ruling.
+
+## The paired rule, rewritten per your round-4 points (`narrow-d436/paired_probe.py`, check passed on v5)
+- **The source review decides.** Two blind reviewers read every written answer to a target or the share control, both arms mixed (`review-brief.md`). A
+  material defect of kind (i), the wrong side asked, (ii) an invented measure, or (iii) the second side dropped, marked by both reviewers, fails the
+  edited send. Kind (iv), the due day, is the separate D636 class: it is reported and does not decide.
+- **Exercise** counts only "no ladder" from the frozen arm, not answers refused twice. It needs at least 6 of 12, spread over at least 3 of the 4 targets.
+- **Controls:**
+  - pool-9 and u1/clean-5 are dropped as entangled with D436; u1/clean-5 is one of the six theses put to Alex.
+  - The six left are justified on their own grounds: two years ×2, no theme ×2, D417 ×1, no checkable date ×1.
+  - The share-centred control u3/clean-11 is added: the edited arm must still ask the share, with no hard-line fault.
+- **Budget:** one cap shared by both arms, $3.60, which covers the in-flight room ($1.18) plus both arms' expected $2.40. That is inside the ~$4.34 left of
+  Alex's ~$6. There are 52 sends.
+
+## Questions
+1. Is v5.1 ready to send on Alex's "yes"?
+2. Is the rewritten rule now right?
+3. Is the scope question correctly his, and is it put to him correctly?
+
+CONSENSUS or DISAGREE.
+
+codex
+I’ll check the exact v5.1 wording, the source-review rule, and the spending guard. I’ll also compare the proposed question with what Alex was actually shown.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba narrow-d436/paired_probe.py | sed -n '1,300p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc 'ls narrow-d436' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+     1	"""The paired exposed verification of the narrow D436 passage (deep council D653, rounds 1 to 5): astra on the frozen ladder request against
+     2	astra on the request with the audited passage (`edit.json`), on four targets astra declined against D436 (acc/clean-8, acc/clean-9 and
+     3	u3/clean-10, three of the six theses put to Alex before D436, and pool-17), six decline controls, and one share-centred control (u3/clean-11,
+     4	whose outcome tracks the share itself), read blind by both families with planted controls, and each written answer of the edited arm on a
+     5	target or on the share control reviewed against its source by two reviewers. Exposed: the 44's targets informed the edit; this verifies that the
+     6	step carries Alex's ruling, not general performance.
+     7	
+     8	  python3 paired_probe.py check                         # $0: the requests, the one inserted passage, the shared cap; writes check-passed.json
+     9	  python3 paired_probe.py send <new run folder>         # frozen and edited interleaved: d1, d2 on all 11 topics; d3 on the 4 targets
+    10	  python3 paired_probe.py reading <run folder> <key folder>
+    11	  python3 paired_probe.py score <run folder> <key folder> <review codex rows> <review claude rows>
+    12	
+    13	The rule, fixed before the send (council rounds 2 and 4):
+    14	- exercised: the frozen arm's own declines ("no ladder", not answers refused twice by code) are at least 6 of its 12 target sends and fall on
+    15	  at least 3 of the 4 targets; otherwise INCONCLUSIVE;
+    16	- PASS when all hold, otherwise FAIL:
+    17	  - every edited target send (12) is a question with no hard-line fault marked by either family;
+    18	  - no edited target or share-control answer carries a material defect of kinds (i) to (iii) of `review-brief.md` marked by both reviewers;
+    19	  - every edited decline-control send (12) is a decline that neither family marks unjustified;
+    20	  - both edited share-control sends ask the share, with no hard-line fault marked by either family;
+    21	  - no edited send is lost (refused twice by code);
+    22	- due-day defects (kind iv) are the separate D636 class: reported for both arms, not deciding;
+    23	- a stopped draw or a missed planted control reads NOT MEASURED.
+    24	"""
+    25	import collections
+    26	import dataclasses
+    27	import hashlib
+    28	import json
+    29	import random
+    30	import sys
+    31	from pathlib import Path
+    32	
+    33	HERE = Path(__file__).resolve().parent
+    34	ROOT = HERE.parents[4]
+    35	sys.path[:0] = [str(HERE.parents[1] / 'reflection-6' / 'opus')]
+    36	import opus_probe as base  # noqa: E402   (the trial harness: run_arm, the planted controls, Stage A, the ladder step, the readers' tools)
+    37	from opus_probe import (accounting, budget, build_reader_packets, collector, ladder_step, model, probe_split, refcontrol,  # noqa: E402
+    38	                        stage_a)
+    39	
+    40	ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+    41	EDIT = json.loads((HERE / 'edit.json').read_text())
+    42	ANCHOR, INSERTED = EDIT['anchor'], EDIT['insert']
+    43	ARMS = ('frozen', 'edited')
+    44	ORDER = [('frozen', 1), ('edited', 1), ('frozen', 2), ('edited', 2), ('frozen', 3), ('edited', 3)]
+    45	TARGETS = ('acc/clean-8', 'acc/clean-9', 'u3/clean-10', 'pool-17')
+    46	CONTROLS = ('week-10-06:c1/clean-4', 'week-10-06:c1/clean-12', 'fortnight:c1/clean-8', 'pool-19', 'u1/clean-9', 'u2/clean-10')
+    47	SHARE = ('u3/clean-11',)
+    48	WORKERS = 1
+    49	EXPECTED_SPEND = 1.20            # 26 sends an arm at up to about $0.045 a send (astra measured $0.033 to $0.047; D633-D649)
+    50	TOTAL_CAP = 3.60                 # one cap shared by both arms: in-flight room (~$1.18) plus both arms' expected spend; within Alex's remaining ~$4.34
+    51	RECORD = HERE / 'check-passed.json'
+    52	SELECTION = HERE.parents[1] / 'reflection-7' / 'fresh-selection.json'
+    53	HARD = refcontrol.HARD
+    54	SHUFFLE_SEED = 20261136
+    55	CODE_FILES = [Path(__file__), Path(base.__file__), SELECTION, HERE / 'edit.json', refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+    56	              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+    57	
+    58	
+    59	FROZEN_TEXTS = stage_a.request_texts          # held here: `send` re-points stage_a.request_texts at an arm's texts during its draws
+    60	
+    61	
+    62	def frozen_texts():
+    63	    return FROZEN_TEXTS()
+    64	
+    65	
+    66	def edited_texts():
+    67	    texts = frozen_texts()
+    68	    if texts['system'].count(ANCHOR) != 1:
+    69	        raise SystemExit('the anchor sentence is not found once in the frozen system text')
+    70	    return dict(texts, system=texts['system'].replace(ANCHOR, ANCHOR + INSERTED))
+    71	
+    72	
+    73	TEXTS = {'frozen': frozen_texts, 'edited': edited_texts}
+    74	
+    75	
+    76	def population():
+    77	    """{name: case} for the 4 targets and 8 controls."""
+    78	    pool = json.loads(SELECTION.read_text())['pool']
+    79	    the_26 = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    80	    the_44 = {case['case']: case for case in json.loads((refcontrol.STAGE_A / 'cases.json').read_text())}
+    81	    out = {}
+    82	    for name in TARGETS + CONTROLS + SHARE:
+    83	        out[name] = pool[int(name.split('-')[1])]['case'] if name.startswith('pool-') else the_26.get(name) or the_44[name]
+    84	    if len(out) != 11:
+    85	        raise SystemExit(f'{len(out)} topics, not 11')
+    86	    return out
+    87	
+    88	
+    89	def topics_of(draw):
+    90	    return TARGETS + CONTROLS + SHARE if draw in (1, 2) else TARGETS
+    91	
+    92	
+    93	def built(case, arm, rl):
+    94	    texts = TEXTS[arm]()
+    95	    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    96	    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+    97	
+    98	
+    99	def code_digest():
+   100	    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+   101	
+   102	
+   103	def check():
+   104	    rl = refcontrol.research_list()
+   105	    failures, shas = [], {arm: {} for arm in ARMS}
+   106	    for name, case in population().items():
+   107	        frozen, edited = built(case, 'frozen', rl), built(case, 'edited', rl)
+   108	        sent_frozen, sent_edited = json.dumps(frozen), json.dumps(edited)      # the transport's serialization
+   109	        anchor = json.dumps(ANCHOR)[1:-1]
+   110	        only_insert = sent_frozen.count(anchor) == 1 and sent_edited == sent_frozen.replace(anchor, anchor + json.dumps(INSERTED)[1:-1])
+   111	        if not only_insert or frozen['model'] != 'gpt-6-astra':
+   112	            failures.append(name)
+   113	        for arm, request in (('frozen', frozen), ('edited', edited)):
+   114	            shas[arm][name] = model.request_identity(request)[1]
+   115	    room = WORKERS * max(budget.worst_cost(built(case, 'edited', rl)) for case in population().values())
+   116	    print(f'11 topics: each edited request is the frozen astra request with only the audited passage inserted: {not failures}')
+   117	    print(f'shared cap ${TOTAL_CAP:.2f}; in-flight room ${room:.3f}; expected spend ${2 * EXPECTED_SPEND:.2f} for both arms')
+   118	    if TOTAL_CAP < room + 2 * EXPECTED_SPEND:
+   119	        failures.append('the shared cap is below the room plus both arms\' expected spend')
+   120	    if failures:
+   121	        raise SystemExit(f'CHECK FAILED: {failures}')
+   122	    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+   123	    print('check passed')
+   124	
+   125	
+   126	def send(folder, *, transport=None):
+   127	    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+   128	    if record is None or record['code_sha256'] != code_digest():
+   129	        raise SystemExit('no check record for these files: run `check` first')
+   130	    rl = refcontrol.research_list()
+   131	    topics = population()
+   132	    for arm in ARMS:
+   133	        if {name: model.request_identity(built(case, arm, rl))[1] for name, case in topics.items()} != record['requests'][arm]:
+   134	            raise SystemExit('REFUSED: the requests differ from the checked record')
+   135	    folder = Path(folder)
+   136	    guard = probe_split.BreachGuard(transport or (lambda provider, request: model.openai_transport(provider, request, max_attempts=1)))
+   137	    room = WORKERS * max(budget.worst_cost(built(case, 'edited', rl)) for case in topics.values())
+   138	    spent = collections.Counter()
+   139	    original = stage_a.request_texts
+   140	    try:
+   141	        for arm, draw in ORDER:
+   142	            stage_a.request_texts = TEXTS[arm]          # base.run_arm reads the step's texts from Stage A for every call
+   143	            cases = [dict(topics[name], case=f'{arm}-d{draw}|{name}') for name in topics_of(draw)]
+   144	            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', TOTAL_CAP - sum(spent.values()), ASTRA, rl, transport=guard,
+   145	                                          workers=WORKERS, first_alone=(arm, draw) == ('edited', 1), room=room)
+   146	            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+   147	            spent[arm] += known + in_full
+   148	            print(f'{arm} d{draw}: {len(written)} of {len(cases)} written; spent ${known + in_full:.4f}', flush=True)
+   149	            if guard.breaches or limit.stopped or len(written) != len(cases):
+   150	                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or guard.breaches}. NOT MEASURED.')
+   151	    finally:
+   152	        stage_a.request_texts = original
+   153	    print(f'spent {dict(spent)}')
+   154	
+   155	
+   156	def reading(run_folder, key_folder):
+   157	    run_folder, key_folder = Path(run_folder), Path(key_folder)
+   158	    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+   159	        raise SystemExit('the key folder must sit outside the repository')
+   160	    rl = refcontrol.research_list()
+   161	    topics = population()
+   162	    rows, cases, expected = [], {}, {}
+   163	    for arm, draw in ORDER:
+   164	        for row in map(json.loads, (run_folder / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+   165	            if row['status'] in ('ladder', 'no ladder'):
+   166	                rows.append(row)
+   167	                cases[row['case']] = dict(topics[row['case'].split('|', 1)[1]], case=row['case'])
+   168	    for row, case, marks in base.controls():
+   169	        rows.append(row)
+   170	        cases[row['case']] = dict(case, case=row['case'])
+   171	        expected[row['case']] = marks
+   172	    folder = run_folder / 'reading'
+   173	    (folder / 'readers').mkdir(parents=True)
+   174	    order = sorted(rows, key=lambda row: row['case'])
+   175	    random.Random(SHUFFLE_SEED).shuffle(order)
+   176	    key, packets = {}, []
+   177	    for number, row in enumerate(order, start=1):
+   178	        key[str(number)] = [row['case'], 1]
+   179	        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+   180	            packets.append([])
+   181	        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+   182	    (folder / 'send-1').mkdir()
+   183	    (folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+   184	    for number, packet in enumerate(packets, start=1):
+   185	        (folder / 'readers' / f'packet-{number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+   186	    key_folder.mkdir(parents=True, exist_ok=True)
+   187	    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+   188	    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+   189	    review_rows = [row for row in rows if row['case'].split('|', 1)[0].startswith('edited') and row['status'] == 'ladder'
+   190	                   and row['case'].split('|', 1)[1] in TARGETS + SHARE]
+   191	    review_rows += [row for row in rows if row['case'].split('|', 1)[0].startswith('frozen') and row['status'] == 'ladder'
+   192	                    and row['case'].split('|', 1)[1] in TARGETS + SHARE]           # the frozen arm's written answers, mixed in so the reviewer cannot tell arms
+   193	    random.Random(SHUFFLE_SEED + 1).shuffle(review_rows)
+   194	    review_key, review_items = {}, []
+   195	    for number, row in enumerate(review_rows, start=1):
+   196	        review_key[str(number)] = row['case']
+   197	        review_items.append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+   198	    (folder / 'review').mkdir()
+   199	    (folder / 'review' / 'packet.json').write_text(json.dumps(review_items, indent=1, ensure_ascii=False) + '\n')
+   200	    (key_folder / 'review-key.json').write_text(json.dumps(review_key, indent=1) + '\n')
+   201	    print(f'{len(rows)} items in {len(packets)} packets; {len(review_items)} answers for the source review')
+   202	
+   203	
+   204	def score(run_folder, key_folder, review_codex, review_claude):
+   205	    folder = Path(run_folder) / 'reading'
+   206	    key, item_of, outcomes, readers, problems = collector.read_rows(folder, Path(key_folder) / 'key.json')
+   207	    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+   208	        raise SystemExit(f'NOT MEASURED: rows missing or not valid: {problems}')
+   209	    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+   210	        for mark, value in marks.items():
+   211	            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+   212	                raise SystemExit(f'NOT MEASURED: a family missed the planted {control} ({mark})')
+   213	    review_key = json.loads((Path(key_folder) / 'review-key.json').read_text())
+   214	    reviews = {}
+   215	    for family, path in (('codex', review_codex), ('claude', review_claude)):
+   216	        rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+   217	        if sorted(row['item'] for row in rows) != list(range(1, len(review_key) + 1)):
+   218	            raise SystemExit(f'NOT MEASURED: the {family} review does not hold each of the {len(review_key)} answers once')
+   219	        for row in rows:
+   220	            reviews.setdefault(review_key[str(row['item'])], {})[family] = set(row.get('defects') or [])
+   221	    sends = {}
+   222	    for arm, draw in ORDER:
+   223	        for row in map(json.loads, (Path(run_folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+   224	            sends[row['case']] = row
+   225	
+   226	    def faults(send_name, row):
+   227	        if row['status'] == 'no ladder: refused':
+   228	            return {'agreed': True, 'strict': True, 'marks': ['refused twice']}
+   229	        marks = [readers[reader][(send_name, 1)] for reader in collector.FAMILIES]
+   230	        applying = [mark for mark in accounting.marks_that_apply(accounting.kind_of(outcomes[(send_name, 1)])) if mark in HARD]
+   231	        failing = sorted({mark for mark in applying for m in marks if m.get(mark) == 'fails'})
+   232	        return {'agreed': any(all(m.get(mark) == 'fails' for m in marks) for mark in applying), 'strict': bool(failing), 'marks': failing}
+   233	    table = collections.defaultdict(dict)
+   234	    for send_name, row in sends.items():
+   235	        arm_draw, topic = send_name.split('|', 1)
+   236	        table[topic][arm_draw] = (row['status'], faults(send_name, row))
+   237	    declines = {t: sum(table[t][f'frozen-d{d}'][0] == 'no ladder' for d in (1, 2, 3)) for t in TARGETS}
+   238	    material = {name: sorted(set.intersection(*[by_family.get(f, set()) for f in ('codex', 'claude')]) & {'i', 'ii', 'iii'})
+   239	                for name, by_family in reviews.items()}
+   240	    due_day = {name: sorted({f for f, kinds in by_family.items() if 'iv' in kinds}) for name, by_family in reviews.items()}
+   241	    edited_targets_ok = {t: [table[t][f'edited-d{d}'][0] == 'ladder' and not table[t][f'edited-d{d}'][1]['strict']
+   242	                             and not material.get(f'edited-d{d}|{t}') for d in (1, 2, 3)] for t in TARGETS}
+   243	    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+   244	    edited_share_ok = {t: [table[t][f'edited-d{d}'][0] == 'ladder' and not table[t][f'edited-d{d}'][1]['strict']
+   245	                           and not material.get(f'edited-d{d}|{t}') for d in (1, 2)] for t in SHARE}
+   246	    print(json.dumps({'frozen declines per target (of 3)': declines, 'edited targets sound': edited_targets_ok,
+   247	                      'edited controls held': edited_controls_ok, 'edited share control sound': edited_share_ok,
+   248	                      'material defects (i-iii) agreed by both reviewers': {k: v for k, v in material.items() if v},
+   249	                      'due-day defects (iv), reported only': {k: v for k, v in due_day.items() if v},
+   250	                      'per topic [status, agreed, strict, marks]': {t: {ad: [st, f['agreed'], f['strict'], f['marks']] for ad, (st, f) in sorted(v.items())}
+   251	                                                                    for t, v in sorted(table.items())}}, indent=1))
+   252	    if sum(declines.values()) < 6 or sum(count > 0 for count in declines.values()) < 3:
+   253	        verdict = f'INCONCLUSIVE: the frozen arm declines {sum(declines.values())} target sends on {sum(c > 0 for c in declines.values())} targets'
+   254	    elif all(all(v) for group in (edited_targets_ok, edited_controls_ok, edited_share_ok) for v in group.values()):
+   255	        verdict = 'PASS'
+   256	    else:
+   257	        verdict = 'FAIL'
+   258	    print(f'VERDICT: {verdict}')
+   259	    return verdict
+   260	
+   261	
+   262	if __name__ == '__main__':
+   263	    command = sys.argv[1] if len(sys.argv) > 1 else ''
+   264	    if command == 'check':
+   265	        check()
+   266	    elif command == 'send':
+   267	        send(sys.argv[2])
+   268	    elif command == 'reading':
+   269	        reading(*sys.argv[2:4])
+   270	    elif command == 'score':
+   271	        score(*sys.argv[2:6])
+   272	    else:
+   273	        sys.exit(__doc__)
+
+ succeeded in 0ms:
+audit-brief.md
+audit-topics.json
+audit-v1-claude.md
+audit-v1-codex.md
+audit-v1-codex.stream
+audit-v2-claude.md
+audit-v2-codex.md
+audit-v2-codex.stream
+audit-v3-claude.md
+audit-v3-codex.md
+audit-v3-codex.stream
+audit-v5-claude.md
+audit-v5-codex.md
+audit-v5-codex.stream
+check-passed.json
+edit-v1.json
+edit-v2.json
+edit-v3.json
+edit-v4.json
+edit-v5.json
+edit.json
+edited-system-v1.txt
+edited-system-v2.txt
+edited-system-v3.txt
+edited-system-v4.txt
+edited-system-v5.txt
+edited-system.txt
+frozen-system.txt
+paired_probe.py
+review-brief.md
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/docs/DECISIONS-log.md | sed -n '4847,4855p;4871,4877p;8527,8548p;8991,9037p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+  4847	## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+  4848	
+  4849	- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  4850	  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  4851	  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  4852	  - Alex: "算一个题，第三处不改 (Recommended)".
+  4853	- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+  4854	- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+  4855	- **Scope:** clean Step 1; c8 stays in force.
+  4871	## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+  4872	
+  4873	- **Alex, 2026-11-13** (unprompted, after a recap of the goal): "把这个goal 改成更多的要求council in the loop 来自行的根据数据和目标做决策。我接下来不会active,需要你有问题的时候就fire council 然后和claude 掰扯直到你们能达到共识为止再下去执行，并仔细的测量，自己看trace 然后把每一轮log 做学习总结，不要饭一样的错，词学迭代完成我们的PRD生产目标".
+  4874	- **Decided (his words):** while he is not active, every choice or next step that would have gone to him goes to the council: an independent read-only Codex review and Claude argue it on the data, the PRD and its quantified goals until they reach a consensus; the consensus is recorded as a decision citing D439, executed, measured, every trace read by Claude itself, and every round logged with a learning summary so the same mistake is not made twice; the loop iterates until the PRD's production goals are met.
+  4875	- **Settled by Claude (wording and limits, not confirmed by Alex):** the standing limits of AGENTS.md stay (the frozen ruler never changes; nothing pushed, deployed, published or committed unasked; credentials and provider caps untouched). Opening a new version of a piece frozen for "a new version only Alex opens" is a council decision under D439; the frozen ruler is not. A disagreement the council cannot settle is recorded with both positions and the cheaper, reversible course is taken. **Spending ceiling:** paid model calls in this period stay within $40 at published rates in total, each paid step with its own ceiling in its council-agreed design; this figure is Claude's setting, not Alex's, and is reported in every status update.
+  4876	- **Where written:** AGENTS.md, "Authority and scope" (the D439 bullet) and §7.3 "Own the loop"; `docs/CURRENT_STATE.md`; the memory file `feedback-council-decides-while-alex-away.md`. The session goal itself is set by Alex's `/goal` command; the replacement text is given to him in the reply.
+  4877	- **Scope:** all modules Alex has taken up; the current work is clean Step 1 (gates 2 and 3 of `clean-arch/step1-diagnosis-2026-11-12/COMBINED-PLAN.md`), then the Step 4 judgement faults that kept Stage B from passing.
+  8527	## D631 · 2026-11-16 · Sol's refusal pattern traced; the description-priority sentence is refused as an unconfirmed rule
+  8528	
+  8529	**The trace** (`reflection-6/model/REFUSAL-TRACE.md`):
+  8530	- 4 agreed-unjustified, 12 disputed and 8 agreed-justified refusals.
+  8531	- The unjustified and disputed ones decline as "several, none the main one" where the outcome lists several parts. The stated reasons
+  8532	  differ: a span of checkpoints, two price series, two authorities.
+  8533	
+  8534	Council round 11 (`reflection-6/codex-challenge-11.md`): "CONSENSUS: no, because the sentence introduces an unconfirmed priority rule
+  8535	and the proposed paid test does not establish sound recovery; audit the rule and request first at $0."
+  8536	
+  8537	- D397 makes the judged part the one the outcome names. D436 keeps two sides of an identified bet together. Neither makes the
+  8538	  description decide the main part.
+  8539	- **Next:** an independent $0 audit of the whole request and of the candidate rule against D397, D436 and the stored cases, including
+  8540	  true no-main topics and descriptions that conflict with their outcomes.
+  8541	
+  8542	## D632 · 2026-11-16 · The Astra screen is sent: gpt-6-astra against a fresh gpt-6.1-sol arm on 12 seeded topics, under $6.70
+  8543	
+  8544	**The audit** (`reflection-6/model/rule-audit.md`, a fresh read-only Codex session) ends "SOURCES SILENT: OWNER RULING NEEDED".
+  8545	- D397, D436 and D417 do not say how to pick the main part when a topic's outcome names several.
+  8546	- The five boundary topics (CPO, Blackwell into China, Reflection AI, equity commitments, memory prices) go on Alex's page with both
+  8547	  readings, marked unresolved.
+  8548	- Sol is recorded as the leading unaccepted candidate (D630).
+  8991	## D651 · 2026-11-17 · Council rounds 40 to 42: test D436's two sentences on astra outside the 44 first; rerun gate 1 only if they pass
+  8992	
+  8993	- **Alex, 2026-11-17:** "你测试吧，但是你跑一下council 稍微整一下下面一步该怎么做".
+  8994	- **The council** (`reflection-7/challenge-40.md` to `-42.md`, Codex thread rounds 40 to 42) **agreed:**
+  8995	  - **The edit:** D436's two sentences, verbatim and with no examples, after the frozen "List every other part … not the one tracked."
+  8996	    sentence. Nothing else changes.
+  8997	    - A2's examples were dropped: two of them mirror the two failing 44 topics (AGENTS §6).
+  8998	    - A2's "description and outcome" changes were dropped too: audit-2 found them not sound.
+  8999	  - **The topics:** 11 outside the 44, from the 48 stored topics outside both the 44 and the 26.
+  9000	    - Two blind source readers (one Codex, one Claude) classified them before any answer.
+  9001	    - They agree on 6 targets (a main figure or event with a second side): pool-7, -17, -20, -32, -35, -38.
+  9002	    - They agree on 5 decline controls: pool-9, pool-19, week-10-06 clean-4 and clean-12, fortnight clean-8.
+  9003	  - **The sends:** astra, frozen against edited, 2 fresh draws each, interleaved. 44 sends; caps $2.60 an arm; expected about $1.6.
+  9004	  - **The rule** (in `reflection-7/second_side_probe.py`):
+  9005	    - **Exercised:** a counted target the frozen arm declines in a draw. Fewer than 3 exercised reads INCONCLUSIVE.
+  9006	    - **Recovered:** both edited sends are questions with no hard-line fault marked by either family.
+  9007	    - **PASS** when all of these hold:
+  9008	      - at least 80% of the exercised targets recover;
+  9009	      - every control is declined in both edited sends, unmarked by both families;
+  9010	      - on no counted topic does the edited arm fail more sends than the frozen arm, under either counting.
+  9011	    - **Otherwise FAIL.** A stopped draw or a missed planted control reads NOT MEASURED.
+  9012	- **If it passes:** gate 1 on the 44 with the edited request.
+  9013	  - It is reported as a reused, exposed set: the 44 informed the change.
+  9014	  - Both countings are reported, and the due-day rule stays Alex's.
+  9015	  - The diagnostic plus the rerun is about $6.30 to $8.20 before retries. Alex is told before the gate send.
+  9016	- **Checked at $0:**
+  9017	  - each edited request is the frozen astra request with only the two sentences inserted;
+  9018	  - a dry run through the real runner writes 11 of 11 in every arm-draw and builds 50 reading items.
+  9019	
+  9020	## D652 · 2026-11-17 · The second-side diagnostic reads INCONCLUSIVE: the two sentences fix "a main figure plus a condition", not "a total plus its part"; no gate rerun
+  9021	
+  9022	- **The run:** `poc/data/clean-second-side-probe-2026-11-17/run-1`, 44 of 44 sends, $1.49.
+  9023	  - Read blind by both families: all rows valid, every planted control caught.
+  9024	  - Score: `reflection-7/score-output.txt`.
+  9025	- **Per topic:**
+  9026	  - **pool-7** (DRAM prices plus whether the shortage persists): frozen declined twice, both unjustified under both countings. Edited wrote two
+  9027	    questions with no fault from either family. Recovered.
+  9028	  - **pool-17** (total accelerator units plus the GPU split): declined in all four sends, unjustified. Not recovered.
+  9029	  - **pool-20, -32, -35 and -38:** questions with no fault in both arms.
+  9030	  - **The 5 controls:** justified declines in both arms.
+  9031	- **The verdict is INCONCLUSIVE:** 2 targets were exercised, below 3. Per D651, there is no gate rerun.
+  9032	- **Prediction for the 44,** which is why no rerun is spent: the edited request should clear acc/clean-8's shape but not acc/clean-9's, so line 4 would
+  9033	  still miss by about 3 or 4.
+  9034	- **Council round 44 consensus:** "audit a general part-of-total example, then test it outside the 44".
+  9035	  - D436 already identifies a chip total and its AI share as one bet.
+  9036	  - The frozen request stays in force.
+  9037	- **Spending:** today's tests stand at $1.49 of Alex's ~$6. The plan's caps and estimates are in D651.
+
+exec
+/opt/homebrew/bin/zsh -lc 'for f in narrow-d436/edit.json narrow-d436/audit-v5-codex.md narrow-d436/audit-v5-claude.md narrow-d436/review-brief.md; do echo "FILE $f"; nl -ba "$f"; done' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+FILE narrow-d436/edit.json
+     1	{
+     2	 "version": "5.1",
+     3	 "anchor": "in not_judged, each with one sentence on why it is not the one tracked.",
+     4	 "insert": " When the outcome tracks a figure and also names one of these second sides of the same bet: the share of the figure that one kind makes up, whether supply stays short of demand beside a figure that measures that supply or its growth, or whether capacity keeps pace with the demand that figure measures; the two are one bet seen from two sides, not several things with none the main one: ask the figure, and list that second side in not_judged. So a bank's total lending for the year named with the share that is commercial lending is asked as the total lending, a steel mill's tonnes shipped in the year named with whether supply stays short of demand are asked as the tonnes shipped, and a utility's power demand for the year named with whether its generating capacity keeps pace is asked as the demand. When the outcome tracks the share itself, with the total only as its base, the share is the question: a bank's commercial share of its lending for the year is asked as that share.",
+     5	 "sources": [
+     6	  "D436. Alex's own reply ('\u7b97\u4e00\u4e2a\u9898\uff0c\u7b2c\u4e09\u5904\u4e0d\u6539') chose the option '\u7b2c\u4e8c\u4ef6\u4e8b\u4f5c\u4e3a\u540c\u4e00\u9898\u7684\u80cc\u666f\u7559\u7740\uff08\u540e\u9762\u5224\u65ad\u65f6\u663e\u793a\u4e3a\u4e0d\u5224\uff09\u2026 \u7406\u7531\uff1a\u90fd\u662f\u540c\u4e00\u4e2a\u62bc\u6ce8\u7684\u4e0d\u540c\u4fa7\u9762', asked on the HBM shipments-and-shortage example only: shape (b) rests on his own words. The record's Decided line ('the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand') is the recorder's statement of the ruling's scope, in force but not his verbatim words: shapes (a) and (c) and their orientation rest on it. D436's scope line names clean Step 1; its '(D397)' clause, the ladder step's not-judged display, carries it here.",
+     7	  "D397: judge the one the outcome names as tracked; list every other part (the trigger requires the outcome to track the figure)",
+     8	  "the frozen decline case 'naming several with none of them the main one' (system line 6), excepted only for D436's three shapes bound to the tracked figure",
+     9	  "the six two-bet theses put to Alex before D436 (clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md): u3/clean-10 (main: HBM capacity added in 2027; second: whether the shortage eases), acc/clean-8, acc/clean-9, acc/clean-10, u1/clean-5, u3/clean-7; Alex: one question"
+    10	 ],
+    11	 "not_taken": [
+    12	  "Codex audit v3: 'require the outcome to identify the figure as the main tracked part before applying the D436 examples'. Not taken: the targets' outcomes name both sides without a stated priority, which is exactly why astra declines (its own account, account-output.json); D436 rules which side is the second side for these shapes; requiring an explicit priority would leave D436 unapplied on the cases it was decided on. Taken to the deep council (round 4)."
+    13	 ],
+    14	 "chars_before": 9545,
+    15	 "chars_after": 10529,
+    16	 "tokens_o200k_before_after": [
+    17	  2031,
+    18	  2234
+    19	 ],
+    20	 "growth_reason": "D436 (2026-11-13) was never carried into the ladder request (frozen 2026-11-10, D426); no sentence states its relation; three audit rounds by both families found no sentence covering the same case or one to cut without changing behaviour.",
+    21	 "changes_from_v5": [
+    22	  "'names, as a second side of that same bet, the share\u2026' -> 'names one of these second sides of the same bet: the share\u2026' (Claude-family audit v5: the clause gave no test and could reopen the family split; the three shapes are the closed set)",
+    23	  "retailer sales/shelves example -> a steel mill's tonnes shipped with whether supply stays short of demand (Claude-family audit v5: sales measures demand, not supply)"
+    24	 ]
+    25	}FILE narrow-d436/audit-v5-codex.md
+     1	**The passage is not sound:** it can make the shape of a topic choose the question even when the outcome has not established which figure is tracked. For example, “total lending and the commercial share” is directed to the total, although the example does not say the outcome makes the total the main figure.
+     2	
+     3	This is a read-only assessment of the supplied text, not a model test. The control list contains **six cases, not eight**; I assessed all six supplied.
+     4	
+     5	### 1. Passage, clause by clause
+     6	
+     7	The inserted text is in [edited-system.txt](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt:5). The comparison is with [D397, D436, D631 and D635](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [the frozen request](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/frozen-system.txt:5), [the closing check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-closing.txt), and [the schema](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-schema.json:19).
+     8	
+     9	| Clause | Verdict | Reason |
+    10	|---|---|---|
+    11	| “When the outcome tracks a figure” | **Consistent** | D397 says to judge the part the outcome names as tracked. If tracking is already established, this does not choose it. |
+    12	| “and also names, as a second side of that same bet” | **Consistent in principle, but insufficiently decisive** | D436 calls for a second side of the same bet to remain context. The clause does not explain how to identify the tracked side when both are named without priority. |
+    13	| “the share of the figure that one kind makes up” | **Keeps wider** | D436 names AI-chip share beside chip total as a second side; it does not say every total-and-share pairing makes the total the tracked figure. |
+    14	| “whether supply stays short of demand beside a figure that measures that supply or its growth” | **Consistent for D436’s shipment example; wider as a general selection rule** | D436 treats shortage beside shipments as context. The wording also covers other supply measures and their growth, without establishing that each is the tracked side. |
+    15	| “whether capacity keeps pace with the demand that figure measures” | **Consistent for the stated orientation** | D436 explicitly puts capacity keeping pace beside demand. It still depends on the outcome actually tracking demand. |
+    16	| “the two are one bet … not several things with none the main one: ask the figure” | **Contradicts the unresolved boundary when tracking is not established** | If “tracks a figure” is taken as already proven, this follows D397 and D436. If the model infers tracking from the listed shapes, it selects a main part where D631 and D635 leave the choice open. |
+    17	| “list that second side in not_judged” | **Consistent** | D436 keeps the second side as context and D397 displays omitted parts as not judged. |
+    18	| Three total-lending, sales, and demand examples | **Keeps wider** | They say the figures are “named with” the other side, then direct the model to select those figures. They do not establish that the outcome tracks them. They therefore teach selection by shape. |
+    19	| “When the outcome tracks the share itself, with the total only as its base, the share is the question” | **Consistent** | This follows D397 when the share is clearly the tracked quantity. Its example does not resolve outcomes naming multiple different splits. |
+    20	
+    21	The collision is conditional but material: the new “ask the figure” direction and examples can override the frozen instruction to decline when several things are named with none main, as well as the schema’s matching `no_ladder` description. The closing check asks whether the question is “the one the topic’s outcome names”; it does not resolve which one that is when the outcome names several. None of the passage expressly cancels the other date, period, or object declines.
+    22	
+    23	### 2. Four targets
+    24	
+    25	| Target | Likely question and listed context | D436 |
+    26	|---|---|---|
+    27	| **acc/clean-8** | Ask 2027 HBM shipment growth; list supply remaining short of demand. | **Yes.** This is the shortage beside shipments in D436. |
+    28	| **acc/clean-9** | Ask 2026 total semiconductor revenue; list the AI-chip portion. | **Yes.** This matches D436’s chip total and AI-chip share orientation. |
+    29	| **u3/clean-10** | Likely ask total new 2027 HBM capacity; list whether it arrives early enough to ease shortage and prices. | **D436 treats the cited case as one bet, but the passage does not cleanly express its timing side.** “Supply stays short” is not the same question as whether capacity arrives before late 2027. It may be listed, but the text does not ensure it. |
+    30	| **pool-17** | Likely ask 2026 total accelerator shipments; list GPU versus non-GPU composition, including the GPU decline comparison. | **Compatible if composition is the second side of the same bet.** D436 gives a total/share example, but does not independently settle every composition topic merely from its shape. |
+    31	
+    32	### 3. Decline controls
+    33	
+    34	The supplied themes include **semiconductor cycle**, **AI capital spending**, **custom silicon**, and **chip export controls**. They do not contain a general robotics-venture-funding theme or a general AI-safety legislation theme.
+    35	
+    36	| Supplied control | Assessment |
+    37	|---|---|
+    38	| **week-10-06:c1/clean-4 — hyperscaler capex in two years** | **Still decline.** Two separate annual figures are named without a main year. Neither the new same-bet shapes nor the AI-capex theme selects one. |
+    39	| **week-10-06:c1/clean-12 — global AI capex in two years** | **Still decline.** The two years remain separate figures; GDP comparisons do not make one year main. AI capex is a listed theme. |
+    40	| **fortnight:c1/clean-8 — robotics venture funding** | **Still decline on the supplied themes.** It asks global robotics startup funding, rather than a matter clearly covered by the listed themes. It is a single calendar-year figure, so “no main figure” or the rolling-period rule would not justify the decline. The theme judgment should be checked against the full article if it supplies a narrower covered matter. |
+    41	| **pool-19 — AI legislation** | **Still decline on the supplied themes.** A broad ban and safety legislation is not clearly chip-export controls or another listed theme. The current fiscal year-end can date a pending regulatory decision under D403, so lack of a date is not the reason. |
+    42	| **u1/clean-9 — domestic accelerator budget share** | **Still decline.** Its rolling twelve-month figure has no stated publication day; D417 expressly covers this kind of case. The share counterexample does not remove that decline. |
+    43	| **u2/clean-10 — HBM capacity and prices** | **No assured decline.** A model may read capacity and persistent shortage as the new supply shape and ask capacity, listing prices. But the outcome names capacity coming online and persistent prices; it does not clearly make one main. D436 does not establish a general capacity-versus-price priority. Declining for no established main part remains justified; retaining it as a control is reasonable, with that ambiguity stated. |
+    44	
+    45	### 4. Six reserved boundary cases
+    46	
+    47	The edited passage does **not explicitly select a part** in five cases: optical-switch checkpoints, the two China authorities’ decisions, the acquisition’s agreement/closing/consideration, memory prices versus makers’ figures, or the export licence versus resumed revenue. Those remain unresolved under D631 and D635.
+    48	
+    49	**Investment commitments is a finding.** Its outcome names remaining balance, cash funded, and changes in commitments. A model could treat remaining balance as a figure and cash funded as a part of the same commitment, then apply “share of the figure that one kind makes up” or the examples’ total-versus-part orientation. The text does not explicitly say funded cash is a share of the remaining balance, so this is a **plausible overreach, not a certain instruction**. The frozen request did not supply that selection rule. More broadly, the examples invite a model to choose a total whenever it sees a related component.
+    50	
+    51	### 5. Examples
+    52	
+    53	The four examples change industries and do not copy the named companies or numbers. But **three mirror the test topics’ decision shapes**: total lending/commercial share mirrors **acc/clean-9**; sales/short shelves mirrors **acc/clean-8**; power demand/capacity keeping pace mirrors **acc/clean-10**. The share-centred bank example mirrors the share-versus-total issue in the supplied counterexample. Thus the examples are not literal copies, but they are close structural translations of the cases being assessed. [AGENTS §6](/Users/lchingen/hivemind/AGENTS.md:194) requires examples from varied domains and none taken from a test article.
+    54	
+    55	The principles can be translated to a bank, drug maker, retailer, or chip maker, but the **retailer sales/empty shelves** example is less exact: sales are realized transactions, whereas shelves running short depend on inventory, replenishment and demand; sales need not measure supply or its growth. It can teach an overly broad relationship.
+    56	
+    57	The stated orientations agree with D436: total beside its share; supply beside shortage; **demand beside capacity keeping pace**. The counterexample correctly selects a share when the outcome actually tracks that share.
+    58	
+    59	### 6. Growth
+    60	
+    61	The reason establishes a plausible missing relation: the frozen request predates D436 and the proposed passage adds **951 characters** and **199 reported tokens**. But [AGENTS §6](/Users/lchingen/hivemind/AGENTS.md:194) permits an addition when the audit shows an instruction is missing and says to remove at least as much elsewhere; growth needs a written reason. “Three rounds found nothing to cut without changing behaviour” is a reason for growth, but it does not cure the unsupported selection taught by the examples or show that the full extra passage is necessary. **It is insufficient to accept this version.**
+    62	
+    63	### 7. Share-centred counterexample
+    64	
+    65	For **u3/clean-11**, the passage does not clearly direct a switch to total spending: its counter-case says a tracked share remains the question. But the actual outcome names **two splits**—spending and incremental compute capacity. The passage does not establish which split is the one tracked, so it does **not assure** a spending-share question. A careful model should not replace it with total spending; choosing between the two splits remains unresolved.
+    66	
+    67	### 8. Same-bet trigger and consistency
+    68	
+    69	“**As a second side of that same bet**” is a useful condition, but it does not by itself stop shape from deciding the main figure. The examples omit an explicit statement that the outcome tracks the total, sales, or demand and nevertheless instruct the model to ask those figures. They can teach the model to infer both “same bet” and the main side from the pairing.
+    70	
+    71	The counter-case and main sentence are **consistent when tracking is independently clear**: ask the total if the outcome tracks the total; ask the share if it tracks the share. They leave a conflict in ambiguous wording because the first sentence and examples can imply total priority while the counter-case requires deciding first whether the share is tracked.
+    72	
+    73	**NOT SOUND: Require the outcome to establish the tracked figure independently, and revise the examples to say explicitly which figure the outcome tracks; do not infer priority from a total-and-part or supply-and-shortage shape.**FILE narrow-d436/audit-v5-claude.md
+     1	(The Claude-family blind auditor's report on version 5, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Verdict line: SOUND. Optional, non-blocking wording fixes: "as a second side of that same bet" -> "one of these second sides of the same bet"; give the retailer example a figure that measures supply.
+     3	1. Consistent with D436: shape (b) from Alex's own words; (a) and (c) from the Decided line; PREREAD's main/second labels agree with all three orientations (acc/clean-9 main "world chip revenue", acc/clean-10 main "CMX-driven NAND demand", u3/clean-10 main "HBM capacity added"). Narrower than D436's six theses (u1/clean-5's and u3/clean-7's shapes not carried), right given D631/D635. Scope carried by "(D397)", disclosed. A deliberate exception to line 6; the no_ladder description does not mention it (weak collision). The retailer example fits shape (c) better than (b) (wording-level). The counter-case restates D397's test.
+     4	2. Targets: all four as D436 rules; pool-17 an extension by shape (not among the six); acc/clean-9 now asks the part both PREREAD readers said fails the opening tests, as D436 rules (disclosed).
+     5	3. Controls: all six still decline; u2/clean-10 defensible, not airtight (its decline rests on "meaningful … through late 2027" not checkable on a date).
+     6	4. Boundary: none decided; memory prices the nearest risk by analogy, not on a careful reading.
+     7	5. Examples: none from a test article; mirror the targets shape for shape (permitted, as D436 names the shapes); passing shows the model follows the examples, not that the rule generalises; shape (c) has no target.
+     8	6. Growth: +951 chars, ~199 tokens; sufficient in kind; "remove at least as much" not met (non-blocking); each shape stated twice.
+     9	7. u3/clean-11: stays asked as the share (the total appears only in the period text).
+    10	8. The same-bet clause gives no test; in effect the shape decides, which for these three shapes is what D436's Decided line rules; read as a real condition it could reopen the family split and bring back the declines.
+FILE narrow-d436/review-brief.md
+     1	# Source review of written answer choices (blind, read-only)
+     2	
+     3	You read `review/packet.json` in the run's reading folder (the path is given in your handoff). Each item is one written judged question with its
+     4	answer choices, the topic it was written for and the article. For each item, compare the question with the article and the topic, and list
+     5	every material defect of these kinds (an empty list when there is none):
+     6	
+     7	- **(i) The wrong side asked.** The topic names a figure together with a second side of the same bet: a share of that figure, whether supply
+     8	  stays short of demand, or whether capacity keeps pace with demand. The question asks the second side, or something else, instead of the
+     9	  figure. When the topic's outcome tracks the share itself, with the total only as its base, asking the total is this defect.
+    10	- **(ii) An invented measure.** The question asks a quantity, unit or series that neither the topic nor the article names, and the answer
+    11	  could not be settled from the material the question names.
+    12	- **(iii) A second side dropped.** The second side that the topic names is not in `not_judged`.
+    13	- **(iv) A due day that does not fit.** The day falls before the material that settles the question can exist, or contradicts a date the
+    14	  topic or the article gives. Report it; it is a separate class.
+    15	
+    16	Return one JSON object per line, in item order, and nothing else:
+    17	`{"item": <n>, "defects": ["i" | "ii" | "iii" | "iv", ...], "why": "<one sentence quoting the source, or empty>"}`.
+    18	Edit nothing and make no model call.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba narrow-d436/review-brief.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md | sed -n '75,86p;95,106p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba narrow-d436/paired_probe.py | sed -n '1,155p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md | sed -n '1,25p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+     1	# Source review of written answer choices (blind, read-only)
+     2	
+     3	You read `review/packet.json` in the run's reading folder (the path is given in your handoff). Each item is one written judged question with its
+     4	answer choices, the topic it was written for and the article. For each item, compare the question with the article and the topic, and list
+     5	every material defect of these kinds (an empty list when there is none):
+     6	
+     7	- **(i) The wrong side asked.** The topic names a figure together with a second side of the same bet: a share of that figure, whether supply
+     8	  stays short of demand, or whether capacity keeps pace with demand. The question asks the second side, or something else, instead of the
+     9	  figure. When the topic's outcome tracks the share itself, with the total only as its base, asking the total is this defect.
+    10	- **(ii) An invented measure.** The question asks a quantity, unit or series that neither the topic nor the article names, and the answer
+    11	  could not be settled from the material the question names.
+    12	- **(iii) A second side dropped.** The second side that the topic names is not in `not_judged`.
+    13	- **(iv) A due day that does not fit.** The day falls before the material that settles the question can exist, or contradicts a date the
+    14	  topic or the article gives. Report it; it is a separate class.
+    15	
+    16	Return one JSON object per line, in item order, and nothing else:
+    17	`{"item": <n>, "defects": ["i" | "ii" | "iii" | "iv", ...], "why": "<one sentence quoting the source, or empty>"}`.
+    18	Edit nothing and make no model call.
+
+ succeeded in 0ms:
+    75	  one is wrong even when it asks exactly what the thesis names (mark `Y`). An annual figure that only names quarterly reports as
+    76	  the material that settles it is not such a case.
+    77	- A step may decline (`no_ladder`) only in the seven cases its instructions allow: the thesis has no main figure or event (its
+    78	  outcome names none, or several things and none is the main one); nothing in it can be checked on a date (for an event:
+    79	  neither the thesis nor the article gives a date, and the thesis names no period, unless it is a pending regulatory decision,
+    80	  which is due at the company's fiscal year-end); it is the company's figure for a
+    81	  quarter or a half-year; it is a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve
+    82	  months, and neither the thesis nor the article gives the day it is published (D417); it is a figure for a year that had already
+    83	  ended on the article's day; it is a figure for a year beyond
+    84	  next year, unless the thesis's `opens_as` is binding_obligation; or the question belongs to another company, or to a matter that
+    85	  none of the listed themes covers (the listed themes are given with the packet). Declining for any other reason, or when the case
+    86	  named does not truly apply, is not justified.
+    95	| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+    96	| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+    97	| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+    98	| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+    99	| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+   100	| `F` | `holds`, `fails`, `n/a` | for a company's figure only: the direction is defensible (which end is bullish), and the reason given in `favourable_why` supports the favourable end. For an amount the company owes, guarantees or has committed to pay, where neither the thesis nor the article settles which end is good for the business (they argue both ends or say nothing on it), the lower end is the favourable one (D413), and "higher" fails unless the thesis's own words say that more of it is good. `n/a` for an event and for a theme |
+   101	| `Y` | `holds`, `fails`, `n/a` | for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails, whatever the thesis asks |
+   102	| `G` | `holds`, `fails`, `not_assessable`, `n/a` | for a figure, always one of the first three: where the article gives any figure for this quantity, `holds` when an analyst would accept the ranges as a fair division of the outcomes around it and `fails` when not; `not_assessable` when the article gives none. `n/a` only for an event's ladder and for a `no_ladder` |
+   103	| `L` | `holds`, `fails`, `n/a` | every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else holds with an empty list |
+   104	| `B` | a list | exactly one entry for each part listed in `not_judged`, in its order: `"bet"` when an analyst would hold a separate view on it, `"not_a_bet"` when it is a detail of the judged question; `[]` when nothing is listed and for a `no_ladder` |
+   105	| `XR` | `holds`, `fails`, `n/a` | the `reference` field quotes what the article states the market expects, with `kind` `expected`, or, for a figure where the article states no expectation, the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), with `kind` `last_reported`; the kind says truly which. It carries the number when the article states one (a range by its two ends), and no number the article does not state. It is null only when the article states no expectation and, for a figure, no amount last reported for the same quantity either; an event's is null whenever the article states no expectation |
+   106	| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+
+ succeeded in 0ms:
+     1	# Gate 1 pre-read: G1-c cannot fix its lines, so G1-c stops before any send (2026-11-13)
+     2	
+     3	**Answer.** Two blind source readers (Codex; Claude Opus), the same brief (`preread-brief.md`), each with the article, decided for every
+     4	matter a thesis names whether it meets the opening tests on its own. On the six two-bet theses of `second-thing/RESULT.md`, they
+     5	**agree in none** that the second matter meets the tests: Codex says yes in 5, Claude says no in 6. They agree on every main matter but
+     6	two, and on all four single theses (the controls and the one-bet-with-extras states: one matter, meets).
+     7	
+     8	| thesis | main matter: Codex / Claude | second matter: Codex / Claude |
+     9	|---|---|---|
+    10	| u3/clean-10 | HBM capacity added in 2027: meets / meets | whether the shortage eases in 2027: meets / no ("the effect and timing of the same capacity additions … the same supply card") |
+    11	| acc/clean-8 | HBM shipment growth in 2027: meets / meets | whether supply stays short in 2027: meets / no ("the same supply question … seen from the demand side") |
+    12	| acc/clean-9 | world chip revenue in 2026: no / no | AI-chip sales in 2026: meets / no ("mostly Nvidia's own reported revenue") |
+    13	| acc/clean-10 | CMX-driven NAND demand in 2027: meets / no | whether memory makers' capacity keeps pace: meets / no ("vague … no settling release or date") |
+    14	| u1/clean-5 | memory contract prices 2026–2027: meets / meets | per-rack memory cost (Codex also splits the prices into three): meets / no ("a broker's estimate … no public material settles it") |
+    15	| u3/clean-7 | Kyber's first shipments by 2028: meets / meets | NVL576 in volume: no / no |
+    16	| u1/clean-7, u2/clean-9, u1/clean-6, acc/clean-2 | one matter: meets / meets | — |
+    17	
+    18	**What it means.** Change 3's premise was that Step 1 puts two separately worthwhile bets in one thesis. Asked the opening tests, the
+    19	two families split on every case along the same line (Codex counts a second side of a matter as its own bet; Claude keeps it on the
+    20	first card), the split the council-loop skill records as a family threshold. With no matter both agree must survive, G1-c has no
+    21	positive line, only regression lines: its 36 sends could show no harm but could not show the change helps. Under D435 ("任何一项不过就停，报给你")
+    22	and D355, G1-c stops here and goes to Alex with a balanced set of these cases for his ruling (a granularity call: D248, "an analyst would
+    23	bet on each separately"; standard line 316's two-scenario test). G1-a and G1-b test changes 1 and 2, which do not depend on change 3,
+    24	and go ahead under D435.
+    25	
+
+ succeeded in 0ms:
+     1	"""The paired exposed verification of the narrow D436 passage (deep council D653, rounds 1 to 5): astra on the frozen ladder request against
+     2	astra on the request with the audited passage (`edit.json`), on four targets astra declined against D436 (acc/clean-8, acc/clean-9 and
+     3	u3/clean-10, three of the six theses put to Alex before D436, and pool-17), six decline controls, and one share-centred control (u3/clean-11,
+     4	whose outcome tracks the share itself), read blind by both families with planted controls, and each written answer of the edited arm on a
+     5	target or on the share control reviewed against its source by two reviewers. Exposed: the 44's targets informed the edit; this verifies that the
+     6	step carries Alex's ruling, not general performance.
+     7	
+     8	  python3 paired_probe.py check                         # $0: the requests, the one inserted passage, the shared cap; writes check-passed.json
+     9	  python3 paired_probe.py send <new run folder>         # frozen and edited interleaved: d1, d2 on all 11 topics; d3 on the 4 targets
+    10	  python3 paired_probe.py reading <run folder> <key folder>
+    11	  python3 paired_probe.py score <run folder> <key folder> <review codex rows> <review claude rows>
+    12	
+    13	The rule, fixed before the send (council rounds 2 and 4):
+    14	- exercised: the frozen arm's own declines ("no ladder", not answers refused twice by code) are at least 6 of its 12 target sends and fall on
+    15	  at least 3 of the 4 targets; otherwise INCONCLUSIVE;
+    16	- PASS when all hold, otherwise FAIL:
+    17	  - every edited target send (12) is a question with no hard-line fault marked by either family;
+    18	  - no edited target or share-control answer carries a material defect of kinds (i) to (iii) of `review-brief.md` marked by both reviewers;
+    19	  - every edited decline-control send (12) is a decline that neither family marks unjustified;
+    20	  - both edited share-control sends ask the share, with no hard-line fault marked by either family;
+    21	  - no edited send is lost (refused twice by code);
+    22	- due-day defects (kind iv) are the separate D636 class: reported for both arms, not deciding;
+    23	- a stopped draw or a missed planted control reads NOT MEASURED.
+    24	"""
+    25	import collections
+    26	import dataclasses
+    27	import hashlib
+    28	import json
+    29	import random
+    30	import sys
+    31	from pathlib import Path
+    32	
+    33	HERE = Path(__file__).resolve().parent
+    34	ROOT = HERE.parents[4]
+    35	sys.path[:0] = [str(HERE.parents[1] / 'reflection-6' / 'opus')]
+    36	import opus_probe as base  # noqa: E402   (the trial harness: run_arm, the planted controls, Stage A, the ladder step, the readers' tools)
+    37	from opus_probe import (accounting, budget, build_reader_packets, collector, ladder_step, model, probe_split, refcontrol,  # noqa: E402
+    38	                        stage_a)
+    39	
+    40	ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+    41	EDIT = json.loads((HERE / 'edit.json').read_text())
+    42	ANCHOR, INSERTED = EDIT['anchor'], EDIT['insert']
+    43	ARMS = ('frozen', 'edited')
+    44	ORDER = [('frozen', 1), ('edited', 1), ('frozen', 2), ('edited', 2), ('frozen', 3), ('edited', 3)]
+    45	TARGETS = ('acc/clean-8', 'acc/clean-9', 'u3/clean-10', 'pool-17')
+    46	CONTROLS = ('week-10-06:c1/clean-4', 'week-10-06:c1/clean-12', 'fortnight:c1/clean-8', 'pool-19', 'u1/clean-9', 'u2/clean-10')
+    47	SHARE = ('u3/clean-11',)
+    48	WORKERS = 1
+    49	EXPECTED_SPEND = 1.20            # 26 sends an arm at up to about $0.045 a send (astra measured $0.033 to $0.047; D633-D649)
+    50	TOTAL_CAP = 3.60                 # one cap shared by both arms: in-flight room (~$1.18) plus both arms' expected spend; within Alex's remaining ~$4.34
+    51	RECORD = HERE / 'check-passed.json'
+    52	SELECTION = HERE.parents[1] / 'reflection-7' / 'fresh-selection.json'
+    53	HARD = refcontrol.HARD
+    54	SHUFFLE_SEED = 20261136
+    55	CODE_FILES = [Path(__file__), Path(base.__file__), SELECTION, HERE / 'edit.json', refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+    56	              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+    57	
+    58	
+    59	FROZEN_TEXTS = stage_a.request_texts          # held here: `send` re-points stage_a.request_texts at an arm's texts during its draws
+    60	
+    61	
+    62	def frozen_texts():
+    63	    return FROZEN_TEXTS()
+    64	
+    65	
+    66	def edited_texts():
+    67	    texts = frozen_texts()
+    68	    if texts['system'].count(ANCHOR) != 1:
+    69	        raise SystemExit('the anchor sentence is not found once in the frozen system text')
+    70	    return dict(texts, system=texts['system'].replace(ANCHOR, ANCHOR + INSERTED))
+    71	
+    72	
+    73	TEXTS = {'frozen': frozen_texts, 'edited': edited_texts}
+    74	
+    75	
+    76	def population():
+    77	    """{name: case} for the 4 targets and 8 controls."""
+    78	    pool = json.loads(SELECTION.read_text())['pool']
+    79	    the_26 = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    80	    the_44 = {case['case']: case for case in json.loads((refcontrol.STAGE_A / 'cases.json').read_text())}
+    81	    out = {}
+    82	    for name in TARGETS + CONTROLS + SHARE:
+    83	        out[name] = pool[int(name.split('-')[1])]['case'] if name.startswith('pool-') else the_26.get(name) or the_44[name]
+    84	    if len(out) != 11:
+    85	        raise SystemExit(f'{len(out)} topics, not 11')
+    86	    return out
+    87	
+    88	
+    89	def topics_of(draw):
+    90	    return TARGETS + CONTROLS + SHARE if draw in (1, 2) else TARGETS
+    91	
+    92	
+    93	def built(case, arm, rl):
+    94	    texts = TEXTS[arm]()
+    95	    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    96	    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+    97	
+    98	
+    99	def code_digest():
+   100	    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+   101	
+   102	
+   103	def check():
+   104	    rl = refcontrol.research_list()
+   105	    failures, shas = [], {arm: {} for arm in ARMS}
+   106	    for name, case in population().items():
+   107	        frozen, edited = built(case, 'frozen', rl), built(case, 'edited', rl)
+   108	        sent_frozen, sent_edited = json.dumps(frozen), json.dumps(edited)      # the transport's serialization
+   109	        anchor = json.dumps(ANCHOR)[1:-1]
+   110	        only_insert = sent_frozen.count(anchor) == 1 and sent_edited == sent_frozen.replace(anchor, anchor + json.dumps(INSERTED)[1:-1])
+   111	        if not only_insert or frozen['model'] != 'gpt-6-astra':
+   112	            failures.append(name)
+   113	        for arm, request in (('frozen', frozen), ('edited', edited)):
+   114	            shas[arm][name] = model.request_identity(request)[1]
+   115	    room = WORKERS * max(budget.worst_cost(built(case, 'edited', rl)) for case in population().values())
+   116	    print(f'11 topics: each edited request is the frozen astra request with only the audited passage inserted: {not failures}')
+   117	    print(f'shared cap ${TOTAL_CAP:.2f}; in-flight room ${room:.3f}; expected spend ${2 * EXPECTED_SPEND:.2f} for both arms')
+   118	    if TOTAL_CAP < room + 2 * EXPECTED_SPEND:
+   119	        failures.append('the shared cap is below the room plus both arms\' expected spend')
+   120	    if failures:
+   121	        raise SystemExit(f'CHECK FAILED: {failures}')
+   122	    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+   123	    print('check passed')
+   124	
+   125	
+   126	def send(folder, *, transport=None):
+   127	    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+   128	    if record is None or record['code_sha256'] != code_digest():
+   129	        raise SystemExit('no check record for these files: run `check` first')
+   130	    rl = refcontrol.research_list()
+   131	    topics = population()
+   132	    for arm in ARMS:
+   133	        if {name: model.request_identity(built(case, arm, rl))[1] for name, case in topics.items()} != record['requests'][arm]:
+   134	            raise SystemExit('REFUSED: the requests differ from the checked record')
+   135	    folder = Path(folder)
+   136	    guard = probe_split.BreachGuard(transport or (lambda provider, request: model.openai_transport(provider, request, max_attempts=1)))
+   137	    room = WORKERS * max(budget.worst_cost(built(case, 'edited', rl)) for case in topics.values())
+   138	    spent = collections.Counter()
+   139	    original = stage_a.request_texts
+   140	    try:
+   141	        for arm, draw in ORDER:
+   142	            stage_a.request_texts = TEXTS[arm]          # base.run_arm reads the step's texts from Stage A for every call
+   143	            cases = [dict(topics[name], case=f'{arm}-d{draw}|{name}') for name in topics_of(draw)]
+   144	            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', TOTAL_CAP - sum(spent.values()), ASTRA, rl, transport=guard,
+   145	                                          workers=WORKERS, first_alone=(arm, draw) == ('edited', 1), room=room)
+   146	            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+   147	            spent[arm] += known + in_full
+   148	            print(f'{arm} d{draw}: {len(written)} of {len(cases)} written; spent ${known + in_full:.4f}', flush=True)
+   149	            if guard.breaches or limit.stopped or len(written) != len(cases):
+   150	                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or guard.breaches}. NOT MEASURED.')
+   151	    finally:
+   152	        stage_a.request_texts = original
+   153	    print(f'spent {dict(spent)}')
+   154	
+   155	
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'COVER|CAP|EXPECTED|SHARE|CONTROLS|material|defects|review' narrow-d436/paired_probe.py" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+5:target or on the share control reviewed against its source by two reviewers. Exposed: the 44's targets informed the edit; this verifies that the
+11:  python3 paired_probe.py score <run folder> <key folder> <review codex rows> <review claude rows>
+18:  - no edited target or share-control answer carries a material defect of kinds (i) to (iii) of `review-brief.md` marked by both reviewers;
+22:- due-day defects (kind iv) are the separate D636 class: reported for both arms, not deciding;
+46:CONTROLS = ('week-10-06:c1/clean-4', 'week-10-06:c1/clean-12', 'fortnight:c1/clean-8', 'pool-19', 'u1/clean-9', 'u2/clean-10')
+47:SHARE = ('u3/clean-11',)
+49:EXPECTED_SPEND = 1.20            # 26 sends an arm at up to about $0.045 a send (astra measured $0.033 to $0.047; D633-D649)
+50:TOTAL_CAP = 3.60                 # one cap shared by both arms: in-flight room (~$1.18) plus both arms' expected spend; within Alex's remaining ~$4.34
+82:    for name in TARGETS + CONTROLS + SHARE:
+90:    return TARGETS + CONTROLS + SHARE if draw in (1, 2) else TARGETS
+117:    print(f'shared cap ${TOTAL_CAP:.2f}; in-flight room ${room:.3f}; expected spend ${2 * EXPECTED_SPEND:.2f} for both arms')
+118:    if TOTAL_CAP < room + 2 * EXPECTED_SPEND:
+144:            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', TOTAL_CAP - sum(spent.values()), ASTRA, rl, transport=guard,
+189:    review_rows = [row for row in rows if row['case'].split('|', 1)[0].startswith('edited') and row['status'] == 'ladder'
+190:                   and row['case'].split('|', 1)[1] in TARGETS + SHARE]
+191:    review_rows += [row for row in rows if row['case'].split('|', 1)[0].startswith('frozen') and row['status'] == 'ladder'
+192:                    and row['case'].split('|', 1)[1] in TARGETS + SHARE]           # the frozen arm's written answers, mixed in so the reviewer cannot tell arms
+193:    random.Random(SHUFFLE_SEED + 1).shuffle(review_rows)
+194:    review_key, review_items = {}, []
+195:    for number, row in enumerate(review_rows, start=1):
+196:        review_key[str(number)] = row['case']
+197:        review_items.append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+198:    (folder / 'review').mkdir()
+199:    (folder / 'review' / 'packet.json').write_text(json.dumps(review_items, indent=1, ensure_ascii=False) + '\n')
+200:    (key_folder / 'review-key.json').write_text(json.dumps(review_key, indent=1) + '\n')
+201:    print(f'{len(rows)} items in {len(packets)} packets; {len(review_items)} answers for the source review')
+204:def score(run_folder, key_folder, review_codex, review_claude):
+213:    review_key = json.loads((Path(key_folder) / 'review-key.json').read_text())
+214:    reviews = {}
+215:    for family, path in (('codex', review_codex), ('claude', review_claude)):
+217:        if sorted(row['item'] for row in rows) != list(range(1, len(review_key) + 1)):
+218:            raise SystemExit(f'NOT MEASURED: the {family} review does not hold each of the {len(review_key)} answers once')
+220:            reviews.setdefault(review_key[str(row['item'])], {})[family] = set(row.get('defects') or [])
+238:    material = {name: sorted(set.intersection(*[by_family.get(f, set()) for f in ('codex', 'claude')]) & {'i', 'ii', 'iii'})
+239:                for name, by_family in reviews.items()}
+240:    due_day = {name: sorted({f for f, kinds in by_family.items() if 'iv' in kinds}) for name, by_family in reviews.items()}
+242:                             and not material.get(f'edited-d{d}|{t}') for d in (1, 2, 3)] for t in TARGETS}
+243:    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+245:                           and not material.get(f'edited-d{d}|{t}') for d in (1, 2)] for t in SHARE}
+248:                      'material defects (i-iii) agreed by both reviewers': {k: v for k, v in material.items() if v},
+249:                      'due-day defects (iv), reported only': {k: v for k, v in due_day.items() if v},
+
+codex
+**DISAGREE: the proposed question for Alex is useful, but v5.1 and the paired test are not ready on a “yes” alone.** The smallest correction is to make the question cover the general rule the passage would apply, then make the review count disputed material defects and handle the uncertain control correctly.
+
+1. **V5.1 on Alex’s “yes”: not yet.** A yes to three examples would establish what he wants for those examples. V5.1 applies the same choice to other topics with those shapes, including pool-17. The question must therefore distinguish:
+
+   - those three named cases; and
+   - the proposed **general rule** for similar cases when both sides are named without a stated priority.
+
+   A yes to the first does not automatically answer the second. The share-centred exception also depends on recognizing when the share itself is tracked; the passage does not remove that ambiguity. [V5.1](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:4)
+
+2. **The rewritten test is improved, but its rule still differs from our agreement.**
+
+   - The source review fails an answer only when **both reviewers mark the same defect**. A serious defect marked by one reader disappears from the verdict; two readers identifying different material defects also disappear. That is not the strict treatment we agreed. Report both views, and make a disputed material defect stop a pass pending resolution. The code also treats a missing or empty `defects` value as no defects, so review-row validity must be enforced before scoring. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:213)
+   - The review brief’s “wrong side” rule **assumes the disputed shape-based choice**. It cannot independently validate that choice. It can test compliance with Alex’s eventual answer, provided the answer explicitly covers the general rule. [Review brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/review-brief.md:7)
+   - **`u3/clean-11` does not unambiguously demand the spending share:** its outcome names both spending and capacity splits. It is a useful overreach probe, but requiring the spending-share question as a settled control would decide another disputed choice. Use a source-confirmed share-centred control instead, or predeclare this case unresolved. [Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v5-codex.md:63)
+   - The claim that `u2/clean-10` has **no checkable date** is not established: the topic names late 2027. The Codex audit calls its no-main-part decline defensible but ambiguous. Do not present it as a clean date control. [Topic](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json:71), [Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v5-codex.md:43)
+   - Due-day defects may be reported separately for this narrow comparison, but a pass with such a defect must **not** be described as a sound production question. The known signed-deal deadline class remains open.
+   - The shared **$3.60** cap and **52 sends** are now reflected in the code. The check record alone does not prove the spending guard or scoring paths; verify those paths before sending. [Plan and cap](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:13)
+
+3. **The scope question is appropriately put to Alex, with the distinction above.** D439 delegates reversible choices while he is inactive; it does not prevent him from deciding this now. I would put it as:
+
+   > “When a topic names both a total and one part, or a supply/demand figure and its shortage, should we always make the total or figure the question and show the other side as context—even if the topic does not say which is more important? For example: chip sales and AI-chip sales; shipments and a shortage; demand and whether capacity keeps up. Or should we decide which part matters from the topic, and decline when that remains unclear?”
+
+   Include the cost: choosing the automatic rule can leave a part-focused question unanswered. Explain that his earlier answer explicitly addressed the shipment/shortage example, while the other two orientations are in the recorded decision. Give him the option to answer **case by case**, not only yes or no. [D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4847)
+
+If Alex chooses the general rule, revise and independently audit the exact passage and test against his answer, then decide the bounded send. If he declines it, the **proposed general passage** stops; the seven recorded Astra misses remain as recorded, without assuming his answer resolves every individual refusal. **DISAGREE.**
+tokens used
+784,700
+**DISAGREE: the proposed question for Alex is useful, but v5.1 and the paired test are not ready on a “yes” alone.** The smallest correction is to make the question cover the general rule the passage would apply, then make the review count disputed material defects and handle the uncertain control correctly.
+
+1. **V5.1 on Alex’s “yes”: not yet.** A yes to three examples would establish what he wants for those examples. V5.1 applies the same choice to other topics with those shapes, including pool-17. The question must therefore distinguish:
+
+   - those three named cases; and
+   - the proposed **general rule** for similar cases when both sides are named without a stated priority.
+
+   A yes to the first does not automatically answer the second. The share-centred exception also depends on recognizing when the share itself is tracked; the passage does not remove that ambiguity. [V5.1](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:4)
+
+2. **The rewritten test is improved, but its rule still differs from our agreement.**
+
+   - The source review fails an answer only when **both reviewers mark the same defect**. A serious defect marked by one reader disappears from the verdict; two readers identifying different material defects also disappear. That is not the strict treatment we agreed. Report both views, and make a disputed material defect stop a pass pending resolution. The code also treats a missing or empty `defects` value as no defects, so review-row validity must be enforced before scoring. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:213)
+   - The review brief’s “wrong side” rule **assumes the disputed shape-based choice**. It cannot independently validate that choice. It can test compliance with Alex’s eventual answer, provided the answer explicitly covers the general rule. [Review brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/review-brief.md:7)
+   - **`u3/clean-11` does not unambiguously demand the spending share:** its outcome names both spending and capacity splits. It is a useful overreach probe, but requiring the spending-share question as a settled control would decide another disputed choice. Use a source-confirmed share-centred control instead, or predeclare this case unresolved. [Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v5-codex.md:63)
+   - The claim that `u2/clean-10` has **no checkable date** is not established: the topic names late 2027. The Codex audit calls its no-main-part decline defensible but ambiguous. Do not present it as a clean date control. [Topic](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json:71), [Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v5-codex.md:43)
+   - Due-day defects may be reported separately for this narrow comparison, but a pass with such a defect must **not** be described as a sound production question. The known signed-deal deadline class remains open.
+   - The shared **$3.60** cap and **52 sends** are now reflected in the code. The check record alone does not prove the spending guard or scoring paths; verify those paths before sending. [Plan and cap](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:13)
+
+3. **The scope question is appropriately put to Alex, with the distinction above.** D439 delegates reversible choices while he is inactive; it does not prevent him from deciding this now. I would put it as:
+
+   > “When a topic names both a total and one part, or a supply/demand figure and its shortage, should we always make the total or figure the question and show the other side as context—even if the topic does not say which is more important? For example: chip sales and AI-chip sales; shipments and a shortage; demand and whether capacity keeps up. Or should we decide which part matters from the topic, and decline when that remains unclear?”
+
+   Include the cost: choosing the automatic rule can leave a part-focused question unanswered. Explain that his earlier answer explicitly addressed the shipment/shortage example, while the other two orientations are in the recorded decision. Give him the option to answer **case by case**, not only yes or no. [D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4847)
+
+If Alex chooses the general rule, revise and independently audit the exact passage and test against his answer, then decide the bounded send. If he declines it, the **proposed general passage** stops; the seven recorded Astra misses remain as recorded, without assuming his answer resolves every individual refusal. **DISAGREE.**

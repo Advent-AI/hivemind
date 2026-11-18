@@ -83,12 +83,17 @@ export function parseDataset(input) {
       `${path}/created_day`,
       'thesis is later than as_of',
     );
+    const positional = thesis.answerShape === 'unrecorded' || thesis.favourableEnd === 'n/a';
     requireThat(
-      scores.length === 2
-        ? ['Yes|No', 'No|Yes'].includes(scores.join('|'))
-        : scores.length === 5 && SCORES.every((s) => scores.includes(s)),
+      positional
+        ? scores.join('|') === thesis.rungs.map((r, n) => String(n + 1)).join('|')
+        : scores.length === 2
+          ? ['Yes|No', 'No|Yes'].includes(scores.join('|'))
+          : scores.length === 3
+            ? thesis.answerShape === 'event' && scores.join('|') === 'Yes|Ruled out|Still open'
+            : scores.length === 5 && SCORES.every((s) => scores.includes(s)),
       `${path}/rungs`,
-      'expected Yes/No or five unique ordinal scores',
+      "expected Yes/No, an event's Yes/Ruled out/Still open, or five unique ordinal scores",
     );
     thesis.rungs.forEach((r, index) =>
       requireThat(

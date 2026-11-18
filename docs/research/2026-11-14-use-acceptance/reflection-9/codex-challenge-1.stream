@@ -1,0 +1,886 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-9
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Reflection council 9, challenge round 1: one way back, for consensus
+
+Three readings were made apart, and all reached the same place:
+- my own, written first (`own-reflection.md`);
+- yours, cold (`cold-codex-1.md`);
+- a cold Claude-family reading (`cold-claude-1.md`, condensed). Its key citations were checked against the record: D623 at DECISIONS-log lines
+  8384–8388, D509 at lines 5914–5916, and AGENTS lines 375–384.
+
+The Claude reading adds four facts:
+- D623 had already recorded that gate 1's zero-fault lines are not a dependable target (about 3.8%, 3.3% and 1.4% faults a send, against under
+  0.5% needed), and more than 30 gate-1 decisions followed;
+- the stop hook rejected holds three times, and each rejection produced a new candidate;
+- D656's FAIL conflicts with AGENTS §7.3's rule against dropping a version that met its goal for a stricter later rule;
+- the gate-5 engineering (D570–D603) ran while gate 1 failed, against AGENTS ("nothing later in the plan … starts before it passes") and D509
+  ("nothing outside it is started").
+
+## The proposed way back (merged)
+
+**Stop now.** These are paused with records kept; nothing is deleted:
+- gate-1 tuning and D656's queued listing census, so no new answer-choice versions;
+- the new control-line reference (D658, design v8, nothing run). It is Alex's choice, so it is paused and put to him (question 4 below);
+- the product page, the live store, the planner and integration;
+- model trials.
+
+**Do first: put Deck 1 to Alex today, unchanged.** It takes about half an hour of his time and $0 of model calls. Scoring order: first his marks
+against the planted cards, then against the model families' stored marks, which carry D661's caveat.
+
+**Written before he marks:**
+- **His review works as an instrument** if all of these hold:
+  - he rejects both planted wrong answers;
+  - he accepts the confirmed supported control;
+  - at least 2 of 3 repeats are marked the same;
+  - he finishes in about 30 minutes, at most 45.
+
+  Then the next step is a design, at $0, for a product comparison: both systems, a real starting library, fresh weeks, cards like these for
+  him, at a size his time allows. It is reviewed by the council and run only on his word. No winner is declared from Deck 1.
+- **It does not yet work** if he accepts a planted answer, two repeats differ, or he cannot finish in 45 minutes. Then the instrument is
+  simplified (fewer fields, clearer cards) before any use. We do not return to gate tuning.
+- **Either way,** list each real card where he and a model family differ on "supported". A family he systematically contradicts no longer
+  decides a gate alone.
+
+**Questions only Alex can answer** (with our recommendations):
+1. **What decides "ready"?**
+   - (a) the six lines stay a hard gate (D623: near-zero chance at current fault rates);
+   - (b) the lines stay as diagnostics, and his product review with planted checks decides (D560; **recommended, decided after the deck**);
+   - (c) an end-to-end final-answer comparison with "beats" in numbers.
+2. **A bound on the new system before it is reconsidered:** a spend, a date, or a number of failed product comparisons (D544's missing bound).
+3. **Product tests start from a library built from earlier real material,** with empty starts kept as diagnostics (D559)? **Recommended: yes.**
+4. **The new reference (D658):**
+   - pause until 1 is answered (**recommended**);
+   - continue on the luna questions;
+   - redo it for astra's questions.
+5. **The 589 uncommitted paths since 11-12:** commit them on his word (AGENTS forbids committing unasked). This is a risk, not drift.
+
+**Process changes against recurrence** (to propose to him; not done unasked):
+- **The waiting-on-Alex queue goes first** in every report while he is active. The deck vanished from the reports after D582.
+- **When the only steps that move the goal are Alex's, the loop holds and says so.** It does not fill the time with later-gate engineering.
+  This needs his word on the standing goal or stop hook that rejected holds.
+- **Before any council,** the earlier reflections on the same question are read and quoted. This is the fifth miss: reflection 8 did not read
+  D560.
+
+Questions for you:
+1. Is anything in **Stop** wrong to stop?
+2. Are the deck's prewritten outcomes right, and is anything missing? For example, the deck is built on the luna-era week of 09-22; is that a
+   problem for a method pilot?
+3. Are the five questions the right ones, in the right order, with the right recommendations?
+4. What is missing for this to be the exact way back?
+
+Answer CONSENSUS or DISAGREE, with the smallest change.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+warning: This session was recorded with model `gpt-6.1-terra` but is resuming with `gpt-6.2-sol`. Consider switching back to `gpt-6.1-terra` as it may affect Codex performance.
+codex
+I’ll check the proposed pauses and deck rules against what was agreed before the tests, then identify the smallest changes needed for consensus.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba AGENTS.md | sed -n '326,394p'; nl -ba docs/DECISIONS-log.md | sed -n '5902,5918p;8374,8404p;9158,9196p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   326	### 7.3 Iterating
+   327	
+   328	- **One class at a time** (Alex, 2026-10-29: "你一类一类改，快速迭代然后测regression"). Count the misses by mechanism; take the largest
+   329	  class; trace it to the sentence that causes it; change one thing aimed at that class; run the whole bench (a prompt change alters every
+   330	  request) against the previous version; read every regression to its raw answer. The pages that showed the failure locate its
+   331	  mechanism; only the whole bench (every set, every draw) accepts the change.
+   332	- **Name the effect on the judgement first.** Every proposed change states the effect it is expected to have on a reader or on the final
+   333	  judgement, and is tested there where possible; a step's own counts do not decide it alone. A fix that keeps moving its error to
+   334	  neighbouring cases stops being tuned on that set (Alex, 2026-11-09: "感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？";
+   335	  he approved this rule the same day, D391).
+   336	- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Totals and acceptance come from at least
+   337	  three samples beside a fresh control; a bar the control fails against itself judges nothing. A direct-read pass
+   338	  (one send per article, every answer read beside its source; D238) locates mechanisms; its counts are one draw and are labelled so.
+   339	- **A written log.** One row per arm: hypothesis, change, numbers against the control (regressions first), kept or not. Refuted arms and
+   340	  your own mistakes stay in it; the next session starts from its last row.
+   341	- **Own the loop, within what Alex agreed.** When the direction is agreed and no stop is in force (`CURRENT_STATE.md`), push your own
+   342	  hypotheses through $0 checks and probes of a few cents on stored cases without asking. A registered test, an end-to-end run, or
+   343	  anything that departs from the agreed plan starts on his word; a result that contradicts the hypothesis stops the line and goes to him
+   344	  (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估"). While he is not active (D439), "his word" is the council's
+   345	  recorded consensus, and a stopped line goes to the council for re-assessment.
+   346	- **Council before every change is sent.** A prompt, schema, code or criterion change, including one found by reading a probe, is a new
+   347	  arm. It goes to an independent Codex read and a challenge round before its first send, and its result goes to a challenge round
+   348	  before the next change. Reading the traces and the model's own account locates a fix; it does not review it (Alex, 2026-11-08:
+   349	  "你这些改动有我你有好好的跑council 再下手").
+   350	  Every round's reasoning and decisions are reflected on in the council until there is a consensus; the decision is recorded, and
+   351	  the next test goes straight ahead, held to the PRD and its quantified goals, with every trace read by you yourself and not only
+   352	  by readers (Alex, 2026-11-10: "你应该跑council loop 来reflect 你每一轮的思路还有决策，需要你打成共识，记录决策，向前直行测试。不要drift,我们有PRD和量化目标，
+   353	  你自己作为llm 下去看所有trace").
+   354	- **Small first, then one run.** A hypothesis is first validated the simplest way, on a few stored cases and a few cents, and shown to
+   355	  work at a high level before any full analysis or stability test is built (Alex, 2026-11-04: "don't overspend resources on wasting time.
+   356	  We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the full
+   357	  analysis stability test. This is a principle you should remember"). A day or week slice before any whole-corpus run; preflight on
+   358	  stored data before any paid run (§5); no edit while a run is live (§9). A paid run measures a configuration; it never tries a fix.
+   359	  Before each send, write what it can still change in the decision and which risk the cheaper check left uncovered; a replicate or
+   360	  control that only re-measures noise or a settled comparison is not sent, and a fix is not sent before the model's own account and the
+   361	  request locate where the decision is made (Alex, 2026-10-30: "你跑这么多次真的有意义吗"; "我感觉你在为了跑而跑"). Several fixes on one
+   362	  base are each proved on stored data in minutes and then run together once (Alex, 2026-11-02: "快速验证。不要drift,不要跑超级繁琐的全方位验证，先poc 改，能work,有结论，全部改动放到一起再跑完整"; D266).
+   363	- **One recommendation, one test.** What reaches Alex as the next step of work is one recommendation and one test of it, reached after
+   364	  rounds of review (Claude's own, Codex's, an independent reader's) on the traces until a round finds nothing serious; never a menu of
+   365	  arms or options, never a conclusion the next probe overturns (a choice that changes what the system does still goes to him with its
+   366	  options and a recommendation, Authority and scope) (Alex, 2026-11-04: "就测试一种，一次 … 你就没有自己看5轮review，能不能自己有个超级自信的定论和证据再给我提建议？").
+   367	  An agreed recommendation is first challenged by an independent reader on the concrete evidence behind it ("why you give
+   368	  recommendations for this. What did you see exactly?"). A review round reads a rule as its author meant it; only a send shows how the
+   369	  model applies it: before a registered test, the changed request is sent on the cases that motivated it, a few cents.
+   370	- **A failed arm is diagnosed before the next one.** When an arm fixes its class and regresses another, write the root cause first: the
+   371	  process error (what grew, what the small sample did not guard) and the mechanism, traced to the raw answers and the model's account,
+   372	  never a guess stated as the cause. A small sample guards every class the change can move, not only its own. When a fix keeps moving
+   373	  another class, the call is doing several jobs: move the rule to its owner (a field's definition sits in the schema beside the field)
+   374	  rather than add a sentence (Alex, 2026-10-30: "那你这些修改都是失败的呀，为什么，根因，你要检讨然后再接着尝试。我觉得你已经陷入deep loop 了").
+   375	  A failed step of a plan is fixed and re-run at that same step: its failures are the work list, and nothing later in the plan and no
+   376	  substitute plan starts before it passes (Alex, 2026-11-04: "你为什么要drift? 你现在明明还有这么多的问题要fix,你到底知不知道你要fix什么？").
+   377	  Before a fix is proposed, write which goal the mechanism still serves and what the product already gives for it; a measurement that
+   378	  removes the reason a mechanism exists retires the mechanism instead of starting its repair (Alex, 2026-11-04: "I told you to think about
+   379	  it and you're giving me suggestions that you reject yourself").
+   380	- **Before a version is rejected, the rejection is checked.** Every failed or refused answer behind a "did not pass" is read against its
+   381	  source and put down as the model's error or the measuring rule's or check's error; a rule or check that refuses right answers is fixed,
+   382	  and a version that already meets the goal (what it was built to fix is fixed, nothing that was right turned wrong) is not dropped for a
+   383	  stricter rule a later review added. Alex, 2026-11-05: "你到底是不是再搬石头砸自己的脚？各种reject自己，你确定是正确的rejection 吗？你又下去看trace吗？";
+   384	  "你不能每次都这样判错然后浪费我时间，我需要你深度看完所有失败trace给我准信下一步你要跑什么才能收敛".
+   385	- **Correct, then cheap.** Make the pipeline right and stable before any cost, speed or throughput work; report cost as a baseline only
+   386	  (Alex, 2026-10-25).
+   387	
+   388	## 8. Product thinking
+   389	
+   390	- Think like a hedge-fund analyst. A thesis is an argued view about the business and the world; its stance comes from the argument
+   391	  weighed against what is priced. Extract the few metrics or segments that carry it; financial-statement lines are its evidence, never its
+   392	  definition.
+   393	- **Lean cautious, catch the increment.** Most of what an item says is noise: not everything is evidence and not everything is a lead. A
+   394	  typical claim or background line is common knowledge (what an analyst following the company knew before the item) and is not kept
+  5902	## D509 · 2026-11-15 · Alex goes inactive: Claude operates by his rules, and every round's run is examined in depth with the council (D439 in force again)
+  5903	
+  5904	- **Asked** (after D508: whether to open the six-call test of the effect on one judgement). **Alex** (in place of an option):
+  5905	  "修改goal，我要睡觉了，下来你自行按照我的准则操作，需要深度的审视每一轮run 用council".
+  5906	- **Decided (his words):** he is not active from here; Claude carries the work forward on its own under his rules (AGENTS.md), and
+  5907	  each round's run is examined in depth with the council. This is D439's arrangement, in force again from this message: a choice or
+  5908	  next step that would have gone to him goes to the council (an independent read-only Codex review and Claude, argued on the data,
+  5909	  the PRD and its goals until consensus), the consensus is recorded as a decision citing D439, executed, measured, every trace read
+  5910	  by Claude, every round logged with what it taught.
+  5911	- **Settled by Claude (wording and limits, not confirmed by Alex):** the standing limits stay as D439 records them (the frozen ruler
+  5912	  never changes; nothing pushed, deployed, published or committed; credentials and provider caps untouched). Paid model calls in
+  5913	  this period stay within D439's ceiling of $40 at published rates in total (Claude's setting), each paid step with its own ceiling
+  5914	  in its council-agreed design; the lean path's spend before this message is $8.32. The scope is what he has taken up: the lean
+  5915	  path's question (which system carries forward toward production) and the open defect of D506 and D508 within the current phase's
+  5916	  PRD (`docs/prd/10-filing-phase.md`); nothing outside it is started. The session goal itself is set by his `/goal` command, which
+  5917	  Claude cannot change; the text that matches his words is given to him in the reply.
+  5918	- **First step under it:** the six-call test of D508, on which the council (round 21) and Claude already agree; its design goes to
+  8374	- The 15 disputed points stay unruled.
+  8375	- D397's splitting defect stays open.
+  8376	- The split's scratch code stays beside the frozen step, unadopted. Its writer changes leave unsplit topics unchanged (the c1 replay is
+  8377	  95 of 95 equal).
+  8378	- D612's reopening conditions govern paid work again.
+  8379	
+  8380	Result: `splitting/RESULT.md`.
+  8381	
+  8382	## D623 · 2026-11-16 · Reflection 6: measure gate 1's reading with a blinded reference control outside the 44
+  8383	
+  8384	The stop hook rejected D622's hold. A cold Codex reviewer read the whole record (`reflection-6/codex-cold.md`, thread `01a1e6f3`):
+  8385	
+  8386	- the largest observed loss is opening answerable questions;
+  8387	- gate 1's zero-fault lines are not a dependable target for the current step. Outside the 44 the stored readings give about 3.8%,
+  8388	  3.3% and 1.4% faults a send on lines 1, 3 and 4, while a 50% chance of zero faults in 131 sends needs under about 0.5% combined.
+  8389	
+  8390	The reviewer proposed a source-to-answer audit, then withdrew it once Claude showed that the carried-library comparison
+  8391	(D559–D561), the delivery trace (D609, D610) and the July opening review had covered it.
+  8392	
+  8393	Consensus (`reflection-6/codex-challenge-1.md`): "Run the blinded outside-44 reference control at $0 in API spending, with the
+  8394	safeguards and narrower conclusions above; leave the gate and D426 unchanged."
+  8395	
+  8396	- **The method.** Independent writers produce reference answer choices for fixed stored topics outside the 44, from the same inputs.
+  8397	  They see no stored answers or marks.
+  8398	- **Checks and blinding.** The references pass the same schema and code checks. They are mixed blind with the frozen step's stored
+  8399	  answers and known controls, and read by both families with the full gate form.
+  8400	- **Review.** Every settled fault on a reference gets an independent source-and-rule review: an answer error, a reader error, or
+  8401	  unresolved.
+  8402	- **What it can show:** a confirmed reader error on a sound reference, or a clear repeated difference between the references and the
+  8403	  step. It cannot prove gate 1 reachable or unreachable.
+  8404	
+  9158	## D656 · 2026-11-17 · The paired test of v5.5 (D655): FAIL by the prewritten rule; D654's class recovered on the exposed targets; v5.5 kept as an unaccepted candidate; next, a $0 census of the listing defect
+  9159	
+  9160	- **Run:** `poc/data/clean-narrow-d436-paired-2026-11-17/run-1`. 52 sends, none lost; spent $1.52 against a cap of $3.60. The score is in
+  9161	  `score-output.txt` and the keys in `keys/`.
+  9162	- **Reading:**
+  9163	  - both reader families with 6 planted controls, all caught. The Codex row on the planted other-question control was asked again in the
+  9164	    established wording after two sessions gave Y and G as n/a; the handoff named the invalid fields.
+  9165	  - two source reviewers;
+  9166	  - third readers of both families on 14 disputed sends.
+  9167	- **Result:**
+  9168	  - **Targets** (acc/clean-8, acc/clean-9, pool-17, 3 passes each): frozen wrote 0 of 9 (9 declines, all ruled unjustified); edited wrote 9 of 9, with
+  9169	    no hard-line fault from either family and no material defect from either source reviewer.
+  9170	  - **Decline controls:** 10 of 10 declined in each arm, none faulted.
+  9171	  - **u2/clean-10** (reported): declined 2 of 2 in each arm.
+  9172	  - **u3/clean-10** (reported): frozen wrote 2 of 3 and edited 3 of 3. Both arms carry a one-reviewer kind-(ii) flag, wafer starts a month as a unit
+  9173	    neither the topic nor the article names; this is not agreed.
+  9174	  - **u3/clean-11** (share control): asked as the share in all 4 sends, never as the total.
+  9175	- **Verdict: FAIL** (prewritten rule).
+  9176	  - Edited-d1 of the share control carries an L fault: Nvidia's own share of spending is not listed. The Codex reader marked it, the Claude reader
+  9177	    held, and both third readers ruled it a fault.
+  9178	  - The same omission is in frozen-d2, also ruled a fault by both third readers. That is 1 of 2 in each arm: an observation on one topic, not an
+  9179	    established equal rate.
+  9180	  - The defect predates the edit: D649 recorded it as disputed on astra's gate-1 run, and that earlier reading stands beside this one.
+  9181	  - Edited-d2, which passed the first readers, appears to omit the same item; it was not ruled on, and its mark is not changed.
+  9182	- **Disclosed, not deciding:**
+  9183	  - pool-17 asks units with a null reference and lists IDC's "19% growth" forecast as not judged. On XR the third readers split.
+  9184	  - The Claude reviewer flags pool-17's due day. 2027-03-31 is the day code stored, while the model proposed 2027-04-30; the reviewer's concern is an
+  9185	    inference from a prior release.
+  9186	  - The share control's sources may not yield its denominator: a W, upheld by one third reader and rejected by the other, in both arms.
+  9187	- **Council** (round 7, thread 01a1e8ee-437f-74a3-ad0a-8edcbde0e3b3): "keep the recorded FAIL, then census the listing defect at $0 before
+  9188	  deciding on a Gate 1 rerun … V5.5 is a promising candidate, not an accepted repair." Claude agrees.
+  9189	- **Decided** (D439; Alex active, informed):
+  9190	  - the FAIL stands;
+  9191	  - v5.5 is kept beside the frozen request as an unaccepted candidate, and the frozen request is unchanged;
+  9192	  - no rerun of the 44 is requested yet.
+  9193	- **Next:** a $0 census, on astra's stored gate-1 run and this run, of answers that leave a separately tracked part unlisted (line 2). Count each
+  9194	  applicable answer, separate agreed rulings from disputes, and trace each raw question and list to its topic and request. The u3/clean-10 unit
+  9195	  concern is reviewed at the source. The result returns to the council with one next test.
+  9196	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/pilot-deck-1/DESIGN.md | sed -n '23,80p'; nl -ba docs/DECISIONS-log.md | sed -n '8783,8808p;9197,9227p'; nl -ba docs/CURRENT_STATE.md | sed -n '421,444p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    23	Sixteen distinct cards and three hidden repeats.
+    24	
+    25	1. **New system, six real answers.** Its planted wrong answer is built on question v1, so v1's real answer is left out (a real
+    26	   card must not reveal a plant). That leaves exactly six: v2, v3 and v7 (the three questions of D508's confirmed pairs, which
+    27	   carry the completeness sheets) and v4, v5, v6.
+    28	2. **Old system, six real answers of fifteen.** First the planted wrong answer is drawn (rule 4) and its question left out.
+    29	   Then one independently confirmed supported control is drawn at random from those the separate reader confirmed
+    30	   (`../week/controls-B.json`, `control-confirmation.jsonl`); then five more at random from the remaining questions.
+    31	3. **Two matters with no question:** M01 (fiscal 2027 revenue: both families mark it missed by one system) and M04 (supply
+    32	   commitments: missed by the other), from `../week/matters-A2.json`. The card shows the matter and its source articles; answer
+    33	   support is not applicable.
+    34	4. **Two wrong answers, one per system:** the new system's planted answer (item 1 of the week's reading B: the rung moved),
+    35	   and one of the old system's two planted answers whose cited statements are all stored (items 22 and 24; the third plant
+    36	   cites an added statement), drawn at random. Each keeps the request and the answer choices of its original control. Both
+    37	   model families marked all four plants unsupported on 2026-11-14.
+    38	5. **Three hidden repeats:** drawn at random from the real answers among the first ten cards in the order that carry no
+    39	   completeness sheet (so a repeat is the same card as its original). *Changed before any card was seen: the first build
+    40	   failed on a repeat of a sheet card.*
+    41	6. **Order:** the sixteen shuffled; the last six positions and the three repeats shuffled together.
+    42	7. **Completeness sheets on three cards** (new system v2, v3, v7): the confirmed kept-but-undelivered fact of that question
+    43	   (D508; for v2 one fact reported by three articles) and one negative control drawn at random from the kept statements both
+    44	   first census readers, reading every statement against all seven questions, left empty for this question while naming it
+    45	   for another (a substantive fact), not linked to it and not among its candidates. *Changed before any card was seen: no
+    46	   candidate of v3 or v7 was marked not bearing by both fresh readers, so the control comes from the first readers' pass.*
+    47	   On every other card completeness is not assessed.
+    48	
+    49	## A card
+    50	
+    51	The question; whose it is and its due day; its answer choices with the present answer marked; the answer's stated reasons;
+    52	the statements it cites, each with its passage and a link to the stored article; and, one click away, the complete request
+    53	the answer step was shown. No system name. Blinding is imperfect in two known ways: the two systems' requests are worded a
+    54	little differently, and the two wrong answers were built on earlier days' requests (2026-09-22) while most real answers are of
+    55	the week's last day; each card shows the true day of the answer it carries.
+    56	
+    57	## Alex's marks
+    58	
+    59	Per card: **worth tracking** (yes / no / cannot tell); **answer supported by what is shown** (yes / no / cannot tell); a few
+    60	words. Per fact on a completeness sheet: **bears on this question** (yes / no / cannot tell), then **it would change**: the
+    61	answer / only the confidence / neither / cannot tell. Opening the complete request or an article is allowed and recorded by
+    62	the page, with the time spent.
+    63	
+    64	## What is reported afterwards
+    65	
+    66	Every mark. His marks on the three repeats beside their originals. His marks beside each model family's stored marks on the
+    67	same cards. Whether the two wrong answers were rejected and the confirmed supported controls accepted. His answers on the
+    68	completeness sheets beside the census readers'. The time, and where it went. The classes of what he rejects, in his words.
+    69	
+    70	**Signals for redesign, not a pass line:** two repeats marked differently; both wrong answers accepted; the deck not markable
+    71	in about half an hour. Three repeats and two wrong answers are too few for an error rate; perfect marks would not prove the
+    72	method reliable.
+    73	
+    74	**It cannot show:** a usable share for any system; which system is better; what the cards' selection left out; a rate for
+    75	other news; which step caused a bad card. $0 covers model calls only: Alex's time and the preparation are not priced.
+    76	
+    77	## To open it
+    78	
+    79	`deck-1.html` in this folder, in a browser. Marks are kept in the browser as he goes; the last box on the page holds them as
+    80	text to paste back.
+  8783	## D642 · 2026-11-16 · The stop hook rejects the hold again; the council finds no send and no $0 step that moves the production decision
+  8784	
+  8785	Council round 35 (`reflection-6/codex-challenge-35.md`) on a last 16-topic send of astra with A2 and v2 ($0.80):
+  8786	- **What the send could not show:** "0 failures in 16 is weak evidence for a 131-send zero-fault gate: even at a true 5% fault rate,
+  8787	  zero occurs about 44% of the time."
+  8788	- **Why it cannot be pooled:** the earlier ten topics used A2 without v2, and their reading was VOID.
+  8789	- **The safeguards are unmet:** the listing harm is not one of Alex's lines, but the council's safeguard was not satisfied, and v2's
+  8790	  safety rule stayed inconclusive.
+  8791	- "CONSENSUS: do not send the 16-topic probe; no decision-moving $0 step is presently supported."
+  8792	
+  8793	**The running system stays the default.** Every candidate stays unadopted.
+  8794	
+  8795	**Work reopens on D612's conditions:**
+  8796	- Alex's rulings (the six main-part cases, D403's event day, the v2 clause, the astra and A2 configuration);
+  8797	- his gate-1 launch on the 44 (D426);
+  8798	- new material;
+  8799	- a new concrete reversible candidate.
+  8800	
+  8801	D439 is at about $37.74 of $40.
+  8802	
+  8803	## D643 · 2026-11-16 · The gate-1 launch is prepared as an inert draft for Alex (council rounds 36 to 38)
+  8804	
+  8805	**Why.** The stop hook rejected the hold a third time. The one remaining step on the critical path that is not Alex's is the
+  8806	preparation between his word and the gate-1 measurement.
+  8807	
+  8808	**What was built** (`reflection-6/gate1-candidate/`), nothing sent:
+  9197	## D657 · 2026-11-17 · Alex: cost is set aside until the new system works
+  9198	
+  9199	- **Alex:** "我觉得我们先别管成本，搞work先". Earlier in this stretch he asked whether astra would be "一个很大的烧钱窟窿" at 1,000 assets (D648).
+  9200	  The cost comparison he was shown puts the clean system with astra at about 5 to 7 times the running system for one NVDA-like asset (D653).
+  9201	- **Decided:**
+  9202	  - Cost is not a gate now; making the new system work comes first (AGENTS §7.3, "Correct, then cheap").
+  9203	  - Cost is still recorded as a baseline in each run, priced from tokens at published rates. It is no longer an item awaiting his decision.
+  9204	  - The model choice stays astra (D648).
+  9205	- **Not changed:** the spending ceiling of each test. His ~$6 testing authorization has about $2.80 left (D656), and paid runs still go to him or the
+  9206	  council within that ceiling.
+  9207	
+  9208	## D658 · 2026-11-17 · Alex: a new reference for the final-answer test's control line, written for the questions the new system asks
+  9209	
+  9210	- **Asked** (D592's open choice, in plain words): the control line needs 8 of 15 control questions comparable with the frozen answer key (reader B,
+  9211	  D3), and only 4 are, because the new system asks most of them differently. There were three ways:
+  9212	  1. write a new reference answer for the 15 control questions as the new system asks them: two independent reader groups who did not build the
+  9213	     system answer from the same material; disagreements are ruled against the source; Alex reviews and signs; it is frozen; then the judge's
+  9214	     answers are scored against it once (recommended);
+  9215	  2. change two frozen steps and deliver three missing facts to fit the old key (at most 8, unproven);
+  9216	  3. leave it.
+  9217	- **Alex:** "第一条ok, 仔细的跑run council review".
+  9218	- **Decided:**
+  9219	  - A new reference for the control line is opened. It is a new piece added beside the frozen ruler (AGENTS §7.1), never an edit of it: reader B's
+  9220	    gold, its packet and its scorer stay as they are.
+  9221	  - It follows AGENTS §7.1's rules for a new gold. The unit and the material are fixed before any answer is read. The reference is written from the
+  9222	    complete material the judge is shown. It has two blind readers of different families, and every disagreement is ruled against the source with
+  9223	    the reason recorded. It is labelled model-authored, frozen with its sha256 after Alex signs, and never edited after the judge's answers are
+  9224	    read. Old scores are never compared with it.
+  9225	  - Its design goes through council review rounds until consensus before any reader is run.
+  9226	- **Next:** the design (population, material, unit, the readers' brief taken from the frozen ruler's definition, the agreement rule, and the line it
+  9227	  serves), then council rounds, then the readers, then Alex's signature.
+   421	
+   422	**This session's investigations, all at $0, closed with evidence (D604 to D612):**
+   423	
+   424	- line 5's fresh misses (D605);
+   425	- the postponement repair, with D606's provisional reading reversed (D607);
+   426	- the shared fiscal-year note (D608);
+   427	- delivery of the company's own figures on the carried fortnight (D609, D610: 5 bearing statements undelivered on 3 questions, none
+   428	  predicted to move an answer by a blind second reader);
+   429	- a same-news comparison from established libraries (D611: underpowered, and no unread week left).
+   430	
+   431	The council's reversible decisions on Alex's page are recorded in D606 and D607.
+   432	
+   433	**The one next task (D658): a new reference for the final-answer test's control line, through council review** (Alex chose the first option and asked for careful
+   434	council review). The design is `docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN.md`, under independent review by both
+   435	families before any reader runs. It answers the 15 control questions as the system asks them, from the frozen packet and brief, with two blind
+   436	readers and third readers on disputes; Alex signs before any score.
+   437	
+   438	**Open defect (D661):** Codex-family blind readers have run with Codex memories on, which carry project context. Every new blind Codex reading
+   439	runs with memories off and a memory probe; a census of past readings is queued.
+   440	
+   441	**Queued after it (D656): a $0 census of astra's listing defect** (`docs/research/2026-11-14-use-acceptance/reflection-8/LOG.md`).
+   442	- **The paired test of the narrow passage v5.5 (D655, D656) failed by its prewritten rule.**
+   443	  - The FAIL is one L fault on the share control u3/clean-11: Nvidia's own share of spending is not listed. The same omission appears in the frozen
+   444	    arm, and D649 had already recorded it as disputed.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'confirmed supported|repeat|wrong|elapsed' docs/research/2026-11-14-use-acceptance/pilot-deck-1/tally_deck.py | head -45; nl -ba docs/DECISIONS-log.md | sed -n '6624,6644p;7088,7103p'; nl -ba docs/DECISIONS.md | sed -n '915,926p'" in /Users/lchingen/hivemind
+ succeeded in 30ms:
+5:Prints every mark beside the card's kind; his marks on the three repeats beside their originals; whether the two wrong
+6:answers were rejected and the confirmed supported controls accepted; his marks beside each model family's stored marks on
+39:        label = record['kind'] + (f" (repeat of {record['repeat_of']})" if record.get('repeat') else '')
+46:        if record.get('repeat'):
+47:            original = str(record['repeat_of'])
+53:        if record['kind'] == 'planted wrong answer':
+54:            print(f"  wrong answer ({record['plant']}), card {number}: supported={mark(number, 'supported')} (rejected if 'no')")
+55:        if record.get('separate_reader') and not record.get('repeat'):
+59:    print('\nAGREEMENT WITH EACH MODEL FAMILY (cards both marked; repeats left out):')
+63:                     if not r.get('repeat') and r.get('stored_marks')]
+  6624	- **Decided, citing D439:** **the work toward production goes on the new system (the rebuild under `clean-arch/`). The old
+  6625	  system stays the running default until the new one passes its gates; both remain; nothing that runs is switched, deleted or
+  6626	  deployed by this decision.** It does not establish that the new system's answers are better. Reasons: Alex had reopened work
+  6627	  on the rebuild (2026-11-06) and D439's scope names its steps; its treatment of the company's financial figures follows the
+  6628	  product rule he last confirmed (D505); the fresh week gives no demonstrated reason to abandon it and shows fewer trivial or
+  6629	  duplicate questions in that one run; the old system's known defects sit in frozen pieces whose fixes are each a new version.
+  6630	- **Qualifications kept:** D505's rule was given for the new system; whether it applies to the old one stays open and is not
+  6631	  claimed. The rebuild's cost and time to production are unknown: its step that writes answer choices has not met its lines on
+  6632	  the original or the fresh questions, Stage B did not pass, integration is undone, and several of its pieces are frozen or
+  6633	  stopped and need their own decisions.
+  6634	- **What reverses it:** Alex's word (it overrides this at any time); Alex changing the product rule; a sound comparison on the
+  6635	  subjects both systems track that materially favours the old system; the rebuild failing to meet its unchanged gates within a
+  6636	  bound agreed later; cost, only after correctness is established and the cost examined.
+  6637	- **A first checkpoint:** $5 of further spending on this direction; reaching it without a candidate that passes its prewritten
+  6638	  small test returns the direction to the council (it does not prove the rebuild cannot work).
+  6639	- **The one next step, $0 of model calls (ceiling $1 for the step):** a bounded review of the new system's answer choices in
+  6640	  the fresh week already run (seven questions, three attempts each, stored): each attempt read beside its source article, the
+  6641	  question the first step opened and the six existing lines (D400), any failure traced into what the judge received, by the
+  6642	  two deciders apart. It opens a repair design only if both find the same specific mechanism on at least two distinct
+  6643	  questions, verified against article and request, with a general change worth testing that weakens no line; otherwise no
+  6644	  wording fix is designed from these cases and the result returns to the council. Seven questions are a diagnostic sample:
+  7088	- **Decided, council consensus:**
+  7089	  1. The three answers above go to Alex.
+  7090	  2. A pilot of his own product-level review is prepared at $0 from the stored fresh-week comparison (2026-09-22..28; 235
+  7091	     articles, 232 not sent before), beside the frozen reference and the gates; it replaces nothing and ranks nothing.
+  7092	     Sixteen distinct cards and three hidden repeats, blinded: six of the new system's seven questions (the three of D508's
+  7093	     confirmed pairs first, three more by a published seed), six of the old system's fifteen (at least one independently
+  7094	     checked supported control among them), two matters a system has no question for, two independently checked wrong
+  7095	     answers. A card shows the question, its answer choices, the present answer and reasons and the cited passages, with
+  7096	     the complete request and the sources one click away. His marks: worth tracking; answer supported; a few words. Three
+  7097	     cards carry a completeness sheet (D508's pairs with a checked negative control): does the fact bear on the question,
+  7098	     and would it change the answer, the confidence, neither. The two model families' stored marks stay attached with their
+  7099	     scope. Its stopping signals are diagnostic, not a calibrated line; his time is recorded.
+  7100	  3. Put to Alex: whether he does the pilot; after it has been tested, "Should the six answer-choice lines remain a required
+  7101	     gate, or should we keep their failures visible as diagnostics and decide readiness using a product-level review with
+  7102	     controls"; D559's confirmation and its small comparison stay as put, after the pilot.
+  7103	  4. No gate, line or frozen piece changes by this decision; nothing is sent.
+   915	| D571 | 2026-11-16 | Under D439 (council rounds 38 to 40): the product page reads the new system's events, theme ranges and unrecorded shapes without inventing a direction (neutral, outcome or range named, no composite) and shows D397's parts not judged; proved by tests, mutants and the fortnight's page in headless Chrome | in force | `docs/research/2026-11-14-use-acceptance/page-contract/RESULT.md` |
+   916	| D572 | 2026-11-16 | Under D439 (council rounds 41 to 43): the page slices of D570 and D571 accepted after round 41's four fixes and the drawer checks; next a $0 check of the API serving a new-system store to the page, before and after a closing | in force | `docs/research/2026-11-14-use-acceptance/page-contract/RESULT.md` |
+   917	| D573 | 2026-11-16 | Under D439 (council round 44): the API serves a new-system store to the page (dates, closings, shapes, the page's cards); the page's one-time read and date clamp observed; next a $0 check of serving while a stored replay writes | in force | `docs/research/2026-11-14-use-acceptance/page-contract/SERVE-RESULT.md` |
+   918	| D574 | 2026-11-16 | Under D439 (council rounds 45 to 50): a freshly opened page shows the served library's latest completed day (the startup read passes the served day; later replacements clamp as before); a live store's first day in progress is an open defect (a race-free guard not built); next, the $0 live-service design | in force | `docs/research/2026-11-14-use-acceptance/page-contract/LIVE-READ-DESIGN.md` |
+   919	| D575 | 2026-11-16 | Under D439 (council rounds 51 and 52): the live-service design paused as recorded input; one consolidated decision page for Alex now; then a $0 feasibility census of Stage B's control line within its fixed population, no paid send implied | in force | `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md` |
+   920	| D576 | 2026-11-16 | Under D439 (council rounds 53 to 58): Alex's page stands; Stage B's control line cannot be exercised by re-sending the judge (4 of 8; the blockers set upstream); no delivery check; next, at $0, a census of the unlisted-parts class (line 2) now that the page reads the list, back to the council before any arm | in force | `docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md` |
+   921	| D577 | 2026-11-16 | Under D439 (council rounds 59 to 65): the unlisted-parts probe of arm A (the topic's wording defined as its description and outcome) sent on 18 stored requests, unchanged and changed ×3 the same day, read blind with planted controls and scored by a rule fixed before the send; a diagnostic, not acceptance | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN.md` |
+   922	| D578 | 2026-11-16 | Under D439 (council round 66): arm A's probe negative under both countings (no unlisted parts in changed written answers against 4-5 control topics, but 2 unjustified refusals); the line stops; two bounded accounts of the refusals ($0.02 ceiling) before any further design | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md` |
+   923	| D579 | 2026-11-16 | Under D439 (council round 67): the two refusal accounts apply line 6's decline rules to the outcome's words; the proposed outcome-only exemption refused (D397, D417); a bounded $0 audit of the decline rules and the outcome's extra parts, then a sourced rule or no candidate | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md` |
+   924	| D580 | 2026-11-16 | Under D439 (council rounds 68 and 69): no reviewed repair for the unlisted parts (the decisions give no general rule for the main part of a multi-part topic; an independent reader left 29 of 63 open); arm A stays stopped; next, a $0 check of the Idea planner on new-system answer shapes | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DECLINE-AUDIT.md` |
+   925	| D581 | 2026-11-16 | Under D439 (council rounds 70 to 72): the Idea planner shows a three-choice event as Yes and Still open; the event-driver design parked as recorded input; no bounded gate-moving candidate on the record; paid work and new lines held until Alex returns or the council names one | in force | `docs/research/2026-11-14-use-acceptance/idea-planner/RESULT.md` |
+   926	| D582 | 2026-11-16 | Alex's standing instruction lifts D581's hold; arm A2 (arm A plus D436's second-side rule) probed on 28 topics against the same-day control, with refusal-retention and recovery-gain rules fixed before the send (council rounds 73 to 77) | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A2.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/reflection-9/cold-claude-1.md | head -125; nl -ba docs/CURRENT_STATE.md | sed -n '319,326p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	(The Claude-family cold review, received as its final message on 2026-11-17 and stored by Claude; condensed. Its key citations were checked by Claude against DECISIONS-log lines 8384-8388 (D623), 5914-5916 (D509) and AGENTS.md lines 375-384.)
+     2	Verdict: the work is circling. A loop told never to stop keeps running into a pass line it already knew it could not pass, while the decisions that could change that line sit in a queue for Alex, who has not been asked them.
+     3	1. Goal: the PRD's standing dated record of open questions (clean-arch/PRD.md:22-24); D560's library goal; the phase PRD: "What is measured is the final judgement ... not any one step's own score" (10-filing-phase.md:27-29). No finish line in numbers Alex owns: gate 3's "beats" has no number; gate 4's lines are proposed; gate 5 is unwritten; the gates' order is the council's; D544's "bound agreed later" was never agreed. Closest: D400's six lines (Claude's proposal, accepted for "this first measurement", told plainly they "不能证明它比老系统好") and D428's lines.
+     4	2. Circling: confirmed counts; third readers agree on 21/70, 29/53, 22/54 disputed points (CURRENT_STATE 580, 642, 651); "target fixed, verdict negative" in D578, D583, D585, D637, D652, D656. Overstated: four model switches were Alex's requests; D544 states its reasons and reversal; not all effort was checklist (D561-D564, D609-D610); not committing is the rule. Missed: (a) D623 already recorded gate 1's zero-fault lines are "not a dependable target" (3.8%, 3.3%, 1.4% faults a send; under 0.5% needed for a 50% chance of zero faults in 131 sends), and 30+ gate-1 decisions followed; (b) the stop hook rejected holds three times (8384, 8706, 8805) and each rejection produced a new candidate; (c) D656's FAIL conflicts with AGENTS §7.3 ("a version that already meets the goal ... is not dropped for a stricter rule"); (d) D544's $5 checkpoint fired with no bound behind it.
+     5	Mechanism: the standing order to keep going plus the stop hook push the loop forward; its only target is a line it has shown it cannot reach by chance; the decisions that could change the line are Alex's; so small steps close as "no candidate" or "FAIL by one point", and spare capacity goes into engineering for later gates.
+     6	3. Scope: serving Alex's goals: D561-D564, D645-D656, D609-D610. Not: the product page, live store and planner (D570-D603), gate-5 work started while gate 1 failed, against AGENTS 375-376 and D509 ("nothing outside it is started"); the period split and model screens opened by the council. D658's reference is Alex's choice but misaimed: designed on luna's questions while the candidate is astra (D653: gate 2 must be re-measured on astra's questions); its Codex readers' blindness is in doubt (D661).
+     7	4. D559 asked Alex to confirm tests start from a real library; no answer recorded. D560 set the deck first; D561-D564 and D581 repeat that the deck "goes to him unchanged"; after D582 it disappears; reflection 8's "For Alex" list omits it while Alex was active. Why dropped: only Alex could act on it, so the forced loop picked steps it could run itself; when he returned, exchanges followed his questions. The deck "cannot show ... which system is better" (DESIGN.md:74).
+     8	5. Stop: D656's queued listing census; further gate-1 versions; live store, page and planner; the new reference (paused, put to Alex). Do first: Deck 1 to Alex today, unchanged. Written before: it works as a measure if he rejects both planted wrong answers, accepts the confirmed supported card, marks at least 2 of 3 repeats the same, and finishes in about 30 minutes; it does not if he accepts a plant, marks two repeats differently, or cannot finish in about 45 minutes. Either way, list cards where he and a model family differ on "supported". Alex's questions: (1) what counts as ready: six lines a hard gate (near-zero chance, D623), lines as warnings with his review deciding (D560), or the end-to-end comparison with "beats" in numbers; (2) how long on the new system before reconsidering; (3) a real starting library for product tests (D559); (4) the new reference: continue on luna's questions, pause until (1), or redo for astra's.
+   319	- **Integration (gate 5) moved twice:** the product's page reads the new system's store (D564); the new system's daily loop now
+   320	  closes due questions with production's closing step, walks calendar days and owns its sequence (D567,
+   321	  [design](research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md)). A production defect found on the way is fixed: a
+   322	  closing on a day without items was invisible at the next day's start (`src/hivemind/replay.py`, D566).
+   323	- **Waiting on Alex (D560, unchanged):** his half hour on the pilot's cards
+   324	  ([the deck](research/2026-11-14-use-acceptance/pilot-deck-1/deck-1.html); his marks tallied by `tally_deck.py` against the key in
+   325	  `~/.hivemind-keys/pilot-deck-1/`), then the six lines' role, then D559's wider question.
+   326	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '9116,9157p'; nl -ba docs/research/2026-11-14-use-acceptance/pilot-deck-1/tally_deck.py | sed -n '25,87p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  9116	## D655 · 2026-11-17 · Council consensus (D439, D654): send the paired test of the narrow passage v5.5 on astra, shared cap $3.60
+  9117	
+  9118	- **Basis:**
+  9119	  - Alex's "你开始做" on D653's next step and his D654 ruling ("立通用规则");
+  9120	  - about $6 of testing authorized ("你测试吧"), of which about $4.34 is left.
+  9121	- **The passage** (`docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json`, version 5.5):
+  9122	  - D654's three shapes and its share counter-case in D654's own words, two examples a shape from industries outside the 44;
+  9123	  - one pointer to the same exception in the closing check, and one in the `no_ladder` description;
+  9124	  - +1,528 characters across the three places, o200k system tokens 2,031 to 2,294, nothing cut (`cut_review`).
+  9125	- **Audits:** fresh blind auditors of both families each round, v5.1 to v5.5. Both families read v5.5 SOUND (`audit-v55-codex.md`,
+  9126	  `audit-v55-claude.md`). The inputs were frozen read-only per round from v5.4 on, after two Claude audits were voided by my replacing files mid-read.
+  9127	- **The test** (`paired_probe.py`), astra on the frozen request against the edited one, interleaved:
+  9128	  - targets acc/clean-8, acc/clean-9 and pool-17, 3 passes each;
+  9129	  - u3/clean-10 (3 passes) and u2/clean-10 (2) are reported, not deciding. The scope rule: a case D654's words do not plainly name is reported. The
+  9130	    two families split three times on u3/clean-10's easing form.
+  9131	  - 5 decline controls and the share control u3/clean-11, 2 passes each;
+  9132	  - 52 sends.
+  9133	- **Verdict, fixed before the send:**
+  9134	  - any lost edited answer gives FAIL;
+  9135	  - fewer than 5 of 9 frozen target declines, or declines on fewer than 2 targets, gives INCONCLUSIVE;
+  9136	  - PASS needs:
+  9137	    - every edited target send written, with no hard-line fault from either family;
+  9138	    - no material defect (wrong side, invented measure, second side dropped) from either source reviewer;
+  9139	    - every edited control a decline neither family faults;
+  9140	    - each share send does not ask the total;
+  9141	  - due-day defects are reported, not deciding;
+  9142	  - a stopped draw or a missed planted control gives NOT MEASURED.
+  9143	- **Code:** 17 tests at $0 (the verdict paths, and a dry run of all six draws and the reading with stored astra answers). No mutant was run: the
+  9144	  machine's guard refused scratch mirrors earlier.
+  9145	- **Council:** rounds 4 to 6c on thread 01a1e8ee-437f-74a3-ad0a-8edcbde0e3b3.
+  9146	  - Round 5 disagreed and sent the scope question to Alex (D654).
+  9147	  - Round 6 corrected two verdict rules and the budget wording.
+  9148	  - Round 6b corrected the verdict order.
+  9149	  - Round 6c: "CONSENSUS: send the paired test under the shared $3.60 cap … a pass is evidence on this exposed test, not a Gate 1 pass or proof of
+  9150	    general performance."
+  9151	- **Cost:** estimated about $2.15 with the system text cached and about $3.2 uncached. These come from stored mean tokens and are not bounds.
+  9152	- **Next:**
+  9153	  - the reading by both families with the planted controls, and two source reviewers;
+  9154	  - third readers on disputes, with the prewritten strict counting kept in the verdict;
+  9155	  - every trace read by Claude;
+  9156	  - a decision recording the result.
+  9157	
+    25	    verdict = (stored.get('answer') or {}).get('verdict')
+    26	    return {'SUPPORTED': 'yes', 'UNSUPPORTED': 'no'}.get(verdict, 'cannot tell' if verdict else None)
+    27	
+    28	
+    29	def main(marks_path, keys):
+    30	    marks = json.loads(Path(marks_path).read_text())
+    31	    key = json.loads((Path(keys) / 'deck-1-key.json').read_text())
+    32	    given = marks['marks']
+    33	    mark = lambda number, field: given.get(f'c{number}-{field}')
+    34	    cards = key['cards']
+    35	    print(f"cards marked: {sum(1 for n in cards if mark(n, 'worth'))} of {len(cards)}")
+    36	    if marks.get('started') and marks.get('last'):
+    37	        print(f"time from first to last mark: {(marks['last'] - marks['started']) / 60000:.0f} min")
+    38	    for number, record in cards.items():
+    39	        label = record['kind'] + (f" (repeat of {record['repeat_of']})" if record.get('repeat') else '')
+    40	        what = record.get('view') or record.get('matter')
+    41	        opened = {k.split(':')[1]: v for k, v in marks.get('opened', {}).items() if k.split(':')[0] == number}
+    42	        print(f"{number:>2} {label:<36} {record.get('system', ''):<3} {what:<4} worth={mark(number, 'worth')} supported={mark(number, 'supported')}"
+    43	              f" opened={opened or '-'} why={mark(number, 'why') or ''}")
+    44	    print('\nREPEATS (his consistency on identical cards):')
+    45	    for number, record in cards.items():
+    46	        if record.get('repeat'):
+    47	            original = str(record['repeat_of'])
+    48	            same = all(mark(number, f) == mark(original, f) for f in ('worth', 'supported'))
+    49	            print(f"  card {original} and {number}: {'same' if same else 'DIFFERENT'} "
+    50	                  f"({mark(original, 'worth')}/{mark(original, 'supported')} against {mark(number, 'worth')}/{mark(number, 'supported')})")
+    51	    print('\nCONTROLS:')
+    52	    for number, record in cards.items():
+    53	        if record['kind'] == 'planted wrong answer':
+    54	            print(f"  wrong answer ({record['plant']}), card {number}: supported={mark(number, 'supported')} (rejected if 'no')")
+    55	        if record.get('separate_reader') and not record.get('repeat'):
+    56	            print(f"  separately read as {record['separate_reader']}, card {number}: supported={mark(number, 'supported')}")
+    57	        if record['kind'] == 'no question':
+    58	            print(f"  matter {record['matter']} (no question in one system), card {number}: should hold a question={mark(number, 'worth')}")
+    59	    print('\nAGREEMENT WITH EACH MODEL FAMILY (cards both marked; repeats left out):')
+    60	    for field in ('worth', 'supported'):
+    61	        for team in TEAMS:
+    62	            pairs = [(mark(n, field), family_mark(r.get('stored_marks', {}).get(team), field)) for n, r in cards.items()
+    63	                     if not r.get('repeat') and r.get('stored_marks')]
+    64	            pairs = [(a, b) for a, b in pairs if a and b]
+    65	            agree = sum(1 for a, b in pairs if a == b)
+    66	            print(f"  {field:<9} {team:<6} agree {agree} of {len(pairs)}; differ on {[(a, b) for a, b in pairs if a != b]}")
+    67	    print('\nCOMPLETENESS SHEETS:')
+    68	    for number, record in cards.items():
+    69	        for fact in record.get('sheet', []):
+    70	            index = fact['fact']
+    71	            print(f"  card {number} fact {index} ({fact['role']}, {fact['statements']}): bears={mark(number, f'fact{index}-bears')}, "
+    72	                  f"would change={mark(number, f'fact{index}-effect')}")
+    73	    print('\nHIS REASONS FOR A "no", BY CARD KIND:')
+    74	    reasons = collections.defaultdict(list)
+    75	    for number, record in cards.items():
+    76	        if 'no' in (mark(number, 'worth'), mark(number, 'supported')) and mark(number, 'why'):
+    77	            reasons[record['kind']].append(f"card {number}: {mark(number, 'why')}")
+    78	    for kind, lines in reasons.items():
+    79	        print(f'  {kind}:')
+    80	        for line in lines:
+    81	            print(f'    {line}')
+    82	
+    83	
+    84	if __name__ == '__main__':
+    85	    main(sys.argv[1], sys.argv[2])
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/comparison-feasibility/RESULT.md | head -95; nl -ba docs/DECISIONS-log.md | sed -n '8187,8202p'; nl -ba docs/DECISIONS.md | sed -n '910,915p;935,938p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Can a same-news product comparison from established libraries decide anything? (D610's review), 2026-11-16, $0
+     2	
+     3	**Answer: not within what is left.** It closes by D610's own condition.
+     4	
+     5	1. **Power.** D517's sizing (`comparison/COMPARISON-SIZING.md`) stands. A week ends with about 7 questions on the new system and 15 on
+     6	   the old.
+     7	   - The shapes about $9 buys detect a difference of about 31 points or more in answers supported, under assumptions the stored
+     8	     readings cannot check.
+     9	   - Big matters covered cannot be sized this way: a week gives two to seven.
+    10	   - D439 has about $10 left.
+    11	   - A starting library changes where questions come from, not how many a week produces, so it does not change this arithmetic.
+    12	2. **Comparable libraries.** The old system's library ends at 2026-08-28 (the sealed three-month run, D206). The new system has
+    13	   carried libraries to 10-05, 10-12 and 10-19. A same-day start needs the old system replayed from 08-29 for about seven weeks.
+    14	   - That is about $3.50 at D517's estimate of $0.50 a week, unpriced by token count here.
+    15	   - It would leave about $6 for the comparison itself.
+    16	3. **Unread news.** By the stored manifests, every week from 2026-09-21 to 10-26 has been read by at least one run of the new system
+    17	   or by Step 1's development runs. The week of 10-19 appears in the takeover, unfiled, capture-control and full-page diagnostic
+    18	   runs. So no exposure-free week remains for a fresh comparison, and the earlier assumption that three later weeks were unread
+    19	   (D517) does not hold.
+    20	
+    21	**So:** a comparison now would be underpowered, and partly built on news the new system's development has seen. Nothing is run. This
+    22	does not show the systems equal. What would change it:
+    23	- more unread news than the database holds;
+    24	- a reading line that does not depend on the handful of questions a week produces;
+    25	- or Alex's own marks as the reference (Deck 1).
+    26	
+    27	## Correction (D613): reason 3 was stated too wide
+    28	
+    29	By the Step 1 traces of every new-system run (1,437 articles matched to the article database), the selected weeks from 2026-07-20 to
+    30	08-24 have **no** article read by any new-system Step 1 run, and the weeks of 09-07 and 09-14 only 10 and 4. Reason 3 holds only for
+    31	09-21 to 10-26. The conclusion stands on reasons 1 and 2: a starting library does not change the power arithmetic, and the old library
+    32	ends at 08-28.
+  8187	- **The council (round 151):** "The standing instruction to make progress does not make an uninformative send productive." The hold is
+  8188	  on the candidates the evidence now supports, not a claim that no improvement exists.
+  8189	- **Reopen work when:**
+  8190	  1. new source-backed cases show a shared delivery mechanism with a consequential effect, including on confidence;
+  8191	  2. unread material and enough budget allow a comparison whose decision rule can resolve a product question;
+  8192	  3. Alex's marks or decisions change the acceptance question or authorize a new reference;
+  8193	  4. the council identifies another concrete, reversible candidate, with a result that could move a gate and one that would close it.
+  8194	- **Kept current meanwhile:** the open evidence (the look-back boundary, the Kyber window mismatch, the due-day cleanup), the decision
+  8195	  page and the status.
+  8196	
+  8197	## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+  8198	
+  8199	- **Correction:** matched against every new-system Step 1 trace (1,437 articles), the selected weeks 2026-07-20 to 08-24 have no article
+  8200	  read, and 09-07 and 09-14 have 10 and 4. D611's "no exposure-free week" held only for 09-21 to 10-26. Its conclusion stands on power
+  8201	  and on the old library's end. The check covers Step 1 traces only, not every other activity.
+  8202	- **Nothing reopens:**
+   910	| D566 | 2026-11-16 | Under D439 (council rounds 17 to 24): the D520 line closed (the judge's self-report does not separate; the readers' source check unclear; the choice stays Alex's); production's replay completes a day at the last sequence it wrote (a closing on a day without items was invisible at the next day's start); the new system's loop to close due questions as production does, one owner of the sequence, as designed | in force | `docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md` |
+   911	| D567 | 2026-11-16 | Under D439 (council rounds 25 and 26): the new system's daily loop closes due questions with production's closing step, walks calendar days and owns its store sequence; accepted on tests, mutants, the unchanged extension proof and a replay to 2027-04-02; next a $0 check of gate 1's reading method on independently established sound answer choices | in force | `docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md` |
+   912	| D568 | 2026-11-16 | Under D439 (council rounds 27 to 31): gate 1's reading of the fortnight repeated from the start by the unchanged tooling (identical packets, fresh readers and third readers of both families) and compared send by send by the gate's own accounting; it reports agreement and difference only; the lines unchanged | in force | `docs/research/2026-11-14-use-acceptance/gate1-stick/DESIGN.md` |
+   913	| D569 | 2026-11-16 | Under D439 (council round 32): gate 1's verdict reproduced by its method on the fortnight (not a validity proof); D397's 'shown beside the answer as not judged' is missing from the product's page; next a $0 design and proof of that display path, judgements unchanged | in force | `docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md` |
+   914	| D570 | 2026-11-16 | Under D439 (council rounds 33 to 37): D397's parts not judged carried to the product's page (bundle, closed schema, adapter, snapshot, drawer; unit-proved, browser proof pending); the page refuses the new system's three-choice events (gate 5's third defect); next a $0 design of the page contract for the new system's answer shapes | in force | `docs/research/2026-11-14-use-acceptance/not-judged-display/DESIGN.md` |
+   915	| D571 | 2026-11-16 | Under D439 (council rounds 38 to 40): the product page reads the new system's events, theme ranges and unrecorded shapes without inventing a direction (neutral, outcome or range named, no composite) and shows D397's parts not judged; proved by tests, mutants and the fortnight's page in headless Chrome | in force | `docs/research/2026-11-14-use-acceptance/page-contract/RESULT.md` |
+   935	| D591 | 2026-11-16 | An announced "not by the due day" as a ruling out (37 company delays and 1 authority case in 296 frozen-step event answers): no decision settles the boundary; form and step unchanged, both readings recorded, 38 answers listed as candidates affected; the question on Alex's page (Claude's lean: it rules out); next a $0 design for the final-answer test's control shortfall | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/BOUNDARY-CASES.md` |
+   936	| D592 | 2026-11-16 | Stage B's control line: an unchanged re-send stays at 4 of 8, delivery of three facts reaches at most 7, the eighth needs an unproven two-step change; the 7-control course is not started for the line's sake; the live-service operating contract resumed as a $0 design (D575's rows, a falsifier), back to the council before any build | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+   937	| D593 | 2026-11-16 | The live-store operating contract v9 (WAL, one transaction and connection per request, one bound resolver, first day refused, search over the visible corpus and a published index day, checkpoint and disk limits, crash bounds, an inode-named writer lock, §9 kept with P1 proposed) agreed for its $0 proof build on test stores; live operation not authorized | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+   938	| D594 | 2026-11-16 | The bound resolver built and proven at $0 (one owner for every upper date bound; future explicit bounds refused; first day refused; the bundle functions' default reads the last completed day; ranges refuse only a start after their end); the served product store's half-processed 2026-08-29 is no longer returned; 308 + 164 tests and 8 mutants; nothing deployed | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md`; `tests/test_bound_resolver.py` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '8697,8727p'; rg -n 'D400 ·|D606 ·|D426 ·' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'share_control|share control|def verdict|def score|strict|hard.line' docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436 -g '*.py' -g '*DESIGN*' -g '*RULE*' -g '"'!audit-v*/**'"' | head -95" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  8697	
+  8698	With it, all four model-choice and request classes of the 11 review defects are accounted for:
+  8699	- line 23 (v2, proposed);
+  8700	- D403's design (Alex's page);
+  8701	- the opening step's wording (this record);
+  8702	- one invented measure (single instance).
+  8703	
+  8704	## D639 · 2026-11-16 · Under D612(4): astra with arm A2's request is sent as a bounded diagnostic against a fresh frozen-request arm
+  8705	
+  8706	**Why.** The stop hook rejected the hold of D638. Council round 28 named D612's fourth condition, a new concrete reversible candidate.
+  8707	- All of astra's agreed gate-line failures are declines on topics whose other parts are second sides of one bet: H20 (3) and memory
+  8708	  (1).
+  8709	- Arm A2 carries D436's sentences, which are Alex's words: "a second side of the same bet … stays in the one question as context";
+  8710	  "a second side is not by itself a reason to decline".
+  8711	- A2 was measured only on luna (D582, D583).
+  8712	
+  8713	**Council rounds 29 to 32** (`reflection-6/codex-challenge-29.md` to `-32.md`):
+  8714	- the premise was corrected (Hugging Face is a control);
+  8715	- a comparison against a fresh frozen arm, with A2's harm (listings already decided, settlement routes) in the verdict;
+  8716	- topic-level comparisons;
+  8717	- a source-backed product review of every question that replaces a decline;
+  8718	- A2's closing check aligned to its own system text after the first blind audit;
+  8719	- a whole-request audit: "NO NEW FINDING FROM THE EDITS";
+  8720	- a planted listing control;
+  8721	- the transport's bytes compared;
+  8722	- distinct review files required.
+  8723	
+  8724	Round 32: "CONSENSUS: send the bounded Astra–A2 diagnostic."
+  8725	
+  8726	**The design** (`reflection-6/astra-a2/DESIGN.md`):
+  8727	- **Arms and cap:** 10 exposed topics outside the 44, 2 interleaved draws, cap $3.40 (D439 at most about $39.83).
+4376:## D400 · 2026-11-10 · Stage A is read against absolute lines, with no paid control arm
+4721:## D426 · 2026-11-10 · The ladder step is not tuned further on the 44 theses; the preparation of Stage B opens on the step as it ran in the fourth Stage A, its $0 baseline reading first
+8060:## D606 · 2026-11-16 · Under D439 (council round 148): the items on Alex's page that D439 permits are decided reversibly; next, a $0 audit of the postponed-event class
+
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:96:def test_one_family_failing_a_hard_line_on_an_edited_target_fails_it(tmp_path, monkeypatch):
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:110:def test_the_share_control_asking_the_total_fails(tmp_path, monkeypatch):
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:144:def test_a_share_control_decline_neither_family_faults_passes(tmp_path, monkeypatch):
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:149:def test_a_share_control_decline_one_family_marks_unjustified_fails(tmp_path, monkeypatch):
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:5:target or on the share control reviewed against its source by two reviewers. Exposed: the 44's targets informed the edit; this verifies that the
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:16:- PASS when all hold, otherwise FAIL (council round 5: strict throughout):
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:17:  - every edited target send (12) is a question with no hard-line fault marked by either family;
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:21:    and no hard-line fault (N for a decline) marked by either family; asking either of u3/clean-11's two splits is allowed (council round 6);
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:231:def score(run_folder, key_folder, review_codex, review_claude):
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:258:            return {'agreed': True, 'strict': True, 'marks': ['refused twice']}
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:262:        return {'agreed': any(all(m.get(mark) == 'fails' for m in marks) for mark in applying), 'strict': bool(failing), 'marks': failing}
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:269:                for name, by_family in reviews.items()}          # strict: marked by either reviewer
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:273:    edited_targets_ok = {t: [table[t][f'edited-d{d}'][0] == 'ladder' and not table[t][f'edited-d{d}'][1]['strict']
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:275:    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:276:    edited_share_ok = {t: [not table[t][f'edited-d{d}'][1]['strict']                      # a lost answer is strict too
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:282:                      'edited controls held': edited_controls_ok, 'edited share control sound': edited_share_ok, 'edited sends lost': lost_edited,
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:285:                      'reported, not deciding': {t: {ad: [st, f['strict'], material.get(f'{ad}|{t}', [])] for ad, (st, f) in sorted(table[t].items())} for t in REPORTED},
+docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:287:                      'per topic [status, agreed, strict, marks]': {t: {ad: [st, f['agreed'], f['strict'], f['marks']] for ad, (st, f) in sorted(v.items())}
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '4376,4403p;8060,8088p;8818,8844p'; nl -ba clean-arch/PRD.md | sed -n '126,138p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  4376	## D400 · 2026-11-10 · Stage A is read against absolute lines, with no paid control arm
+  4377	
+  4378	- **Asked:** "第一段测试只测新做的“定档”这一步：44 道题各发 3 次，约 2–3 美元。我建议不再花钱重跑“老系统写法”当对照组（连续三轮评审都卡在两种写法没法公平地比），参照改用老系统存档里已写出的 36 个分档。代价：这一段只能说明新做法达没达到你定的线，不能证明它比老系统好；项目规则原本要求验收要有当场重跑的对照，所以这个例外要你点头。通过线我提议：四条硬线一个都不能有（问错题、漏列未判部分、分档有重叠或遗漏、无正当理由拒判）；44 道里至少 35 道在 3 次中至少 2 次做对，其中至少 28 道是真写出了分档；同一道题 3 次的“好坏方向”必须一致、到期日至少九成一致。你的意见？"
+  4379	  - Options: agree, no control, the lines as proposed (recommended); no control with a stricter line (40 of 44); a paid control arm.
+  4380	  - Alex: "同意：不设对照，线按提议 (Recommended)".
+  4381	- **Decided:**
+  4382	  - Stage A of the clean ladder step sends the candidate only. This is an exception, by his word, to AGENTS §7.3's "beside a fresh
+  4383	    control", for this first measurement of a step production does not have as its own call.
+  4384	  - Its lines are his: no ladder that asks another question, leaves a part unlisted, or has an outcome with no rung or two; no
+  4385	    refusal without a justified reason; at least 35 of the 44 theses right in at least two of three sends, at least 28 of them by a
+  4386	    written ladder; the favourable end the same in all three sends for every company figure and the due day the same for at least
+  4387	    nine in ten theses.
+  4388	  - Every report of Stage A says that it does not compare the step with production; the $0 reading of the 36 ladders production
+  4389	    wrote is printed beside it as a reference.
+  4390	
+  4391	## D401 · 2026-11-10 · Once a review finds nothing serious, build the ladder step and run Stage A without asking again
+  4392	
+  4393	- **Asked:** "等你回答上面两问后，我会再改设计稿并再送评审。一旦有一轮评审挑不出严重问题，是否可以不再问你，直接动手做“定档”这一步并跑第一段测试（花费上限 3 美元）？第二段（把分档接到老判断程序上每天判断）不在这次范围内，到时另行请示。"
+  4394	  - Options: yes, build and run after the review clears (recommended); ask again after the review; stop at the design.
+  4395	  - Alex: "可以，评审放行后直接做 (Recommended)".
+  4396	- **Decided:** when a fresh reviewer finds nothing serious in the design of the ladder step and Stage A, the ladder step is built
+  4397	  (code, tests, mutants, the pre-send checks, the request audit) and Stage A is sent, with a spending cap of $3. A line missed stops
+  4398	  the work and goes to him. Stage B (the frozen judge on the system's own ladders) is not covered and needs his word again.
+  4399	
+  4400	## D402 · 2026-11-10 · Before more review or the build: send the ladder request once on six stored theses, for a few cents
+  4401	
+  4402	- **Asked:** "“定档”这一步的设计，我请独立评审读了五轮（每轮 4 到 7 位，各读一块）：挑出的问题数是 15、9、15、11、11 条。每条都是真的，但都是边角（例如“模型答案里若有一个非法字符，存档会报错”），没有一条改变这一步的做法，而且不收敛到零。评审看不出的是：模型拿到这份提示词实际会怎么答。下一步你想怎么走？"
+  4403	  - Options: a small send first (recommended): a few cents, six stored theses, the answers read one by one, then decide between
+  8060	## D606 · 2026-11-16 · Under D439 (council round 148): the items on Alex's page that D439 permits are decided reversibly; next, a $0 audit of the postponed-event class
+  8061	
+  8062	- **Why:** the session's standing instruction ("go in the council loop … don't stop until you do") rejected D605's hold on Alex's
+  8063	  rulings; D544 already excludes "Alex's choice" as an outcome.
+  8064	- **Reversible decisions** (each reversed on Alex's word):
+  8065	  1. **The starting library:** the next product-oriented test starts from a library built from real earlier material. Empty-start
+  8066	     tests stay as separately labelled diagnostics, and the frozen ruler's conditions are unchanged. Also reversed on evidence that
+  8067	     another start better tests the intended use. This is a council choice, not Alex's recorded answer to D559.
+  8068	  2. **The six lines:** Alex's accepted lines and the existing accounting stay in force. Reader disagreements and diagnostic
+  8069	     recounts are reported beside a result; they are not a pass and do not remove XR. Also revisited if a reviewed control shows the
+  8070	     accounting cannot apply the lines reliably.
+  8071	  3. **Postponement:** provisionally, a formal postponement where the event remains possible and has not been abandoned or rejected
+  8072	     reads **Still open**, not Ruled out.
+  8073	     - The cost is recorded: a question on whether an event happens by a date can close showing "Still open" after that date.
+  8074	     - Also reversed if worked cases show it misstates the question an analyst holds.
+  8075	     - This is a council interpretation, not a rule Alex settled (D409).
+  8076	  4. **D520 and D571:** the running behaviour is retained while untested. The target for a future reviewed version is to tell an
+  8077	     answer with no stated sizing from a supported estimate, and to assign no favourable direction where none is registered. The
+  8078	     running product is not changed by this decision.
+  8079	  5. **P1:** the snapshot rule stays in force. P1 is reviewable by the council if live operation becomes the next concrete step.
+  8080	     Nothing here authorizes a restart, a deploy or a publication.
+  8081	- **Next:** a $0 audit and sizing of the postponed-event class, not yet a prompt sentence.
+  8082	  - Read the 38 census answers by distinct topic and matter, with their complete rungs (the model's decision and the text code
+  8083	    appends) and original requests, beside the source articles and the provisional reading.
+  8084	  - Guards: a cancellation, a delay still inside the deadline, a changed decision, an authority's proceeding.
+  8085	  - **Advances if:** a general, sourced mechanism across several distinct matters, with a change that makes the worked cases
+  8086	    unambiguous, and a prewritten control and harm test.
+  8087	  - **Closes if:** only isolated misapplications, no general rule that keeps the guards, or a change that only moves the ambiguity.
+  8088	  - 29 of the 37 company delays were passed by both first readers under the existing form, so the provisional reading changes their
+  8818	  - a dry run through the real runner on outside-44 topics, for both configurations;
+  8819	  - tests 9 of 9.
+  8820	- **The price, stated plainly:** about $4.90 to $6.60 before retries, a cap of at least about $9, beyond D439's remaining $2.26.
+  8821	- **Mutants not run:** Claude Code's permission classifier refused the scratch-mirror step, and it was not worked around.
+  8822	
+  8823	Council round 38: "CONSENSUS: put the handoff on Alex's page as an inert draft, with preflight enforcement and mutation verification
+  8824	still outstanding."
+  8825	- The preflight enforcement was added after that round.
+  8826	- Before any paid launch, `scripts/preflight.py` is run as AGENTS §5 requires.
+  8827	
+  8828	## D644 · 2026-11-16 · No in-authority, in-budget step moves the production decision; D426 stands; the record waits on Alex
+  8829	
+  8830	Council round 39 (`reflection-6/codex-challenge-39.md`) on a fifth Stage A with sol plus A2 plus v2 within the remaining $2.26:
+  8831	- **Authority:** D426's "no fifth Stage A is sent" is Alex's specific decision and "remains in force". D439's later general delegation
+  8832	  "does not explicitly reverse that decision".
+  8833	- **The configuration:** the pair is unmeasured. A2's evidence comes from a voided reading on another model.
+  8834	- **The cost:** an estimate. An incomplete run would read NOT MEASURED.
+  8835	- "CONSENSUS: no, because the proposed fifth Stage A lacks an explicit reversal of D426 and a sufficiently validated final
+  8836	  configuration."
+  8837	- The council's words: "no supported in-authority, in-budget step on the present record that would move the production decision".
+  8838	
+  8839	**The record stands at D643:**
+  8840	- the gate-1 launch is prepared and inert (`reflection-6/gate1-candidate/README.md`);
+  8841	- Alex's rulings are on his page;
+  8842	- D439 is at about $37.74 of $40.
+  8843	
+  8844	Work reopens on Alex's word, new material, or a new concrete reversible candidate (D612).
+   126	### 1.5 The gates before it replaces the running pipeline
+   127	
+   128	The new system replaces the running pipeline only after it passes five gates, in order (D548, written by the council under D439;
+   129	D544):
+   130	
+   131	| Gate | Its lines, and whose | Where it stands |
+   132	|---|---|---|
+   133	| 1. The ladder step (Stage A) | Alex's six lines (D400): no question other than the topic's; no part left unlisted; no outcome with no range or with two; no unjustified decline; 35 of 44 topics right in two of three sends, 28 of them with written answer choices; the same favourable end in all three sends and the same due day for nine in ten. | Not passed; missed in all nine readings. |
+   134	| 2. The judge on the system's own questions (Stage B) | D428: unsupported figure answers at most five points above the baseline; unsupported yes/no answers at most 5%; unsupported last answers at most 3 in 30; enough controls. | Not passed: 4 comparable controls against 8 needed; the strictest last-answer reading missed (3 of 24). |
+   135	| 3. End to end against the running pipeline | D427, D431: both systems, unseeded, the same day, three draws each, on the frozen ruler, with Step 2's three lines checked in the same run. | Owed. "Beats" is not yet defined in numbers. |
+   136	| 4. Use on unseen news | Opened by Alex beside the others (D484). Its lines (four in five big matters covered; at most one in five questions trivial or duplicate; nine in ten last answers supported; at most one in twenty cited statements wrong; no undelivered fact that would change an answer) are proposed, not his. | Not an accepted gate yet. |
+   137	| 5. Integration and release | The whole path on production storage and the product's pages, accepted on the product's own path. | Partly built: the product page and API read a store of the new system (D570–D573); the live-store contract is agreed for test stores only (D593). |
+   138	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py | sed -n '12,25p;270,300p'; rg -n 'git|commit' AGENTS.md | head -14; rg -n 'astra' docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN.md | head -15" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    12	
+    13	The rule, fixed before the send (council rounds 2 and 4):
+    14	- exercised: the frozen arm's own declines ("no ladder", not answers refused twice by code) are at least 5 of its 9 target sends and fall on
+    15	  at least 2 of the 3 targets; otherwise INCONCLUSIVE;
+    16	- PASS when all hold, otherwise FAIL (council round 5: strict throughout):
+    17	  - every edited target send (12) is a question with no hard-line fault marked by either family;
+    18	  - no edited target or share-control answer carries a material defect of kinds (i) to (iii) of `review-brief.md` marked by either reviewer;
+    19	  - every edited decline-control send (10) is a decline that neither family marks unjustified;
+    20	  - each edited share-control send does not ask the total (D654's check): a question with no kind (i) from either reviewer, or a decline,
+    21	    and no hard-line fault (N for a decline) marked by either family; asking either of u3/clean-11's two splits is allowed (council round 6);
+    22	  - no edited send is lost (refused twice by code), on any of the 26 edited sends, reported topics included (council round 6);
+    23	- u2/clean-10 is sent and reported, not deciding (its decline is defensible but ambiguous: council round 5);
+    24	- u3/clean-10 is sent in all three draws and reported, not deciding: the passage carries D654's three shapes in D654's words only, and
+    25	  whether "capacity added ... easing the shortage" falls under them is read differently by the two auditor families (audits v5.1 to v5.4);
+   270	    material_agreed = {name: sorted(set.intersection(*[by_family.get(f, set()) for f in ('codex', 'claude')]) & {'i', 'ii', 'iii'})
+   271	                       for name, by_family in reviews.items()}
+   272	    due_day = {name: sorted({f for f, kinds in by_family.items() if 'iv' in kinds}) for name, by_family in reviews.items()}
+   273	    edited_targets_ok = {t: [table[t][f'edited-d{d}'][0] == 'ladder' and not table[t][f'edited-d{d}'][1]['strict']
+   274	                             and not material.get(f'edited-d{d}|{t}') for d in (1, 2, 3)] for t in TARGETS}
+   275	    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+   276	    edited_share_ok = {t: [not table[t][f'edited-d{d}'][1]['strict']                      # a lost answer is strict too
+   277	                           and (table[t][f'edited-d{d}'][0] == 'no ladder'                # a decline neither family marks unjustified
+   278	                                or 'i' not in material.get(f'edited-d{d}|{t}', []))       # or a question that does not ask the total
+   279	                           for d in (1, 2)] for t in SHARE}                               # D654: it checks only that the total is not asked
+   280	    lost_edited = sorted(name for name, row in sends.items() if name.startswith('edited') and row['status'] == 'no ladder: refused')
+   281	    print(json.dumps({'frozen declines per target (of 3)': declines, 'edited targets sound': edited_targets_ok,
+   282	                      'edited controls held': edited_controls_ok, 'edited share control sound': edited_share_ok, 'edited sends lost': lost_edited,
+   283	                      'material defects (i-iii), either reviewer': {k: v for k, v in material.items() if v},
+   284	                      'material defects (i-iii), both reviewers': {k: v for k, v in material_agreed.items() if v},
+   285	                      'reported, not deciding': {t: {ad: [st, f['strict'], material.get(f'{ad}|{t}', [])] for ad, (st, f) in sorted(table[t].items())} for t in REPORTED},
+   286	                      'due-day defects (iv), reported only': {k: v for k, v in due_day.items() if v},
+   287	                      'per topic [status, agreed, strict, marks]': {t: {ad: [st, f['agreed'], f['strict'], f['marks']] for ad, (st, f) in sorted(v.items())}
+   288	                                                                    for t, v in sorted(table.items())}}, indent=1))
+   289	    if lost_edited:
+   290	        verdict = f'FAIL: edited answers lost (refused twice by code): {lost_edited}'
+   291	    elif sum(declines.values()) < 5 or sum(count > 0 for count in declines.values()) < 2:
+   292	        verdict = f'INCONCLUSIVE: the frozen arm declines {sum(declines.values())} target sends on {sum(c > 0 for c in declines.values())} targets'
+   293	    elif all(all(v) for group in (edited_targets_ok, edited_controls_ok, edited_share_ok) for v in group.values()):
+   294	        verdict = 'PASS'
+   295	    else:
+   296	        verdict = 'FAIL'
+   297	    print(f'VERDICT: {verdict}')
+   298	    return verdict
+   299	
+   300	
+46:  The limits stay: the frozen ruler never changes; nothing is pushed, deployed, published or committed unasked; credentials and
+477:- Codex reviews read-only: `codex exec -s read-only -C <repo> --skip-git-repo-check --ephemeral -o <out> - < <prompt>`. The prompt names
+
+codex
+**DISAGREE as written. Put Deck 1 to Alex today, unchanged. The smallest correction is to use it to decide whether to design a larger comparison, and leave the release decision for later.** If Alex spots both planted wrong answers and agrees with his own earlier marks, we learn that he could read these cards consistently. We still need a fair comparison to learn which system gives him better research. [D560](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7088) · [Deck design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/DESIGN.md:64)
+
+1. **What to stop.** Pause question-writing changes, the listing census, model trials, and further page, planner, live-store and integration work. The record supports pausing later release engineering while the earlier quality question is open. The page work also addressed a real display defect, so I would distinguish that fix from the live-store expansion. Ask Alex to defer D658 rather than record the pause as decided. He explicitly approved that work, and it is still listed as the next task. [Working rules](/Users/lchingen/hivemind/AGENTS.md:375) · [Page defect](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7179) · [Live-store decision](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7735) · [D658](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9208) · [Current state](/Users/lchingen/hivemind/docs/CURRENT_STATE.md:433)
+
+   Correct two claims in the rationale. D656’s share-control rule was written into the test before the send. Keep the recorded failure and the separate finding that the edit recovered all nine selected attempts, while the listing omission appeared in both versions. Also, the stop hook did keep reopening work, but the third rejection led to an inert handoff draft. D623’s fault rates explain why the zero-fault bar was a poor target on those readings. They do not establish astra’s chance of passing it. [Prewritten test rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:13) · [D656](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9167) · [D623](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8382) · [D643](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8803)
+
+2. **What the deck can decide.** The luna-era week is fine for testing whether Alex can make the marks. It cannot assess astra’s output. Use **“enough to design the next comparison”** if he marks the full deck within 45 minutes, rejects both plants, accepts the supported control, and matches both marks on at least two of three repeats. Treat 30 minutes as the target. If any condition is unmet, including a skipped control or “cannot tell” on one, inspect why before relying on the method. A missed plant, a disputed supported card and a slow review may call for different changes. Either way, list the real-card disagreements and Alex’s reasons, record whether he opened the full material, and include the three missing-fact sheets. Use those disagreements to inspect particular judgments. A selected deck cannot establish a reader family’s overall reliability or change its role in a gate. [Deck selection and reporting](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/DESIGN.md:49) · [Repeat and control tally](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/tally_deck.py:44) · [D661](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9283)
+
+3. **What to ask Alex, in order.**
+   - **Today:** “Will you mark the deck, and may we defer the new final-answer reference until we see your marks?” Recommend yes to both. If he wants reference work to continue, ask whether he wants the approved luna reference completed or a separately reviewed design for astra’s questions. [D560](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7088) · [D658](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9208) · [Astra remeasurement](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/LOG.md:49)
+   - **After the deck:** “Should the six requirements still block release, or should we report those failures and decide readiness with a controlled comparison of what the analyst receives?” Recommend the second if the pilot supports designing that comparison. The product review supplies evidence for the comparison. A numerical definition of “beats” belongs in that same decision, so options **(b)** and **(c)** should be combined. [D560](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7100) · [Release checks](/Users/lchingen/hivemind/clean-arch/PRD.md:126)
+   - **When the comparison is concrete:** Ask for a reconsideration point. Recommend reviewing direction after the first comparison capable of deciding something, or at an agreed date if no such comparison can be designed. Use real earlier libraries as the working assumption. D606 already adopted that condition provisionally, so raise it with Alex if the design needs a different start. Keep the uncommitted paths as a separate repository decision. [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6634) · [D606](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8064) · [Commit authority](/Users/lchingen/hivemind/AGENTS.md:46)
+
+4. **What makes the way back exact.** Put the deck first in the handoff and record what can reopen work. If the marks are pending, report the hold. If they support a comparison design, require both systems to start on the same date with comparable libraries, enough fresh material and reader time to resolve a meaningful difference, and a written rule for what would favor either system or leave the result unclear. If that design cannot clear the earlier feasibility objections, take that finding to Alex. The stop hook needs to accept that hold instead of treating it as a reason to start another task. [Comparison feasibility and correction](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison-feasibility/RESULT.md:5) · [D612 reopening conditions](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8187) · [D643 stop-hook record](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8803)
+tokens used
+252,596
+**DISAGREE as written. Put Deck 1 to Alex today, unchanged. The smallest correction is to use it to decide whether to design a larger comparison, and leave the release decision for later.** If Alex spots both planted wrong answers and agrees with his own earlier marks, we learn that he could read these cards consistently. We still need a fair comparison to learn which system gives him better research. [D560](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7088) · [Deck design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/DESIGN.md:64)
+
+1. **What to stop.** Pause question-writing changes, the listing census, model trials, and further page, planner, live-store and integration work. The record supports pausing later release engineering while the earlier quality question is open. The page work also addressed a real display defect, so I would distinguish that fix from the live-store expansion. Ask Alex to defer D658 rather than record the pause as decided. He explicitly approved that work, and it is still listed as the next task. [Working rules](/Users/lchingen/hivemind/AGENTS.md:375) · [Page defect](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7179) · [Live-store decision](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7735) · [D658](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9208) · [Current state](/Users/lchingen/hivemind/docs/CURRENT_STATE.md:433)
+
+   Correct two claims in the rationale. D656’s share-control rule was written into the test before the send. Keep the recorded failure and the separate finding that the edit recovered all nine selected attempts, while the listing omission appeared in both versions. Also, the stop hook did keep reopening work, but the third rejection led to an inert handoff draft. D623’s fault rates explain why the zero-fault bar was a poor target on those readings. They do not establish astra’s chance of passing it. [Prewritten test rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:13) · [D656](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9167) · [D623](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8382) · [D643](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8803)
+
+2. **What the deck can decide.** The luna-era week is fine for testing whether Alex can make the marks. It cannot assess astra’s output. Use **“enough to design the next comparison”** if he marks the full deck within 45 minutes, rejects both plants, accepts the supported control, and matches both marks on at least two of three repeats. Treat 30 minutes as the target. If any condition is unmet, including a skipped control or “cannot tell” on one, inspect why before relying on the method. A missed plant, a disputed supported card and a slow review may call for different changes. Either way, list the real-card disagreements and Alex’s reasons, record whether he opened the full material, and include the three missing-fact sheets. Use those disagreements to inspect particular judgments. A selected deck cannot establish a reader family’s overall reliability or change its role in a gate. [Deck selection and reporting](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/DESIGN.md:49) · [Repeat and control tally](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/tally_deck.py:44) · [D661](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9283)
+
+3. **What to ask Alex, in order.**
+   - **Today:** “Will you mark the deck, and may we defer the new final-answer reference until we see your marks?” Recommend yes to both. If he wants reference work to continue, ask whether he wants the approved luna reference completed or a separately reviewed design for astra’s questions. [D560](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7088) · [D658](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9208) · [Astra remeasurement](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/LOG.md:49)
+   - **After the deck:** “Should the six requirements still block release, or should we report those failures and decide readiness with a controlled comparison of what the analyst receives?” Recommend the second if the pilot supports designing that comparison. The product review supplies evidence for the comparison. A numerical definition of “beats” belongs in that same decision, so options **(b)** and **(c)** should be combined. [D560](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7100) · [Release checks](/Users/lchingen/hivemind/clean-arch/PRD.md:126)
+   - **When the comparison is concrete:** Ask for a reconsideration point. Recommend reviewing direction after the first comparison capable of deciding something, or at an agreed date if no such comparison can be designed. Use real earlier libraries as the working assumption. D606 already adopted that condition provisionally, so raise it with Alex if the design needs a different start. Keep the uncommitted paths as a separate repository decision. [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6634) · [D606](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8064) · [Commit authority](/Users/lchingen/hivemind/AGENTS.md:46)
+
+4. **What makes the way back exact.** Put the deck first in the handoff and record what can reopen work. If the marks are pending, report the hold. If they support a comparison design, require both systems to start on the same date with comparable libraries, enough fresh material and reader time to resolve a meaningful difference, and a written rule for what would favor either system or leave the result unclear. If that design cannot clear the earlier feasibility objections, take that finding to Alex. The stop hook needs to accept that hold instead of treating it as a reason to start another task. [Comparison feasibility and correction](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison-feasibility/RESULT.md:5) · [D612 reopening conditions](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8187) · [D643 stop-hook record](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8803)

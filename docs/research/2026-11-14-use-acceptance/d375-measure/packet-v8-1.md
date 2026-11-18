@@ -1,0 +1,130 @@
+# Packet v8-1
+
+**The question:** How much will tech companies spend on AI in calendar 2027?
+
+Due 2028-12-31. Possible answers:
+- 1 Lowest range: AI spending is below $1 trillion.
+- 2 Lower-middle range: AI spending is at least $1 trillion and below $1.2 trillion.
+- 3 Middle range: AI spending is at least $1.2 trillion and below $1.4 trillion.
+- 4 Upper-middle range: AI spending is at least $1.4 trillion and below $1.6 trillion.
+- 5 Highest range: AI spending is at least $1.6 trillion.
+
+**58 statements read on 2026-09-23:**
+
+- **v8-1-1** (stored attribution: 24/7 Wall St. author): The 24/7 Wall St. author forecast NVIDIA gross margin of 71% to 72% in Q4 FY2027 and 72% to 73% in FY2028.
+  - Passage: "Gross margins are expected to bottom in the 71% to 72% range in Q4 on memory cost inflation, recovering to 72% to 73% in fiscal 2028 as volumes scale."
+- **v8-1-2** (stored attribution: Jensen Huang): NVIDIA CEO Jensen Huang said demand was well above supply.
+  - Passage: "whose chief executive just told you demand runs well above supply."
+- **v8-1-3** (stored attribution: Jensen Huang, Nvidia CEO): Nvidia CEO Jensen Huang said customer demand without the supply constraint would be a lot higher.
+  - Passage: "would be a lot higher."
+- **v8-1-4** (stored attribution: NVIDIA): NVIDIA had helped arrange over $500 billion of third-party capital with six infrastructure providers.
+  - Passage: "helped arrange over $500 billion of third-party capital with six infrastructure providers."
+- **v8-1-5** (stored attribution: Nvidia): Nvidia guided to $108 billion in revenue for the current quarter, up 17% sequentially.
+  - Passage: "Nvidia guided to a jaw-dropping $108 billion in revenue for the current quarter, representing 17% sequential growth."
+- **v8-1-6** (stored attribution: Colette Kress, Nvidia CFO): Nvidia CFO Colette Kress characterized the company's FY2028 revenue outlook as supply-constrained.
+  - Passage: "This is a supply-constrained outlook."
+- **v8-1-7** (stored attribution: Nvidia): Nvidia estimated that the big five AI hyperscalers' data-center capital expenditures would rise to $1.3 trillion in 2027.
+  - Passage: "Next year, that figure is estimated to rise to $1.3 trillion."
+- **v8-1-8** (stored attribution: fool.com (analyst)): The author reports Nvidia’s P/E ratio at 29, versus 25 for the S&P 500; no measurement date or earnings period is specified.
+  - Passage: "Nvidia now trades at a P/E of 29, which is slightly higher than the S&P 500's P/E ratio of 25."
+- **v8-1-9** (stored attribution: fool.com (analyst)): The author reports an expected Nvidia EPS of $15.68 for FY2028; the estimate’s source is not specified.
+  - Passage: "For fiscal 2028, which ends in January of that year, Nvidia is expected to have earnings per share of $15.68."
+- **v8-1-10** (stored attribution: 24/7 Wall St. author): The 24/7 Wall St. author said more than $500 billion in third-party AI infrastructure capital was being mobilized through NVIDIA partners.
+  - Passage: "Three catalysts drive the call: the Vera Rubin production ramp, more than $500 billion in third-party AI infrastructure capital being mobilized through NVIDIA partners, and the opening chapter of physical AI across robotics and autonomous vehicles."
+- **v8-1-11** (stored attribution: AMD): AMD reported Q2 FY2026 Data Center revenue growth of 107%.
+  - Passage: "Advanced Micro Devices ( NASDAQ:AMD ) posted Q2 fiscal 2026 revenue of $11.536 billion, up 50.11%, with Data Center up 107%."
+- **v8-1-12** (stored attribution: Nvidia): Nvidia reported fiscal second-quarter revenue of $96.2 billion, up 106% year over year.
+  - Passage: "Nvidia ( NVDA +2.55% ) recently reported $96.2 billion in revenue for the fiscal second quarter, which was 106% more than in the same period last year."
+- **v8-1-13** (stored attribution: Alibaba's chip unit): Alibaba's chip unit unveiled its Zhenwu V900 AI chip, which it said triples its predecessor's performance, and plans to put it on sale in early 2027.
+  - Passage: "At the Apsara Conference in Hangzhou on Tuesday, Alibaba's chip unit unveiled the Zhenwu V900 chip , which triples the performance of its predecessor and will go on sale in early 2027."
+- **v8-1-14** (stored attribution: TSMC): TSMC announced an additional $100 billion investment in its Arizona production facilities during Q2.
+  - Passage: "Furthermore, TSMC announced an additional $100 billion investment in its Arizona production facilities during Q2, so clearly it sees more demand coming that requires increased production capacity."
+- **v8-1-15** (stored attribution: NVIDIA): NVIDIA had invested nearly $50 billion in Frontier AI Labs.
+  - Passage: "NVIDIA has invested nearly $50 billion in the Frontier AI Labs"
+- **v8-1-16** (stored attribution: NVIDIA): NVIDIA reported Q2 FY2027 Data Center revenue of $89.023 billion.
+  - Passage: "Data Center revenue hit $89.023 billion."
+- **v8-1-17** (stored attribution: Colette Kress, Nvidia CFO): Nvidia CFO Colette Kress expected Nvidia revenue to grow approximately 70% in FY2028.
+  - Passage: "We expect to grow revenue by approximately 70% in fiscal 2028,"
+- **v8-1-18** (stored attribution: Keithen Drury): The author said Broadcom and its AI hyperscaler clients are designing workload-specific AI computing units that perform AI computing at lower cost and more effectively than Nvidia's GPUs, threatening Nvidia's market share.
+  - Passage: "There are also workload-specific AI computing units being designed by Broadcom ( AVGO +2.83% ) and its AI hyperscaler clients that perform AI computing at lower cost and more effectively than Nvidia's or AMD's GPUs, threatening Nvidia's market share."
+- **v8-1-19** (stored attribution: Eric Xu, Huawei chairman): Huawei chairman Eric Xu said Huawei may be unable to make enough chips to meet domestic demand.
+  - Passage: "Chairman Eric Xu acknowledged that Huawei may not be able to make enough chips to meet domestic demand"
+- **v8-1-20** (stored attribution: fool.com analyst): Nvidia's receivables increased from $38.5 billion in January to $63.1 billion at the end of July.
+  - Passage: "A big part of that is the company's receivables rising from $38.5 billion in January to $63.1 billion at the end of July."
+- **v8-1-21** (stored attribution: CNBC.com): Huawei's latest SuperPoD architecture links fewer processors than originally planned, and each Huawei chip delivers roughly half the compute of an Nvidia chip.
+  - Passage: "Huawei's latest SuperPoD computing architecture links far fewer processors than originally planned, and each chip still delivers roughly half the compute of Nvidia's."
+- **v8-1-22** (stored attribution: Apple): Apple is pitching its newest high-end Macs to enterprise customers as an alternative to cloud AI infrastructure, potentially competing with demand for Nvidia data-center AI.
+  - Passage: "Apple ( NASDAQ:AAPL ) is making an unusually aggressive push into enterprise artificial intelligence , pitching its newest high-end Macs as an alternative to the expensive cloud infrastructure that has helped Nvidia ( NASDAQ:NVDA ) and Microsoft ( NASDAQ:MSFT ) dominate the AI boom."
+- **v8-1-23** (stored attribution: NVIDIA): NVIDIA guided Q3 FY2027 revenue to $108 billion at the midpoint.
+  - Passage: "with a Q3 guide of $108 billion at the midpoint"
+- **v8-1-24** (stored attribution: IonQ): IonQ announced that its Superion 256 QPU is planned to be the first on-premise quantum computer installed at NVIDIA’s Accelerated Quantum Research Center in 2027, with a direct interconnect to an NVIDIA GB200 NVL72 rack via NVQLink.
+  - Passage: "Trapped-ion quantum hardware developer IonQ (NYSE: IONQ) has announced that its sixth-generation Superion 256 quantum processing unit (QPU) will serve as the first on-premise quantum computer installed at the NVIDIA Accelerated Quantum Research Center (NVAQC) . Scheduled for installation in 2027 alongside first commercial deliveries, the deployment establishes a direct hardware interconnect between IonQ’s 256-qubit system and an NVIDIA GB200 NVL72 accelerated computing rack via NVIDIA NVQLink ."
+- **v8-1-25** (stored attribution: Nvidia): Nvidia reported fiscal Q2 2027 net income of $59.7 billion, up 126% year over year.
+  - Passage: "Net income rose 126% year over year, to $59.7 billion."
+- **v8-1-26** (stored attribution: Lisa Su, AMD CEO): AMD CEO Lisa Su said customer demand for AMD's Helios AI systems was very strong and tracking ahead of the company's initial forecast.
+  - Passage: "customer pull for the company's new Helios AI systems is "very strong and tracking ahead of our initial forecast,""
+- **v8-1-27** (stored attribution: NVIDIA management): NVIDIA management guided Q3 FY2027 total revenue to $108 billion.
+  - Passage: "Management guided Q3 to $108 billion."
+- **v8-1-28** (stored attribution: Nvidia): Nvidia estimated that the big five AI hyperscalers' data-center capital expenditures would approach $800 billion in 2026.
+  - Passage: "During its most recent earnings call, Nvidia noted that this year's data center capital expenditures from the big five AI hyperscalers will approach $800 billion."
+- **v8-1-29** (stored attribution: 24/7 Wall St. author): The 24/7 Wall St. author forecast hyperscaler capital spending of nearly $800 billion in calendar 2026 and $1.3 trillion in calendar 2027.
+  - Passage: "Hyperscaler capex is expected to reach nearly 800 billion in 2026 and 1.3 trillion in 2027, a wave that also pulls in the power, cooling, and networking suppliers we profiled in a free report on seven AI infrastructure names that aren't chipmakers."
+- **v8-1-30** (stored attribution: IonQ): IonQ announced plans to deploy its Superion 256 quantum computer on-premise at NVIDIA's Accelerated Quantum Research Center; no deployment date was given.
+  - Passage: "IonQ recently announced it will deploy its Superion 256 quantum computer on-premise at NVIDIA's Accelerated Quantum Research Center"
+- **v8-1-31** (stored attribution: NVIDIA): NVIDIA's guarantee obligations were capped at $108.5 billion.
+  - Passage: "guarantee obligations are capped at $108.5 billion."
+- **v8-1-32** (stored attribution: Jensen Huang): NVIDIA CEO Jensen Huang said NVIDIA could supply only 70% of demand.
+  - Passage: "Jensen Huang told investors NVIDIA can supply only 70% of demand, with fiscal 2028 growth pegged at approximately 70%."
+- **v8-1-33** (stored attribution: 24/7 Wall St. author): 24/7 Wall St. author set a $310.20 NVIDIA price target, implying 39.56% upside from the $225.35 quote.
+  - Passage: "My 24/7 Wall St. price target for NVIDIA ( NASDAQ:NVDA ) is $310.20, which implies 39.56% upside from the current $225.35 quote."
+- **v8-1-34** (stored attribution: IonQ and Nvidia): IonQ announced a partnership with Nvidia to deploy IonQ's quantum computer at Nvidia's Accelerated Quantum Research Center, aligning IonQ's trapped-ion hardware with Nvidia's CUDA-Q platform.
+  - Passage: "IonQ (IONQ) shares inched higher on Sept. 23 after announcing a landmark partnership with Nvidia (NVDA) to deploy its quantum computer at the AI titan's Accelerated Quantum Research Center.
+The deal aligns IonQ's trapped-ion hardware with Nvidia's CUDA-Q platform, advancing hybrid classical-quantum supercomputing."
+- **v8-1-35** (stored attribution: NVIDIA): NVIDIA's preliminary expectation was for total revenue growth of approximately 70% in FY2028.
+  - Passage: "a preliminary fiscal 2028 growth expectation of approximately 70%"
+- **v8-1-36** (stored attribution: NVIDIA): NVIDIA's supply commitments reached $279 billion.
+  - Passage: "Supply commitments surged to $279 billion"
+- **v8-1-37** (stored attribution: Nvidia): Nvidia extended payment terms on large orders from certain customers.
+  - Passage: "The company extended payment terms on large orders from certain customers."
+- **v8-1-38** (stored attribution: NVIDIA): Nvidia's second-quarter net income increased 126% year on year to $59.7 billion.
+  - Passage: "Second-quarter net income rocketed 126% to $59.7bn year-on-year, around 4.5 times faster than the stock."
+- **v8-1-39** (stored attribution: Nvidia): Nvidia reported fiscal Q2 2027 revenue of $96.2 billion, up 106% year over year; Data Center revenue was approximately $89.2 billion.
+  - Passage: "Revenue grew 106% year over year to $96.2 billion, an acceleration from the previous quarter, and the data center business contributed all but about $7 billion of the total."
+- **v8-1-40** (stored attribution: The 61 analysts providing forecasts): Analysts' one-year Nvidia share-price forecasts range from $180 to $710, with an average forecast of $333.
+  - Passage: "With 61 analysts providing one-year share-price forecasts, there's a massive range of outcomes. The lowest estimate is $180 and the highest $710, while the average is $333."
+- **v8-1-41** (stored attribution: NVIDIA): NVIDIA reported Q2 FY2027 total revenue of $96.22 billion, up 105.8% year over year.
+  - Passage: "Q2 fiscal 2027 revenue was $96.22 billion, up 105.8% year over year"
+- **v8-1-42** (stored attribution: Daniel Sparks): The author calculated that Nvidia shares at $227.38 traded at about 15 times expected FY2028 earnings.
+  - Passage: "At Monday's close of $227.38, shares trade at about 15 times what the company is expected to earn in fiscal 2028, the year that outlook applies to."
+- **v8-1-43** (stored attribution: Nvidia management): Nvidia guided to fiscal Q3 2027 revenue of $108.0 billion.
+  - Passage: "$108.0 billion of revenue."
+- **v8-1-44** (stored attribution: Batech AI): Batech AI moved its retail-surveillance architecture to NVIDIA hardware after joining Inception and reported a 60% reduction in customer onboarding time; no date is given.
+  - Passage: "One example reported is Batech AI , a Mexican startup focused on retail surveillance that moved its architecture to NVIDIA hardware after joining the program and reduced customer onboarding time by 60%."
+- **v8-1-45** (stored attribution: fool.com (analyst)): The author calculates that Nvidia shares would double in less than 18 months if the company reaches the cited $15.68 FY2028 EPS forecast and maintains its current P/E ratio.
+  - Passage: "If Nvidia maintains its current P/E ratio and hits that EPS forecast, the stock would double in less than a year and a half."
+- **v8-1-46** (stored attribution: Nvidia management): Nvidia management guided to roughly 70% revenue growth in the next fiscal year.
+  - Passage: "The company also produced a 75% gross margin, and management told investors to expect roughly 70% revenue growth in the next fiscal year."
+- **v8-1-47** (stored attribution: Skild, Nvidia and Foxconn): Skild, Nvidia and Foxconn recently began deploying Skild Brain on dual-arm robots at an Nvidia factory in Houston to assemble Nvidia Blackwell GPU systems.
+  - Passage: "The technology is already being deployed at an Nvidia factory in Houston, where Skild, Nvidia and contract electronics manufacturing giant Foxconn recently began using the Skild Brain omni-bodied foundation model on dual-arm robots to assemble Nvidia Blackwell GPU systems."
+- **v8-1-48** (stored attribution: AMD): AMD reported second-quarter 2026 Data Center segment revenue of $6.7 billion, up more than 100% year over year.
+  - Passage: "more than doubled year over year, totaling $6.7 billion (58% of the company's revenue)."
+- **v8-1-49** (stored attribution: Einride): Einride announced a strategic collaboration with NVIDIA around DRIVE Hyperion on September 21, 2026.
+  - Passage: "On September 21, the autonomous-freight operator announced a strategic collaboration with NVIDIA Corporation (NASDAQ: NVDA ) around DRIVE Hyperion"
+- **v8-1-50** (stored attribution: fool.com analyst): Nvidia's days sales outstanding increased from 45 to 60 days in one quarter.
+  - Passage: "Nvidia's DSO went from 45 to 60 days in one quarter."
+- **v8-1-51** (stored attribution: Huawei Technologies): Huawei said its Ascent 960DT AI chip is planned to ship in Q1 2027, three quarters ahead of its original schedule.
+  - Passage: "At its annual Huawei Connect conference last week, Huawei said its Ascent 960DT will ship in the first quarter of 2027 , three quarters ahead of its original schedule."
+- **v8-1-52** (stored attribution: IonQ): IonQ said it plans to install its Superion 256 at Nvidia’s Accelerated Quantum Research Center in 2027, linking it to an Nvidia GB200 NVL72 system and using NVQLink and CUDA-Q to connect it with Nvidia’s accelerated computing infrastructure.
+  - Passage: "IonQ said on Wednesday that its Superion 256 will be installed at Nvidia’s Accelerated Quantum Research Center next year, where it will be linked directly to an Nvidia GB200 NVL72 system. The companies will use Nvidia’s NVQLink technology and CUDA-Q platform to connect the quantum processor with Nvidia’s accelerated computing infrastructure."
+- **v8-1-53** (stored attribution: Broadcom): Broadcom reported Q3 FY2026 AI semiconductor revenue of $16.70 billion, up 221% year over year.
+  - Passage: "Q3 fiscal 2026 revenue reached $29.591 billion, up 85.5%, with AI semiconductor revenue of $16.70 billion growing 221% year over year."
+- **v8-1-54** (stored attribution: TrendForce): TrendForce estimated that TSMC generated 72.5% of semiconductor revenue in the relevant space during the second quarter.
+  - Passage: "During the second quarter, TrendForce estimates that TSMC generated 72.5% of all semiconductor revenue in the space."
+- **v8-1-55** (stored attribution: Wall Street analysts): The author says Wall Street expects Nvidia revenue growth of 91% in FY2027 and 66% in FY2028.
+  - Passage: "Wall Street expects the company to grow revenue by 91% this year and 66% next year."
+- **v8-1-56** (stored attribution: NVIDIA): NVIDIA reported Q2 FY2027 total revenue of $96.22 billion, up 105.85% year over year.
+  - Passage: "Q2 fiscal 2027 delivered revenue of $96.22 billion, up 105.85% year over year, with non-GAAP EPS of $2.22 beating consensus by 6.29%."
+- **v8-1-57** (stored attribution: Nvidia): Nvidia projected that global annual data-center capital expenditures would reach $3 trillion to $4 trillion by 2030.
+  - Passage: "Ultimately, Nvidia sees global annual data center capital expenditures increasing to $3 trillion to $4 trillion by 2030."
+- **v8-1-58** (stored attribution: CNBC.com): DeepSeek reportedly lined up the largest known cluster of Huawei chips built to date; the item gives no amount or deployment date.
+  - Passage: "DeepSeek, the startup whose low-cost model rattled global markets last year, reportedly lined up the largest known cluster of Huawei chips built to date."

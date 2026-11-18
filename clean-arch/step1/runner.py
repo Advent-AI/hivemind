@@ -290,6 +290,7 @@ def run(source_path, output_path, manifest, initial_theses, settings, transport,
                     conn.commit()
                 transport.on_reserve = record_reservation
             response = None
+            notes = []          # this step's retries, network and format, in order: written to retry_reason, none overwriting another
             try:
                 if type(transport) is LiveTransport:
                     def capture(provider, built_request):
@@ -302,6 +303,11 @@ def run(source_path, output_path, manifest, initial_theses, settings, transport,
                                 if hasattr(error, 'response_body_base64'):
                                     response['raw_body_base64'] = error.response_body_base64
                             raise
+                        finally:
+                            notes.extend(f'network retry, {note}' for note in transport.network_errors)
+                            if notes:
+                                with conn:
+                                    conn.execute('update trace set retry_reason=? where sequence=?', ('; '.join(notes), sequence))
                         if transport.last_sent is not built_request:   # a provider adaptation changed the bytes: keep what was sent
                             response = dict(response, sent_request=transport.last_sent)
                         conn.execute('update trace set raw_response=? where sequence=?', (dump(response), sequence))
@@ -319,8 +325,9 @@ def run(source_path, output_path, manifest, initial_theses, settings, transport,
                                               'clean_step1', 'clean_step1', transport=capture)
                     except model.SchemaError as first:
                         first_reason = f'SchemaError: {first}'
+                        notes.append(first_reason)
                         with conn:
-                            conn.execute('update trace set retry_reason=? where sequence=?', (first_reason, sequence))
+                            conn.execute('update trace set retry_reason=? where sequence=?', ('; '.join(notes), sequence))
                         try:   # the failed answer is archived under its own key, so the identical request is sent again
                             recorded = model.call(archive, call_config, setting, prompt, user, schema,
                                                   'clean_step1', 'clean_step1', transport=capture)

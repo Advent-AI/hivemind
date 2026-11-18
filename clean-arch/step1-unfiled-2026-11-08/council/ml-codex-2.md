@@ -1,0 +1,15 @@
+I cannot yet agree to shape B′. Its narrower purpose is sound: use the saved clean runs and fresh production runs to find **observed losses**, while treating any ranking between them as provisional. Four changes are still needed before the slice.
+
+1. **Preserve uncertainty in the count.** An unresolved match is not proof that a question was never opened. Give it an “unresolved” outcome and exclude it from opening-loss counts until resolved. Also specify what happens when an unresolved candidate exists alongside a confirmed match; the current ordering can hide it.
+
+2. **Trace each decisive fact separately before assigning a cause.** The proposed rules miss partial extraction: one decisive fact can be kept while another is never extracted. They also jump from “linked to the view” to “reached the judge.” [The existing control](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control_theses.py:79) checks the actual judgment requests, not just links. For each decisive fact, record whether it was extracted, linked in time, and shown in the relevant request; then state how multiple losses and a missing judgment are counted. An answer without a judgment cannot automatically be called a judgment error.
+
+3. **Make the ceiling a real ceiling.** $4.25 plus “one day’s calls” is not an enforceable dollar limit. [Replay](/Users/lchingen/hivemind/src/hivemind/replay.py:94) can have extraction calls in flight, and day-end judging runs after the item-level cap check. The historical $0.03–0.05 is an estimate, not a maximum. Before a send, use a tested shared budget that reserves for all calls and retries across the slice and draws, or state and prove a conservative numeric maximum for every possible overrun. Include the allowed rerun in that same maximum.
+
+4. **Complete and report the $0 verification before sending.** The seeded v116 comparison is a useful positive control, but no-judgment and open-gold cases should produce their explicit report outcomes, not disappear as refusals. Verify the production reader on request extraction and evidence visibility as well as verdicts. Run preflight and report judged and skipped counts; a plan to run it is not a result. Finally, D442 required verification of **both paths’ requests**, so specify the stored-request replay for the clean path as well. The v116 preflight cannot establish the behaviour of v118’s unseeded path.
+
+One additional correction: “production has never been measured unseeded” is stronger than the evidence I checked. Say that **no stored v118 run was found in the searched records**, and report the search scope.
+
+The first-created match rule and the provisional ranking can be used for this exploratory census once these boundaries are fixed. The same-day comparison and fresh ladder draws remain necessary for the production decision.
+
+Council position: not yet consensus; resolve the uncertainty, trace, ceiling, and pre-send verification rules above.

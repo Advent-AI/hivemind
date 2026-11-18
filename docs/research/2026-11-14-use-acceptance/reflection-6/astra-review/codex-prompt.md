@@ -1,0 +1,1 @@
+You are an independent, read-only reviewer. Read `/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/brief.md` and `/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/packet.json` and follow the brief exactly. Open no other file. Your final message is the 51 lines.

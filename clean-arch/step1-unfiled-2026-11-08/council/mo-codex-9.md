@@ -1,0 +1,11 @@
+**Change the new spending record before launching.** The preflight addresses the first issue, but the measurement change now sits inside the spending ledger’s stop and settlement paths.
+
+1. In [budget_replay.py](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_replay.py:125), a refused reservation writes the attempt line **before** the stopped state is persisted. If that write fails, the ledger lock is released without recording the stop. Likewise, [settlement](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_replay.py:144) writes the line before persisting the charge and any overrun. A logging error can therefore prevent a budget refusal or overrun from stopping the other process. A crash after the line is appended but before the ledger is replaced can also leave a line for a charge that the ledger still holds as reserved.
+
+   The smallest correction is to make the authoritative spending and stop update independent of a failed measurement append, and make the two records reconcilable after a crash. Test a failed append on a refusal and an overrun, plus a crash between the two writes.
+
+2. The claim that embedding tokens can be recovered from the new lines needs qualification. [spend_by_component.py](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/spend_by_component.py:24) maps by process, while a Step 2 process makes both embedding and Jev calls. The lines record amounts but no call kind or rate. They support a **total Step 2 ledger charge**, but do not reliably identify which charge was for embeddings or recover its token count. Add that attribution to the measurement record, or report the split as unavailable.
+
+The recorded preflight covers the three stored v118 draws and states the relevant limits. The successful end-to-end output demonstrates attribution and reconciliation for its clean completion; it does not exercise the measurement-write failure or crash window above. I did not run the proofs or launch the slice.
+
+Council position: change the spending-record failure handling and embedding-attribution claim first.

@@ -1,0 +1,9 @@
+**Not yet.** The revised design closes the earlier outcome and WAL-mode gaps, but it attributes behavior to the existing launcher that the code does not have.
+
+For a non-retryable `WriterStopped`, the launcher currently records the detailed exception in the **attempt**, but calls `limit.stop()` with the generic reason `"<run> incomplete: WriterStopped"`. If the contract requires the actual low-space or checkpoint reason as the run’s stop reason, specify the small launcher change and assert that exact reason in both the attempt and the run-level record. [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:98), [proposed stop](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:406).
+
+The WAL start proof should also read back **both** `journal_mode` and `journal_size_limit` on the connection returned by `store.open_db`. The design sets the limit on an initial connection and closes it; its proposed test currently checks only the mode after reopening. If the limit is not retained on the writer’s connection, set it there and verify it. SQLite describes the limit as the value used when a journal or WAL is reset. [SQLite pragma documentation](https://sqlite.org/pragma.html#pragma_journal_size_limit), [start design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:397).
+
+The isolated-test limitation is stated correctly: 4a does not authorize live operation or concurrent preflight.
+
+CONSENSUS: no, because the launcher’s actual stop reason and the reopened writer connection’s size limit need to be included in the design and proof.

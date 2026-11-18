@@ -1,0 +1,290 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 20: the due-day audit and census (`reflection-6/due-day/AUDIT.md`, `due-day/census.txt`)
+
+**Class (a): the request's line 23** ("for an obligation already taken on, its next annual filing") **is applied to completion
+events.**
+- **Where:** sol and astra date the fortnight Hugging Face completion at 2027-02-28 (9 of 9) and label it `stated`. The topic states
+  24 March 2028; luna keeps the stated date (4 of 4).
+- **The two decisions:**
+  - D403, Alex: an event's day is the stated date or the period end, and "the model chooses no other day";
+  - D210, Alex's go: the next-annual-filing rule is for "a financing_amount question on the amount the obligation reaches".
+- **How the request reads:** line 23 is wider than D210 and contradicts D403 on events.
+- **Counted:** 13 answers on 2 of 26 topics.
+- **The other binding-obligation event** (the guarantee, 3 April 2028) is dated as stated by every model, 13 of 13.
+
+**Class (b): events dated at period end before their settling report.** I classify these as D403's design, not a ladder defect.
+They go on Alex's page as a consequence, with both readings (judge on the day, or wait for the report). The judging step owns that
+choice.
+
+**Proposed: one new request version, one clause.** Line 23 becomes "for an obligation already taken on asked as an amount, its next
+annual filing".
+1. **Prompt audit** of the whole changed request (lines 20 to 23, the schema's due_day descriptions, the closing check).
+2. **$0 checks:**
+   - no stored answer the current code accepts is refused by the code (the code does not test this clause; confirm by replay);
+   - the change touches only binding-obligation events.
+3. **Probe, about $0.75, astra only (the leading candidate):**
+   - **the two Hugging Face topics, which must keep the topic's dates;**
+   - **controls:**
+     - the guarantee event (must keep 3 April 2028);
+     - the three obligation-amount topics (fortnight c1/clean-2, week c1/clean-1 and -8), which must keep the next annual filing;
+   - 3 draws each, 18 sends.
+   - **Moves:** both Hugging Face topics take the topic's date in at least 5 of 6, every control keeps its day, and no new decline
+     appears.
+   - **Closes:** otherwise.
+
+**Asked:**
+1. Is (a)'s mechanism and source sound?
+2. Is (b) correctly left to the judging step and Alex?
+3. Send the plan?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the census and the event-date decisions, then review whether the proposed probe can isolate the change and protect the existing date rules.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/census.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/AUDIT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D403|''^## D210|''^## D185|''^## D414|''^## D397'"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '18,25p' clean-arch/step4-2026-11-10/ladder/candidate-system.txt" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'due_day|event_rungs|binding_obligation' clean-arch/step4-2026-11-10/ladder/ladder_step.py | head -25" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+event ladders by source: {'frozen (stored first send)': 11, 'luna (model-probe)': 31, 'sol (model-probe)': 23, 'sol (astra-screen)': 1, 'astra (astra-screen)': 3, 'sol (astra-rest)': 20, 'astra (astra-rest)': 18}
+binding_obligation event ladders by source: {'frozen (stored first send)': 4, 'luna (model-probe)': 12, 'sol (model-probe)': 8, 'sol (astra-screen)': 1, 'astra (astra-screen)': 3, 'sol (astra-rest)': 6, 'astra (astra-rest)': 6}
+
+(a) binding_obligation topics answered as events: due day chosen against the dates the topic states
+  fortnight:c1/clean-12 | topic period: Check date 3 April 2028 (18 months after the 3 October 2026 item), with earlier disclosure possible in Nvidia'
+      ('frozen (stored first send)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('luna (model-probe)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('luna (model-probe)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('luna (model-probe)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('sol (model-probe)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('sol (model-probe)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('sol (model-probe)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('sol (astra-rest)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('sol (astra-rest)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('sol (astra-rest)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('astra (astra-rest)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('astra (astra-rest)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+      ('astra (astra-rest)', '2028-04-03', 'stated', ['3 April 2028', '3 October 2026'])
+  fortnight:c1/clean-6 | topic period: Check date 24 March 2028 (18 months after the 25 September 2026 item) — set per section 3 for a sized acquisit
+      ('frozen (stored first send)', '2028-03-24', 'stated', ['24 March 2028', '25 September 2026'])
+      ('luna (model-probe)', '2028-03-24', 'stated', ['24 March 2028', '25 September 2026'])
+      ('luna (model-probe)', '2028-03-24', 'stated', ['24 March 2028', '25 September 2026'])
+      ('luna (model-probe)', '2028-03-24', 'stated', ['24 March 2028', '25 September 2026'])
+      ('sol (model-probe)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+      ('sol (model-probe)', '2027-02-26', 'stated', ['24 March 2028', '25 September 2026'])
+      ('sol (model-probe)', '2027-02-26', 'stated', ['24 March 2028', '25 September 2026'])
+      ('sol (astra-rest)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+      ('sol (astra-rest)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+      ('sol (astra-rest)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+      ('astra (astra-rest)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+      ('astra (astra-rest)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+      ('astra (astra-rest)', '2027-02-28', 'stated', ['24 March 2028', '25 September 2026'])
+  week-10-06:c1/clean-11 | topic period: Check date: April 2028, the outer limit of a date within 18 months of the Oct. 10, 2026 item for an acquisitio
+      ('frozen (stored first send)', '2028-04-10', 'stated', [])
+      ('luna (model-probe)', '2028-04-10', 'stated', [])
+      ('luna (model-probe)', '2028-04-10', 'stated', [])
+      ('luna (model-probe)', '2028-04-10', 'stated', [])
+  week-10-06:c1/clean-5 | topic period: Check date: the first half of calendar 2027, the closing window the Sept. 3, 2026 agreement states (within 18 
+      ('frozen (stored first send)', '2027-06-30', 'period_end', [])
+      ('luna (model-probe)', '2027-06-30', 'period_end', [])
+      ('luna (model-probe)', '2027-02-28', 'stated', [])
+      ('luna (model-probe)', '2027-06-30', 'period_end', [])
+      ('sol (model-probe)', '2027-06-30', 'period_end', [])
+      ('sol (model-probe)', '2027-02-28', 'stated', [])
+      ('sol (astra-screen)', '2027-02-28', 'stated', [])
+      ('astra (astra-screen)', '2027-06-30', 'period_end', [])
+      ('astra (astra-screen)', '2027-06-30', 'period_end', [])
+      ('astra (astra-screen)', '2027-02-28', 'stated', [])
+
+(b) event questions limiting evidence to what is available by the due day
+  fortnight:c1/clean-4 ('astra (astra-rest)', '2027-01-31', 'available by that date')
+  fortnight:c1/clean-4 ('astra (astra-rest)', '2027-01-31', 'available by that date')
+  week-10-06:c1/clean-7 ('sol (model-probe)', '2027-02-28', 'available by February 2')
+  week-10-06:c1/clean-7 ('sol (astra-rest)', '2027-02-28', 'available by February 2')
+  week-10-06:c1/clean-7 ('astra (astra-rest)', '2027-01-31', 'available by that date')
+  week-10-06:c1/clean-7 ('astra (astra-rest)', '2027-02-28', 'available by February 2')
+  week-10-06:c1/clean-7 ('astra (astra-rest)', '2027-02-28', 'available by February 2')
+  week-10-06:c1/clean-9 ('sol (model-probe)', '2026-11-30', 'available by November 3')
+  week-10-06:c1/clean-9 ('sol (model-probe)', '2026-11-30', 'available by November 3')
+  week-10-06:c1/clean-9 ('sol (model-probe)', '2027-02-28', 'available by February 2')
+  week-10-06:c1/clean-9 ('sol (astra-rest)', '2027-02-28', 'available by February 2')
+  week-10-06:c1/clean-9 ('sol (astra-rest)', '2026-11-30', 'available by November 3')
+  week-10-06:c1/clean-9 ('sol (astra-rest)', '2026-11-30', 'available by November 3')
+  week-10-06:c1/clean-9 ('astra (astra-rest)', '2026-11-30', 'available by November 3')
+  week-10-06:c1/clean-9 ('astra (astra-rest)', '2026-11-30', 'available by November 3')
+  week-10-06:c1/clean-9 ('astra (astra-rest)', '2026-11-30', 'available by November 3')
+
+ succeeded in 0ms:
+# The due-day audit and census (D635; council round 19), $0
+
+**The request lines** (`candidate-system.txt`):
+- **20:** "Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that
+  settles the question is published."
+- **22:** "For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it
+  is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no
+  date."
+- **23:** "When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation
+  already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked."
+
+**The decisions:**
+- **D403** (Alex: "保持更严"): "an event's due day is the date the thesis or the article gives, or the last day of the period the
+  thesis names … The model chooses no other day."
+- **D210** (Alex's go): "Already taken on, one deal or a programme: a **financing_amount question on the amount** the obligation
+  reaches at the company's next annual filing".
+- **D185:** a binding obligation is due within 18 months.
+- **The clean-step design table** (`DESIGN.md` line 291) carries line 23 from v74i line 13, D185 and `check_admission`. It does not
+  separate amounts from events.
+- **The reader brief's D row** holds both sentences.
+
+**Class (a): a binding-obligation topic answered as an event, dated at the next annual filing**
+
+| Topic (stated check date) | frozen and luna | sol | astra |
+|---|---|---|---|
+| fortnight c1/clean-6, Hugging Face (24 March 2028) | stated date 4 of 4 | 2027-02-26/28, 6 of 6 | 2027-02-28, 3 of 3 |
+| week c1/clean-5, Hugging Face ("the first half of calendar 2027") | June 30 3 of 4, Feb 28 1 | June 30 1, Feb 28 2, decline 2 | June 30 2, Feb 28 1 |
+| fortnight c1/clean-12, guarantee (3 April 2028) | stated 4 of 4 | stated 6 of 6 | stated 3 of 3 |
+
+- **What the next-annual-filing day is:** every answer that uses it labels it `stated`, though neither the topic nor the article gives
+  it. Under D403, an event's day is the stated date or the period end, and "the model chooses no other day". So the next-annual-filing
+  date on an event contradicts D403.
+- **Where line 23's rule comes from:** D210, which scopes it to the amount of an obligation already taken on.
+- **How line 23 reads:** it is written wider than D210 and collides with D403 on events.
+- **Who it affects:** the stronger models apply it literally; luna does not.
+- **Counted:** 13 answers on 2 topics (stronger models 12, luna 1).
+
+**Class (b): an event dated at period end whose settling report comes later**
+- 16 sol and astra questions (Vera Rubin, Rubin, Groq) write the cut-off out ("as confirmed by disclosures available by that date").
+  Every model dates these events at period end, as D403 requires.
+- **Not a ladder-step defect under D403.** Whether the judge sees the later report is the judging step's design.
+- It goes on Alex's page as a consequence of D403, with both readings:
+  - the event is judged on what is known on its day;
+  - the judge waits for the report.
+
+**Model-choice classes (not request-caused, small):** Rubin's "this quarter" widened (3 astra), and the invented memory measure (1).
+
+**The sourced candidate.** A new request version changes line 23 only: "for an obligation already taken on **asked as an amount**, its
+next annual filing". Events follow line 22 (D403). Its sources:
+- D210's own scope;
+- D403's "no other day".
+It changes no gate, no reader form and no code check.
+
+ succeeded in 0ms:
+2472:## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
+2664:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4414:## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+ succeeded in 0ms:
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+
+ succeeded in 0ms:
+214:    if ISO_DAY.fullmatch(ladder['due_day']):
+216:            written_day = datetime.date.fromisoformat(ladder['due_day'])
+219:    due_day = written_day
+221:        reasons.append(f'due_day is not a real date: {ladder["due_day"]!r}')
+222:    elif shape == 'figure' and ladder['due_day_basis'] == 'expected_publication':                 # D414: code sets the day of a year's figure
+229:                               f'the publication day the topic or the item gives, with due_day_basis stated; when neither gives one, nothing in the '
+231:            due_day = datetime.date.fromisoformat(due_day_of(ladder, object_kind, object_id, research_list))
+232:    if due_day is not None:
+233:        if due_day <= article_day:
+234:            reasons.append(f'the due day {due_day} is not after the item\'s day {article_day}')
+235:        if thesis['opens_as'] == 'binding_obligation' and due_day > article_day + datetime.timedelta(days=binding_horizon_days):
+236:            reasons.append(f'a binding obligation is due at most {binding_horizon_days} days after the item; {due_day} is later')
+241:            if thesis['opens_as'] != 'binding_obligation' and beyond_next_year(year, article['publication_date'], object_id, research_list):
+247:    if ladder['due_day_basis'] not in allowed_bases:
+248:        reasons.append(f'due_day_basis {ladder["due_day_basis"]!r} does not fit {"a figure" if shape == "figure" else "an event"}: use one of {", ".join(allowed_bases)}')
+289:def due_day_of(ladder, object_kind, object_id, research_list):
+290:    """The day the question is due, as an ISO string (D414). A figure whose day the model would estimate (due_day_basis
+293:    if figure is not None and ladder['due_day_basis'] == 'expected_publication':
+297:    return ladder['due_day']
+300:def event_rungs(event, due_day, article_day):
+312:        return [happened, {'label': 'No', 'condition': f'Rung 1 does not hold on {due_day}.'}]
+318:                          f'stands on {due_day}, and only when rung 1 does not.'},
+319:            {'label': 'Still open', 'condition': f'Neither rung 1 nor rung 2 holds on {due_day}.'}]
+330:        rungs = event_rungs(ladder['event'], ladder['due_day'], article_day)
+331:        year = ladder['due_day'][:4]
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '4414,4440p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+
+- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+    three sends of one thesis may set three days.
+  - Alex: "保持更严 (Recommended)".
+- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+  a date". This is narrower than v74i line 26 by his decision.
+- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+
+## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+
+- **Asked:** "试发读完了：提示词主干管用，但有三类问题（1. 引用文章原话时会改词或抄错来源；2. 问题里写“本文提到的……”，离开文章就看不懂；3. 世界大事类的题被贴了看涨看跌标签，程序检查拦不住）。下一步怎么走？"
+  - Options: change and send once more (recommended): "我针对这三类问题改提示词（各一句）和一条程序检查，先花 2 美分问模型“你当时是依据哪句话这么做的”来定位原因，然后把同样 6 道题再发一次（约 1 美分）看是否改好。改好了就按原授权动手写程序。"; build at once, with the three classes changed in the request and the check, and see in Stage A whether they are fixed; stop and let him read the answers.
+  - Alex: "改完再试发一次 (Recommended)".
+- **Decided:** (1) the model is asked, on the stored conversations of the probe, which instruction led it to each fault (about two
+  cents); (2) the request gets one change for each of the three classes, and the check on a theme's state names refuses the
+  company's labels; (3) the same six theses are sent once more (about one cent) and read as the first six were; (4) when the three
+  classes are gone from those answers, the ladder step is built and Stage A sent on D401's terms (capped at $3; a missed line
+  stops and goes to him; Stage B needs his word), with no further round of design review before the build. If they are not gone,
+  the result goes to him before anything else (D355).
+- **Scope:** the clean path's ladder step. The reviews' open corner cases become tests of the build.
+
+
+codex
+**The line-23 conflict is a sound reason to prepare a new request version; the proposed 18-call probe is not ready to send.** The two Hugging Face topics are versions of the same matter, so recovering both would not by itself show a general fix.
+
+1. **Class (a): supported, with a limit.** D210’s next-filing rule concerns the **amount** of an obligation; D403 restricts event dates to a date in the topic or article, or the end of the named period. The request applies the filing instruction more widely, and the stored completion answers use the filing date despite a different stated check date. That makes the instruction a credible cause; the census alone cannot prove which sentence caused each model’s choice. [Audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/AUDIT.md), [D403](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4414)
+
+2. **Class (b): preserve D403, but do not assign the whole issue to the judge yet.** Some written questions themselves restrict confirmation to disclosures available by the event date. The audit needs to trace whether the product can later record evidence that an event occurred *by* that date, without changing the event’s deadline. D403 fixes the event date; it does not by itself establish the entire later-evidence behaviour. The council can review that consequence under D439; Alex’s override remains available.
+
+3. **Prepare the probe, then return it to council before a send:**
+
+   - Complete the blind whole-request audit first, including the schema, closing check and the 548-day rule. A prompt change can affect **all** requests, so “touches only events” is a hypothesis to test, not a $0 guarantee.
+   - Add **fresh unchanged Astra controls** alongside the changed requests. Include distinct event matters and stated-date, period-end, unsigned-obligation and amount controls. Read the question and rungs as well as the date, and count refusals and other regressions.
+   - State that **5 of 6** on the two Hugging Face topics is a small diagnostic, not a zero-fault gate pass. Keep the gate form and D426 unchanged. Compare the code’s actual acceptances on stored answers; do not imply that a prompt-only edit replays the model’s new behaviour for free.
+   - Reprice both arms, set the cap and preflight before the separate send decision.
+
+**CONSENSUS: Prepare and audit the narrowly scoped candidate at $0; add fresh controls and a wider set of date cases before deciding whether to send it.**
+tokens used
+972,411
+**The line-23 conflict is a sound reason to prepare a new request version; the proposed 18-call probe is not ready to send.** The two Hugging Face topics are versions of the same matter, so recovering both would not by itself show a general fix.
+
+1. **Class (a): supported, with a limit.** D210’s next-filing rule concerns the **amount** of an obligation; D403 restricts event dates to a date in the topic or article, or the end of the named period. The request applies the filing instruction more widely, and the stored completion answers use the filing date despite a different stated check date. That makes the instruction a credible cause; the census alone cannot prove which sentence caused each model’s choice. [Audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/AUDIT.md), [D403](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4414)
+
+2. **Class (b): preserve D403, but do not assign the whole issue to the judge yet.** Some written questions themselves restrict confirmation to disclosures available by the event date. The audit needs to trace whether the product can later record evidence that an event occurred *by* that date, without changing the event’s deadline. D403 fixes the event date; it does not by itself establish the entire later-evidence behaviour. The council can review that consequence under D439; Alex’s override remains available.
+
+3. **Prepare the probe, then return it to council before a send:**
+
+   - Complete the blind whole-request audit first, including the schema, closing check and the 548-day rule. A prompt change can affect **all** requests, so “touches only events” is a hypothesis to test, not a $0 guarantee.
+   - Add **fresh unchanged Astra controls** alongside the changed requests. Include distinct event matters and stated-date, period-end, unsigned-obligation and amount controls. Read the question and rungs as well as the date, and count refusals and other regressions.
+   - State that **5 of 6** on the two Hugging Face topics is a small diagnostic, not a zero-fault gate pass. Keep the gate form and D426 unchanged. Compare the code’s actual acceptances on stored answers; do not imply that a prompt-only edit replays the model’s new behaviour for free.
+   - Reprice both arms, set the cap and preflight before the separate send decision.
+
+**CONSENSUS: Prepare and audit the narrowly scoped candidate at $0; add fresh controls and a wider set of date cases before deciding whether to send it.**

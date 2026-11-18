@@ -1,0 +1,773 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 111: the live-service operating contract, version 1 (`live-service/OPERATING-CONTRACT.md`). Review it against D575's rows and its falsifier
+
+- **The shortfall record** is corrected as you said: "an unchanged re-send cannot exercise the line"; the two-step course could be
+  reviewed under D439; a diagnostic on another population need not replace the ruler. D592 is recorded.
+- **What I searched for the reader table:**
+  - `scripts/hivemind_api.py`: `Connections`, one read-only connection per request.
+  - `scripts/hivemind_mcp.py`: one connection at start, and its object list computed once.
+  - `scripts/mock_build.py` → `bundle.library`, the Idea scripts, the research scripts, and `snapshot.sh` (the backup API).
+  - The writer `ladder_adapter.py` commits several times within a day.
+- **The contract's seven rows:**
+  1. WAL mode, side files on local disk, no bind mount or network share, `mode=ro`, never `immutable`, backup-API copies only.
+  2. One explicit read transaction per request or tool call. Python's default otherwise runs each `SELECT` alone.
+  3. Passive checkpoints; no transaction held between MCP calls; the object list per call.
+  4. The first day refused everywhere, including the streamed Idea route.
+  5. An explicit future `as_of` refused, naming the last completed day.
+  6. Crash recovery.
+  7. AGENTS §9 kept for everything but the product's own service readers. Any text change is decided at acceptance.
+- **A state × event table** and an 8-test proof plan, one test per required case.
+
+**Asked of you:** a case from D575's list, or one you find, that this contract cannot serve consistently without blocking the writer
+or exposing partial work. Also any reader or copy path missing from the table, and any row that overreaches what the code and
+SQLite's documented behaviour support.
+
+End with `CONSENSUS: yes` (the contract is ready for its $0 proof build, which comes back to you) or `CONSENSUS: no, because …`.
+
+codex
+I’ll trace the contract’s reader and copy paths against the code, and check its state table and proposed proofs for gaps.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# A live new-system store: the operating contract, version 1 for the council (D592; $0 design, nothing built)
+
+**Status:** D575 paused the earlier design (`DESIGN.md`) as recorded input; it was not accepted. Round 110 resumed the work as this
+$0 contract. It returns to the council before any build or live run. The new system has not passed its quality gates, and adopting
+it is Alex's choice. This contract only states what a live store would have to guarantee.
+
+**Falsifier (round 110):** a required operating case that cannot be served consistently under this contract without blocking the
+writer or exposing partial work. The proof plan below names one test per case. One failing test sends the contract back.
+
+## What is live, and who touches it (searched in the code)
+
+- **The writer:** the new system's daily loop through `clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py`. It commits several
+  times within a day (after a thesis opens, after a judgement, at the day's end) and records each completed day in
+  `days_completed`.
+- **The readers:**
+
+| Reader | How it opens the store today | Lifetime |
+|---|---|---|
+| The API (`scripts/hivemind_api.py`, `Connections`) | `service.open_ledger` → `file:…?mode=ro` | one connection per request, closed after |
+| The MCP server (`scripts/hivemind_mcp.py`) | the same, once, at start (`LEDGER`) | the whole process; its object list is computed once at start |
+| The page | only through the API | — |
+| The page's embedded snapshot (`scripts/mock_build.py` → `bundle.library`) | `service.open_ledger` | one build |
+| The Idea scripts (`idea_probe`, `idea_gold`, `idea_stability`, `agent_day0`) | `open_read_only` | one run |
+| Research and census scripts (`docs/research/**`) | `open_read_only` | one run |
+| Copies (`snapshot.sh`: SQLite's backup API) | `sqlite3 … .backup` | one copy |
+
+## The contract, row by row (D575's conditions)
+
+1. **Journal mode and its side files.**
+   - The live store is in WAL mode, set by its writer when it creates the store. Production's stores stay as they are.
+   - The `-wal` and `-shm` files live beside the store, on the same local disk as every reader and the writer.
+   - **No reader reaches a live store through a container bind mount or a network share.** WAL's shared memory is not reliable
+     there. On this Mac the service already runs on the host (README; Docker has no outbound network under the VPN).
+   - Readers open with `mode=ro`, never `immutable=1`: an immutable read skips locking and can see a torn state.
+   - **A copy** is made only with the backup API (`snapshot.sh`). A file copy of the store without its `-wal` is not a copy.
+2. **One committed state per request.**
+   - Each API request and each MCP tool call runs its reads inside one explicit read transaction: `BEGIN` before the first read,
+     ended after the last.
+   - Python's default runs each `SELECT` on its own, so without this a request's reads can straddle a writer's commit.
+   - The first-day check below runs inside the same transaction as the reads.
+3. **Checkpoints and long reads.**
+   - The writer checkpoints passively (SQLite's automatic checkpoint), which never waits for readers.
+   - A reader's transaction lasts one request or one tool call, never longer. A long read (`/library`, a thesis bundle) holds back
+     the checkpoint only while it runs, and the `-wal` file shrinks after it.
+   - **The MCP process's long-lived connection holds no transaction between calls.** Its object list is recomputed per call from the
+     call's state, not once at start.
+4. **The first day** (open defect 10).
+   - Before any day completes, every route and tool answers "the store's first day has not completed" (HTTP 503 for the API). That
+     includes the streamed Idea route, before any header.
+   - An empty store (no step) and a legacy ledger read as today.
+5. **A date not yet completed.**
+   - With no date given, a request is served as of the last completed day, as today.
+   - **An explicit `as_of` later than the last completed day is refused,** naming the last completed day. It is not served
+     partially and not silently moved.
+6. **A crash.**
+   - On the writer's next open, WAL keeps every committed transaction and drops the unfinished one.
+   - The last completed day does not move, so readers keep serving it.
+   - A crash during the first day leaves the store refusing (row 4) until a day completes or the store is replaced.
+7. **AGENTS §9's rule "Never open a live run's databases".**
+   - It stays as written for every reader except the product's own service readers (the API and the MCP server) on a WAL store run
+     under rows 1 to 6.
+   - Research and census scripts keep reading snapshots made by the backup API.
+   - Widening the exception, or any change to the rule's text, is a decision recorded when the contract is accepted, not now.
+
+## State × event (the writer's state at the request's snapshot × the request)
+
+| State | No date | Explicit date ≤ last completed day | Explicit date > last completed day | MCP tool | Copy (backup) |
+|---|---|---|---|---|---|
+| Empty store | as today (no day) | as today | as today | as today | consistent |
+| First day in progress | refused (row 4) | — (no completed day) | refused (row 4) | refused | consistent; the copy is the in-progress state, and the same rules apply to reading it |
+| A later day in progress | the last completed day; the partial day's rows are dated after it and invisible | that day | refused (row 5) | as of the call's last completed day | consistent |
+| A day completing while a request runs | the request keeps the state of its own transaction | same | same | same | consistent |
+| The writer crashed mid-day | the last completed day | that day | refused | same | consistent |
+
+## Proof plan ($0; nothing built until the council accepts this contract)
+
+1. **The writer's store is in WAL mode,** and production's stores are unchanged (a test on each).
+2. **The API on a store driven through the loop's real writes,** with a request held between its first and last read (a test hook)
+   while the writer commits a judgement and completes a day:
+   - the held response equals the state at its start;
+   - the writer completes with no lock error.
+   - Run in two variants: a store in its first day and a store with one completed day.
+3. **A long read held for a set time** while the writer commits several times: the writer never waits, and the `-wal` file shrinks
+   after the read ends.
+4. **The MCP server:** after a later day completes, a new tool call lists that day's objects. No transaction is open between calls
+   (the connection's `in_transaction` is false).
+5. **The refusals:** an explicit future `as_of` is refused with the last completed day named; the first day is refused, the streamed
+   Idea route included.
+6. **A crash:** the writer is killed mid-day, and the store reopens with the last completed day unchanged.
+7. **The copy:** a backup taken while the writer commits passes an integrity check and reads like the store at one commit.
+8. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+
+## Not covered
+
+- The Idea planner on a new-system ledger (a separate item).
+- A long-running service's operations: restart, monitoring and disk space for the `-wal`.
+- The page's note when the live read fails, which is Alex's presentation choice and stays as specified.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'sqlite3.connect|open_db|immutable|mode=ro|backup\\(|VACUUM|shutil.copy|copyfile|views.sqlite|connect\\(' scripts/hivemind_api.py scripts/hivemind_mcp.py scripts/mock_build.py scripts/snapshot.sh src/hivemind clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py --glob '*.py' --glob '*.sh'" in /Users/lchingen/hivemind
+ exited 2 in 0ms:
+rg: scripts/snapshot.sh: No such file or directory (os error 2)
+scripts/mock_build.py:21:    parser.add_argument('--ledger', type=Path, default=ROOT / 'poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite')
+scripts/hivemind_mcp.py:21:parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:154:    conn = sqlite3.connect(f'file:{first}?mode=ro', uri=True)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:165:        self.conn = store.open_db(views_path)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:294:    conn = sqlite3.connect(f'file:{Path(archive_path or LADDER_ARCHIVE)}?mode=ro', uri=True)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:340:    runner = LadderAdapter(output / 'views.sqlite', output / 'archive.sqlite', output / 'spend.jsonl', transport=transport, cap_usd=cap_usd, sleep=sleep,
+scripts/hivemind_api.py:208:    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+src/hivemind/views/store.py:55:def open_db(path):
+src/hivemind/views/store.py:57:    conn = sqlite3.connect(path)
+src/hivemind/views/store.py:218:    conn = sqlite3.connect(f'file:{os.path.abspath(path)}?mode=ro', uri=True)
+src/hivemind/search.py:40:    conn = sqlite3.connect(path)
+src/hivemind/replay.py:53:    items_db = testdb.open_db(testdb_path)
+src/hivemind/replay.py:54:    conn = store.open_db(views_path)
+src/hivemind/replay.py:142:            shutil.copy(views_path, views_path + '.day0.sqlite')
+src/hivemind/testdb.py:12:def open_db(path):
+src/hivemind/testdb.py:13:    conn = sqlite3.connect(path)
+src/hivemind/model.py:69:        self.conn = sqlite3.connect(path, check_same_thread=False)
+src/hivemind/idea_composite.py:278:    """Supply the immutable ordered outcomes, without copying evidence or guessing UI score orientation."""
+src/hivemind/service.py:27:_SEQ_DAYS = {}      # id(connection) → (connection, (max sequence, rows), map); a sqlite3 connection cannot carry attributes
+
+web search: 
+web search: https://sqlite.org/wal.html
+exec
+/opt/homebrew/bin/zsh -lc "rg --files | rg 'snapshot\\.sh"'$|hivemind_(api|mcp)'"\\.py"'$'"'; sed -n '1,240p' scripts/hivemind_api.py; sed -n '1,180p' scripts/hivemind_mcp.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+scripts/hivemind_api.py
+scripts/hivemind_mcp.py
+"""The HTTP front of the Hivemind service (docs/poc/service.md, docs/poc/idea-card.md): JSON on one port, one route
+per call, every answer from src/hivemind/service.py, search.py and idea.py. The web page's front; agents use MCP.
+
+GET routes (query string parameters in brackets):
+  /search          [q, k, as_of, include_closed]
+  /views           [object, as_of, include_closed]
+  /views/<id>      [as_of]
+  /views/<id>/history   [from, to]
+  /views/<id>/evidence  [as_of, tier]
+  /views/<id>/record    [as_of]
+  /changes         [since, to]
+  /evaluate        [view_id, comparator (>=, <, =), value_usd, as_of]
+  /days            the ledger's first and last completed day
+  /thesis-bundles   [ids (comma-separated), as_of] complete dated frontend inputs
+  /library         [as_of] all collected theses and stored groups, without a model call
+POST route (JSON body):
+  /ideas           {text, as_of?, k?, bundles?} → the idea card (mapping and optional analyst summary; none when no view is recorded); bundles:false leaves the
+                   views' bundles out for a page that fetches /thesis-bundles itself
+                   Accept: application/x-ndjson streams progress then result, or an error record
+
+Every request opens its own connections (the server is threaded; an idea call takes seconds and must not block the
+page's reads). Usage: python3 scripts/hivemind_api.py [--host 127.0.0.1] [--port 8788] [--views DB] [--items DB]
+[--index DB] [--archive DB] [--config JSON] [--lexical]
+"""
+import argparse
+import http.server
+import json
+import os
+import sys
+import urllib.parse
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'src'))
+from hivemind import bundle, config, idea, model, search, service  # noqa: E402
+from hivemind.views import store  # noqa: E402
+
+PATHS = {}
+ALIASES = {}
+CFG = None
+SEMANTIC = True
+REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+
+
+def error_response(error):
+    if isinstance(error, KeyError):
+        return 404, f'not found: {error}'
+    if isinstance(error, service.LedgerError):
+        return 500, str(error)
+    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+        return 502, f'{type(error).__name__}: {str(error)[:200]}'
+    return 400, str(error)
+
+
+class Connections:
+    """The databases one request reads: opened on entry, closed on exit, never shared between threads."""
+
+    def __init__(self, read_only=False):
+        self.read_only = read_only
+
+    def __enter__(self):
+        self.ledger = service.open_ledger(PATHS['views'])
+        self.index = None if self.read_only else search.open_index(PATHS['index'])
+        self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+        self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+        return self
+
+    def __exit__(self, *exc):
+        for conn in (self.ledger, self.index, self.items):
+            if conn is not None:
+                conn.close()
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, fmt, *args):   # one line per request, no query text or body (an idea can carry anything)
+        sys.stderr.write(f'{self.address_string()} {self.command} {self.path.split("?")[0]}\n')
+
+    def _send(self, status, payload):
+        body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self._cors()
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _cors(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+
+    def do_OPTIONS(self):          # a browser's preflight before a JSON POST
+        self.send_response(204)
+        self._cors()
+        self.end_headers()
+
+    def _answer(self, work, read_only=False):
+        try:
+            with Connections(read_only) as db:
+                self._send(200, work(db))
+        except REQUEST_ERRORS as error:
+            status, message = error_response(error)
+            self._send(status, {'error': message})
+
+    def _stream_answer(self, work):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+        self.send_header('Cache-Control', 'no-store')
+        self._cors()
+        self.end_headers()
+
+        def emit(event):
+            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+            self.wfile.flush()
+
+        try:
+            with Connections() as db:
+                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+                emit({'type': 'result', 'data': card})
+        except (BrokenPipeError, ConnectionResetError):
+            return
+        except REQUEST_ERRORS as error:
+            status, message = error_response(error)
+            try:
+                emit({'type': 'error', 'status': status, 'message': message})
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+    def do_GET(self):
+        url = urllib.parse.urlsplit(self.path)
+        q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
+        parts = [p for p in url.path.split('/') if p]
+        self._answer(lambda db: route(db, parts, q), read_only=parts in (['library'], ['thesis-bundles']))
+
+    def do_POST(self):
+        parts = [p for p in urllib.parse.urlsplit(self.path).path.split('/') if p]
+        length = int(self.headers.get('Content-Length') or 0)
+        raw = self.rfile.read(length) if length else b''
+
+        def work(db, on_progress=None):
+            if parts != ['ideas']:
+                raise KeyError('/'.join(parts))
+            try:
+                body = json.loads(raw or b'{}')
+            except json.JSONDecodeError as error:
+                raise ValueError(f'the body is not JSON: {error}')
+            if not isinstance(body, dict) or not str(body.get('text') or '').strip():
+                raise ValueError('POST /ideas needs a JSON body with text')
+            if CFG is None:
+                raise config.ConfigError('the server was started without --config, so it cannot read ideas')
+            return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
+                                  int(body.get('k') or 10), aliases=ALIASES, semantic=SEMANTIC, bundles=body.get('bundles', True) is not False,
+                                  on_progress=on_progress)
+        accepted = [part.split(';', 1)[0].strip() for part in self.headers.get('Accept', '').split(',')]
+        if parts == ['ideas'] and 'application/x-ndjson' in accepted:
+            self._stream_answer(work)
+        else:
+            self._answer(work)
+
+
+def flag(value):
+    return str(value).lower() in ('1', 'true', 'yes')
+
+
+def route(db, parts, q):
+    ledger, as_of = db.ledger, q.get('as_of') or None
+    if parts == ['library']:
+        return bundle.library(ledger, db.items, as_of)
+    if parts == ['thesis-bundles']:
+        return bundle.thesis_bundles(ledger, db.items, [id.strip() for id in q.get('ids', '').split(',') if id.strip()], as_of)
+    if parts == ['search']:
+        return search.search(ledger, db.index, q.get('q', ''), int(q.get('k', 10)), as_of, flag(q.get('include_closed', '')), aliases=ALIASES, semantic=SEMANTIC)
+    if parts == ['views']:
+        return service.views(ledger, q.get('object') or None, as_of, flag(q.get('include_closed', '')))
+    if len(parts) == 2 and parts[0] == 'views':
+        record = service.view(ledger, parts[1], as_of)
+        if record is None:
+            raise KeyError(parts[1])
+        return record
+    if len(parts) == 3 and parts[0] == 'views':
+        view_id, what = parts[1], parts[2]
+        if what == 'history':
+            return service.history(ledger, view_id, q.get('from') or None, q.get('to') or None)
+        if what == 'evidence':
+            return service.evidence(ledger, view_id, as_of, q.get('tier') or None)
+        if what == 'record':
+            return service.record(ledger, view_id, as_of)
+        raise KeyError(what)
+    if parts == ['changes']:
+        if not q.get('since'):
+            raise ValueError('changes needs since=YYYY-MM-DD')
+        return service.changes(ledger, q['since'], q.get('to') or None)
+    if parts == ['evaluate']:
+        if not all(k in q for k in ('view_id', 'comparator', 'value_usd')):
+            raise ValueError('evaluate needs view_id, comparator and value_usd')
+        answer = service.evaluate(ledger, q['view_id'], q['comparator'], float(q['value_usd']), as_of)
+        if answer is None:
+            raise KeyError(q['view_id'])
+        return answer
+    if parts == ['days']:
+        row = ledger.execute('select min(day), max(day) from days_completed').fetchone()
+        return {'first_day': row[0], 'last_day': row[1]}
+    raise KeyError('/'.join(parts))
+
+
+def main():
+    global ALIASES, CFG, SEMANTIC
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+    parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'), help='the items database, for source titles in the idea card')
+    parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
+    parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
+    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-idea.json'), help='the config whose idea settings name the mapping and final assessment models and prompts')
+    parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
+    parser.add_argument('--host', default='127.0.0.1')
+    parser.add_argument('--port', type=int, default=8788)
+    parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
+    args = parser.parse_args()
+    PATHS.update(views=args.views, items=args.items, index=args.index, archive=args.archive)
+    os.makedirs(os.path.dirname(os.path.abspath(args.archive)), exist_ok=True)
+    ALIASES = search.object_aliases(args.universe)
+    CFG = config.load(args.config) if args.config and os.path.exists(args.config) else None
+    SEMANTIC = not args.lexical
+    if not os.path.exists(args.items):
+        print(f'items database not found ({args.items}): idea cards name sources by input id', flush=True)
+    if CFG is None:
+        print('no config: GET routes only, POST /ideas answers 502', flush=True)
+    else:
+        print(f'config {CFG.version}: ideas read by {CFG.idea.model} ({CFG.idea.prompt_version}, effort {CFG.idea.reasoning_effort}); archive {os.path.basename(args.archive)}', flush=True)
+        if CFG.idea_summary is not None:
+            print(f'analyst summary: {CFG.idea_summary.model} ({CFG.idea_summary.prompt_version}, effort {CFG.idea_summary.reasoning_effort})', flush=True)
+    if args.lexical:
+        print('--lexical: no embedding; every search answers in lexical mode', flush=True)
+    else:
+        with Connections() as db:
+            embedded, unchanged, tokens, error = search.ensure_index(db.ledger, db.index)
+        print(f'index: {embedded} views embedded, {unchanged} unchanged, {tokens} tokens' + (f'; embedding stopped ({error}): search runs lexical until the rest is built' if error else ''), flush=True)
+    print(f'hivemind api on http://{args.host}:{args.port}  ledger {os.path.basename(os.path.dirname(args.views))}/{os.path.basename(args.views)}  index {os.path.basename(args.index)}', flush=True)
+    server = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
+    server.daemon_threads = True
+    server.serve_forever()
+"""The MCP front of the Hivemind service (docs/poc/service.md): one tool per call, stdio transport, every answer from
+src/hivemind/service.py and search.py. Hivemind is a database with a search engine on top: the caller searches,
+chooses which views to keep and how to arrange them, and reads each view's state, history and evidence. Nothing
+here writes to the ledger or knows who is asking.
+
+Usage: python3 scripts/hivemind_mcp.py [--views DB] [--index DB]
+Claude Code: claude mcp add hivemind -- python3 /path/to/scripts/hivemind_mcp.py
+"""
+import argparse
+import os
+import sys
+
+from mcp.server.fastmcp import FastMCP
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'src'))
+from hivemind import bundle, search as search_module, service  # noqa: E402
+from hivemind.views import store  # noqa: E402
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
+parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
+parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'))
+parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
+parser.add_argument('--transport', choices=['stdio', 'streamable-http'], default='stdio', help='stdio for a local agent; streamable-http to serve /mcp over HTTP (Docker)')
+parser.add_argument('--host', default='127.0.0.1')
+parser.add_argument('--port', type=int, default=8789)
+ARGS = parser.parse_args()
+LEDGER = service.open_ledger(ARGS.views)
+INDEX = search_module.open_index(ARGS.index)
+ITEMS = store.open_read_only(ARGS.items) if os.path.exists(ARGS.items) else None
+ALIASES = search_module.object_aliases(ARGS.universe)
+if not ARGS.lexical:
+    _embedded, _unchanged, _tokens, INDEX_ERROR = search_module.ensure_index(LEDGER, INDEX)
+    if INDEX_ERROR:
+        sys.stderr.write(f'hivemind: embedding stopped ({INDEX_ERROR}) after {_embedded} views; search runs lexical until the rest is built\n')
+
+from hivemind import idea as idea_module  # noqa: E402
+
+OBJECTS = idea_module.object_list(LEDGER, service.default_as_of(LEDGER), ALIASES)
+mcp = FastMCP('hivemind', host=ARGS.host, port=ARGS.port, instructions=(
+    'Hivemind is a ledger of research views (a dated question with a five-step ladder, judged every day on evidence) '
+    'with a search engine on top. To read an idea against it: first break the idea into its parts, the one to four '
+    'questions whose answers decide it (each about one concrete quantity, date or event); search with the idea and with '
+    'each part (k=20); map each part to every view whose question answers it or whose outcome would move it, leaving out '
+    'views that only share a company or a word; then read each mapped view (state as of a day, history, evidence) and '
+    'say what the judged positions tell about each part and which parts no view covers. Say judged, never true. Every '
+    'tool takes as_of, a calendar day; the default is the ledger\'s last completed day. Nothing here changes the ledger. '
+    'search matches each view\'s own text (question, what it looks at, ladder conditions; Chinese, English queries work): '
+    'ask for one object and one quantity or event per query; views(object) lists everything under one object. '
+    + OBJECTS))
+
+
+@mcp.tool()
+def thesis_library(as_of: str = '') -> dict:
+    """All collected theses and their stored research groups, including ungrouped and closed theses.
+    Membership is not a dependency or a parent-child relationship. No model call or ledger write."""
+    return bundle.library(LEDGER, ITEMS, as_of or None)
+
+
+@mcp.tool()
+def thesis_bundles(view_ids: list[str], as_of: str = '') -> dict:
+    """Complete UI inputs for selected thesis ids: dated states, assessments, sources, evidence and relationships.
+    Pass this envelope to the frontend's fromBundles adapter. Read-only; does not call a model."""
+    return bundle.thesis_bundles(LEDGER, ITEMS, view_ids, as_of or None)
+
+
+@mcp.tool()
+def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+    """Top-k views for an idea or sentence: id, object, kind, what it looks at, the question, due day, dependencies
+    (the views it is judged after) and dependants, with the score and its parts. Views, never evidence: evidence is
+    anchored under its view."""
+    return search_module.search(LEDGER, INDEX, query, k, as_of or None, include_closed, aliases=ALIASES, semantic=not ARGS.lexical)
+
+
+@mcp.tool()
+def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+    """The views of one object (a ticker like NVDA or a theme id like ai-capex), or all views, as of a day."""
+    return service.views(LEDGER, object or None, as_of or None, include_closed)
+
+
+@mcp.tool()
+def view(view_id: str, as_of: str = '') -> dict:
+    """One view as of a day: the question, the ladder (positions 1..5, position 1 the most bullish outcome; or 2 for
+    yes/no), the judged position with its label and condition and since when, whether open, dependencies and
+    dependants, counts of rounds, evidence and facts."""
+    record = service.view(LEDGER, view_id, as_of or None)
+    if record is None:
+        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+    return record
+
+
+@mcp.tool()
+def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+    """Every judgement round in the span (day, position, whether it changed, why, the cited evidence ids and the push
+    each gave), evidence arrivals per day, position changes, replacements of guidance, open/close switches."""
+    return service.history(LEDGER, view_id, from_day or None, to_day or None)
+
+
+@mcp.tool()
+def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+    """Evidence in force under the view as of a day: one line, the source's own words, tier (发生的事 fact, 当事人说的
+    party statement, 第三方看法 third-party view, 传闻 rumour), speaker, when it arrived, its sources."""
+    return service.evidence(LEDGER, view_id, as_of or None, tier or None)
+
+
+@mcp.tool()
+def record(view_id: str, as_of: str = '') -> dict:
+    """The last check of the view on or before the day: when, by which round, how many items were processed that
+    day and how much evidence arrived under the view."""
+    return service.record(LEDGER, view_id, as_of or None)
+
+
+@mcp.tool()
+def changes(since_day: str, to_day: str = '') -> list:
+    """Judgements that said 'changed' after since_day, each with the view, from/to position and the evidence cited."""
+    return service.changes(LEDGER, since_day, to_day or None)
+
+
+@mcp.tool()
+def evaluate(view_id: str, comparator: str, value_usd: float, as_of: str = '') -> dict:
+    """A claim against a view's ladder: 'the quantity >= / < / = value_usd'. Returns the ladder position the
+    threshold sits in, the judged position, and the verdict: holds (the judged band is wholly on the claim's side),
+    not_yet (wholly on the other side) or borderline (the threshold cuts through the judged band)."""
+    answer = service.evaluate(LEDGER, view_id, comparator, value_usd, as_of or None)
+    if answer is None:
+        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+    return answer
+
+
+if __name__ == '__main__':
+    mcp.run(transport=ARGS.transport)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'snapshot\\.sh|\\.backup|shutil\\.copy\\(|shutil\\.copyfile\\(|copy2\\(' --glob '*.py' --glob '*.sh' scripts src clean-arch | head -75; rg -n 'def (history|changes|default_as_of)|select.*judg|round' src/hivemind/service.py | tail -30; rg -n 'def ensure_index|def search\\(' src/hivemind/search.py; rg -n '"'^## 9|Never open a live'"' AGENTS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+scripts/preflight.py:191:        shutil.copy(path, scratch)
+src/hivemind/replay.py:142:            shutil.copy(views_path, views_path + '.day0.sqlite')
+clean-arch/step2-validation-2026-11-07/map_reference.py:57:        shutil.copy(path, out / path.name)
+clean-arch/step1/preserve_page_source.py:57:            clean.backup(destination)
+clean-arch/step4-2026-11-10/stage_a/supplement_reader_packet.py:39:        shutil.copyfile(packet_file, readers_folder / packet_file.name)
+clean-arch/e2e-comparison-2026-11-13/resume_check.py:69:        shutil.copy(draw / name, copy / name)
+clean-arch/step4-2026-11-10/stage_b/mutants.py:68:        shutil.copy(STAGE_B / name, TREE / 'clean-arch/step4-2026-11-10/stage_b' / name)
+clean-arch/e2e-comparison-2026-11-13/run_fresh.py:343:        shutil.copy(ROOT / 'clean-arch/unseeded-2026-11-10/initial-empty.json', folder / 'initial.json')
+clean-arch/e2e-comparison-2026-11-13/run_fresh.py:344:        shutil.copy(STAGE2 / 'stage2-settings.json', folder / 'settings.json')
+clean-arch/e2e-comparison-2026-11-13/run_fresh.py:345:        shutil.copy(STAGE2 / 'stage2-limits.json', folder / 'limits.json')
+clean-arch/e2e-comparison-2026-11-13/prod_records.py:220:            shutil.copy(folder / name, Path(scratch) / name)
+clean-arch/e2e-comparison-2026-11-13/proof_wiring.py:115:    shutil.copy(scratch / 'u1-default' / 'views.sqlite', tampered)
+5:daily round dated on or before that day. Nothing here writes.
+23:def default_as_of(conn):
+24:    return store.last_completed_day(conn) or conn.execute('select max(publication_day) from judgements').fetchone()[0]
+31:    """sequence number → the publication day of the item or daily round written under it. Cached per connection and
+73:    rows = [dict(r) for r in conn.execute('select * from judgements where view_id=? and publication_day<=? order by judgement_id', (view_id, as_of))]
+84:            'rounds': len(rows), 'why_changed': last['why_changed'], 'reasons': last['reasons'], 'theme_pushes': _json(last.get('theme_pushes_json'))}
+160:        'counts': {'rounds': state['rounds'] if state else 0, 'evidence': len(in_force), 'facts': sum(1 for e in in_force if vocabulary.canonical('tier', e['tier']) == TIER_FACT)},
+199:def history(conn, view_id, from_day=None, to_day=None):
+204:    for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+207:                 'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
+256:    """The last check of the view on or before the day: when, by which round, how much came in that day."""
+258:    row = conn.execute('select input_id, publication_day, seq from judgements where view_id=? and publication_day<=? order by judgement_id desc limit 1', (view_id, as_of)).fetchone()
+264:    return {'view_id': view_id, 'as_of': as_of, 'last_check': {'day': day, 'round': row['input_id'], 'items_processed_that_day': len(items), 'evidence_arrived_that_day': arrived}}
+269:def changes(conn, since_day, to_day=None):
+274:    for row in conn.execute('select * from judgements order by judgement_id'):
+221:def search(ledger, index, query, k=10, as_of=None, include_closed=False, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, aliases=None, semantic=True):
+419:## 9. Workspace and operations
+431:- Never open a live run's databases: run `sh <run folder>/snapshot.sh` and query the snapshot.
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '190,250p;265,300p' src/hivemind/service.py; rg -n -A 55 'def ensure_index|def index' src/hivemind/search.py; rg -n -A 20 'def complete_day|def record_article|def replay\\(' clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py; sed -n '419,435p' AGENTS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+        piece = evidence_record(conn, link['evidence_id'], as_of, link['seq'])
+        if tier and piece['tier'] != tier:
+            continue
+        out.append(piece)
+    return out
+
+
+# ---------- history
+
+def history(conn, view_id, from_day=None, to_day=None):
+    to_day = to_day or default_as_of(conn)
+    from_day = from_day or '0000-00-00'
+    judgements = []
+    previous = None
+    for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+        entry = {'day': row['publication_day'], 'seq': row['seq'], 'position': row['rung'], 'changed': bool(row['changed']), 'moved_from': previous if previous is not None and previous != row['rung'] else None,
+                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _unique(_json(row['cited_evidence_json'])), 'pushes': _json(row['pushes_json']),
+                 'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
+        previous = row['rung']
+        if from_day <= row['publication_day'] <= to_day:
+            judgements.append(entry)
+    arrivals = {}
+    for link in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,)):
+        day = day_of_seq(conn, link['seq'])
+        if day and from_day <= day <= to_day:
+            piece = store.evidence(conn, link['evidence_id'])
+            bucket = arrivals.setdefault(day, {'evidence': 0, 'facts': 0})
+            bucket['evidence'] += 1
+            bucket['facts'] += int(vocabulary.canonical('tier', piece['tier']) == TIER_FACT)
+    replacements = [{'day': day_of_seq(conn, r['seq']), 'old': r['old_evidence_id'], 'new': r['new_evidence_id'], 'said_day': r['said_day']}
+                    for r in conn.execute('select r.* from replacements r join evidence_links l on l.evidence_id=r.new_evidence_id where l.view_id=?', (view_id,))
+                    if day_of_seq(conn, r['seq']) and from_day <= day_of_seq(conn, r['seq']) <= to_day]
+    switches = [{'day': day_of_seq(conn, s['after_seq']), 'open': bool(s['open']), 'reason': s['reason']}
+                for s in conn.execute('select * from view_switches where view_id=? order by id', (view_id,)) if day_of_seq(conn, s['after_seq']) and from_day <= day_of_seq(conn, s['after_seq']) <= to_day]
+    return {'view_id': view_id, 'from_day': from_day, 'to_day': to_day, 'judgements': judgements,
+            'changes': [j for j in judgements if j['moved_from'] is not None], 'arrivals': dict(sorted(arrivals.items())),
+            'replacements': replacements, 'switches': switches}
+
+
+class LedgerError(ValueError):
+    """A ledger record the service cannot read (corrupt JSON): refused, never read as empty."""
+
+
+def _unique(ids):
+    """A judgement's cites as the UI contract reads them: each id once, first occurrence kept. The writer stores the set from
+    2026-10-28; the sealed ledger sealed-2026-10-28-v34-nvda-3m-through-0828 holds one judgement (v2, id 736) that cites an id twice."""
+    seen, out = set(), []
+    for value in ids:
+        if value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def _json(text):
+    if not text:
+        return []
+    try:
+        return json.loads(text)
+    except ValueError as error:
+        raise LedgerError(f'a judgement record holds invalid JSON: {text[:60]!r}') from error
+
+
+# ---------- changes since a day
+
+def changes(conn, since_day, to_day=None):
+    """Judgements that said 'changed' after since_day (exclusive) up to to_day, with their cited evidence."""
+    to_day = to_day or default_as_of(conn)
+    out = []
+    previous = {}
+    for row in conn.execute('select * from judgements order by judgement_id'):
+        before = previous.get(row['view_id'])
+        previous[row['view_id']] = row['rung']
+        if not row['changed'] or not (since_day < row['publication_day'] <= to_day):
+            continue
+        cited = [piece for piece in (evidence_record(conn, e, row['publication_day']) for e in _unique(_json(row['cited_evidence_json']))) if piece]
+        out.append({'view_id': row['view_id'], 'day': row['publication_day'], 'from_position': before, 'to_position': row['rung'],
+                    'position_moved': before is not None and before != row['rung'], 'why_changed': row['why_changed'], 'cited': cited})
+    return out
+
+
+# ---------- a claim against a ladder
+#
+# A rung's condition is a sentence like "不低于 1650 亿美元且不高于 1690 亿美元，处于公司指引区间". The band is read from
+# the comparator words and the amount that follows each; remarks after ；or ， are not part of it. The ladder is
+# evaluable only when its bands form one unbroken partition of the line (06-views: 格和格不重叠、不留空), so a
+# condition the parser cannot read makes the whole ladder "not evaluable" rather than a wrong verdict.
+
+INF = float('inf')
+UNIT_USD = {'万亿': Decimal('1e12'), '千亿': Decimal('1e11'), '亿': Decimal('1e8'), '万': Decimal('1e4'), None: Decimal(1)}   # exact: 269.79亿 is 26,979,000,000, not ...000.000004
+# an amount: a number with a Chinese magnitude or followed by 美元; a bare number counts only right after a comparator
+# or a range separator (大于或等于0, 小于-10亿), so years (2026年, FY2026) and model names (H100) are not amounts
+AMOUNT_TOKEN = re.compile(r'(?<![A-Za-z\d.])(-?\d[\d,]*(?:\.\d+)?)\s*(万亿|千亿|亿|万)?(\s*美元)?')
+COMPARATORS_RE = [
+    ('lo_inc', re.compile(r'不低于|不少于|至少|大于或等于|大于等于|达到或超过|达到(?!或)|≥|>=')),
+    ('lo_exc', re.compile(r'(?<!不)高于|(?<![不或])超过|大于(?!或等于|等于)|多于|>(?!=)')),
+    ('hi_inc', re.compile(r'不高于|不超过|至多|小于或等于|小于等于|≤|<=')),
+258:    def record_article(self, k, input_id, day):
+259-        """The processing record the product's read side places items in time by (store.mark_step; `service.seq_day_map`): the
+260-        article's sequence and day. Its time field is the day itself: no clock orders anything (AGENTS §3)."""
+261-        store.mark_step(self.conn, input_id, k, 'handed_over', 'ok', None, day, day)
+262-
+263-
+264-def ladders_for(run, opened, days_of, cases_path=None, ladders_path=None):
+265-    """{thesis id: stored outcome} for the draw, after checking that the stored cases are exactly the theses the trace opened, each
+266-    with the same description, and that each has exactly one outcome. The cases and ladder files default to Stage B's."""
+267-    cases_path, ladders_path = Path(cases_path or CASES), Path(ladders_path or LADDERS)
+268-    cases = {case['case']: case for case in json.loads(cases_path.read_text()) if case['case'].startswith(f'{run}/')}
+269-    outcomes = collections.defaultdict(list)
+270-    for line in ladders_path.read_text().splitlines():
+271-        row = json.loads(line)
+272-        if row['case'].startswith(f'{run}/'):
+273-            outcomes[row['case']].append(row)
+274-    opened_theses = {thesis_id: thesis for theses in opened.values() for thesis_id, thesis in theses.items()}
+275-    opening_day = {thesis_id: days_of[k] for k, theses in opened.items() for thesis_id in theses}
+276-    if {name.split('/', 1)[1] for name in cases} != set(opened_theses):
+277-        raise SystemExit(f'the stored cases of {run} are not the theses its trace opened')
+278-    for name, case in cases.items():
+--
+311:def replay(run, output_folder, *, transport=None, cap_usd=0.66, sleep=None, limit=None, inputs=None, shared=None, end_day=None):
+312-    """`inputs` (WIRING-DESIGN.md §A, D448) names a fresh draw's files: {'trace', 'step2', 'ladders', 'ladder_archive', 'cases',
+313-    'output_root'}; any key left out takes Stage B's value for `run`. `shared` is the run's shared ledger. The loop walks every
+314-    calendar day from the first article's day to `end_day` (the last article's day when left out) and closes due questions at each
+315-    day's end as production does (D566, CLOSING-DESIGN.md)."""
+316-    inputs = dict(inputs or {})
+317-    output_root = Path(inputs.get('output_root', OUTPUT_ROOT))
+318-    output = Path(output_folder).resolve()
+319-    if transport is None and output_root.resolve() not in output.parents:
+320-        raise SystemExit(f'a live replay writes only under {output_root}')
+321-    output.mkdir(parents=True, exist_ok=False)
+322-    trace_path, step2_folder = (inputs['trace'], Path(inputs['step2'])) if 'trace' in inputs else DRAWS[run]
+323-    ladders_path = Path(inputs.get('ladders', LADDERS))
+324-    by_article, library = adapter.load_draw(trace_path, step2_folder)
+325-    days_of, opened, failed = adapter.trace_articles(trace_path)
+326-    ladders = ladders_for(run, opened, days_of, inputs.get('cases'), ladders_path)
+327-    source = ladder_configuration(inputs.get('ladder_archive'))
+328-    revisions_by_record = collections.defaultdict(list)
+329-    for group in library['groups'].values():
+330-        for revision in group['revises']:
+331-            revisions_by_record[revision['by']].append(revision['group'])
+## 9. Workspace and operations
+
+- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting stored data needs
+  Alex's request, a backup, exactly identified items and a log entry.
+- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel agents that edit
+  shared modules.
+- When Alex names a step, the test is that step alone through its own harness (extraction: stored requests re-sent, answers sifted,
+  scored against the gold). A full-pipeline run, a registered test, or a paid send beyond the probes of a few cents an agreed direction
+  allows (§7.3) starts only on his explicit word (Alex, 2026-10-27: "我不是要你看下step 1抽取到底行不行？").
+- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network health; nothing heavy
+  runs beside paid calls. A gate runs on a snapshot no one is editing.
+- Never open a live run's databases: run `sh <run folder>/snapshot.sh` and query the snapshot.
+- No edit to package code or prompt files while any run is live: the parallel day's manifest hashes every `.py` and prompt file and
+  fails the day. Edit in another worktree or wait.
+- Experiment harnesses send concurrently (a thread pool of 8; the archive is thread-safe); serial sends waste the wall clock Alex is
+  waiting on.
+
+codex
+**No-go on the proof build yet.** The contract is a useful starting point, but it does not yet cover every path that can expose an unfinished day, and two WAL guarantees are stronger than SQLite provides.
+
+- **History and changes can request future data without `as_of`.** The API and MCP expose `history(..., to_day)` and `changes(..., to_day)`. Both service functions accept that upper date and iterate judgements through it, so guarding only `as_of` leaves a route to an in-progress day. Enumerate and test every date-bearing entry point, including omitted end dates and start-of-service indexing. [API routes](</Users/lchingen/hivemind/scripts/hivemind_api.py>), [history and changes](</Users/lchingen/hivemind/src/hivemind/service.py:199>)
+
+- **WAL does not promise that the file shrinks after a reader ends.** SQLite normally recycles the WAL rather than truncating it, and long readers can prevent checkpoints from completing. The proof should check checkpoint progress and bounded resource behavior under an explicit policy, rather than require immediate file shrinkage or leave disk space outside the operating contract. [SQLite WAL documentation](https://sqlite.org/wal.html)
+
+- **Read-only opening needs an operating precondition.** `mode=ro` is not sufficient by itself: SQLite requires readable `-wal` and `-shm` files, or permission to create them. Define and test startup and reopen behavior when those files are absent or the directory is not writable. WAL improves concurrency, but SQLite also documents cases where WAL reads can return `SQLITE_BUSY`; “writer never waits” is too absolute. [SQLite WAL documentation](https://sqlite.org/wal.html)
+
+- **Crash recovery does not remove already committed partial-day writes.** The writer commits within the day, so WAL rolls back only the unfinished *transaction*, not the whole day. The contract must say whether the writer resumes or replaces that partial store, and prove readers remain bounded to the last completed day throughout recovery. [Contract](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md>)
+
+- **The live-reader exception is not currently in force.** AGENTS §9 says “Never open a live run’s databases.” Row 7 presents an exception while postponing the decision to change the rule. Frame the exception as a proposed decision to resolve before any live-service operation; it cannot be assumed by the proof. [AGENTS §9](</Users/lchingen/hivemind/AGENTS.md:431>)
+
+The reader inventory also needs to account for the API’s startup search-index build and existing copy paths such as preflight’s `shutil.copy`; the named `snapshot.sh` is a per-run artifact, not a repository-wide script established by the table. Prove which paths may touch the live store and which must use a snapshot. [API startup](</Users/lchingen/hivemind/scripts/hivemind_api.py>), [preflight](</Users/lchingen/hivemind/scripts/preflight.py:191>)
+
+CONSENSUS: no, because future-dated history can bypass the proposed boundary, and the WAL, recovery and authorization rows need a complete operating contract before the proof is built.
+tokens used
+2,999,741
+**No-go on the proof build yet.** The contract is a useful starting point, but it does not yet cover every path that can expose an unfinished day, and two WAL guarantees are stronger than SQLite provides.
+
+- **History and changes can request future data without `as_of`.** The API and MCP expose `history(..., to_day)` and `changes(..., to_day)`. Both service functions accept that upper date and iterate judgements through it, so guarding only `as_of` leaves a route to an in-progress day. Enumerate and test every date-bearing entry point, including omitted end dates and start-of-service indexing. [API routes](</Users/lchingen/hivemind/scripts/hivemind_api.py>), [history and changes](</Users/lchingen/hivemind/src/hivemind/service.py:199>)
+
+- **WAL does not promise that the file shrinks after a reader ends.** SQLite normally recycles the WAL rather than truncating it, and long readers can prevent checkpoints from completing. The proof should check checkpoint progress and bounded resource behavior under an explicit policy, rather than require immediate file shrinkage or leave disk space outside the operating contract. [SQLite WAL documentation](https://sqlite.org/wal.html)
+
+- **Read-only opening needs an operating precondition.** `mode=ro` is not sufficient by itself: SQLite requires readable `-wal` and `-shm` files, or permission to create them. Define and test startup and reopen behavior when those files are absent or the directory is not writable. WAL improves concurrency, but SQLite also documents cases where WAL reads can return `SQLITE_BUSY`; “writer never waits” is too absolute. [SQLite WAL documentation](https://sqlite.org/wal.html)
+
+- **Crash recovery does not remove already committed partial-day writes.** The writer commits within the day, so WAL rolls back only the unfinished *transaction*, not the whole day. The contract must say whether the writer resumes or replaces that partial store, and prove readers remain bounded to the last completed day throughout recovery. [Contract](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md>)
+
+- **The live-reader exception is not currently in force.** AGENTS §9 says “Never open a live run’s databases.” Row 7 presents an exception while postponing the decision to change the rule. Frame the exception as a proposed decision to resolve before any live-service operation; it cannot be assumed by the proof. [AGENTS §9](</Users/lchingen/hivemind/AGENTS.md:431>)
+
+The reader inventory also needs to account for the API’s startup search-index build and existing copy paths such as preflight’s `shutil.copy`; the named `snapshot.sh` is a per-run artifact, not a repository-wide script established by the table. Prove which paths may touch the live store and which must use a snapshot. [API startup](</Users/lchingen/hivemind/scripts/hivemind_api.py>), [preflight](</Users/lchingen/hivemind/scripts/preflight.py:191>)
+
+CONSENSUS: no, because future-dated history can bypass the proposed boundary, and the WAL, recovery and authorization rows need a complete operating contract before the proof is built.

@@ -1,0 +1,12 @@
+**Choose (b) as a provisional design to review—not the proposed description-priority sentence as an already sound rule.** D439 lets the council make a reversible product decision while Alex is inactive, but it cannot present that decision as Alex’s or change the frozen gate.
+
+The new result is narrower than “the main-part class is the single remaining blocker.” Astra had **three agreed failures on 42 sends**, so the complementary screen closes under its registered rule. Across both exposed halves, it had **4 failures in 78 sends** and no agreed hard-line fault on 51 written ladders. The strict count was **11 versus Sol’s 10** in the second half, and the review found a near-identical Rubin question passed for Astra but failed for Sol. Those limits prevent a claim that the model route or all other fault classes are exhausted. [Result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT-REST.md), [scores](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/score-output-rest.txt)
+
+To make (b) sound, the council should first do **one $0 review** of a narrower provisional rule: when the description asks one thing, can it identify that thing as main **without overriding an outcome that expressly tracks competing things**? Apply it to the six refusal topics and counterexamples where the description and outcome conflict, two bets are equally tracked, or refusal is justified. Read the proposed questions as well as the refusals.
+
+- **Move:** a general rule survives those cases, preserves the existing decisions and yields a testable change without altering the gate’s accounting. Record it explicitly as the council’s reversible decision, then audit the whole new request before a separately decided probe.
+- **Close this rule:** it forces an arbitrary choice, overrides the outcome, or recovers a question by making another hard-line fault. Record the disagreement and take the cheaper reversible course.
+
+Add H20 to Alex’s page with the competing readings. D426 remains unchanged; neither screen authorizes a fifth Stage A on the 44.
+
+**CONSENSUS: Review a narrower provisional rule at $0 under D439; do not adopt the proposed sentence or close the entire model route on this screen.**

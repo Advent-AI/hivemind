@@ -1,0 +1,312 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 155: the period split, design v1 (`splitting/DESIGN.md`)
+
+It covers your four requirements:
+
+1. **Unit and writer path:**
+   - two child topics with new identities (`clean-12@2026`, `clean-12@2027`), each with one judged question, so D397 is kept;
+   - the parent gets a `split` row;
+   - the writer's existing list mapping sends every statement linked to the parent to both children. A statement about one year
+     reaching the other year's judge is stated as a property to read;
+   - per-view closing and updates.
+2. **Boundary:**
+   - the model names a typed case `one_quantity_two_periods` with its two years;
+   - code checks two distinct allowed years, each through the existing year checks, and re-asks once per year with a one-line
+     restriction;
+   - a base year that has ended is refused by the existing check, so the result is the same as answering the open year;
+   - non-year topics (D436, Intel, Firmus) fail the shape check and are refused as today;
+   - several products: the children may refuse, which is no worse than today;
+   - no recursion.
+3. **Test:**
+   - $0 checks first: byte-for-byte rebuild, a request diff, synthetic answers, the writer and page on a split store, tests, mutants,
+     the prompt audit;
+   - then a probe, reviewed apart, of about $0.10: the 2 two-year topics, 6 one-year-with-base controls, 2 second-side, 2 guards and the
+     memory topic, 3 frozen and 3 new sends each;
+   - **a product decision rule written now:** the case used on both two-year topics and valid child ladders; no case use and no outcome
+     change on controls beyond the same-day control's own variation; blind readers find no base-year question and no lost
+     qualification;
+   - limits: development cases only, and adoption needs a regression read of the 44.
+4. **Stop:** misuse on controls, a base-year child, a lost qualification, broken guards, or a writer or page change for unsplit topics.
+
+**Asked of you:** is the design complete enough for its $0 checks to be built (code and tests on a scratch version beside the frozen
+step, nothing sent)? Or what is still missing? Is the schema change (a typed case over the existing prose decline cases) a hidden rule
+change?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the written design against the refusal schema, the writer’s topic mapping and the year rules, especially whether the split can create or discard a question before its meaning is checked.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The period split, design v1 (D615), 2026-11-16, $0
+
+**What it repairs:** the open defect D397 names, for one kind only. A topic that tracks **one quantity in two years** (D38: "one view a
+year") is refused today as having "several figures, none the main one". Two worthwhile bets are lost. Example: the five largest
+hyperscalers' capex in calendar 2026 and in calendar 2027.
+
+**What it does not claim:**
+- it moves no gate: the official 44 hold no such topic;
+- it does not touch D436's second sides, two-thing stakes or several products;
+- it does not change D397's rule of at most one judged question per topic.
+
+## 1. The unit and the writer path
+
+- **Two topics, each with one judged question** (D397 kept):
+  - the parent topic, say `clean-12`, gets a ladder row with status `split` naming its children and the two years;
+  - each child is a new topic with a new identity (AGENTS §3, Identity): `clean-12@2026` and `clean-12@2027`;
+  - each child has its own ladder row and its own view (`v12@2026`, `v12@2027`), with its own question, year and due day by the
+    existing rules (D414 for a figure's day).
+- **Evidence:** the Step 3 library links statements to the parent's id. The writer's mapping is already a list (`mapping[thesis_id]`),
+  so `mapping['clean-12'] = ['v12@2026', 'v12@2027']`, and every statement linked to the parent, now and later, reaches both
+  children's judges. A statement about one year is shown to the other year's judge as well. That is acceptable (a 2027 capex judge
+  should see 2026's figures as its base), and it is stated as a property to read in the probe.
+- **Closing and updates:** per view, as today. Each child closes at its own due day. A child's revision or later link follows the
+  parent's links.
+- **Readers of the product:**
+  - the page and `bundle` read `clean_ladders` by `view_id`, and each child's row is keyed by its own view;
+  - the parent's `split` row has no view, and the library shows it as split into its two children;
+  - the table's key becomes (`thesis_id`), unchanged, because the children are distinct theses.
+
+## 2. The boundary: who decides what
+
+| Case | Who decides | What happens |
+|---|---|---|
+| One quantity in two named years, both open (this year and next) | **the model:** a typed refusal case `one_quantity_two_periods` with `periods: [Y1, Y2]` | **code:** checks two distinct four-digit years, each allowed by the step's existing year checks; then re-asks the step once per year with the topic restricted to that year |
+| A prior year used only as a base or comparison (2025 → 2026) | the model should answer the open year directly, as today in 20 of 20 stored cases | if the model names the case anyway, code's ended-year check refuses the ended year, and only the open year's child is asked. That is the same result as answering directly |
+| Two different quantities, or a second side (D436), or a two-thing stake (Intel, Firmus) | the existing main-part rule, unchanged | not this case. Naming it fails the shape check (two distinct years), so the answer is re-asked once and then refused, as today |
+| Several products over two years (AI memory prices 2026 to 2027) | the model may name the case | each child still meets the main-part rule for its year and may refuse. That is no worse than today's refusal of the whole |
+| A year beyond next year, or one ended on the item's day | the step's existing checks | that child is not asked; it is recorded as refused with the existing reason |
+
+**The child's request** is the frozen request plus one line naming the restriction: "Write the question for {Y} only; {other Y} is a
+separate question." Code checks the child's answer: a figure ladder with `figure.year == Y`, or any refusal, which is kept as given. A
+child naming the two-period case again is refused (no recursion).
+
+**The schema change:** `no_ladder` becomes `{case, reason, periods?}`, with `case` a closed set of the existing decline cases plus
+`one_quantity_two_periods`.
+- The existing cases are written as the closed set the request already lists in prose (AGENTS §6: a classification is a closed set),
+  with no new rule among them.
+- Characters before and after are reported in the prompt audit (`prompt-audit` skill) before any send.
+
+## 3. The test, and its limits
+
+**At $0, first:**
+1. The frozen step's stored requests rebuilt byte for byte (control).
+2. The new version's request differs by the schema and the one child line only, shown as a diff.
+3. Synthetic answers through every code check: the case with two allowed years; with one ended year; with equal years; on a non-year
+   topic; a child answering the wrong year; a child naming the case again.
+4. The writer and the page on a store holding a split parent and its two children: rows, views, mapping, the library, closing.
+5. Tests, mutants and the prompt audit.
+
+**The probe** (separately reviewed before any send; about $0.10). Topics:
+- the 2 development two-year topics;
+- 6 of the 20 one-year topics with a base year;
+- 2 second-side topics (acc/clean-9's kind);
+- the 2 guards (Intel, Firmus);
+- the several-products memory topic.
+
+Each is sent 3 times by the frozen step (the same-day control) and 3 times by the new version, children included.
+
+**The product decision rule, written now, apart from the official gate:**
+- **Lead** needs all of these:
+  1. On both two-year topics, the new version names the case in at least 2 of 3 sends, and each child writes a valid ladder for its year
+     in at least 2 of its 3 sends.
+  2. On every control (one-year, second-side and guard), it names the case in no send. No control's outcome kind (ladder or refusal)
+     changes more than the frozen step's own same-day send-to-send variation.
+  3. Two blind reader families, reading original and split outputs mixed with planted controls, find no child question asking a base
+     or context year, and no qualification of the original topic lost: each child lists the other year as not judged.
+- **Negative** if 2 or 3 fails. **Otherwise inconclusive.**
+
+**Limits:**
+- The two two-year topics are development cases. Independent cases are rare (2 of the 66 stored topics), and unread weeks would need
+  new Step 1 runs (about $3.50 a week) for about 0.2 such topics a week. So a lead is a lead on development cases, and its adoption
+  carries that limit.
+- Adoption also needs a regression read of the 44 under the gate form, showing no new fault (about 132 sends, about $0.15, plus the
+  reading). D426's stop on tuning is not breached by a no-change check.
+
+## 4. The stop condition
+
+Close the candidate if any of these happens:
+- the model names the case on a one-year, second-side or guard topic;
+- a child asks a base or context year;
+- a child loses a qualification of the original topic;
+- the guards break;
+- the $0 checks show the writer or the page cannot carry a split parent without changing what they show for unsplit topics.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'opening|link|thesis|mapping|open_thesis' clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | head -70" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+6:- **Each thesis Step 1 opened gets its ladder at its opening article**, before that article's records are written: the ladder
+8:  view `v<N>` for thesis `clean-<N>` (its stored view, as `ladder_step.write_view` built it) and a row of `clean_ladders`; a thesis
+10:- **Links follow the ladder.** A link to a laddered thesis is written to its view; a link to a thesis with no ladder is counted
+11:  "links to an unjudged thesis" and not written.
+50:LADDER_COLUMNS = ('thesis_id', 'view_id', 'status', 'reason', 'reference_status', 'checked_answer', 'outcome_record', 'config_checksum',
+250:            self.conn.execute(f"create table if not exists clean_ladders ({', '.join(LADDER_COLUMNS)}, primary key (thesis_id))")
+282:        self.mapping = {}
+289:    def open_thesis(self, thesis_id, outcome, k, seq, day, input_id, source):
+290:        """Write the thesis's ladder row and, for a written ladder, its view; not committed here. `k` is the trace's article number
+293:        number = thesis_id.split('-', 1)[1]
+308:        store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, view_id=view_id, status=status,
+313:            self.unjudged.add(thesis_id)
+323:        self.mapping[thesis_id] = [view_id]
+326:    def _link(self, evidence_id, thesis_id, k, changed):
+327:        if evidence_id is not None and thesis_id in self.unjudged:
+328:            self.counts['links to an unjudged thesis'] += 1
+330:        if evidence_id is not None and thesis_id in self.mapping:
+331:            for view_id in self.mapping[thesis_id]:
+332:                self.counts['links from a laddered thesis to its view'] += 1
+333:                self._write_link(evidence_id, view_id, k, changed)
+335:        self._write_link(evidence_id, thesis_id, k, changed)
+337:    def _write_link(self, evidence_id, view_id, k, changed):
+338:        """A link to a closed question is written as production's writer writes one and not judged (production's round takes open
+340:        §2, §6). A link that already exists writes nothing and is not counted."""
+342:        linked = lambda: self.conn.execute('select 1 from evidence_links where evidence_id=? and view_id=?', (evidence_id, view_id)).fetchone() is not None
+343:        before = closed and linked()
+344:        super()._link(evidence_id, view_id, k, changed)
+345:        if closed and not before and linked():
+346:            self.counts['links to a closed question written (not judged)'] += 1
+373:    """{thesis id: stored outcome} for the draw, after checking that the stored cases are exactly the theses the trace opened, each
+382:    opened_theses = {thesis_id: thesis for theses in opened.values() for thesis_id, thesis in theses.items()}
+383:    opening_day = {thesis_id: days_of[k] for k, theses in opened.items() for thesis_id in theses}
+387:        thesis_id = name.split('/', 1)[1]
+388:        in_trace = opened_theses[thesis_id]
+389:        differing = [field for field in ('description', 'outcome', 'period') if field not in in_trace or case['thesis'].get(field) != in_trace[field]]
+392:        if case['item']['publication_date'] != opening_day[thesis_id]:
+393:            raise SystemExit(f'{name}: the stored case\'s article is of {case["item"]["publication_date"]}, the trace opened it on {opening_day[thesis_id]}')
+494:                for thesis_id in opened_here:
+495:                    runner.open_thesis(thesis_id, ladders[thesis_id], k, seq, day, input_id, source)
+498:                for thesis_id in opened_here:
+499:                    for view_id in runner.mapping.get(thesis_id, []):
+500:                        if runner.conn.execute('select count(*) from evidence_links where view_id=?', (view_id,)).fetchone()[0] == 0:
+501:                            runner.counts['views with no opening evidence'] += 1
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 2 'D426|D436|D397' docs/DECISIONS.md | head -35" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+739-| D395 | 2026-11-10 | Run the unseeded clean measurement: three draws from an empty library, opened questions matched by the frozen rule (MATCHING-v2) through an independent reading, graded on q04, q05, q08, q09, q13, q18 and q23, every other question reported | in force | `clean-arch/unseeded-2026-11-10/MATCHING-v2.md` |
+740-| D396 | 2026-11-10 | Design the clean system's own judging step (Step 4): ladders and judgements for its own questions; first test is independent readers checking its answers against the sources; design and council before any code or paid send | in force | round log §67 |
+741:| D397 | 2026-11-10 | Clean Step 4's ladder step: a topic that asks more than one thing gets one judged question (the part its outcome names); the other parts are shown as not judged; a departure from D38 for topics with two real bets, recorded as an open defect | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §4 |
+742-| D398 | 2026-11-10 | Clean Step 4's ladder step carries D186 in full: ranges stated against the reference (D260's list), the favourable end registered with its reason, rungs ordered and labelled by code; a number question with no reference is marked so | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §4 |
+743-| D399 | 2026-11-10 | The clean ladder request may teach how to build an event's five states (outcomes that exclude one another, one or two divided by a property that holds or does not), with a general example | superseded by D409 | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2 |
+--
+768-| D424 | 2026-11-10 | The clean writer keeps giving a "later version" the older record's questions (D202's rule); removing it is closed without a change; the carried context links are a recorded defect; "a company's answer sits wherever its report is filed" is not decided | in force | `clean-arch/step2-revision-links-2026-11-10/LOG.md` §6; Step 2 log §16 |
+769-| D425 | 2026-11-10 | The ladder step takes no second look: the test (D422) did not pass; the step stays as it ran in the fourth Stage A | in force | `clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/RESULT.md` |
+770:| D426 | 2026-11-10 | The ladder step is not tuned further on the 44 theses and no fifth Stage A is sent; Stage A has not passed (lines 1, 3, 4 missed by 1 to 3 answers of 131); by his word the preparation of Stage B opens on that step, its $0 baseline reading of the 159 stored judgements first; no paid Stage B send without his word again | in force (an exception to D401's stop at a missed line) | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+771-| D427 | 2026-11-11 | Clean Step 2 (search, Jev comparison, best-match grouping, forward runner, Step 3 library) closed and frozen; not moved into production alone; goes to production with the whole clean path after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each) | in force | `tests/test_frozen_clean_step2.py`; clean-arch PRD §5; Step 2 log §19 |
+772-| D428 | 2026-11-11 | Stage B's lines: decided figure-question judgements UNSUPPORTED at most 5 points above the baseline's (12.7% to 14.4%), yes/no at most 5%, last judgements at most 3 in 30 UNSUPPORTED with INSUFFICIENT beside; no overall line | in force | `clean-arch/step4-2026-11-10/stage_b/RESULT.md` |
+--
+778-| D434 | 2026-11-13 | c14 stopped (stage 1: 7 of 9 against 8), c8 stays; diagnose the second-thing shapes at $0, then combine the year boundary, the customer-spending collision and that class, each shown small on stored data, into one Step 1 version measured once against c8 on fresh articles; the plan goes to Alex first | in force | `clean-arch/step1-diagnosis-2026-11-12/STAGE1-RESULT.md` |
+779-| D435 | 2026-11-13 | Gate 1 of the combined Step 1 plan runs: G1-a years and customers together, G1-b customers alone, G1-c the outcome definition alone (preservation lines fixed by blind source readers first); c8 on every state; ceiling $2; audit and council before the send; a failed proof stops and goes to Alex | in force | `clean-arch/step1-diagnosis-2026-11-12/COMBINED-PLAN.md` |
+780:| D436 | 2026-11-13 | A second side of the same bet is one question (context, shown as not judged, D397); change 3 dropped; G1-a and G1-b run without it; later gates use c8 with changes 1 and 2 | in force | `clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md` |
+781-| D437 | 2026-11-13 | Changes 1 and 2 (c15yc) go to gate 2 although G1-a missed its line (5 of 9 against 8); the failure stays recorded; gate 2's lines shown to Alex before any send; c8 in force | in force | `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` |
+782-| D438 | 2026-11-13 | Gate 2 sent as written (126 sends, ceiling $2.2); a stop or an unexercised control goes to Alex; a pass leads to gate 3's design shown to him first | in force | `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` |
+--
+889-| D545 | 2026-11-15 | Under D439 (council consensus): the fresh week's answer choices read by two readers apart and traced to the judge; an omitted-clause fault of line 2 recorded, its repair deferred; ranges written without a figure and overrun by the first filed amount found on two questions (and one of the old system's); next, a $0 census of amount ranges in both systems | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md` |
+890-| D546 | 2026-11-15 | Under D439 (council consensus): the census of 49 amount questions closes the general range design for now (12 opened without a comparable amount, 9 of them on an end range, mostly one matter; the trigger of three further matters not met); next, a prompt audit of the omitted-clause fault of the answer-choice step, ceiling $0.05 | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md` |
+891:| D547 | 2026-11-15 | Under D439 (council consensus): the audit of line 2 finds an undefined term ("the topic's wording"); the description-only reading is refused (D397, D436); the recount against the July rulings finds no omission recurring on two questions under an agreed reading: no prompt change; the frozen step untouched | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/PROMPT-AUDIT-LINE-2.md` |
+892-| D548 | 2026-11-15 | Under D439 (council consensus): the gates the new system must pass, listed from the record (Stage A on Alex's lines; Stage B; the end-to-end comparison; use on unseen news as proposed lines; integration); the first blocker is the worthwhile questions its answer-choice step declines, framed at $0 | in force | `docs/research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md` |
+893-| D549 | 2026-11-15 | Under D439 (council consensus): no candidate change for the questions the answer-choice step declines; one more week of news is prepared for a diagnostic reading of the answer choices (rule fixed beforehand; ceiling $3.50), the send conditional on exposure, price and run checks | in force | `docs/research/2026-11-14-use-acceptance/second-week/DESIGN.md` |
+--
+896-| D552 | 2026-11-15 | Under D439 (council consensus), on Alex's "continue": each call of the new system's first step waits at most 600 seconds on a silent connection (tests and a mutant); the week's run is continued as a second part on a ledger of $2.699577 after the $0 split and entry proofs; an unfinished second part stops before the matching step | in force | `clean-arch/step1/live.py`; `docs/research/2026-11-14-use-acceptance/second-week/split_proof.py` |
+897-| D553 | 2026-11-15 | Under D439 (council consensus): after the continued first step only the topics and the answer choices are run, the matching and the judge recorded as not run (eight lost attempts charged at their reservations left no room for them); no ceiling raised; proved at $0 with a full positive control | in force | `docs/research/2026-11-14-use-acceptance/second-week/choices_full_control.py` |
+898:| D554 | 2026-11-15 | Under D439: the one-week diagnostic of the answer choices is read and recorded as evidence, not as a gate: not clean on both counts (9 of 39 attempts declined on 4 of 13 topics; three zero-fault lines missed on agreed faults); the largest reason for declining, over every stored run, is a topic that asks two things, which is D397's known open defect | in force | `docs/research/2026-11-14-use-acceptance/second-week/RESULT.md` |
+899:| D555 | 2026-11-15 | Under D439 (council consensus): the work stays on the new system; next a $0 study of the boundary of "no main part" on the nine declined topics and the D469/D470 cases, with a stop condition; Claude's first-named rule refused (D397, D469, D470); no change to the frozen step, no send | in force | `docs/research/2026-11-14-use-acceptance/second-week/RESULT.md` |
+900-| D556 | 2026-11-15 | Under D439 (council consensus): no candidate for the "no main part" refusals among those considered; next, at $0, one map of every stored topic short of the first gate (104 topics, four readings kept apart), with overlapping and unresolved causes, reconciled to each report; it cannot by itself prove the gate out of reach or trigger D544's reversal | in force | `docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md` |
+901-| D557 | 2026-11-15 | Under D439 (council consensus): the map of the first gate accepted with one correction; D400's lines stay as written and no pass is claimed; the record shows no bounded way to bring the four zero-fault lines to zero together (a delivery risk, not a reversal); next, at $0, one prompt audit of the event-reference class and the unlisted-part class with an independent second read | in force | `docs/research/2026-11-14-use-acceptance/second-week/FIRST-GATE-MAP.md` |
+--
+911-| D567 | 2026-11-16 | Under D439 (council rounds 25 and 26): the new system's daily loop closes due questions with production's closing step, walks calendar days and owns its store sequence; accepted on tests, mutants, the unchanged extension proof and a replay to 2027-04-02; next a $0 check of gate 1's reading method on independently established sound answer choices | in force | `docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md` |
+912-| D568 | 2026-11-16 | Under D439 (council rounds 27 to 31): gate 1's reading of the fortnight repeated from the start by the unchanged tooling (identical packets, fresh readers and third readers of both families) and compared send by send by the gate's own accounting; it reports agreement and difference only; the lines unchanged | in force | `docs/research/2026-11-14-use-acceptance/gate1-stick/DESIGN.md` |
+913:| D569 | 2026-11-16 | Under D439 (council round 32): gate 1's verdict reproduced by its method on the fortnight (not a validity proof); D397's 'shown beside the answer as not judged' is missing from the product's page; next a $0 design and proof of that display path, judgements unchanged | in force | `docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md` |
+914:| D570 | 2026-11-16 | Under D439 (council rounds 33 to 37): D397's parts not judged carried to the product's page (bundle, closed schema, adapter, snapshot, drawer; unit-proved, browser proof pending); the page refuses the new system's three-choice events (gate 5's third defect); next a $0 design of the page contract for the new system's answer shapes | in force | `docs/research/2026-11-14-use-acceptance/not-judged-display/DESIGN.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'no_ladder|no ladder|refus|schema' clean-arch/step4-2026-11-10/ladder/ladder_step.py clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | head -70" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:9:  with no ladder gets the row alone. No ladder call is made here.
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:10:- **Links follow the ladder.** A link to a laddered thesis is written to its view; a link to a thesis with no ladder is counted
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:49:STATUS = {'ladder': 'ladder', 'no ladder': 'no ladder', 'refused twice': 'no ladder: refused'}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:58:    **One stop rule.** The first stop of any kind ends every later send: the limit's own refusal at the cap, or a stop the caller
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:71:        """Record a stop: written to the ledger once, under the lock; every later send refuses."""
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:101:                    self._stop('the shared ledger refused the reservation')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:102:                    raise budget.OverBudget('the shared ledger refused the reservation')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:177:    """The new store, created empty and exclusively, locked (live_lock: refused if another process holds it), put in WAL mode
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:178:    (checked) before `store.open_db` writes its schema, with the -wal size limit on the writer's own connection; its identity checked
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:196:            raise SystemExit(f'{path}: the journal mode is {mode!r}, not wal: refused')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:219:    return str(error).startswith(('database is locked', 'database table is locked', 'database schema is locked'))
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:304:        elif status == 'no ladder':                 # §5.4: the answer as given, the reason and a null ladder
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:305:            checked = answer if answer is not None else {'ladder': None, 'no_ladder': outcome['reason']}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:309:                     reason=outcome['reason'] if status == 'no ladder' else None, reference_status=reference_status,
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:350:        by construction; a breach refuses the run (CLOSING-DESIGN.md §2)."""
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:354:                raise SystemExit(f'{view_id} is open and was due {due}, before {day}: every earlier day closes its due questions; refused')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:459:            raise SystemExit(f'the end day {end_day} is before the last article day {last_article_day}: refused')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:4:checks the answer (checks 1 to 6), writes the rungs' labels and conditions (check 7), and sends a refused answer back once with
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:27:RESEND_NOTE = ('\n\nYour previous answer was:\n{answer}\n\nIt was refused for the reasons below. Correct those problems and return the complete '
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:30:                          'schema.')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:101:    therefore a refusal. Production's repair looks at no quote of fewer than eight characters, so one that short is accepted
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:145:    """The reasons an answer is refused, an empty list when none; and, for an accepted ladder, the article's passage for its
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:146:    reference (or None). `answer` is the exact parse of the model's text. A `no_ladder` answer is accepted when its shape is right:
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:149:    no_ladder, ladder = answer.get('no_ladder'), answer.get('ladder')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:150:    if (no_ladder is None) == (ladder is None):                                                   # check 1
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:151:        return ['exactly one of no_ladder and ladder must be null'], None
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:170:                       'applies; otherwise return no_ladder and name the other company or uncovered matter.')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:228:                               f'year. A company\'s figure for a quarter or a half-year is returned as no_ladder. A figure for another period takes '
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:230:                               f'topic can be checked on a date: return no_ladder')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:242:                reasons.append(f'the figure is for {year}, a year beyond next year: return no_ladder')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:245:                reasons.append(f'the figure is for {year}, a year that had ended on the item\'s day: return no_ladder')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:367:def ladder_for_thesis(payload, *, system_text, closing_text, schema, call_model, check):
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:368:    """Ask for one thesis's ladder; send a refused answer back once, with the answer itself and the reasons, so that the model
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:371:    `call_model(system_text, user_text, schema)` sends one request and returns a dict with `answer_text` (the model's own text, or
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:373:    reason the answer could not be read or did not fit the schema). `check(answer)` returns (reasons, passage) as `check_answer`
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:379:        sent = call_model(system_text, user_text(payload, closing_text) + note, schema)
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:396:                record['result'] = 'no ladder'
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:398:                return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder', 'reason': answer['no_ladder'], 'requests': requests,
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:404:        record['result'] = 'refused'
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:407:        if answer is None:                               # the answer could not be read or did not fit the schema: nothing to show back
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:411:    return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder: refused', 'reason': None, 'requests': requests, 'answer': None,
+
+codex
+The design needs another revision before building. The main gap is that two year values do not establish that a topic asks two worthwhile questions.
+
+For example, “2026 spending compared with 2025” contains two distinct years, but the earlier year may be only a reference. The proposed shape check cannot tell that from two independently tracked years. Likewise, an ended year is not necessarily a base year, so dropping that child does not prove the result equals an ordinary answer to the remaining year. [Design v1](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md)
+
+The schema is also a **behavior change**: a model-declared refusal now triggers two further calls and can create two views. It should be audited and measured as a new version, even if the existing refusal categories are transcribed faithfully. The current step accepts a properly shaped `no_ladder` answer without judging its reason in code. [Current check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:143)
+
+The next design should resolve these points:
+
+- **Classification and partial results.** Specify who decides whether both years are independently asked, what happens when the case is uncertain or wrong, and every outcome when one child succeeds and the other refuses, fails validation, or is interrupted. Do not equate a one-child result with the existing behavior without testing the actual question and context.
+- **Topic ownership.** Establish where the two child topics exist and how later matching, revisions and links find them. The existing writer maps a parent to views, but a list in that mapping does not by itself create two Step 3 topics or establish their future matching behavior. [Writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:289)
+- **Evidence and presentation.** Delivering every parent statement to both children is a proposed behavior whose relevance and effect need testing, including later links and closed children. The rule that each child lists the other year as “not judged” also needs review: the other child may in fact judge it. Verify how the parent’s proposed `split` status reaches the library and page; it is a new state.
+- **Measurement.** Define the denominator and pairing for the child success rule, how missing or refused child calls count, and how both families’ disagreements and planted controls affect the verdict. “No outcome change beyond variation” needs a precise calculation. The two motivating matters remain development cases; a separate 44-topic regression send is not automatically exempt from D426’s stop.
+
+The prompt audit and synthetic checks are necessary, but they should test a settled design rather than supply the missing decisions. Bring version 2 back before building the scratch implementation.
+
+CONSENSUS: no, because the split boundary, child lifecycle and measurement are not yet specified well enough to build.
+tokens used
+4,121,365
+The design needs another revision before building. The main gap is that two year values do not establish that a topic asks two worthwhile questions.
+
+For example, “2026 spending compared with 2025” contains two distinct years, but the earlier year may be only a reference. The proposed shape check cannot tell that from two independently tracked years. Likewise, an ended year is not necessarily a base year, so dropping that child does not prove the result equals an ordinary answer to the remaining year. [Design v1](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md)
+
+The schema is also a **behavior change**: a model-declared refusal now triggers two further calls and can create two views. It should be audited and measured as a new version, even if the existing refusal categories are transcribed faithfully. The current step accepts a properly shaped `no_ladder` answer without judging its reason in code. [Current check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:143)
+
+The next design should resolve these points:
+
+- **Classification and partial results.** Specify who decides whether both years are independently asked, what happens when the case is uncertain or wrong, and every outcome when one child succeeds and the other refuses, fails validation, or is interrupted. Do not equate a one-child result with the existing behavior without testing the actual question and context.
+- **Topic ownership.** Establish where the two child topics exist and how later matching, revisions and links find them. The existing writer maps a parent to views, but a list in that mapping does not by itself create two Step 3 topics or establish their future matching behavior. [Writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:289)
+- **Evidence and presentation.** Delivering every parent statement to both children is a proposed behavior whose relevance and effect need testing, including later links and closed children. The rule that each child lists the other year as “not judged” also needs review: the other child may in fact judge it. Verify how the parent’s proposed `split` status reaches the library and page; it is a new state.
+- **Measurement.** Define the denominator and pairing for the child success rule, how missing or refused child calls count, and how both families’ disagreements and planted controls affect the verdict. “No outcome change beyond variation” needs a precise calculation. The two motivating matters remain development cases; a separate 44-topic regression send is not automatically exempt from D426’s stop.
+
+The prompt audit and synthetic checks are necessary, but they should test a settled design rather than supply the missing decisions. Bring version 2 back before building the scratch implementation.
+
+CONSENSUS: no, because the split boundary, child lifecycle and measurement are not yet specified well enough to build.

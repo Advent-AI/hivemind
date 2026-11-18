@@ -1,0 +1,11 @@
+**No-go on v4 yet.** Separating the reader disagreement from the frozen accounting is the right correction, but the design now has no required check that the new rule preserves a finer case in a grouped choice.
+
+- **Keep that check as a diagnostic, even if it cannot decide the gate.** Report the actual choice, the named finer case, whether A3 retained it, and the readers’ marks. If fewer than two sends exercise it, say the distinction is untested; do not let a lead imply that this part of the rule worked. The current design says it will report keeps and drops but does not state what happens if none is exercised. [A3 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:47>)
+
+- **Call the H result a disagreement with the proposed interpretation, not established bias.** The brief itself says a choice decides a part only when holding it says whether the part happened, but the reading’s application to grouped choices is contested. Show both the unchanged score and the specific disagreement beside it. [H brief](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/h-brief.md:15>)
+
+- **The disclosure control checks the question, not the new removal instruction.** Because that instruction acts on `not_judged`, also exercise a case where a disclosure is itself an unjudged part and must remain listed. Keeping “disclosed” in the main question alone cannot show that the source-only removal preserves it. [A3 controls](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:39>)
+
+Before building, also record the required whole-request prompt audit and blind second reading after A2’s measurement; v4 currently gives a source table for the new sentence but does not record that audit. [Working rules §6](</Users/lchingen/hivemind/AGENTS.md:200>)
+
+CONSENSUS: no, because the key grouped-choice and disclosure distinctions are not yet required to be exercised, and the post-measurement prompt audit is not recorded.

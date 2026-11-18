@@ -1,0 +1,295 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 33: the astra-with-A2 diagnostic is VOID by its rule (`astra-a2/final-output.txt`, `astra-a2/descriptive-not-a-verdict.txt`)
+
+**The run:** $1.31; D439 at about $37.74.
+- **H20:** A2 wrote a question 2 of 2, where the frozen arm declined 2 of 2.
+- **Memory:** the same, 2 of 2 against 2 of 2.
+- The disputed topics were declined by both arms. The justified declines were kept by both. Hugging Face was written by both.
+
+**VOID:** the Codex family marked the planted termination entry (the question's own ruled-out outcome) as `part`. Claude marked it
+`already_judged`, as expected. By the registered rule, a missed control voids the reading.
+
+**Descriptive only, not a verdict:**
+- **Gate hard lines:** agreed failed sends frozen 2 (H20 d2 N, memory d2 N) against A2 0. Strict 13 against 9. No topic is worse in A2.
+- **The product review:**
+  - A2's H20 questions are flagged by neither reviewer, while the frozen H20 declines are flagged by both;
+  - A2's memory questions are flagged by Codex only;
+  - the other flags are equal across arms (the disputed declines, and Hugging Face d1 in both arms).
+- **Not measured:** the harm field (H), the listing risk A2 is known for. One family cannot separate an already-decided outcome from a
+  part, which is the reader disagreement D586 recorded.
+
+**Asked:**
+1. Record VOID with the descriptive numbers?
+2. Is a fresh H-only reading by a new Codex reader, with the same planted control, a legitimate instrument repair (the reading failed
+   its control), or a post-hoc rescue the council should refuse?
+3. Under D439, what is the reversible record for "astra with A2"? My proposal: the leading unadopted candidate, with H20 recovered
+   cleanly in 2 of 2 by both readings and both families, memory disputed, the listing harm unmeasured.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll inspect the voided reading, the control and the stored answers before deciding what the result can support and whether a replacement reading would be valid.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/DESIGN.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/descriptive-not-a-verdict.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/final-output.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Astra with A2: design (council rounds 29 and 30; D639 when sent)
+
+**What it tests.** On astra, does arm A2's request reduce the step's gate-line failures against a fresh frozen-request arm, without A2's
+known harm?
+- **A2:** D436's second-side sentences, and "the topic's wording" read as its description and outcome.
+- **Not tested:** any rule for choosing the main part. The blind audit (`audit.md`) finds A2 adds none.
+- **One alignment after the audit:** A2's closing check said "every other part … listed", wider than its own system text and schema
+  ("that the question leaves out"). The closing is aligned to them; nothing is added. A3's removal instruction was not used: it
+  failed (D584, D585).
+
+**Topics** (exposed, outside the 44; a diagnostic, not a production claim):
+- astra's agreed failures: H20 and memory;
+- the disputed main-part topics: Reflection, equity commitments, Blackwell into China, CPO;
+- Hugging Face, which astra writes;
+- three declines both families justify: the two-year capex topics and robotics funding.
+
+**Arms and spend.** Frozen and A2, interleaved, 2 draws, 40 sends.
+- **Requests:** the frozen ones are the stored ones, and A2's differ only by the recorded edits (`check-passed.json`).
+- **Cap:** $3.40, one attempt in flight ($1.14 reserve). A draw starts only if its arm's last draw and the reserve fit.
+- **D439:** about $36.43 used, so at most about $39.83.
+
+**Two blind readings, both families each:**
+1. **The gate form with A2's H field** (`unlisted-parts/run_readers.py`, first kind), with six known controls. A missed control
+   voids it.
+2. **The source-backed product review** (`review-brief.md`), with the due-day probe's four known controls. A missed control voids it.
+
+**Verdict, fixed before.** It is counted twice: with unresolved points held, and with them failed (one reviewer suffices for a
+material flag). When the two countings differ, the verdict is inconclusive.
+- **Moves (a diagnostic),** when all of these hold:
+  - failed sends (agreed hard-line faults plus lost answers) are at least 2 fewer in A2 than in the frozen arm;
+  - no topic is worse;
+  - the three justified declines stay declined in both draws;
+  - harmful listings (already decided, or a settlement route) are at most the frozen count plus 1;
+  - every A2 question written where the frozen arm declined is free of material defects;
+  - no topic has more material defects in A2.
+- **Closes:** A2 fails as many sends as the frozen arm or more, flips or loses a justified decline, exceeds the harm bound, or a
+  replacement question is flagged.
+- **Otherwise:** inconclusive.
+
+**Proofs:**
+- tests 12 of 12;
+- nine mutants, each caught (`mutants.txt`);
+- the preflight: 200 stored attempts on the 10 topics, the current checks agreeing with every stored verdict (`preflight.txt`);
+- the check passes.
+
+ succeeded in 0ms:
+rows problems: {}
+holds: failed sends {'frozen': 2}
+    week-10-06:c1/clean-3 ['frozen-d2:N']
+    week-10-06:c1/clean-6 ['frozen-d2:N']
+fails: failed sends {'frozen': 13, 'a2': 9}
+    fortnight:c1/clean-13 ['a2-d1:N', 'frozen-d2:N', 'a2-d2:N', 'frozen-d1:N']
+    fortnight:c1/clean-3 ['frozen-d1:N', 'frozen-d2:N', 'a2-d2:N', 'a2-d1:N']
+    week-10-06:c1/clean-11 ['a2-d2:N', 'frozen-d2:N', 'a2-d1:N', 'frozen-d1:N']
+    week-10-06:c1/clean-12 ['frozen-d2:N']
+    week-10-06:c1/clean-13 ['frozen-d1:N', 'a2-d2:N', 'a2-d1:N', 'frozen-d2:N']
+    week-10-06:c1/clean-3 ['frozen-d1:N', 'a2-d1:Q', 'frozen-d2:N']
+    week-10-06:c1/clean-6 ['frozen-d1:N', 'frozen-d2:N']
+review material a2-d1|fortnight:c1/clean-13 [True, True]
+review material a2-d1|fortnight:c1/clean-3 [True, True]
+review material a2-d1|week-10-06:c1/clean-11 [True, True]
+review material a2-d1|week-10-06:c1/clean-13 [False, True]
+review material a2-d1|week-10-06:c1/clean-3 [True, False]
+review material a2-d1|week-10-06:c1/clean-5 [True, True]
+review material a2-d2|fortnight:c1/clean-13 [True, True]
+review material a2-d2|fortnight:c1/clean-3 [True, True]
+review material a2-d2|week-10-06:c1/clean-11 [True, True]
+review material a2-d2|week-10-06:c1/clean-13 [False, True]
+review material a2-d2|week-10-06:c1/clean-3 [True, False]
+review material frozen-d1|fortnight:c1/clean-13 [True, True]
+review material frozen-d1|fortnight:c1/clean-3 [True, True]
+review material frozen-d1|week-10-06:c1/clean-11 [True, True]
+review material frozen-d1|week-10-06:c1/clean-13 [False, True]
+review material frozen-d1|week-10-06:c1/clean-3 [False, True]
+review material frozen-d1|week-10-06:c1/clean-5 [True, True]
+review material frozen-d1|week-10-06:c1/clean-6 [True, True]
+review material frozen-d2|fortnight:c1/clean-13 [True, True]
+review material frozen-d2|fortnight:c1/clean-3 [True, True]
+review material frozen-d2|week-10-06:c1/clean-11 [True, True]
+review material frozen-d2|week-10-06:c1/clean-13 [False, True]
+review material frozen-d2|week-10-06:c1/clean-3 [False, True]
+review material frozen-d2|week-10-06:c1/clean-6 [True, True]
+
+ succeeded in 0ms:
+VOID: a family missed the planted control|listings (H)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'hivemind.*council|extraction evaluation' /Users/lchingen/.codex/memories/MEMORY.md | head" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 2 'D586|D639|D640' docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+110:# Task Group: Hivemind Step 2 failed revision probe and downstream impact council
+119:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+129:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+139:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+453:# Task Group: Hivemind extraction evaluation and source-contract audits
+
+ succeeded in 0ms:
+928-| D584 | 2026-11-16 | Arm A3 built and sent by council consensus: A2 plus one closed-set sentence removing an event's restated outcomes (D409, D397); three arms, Reading A and a pre-registered diagnostic Reading B; a lead is provisional until a trace review | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md` |
+929-| D585 | 2026-11-16 | Arm A3's probe negative under the fixed rule; checked: two failing checks are measurement errors (classer, matter labels, a check counting the intended removal); the change-consistent effect is a named way of ruling out listed as not judged; line 2 at 0 in A2 and A3 | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-A3.md` |
+930:| D586 | 2026-11-16 | Tuning of the not-judged list's edge stops on these topics (D391); A2 an unaccepted candidate; next a $0 provenance check and design for one fresh controlled A2 comparison on Alex's six lines | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-A3.md` |
+931-| D587 | 2026-11-16 | A fresh controlled comparison of A2 (week of 10-13 from the 10-06 library, frozen vs A2, gate-1 form, two populations classed blind) is designed; its $0 proofs come next and the paid run is decided on their numbers | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md` |
+932-| D588 | 2026-11-16 | The fresh A2 comparison's first step is sent on the week of 10-13 (383 articles) from the 10-06 library, frozen Step 1 under a $6.50 shared ledger, proven at $0 on the exact launcher; an incomplete run gives no verdict | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md` |
+--
+981-| D637 | 2026-11-16 | Due-day probe inconclusive by its rule (dates fixed 4/4 vs 0/4, controls unchanged; one MIIT listing split); v2 kept beside the frozen request as a proposed decision-supported correction, unadopted; MIIT and purchase-commitment leads closed ($0 traces); no paid send justified on present evidence | in force | `reflection-6/due-day/RESULT.md`, `MIIT-TRACE.md`, `COMMITMENTS-TRACE.md`, `codex-challenge-25.md`, `-26.md` |
+982-| D638 | 2026-11-16 | Rubin 'this quarter' widening traces to the topic's own period field (the opener wrote two windows); luna follows the period per D403; no request sentence causes it; lead closed for the answer-choice step, recorded as an opening-step wording defect | in force | `reflection-6/due-day/RUBIN-TRACE.md`, `reflection-6/codex-challenge-27.md` |
+983:| D639 | 2026-11-16 | Under D612(4): astra with arm A2 (D436's second-side sentences; closing aligned after a blind audit) sent as a bounded diagnostic against a fresh frozen arm, 10 exposed topics × 2 draws, cap $3.40; verdict fixed before with comparative, per-topic, justified-decline, harm (planted listing control), and replacement-soundness conditions | in force | `reflection-6/astra-a2/DESIGN.md`, `reflection-6/codex-challenge-29.md`–`32.md` |
+984-
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls -la docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "ls poc/data | rg 'astra.*a2|a2.*astra'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+total 1000
+drwxr-xr-x@  22 lchingen  staff     704 Nov 16 20:22 .
+drwxr-xr-x@ 114 lchingen  staff    3648 Nov 16 20:22 ..
+-rw-r--r--@   1 lchingen  staff    2834 Nov 16 20:03 DESIGN.md
+-rw-r--r--@   1 lchingen  staff   21709 Nov 16 20:06 a2_probe.py
+-rw-r--r--@   1 lchingen  staff    2188 Nov 16 20:05 audit-2-prompt.md
+-rw-r--r--@   1 lchingen  staff    3019 Nov 16 20:05 audit-2.md
+-rw-r--r--@   1 lchingen  staff  101334 Nov 16 20:05 audit-2.stream
+-rw-r--r--@   1 lchingen  staff    1828 Nov 16 20:07 audit-3-prompt.md
+-rw-r--r--@   1 lchingen  staff    4820 Nov 16 20:07 audit-3.md
+-rw-r--r--@   1 lchingen  staff  167887 Nov 16 20:07 audit-3.stream
+-rw-r--r--@   1 lchingen  staff    1703 Nov 16 20:02 audit-prompt.md
+-rw-r--r--@   1 lchingen  staff    3079 Nov 16 20:02 audit.md
+-rw-r--r--@   1 lchingen  staff   69332 Nov 16 20:02 audit.stream
+-rw-r--r--@   1 lchingen  staff     172 Nov 16 20:08 check-output.txt
+-rw-r--r--@   1 lchingen  staff    2059 Nov 16 20:08 check-passed.json
+-rw-r--r--@   1 lchingen  staff    2097 Nov 16 20:22 descriptive-not-a-verdict.txt
+-rw-r--r--@   1 lchingen  staff      55 Nov 16 20:21 final-output.txt
+-rw-r--r--@   1 lchingen  staff    3119 Nov 16 20:07 mutants.txt
+-rw-r--r--@   1 lchingen  staff     497 Nov 16 20:02 preflight.txt
+drwxr-xr-x@   5 lchingen  staff     160 Nov 16 20:05 request
+-rw-r--r--@   1 lchingen  staff    3892 Nov 16 20:03 review-brief.md
+-rw-r--r--@   1 lchingen  staff   11889 Nov 16 20:06 test_a2_probe.py
+
+ succeeded in 0ms:
+clean-astra-a2-2026-11-16
+clean-astra-a2-2026-11-16.log
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json,pathlib; p=pathlib.Path(\"poc/data/clean-astra-a2-2026-11-16\");
+for f in sorted(p.glob(\"*-d*/outcomes.jsonl\")):
+ for row in map(json.loads,f.read_text().splitlines()):
+  if row[\"case\"].endswith((\"week-10-06:c1/clean-6\",\"week-10-06:c1/clean-3\")):
+   print(row[\"case\"],row[\"status\"],row.get(\"reason\")); a=row.get(\"answer\") or {}; l=a.get(\"ladder\") or {}; print(\"QUESTION\",l.get(\"question\")); print(\"NOT_JUDGED\",json.dumps(l.get(\"not_judged\"),ensure_ascii=False))'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+a2-d1|week-10-06:c1/clean-3 ladder None
+QUESTION What percentage change in AI-server memory (HBM/DRAM) contract prices over calendar 2027 is reported in TrendForce/DRAMeXchange's contract-price releases covering that year?
+NOT_JUDGED [{"part": "Memory makers' reported average selling prices for periods covering 2027.", "why": "Company-level realized selling prices are supporting evidence rather than the market contract-price change tracked by the question."}, {"part": "Memory makers' reported memory gross margins for periods covering 2027.", "why": "Gross margins are a separate profitability measure, not the tracked contract-price change."}, {"part": "The memory input cost embedded in Nvidia's GPUs.", "why": "Nvidia's resulting input cost provides company context but is not the market price outcome being judged."}, {"part": "Micron's fiscal 2027 pricing outlook and its overlap with calendar 2027.", "why": "Micron's fiscal-year outlook supplies context but does not replace the question's calendar-year measurement period."}]
+a2-d1|week-10-06:c1/clean-6 ladder None
+QUESTION Will the United States lift the export-licence requirement on Nvidia's H20-class data center products for China by Nvidia's FY2027 year-end, January 31, 2027, as established by Commerce Department/BIS rulemaking published in the Federal Register?
+NOT_JUDGED [{"part": "Whether Nvidia resumes recognizing data center compute revenue from China.", "why": "Revenue recognition is a separate company outcome, whereas the tracked event is the lifting of the export-licence requirement."}, {"part": "Whether Nvidia remains effectively barred from China's data center compute market.", "why": "Effective market access is commercial context and is not identical to the legal status of the export-licence requirement."}]
+a2-d2|week-10-06:c1/clean-3 ladder None
+QUESTION What will be the percentage change in contract prices for AI-server memory (HBM/DRAM), used with Nvidia GPUs, from year-end 2026 to year-end 2027, as reported in TrendForce/DRAMeXchange's contract-price releases covering calendar 2027?
+NOT_JUDGED [{"part": "Memory makers' reported average selling prices for periods covering 2027.", "why": "Company-specific realized selling prices are supporting evidence rather than the market contract-price change being tracked."}, {"part": "Memory makers' reported memory gross margins for periods covering 2027.", "why": "Gross margins reflect costs and product mix as well as pricing and are not the tracked contract-price change."}, {"part": "The memory input cost embedded in Nvidia's GPUs.", "why": "Nvidia's exposure provides context, but the tracked outcome is market memory pricing rather than Nvidia's own input costs."}, {"part": "The overlap with Micron's fiscal 2027 and its management's fiscal-year price guidance.", "why": "Micron's fiscal-year outlook provides context but does not replace the calendar-2027 measurement period."}]
+a2-d2|week-10-06:c1/clean-6 ladder None
+QUESTION Will the U.S. export-licence requirement on Nvidia's H20-class data center products for China be lifted by Nvidia's FY2027 year-end on January 31, 2027, as established by Commerce Department/BIS rulemaking in the Federal Register?
+NOT_JUDGED [{"part": "Whether Nvidia resumes recognizing data center compute revenue from China.", "why": "Revenue recognition is a separate company outcome, whereas the tracked policy event is the lifting of the export-licence requirement."}, {"part": "Whether Nvidia remains effectively barred from China's data center compute market.", "why": "Effective market access is business context rather than the legal status being judged, since licences could permit sales without lifting the requirement."}]
+frozen-d1|week-10-06:c1/clean-3 no ladder The topic does not identify one main measurable figure: HBM and DRAM have distinct contract-price series, and neither the topic nor the item specifies a single series or a combined price measure. The outcome also names memory makers’ average selling prices and gross margins without selecting one as decisive. A single ladder would require inventing a benchmark or choosing among these figures.
+QUESTION None
+NOT_JUDGED null
+frozen-d1|week-10-06:c1/clean-6 no ladder The topic's outcome names two distinct tracked events—whether the U.S. H20 export-licence requirement is lifted and whether Nvidia resumes recognizing China data center compute revenue—without identifying either as the main one. They cannot be combined into one judged question or ladder.
+QUESTION None
+NOT_JUDGED null
+frozen-d2|week-10-06:c1/clean-3 no ladder The topic does not define one resolvable figure: HBM and DRAM have distinct contract-price series, and no benchmark or aggregation method is specified for a single calendar-2027 price change. The outcome also names several memory makers' selling prices and gross margins without identifying one series as the main figure. Selecting a series or constructing a composite would change what is being tracked.
+QUESTION None
+NOT_JUDGED null
+frozen-d2|week-10-06:c1/clean-6 no ladder The topic's outcome names two distinct tracked events without identifying a main one: whether the U.S. export-licence requirement on Nvidia's H20-class products is lifted, and whether Nvidia resumes recognizing data center compute revenue from China. These can resolve differently and cannot be combined into one judged ladder.
+QUESTION None
+NOT_JUDGED null
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls poc/data/clean-astra-a2-2026-11-16/review && cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/review-brief.md | head -50' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+codex-prompt.md
+packet.json
+review-claude.jsonl
+review-codex.jsonl
+review-codex.stream
+# A source-backed product review (read-only)
+
+Each item in the packet holds:
+- **`thesis`:** a research topic an analyst system opened on NVIDIA: `description` (the question asked), `outcome` (what is tracked),
+  `period`, `opens_as` (its kind) and `settled_by`;
+- **`article`:** the article the topic came from;
+- **`fiscal_year_note`:** NVIDIA's fiscal calendar;
+- **`ladder_as_the_judge_is_shown_it`:** what a step wrote and the product stores. It is either one judged question with its answer
+  choices (`rungs`) and the stored `due_day`, the day the judge records the answer on (code sets it for a year's figure), or
+  `{"no_ladder": <the reason>}` when the step declined;
+- **`other_fields`:** the parts the question leaves out (`not_judged`), the reference quoted from the article, and the basis of the
+  due day.
+
+The listed themes are: chip-export-controls, ai-capex, custom-silicon, semiconductor-cycle, fed-policy-rate, us-inflation,
+us-recession-risk, us-china-tariffs, taiwan-strait, middle-east-conflict, russia-ukraine-war, supply-chain-shift.
+
+**The step's own rule for declining,** quoted from its instructions:
+
+> - Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+**The rule for the due day:**
+- an event's day is the date the topic or the article gives for assessing it, or the last day of the period the topic names (the
+  company's fiscal year-end for a pending regulatory decision with no date);
+- a figure's day falls after the period it covers, when the figure is published.
+
+**For each item, judge it against the topic and the article:**
+1. **A written question:**
+   - **period:** does it keep the topic's period or check date?
+   - **measure:** is the thing measured the one the topic tracks, and is any constructed measure supported by the topic or the
+     article?
+   - **conditions:** are they kept or listed as not judged?
+   - **choices:** can the judge apply them on the due day (no overlap, no gap, right unit and scale)?
+   - **record day:** is the stored due day the right day for what the topic tracks?
+2. **A decline:** is its reason one of the cases above, truly applying to this topic? If not, it is an `unjustified_decline`,
+   material.
+
+**Return one JSON line per item, in item order:**
+- `item`;
+- `verdict`: `"sound"` or `"defect"`;
+- `class`: `null`, or one of `unjustified_decline`, `period_changed`, `measure_invented`, `measure_changed`, `condition_lost`,
+  `condition_added`, `choices_unusable`, `other`;
+- `material`: true only if the defect would change what the judge records or what an analyst concludes;
+- `evidence`: the exact words that show it, quoted;
+- `why`: one sentence.
+
+Judge each item on its own text; similar items may differ. Return exactly one line per item of the packet, nothing else.
+
+codex
+1. **Record VOID**, with the numbers clearly labelled descriptive. The registered control rule voided the gate reading; it did not produce a pass or a close. The separate product review remains evidence within its own controls. [Final output](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/final-output.txt>), [descriptive counts](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/descriptive-not-a-verdict.txt>)
+
+2. **A fresh H-only reading is legitimate as a separate diagnostic**, not as a replacement verdict for the voided test. Fix its rule first; blind the new reader to arms and prior marks; read all listings in both arms; use the original control plus fresh sound and planted controls. Preserve both original readers’ marks and report disagreements. This can measure the listing concern, but cannot retroactively turn VOID into a pass.
+
+3. **Keep Astra with A2 as an unadopted candidate, not yet the leader.** A2 wrote H20 questions twice where the fresh frozen arm declined twice; neither product reviewer flagged those questions. That is a useful, narrow finding, not proof they are fully clean. Both memory questions drew a material flag from one reviewer, and the listing harm remains unmeasured. The [registered design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/DESIGN.md>) made that harm part of the decision.
+
+CONSENSUS: record VOID; conduct a separately registered, blinded H-only diagnostic at $0; keep Astra with A2 unadopted and provisional.
+tokens used
+1,181,395
+1. **Record VOID**, with the numbers clearly labelled descriptive. The registered control rule voided the gate reading; it did not produce a pass or a close. The separate product review remains evidence within its own controls. [Final output](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/final-output.txt>), [descriptive counts](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/descriptive-not-a-verdict.txt>)
+
+2. **A fresh H-only reading is legitimate as a separate diagnostic**, not as a replacement verdict for the voided test. Fix its rule first; blind the new reader to arms and prior marks; read all listings in both arms; use the original control plus fresh sound and planted controls. Preserve both original readers’ marks and report disagreements. This can measure the listing concern, but cannot retroactively turn VOID into a pass.
+
+3. **Keep Astra with A2 as an unadopted candidate, not yet the leader.** A2 wrote H20 questions twice where the fresh frozen arm declined twice; neither product reviewer flagged those questions. That is a useful, narrow finding, not proof they are fully clean. Both memory questions drew a material flag from one reviewer, and the listing harm remains unmeasured. The [registered design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/DESIGN.md>) made that harm part of the decision.
+
+CONSENSUS: record VOID; conduct a separately registered, blinded H-only diagnostic at $0; keep Astra with A2 unadopted and provisional.

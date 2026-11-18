@@ -1,0 +1,9 @@
+**No-go until the direct dated-reader path is covered.** The revised design fixes the main issues from round 33, including the page-readable replay and the distinction between absent and empty records. But its statement that callers decide visibility is not a complete contract for every caller.
+
+`view_bundle` accepts `as_of` but does not itself refuse a view created after that day; `library()` and `thesis_bundles()` filter it first, while `idea.py` calls `view_bundle` directly. On the UI side, the exported `openThesis` can open a loaded question at the selected day, and `snapshotThesis` retains its other fields even before its creation day. The new list therefore needs an explicit before-creation rule on these paths, not only a `library()` test. [bundle.py](/Users/lchingen/hivemind/src/hivemind/bundle.py:45), [idea.py](/Users/lchingen/hivemind/src/hivemind/idea.py:381), [library.js](/Users/lchingen/hivemind/poc/ui/src/components/library.js:169), [thesis.js](/Users/lchingen/hivemind/poc/ui/src/model/thesis.js:44)
+
+Before building, specify whether direct access before creation refuses the question or suppresses the new field, and test the selected contract through the direct bundle and public drawer entry points. Keep the library tests on creation and after closing.
+
+The coordinated-upgrade decision is adequately stated for the supported combinations. The replay proof is also now concrete: it must verify the ladder rows and page-dating records before the browser check. [DESIGN.md](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/not-judged-display/DESIGN.md:20)
+
+CONSENSUS: no, because before-creation visibility is not yet specified or tested for direct bundle and drawer access.

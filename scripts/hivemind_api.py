@@ -31,43 +31,62 @@ import urllib.parse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import bundle, config, idea, model, search, service  # noqa: E402
+from hivemind import bundle, config, idea, live_lock, model, search, service  # noqa: E402
 from hivemind.views import store  # noqa: E402
 
 PATHS = {}
 ALIASES = {}
 CFG = None
 SEMANTIC = True
-REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+REQUEST_ERRORS = (KeyError, service.LedgerError, live_lock.LockRefused, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
 
 
 def error_response(error):
+    """(status, body) for a request's error. The store's date refusals carry their days (OPERATING-CONTRACT.md, row 3)."""
+    if isinstance(error, service.FirstDayNotCompleted):
+        return 503, {'error': str(error)}
+    if isinstance(error, service.BoundNotCompleted):
+        return 409, {'error': 'day not completed', 'requested': error.requested, 'last_completed_day': error.last_completed_day}
+    if isinstance(error, service.RangeNotOrdered):
+        return 409, {'error': 'range start after its end', 'start': error.start, 'end': error.end}
     if isinstance(error, KeyError):
-        return 404, f'not found: {error}'
-    if isinstance(error, service.LedgerError):
-        return 500, str(error)
+        return 404, {'error': f'not found: {error}'}
+    if isinstance(error, (service.LedgerError, live_lock.LockRefused)):     # the store cannot be served as configured (row 7)
+        return 500, {'error': str(error)}
     if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
-        return 502, f'{type(error).__name__}: {str(error)[:200]}'
-    return 400, str(error)
+        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    return 400, {'error': str(error)}
 
 
 class Connections:
-    """The databases one request reads: opened on entry, closed on exit, never shared between threads."""
+    """The databases one request reads: opened on entry, closed on exit, never shared between threads. The ledger's committed state
+    is pinned by BEGIN and a first read, so every read of the request sees one state while a writer commits (live-service/
+    OPERATING-CONTRACT.md, row 2); a failure while opening closes what was already opened."""
 
     def __init__(self, read_only=False):
         self.read_only = read_only
 
     def __enter__(self):
-        self.ledger = service.open_ledger(PATHS['views'])
-        self.index = None if self.read_only else search.open_index(PATHS['index'])
-        self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
-        self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+        self.ledger = self.index = self.items = self.archive = None
+        try:
+            self.ledger = service.open_pinned(PATHS['views'])
+            self.index = None if self.read_only else search.open_index(PATHS['index'])
+            self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+            self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+        except BaseException:
+            self._close()
+            raise
         return self
 
-    def __exit__(self, *exc):
+    def _close(self):
+        if self.ledger is not None and self.ledger.in_transaction:
+            self.ledger.rollback()
         for conn in (self.ledger, self.index, self.items):
             if conn is not None:
                 conn.close()
+
+    def __exit__(self, *exc):
+        self._close()
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -98,15 +117,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             with Connections(read_only) as db:
                 self._send(200, work(db))
         except REQUEST_ERRORS as error:
-            status, message = error_response(error)
-            self._send(status, {'error': message})
+            status, body = error_response(error)
+            self._send(status, body)
 
-    def _stream_answer(self, work):
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
-        self.send_header('Cache-Control', 'no-store')
-        self._cors()
-        self.end_headers()
+    def _stream_answer(self, work, prepare):
+        """The streamed Idea answer, in one read transaction: `prepare` checks the request (its date resolved, the first day refused)
+        before any header, so a refusal is a normal status and body; then the 200 headers and the work, in the same transaction."""
+        headers_sent = False
 
         def emit(event):
             self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
@@ -114,14 +131,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         try:
             with Connections() as db:
+                prepare(db)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+                self.send_header('Cache-Control', 'no-store')
+                self._cors()
+                self.end_headers()
+                headers_sent = True
                 card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
                 emit({'type': 'result', 'data': card})
         except (BrokenPipeError, ConnectionResetError):
             return
         except REQUEST_ERRORS as error:
-            status, message = error_response(error)
+            status, body = error_response(error)
+            if not headers_sent:
+                self._send(status, body)
+                return
             try:
-                emit({'type': 'error', 'status': status, 'message': message})
+                emit({'type': 'error', 'status': status, 'message': body['error'], **{k: v for k, v in body.items() if k != 'error'}})
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
@@ -136,7 +163,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         length = int(self.headers.get('Content-Length') or 0)
         raw = self.rfile.read(length) if length else b''
 
-        def work(db, on_progress=None):
+        def request_body():
             if parts != ['ideas']:
                 raise KeyError('/'.join(parts))
             try:
@@ -145,6 +172,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 raise ValueError(f'the body is not JSON: {error}')
             if not isinstance(body, dict) or not str(body.get('text') or '').strip():
                 raise ValueError('POST /ideas needs a JSON body with text')
+            return body
+
+        def prepare(db):
+            """The store's date refusals, before any header (OPERATING-CONTRACT.md, row 3): a first-day store, and a date after the last
+            completed day. A malformed body or a missing configuration is answered in the stream, as before (D281)."""
+            try:
+                as_of = request_body().get('as_of') or None
+            except (KeyError, ValueError):
+                as_of = None                          # the body's own error is raised by `work`, in the stream
+            service.resolve_bound(db.ledger, as_of)
+
+        def work(db, on_progress=None):
+            body = request_body()
             if CFG is None:
                 raise config.ConfigError('the server was started without --config, so it cannot read ideas')
             return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
@@ -152,10 +192,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                                   on_progress=on_progress)
         accepted = [part.split(';', 1)[0].strip() for part in self.headers.get('Accept', '').split(',')]
         if parts == ['ideas'] and 'application/x-ndjson' in accepted:
-            self._stream_answer(work)
+            self._stream_answer(work, prepare)
         else:
             self._answer(work)
-
 
 def flag(value):
     return str(value).lower() in ('1', 'true', 'yes')
@@ -197,9 +236,21 @@ def route(db, parts, q):
             raise KeyError(q['view_id'])
         return answer
     if parts == ['days']:
+        service.resolve_bound(ledger, None)          # a first-day store is refused here too (OPERATING-CONTRACT.md, row 4)
         row = ledger.execute('select min(day), max(day) from days_completed').fetchone()
         return {'first_day': row[0], 'last_day': row[1]}
     raise KeyError('/'.join(parts))
+
+
+def index_at_start(embed=None):
+    """The search index built at start to the last completed day (OPERATING-CONTRACT.md, row 4a); on a first-day store nothing is
+    built, and search stays lexical until the service is restarted after a day completes. Returns the line the server prints."""
+    with Connections() as db:
+        try:
+            embedded, unchanged, tokens, error = search.ensure_index(db.ledger, db.index, **({'embed': embed} if embed else {}))
+        except service.FirstDayNotCompleted:
+            return "index: not built, the store's first day has not completed; search is lexical until a restart after it completes"
+    return f'index: {embedded} views embedded, {unchanged} unchanged, {tokens} tokens' + (f'; embedding stopped ({error}): search runs lexical until the rest is built' if error else '')
 
 
 def main():
@@ -231,9 +282,7 @@ def main():
     if args.lexical:
         print('--lexical: no embedding; every search answers in lexical mode', flush=True)
     else:
-        with Connections() as db:
-            embedded, unchanged, tokens, error = search.ensure_index(db.ledger, db.index)
-        print(f'index: {embedded} views embedded, {unchanged} unchanged, {tokens} tokens' + (f'; embedding stopped ({error}): search runs lexical until the rest is built' if error else ''), flush=True)
+        print(index_at_start(), flush=True)
     print(f'hivemind api on http://{args.host}:{args.port}  ledger {os.path.basename(os.path.dirname(args.views))}/{os.path.basename(args.views)}  index {os.path.basename(args.index)}', flush=True)
     server = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
     server.daemon_threads = True

@@ -80,10 +80,12 @@ def openai_embeddings(texts, embedding_model=EMBEDDING_MODEL, timeout=120):
 
 
 def build_index(ledger, index, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, batch=64):
-    """Embed every view whose text is new or changed, batch by batch, each batch committed as it lands. Returns
+    """Embed every view visible at the last completed day whose text is new or changed, batch by batch, each batch committed as it
+    lands; a view of an unfinished day is never embedded or sent (OPERATING-CONTRACT.md, row 4a). Returns
     (embedded, unchanged, tokens, error): on a failure the counts are what was done before it, never zero, and the
     error is the message without the provider's body. Never raises."""
-    rows = [dict(r) for r in ledger.execute('select * from views order by created_seq')]
+    as_of = service.resolve_bound(ledger, None)          # a first-day store is refused: nothing of an unfinished day is embedded
+    rows = [dict(r) for r in ledger.execute('select * from views order by created_seq') if as_of is None or service.view_exists(ledger, r, as_of)]
     todo, unchanged = [], 0
     for record in rows:
         text = view_text(record, store.rungs_of(ledger, record['view_id']))
@@ -119,13 +121,18 @@ def usable(vector):
     return isinstance(vector, list) and len(vector) > 0 and all(isinstance(x, (int, float)) for x in vector)
 
 
-def fresh_vectors(ledger, index, embedding_model=EMBEDDING_MODEL):
+def fresh_vectors(ledger, index, embedding_model=EMBEDDING_MODEL, view_ids=None):
     """view id → vector for every view whose stored vector was made from the view's current text and is usable; a
-    view whose text changed since, was never embedded, or holds an empty vector is absent."""
+    view whose text changed since, was never embedded, or holds an empty vector is absent. With `view_ids` (a request's visible
+    candidates), only those views are checked and only they set the vector length, so a view the request cannot see never decides
+    which visible vectors are used (OPERATING-CONTRACT.md, row 4a). The stored vectors are read in one statement."""
     stored = {r['view_id']: (r['text_sha256'], json.loads(r['vector_json'])) for r in index.execute('select view_id, text_sha256, vector_json from view_vectors where model=?', (embedding_model,))}
+    wanted = None if view_ids is None else set(view_ids)
     out = {}
     dims = None
-    for record in ledger.execute('select * from views'):
+    for record in ledger.execute('select * from views order by created_seq'):
+        if wanted is not None and record['view_id'] not in wanted:
+            continue
         have = stored.get(record['view_id'])
         if have and have[0] == sha(view_text(record, store.rungs_of(ledger, record['view_id']))) and usable(have[1]) and (dims is None or len(have[1]) == dims):
             out[record['view_id']] = have[1]
@@ -203,6 +210,26 @@ def objects_in(query, aliases):
     return {object_id for object_id, words in aliases.items() if any(_names(w, text) for w in words)}
 
 
+def visible_lexical_order(corpus, text, top_n):
+    """The trigram ranking `store.search_views` gives, computed over `corpus` only (the views visible at the request's bound), so the
+    ranking's statistics never include a view the request cannot see (OPERATING-CONTRACT.md, row 4a). Same text per view, same query,
+    same tokenizer, the views in creation order."""
+    words = [w for w in text.replace('？', ' ').replace('，', ' ').split() if len(w) >= 2]
+    if not words or not corpus:
+        return []
+    query = ' OR '.join('"' + w.replace('"', '') + '"' for w in words[:12])
+    memory = sqlite3.connect(':memory:')
+    try:
+        memory.execute("create virtual table views_fts using fts5(view_id unindexed, text, tokenize='trigram')")
+        memory.executemany('insert into views_fts (view_id, text) values (?, ?)',
+                           [(record['view_id'], f"{record['object']} {record['looks_at']} {record['question']}") for record in corpus])
+        return [row[0] for row in memory.execute('select view_id from views_fts where views_fts match ? order by rank limit ?', (query, top_n))]
+    except sqlite3.OperationalError:
+        return []
+    finally:
+        memory.close()
+
+
 def lexical_terms(query, limit=12):
     """What the ledger's trigram index is asked for: the Latin words of three characters or more, and every
     three-character window of each Chinese run (Chinese has no spaces to split on; the index matches on
@@ -227,14 +254,15 @@ def search(ledger, index, query, k=10, as_of=None, include_closed=False, embed=o
     `results` is null when the library holds no view on anything the idea names as of that day (D91): no company
     or theme of the universe is named in it and the ledger's own text index matches no view; otherwise the ranked
     list comes back whole and the caller judges which views correspond (D76)."""
-    as_of = as_of or service.default_as_of(ledger)
+    as_of = service.resolve_bound(ledger, as_of)
     candidates = service.summaries(ledger, as_of, include_closed)
     if not candidates:
         return {'query': query, 'as_of': as_of, 'mode': 'semantic' if semantic else 'lexical', 'missing_vectors': [], 'results': None}
     mentioned = objects_in(query, aliases or {})
-    lexical_order = store.search_views(ledger, ' '.join(lexical_terms(query)), 50)          # the ledger's trigram index, best first
+    corpus = service.summaries(ledger, as_of, include_closed=True)                              # every view visible at the bound
+    lexical_order = visible_lexical_order(corpus, ' '.join(lexical_terms(query)), 50)           # trigram ranking over those only, best first
     lexical_rank = {view_id: i for i, view_id in enumerate(lexical_order)}
-    vectors = fresh_vectors(ledger, index, embedding_model) if semantic else {}
+    vectors = fresh_vectors(ledger, index, embedding_model, [record['view_id'] for record in candidates]) if semantic else {}
     missing = [record['view_id'] for record in candidates if record['view_id'] not in vectors]
     mode, q = 'semantic', None
     if not semantic or missing:

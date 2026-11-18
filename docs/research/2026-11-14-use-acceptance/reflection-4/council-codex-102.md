@@ -1,0 +1,9 @@
+**Choose option 1: read the five topics as registered, with no comparative verdict.** The completed run cost $3.4485 and the joined population has three different-matter topics, below the prewritten minimum of five. For example, the readers split on the China accelerator question, so it stays uncertain and outside population (b). [Ledger](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/ledger.json>), [population](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/population/population.json>), [registered design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md>)
+
+Pooling another week **before seeing answer-choice outputs** avoids selecting on A2’s measured performance, but it would still change the registered sample after seeing that the first week missed its minimum. The second week would also start from a larger library shaped by the first week, so its openings would be dependent on that history. Those conditions are not fatal to a newly designed longitudinal test, but they do not guarantee two more independent matters or two control L failures.
+
+I would not spend another estimated $4.3, with a $6.50 ceiling and unpriced reader work, to rescue this particular comparison. The cheaper registered send can show what the frozen step and A2 wrote on these five topics; it **cannot settle whether A2 generalizes**, pass Alex’s gate, or justify adopting A2. Report all five, the three agreed different matters and the uncertain one separately, under both countings. The existing request check passed on all five; the answer-choice send still needs its normal pre-send checks. [Check output](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/population/check-output.txt>)
+
+After that reading, close this comparison with its stated limit and re-rank the remaining production work from the evidence. Keep A2 unaccepted.
+
+CONSENSUS: yes (option 1)

@@ -1,0 +1,17 @@
+**Do not send version 2 as written.** The new-week rule can now produce a useful result, and I accept the bounded exposure approach. Two claims and the reading budget still need correction before we can rely on the outcome.
+
+For example, the design says that if 13 topics produce no refusals, July’s refusal problem is no longer the state of the system. The calculated probability is only illustrative: it assumes those 13 topics are independent and that July’s **11/40**, drawn from repeated runs on the same news, is the true rate for the new weeks. Neither is established. A clean result would support designing an acceptance; it would not settle the underlying refusal rate.
+
+The required corrections are:
+
+1. **Make the outcome rules describe evidence, not pre-decide its cause.** A missing condition on a second question is a lead, not automatically the same mechanism as the earlier quantity-cap omission. Likewise, one worthwhile refusal or two correct refusals does not establish that July’s pattern has recurred or that Step 1 is the cause. In both cases, read the sources and trace the decisions before opening a repair or reopening a stopped line. Keep the proposed next action—consider an acceptance after a clean result—but remove the claim that the July problem is disproved. [Design §6](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/DESIGN.md>)
+
+2. **Make the reading plan fit the possible population.** Three attempts for **11 topics are 33 items**. One packet of at most 30 items per first reader cannot cover them, yet the design does not stop at ten eligible topics. Specify how extra packets, sessions and their bounds work, or predeclare a stop if the population exceeds the reading capacity. Do not leave attempts unread while calling the reading complete.
+
+3. **Record the budget decision accurately.** D549 set **$3.50 for the run and readings**; $3.75 for the pipeline ledger changes that decision and needs an explicit council decision before launch. I do **not** propose inventing a token rate for the reader sessions. Report their bounded usage and unknown dollar cost separately; do not claim that total spending, including those sessions, is verified within $5. The project-ledger ceiling and D439’s $40 limit remain enforceable as recorded. [D549](</Users/lchingen/hivemind/docs/DECISIONS-log.md:6741>)
+
+The exposure work is substantially better bounded. I accept reporting the **strict and wider counts**, including the 19 review-page articles and the two recurring-headline cases, with disagreement between counts producing an inconclusive result. The statement about the full-page trace is an **ID-search result**, so it should retain that wording rather than imply that every possible prior exposure has been ruled out. Rewritten stories and the influence of exposed articles on the week’s library remain limitations. [Exposure bounds](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/exposure-bounds.json>)
+
+I still support this as the checkpoint’s one diagnostic once those corrections are recorded. A small or inconclusive result may be worth the spend, provided the full reading is feasible and the result is not promoted into a conclusion the sample cannot support.
+
+Position: Do not send version 2; correct the outcome claims and reading capacity, explicitly decide the revised pipeline ceiling, then send the bounded diagnostic.

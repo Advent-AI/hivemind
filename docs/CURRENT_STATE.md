@@ -127,6 +127,9 @@ The small 2026-11-05 study used three archived NVDA articles and an 8/28 histori
 
 ## What runs
 
+- **Nothing is live.** The two-week run of D563 finished on 2026-11-16 at 01:23 local (`poc/data/clean-carried-run-2026-11-16/`, draw
+  complete, ledger $3.476 of $6.00); its readings are recorded (D564, [result](research/2026-11-14-use-acceptance/carried-run/RESULT.md));
+  the six contested last answers are being traced at $0 (`docs/research/2026-11-14-use-acceptance/contested-six/`).
 - **Pipeline (replay default `poc/config/poc-v118.json`, D370, D374).** Every item reads the relevant open questions from the library at the start of its day, then extraction v74i on `gpt-6-luna` proposes evidence and questions; Jev matching with the collision judge matches them; code writes the records; judging-v7 judges changes once a day; pull mode closes due questions. There is no separate seed or coverage-start report import, and reports as source items remain eligible. This default has not completed end-to-end acceptance. The [pipeline guide](poc/pipeline-plan.md) maps stages to code.
 - **Measured:** one company (NVDA) over one 14-day window (2026-07-01 to 07-14), the judgement scored at the window end on the frozen ruler (AGENTS §7.1). Three draws of `poc-v116` against three of `poc-v108` run in the same hours: 53 against 45 agreements of 57; operating margin and capex agree in 3 of 3 draws, never judged without the coverage-start reading ([acceptance](research/2026-11-04-filing-end-to-end/acceptance-design.md)).
 - **Served data:** the service, the MCP server and the standalone page serve the sealed three-month ledger `served-2026-10-28-v34-nvda-3m-through-0828` (68 theses, 34 groups; D358), built by the earlier `poc-v34` pipeline, not by the replay default. HTTP `/library`, MCP `thesis_library` and the standalone page share the dated bundle writer.
@@ -148,18 +151,372 @@ The small 2026-11-05 study used three archived NVDA articles and an 8/28 histori
 
 Upstream supply and the human review pool's output remain deferred.
 
+10. **A new-system store being written serves its first day in progress** (D573, D574; `docs/research/2026-11-14-use-acceptance/page-contract/LIVE-READ-DESIGN.md`, B):
+   before any day completes, the service's default date falls back to the latest judgement's day. Not built: a correct guard needs one
+   snapshot for the check and the read, MCP's start and the streamed Idea response handled; 0 of 143 stores are in that state and no
+   new-system store is served live today.
+
 ## One next task
+
+**Where the lean path stands (2026-11-15; D489 to D542).** Alex is not active (D509); D439 is in force: choices go to the
+council (an independent Codex review and Claude) until consensus, recorded citing D439; nothing is pushed, deployed, published or
+committed; paid calls stay within D439's $40 ceiling (about $18.42 recorded; $0.0134 sent in this period, the ten judge calls of
+D511 and D519; the lean path $8.34 in all). Every stretch below is closed; its full record is in the decision log and in
+`research/2026-11-14-use-acceptance/LEAN-LOG.md` (sections 1 to 43).
+
+- **The choice between the systems is not made.** The fresh week did not separate them (D489, "not clear"; nothing since ranks
+  them). The comparison that could choose by measurement was sized and not sent: at the proposed size it may miss differences
+  that matter ([sizing](research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md), D517). **Production stays the default
+  and both systems stay (D518).** Alex's product choice on the company's financial figures stands (D505: evidence for related
+  questions, no table and no questions of their own; D382 and D384 stand).
+- **For Alex:** the [decision page](research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-15.md) (its section 7 is the one list
+  of what is his to choose, what he has decided and awaits building, and the defects with their evidence), the
+  [side-by-side week](research/2026-11-14-use-acceptance/side-by-side/SIDE-BY-SIDE-WEEK.md) and the
+  [judge note](research/2026-11-14-use-acceptance/unsupported/DESIGN-NOTE.md) with its one choice.
+
+**Open defects found on this path, each with its evidence; nothing is built on any of them:**
+1. **The new system's delivery gap** (D506, D508, D513, D514): a kept fact that bears on a question by a step of reasoning may be
+   linked to another question or to none, and so never reach that question's judge; the later-linking step skips a group whose
+   original statement arrived under another question. Three confirmed fact-and-question pairs in the fresh week, 23 unresolved
+   ([census](research/2026-11-14-use-acceptance/delivery-class/CLASS-CENSUS-RESULT.md)); one six-call test of its effect was
+   inconclusive ([result](research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md), D511). Paused.
+2. **The judge, shared by both systems** (D519, D520): on a question that asks for an amount it names a band when nothing shown
+   sizes the amount, or closes the last gap with a number of its own (36 of 438 stored readings, many of them the same
+   question read on successive days: a failure pattern on a few question paths, not an error rate;
+   [census](research/2026-11-14-use-acceptance/unsupported/UNSUPPORTED-CENSUS.md)). Three of the ten settled unsupported answers
+   coincided with a figure the system held and had not delivered to that question
+   ([result](research/2026-11-14-use-acceptance/missing-input/MISSING-INPUT-RESULT.md), D530 to D532). What the product shows is
+   Alex's choice (the judge note).
+3. **The old system's duplicate questions** (D520 to D523): three pairs in the fresh week; one second question was never compared
+   with the first, the others were compared and kept apart
+   ([result](research/2026-11-14-use-acceptance/duplicates/DUPLICATES-RESULT.md)).
+4. **The old system's filing under the broader question** (D529 to D531): the data-center revenue question never received the
+   next quarter's guidance or a consensus for the year, filed under total revenue only
+   ([cases](research/2026-11-14-use-acceptance/d375-measure/SAME-DAY-CASES-RESULT.md),
+   [trace](research/2026-11-14-use-acceptance/missing-input/FILING-TRACE-RESULT.md)). The relation `docs/prd/10-filing-phase.md` §2 names.
+5. **Where decisions and code part on dependencies** (D541, D542): `writing.write` drops an edge that would close a circle with a
+   note where PRD 06 says refuse and ask for a correction; PRD 06's "historical only" branch has a reader and no writer; the
+   label the seeding module writes on every seed edge (`last_end`) is defined nowhere; no decision says what happens to a later
+   proposal with another direction for a pair already read.
+
+**Decided by Alex, awaiting implementation and acceptance (not asked again):**
+- **D375, each article sees the questions committed before it.** A passed, bounded serial proof with labelled fake answers
+  ([result](research/2026-11-14-use-acceptance/duplicates/D375-PROOF-RESULT.md), D526, D528); the eligible same-day cases of the
+  fresh week read (D529). A real measurement needs a new version of the reading request and a paid run; not opened.
+- **D368 item 2, the matching step chooses a new question's dependencies.** In the unseeded fresh week one clear case among 97
+  pairs (data-center revenue reading total revenue;
+  [census](research/2026-11-14-use-acceptance/dependency-selection/DEPENDENCY-SELECTION-CENSUS.md), D537). As the code stands
+  one stored edge has two readers (whose conclusion to read; which of two homes is the narrower): the same edge would remove
+  seven filing links ([proof](research/2026-11-14-use-acceptance/dependency-selection/EDGE-PROOF-RESULT.md), D538). A design that
+  reads the two uses apart is recorded as **a provisional candidate, not sound for build**
+  ([design](research/2026-11-14-use-acceptance/dependency-selection/SEPARATION-DESIGN.md), D539 to D542): two proofs on stored
+  data, the package's suite run under it, every stored dependency row classed. If the slice is reopened, its review must first
+  settle the cycle through an awaited question at creation, closing behaviour, a theme shown twice, the historical readers and
+  the label. A statement's home is not something an edge can decide (its section 2.5): the reading step's, the filing phase's
+  subject. No selection call is designed; nothing was sent.
+- **D368 item 4, the reading direction for preset questions** (settled by Claude on Alex's delegation): not measured (D536); the
+  stored seeded draws already agree with the frozen reference on 15, 15 and 16 of 17 questions; the rebuild and dry-run harness
+  is kept ([page](research/2026-11-14-use-acceptance/dependency-channel/CHANNEL-ASSESSMENT.md)).
+
+**The choice is made by the council under D439 (D544, 2026-11-15): the work toward production carries forward on the new
+system; the old system stays the running default until the new one passes its gates; both remain.** Nothing that runs is
+switched, deleted or deployed. It is not a finding that the new system's answers are better: the cold reflection (D543) found
+nothing that ranks the two systems' answers, and the first consensus left the choice to Alex; that deferral was withdrawn the
+same day, because his words in D439 give the council the job of taking a course. Reasons: he had reopened work on the rebuild
+and D439's scope names its steps; it follows the product rule on financial figures he last confirmed (D505); the fresh week
+gives no demonstrated reason to abandon it and shows fewer trivial or duplicate questions in that one run. Kept in view: its
+answer-choice step has not met its lines, Stage B did not pass, integration is undone, and its cost and time to production are
+unknown. **Alex's word overrides this at any time**; it is also reconsidered on a change of his product rule, a sound comparison
+on shared subjects that favours the old system, or the rebuild failing its unchanged gates within a bound agreed later. A first
+checkpoint: $5 of further spending without a candidate that passes its prewritten small test returns the direction to the
+council.
+
+**Since the choice (D545 to D550, all under D439):**
+
+- **The fresh week's answer choices, read and traced (D545 to D547).** Of 21 attempts on seven questions, one agreed fault of
+  Alex's lines (a condition of the topic left out of the choices, six attempts); ranges written with no figure were overrun by
+  the first filed amount on two questions (the old system shares this). A census of 49 amount questions and an audit of the
+  request found an undefined term ("the topic's wording") and no mechanism general enough to design for; no prompt change
+  ([result](research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md),
+  [audit](research/2026-11-14-use-acceptance/fresh-ladders/PROMPT-AUDIT-LINE-2.md)).
+- **The gates the new system must pass (D548), in order:** the answer-choice step on Alex's lines (D400), not passed; the
+  judge on the system's own questions (D428), not passed; the end-to-end comparison with Step 2's checks (D427, D431), still
+  owed, "beats" not yet defined in numbers; use on unseen news (D484), its lines proposed and not his; integration and
+  release, not written ([frame](research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md)).
+- **The first blocker (D549):** the step declines some worthwhile questions. From the July refusal review, no general,
+  permitted change recovers them: no candidate.
+
+**The one-week diagnostic of the answer choices is run and read (D550 to D554, 2026-11-15): not clean.** Nothing is live. The
+new system read the 272 articles of 2026-10-06 to 10-12 in two parts (the first part stalled when the laptop slept with a call
+in flight; it was ended and continued from the library after article 120, D551, D552); only the topics and the answer choices
+were then run (the matching and the judge are recorded as not run, D553; they can be run later from the merged trace by a
+decision of their own). Result ([page](research/2026-11-14-use-acceptance/second-week/RESULT.md)): 13 topics; of 39 attempts at
+answer choices 9 were declined, on 4 topics, two of them in all three attempts; three of the zero-fault lines are missed on
+faults both reader families agree on; the count by written choices is missed (6 of 12 against 8). The fresh week's picture (no
+refusal) did not repeat. It is evidence, not a gate: it passes nothing and reverses nothing. Traced at $0: the largest reason
+for declining over every stored run (22 of 37 refusals) is a topic that asks two things (two years, or two figures), which the
+step declines by Alex's own rule (D397), a known open defect "until splitting is built"; it starts in the first step's field
+for what a topic tracks. Ledger $3.67 of the run's $3.95; paid calls under D439 about $22.10 of $40 (Claude's ceiling). D544's
+$5 checkpoint is reached for further weeks, so the direction is back with the council.
+
+**Changed in the code (D552):** each call of the new system's first step waits at most 600 seconds on a silent connection
+(`clean-arch/step1/live.py`, `CALL_WAIT_SECONDS`; five tests). Before it, a machine that slept during a call stopped the run for
+good; with it, the second part survived eight lost attempts and a second sleep.
+
+**Open defects found on the way:** (1) a lost attempt is charged its whole reservation on the ledger (about $0.12 against a
+cent for an answered call): eight of them used up the room for the matching and the judge; the rule is the design's and was
+not changed. (2) The note given to the answer-choice step and to the readers says a year's figures are "published around
+2027-02; use that day", while code sets the due day 60 days after the fiscal year-end (D414): the two reader families read the
+due day apart on 23 points. (3) Reader sessions' dollar cost is not known and is outside every ledger.
+
+**After the diagnostic (D555 to D558, all at $0):** the council refused a rule that would take the first-named figure as a
+topic's main one (D397, D469, D470); a study of the "no main part" refusals found no candidate
+([study](research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md)); a map of all four stored readings, reconciled
+to their reports, shows agreed faults on the zero-fault lines in every reading (6 to 8 marks, of kinds that change) and no
+bounded way on the record to bring the four to zero together ([map](research/2026-11-14-use-acceptance/second-week/FIRST-GATE-MAP.md));
+an audit of the two classes that are the step's own (an event's reference; unlisted parts) with an independent second read
+finds no bounded, product-relevant repair ready ([audit](research/2026-11-14-use-acceptance/second-week/PROMPT-AUDIT-TWO-CLASSES.md)).
+**The first gate is recorded as not met; Alex's lines (D400) stay as written; no pass is claimed.**
+
+**The core-problem council (D559, 2026-11-15; asked by Alex after the week's result, his words in the decision log), all at $0:** the product
+problem is forming answerable questions: a worthwhile matter is left without an answerable question, or a delivered question
+asks a materially different or potentially unresolvable thing; no single cause is proven. Over July's three runs two reader
+families found 18 matters: the same judged question in every run that opened it on 3 (a fourth disputed), delivered but
+different on 3, a question in one run and a refusal in another on 4, refused in both on 1, opened by one run of three on 6.
+The clean measurements examined (July, the weeks of 09-22 and 10-06) each start from empty, which the start-state correction
+of 2026-11-05 above says does not represent the test with an existing research library; that record had no decision number
+and was not carried into D466 or D469. In the two later weeks, by two families with the articles, 18 of 20 opened topics were
+standing matters, 16 of 20 were opened from an article that mentions the matter in passing, and 10 of 20 were on a matter an
+earlier-dated library already held a question on. These classify 20 selected topics; they are not a rate, and nothing shows
+yet that a carried library prevents the failures ([council](research/2026-11-14-use-acceptance/reflection-3/cold-codex-5.md),
+[round log](research/2026-11-14-use-acceptance/LEAN-LOG.md) §51).
+
+**The reflection council (D560, 2026-11-15, asked by Alex; his words in the decision log), all at $0:** the goal is a
+continuing research library in which an analyst finds the important questions, the facts for and against, and a present
+answer whose reasons are visible; the record carries four goals at once and no single number for "ready". The measuring
+method is a major part of the impasse, beside demonstrated product defects, and the present sticks cannot apportion the two:
+the first gate has substantial reader disagreement, nothing on record clears it and it has no measured link to the final
+answer; the July end-to-end reference could not rank the systems at that size; the conditions measured were not the
+product's. The next step is a pilot of Alex's own product-level review on the stored fresh week (sixteen cards, three hidden
+repeats, controls, three completeness sheets), beside the frozen reference and the gates, replacing and ranking nothing;
+then D559's comparison. The role of the six answer-choice lines is put to him after the pilot. No gate, line or frozen piece
+changes ([council](research/2026-11-14-use-acceptance/reflection-4/council-codex-3.md), [round log](research/2026-11-14-use-acceptance/LEAN-LOG.md) §52).
+
+**The small comparison ran on Alex's "go" (D561, D562; $0.43):** with the week of 09-22's library the first step re-opened none
+of the four questions it held and filed their facts under them (4 questions opened against 16 from empty, none duplicating the
+library); it did not open the equity-commitments question the empty read opened and lost a DOJ/FTC question on the Groq deal;
+by the rule written before the run, between its two outcomes ([result](research/2026-11-14-use-acceptance/carried-library/RESULT.md)).
+
+**Where it stands (2026-11-16; D563 to D567; Alex not active, D439 in force; about $26.07 of D439's $40 spent):**
+- **The two-week product-condition run (D563, D564):** read in five ways; gate 1 (Alex's six lines) is not met there either (7 or
+  5 of 13 topics right); no last answer is unsupported by both reader families and 6 of 12 are contested, for too little
+  evidence to choose a band and for question forms, not for undelivered facts ([result](research/2026-11-14-use-acceptance/carried-run/RESULT.md),
+  [the six](research/2026-11-14-use-acceptance/contested-six/RESULT.md)).
+- **The judge naming a band where nothing sizes it (D519, D520):** closed for Alex with its record (D565, D566): the judge's own
+  account does not separate failed from passed answers; reader families agree only when no amount is the starting point. The
+  choice (leave the band, label it, show none) stays his ([self-report](research/2026-11-14-use-acceptance/self-report/RESULT.md),
+  [source check](research/2026-11-14-use-acceptance/self-report/SOURCE-CHECK-RESULT.md)).
+- **Integration (gate 5) moved twice:** the product's page reads the new system's store (D564); the new system's daily loop now
+  closes due questions with production's closing step, walks calendar days and owns its sequence (D567,
+  [design](research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md)). A production defect found on the way is fixed: a
+  closing on a day without items was invisible at the next day's start (`src/hivemind/replay.py`, D566).
+- **Waiting on Alex (D560, unchanged):** his half hour on the pilot's cards
+  ([the deck](research/2026-11-14-use-acceptance/pilot-deck-1/deck-1.html); his marks tallied by `tally_deck.py` against the key in
+  `~/.hivemind-keys/pilot-deck-1/`), then the six lines' role, then D559's wider question.
+
+- **Gate 1's reading repeated (D568, D569):** the same 39 sends read again from identical packets give the same line verdicts; line 2's
+  failing sends are identical (reproduced by the method, not proved right). The parts a question does not judge (L) were shown nowhere.
+- **The product page now reads the new system (D570 to D573):** the page shows D397's "Not judged" parts beside the answer; it reads the
+  new system's events, theme ranges and unrecorded shapes without inventing a direction (neutral, named, no Idea composite); the API
+  serves a new-system store, closings included, and the page renders it ([result](research/2026-11-14-use-acceptance/page-contract/RESULT.md),
+  [serving](research/2026-11-14-use-acceptance/page-contract/SERVE-RESULT.md)). Listed for Alex, not changed: production's Yes/No colours
+  and its inferred theme scores state a direction the question may not hold.
+
+- **Serving while writing (D574):** no partial day leaks into the completed-day view; a freshly opened page now shows the served
+  library's latest completed day. The first day of a live store is open defect 10.
+
+- **Alex's page (D575, D576):** `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md`, six choices in order, checked
+  against the records. The live-service design is paused (D575). Stage B's control line cannot be exercised by re-sending the judge (D576).
+
+- **The unlisted parts (D576, D577):** the request never ties "the topic's wording" to a field. 12 failing attempts on 7 matters leave
+  out a second figure, event or cap; 10 of them sit only in the topic's outcome. Arm A defines the wording in all four places. The
+  probe (18 stored requests, unchanged and changed ×3, about $0.15) was sent 2026-11-16 to `poc/data/clean-unlisted-probe-2026-11-16/`
+  (`docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN.md`).
+
+- **The unlisted-parts probe (D578 to D580):** negative under the rule fixed before the send. The changed written answers left no part
+  unlisted, against 4 or 5 control topics; but the change declined twice where both readers said it should not. The two accounts
+  apply line 6's decline rules to the outcome's words. No sourced rule for the main part of a multi-part topic survived review
+  (`unlisted-parts/DECLINE-AUDIT.md`, `rule-review.md`). Arm A is stopped.
+- **The Idea planner (D580, D581):** a new-system three-choice event is shown to it as Yes and Still open. The design is parked as
+  recorded input (`idea-planner/`).
+
+- **The hold lifted, arm A2 (D582, D583):** Alex's standing instruction to keep going outranks D581's hold. A2 adds D436's rule for a
+  second side of the same bet to arm A. It is negative under the rule fixed before the send.
+  - **What it fixed:** no part left unlisted and no refusal on the motivating topics (the control left parts out on 6 topics); every
+    refusal control kept.
+  - **What it broke:** it lists an event's own outcomes, and the source the answer is read from, as not judged (9 of 137 entries,
+    against 1 of 71).
+  - **The bar itself:** run against itself, the unchanged request already breaks the "+1" bar on 5 marks (`unlisted-parts/RESULT-A2.md`,
+    `control-vs-control.txt`).
+- **Arm A3 (D584):** A2 plus one closed-set sentence that removes, for an event only, an entry that merely restates one of its outcomes
+  (D409, D397). It was built at $0 through council rounds 78 to 93 (`unlisted-parts/DESIGN-A3.md` v11).
+  - The three arms (control, A2, A3) are sent on the same 28 topics.
+  - They are read with the existing reading and a pre-registered diagnostic one.
+  - A lead stays provisional until a trace review classes every failure above the control.
+
+- **A3 and the edge (D585, D586):** A3 is negative under its fixed rule.
+  - Two of its failing checks were measurement errors (`unlisted-parts/RESULT-A3.md`).
+  - Its real side effect: on another event it lists the Ruled-out rung's own named decision as not judged.
+  - Tuning of the not-judged list's edge stops (D391). A2 stays an unaccepted candidate.
+- **A fresh comparison of A2 (D587 to D589):** no stored topic set is held out. So the frozen first step ran on the unread week of
+  10-13 (383 articles), starting from the 10-06 week's library (`poc/data/clean-fresh-a2-2026-11-16/`).
+  - **The run:** complete, $3.45, 5 topics opened.
+  - **The populations:** population (a) has all 5. Population (b), classed blind, has 3 different matters, under the minimum of 5,
+    so the comparison gives no verdict (D589).
+  - **The council's choice (round 102):** send and read the 5 topics as registered, then close the comparison. Pooling the corpus's
+    last week was refused.
+
+- **The fresh reading (D590):** the frozen step on 5 fresh topics misses lines 2, 3 and 5 and meets line 4. A2 is better or equal,
+  with no verdict; the comparison is closed (`unlisted-parts/RESULT-FRESH-A2.md`).
+- **The due-day mark's split (D590):** Codex first readers fail D on 133 company figures with code's day, Claude on none. A D-only
+  diagnostic held all 12 class items in both families, so it is noted as a reader discrepancy and the brief is unchanged
+  (`fresh-a2/d-diagnostic/RESULT.md`).
+
+- **Ruled-out rungs that catch a postponement (D591):** in 296 frozen-step event answers there are 37 company delays on deadline
+  questions and 1 authority case (Taiwan p3). No decision settles whether "not by the due day" rules an event out. The step and the
+  form are unchanged, both readings are recorded, and the 38 answers are listed beside gate counts as candidates affected. The
+  question is on Alex's page (`fresh-a2/postponement/BOUNDARY-CASES.md`).
+
+- **The final-answer test's control line (D592):** an unchanged re-send stays at 4 comparable controls of 8, and delivering three
+  facts reaches at most 7. It is not pursued for the line's sake (`stage-b-controls/DESIGN-SHORTFALL.md`).
+- **The live store's operating contract (D593):** version 9 is agreed after nine council rounds for a $0 proof build on test stores
+  (`live-service/OPERATING-CONTRACT.md`). Live operation is not authorized. P1, the exception to AGENTS §9 for the product's own
+  readers, is only proposed.
+
+- **The live store's proof build (D594 to D597; nothing deployed, no service restarted):**
+  - **Slice 1:** one owner for every upper date bound. A future date is refused, and the served product store's half-processed
+    2026-08-29 is no longer returned.
+  - **Slice 2:** one pinned read transaction per API request and per MCP call, and MCP connections per call.
+  - **Slice 3:** search ranks and embeds only what a request may see.
+  - **Slice 4a:** the writer's WAL store, its stops and its orderly end.
+  - **Slice 4b (D598, corrected in D599 and D600):** one writer per store by an operating-system lock, preflight's one locked copy, the
+    snapshot route, every reader opening a store by its own path, and the writer leaving WAL mode on every exit. The
+    filesystem-full proof was run separately.
+  - The suite passes (341), and so do the new system's folders (190).
+
+**The live-store contract's proofs are all built at $0 on test stores (D594 to D603):**
+
+- the resolver;
+- pinned reads, through one opener that names the store on failure;
+- visible-only search;
+- the writer's WAL store, stops, lock and end;
+- preflight's locked copy and the snapshot route;
+- serving while the built writer runs (proof 10);
+- the page's day reaching the Idea call (2f);
+- the crash, disk and busy proofs.
+
+The suite passes (346), and so do the new system's folders (192). Nothing is deployed or restarted. P1 (the AGENTS §9 exception for
+the product's own readers) stays only proposed, and the running service picks up the new behaviour only on a restart, which is
+Alex's.
+
+**This session's investigations, all at $0, closed with evidence (D604 to D612):**
+
+- line 5's fresh misses (D605);
+- the postponement repair, with D606's provisional reading reversed (D607);
+- the shared fiscal-year note (D608);
+- delivery of the company's own figures on the carried fortnight (D609, D610: 5 bearing statements undelivered on 3 questions, none
+  predicted to move an answer by a blind second reader);
+- a same-news comparison from established libraries (D611: underpowered, and no unread week left).
+
+The council's reversible decisions on Alex's page are recorded in D606 and D607.
+
+**The one next task (D665–D671): finish stage 0 of the release comparison, at $0** (`docs/research/2026-11-17-product-comparison/RUN-PLAN-v11.md`).
+- **Done in stage 0:**
+  - the old replays were classed (all reads, D668);
+  - the exposure census was run, with the scored window 09-07..09-20 (D669, Alex);
+  - 410 of 502 articles were kept (D670);
+  - the blind matter list was frozen at **N = 32** (D671);
+  - code changes A, C, D and E were made, with tests and mutants.
+- **Left:**
+  - the filtered input and its two-launcher proof;
+  - `verdict-rule.json` and the scorer;
+  - the card builder (F);
+  - the size check and preflight;
+  - the §1.6 tools;
+  - the freeze review.
+- **Stage 0, all $0:**
+  - the exposure census and the frozen exclusions;
+  - one filtered input for both systems;
+  - the blind matter census (N < 20 goes to Alex);
+  - `verdict-rule.json` and the scorer;
+  - code changes A to F, each with a test and a mutant;
+  - the stored-data size check;
+  - preflight;
+  - the freeze review of the built artifacts.
+- **Then:**
+  - stage 1, a one-week slice of each system;
+  - stage 2, three draws each, launched together, one ledger per draw ($270 of guards, not a budget);
+  - stage 3, the council's reading and the verdict.
+- **Monitored** in `RUN-LOG.md`. Out-of-scope findings go to `FINDINGS.md`.
+- **Held** (D662): answer-choice changes, model trials, and live-store, planner and integration work. D658 waits (D664).
+- **Open:** D661 (past Codex readers ran with memories on); D656's listing omission; the 589 uncommitted paths (his call).
+
+**After D638:** the stop hook rejected the hold, so the council opened D612's fourth condition with a new candidate, astra with arm A2
+(D436's second-side sentences; D639).
+- **Two readings,** both VOID by their planted listing controls (D640, D641).
+- **Descriptive only:**
+  - A2 wrote H20 2 of 2 where the frozen arm declined 2 of 2, unflagged by both product reviewers;
+  - memory is disputed;
+  - agreed hard-line failures frozen 2 against A2 0;
+  - the listing harm is unmeasured.
+- **Its status:** astra with A2 stays provisional and unadopted, and the route stops.
+
+**The state, measured today** (`reflection-6/`, D623 to D637):
+- **The readers are valid** (D625).
+- **Higher effort and a required field are closed** (D626), and so is a paired gate-3 comparison (D628).
+- **Sol** fails 9 of 78 sends on the 26 topics outside the 44. **Astra**, on the unchanged request, fails 4 of 78, all main-part
+  declines (D633, D634).
+- **The main-part choice is unsourced** (D631). Two rule candidates closed (D631, D635). Six cases are on Alex's page.
+- **A source-backed review of astra's 51 written questions** finds 11 material defects that gate 1 does not count (D636).
+- **A one-clause correction** (`due-day/candidate-system-v2.txt`, the binding-obligation day narrowed to amounts per D210 and D403)
+  fixes the signed-deal completion date in its probe, 4 of 4 against 0 of 4, with no control moved.
+  - Its verdict is inconclusive on one unrelated listing split (D637).
+  - It is kept beside the frozen request, unadopted.
+- **Two leads closed at $0:** the MIIT listing (request-independent) and the purchase-commitment ranges (the recorded fixed-range
+  limitation).
+- **A third lead closed (D638):** Rubin's widened window follows the topic's own period field, which contradicts its description. It
+  is an opening-step wording defect, recorded and not taken up.
+- **Council round 28:** "the record stands; no further step is supported on the present evidence". Work reopens on D612's conditions,
+  including a new concrete reversible candidate.
+
+**On Alex's page** (`DECISION-PAGE-2026-11-16.md`, item 2):
+- the six main-part cases;
+- the measurements, kept separate;
+- the v2 correction;
+- D403's consequence for events proven after their day;
+- the reader brief's D row.
+
+The gate-1 measurement on his 44 topics, and any adoption, are his (D426).
+
+D612's four reopening conditions govern paid work again.
+
+Alex's page (`DECISION-PAGE-2026-11-16.md`) is kept current.
+
+The paragraphs below are the record of where the clean path's Step 4 stood on 2026-11-12.
 
 **Clean Step 4 (D396–D430):** the ladder step was measured four times and has not passed Alex's lines; it is frozen as it ran
 in the fourth measurement (D426). The frozen judge's baseline on the ruler's ladders is read (3% unsupported, all in figure
-questions). Stage B (the judge on the ladder step's own questions) is built; one more review, then three draws under a $2 cap
-(D429). After it: the diagnosis of how Step 1 cuts a matter into theses (D432); the end-to-end gate is against production as
-it now runs, with no preset questions (D431). Where the whole clean path stands, read by the council:
+questions). **Stage B (the judge on the ladder step's own questions) ran and does not pass** (2026-11-12,
+[result](../clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md)): the control line is unexercised (4 controls comparable with
+reader B's material shown, 8 needed; all 4 agree); the judgement lines are met except the last-judgement line on its strictest
+reading (3 of 24). Next: the diagnosis of how Step 1 cuts a matter into theses (D432), including council B's $0 trace of the 8
+controls excluded on the question and the 3 with missing material; the end-to-end gate is against production as it now runs,
+with no preset questions (D431). Where the whole clean path stands, read by the council:
 [progress](../clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md), [consensus](../clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md).
 
 - **What Step 4 is:** the first thing built and tested is the **ladder step alone**: the call that turns a thesis Step 1 opened
   into one judged question with its answer ladder and due day, or declines. The frozen judge follows only when the ladder step
-  meets its lines (Stage B, which needs Alex's word).
+  meets its lines (Stage B, run 2026-11-12: does not pass).
 - **Alex's decisions in force (2026-11-10):** one judged question a thesis, the other parts shown as not judged (D397); the step
   carries D186 in full (D398); the request may teach how to build an event's five states (D399); Stage A is read against his six
   fixed lines with no paid control arm (D400); build and send Stage A capped at $3, a missed line stops and goes to him (D401);
@@ -312,10 +669,110 @@ it now runs, with no preset questions (D431). Where the whole clean path stands,
   questions end the window SUPPORTED. Every fault is in three figure questions before a sized amount is in view. Controls:
   6 of 6 planted caught by both families. The lines' chance behaviour is measured (`line_chance.py`). Council B consensus
   (`km`, `kn`): put Stage B's lines and the paid send to Alex.
-- **The next task:** Alex's word on Stage B's lines, its reading shape and the paid send; the adapter's mode that runs the
-  frozen judge over the ladder step's questions (design §5) is built (`stage_b/ladder_adapter.py`, D429). Stage A has
-  not passed (D426). Reported and not confirmed: a footnote marker set aside in a quotation; an event undone counts as
-  happened; a ruling out is new, whole and standing; the middle range spans a stated range.
+- **Stage B (2026-11-12, `clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md`): does not pass.** Three draws, 236
+  judgements, $0.42; the reading plan reviewed five times; trial 6 of 6; both families caught 6 of 6 planted answers. Line 3
+  unexercised (eligible 7, material shown 4, all agreeing). Lines 1 and 2 met (26 of 26); figure 3.4/3.2/10.5% against
+  12.7/12.5/14.4%, yes/no 0.9/0.8/4.9% against 5%: met; last judgements missed 3 of 24 on the strictest reading. The families
+  differ on 22 of 236 and the third readers split on 12 (9 along family lines). Patterns: three-outcome events kept at "Still
+  open" because nothing is settled yet (Kyber); figure questions with no reference figure the evidence cannot size (19
+  INSUFFICIENT); a figure carried forward. Council B (`council/la-codex.md`): stands with corrections, applied.
+- **The control trace (done, `stage_b/CONTROL_TRACE.md`):** most of the 8 question differences are already in the Step 1
+  thesis (the article's angle: a programme inside a total, the reported date, a later milestone); two missing items are stored
+  with no link to any thesis though the capex thesis was open; leads, not an attribution.
+- **The Step 1 diagnosis (D432, `clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md`, version 8; seven council rounds):** c8 states
+  "one quantity for one period, or one event", but its merge rules carry neither D38's year boundary nor D388's signing exception;
+  the second year of an annual quantity is never opened (3 graded misses). Proposed to Alex: carry D38's year boundary into two
+  merge sentences (+151 characters), first tested on stored articles with a c8 arm. Recorded, not proposed: outcomes with a second
+  thing in them (under most of Stage A's ladder faults, a class to investigate); rolling periods and small matters against c8; a
+  contract gap between c8's shared_quantity and the ladder step's object and theme rules.
+- **c14 (D433), stage 1 (`clean-arch/step1-diagnosis-2026-11-12/STAGE1-RESULT.md`): does not pass.** Both years of hyperscaler
+  capex opened apart in 7 of 9 sends against a line of 8 (c8 0 of 9); one send lost the capex question (c8 never); $0.24. The
+  misses: the model choosing one year as the bet, and c8's "a customer expanding capacity … is not a thesis of its own" colliding
+  with shared_quantity. Stage 2 not sent; c8 stays in force.
+- **Gate 1 done** (`clean-arch/step1-diagnosis-2026-11-12/gate1/`, D435, D436): change 2 (the capacity counterexample scoped) passes
+  G1-b; changes 1 and 2 together fail G1-a, separating the two years of hyperscaler capex in 5 of 9 sends against a line of 8 (c8: 0 of
+  9; 20 of 26 over every year-wording send on that article). The misses decline the second year as too much. c8 stays in force.
+- **Alex carried changes 1 and 2 to gate 2 (D437).** Gate 2 (`clean-arch/step1-diagnosis-2026-11-12/GATE2.md`, version 11) passed
+  its review in round 11 (`council/mi-codex.md`): c15yc against c8 on seven stored neighbours in three draws, 126 sends, about $1.8,
+  ceiling $2.2.
+- **Authority (D439, 2026-11-13):** Alex is not active; every choice goes to the council (Codex + Claude) until consensus, recorded
+  citing D439. Paid spending in this period: $0.83 (gate 1) of a $40 ceiling (Claude's setting); gate 2 sent on Alex's word (D438).
+- **Step 1's combined candidate stopped (D441).** Gate 2 failed on the memory article; the council's memory diagnostic (D440) found
+  c15yc opens a memory-price question less often (17 against 28 of 54, interval -34.6 to -4.8) and pushes it from the ruler's
+  2027-against-2026 shape to 2026; c8 stays. Spend so far $4.77 of the $40 D439 ceiling.
+- **The next step (D442–D444): an exploratory end-to-end census.** The clean path's stored chain (unseeded draws 2026-11-10, Stage A
+  run-4 ladders, Stage B judgements) against fresh production draws (`poc-v118`, no seeded questions), on the frozen judgement ruler by one
+  method (`clean-arch/e2e-comparison-2026-11-13/DESIGN.md` v4). The first three draws stopped at an over-conservative ledger (D444; kept
+  as records); three fresh 14-day draws completed 2026-11-13 03:46 (`poc/data/clean-e2e-comparison-2026-11-13/draw-q1..q3`: 243 items
+  each, 0 failed, 13, 12 and 15 own views; recorded $0.43, $0.46, $0.46). D442's same-day comparison stays owed for D427.
+- **The census result** (`clean-arch/e2e-comparison-2026-11-13/RESULT.md`): on the seven graded questions both systems agree with
+  reader B on one or two a draw (production 1/1/1, clean 1/2/1; two unresolved each); no eligible judgement disagrees in either; every
+  loss is at opening (event deadlines against the standard's rules, the memory comparison never opened, scope). A measuring-stick concern
+  (D430's same deadline against the standard's 18-month range for q23) is recorded apart (D373), scoring unchanged.
+- **After the census (D445–D447):** the trace of the clean path's 17 graded opening losses found no single mechanism; a typed-unit
+  audit found identity fields detect 2 of 16 and recover none, so that line stopped.
+- **The wiring (D447, D448), built and proved at $0** (`clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md` v4; round log §81): one
+  shared spending ledger over every paid call (Step 1, Step 2's embeddings and Jev, the ladder step, the judge, production), the
+  ladder step's and the judge's inputs as arguments, a per-draw orchestrator (`run_fresh.py`). The $0 proof passed: Stage B's three
+  databases rebuilt row for row through the new inputs; Step 1 (one day), Step 2 (a whole draw, byte for byte), Stage A run 4 (every
+  outcome of three passes), the judge and production (one day) each sent every network call under a ledger reservation; a ledger
+  refusal stops every component; bypass mutants are caught. Full suite 287 passed.
+- **The code review (D449):** eight defects found and closed by four structural rules (stops shared and read before every actual send;
+  launcher liveness by its lock registered on the ledger; one reservation bound and settlement rule; the proof through the real
+  orchestrator). `proof_end_to_end.py`: one day through `run_fresh.py` (5 child processes, 55 calls, all reserved), a killed child and a
+  killed orchestrator handled; full suite 287 passed. Redo of Step 1, Step 2 and production only by a reasoned relaunch; a crash stops
+  the run.
+- **The slice (D450) ran and the wiring works live** (`clean-arch/e2e-comparison-2026-11-13/SLICE-RESULT.md`): both draws complete in 8
+  minutes, every component with real sends on one ledger, every ledger line attributed; $0.159 of ledger (about $0.15 at the published
+  rates). Every answer read.
+- **The full run (D451) completed** (`poc/data/clean-e2e-full-2026-11-13/`, 05:44–08:33; c2's Step 1 redone after a dropped response,
+  D453): ledger $11.43, every line attributed (`spend-by-component.json`). Clean 15/10/15 theses, 69/72/92 judgements; production 12/13/14
+  views, 92/80/104 judgements, 0 failed. First read in the round log §84.
+- **The full run, read (D452–D455):** Stage A on the 40 fresh theses misses lines 1–5 and meets line 6 (`STAGE-A-FULL-RESULT.md`); the
+  census (`CENSUS-FULL-RESULT.md`): settled agreements on the seven graded questions clean 2/1/0, production 1/1/1 (2/2/1 and 2/2/2 with
+  unresolved points counted), no eligible judgement disagrees, every loss at opening; the clean path kept 51 of 55 decisive facts of its lost
+  questions, production 39 and left kept Kyber and Ohio facts unlinked; Stage B line 3 unexercised (0 settled, at most 4 of 8), its judgement
+  reading stopped (D455).
+- **Traced since (D456–D458), all at $0:** production's kept-but-unlinked facts cost no final answer in this window (three mechanisms,
+  `unlinked-trace/UNLINKED-TRACE-RESULT.md`); the opening losses hold few shown breaches of the standard, spread over small mechanisms, and
+  their largest classes are choices the standard leaves open (`opening-review/OPENING-REVIEW.md`); no opening phase is opened.
+- **Since (D458–D460):** Stage A's first-pass faults form no class (`stage-a-trace/STAGE-A-TRACE-RESULT.md`); the model's accounts make
+  two opening mechanisms strong leads, the unsigned Ohio guarantee folded into the programme's amount (seven draws, both systems) and the
+  next year's capex folded into this year's question (five of six clean draws), and show the standard's keep-apart line for unsigned deals
+  missing from the clean Step 1 request (`opening-review/D459-RESULT.md`).
+- **Since (D460–D462):** the whole-request audit of clean Step 1 (two readers apart, `step1-audit/AUDIT.md`) finds the standard's identity
+  boundaries missing from its request (the unsigned deal beside a plan's amount; another year of a shared quantity) and one date sentence
+  narrower than the standard (F6); F6 decided only one or two of 26 memory declines (`step1-audit/f6/`) and is recorded, not tested alone.
+  The status report for Alex, reviewed by the council for accuracy: `clean-arch/e2e-comparison-2026-11-13/STATUS-FOR-ALEX-2026-11-13.md`.
+- **Since (D463–D464):** the identity lever is a prompt clause first; candidate c16 (version 5, four blind audits) and a case-specific
+  diagnostic on fresh articles (one story per target boundary is all this window holds), 7 merge and 9 negative stories and the stored guards
+  (`clean-arch/e2e-comparison-2026-11-13/identity-probe/v2/PROBE-DESIGN-v2.md`).
+- **Since (D465–D466):** the identity diagnostic moved its error (c16 not adopted, c8 stays; `identity-probe/v2/RESULT.md`, $4.49); a deep
+  reflection council (Alex's request) agreed the second half of the day circled and reset the plan.
+- **Since (D467–D473):** the ladder-cost proofs are kept as tools (`ladder-cost/`); the ladder-refusal candidate stopped on a contested
+  "main figure" boundary; the 41 Stage A reader splits recorded, none changing its verdict; the ten right-by-refusal theses traced; the period
+  candidate c17 failed its frozen lines (memory and federal openings suppressed; `period-probe/RESULT.md`). Step 1 sentence changes on these
+  articles stop (D473). Provisional choices under D439 (D469): empty-start measurement; the three open shapes stay concerns; the written-ladder
+  line stands (D471). Alex's answer overrides any of them.
+- **Since (D474–D477):** the unsigned-deal candidate c18 was not adopted (`unsigned-deals/RESULT.md`). The source check of the eleven
+  first-pass refusals (`reachability/RESULT.md`): six right, four reachable only on paper, one split. **D477:** Stage A not passed; no theme or
+  ladder change for the H100 boundary; no more Step 1 sentence changes on these articles; production stays the default; the clean path's
+  three product choices are written for Alex (`clean-arch/e2e-comparison-2026-11-13/CHOICES-FOR-ALEX-2026-11-13.md`).
+- **Since (D478–D482), under D439:** choice 2 tested and failed (c19); choice 3 taken (production stays the default); production's price
+  rule (D191.4) tested and failed (`docs/research/2026-11-13-shared-quantity-price/`); no further paid test on the frozen ruler (D482).
+- **Alex active again (2026-11-14).** D483–D486: a use-oriented acceptance was designed and its $0 trial read
+  (`docs/research/2026-11-14-use-acceptance/TRIAL-RESULT.md`); Alex asked for a leaner path (small steps, each run fast). D487: step 1 built nothing (the
+  "dated after the article" statements are correct dates against items stored a day early); step 2 runs one fresh week (2026-09-22..28, 235
+  items proved identical for both systems), one draw a system, a one-day slice first, readings A and B, the decision rule written before
+  reading (`LEAN-LOG.md` §2). Slice passed; production's week draw complete; the clean draw stopped twice on dropped connections, root-caused and fixed (D488: Step 1 resends a
+  network loss, each attempt on the ledger). The clean week draw completed from empty (`poc/data/clean-lean-week-2026-11-14/week-r2/`, $2.52; both ledgers $4.69). **Result (D489,
+  `docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md`):** not clear by the rule written before reading; no system chosen. Production
+  covers 4 of the 5 big matters two blind reader families listed, the clean path 2 (it lacks revenue and margin by D382/D384); judgement
+  support does not rank them at this size. The question then put to Alex (whether the new system holds questions on the company's main
+  numbers) was answered by him on 2026-11-15 (D505; see "One next task").
+  Recorded spend under D439 at that point: about $18.4 of $40 (about $7.26 before the run; the run's ledger $11.43, somewhat above its cost at the
+  published rates); the current figure is in "One next task". (An earlier line here gave "about $29.2" as tracked spend; no decision or
+  log records that figure and it is withdrawn.)
 - **Open defects recorded by this review:** the frozen judge retried 10, 16 and 18 judgements in the seeded clean draws, 38 of 51
   reasons a theme cited as a dependency (PRD 11, E4), and its stored path holds the 2026-07-05 fault above (frozen; findings for
   Alex); the same matter takes different shapes between draws (Kyber due end-2027 in one draw and end-2028 in another); under D397

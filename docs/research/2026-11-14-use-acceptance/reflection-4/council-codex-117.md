@@ -1,0 +1,11 @@
+**Not yet.** The inode lock addresses aliases of a stable file, but the contract still needs to cover a store being replaced between `stat` and the copy.
+
+1. **Lock and opened file can differ.** Preflight can `stat` store A, acquire A’s inode lock, and then open the same path after it has been replaced with store B. A writer holding B’s different lock can then write during the copy. Define how preflight verifies that the file it will copy is the one whose lock it holds, and how replacement is prevented or detected throughout the copy. Add a test that replaces the path after `stat` and before opening it. The writer needs the corresponding check between creating or identifying its file and opening it. [Contract, row 7](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:123).
+
+2. **The shared lock folder is part of the contract.** The same device and inode only lead to the same lock if writer and preflight resolve the *same* lock directory and the lock file is not removed and recreated while held. Specify the directory and permissions for both entry points, fail closed if they cannot use it, and retain lock files while they may be in use. Test the failure path and replacement of a lock file. [Contract, lock location](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:124).
+
+The published-vector identity and text checks answer my previous replacement concern. The retry rule and its test are now consistent. The proof should still verify the snapshot-restoration case stated in the design, including a changed text with the same store identity. [Contract, index](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:83).
+
+The lock also protects only writers that participate in it; the stated limitation for the existing production writer remains, and §9 continues to govern that writer. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:132).
+
+CONSENSUS: no, because the file locked must be tied to the file actually copied, and the shared lock directory’s lifecycle needs to be specified.

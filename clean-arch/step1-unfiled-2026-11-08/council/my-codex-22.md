@@ -1,0 +1,18 @@
+**Trace the two delivery paths next, but correct the clean-path case first:** Broadcom’s $16 billion guidance arrived **before** the actual clean question opened, not while it was open.
+
+In the Stage B store, `e151` arrived at article 63; the custom-accelerator question `v7` was created at article 65. The clean library identifies the original as group `63:E-5` and records that it was considered for `clean-7` when that thesis opened, with the result **false**. A later repeat at article 92 supplied the group’s eventual link. The baseline’s `v16` was a hand-written seed created at sequence 0; it was not the clean reading step’s open-question list. [Clean library](/Users/lchingen/hivemind/poc/data/clean-unseeded-2026-11-10/draw-d2/step2/library.json) · [Candidate inventory](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/missing-input/candidates.json)
+
+That makes the proposed clean-path trace a **later-linking decision**, not yet an ordinary failure to link a fact to an already-open question. The historical records also warn against treating the two judge answers as independent occurrences: baseline and Stage B use the same underlying statement and library. And Stage B’s question names four companies; its earlier review notes that Broadcom’s figure is not broken out by buyer, so its relevance is a reason to investigate, not a complete answer to that narrower question. [Stage B result](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md)
+
+The finding should say: **three of ten reviewed answers on two matters coincided with a relevant candidate figure in the store that was absent from the request**. It does not yet show one common mechanism, or that the omissions caused those answers. For the other seven, say the search and reading found no qualifying figure—not that no such figure existed. The pattern search is incomplete, and the 26 “too little” answers were outside it. The before-and-after on Broadcom is useful, but other evidence arrived and the answer was read on a different day; it is not a controlled proof.
+
+I also correct my prior remark: `e11` in the data-center request **does** state that the latest quarter’s data-center revenue was roughly 92.5% of total. Applying that historical share to later quarterly guidance or a full-year consensus remains an inference, not a stated future share.
+
+The next step is the proposed **$0 trace**, with the paths kept separate:
+
+1. For `63:E-5`, read the actual later-linking request and answer, the `clean-7` thesis as shown then, the checks and library write; compare the linked `63:E-6` and the article-92 repeat. Establish whether the negative decision is from the model, input construction, or a check.
+2. For production, read the original guidance passages, both questions and takes lines as shown, the raw extraction answers, and the filing checks. Determine what the records actually show; do not infer that a particular sentence caused the decision merely because it appears in the request.
+
+Stop with the mechanisms recorded if the trace cannot identify an actionable cause, or if the proposed correction would merely fix these examples without addressing its counted class. The paths need not share a cause to be reported; any new version, model account, or paid proof returns to council separately under D439. The six-call judge test remains optional: the natural before-and-after does not prove benefit, and a send would not by itself repair delivery.
+
+Council position: correct the clean-case timing and the sizing claims; trace the clean later-linking decision and production filing path at $0, without sending a model call or assuming they share a mechanism.

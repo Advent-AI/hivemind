@@ -1,0 +1,282 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 147: the source-backed part of D604's trace (`line5/RESULT.md`, "Corrected in round 146")
+
+**You were right.** For a figure, `write_view` puts the reference into the middle choice the judge and the page see. My claim came
+from an older finding and a search for the word, without following the writer. Both of your recount corrections are applied: the
+3/5 and 2/5 recount is diagnostic, and 9 or 7 of 13 was counted without both L and XR.
+
+**Every XR failure, read beside its article:**
+
+- **clean-14** (all passes, null). The article gives H1 2026's 2.008 million units and IDC's "19% growth" forecast, but no full-year
+  2025 count, so no expected count is stated.
+  - Claude says to quote the 19% (`expected`, no number). Codex says it is a growth rate, so null holds in packet 1 and fails in
+    packet 2.
+  - With no number, a words-only reference gives the same middle choice as null: "(no reference figure when the question opened)".
+- **clean-15 pass 1** (null). Microsoft's "multi-gigawatt" Maia plan.
+  - Both first readers fail it, so it was settled with no third reader.
+  - Both families' third readers rule null right on the other passes and on the A2 arm.
+  - The result is the same visible choice either way: a reading inconsistency.
+- **clean-17** (event, null). "Taiwan will tighten export controls …" is an expected event. An event's reference reaches no rung, so
+  nothing is visible.
+
+**So** a rule-following answer would produce the same answer choices in every case. The disputes are about the rule's reach ("what
+counts as an expectation", the recorded open form issue). There is no product consequence and no sourced general mechanism, so under
+your criterion the route closes, the gate stays unmet, and nothing paid follows without a new candidate. One G remark (clean-14's
+middle range below the run rate) is noted as a lead, not a class.
+
+**Asked of you:**
+
+1. Confirm the closure, or name what is still missing.
+2. With this closed, what does the loop do next without drifting? My reading: every remaining gate item is Alex's. The council can
+   only keep the record current and spend nothing until a new candidate or his rulings arrive.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the corrected trace against the stored answers, reader rulings and view writer, then assess whether it closes this route and what remains.
+exec
+/opt/homebrew/bin/zsh -lc "cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/line5/RESULT.md
+ls poc/data/clean-fresh-a2-2026-11-16/choices/reading
+rg -n '19%|multi-gigawatt|Taiwan|grow.*rate|expected' poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader --glob '*.jsonl' | head -15
+nl -ba clean-arch/step4-2026-11-10/ladder/ladder_step.py | sed -n '250,270p;322,355p'
+nl -ba clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md | sed -n '60,68p;94,108p'
+rg -n 'D604|D544|D591|D592|D586|D517' docs/DECISIONS.md | tail -10
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Why the fresh topics miss line 5 (D604's trace), 2026-11-16, $0
+
+`line5_trace.py` → `line5-trace-output.txt`. It reads the stored fresh reading (`poc/data/clean-fresh-a2-2026-11-16/choices/reading`)
+with the gate-1 scorer's own functions, for the control arm (the frozen step). It reproduces the recorded line 5: 2 of 5 right with
+unresolved points counted for the answer, 1 of 5 with them counted against.
+
+## Topic by topic
+
+| Topic (kind) | What blocks it, counted for / against | How settled | Reaches what a reader of the product sees? | Existing record |
+|---|---|---|---|---|
+| clean-14 (theme figure) | XR / XR | Passes 1 and 3: both third readers fail XR (the reference: IDC's "19% growth" forecast for a unit count). Pass 2 split. | **Not in these cases** (corrected in round 146, see below). | Event reference has no bounded repair (D557, D558); "what counts as an expectation" is an open form issue. |
+| clean-15 (theme figure) | L, XR / L, XR | L: pass 1 both first readers; pass 2 both third readers; pass 3 split. XR: pass 1 both first readers. | **Yes, for L:** a part the question leaves out, now shown in the card's list of parts not judged. XR: no. | Line 2's class; no sourced main-part rule (D580); tuning stopped (D586, D391). |
+| clean-16 (AI bill) | none / none: three justified refusals | Both families: N holds. | Right. | |
+| clean-17 (event) | R, XR / R, XR | R: pass 3 both third readers (the wait-as-ruling-out class); pass 1 split. XR: all three passes, both first readers. | **Yes, for R:** the Ruled-out rung's words. XR: no (the judge never sees an event's reference, D557). | The postponement boundary, on Alex's page (D591). |
+| clean-18 (company figure) | none / D | D split on all three passes (Codex fails, Claude holds). | **Yes,** the due day is shown, and it is code's D414 day, 60 days after year-end. Readers who fail it read the request's fiscal-year note ("around 2027-02; use that day"), which contradicts code. | The reader discrepancy (D590): read alone, both families hold D on the class. The request-and-code contradiction (`universe.py:136` against D414) is recorded and not changed. |
+
+## What this gives
+
+- **On fresh topics, line 5's misses reduce to four recorded things:**
+  - a mark no reader of the product sees (XR, on 3 of 4 written topics, and the only blocker of clean-14);
+  - a stopped class (L);
+  - an unresolved policy boundary (R, Alex's);
+  - a reader discrepancy on Alex's own rule (D).
+- **No common, sourced product mechanism is found.** By D604's rule this closes the route to a candidate. The gate stays unmet; a
+  later candidate is not excluded.
+- **A diagnostic recount of the stored marks, not a gate result and not a change of any line.** Without XR, line 5 on the fresh
+  topics would read 3 of 5 (unresolved for) or 2 of 5 (against). The development map's 9 or 7 of 13 (`gate1-stick/RESULT.md`) was
+  counted without both L and XR, not without XR alone.
+- **Limits:** one week, one draw, 5 topics, control arm only.
+
+## Corrected in round 146, and the source-backed reading (D604's unfinished part)
+
+**My error.** I wrote that no product reader sees the ladder's reference. That is wrong for figures. `ladder_step.write_view` puts the
+reference into the middle answer choice's words, which the judge is shown and the page carries:
+- with a stated number, "(the reference when the question opened: "…")";
+- with a last reported amount, "(the amount last reported …)";
+- otherwise "(no reference figure when the question opened)".
+
+An event's reference is used by no rung. I had relied on an older finding and a search for the word in `bundle.py`, without following
+the writer.
+
+**Each XR failure, read beside its article.** The articles are in `cases/cases.json`; the readers' reasons are in
+`choices/reading/third-reader` and `readers-answers`.
+
+| Topic, passes | What the article states | The answer's reference | Readers | What the judge and page see |
+|---|---|---|---|---|
+| clean-14, all three | "China's broader AI accelerator market reached about 2.008 million units in the first half … IDC expects total accelerator shipments to grow 19% in 2026". No full-year 2025 count, so no expected count is stated. | null | Claude: the 19% is an expectation for this very quantity, so it should be quoted (kind `expected`, no number). Codex: a growth rate, not a count, so null holds in packet 1 and fails in packet 2. | **The same either way.** With no number in the figure's unit, a quoted words-only reference gives the same middle choice as null: "(no reference figure when the question opened)". |
+| clean-15, pass 1 | Microsoft: "Starting next calendar year, we will scale our Maia family to multi-gigawatt deployments". | null | Both first readers fail, so it was settled without a third reader. On passes 2 and 3, and on the A2 arm, both families' third readers rule that a null reference is right, because it is one company's plan, not an expectation for the combined capacity. | The same either way, since no number. The fail is a reading inconsistency across passes. |
+| clean-17, all three (event) | "Taiwan will tighten export controls on high-end AI processors and servers, mirroring U.S. rules". | null | Both first readers fail: an expected event belongs in the reference. | **Nothing:** an event's reference is used by no rung. |
+
+**What it gives:**
+
+- **Every XR failure on these topics leaves what the judge and the page are shown unchanged.** An answer that followed the rule
+  exactly would produce the same answer choices: a words-only reference for clean-14 and clean-17, or null for clean-15.
+  - The rule allows "no number the article does not state".
+  - None of these articles states a number in the figure's unit.
+  - An event's reference never reaches a rung.
+- **The disputes are about the rule's reach:** whether a growth rate counts as an expectation for a unit count, and whether one
+  company's plan does for a combined figure. "What counts as an expectation" is the open form issue already recorded.
+- **Under D604 and round 146's criterion this closes the route.** It found disputed reference choices with no product consequence and
+  no sourced general mechanism. The gate stays unmet; no paid work follows without a new candidate.
+- **Observation, outside the line marks:**
+  - A Claude first reader's G remark on clean-14: the middle range (3.5 to 4.0 million) sits below the first half's annual rate
+    (about 4.0 million) and below what IDC's growth implies.
+  - G is not one of the line marks.
+  - The ranges are product-visible, but one reader of one family on one topic is a lead, not a class.
+cases.json
+handoffs
+readers
+readers-answers
+send-1
+send-2
+send-3
+sessions-codex-first.json
+sessions-codex-h.json
+sessions-codex-third.json
+third-reader
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:1:{"id": "2-XR", "ruling": "fails", "why": "The article states 'IDC expects total accelerator shipments to grow 19% in 2026', an expectation for the very quantity asked (total China units in 2026), and the thesis's outcome names it as the measure, so a null reference fails."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:2:{"id": "3-XR", "ruling": "fails", "why": "The article states 'IDC expects total accelerator shipments to grow 19% in 2026', an expectation for the very quantity asked, so the reference may not be null even though it carries words and no unit number."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:4:{"id": "4-XR", "ruling": "holds", "why": "Nadella's 'we will scale our Maia family to multi-gigawatt deployments' is a plan for one hyperscaler's part of the capacity, not an expectation for the combined custom-silicon capacity of the largest hyperscalers, which the article never states, so null is right."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:5:{"id": "5-D", "ruling": "holds", "why": "The licence was agreed on August 20, 2026, so it is due at the next annual filing, the FY2027 10-K; neither the thesis nor the article states that day, so code's 60 days after the FY2027 year-end (2027-01-31) gives 2027-04-01 with basis expected_publication, and 'around 2027-02' comes only from the fiscal-year note."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:6:{"id": "6-XR", "ruling": "fails", "why": "The article states 'IDC expects total accelerator shipments to grow 19% in 2026', an expectation for the total being asked, so the reference should quote it with kind expected rather than be null."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:7:{"id": "7-D", "ruling": "holds", "why": "The commitment already taken on is due at the next annual filing, the FY2027 10-K, whose day neither the thesis nor the article states, so code's 60 days after the 2027-01-31 year-end, 2027-04-01, is right with basis expected_publication."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:8:{"id": "8-D", "ruling": "holds", "why": "The commitment already taken on is due at the next annual filing, the FY2027 10-K, whose day neither the thesis nor the article states, so code's 60 days after the 2027-01-31 year-end, 2027-04-01, is right with basis expected_publication."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:9:{"id": "9-XR", "ruling": "fails", "why": "The article states 'IDC expects total accelerator shipments to grow 19% in 2026', an expectation for the total being asked, so the null reference fails."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:11:{"id": "10-XR", "ruling": "fails", "why": "The quoted 'we will scale our Maia family to multi-gigawatt deployments' is Microsoft's plan for its own part, not what the article states is expected for the combined capacity of the largest hyperscalers, which it never states, so the reference should be null."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:12:{"id": "12-XR", "ruling": "holds", "why": "The article says only that NVIDIA 'recently agreed to acquire Hugging Face for approximately $12.9 billion', an agreement already made, and states no expected closing date or other expectation for completion, so an event's null reference is right; the due-day part of the failing reason concerns D."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:13:{"id": "15-R", "ruling": "holds", "why": "The Ruled out sentence names a formal abandonment or withdrawal of the tightening, or a final control list excluding Nvidia accelerators and Taiwan-built AI servers, both decisions by Taiwan's MOEA or BOFT against the event as the Yes rung defines it, and a later list that brings them in makes rung 1 hold instead; the omitted-reference point concerns XR, not R."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-claude-1.jsonl:14:{"id": "16-XR", "ruling": "holds", "why": "Nadella's 'we will scale our Maia family to multi-gigawatt deployments' is a plan for Microsoft's part only, not an expectation for the combined capacity of the largest hyperscalers, which the article never states, so null is right."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-2.jsonl:5:{"id":"21-XR","ruling":"fails","why":"The reference is null although IDC expects total accelerator shipments to grow 19% in 2026."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-2.jsonl:6:{"id":"22-L","ruling":"fails","why":"Microsoft's multi-gigawatt Maia deployment is named in the outcome but is not separately judged or listed as omitted."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-2.jsonl:7:{"id":"22-XR","ruling":"holds","why":"Microsoft's multi-gigawatt Maia plan concerns one company's deployment, not the combined capacity of the largest hyperscalers."}
+   250	    passage = None                                                                                # check 6
+   251	    reference = ladder.get('reference')
+   252	    if reference is not None:
+   253	        passage = article_passage(reference['words'], article['text'], repair_quote, normalise, quote_tokens)
+   254	        if passage is None:
+   255	            reasons.append('the reference\'s words are not in the item: copy one unbroken passage from the item exactly, not reworded, not reordered, and not taken from the topic')
+   256	        value, value_to = reference['value'], reference['value_to']
+   257	        if reference['kind'] == 'last_reported' and shape != 'figure':
+   258	            reasons.append('a reference of kind last_reported belongs to a figure: an event\'s reference is of kind expected, or null')
+   259	        if (value is not None and not is_finite_number(value)) or (value_to is not None and not is_finite_number(value_to)):
+   260	            reasons.append('the reference\'s value and value_to are finite numbers, or null')
+   261	        elif value_to is not None and (value is None or not value < value_to):
+   262	            reasons.append('value_to is the upper end of a range the item states: it is null, or greater than value')
+   263	        elif value is not None and shape == 'figure' and ordered is not None:
+   264	            middle = ordered[2]
+   265	            if value_to is None and not (middle['lo'] <= value < middle['hi']):
+   266	                reasons.append(f'the reference\'s value {written_number(value)} must lie in the middle range, from {written_number(middle["lo"])} to below {written_number(middle["hi"])}')
+   267	            if value_to is not None and not (middle['lo'] <= value and value_to <= middle['hi']):       # the middle range spans the stated range, end to end
+   268	                reasons.append(f'the middle range, from {written_number(middle["lo"])} to below {written_number(middle["hi"])}, must run from at or below the '
+   269	                               f'lower end of the reference\'s range {written_number(value)} to {written_number(value_to)} to at or above its upper end')
+   270	    return reasons, passage
+   322	def write_view(ladder, passage, *, thesis, article_day, company, research_list):
+   323	    """The view an accepted ladder is written as: its object, kind, focus, question, year, due day and its rungs in position
+   324	    order, each with the label and condition the judge is shown and, for a figure, its bounds as floats."""
+   325	    object_id = research_list.resolve(ladder['object'])
+   326	    object_kind = research_list.kind(object_id)
+   327	    reference = ladder.get('reference')
+   328	    reference_status = None
+   329	    if ladder.get('event') is not None:
+   330	        rungs = event_rungs(ladder['event'], ladder['due_day'], article_day)
+   331	        year = ladder['due_day'][:4]
+   332	    else:
+   333	        figure = ladder['figure']
+   334	        ascending = sorted_ranges(figure['ranges'])
+   335	        middle_text_suffix = ' (no reference figure when the question opened)'
+   336	        reference_status = 'no reference figure'
+   337	        if reference is not None and reference['value'] is not None:
+   338	            if reference['kind'] == 'last_reported':             # D411: named as that, never as what the market expects
+   339	                middle_text_suffix = f' (the amount last reported when the question opened: "{passage}")'
+   340	                reference_status = 'last reported figure'
+   341	            else:
+   342	                middle_text_suffix = f' (the reference when the question opened: "{passage}")'
+   343	                reference_status = 'reference figure'
+   344	        in_position_order = list(reversed(ascending)) if (object_kind == 'company' and figure['favourable_end'] == 'higher') else ascending
+   345	        rungs = []
+   346	        for position, bounds in enumerate(in_position_order, start=1):
+   347	            condition = interval_text(bounds['lo'], bounds['hi'], figure['unit'])
+   348	            label = COMPANY_LABELS[position - 1] if object_kind == 'company' else condition
+   349	            if bounds is ascending[2]:
+   350	                condition += middle_text_suffix
+   351	            rungs.append({'label': label, 'condition': condition,
+   352	                          'lo': None if bounds['lo'] is None else float(bounds['lo']), 'hi': None if bounds['hi'] is None else float(bounds['hi'])})
+   353	        year = figure['year']
+   354	    return {'object_id': object_id, 'object_kind': object_kind, 'kind': 'asset' if object_kind == 'company' else 'theme',
+   355	            'looks_at': thesis['outcome'], 'question': ladder['question'], 'due_day': due_day_of(ladder, object_kind, object_id, research_list),
+    60	- A company's figure runs from Strongly bullish to Strongly bearish, meaning good or bad for the company's business. An event's
+    61	  rungs carry no such labels.
+    62	- The reference is what the question is measured against when it opens. Its kind is `expected` for what the market expects: a
+    63	  consensus, the company's guidance, a stated plan or deadline. For a figure, where the article states no expectation and gives
+    64	  the amount most recently reported for the same quantity, that amount is the reference and its kind is `last_reported`; a
+    65	  reported amount is never called an expectation (D411). When the article states a number, the field carries it and a
+    66	  figure's middle rung holds it; a stated range is carried by its two ends, and the middle rung runs from at or below its lower end to at or above its upper end. When the
+    67	  article states it in words alone, the field carries the words and no number, and the ranges are the step's own estimate.
+    68	- The due day is when the question can be resolved: a figure's publication date; for an event, the date its outcome is assessed. Where
+    94	| `item` | the item number | |
+    95	| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+    96	| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+    97	| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+    98	| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+    99	| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+   100	| `F` | `holds`, `fails`, `n/a` | for a company's figure only: the direction is defensible (which end is bullish), and the reason given in `favourable_why` supports the favourable end. For an amount the company owes, guarantees or has committed to pay, where neither the thesis nor the article settles which end is good for the business (they argue both ends or say nothing on it), the lower end is the favourable one (D413), and "higher" fails unless the thesis's own words say that more of it is good. `n/a` for an event and for a theme |
+   101	| `Y` | `holds`, `fails`, `n/a` | for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails, whatever the thesis asks |
+   102	| `G` | `holds`, `fails`, `not_assessable`, `n/a` | for a figure, always one of the first three: where the article gives any figure for this quantity, `holds` when an analyst would accept the ranges as a fair division of the outcomes around it and `fails` when not; `not_assessable` when the article gives none. `n/a` only for an event's ladder and for a `no_ladder` |
+   103	| `L` | `holds`, `fails`, `n/a` | every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else holds with an empty list |
+   104	| `B` | a list | exactly one entry for each part listed in `not_judged`, in its order: `"bet"` when an analyst would hold a separate view on it, `"not_a_bet"` when it is a detail of the judged question; `[]` when nothing is listed and for a `no_ladder` |
+   105	| `XR` | `holds`, `fails`, `n/a` | the `reference` field quotes what the article states the market expects, with `kind` `expected`, or, for a figure where the article states no expectation, the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), with `kind` `last_reported`; the kind says truly which. It carries the number when the article states one (a range by its two ends), and no number the article does not state. It is null only when the article states no expectation and, for a figure, no amount last reported for the same quantity either; an event's is null whenever the article states no expectation |
+   106	| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+   107	| `W` | a string | any other fault that would mislead a reader of this judged question, in a short sentence; the empty string `""` when there is none. The field is always present |
+   108	| `why` | a string | one sentence giving the reason for every `fails` and for a non-empty `W`, naming the words or the figure; it may be empty only when no mark fails and `W` is empty |
+861:| D517 | 2026-11-15 | Under D439 (reflection council round 7): the comparison is sized and not sent (at the proposed size it may miss differences that matter; its reliability cannot be calculated from the stored readings); no answer-choice tests to resume; the look-back not widened now; next a $0 side-by-side of the two systems' output on the fresh week, then a bounded council decision | in force | `docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md` |
+887:| D543 | 2026-11-15 | Under D439 (a cold reflection council on the whole lean path): D518 stands with its reasons (continuity; the new path not ready), the quality of the two systems' answers is not ranked, the choice of system is not made in Alex's place, and no investigation is opened; the pages corrected for a cold reader | in force, except its deferral of the choice of system, withdrawn by D544 | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-1.md` |
+888:| D544 | 2026-11-15 | Under D439 (council consensus): the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates; both remain; reversal conditions and a $5 checkpoint recorded; next, a $0 review of the fresh week's answer choices against the six lines | in force | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-3.md` |
+900:| D556 | 2026-11-15 | Under D439 (council consensus): no candidate for the "no main part" refusals among those considered; next, at $0, one map of every stored topic short of the first gate (104 topics, four readings kept apart), with overlapping and unresolved causes, reconciled to each report; it cannot by itself prove the gate out of reach or trigger D544's reversal | in force | `docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md` |
+930:| D586 | 2026-11-16 | Tuning of the not-judged list's edge stops on these topics (D391); A2 an unaccepted candidate; next a $0 provenance check and design for one fresh controlled A2 comparison on Alex's six lines | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-A3.md` |
+935:| D591 | 2026-11-16 | An announced "not by the due day" as a ruling out (37 company delays and 1 authority case in 296 frozen-step event answers): no decision settles the boundary; form and step unchanged, both readings recorded, 38 answers listed as candidates affected; the question on Alex's page (Claude's lean: it rules out); next a $0 design for the final-answer test's control shortfall | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/BOUNDARY-CASES.md` |
+936:| D592 | 2026-11-16 | Stage B's control line: an unchanged re-send stays at 4 of 8, delivery of three facts reaches at most 7, the eighth needs an unproven two-step change; the 7-control course is not started for the line's sake; the live-service operating contract resumed as a $0 design (D575's rows, a falsifier), back to the council before any build | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+948:| D604 | 2026-11-16 | Under D439 (council round 145): the next production step is a $0 trace of the fresh topics' line-5 failures (each topic's three control answers beside topic, source and settled marks; the mark that changes its status under each counting; family agreement; product visibility), mapped to existing censuses before any candidate; closes this route if no sourced common mechanism | in force | `reflection-4/council-codex-145.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; from pathlib import Path
+for p in sorted(Path(\"poc/data/clean-fresh-a2-2026-11-16/choices/control\").glob(\"send-*/outcomes.jsonl\")):
+ for l in p.open():
+  x=json.loads(l)
+  if any(\"clean-\"+str(i) in x[\"case\"] for i in [14,15,17]):
+   a=x.get(\"answer\") or {}; v=x.get(\"view\") or {}; ladder=a.get(\"ladder\") or {}; print(x[\"case\"],x[\"pass\"],\"ref\",ladder.get(\"reference\"),\"middle\",[r[\"condition\"] for r in v.get(\"rungs\",[]) if \"when the question opened\" in r[\"condition\"]])'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+control|fresh:f1/clean-17 1 ref None middle []
+control|fresh:f1/clean-14 1 ref None middle ['from 3,500,000 count to below 4,500,000 count (no reference figure when the question opened)']
+control|fresh:f1/clean-15 1 ref None middle ['from 10 GW to below 20 GW (no reference figure when the question opened)']
+control|fresh:f1/clean-14 2 ref None middle ['from 3,500,000 count to below 4,000,000 count (no reference figure when the question opened)']
+control|fresh:f1/clean-15 2 ref {'words': 'Starting next calendar year, we will scale our Maia family to multi-gigawatt deployments', 'kind': 'expected', 'value': None, 'value_to': None} middle ['from 10 GW to below 20 GW (no reference figure when the question opened)']
+control|fresh:f1/clean-17 2 ref None middle []
+control|fresh:f1/clean-14 3 ref None middle ['from 4,000,000 count to below 4,500,000 count (no reference figure when the question opened)']
+control|fresh:f1/clean-15 3 ref None middle ['from 5 GW to below 10 GW (no reference figure when the question opened)']
+control|fresh:f1/clean-17 3 ref None middle []
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"poc/data/clean-fresh-a2-2026-11-16/cases/cases.json\"; x=json.load(open(p)); print(type(x).__name__); print(list(x)[:5] if isinstance(x,dict) else len(x)); print(str(x)[:400])'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+list
+5
+[{'case': 'f1/clean-14', 'thesis': {'id': 'clean-14', 'description': 'How many AI accelerators (total units) will be shipped in China in calendar 2026, and how does the GPU versus non-GPU split evolve?', 'outcome': "China's total AI accelerator unit shipments for calendar 2026, and the GPU versus non-GPU composition, measured against IDC's forecast of 19% total shipment growth and a 9% decline in 
+
+codex
+**Close this line-5 route as “no candidate found,” with a narrower consequence claim.** The stored answers support the key observation: on these cases, changing only a null reference to the proposed words-only reference leaves the figure’s middle-choice text unchanged; an event reference is not used to write its rungs. That is a check of the writer’s behavior, not a test showing that a new model request would leave every other field unchanged. [Corrected trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/line5/RESULT.md), [view writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:322).
+
+The topic-by-topic marks reproduce the recorded counts, and the source-backed reading identifies disputes rather than a common sourced repair. Keep line 5 and the gate **unmet**; do not treat the recount without XR as a gate result. The result page should also remove its remaining older bullet saying XR is “a mark no reader of the product sees”: its correction below already explains why that is false for figures. [Trace output](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/line5/line5-trace-output.txt).
+
+I do not see a currently supported **bounded candidate likely to move a gate** that merits another paid send. That is narrower than saying every remaining gate item is exclusively Alex’s or that no council-owned path can exist: D439 permits reviewed council decisions, and Stage B’s two-step control course and other diagnostics remain possible in principle, without a justified candidate on this record. [Stage B shortfall](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/DESIGN-SHORTFALL.md), [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6616).
+
+Meanwhile, keep the decision page and open defects accurate, make no paid sends without a new reviewable candidate, and keep the old system as the running default. Resume on Alex’s rulings or on new evidence that identifies a bounded route; do not represent the present gates as passed.
+
+CONSENSUS: close this line-5 candidate route; keep the gate unmet and hold paid work pending new evidence or Alex’s rulings.
+tokens used
+3,688,687
+**Close this line-5 route as “no candidate found,” with a narrower consequence claim.** The stored answers support the key observation: on these cases, changing only a null reference to the proposed words-only reference leaves the figure’s middle-choice text unchanged; an event reference is not used to write its rungs. That is a check of the writer’s behavior, not a test showing that a new model request would leave every other field unchanged. [Corrected trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/line5/RESULT.md), [view writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:322).
+
+The topic-by-topic marks reproduce the recorded counts, and the source-backed reading identifies disputes rather than a common sourced repair. Keep line 5 and the gate **unmet**; do not treat the recount without XR as a gate result. The result page should also remove its remaining older bullet saying XR is “a mark no reader of the product sees”: its correction below already explains why that is false for figures. [Trace output](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/line5/line5-trace-output.txt).
+
+I do not see a currently supported **bounded candidate likely to move a gate** that merits another paid send. That is narrower than saying every remaining gate item is exclusively Alex’s or that no council-owned path can exist: D439 permits reviewed council decisions, and Stage B’s two-step control course and other diagnostics remain possible in principle, without a justified candidate on this record. [Stage B shortfall](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/DESIGN-SHORTFALL.md), [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6616).
+
+Meanwhile, keep the decision page and open defects accurate, make no paid sends without a new reviewable candidate, and keep the old system as the running default. Resume on Alex’s rulings or on new evidence that identifies a bounded route; do not represent the present gates as passed.
+
+CONSENSUS: close this line-5 candidate route; keep the gate unmet and hold paid work pending new evidence or Alex’s rulings.

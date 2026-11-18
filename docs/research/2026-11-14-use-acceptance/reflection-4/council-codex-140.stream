@@ -1,0 +1,492 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 140: proof 10's design (contract, "Proof 10's design")
+
+The harness `page-contract/serving_while_writing.py` is re-run on the built code. Its writer is the real `replay`, now in WAL with
+its lock. It runs at $0 (judge answers come from the stored archive), keeps the same seven pauses and runs detached.
+
+**At each pause, through the real entry points:**
+
+1. **The API, `GET /days` and `/library`:** every existing check holds.
+   - The first-day case must now pass: both answer 503 at 2026-09-22 before close.
+   - A fresh page is rendered at the same two pauses as before, and its checks hold.
+2. **MCP,** loaded once at the first pause, lexical, as its entry point builds it:
+   - on the first day, its instructions say no day has completed and `thesis_library()`/`views()` refuse;
+   - afterwards, `thesis_library()`'s day and question ids equal `/library`'s at the same pause.
+3. **Lock and copies:**
+   - `live_lock.acquire` and preflight's `store_copies` are refused while the writer runs;
+   - `scripts/snapshot_store.py`, at the two pauses where a day's articles are committed but the day is not completed, gives a copy
+     whose last day is the previous one, out of WAL, integrity `ok`;
+   - the store is in WAL at every pause.
+
+**Concurrent reads.** A poller asks `GET /library` back to back while the writer runs between pauses. Each answer:
+
+- is 200, or 503 before the first completion;
+- serves a day completed before the request was sent;
+- never goes backwards;
+- equals `GET /library?as_of=<that day>` on the finished store, byte for byte.
+
+**After the writer ends:** the lock is free, the store is out of WAL, and the API answers as of the last day.
+
+**Asked of you:** anything missing, or wrong, for row 2 (one state per request), row 3 (dates), row 7 (who writes) and the
+first-day refusal. Is the byte-for-byte equality of a concurrent answer with a later dated read right under row 3, or does the
+library carry anything time-dependent that would make it fail for a reason other than a leak?
+
+End with `CONSENSUS: yes` (build and run proof 10) or `CONSENSUS: no, because …`.
+
+codex
+I’ll read the proof design and harness, then trace the library’s dated fields and the pause timing against the proposed comparisons.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Proof 10.s design|Concurrent|poller|pause' docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -100
+nl -ba docs/research/2026-11-14-use-acceptance/page-contract/serving_while_writing.py | sed -n '1,260p'
+nl -ba src/hivemind/bundle.py | sed -n '98,170p;185,245p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4:119). That agreement covers test stores only, not live operation; P1 stays a proposed decision. D575 paused the earlier design (`DESIGN.md`) as recorded input; it was not accepted. Round 110 resumed the work as this
+275:8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+303:10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+557:## Proof 10's design (council round 140)
+565:  - The API is started on the store being written (`--lexical`, no index build) at the first pause, as before.
+569:**The pauses** stay the same seven: 2026-09-22 before close (the first day, nothing completed); 2026-09-24 after close; 2026-09-25
+572:**At each pause, through the real entry points:**
+577:   - A fresh page is rendered at the same two pauses as before, and its checks hold.
+578:2. **MCP**, loaded once at the first pause on the store being written, lexical, as its entry point builds it:
+579:   - at the first pause, its instructions say no day has completed, and `thesis_library()` and `views()` refuse;
+580:   - at every later pause, `thesis_library()`'s day equals `/library`'s day, and its question ids equal `/library`'s.
+586:   - the store is in WAL mode at every pause.
+588:**Concurrent reads, not only at pauses.** A poller thread asks `GET /library` back to back from the API's start to the writer's end,
+589:while the writer runs between pauses. For every answer:
+   512	  own new 2 MB disk image, both detached and deleted:
+   513	  - **A, the free-space stop switched off:** the disk filled inside the tenth day. The writer exited with "database or disk is
+   514	    full", and no reason was recorded beside the store (as expected for a crash). Nine completed days were kept; readers and
+   515	    preflight's copy both serve 2026-07-09; the lock was free once the process had ended.
+   516	  - **B, the stop as built:** before the first day the writer stopped with its reason recorded, because it needed 17.6 MB free
+   517	    (20 times the 0.88 MB store, schema and `-wal` included) and the disk had 1.9 MB.
+   518	
+   519	**Round 137's corrections (D599).**
+   520	
+   521	- **Every reader opens a store by its own path.** `store.open_read_only`, which the API, MCP, `service` and reports all use,
+   522	  resolves a symlink and refuses a store with another hard link (`live_lock.LockRefused`, naming the reason).
+   523	  - The API refuses at start (`index_at_start`) and per request (500, the reason in the body).
+   524	  - MCP refuses at start and per tool call.
+   525	  - Census before the change: none of the 702 `.sqlite` files under `poc/data` and `clean-arch` has a second hard link.
+   526	- **Cleanup when cleanup itself fails:**
+   527	  - **`LadderAdapter.close`:** if leaving WAL mode fails, the connection is still closed and then the lock released. If closing
+   528	    the connection fails, the lock is kept until the process ends (the operating system releases it then). So a writable
+   529	    connection never outlives its lock.
+   530	  - **`snapshot`:** if the target cannot be opened, the source is closed and nothing is left.
+   531	  - **`scripts/snapshot_store.py`** also reports a SQLite error as a refusal (exit 1) instead of a traceback.
+   532	- **A store moved mid-run, a finding, not understood and not fixed:**
+   533	  - What was seen: SQLite raised "disk I/O error" on the writer's next statement after its store file was renamed, before the
+   534	    writer's own path check. This happened only in a process that had first run the API/MCP hard-link test. Which SQLite state in
+   535	    that process makes the difference was not identified.
+   536	  - A moved store breaks the contract's operating precondition (a store's path is never replaced while it may be in use). This
+   537	    finding is therefore a stated limit of that test case, not a claim that the writer handles a moved store.
+   538	  - What the writer records no longer depends on it:
+   539	    - its stop takes the last completed day from its loop;
+   540	    - before each day it checks the path first, then any checkpoint failure.
+   541	
+   542	**Round 138's correction (D600): a reader holding the store is reported apart from every other failure.**
+   543	
+   544	- `truncate_checkpoint` answers `done`, `busy` or the error's own text. `busy` means SQLite's own "database is locked" messages,
+   545	  or a checkpoint held back by another connection. That shows contention, not which connection; round 139 renamed the recorded
+   546	  reasons to "another connection held the store".
+   547	  - Only `busy` counts toward the three-day stop "another connection held the store".
+   548	  - Any other error stops the writer before the next day with "the truncating checkpoint after <day> failed: <error>". After the
+   549	    last day it is recorded in the counts.
+   550	- `leave_wal` answers the mode it ends in and why WAL was kept: "another connection held the store at the end", or "leaving WAL
+   551	  failed: <error>".
+   552	- Tested with a connection whose checkpoint, or whose change out of WAL, fails with "disk I/O error":
+   553	  - the stop's reason, and the record at the end, name that error and not a reader;
+   554	  - the lock is free afterwards.
+   555	- The real held-reader test still reports a reader.
+   556	
+   557	## Proof 10's design (council round 140)
+   558	
+   559	**What it re-runs.**
+   560	
+   561	- `page-contract/serving_while_writing.py` as it stands: the extension draw's c1 judged again through the accepted loop into a new
+   562	  scratch store to 2027-04-02.
+   563	  - Every judge request is answered from the stored archive by identity: $0, no model or embedding call.
+   564	  - The writer is now the built `replay`: a WAL store, its lock, the checks before each day and the orderly end.
+   565	  - The API is started on the store being written (`--lexical`, no index build) at the first pause, as before.
+   566	- **The run itself** is launched detached in a new scratch folder, with a log, after the council's yes. Nothing else heavy runs beside
+   567	  it.
+   568	
+   569	**The pauses** stay the same seven: 2026-09-22 before close (the first day, nothing completed); 2026-09-24 after close; 2026-09-25
+   570	before judging and after close; 2027-01-30 after close; 2027-01-31 before and after close.
+   571	
+   572	**At each pause, through the real entry points:**
+   573	
+   574	1. **The API:** `GET /days` and `GET /library`, as before. Every existing check holds.
+   575	   - The first-day case is now a check that must pass, no longer a known finding: at 2026-09-22 before close, both `/days` and
+   576	     `/library` answer 503 with "the store's first day has not completed".
+   577	   - A fresh page is rendered at the same two pauses as before, and its checks hold.
+   578	2. **MCP**, loaded once at the first pause on the store being written, lexical, as its entry point builds it:
+   579	   - at the first pause, its instructions say no day has completed, and `thesis_library()` and `views()` refuse;
+   580	   - at every later pause, `thesis_library()`'s day equals `/library`'s day, and its question ids equal `/library`'s.
+   581	3. **Who writes and copies:**
+   582	   - `live_lock.acquire` on the store is refused while the writer runs, and so is preflight's `store_copies`, naming the snapshot
+   583	     route;
+   584	   - `scripts/snapshot_store.py` at 2026-09-25 before judging and at 2027-01-31 before close (a day's articles committed, the day
+   585	     not completed) gives a copy whose last completed day is the previous day, out of WAL mode, integrity `ok`;
+   586	   - the store is in WAL mode at every pause.
+   587	
+   588	**Concurrent reads, not only at pauses.** A poller thread asks `GET /library` back to back from the API's start to the writer's end,
+   589	while the writer runs between pauses. For every answer:
+   590	
+   591	- the status is 200, or 503 before the first day completed; nothing else;
+   592	- its day is one the writer had completed before the request was sent (the harness records each day's completion time when
+   593	  `close_and_complete` returns);
+   594	- the days never go backwards;
+   595	- after the run, `GET /library?as_of=<that day>` on the finished store equals the answer byte for byte (row 3: the same date gets the
+   596	  same answer).
+   597	
+   598	**After the writer ends:**
+   599	
+   600	- the lock is free;
+   601	- the store is out of WAL mode;
+   602	- the API still answers as of the last day.
+   603	
+   604	**It exits 1 unless every check holds.** A failure is read to its first differing value before anything is changed.
+   605	
+   606	## Not covered
+   607	
+   608	- Resuming a stopped live store.
+   609	- The Idea planner on a new-system ledger.
+   610	- A long-running service's restart and monitoring.
+   611	- The page's note when its live read fails, which is Alex's presentation choice.
+     1	"""Serving while a stored-answer replay writes (D573; $0). The extension proof's draw is judged again through the accepted loop
+     2	(D567) into a new scratch store, to an end day past its due days; every judge request is answered from the stored archive by
+     3	identity, and a request with none stops the run. At fixed pauses inside the loop (before a day's judging round, before its
+     4	closing and completion, after them) the product's API, started on the store being written, is asked for `/days` and `/library`,
+     5	and a fresh page pointed at it is rendered in headless Chrome. It exits 1 unless every check holds.
+     6	
+     7	  python3 serving_while_writing.py <extension proof folder> <new scratch folder> [end day]
+     8	"""
+     9	import json
+    10	import re
+    11	import socket
+    12	import subprocess
+    13	import sys
+    14	import time
+    15	import html
+    16	import urllib.error
+    17	import urllib.request
+    18	from pathlib import Path
+    19	
+    20	ROOT = Path('/Users/lchingen/hivemind')
+    21	sys.path[:0] = [str(ROOT / 'clean-arch/step4-2026-11-10/stage_b'), str(ROOT / 'clean-arch/e2e-2026-11-09'), str(ROOT / 'src')]
+    22	import ladder_adapter  # noqa: E402
+    23	from hivemind import model  # noqa: E402
+    24	
+    25	CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    26	PAUSES = {('2026-09-22', 'before close'), ('2026-09-24', 'after close'), ('2026-09-25', 'before judging'),
+    27	          ('2026-09-25', 'after close'), ('2027-01-30', 'after close'), ('2027-01-31', 'before close'), ('2027-01-31', 'after close')}
+    28	PAGES = {('2026-09-25', 'before judging'), ('2027-01-31', 'after close')}
+    29	
+    30	
+    31	def free_port():
+    32	    s = socket.socket()
+    33	    s.bind(('127.0.0.1', 0))
+    34	    port = s.getsockname()[1]
+    35	    s.close()
+    36	    return port
+    37	
+    38	
+    39	def get(port, path):
+    40	    try:
+    41	        with urllib.request.urlopen(f'http://127.0.0.1:{port}{path}', timeout=60) as response:
+    42	            return response.status, json.loads(response.read())
+    43	    except urllib.error.HTTPError as error:
+    44	        return error.code, json.loads(error.read() or b'{}')
+    45	
+    46	
+    47	def main(proof, scratch, end_day='2027-04-02'):
+    48	    scratch = Path(scratch)
+    49	    scratch.mkdir(parents=True)
+    50	    draw = Path(proof) / 'week/c1'
+    51	    stored = __import__('sqlite3').connect(f"file:{draw / 'judge/draw-c1/archive.sqlite'}?mode=ro", uri=True)
+    52	    answers = {sha: json.loads(r) for sha, r in stored.execute('select request_sha256, response_json from model_calls where response_json is not null')}
+    53	
+    54	    def from_the_archive(provider, request):
+    55	        sha = model.request_identity(request)[1]
+    56	        if sha not in answers:
+    57	            raise SystemExit(f'a judge request with no stored answer: {sha[:16]}')
+    58	        return answers[sha]
+    59	
+    60	    output = scratch / 'out'
+    61	    api = {'port': free_port(), 'process': None}
+    62	    page_shell = (scratch / 'shell.html')
+    63	    subprocess.run([sys.executable, str(ROOT / 'scripts/mock_build.py'), '--out', str(page_shell)], check=True, capture_output=True)
+    64	    seen = {}
+    65	
+    66	    def ask(day, phase):
+    67	        if (day, phase) not in PAUSES:
+    68	            return
+    69	        if api['process'] is None:
+    70	            api['process'] = subprocess.Popen([sys.executable, str(ROOT / 'scripts/hivemind_api.py'), '--port', str(api['port']), '--lexical', '--config', '',
+    71	                                               '--views', str(output / 'views.sqlite'), '--index', str(scratch / 'index.sqlite'), '--archive', str(scratch / 'archive.sqlite')],
+    72	                                              stdout=open(scratch / 'api.log', 'w'), stderr=subprocess.STDOUT)
+    73	            for _ in range(60):
+    74	                try:
+    75	                    urllib.request.urlopen(f"http://127.0.0.1:{api['port']}/days", timeout=2)
+    76	                    break
+    77	                except Exception:
+    78	                    time.sleep(0.5)
+    79	        record = {'days': get(api['port'], '/days'), 'library': get(api['port'], '/library')}
+    80	        if (day, phase) in PAGES:
+    81	            record['page'] = render(api['port'], page_shell, scratch, f'{day}-{phase}'.replace(' ', '-'))
+    82	        seen[(day, phase)] = record
+    83	        lib = record['library']
+    84	        print(f"pause {day} {phase}: /days {record['days'][1]} | /library {lib[0]} as_of {lib[1].get('as_of')} questions {len(lib[1].get('views', []))}"
+    85	              + (f" | page {record['page']}" if 'page' in record else ''), flush=True)
+    86	
+    87	    real_judge, real_close = ladder_adapter.LadderAdapter.judge, ladder_adapter.LadderAdapter.close_and_complete
+    88	
+    89	    def judge(self, day, seq, changed):
+    90	        ask(day, 'before judging')
+    91	        return real_judge(self, day, seq, changed)
+    92	
+    93	    def close(self, day):
+    94	        ask(day, 'before close')
+    95	        result = real_close(self, day)
+    96	        ask(day, 'after close')
+    97	        return result
+    98	
+    99	    ladder_adapter.LadderAdapter.judge, ladder_adapter.LadderAdapter.close_and_complete = judge, close
+   100	    inputs = {'trace': str(draw / 'step1/trace.sqlite'), 'step2': str(draw / 'step2'), 'ladders': str(draw / 'ladder/send-1/outcomes.jsonl'),
+   101	              'ladder_archive': str(draw / 'ladder/send-1/archive.sqlite'), 'cases': str(draw / 'cases/cases.json'), 'output_root': str(scratch)}
+   102	    try:
+   103	        ladder_adapter.replay('c1', output, transport=from_the_archive, cap_usd=5.0, inputs=inputs, end_day=end_day)
+   104	    finally:
+   105	        if api['process']:
+   106	            api['process'].terminate()
+   107	    checks = check(seen)
+   108	    (scratch / 'seen.json').write_text(json.dumps({f'{d} {p}': r for (d, p), r in seen.items()}, indent=1, ensure_ascii=False))
+   109	    failed = False
+   110	    for name, holds in checks.items():
+   111	        known = next((note for prefix, note in FINDINGS.items() if name.startswith(prefix)), None)
+   112	        print(('ok   ' if holds else ('KNOWN ' if known else 'FAIL ')) + name + (f' [{known}]' if known and not holds else ''))
+   113	        failed |= not holds and not known
+   114	    if failed:
+   115	        raise SystemExit(1)
+   116	
+   117	
+   118	def render(port, shell, scratch, name):
+   119	    """A fresh page pointed at the API; returns what it shows: its question count and the dates in its library text."""
+   120	    page = shell.read_text()
+   121	    m = re.search(r'<body([^>]*)>', page)
+   122	    page = page.replace(m.group(0), f'<body{m.group(1)} data-api="http://127.0.0.1:{port}">', 1)
+   123	    probe = ('<pre id="probe-result"></pre><script>setTimeout(()=>{const lib=document.getElementById("library");'
+   124	             'const out={cards:lib.querySelectorAll(".card").length,questions:[...lib.querySelectorAll(".card__q")].map(q=>q.textContent.trim()).sort(),'
+   125	             'status:Object.fromEntries([...lib.querySelectorAll(".library-card")].map(c=>[c.querySelector(".card__q").textContent.trim(),c.querySelector(".library-card-meta .chip--line").textContent.trim()]))};'
+   126	             'document.querySelector("#probe-result").textContent=JSON.stringify(out);},6000);</script></body>')
+   127	    (scratch / f'{name}.html').write_text(page.replace('</body>', probe))
+   128	    web_port = free_port()
+   129	    web = subprocess.Popen([sys.executable, '-m', 'http.server', str(web_port), '--bind', '127.0.0.1'], cwd=scratch,
+   130	                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+   131	    time.sleep(1)
+   132	    try:
+   133	        dom = subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--no-first-run', f'--user-data-dir={scratch / "chrome"}',
+   134	                              '--virtual-time-budget=20000', '--dump-dom', f'http://127.0.0.1:{web_port}/{name}.html'],
+   135	                             capture_output=True, text=True, timeout=180).stdout
+   136	    finally:
+   137	        web.terminate()
+   138	    m = re.search(r'<pre id="probe-result">(.*?)</pre>', dom, re.S)
+   139	    return json.loads(html.unescape(m.group(1))) if m and m.group(1) else None
+   140	
+   141	
+   142	def check(seen):
+   143	    lib = lambda key: seen[key]['library']
+   144	    out = {}
+   145	    first = seen[('2026-09-22', 'before close')]
+   146	    out[f"before the first completed day the API serves no library (/library {lib(('2026-09-22', 'before close'))[0]}, /days {first['days'][1]})"] = \
+   147	        lib(('2026-09-22', 'before close'))[0] != 200 or not lib(('2026-09-22', 'before close'))[1].get('views')
+   148	    out['inside 2026-09-25, before its judging round, /library equals what it served right after 2026-09-24 completed'] = \
+   149	        lib(('2026-09-25', 'before judging')) == lib(('2026-09-24', 'after close'))
+   150	    out['right after 2026-09-25 completed, /library is as of 2026-09-25'] = lib(('2026-09-25', 'after close'))[1].get('as_of') == '2026-09-25'
+   151	    out['on 2027-01-31 before its closing, /library equals what it served after 2027-01-30'] = lib(('2027-01-31', 'before close')) == lib(('2027-01-30', 'after close'))
+   152	    after = {v['view_id']: v for v in lib(('2027-01-31', 'after close'))[1]['views']}
+   153	    out['after 2027-01-31 completed, its three due questions are closed on that day'] = all(
+   154	        not after[v]['open'] and after[v]['switches'][-1]['day'] == '2027-01-31' for v in ('v3', 'v4', 'v7'))
+   155	    for key, served in ((('2026-09-25', 'before judging'), ('2026-09-24', 'after close')), (('2027-01-31', 'after close'), ('2027-01-31', 'after close'))):
+   156	        page = seen[key].get('page') or {}
+   157	        expected = sorted(v['question'] for v in lib(served)[1]['views'])
+   158	        out[f"a fresh page at {key[0]} {key[1]} shows exactly the questions served as of {lib(served)[1].get('as_of')} ({page.get('cards')} cards)"] = page.get('questions') == expected
+   159	        status = {v['question']: ('Open' if v['open'] else 'Closed') for v in lib(served)[1]['views']}
+   160	        out[f"... and each card's status is the served one on {lib(served)[1].get('as_of')} (the page's day, not another)"] = page.get('status') == status
+   161	    return out
+   162	
+   163	
+   164	FINDINGS = {"before the first completed day the API serves no library": 'known open defect B (LIVE-READ-DESIGN.md): reported, not a failing check'}
+   165	
+   166	
+   167	if __name__ == '__main__':
+   168	    main(*sys.argv[1:])
+    98	
+    99	
+   100	def view_bundle(views_db, item_of, view_id, as_of=None):
+   101	    """One view's complete record as of the bound (resolved; an omitted bound on a store with no completed day reads every
+   102	    record, as before). A view not visible at the bound is refused (OPERATING-CONTRACT.md, row 3)."""
+   103	    as_of = service.resolve_bound(views_db, as_of, unfiltered=True)
+   104	    v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   105	    if v is None:
+   106	        raise KeyError(view_id)
+   107	    if as_of is not None and not service.view_exists(views_db, v, as_of):
+   108	        raise KeyError(f'{view_id} is not available as of {as_of}')
+   109	    columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
+   110	    bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
+   111	    rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
+   112	    switches = [dict(r) for r in views_db.execute('select open, reason, after_seq from view_switches where view_id=? order by id', (view_id,))
+   113	                if _visible(views_db, r['after_seq'], as_of)]
+   114	    for switch in switches:
+   115	        switch['day'] = service.day_of_seq(views_db, switch['after_seq'])
+   116	    judgements = []
+   117	    for j in views_db.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+   118	        if as_of is not None and j['publication_day'] > as_of:
+   119	            continue
+   120	        judgements.append({'id': str(j['judgement_id']), 'day': j['publication_day'], 'seq': j['seq'], 'rung': j['rung'], 'changed': bool(j['changed']),
+   121	                           'why_changed': j['why_changed'], 'reasons': j['reasons'], 'cited': list(dict.fromkeys(json.loads(j['cited_evidence_json'] or '[]'))),   # each id once (UI contract uniqueItems); the sealed 2026-10-28 ledger holds one judgement citing an id twice
+   122	                           'cited_views': json.loads(j['cited_views_json'] or '[]'), 'pushes': json.loads(j['pushes_json'] or '[]'),
+   123	                           'from_item': j['input_id']})
+   124	    evidence = []
+   125	    for e in views_db.execute('select e.*, l.seq as linked_seq from evidence_links l join evidence e on e.evidence_id=l.evidence_id where l.view_id=? order by l.id', (view_id,)):
+   126	        if not _visible(views_db, e['linked_seq'], as_of):
+   127	            continue
+   128	        sources = [dict(s) for s in views_db.execute('select input_id, publication_day, seq from evidence_sources where evidence_id=? order by id', (e['evidence_id'],))
+   129	                   if _visible(views_db, s['seq'], as_of)]
+   130	        replaced_by = views_db.execute('select new_evidence_id, said_day, seq from replacements where old_evidence_id=? order by id desc limit 1', (e['evidence_id'],)).fetchone()
+   131	        if replaced_by is not None and not _visible(views_db, replaced_by['seq'], as_of):
+   132	            replaced_by = None
+   133	        replaces = views_db.execute('select old_evidence_id, seq from replacements where new_evidence_id=?', (e['evidence_id'],)).fetchone()
+   134	        if replaces and not _visible(views_db, replaces['seq'], as_of):
+   135	            replaces = None
+   136	        first = sources[0] if sources else {'input_id': e['created_from_input'], 'publication_day': '', 'seq': e['created_seq']}
+   137	        item = item_of(first['input_id'])
+   138	        evidence.append({'id': e['evidence_id'], 'one_line': e['one_line'], 'quote': e['quote'], 'tier': e['tier'], 'speaker': e['speaker'],
+   139	                         'original_who': e['original_who'], 'original_day': e['original_day'], 'event_time': e['event_time'],
+   140	                         'day': first['publication_day'] or item['publication_day'], 'seq': first['seq'], 'linked_seq': e['linked_seq'],
+   141	                         'arrival_day': service.day_of_seq(views_db, e['linked_seq']),
+   142	                         'source': {'title': item['title'], 'publisher': item['publisher'], 'publisher_type': item['publisher_type'],
+   143	                                    'category': item['category'], 'uri': item['source_uri']},
+   144	                         'sources': [{'input_id': s['input_id'], 'day': s['publication_day'],
+   145	                                      'arrival_day': service.day_of_seq(views_db, s['seq']),
+   146	                                      'source': item_of(s['input_id'])} for s in sources],
+   147	                         'outlets': len(sources), 'replaced_by': {'new_evidence_id': replaced_by['new_evidence_id'], 'said_day': replaced_by['said_day'],
+   148	                                                               'day': service.day_of_seq(views_db, replaced_by['seq'])} if replaced_by else None,
+   149	                         'replaces': replaces['old_evidence_id'] if replaces else None})
+   150	    dependencies = [dict(r) for r in views_db.execute('select dependency_id, depends_on, direction, wait_chain_view_id, wait_year, seq from dependencies where view_id=? order by dependency_id', (view_id,))
+   151	                    if _visible(views_db, r['seq'], as_of)]
+   152	    for dependency in dependencies:
+   153	        dependency['day'] = service.day_of_seq(views_db, dependency['seq'])
+   154	        dependency['resolutions'] = [dict(target=r['resolved_to'], day=service.day_of_seq(views_db, r['seq']), seq=r['seq'])
+   155	                                    for r in views_db.execute('select resolved_to, seq from dependency_resolutions where dependency_id=? order by id', (dependency['dependency_id'],))
+   156	                                    if _visible(views_db, r['seq'], as_of)]
+   157	    dependants = sorted({r['view_id'] for r in views_db.execute('select view_id, seq from dependencies where depends_on=?', (view_id,)) if _visible(views_db, r['seq'], as_of)},
+   158	                        key=lambda s: (len(s), s))
+   159	    created = item_of(v['created_from_input'])
+   160	    key = store.view_key(views_db, view_id)
+   161	    identity = {name: key[name] for name in ('measure', 'scope', 'period_start', 'period_end', 'basis', 'unit', 'event_type')} if key else None
+   162	    successions = [{'thesis_id': r['succeeds'] if r['view_id'] == view_id else r['view_id'],
+   163	                    'relation': 'previous' if r['view_id'] == view_id else 'next',
+   164	                    'day': service.day_of_seq(views_db, r['seq'])}
+   165	                   for r in views_db.execute('select * from successions where view_id=? or succeeds=? order by id', (view_id, view_id))
+   166	                   if _visible(views_db, r['seq'], as_of)]
+   167	    return {'view_id': view_id, 'object': v['object_id'], 'kind': v['kind'], 'looks_at': v['looks_at'], 'question': v['question'],
+   168	            'due_day': v['due_day'], 'year': v['year'], 'identity': identity, 'successions': successions,
+   169	            'created_seq': v['created_seq'], 'created_day': service.day_of_seq(views_db, v['created_seq']),
+   170	            'created_from': {'title': created['title'], 'publisher': created['publisher'], 'category': created['category']},
+   185	    by its caller (`thesis_bundles`, `library`)."""
+   186	    date.fromisoformat(as_of)
+   187	    if not isinstance(view_ids, list) or not view_ids or any(not isinstance(id, str) or not id for id in view_ids):
+   188	        raise ValueError('thesis_bundles needs a non-empty list of view ids')
+   189	    lookup = item_lookup(items_db)
+   190	    records = []
+   191	    for view_id in dict.fromkeys(view_ids):
+   192	        row = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   193	        if row is None or not service.view_exists(views_db, row, as_of):
+   194	            raise KeyError(f'{view_id} is not available as of {as_of}')
+   195	        records.append(view_bundle(views_db, lookup, view_id, as_of))
+   196	    return {'as_of': as_of, 'days': days(views_db, as_of), 'views': records,
+   197	            'coverage': coverage, 'groups': research_groups(views_db, view_ids, as_of)}
+   198	
+   199	
+   200	def research_groups(conn, view_ids, as_of):
+   201	    """Stored groups, with dated memberships limited to the envelope's loaded theses."""
+   202	    if not conn.execute('pragma table_info(thesis_groups)').fetchone():
+   203	        return []
+   204	    loaded = set(view_ids)
+   205	    result = []
+   206	    for row in conn.execute('select * from thesis_groups order by created_seq, rowid'):
+   207	        if not service.visible(conn, row['created_seq'], as_of):
+   208	            continue
+   209	        members = [{'thesis_id': m['view_id'], 'day': service.day_of_seq(conn, m['seq']), 'basis': m['basis'] or ''}
+   210	                   for m in conn.execute('select * from thesis_group_members where group_id=? order by id', (row['group_id'],))
+   211	                   if m['view_id'] in loaded and service.visible(conn, m['seq'], as_of)]
+   212	        if members:
+   213	            result.append({'id': row['group_id'], 'name': row['name'], 'scope': row['scope'],
+   214	                           'aliases': json.loads(row['aliases'] or '[]') if 'aliases' in row.keys() else [],
+   215	                           'created_day': service.day_of_seq(conn, row['created_seq']), 'members': members})
+   216	    return result
+   217	
+   218	
+   219	def thesis_bundles(views_db, items_db, view_ids, as_of=None):
+   220	    """Selected complete thesis records, pinned to one read transaction."""
+   221	    with read_snapshot(views_db, items_db):
+   222	        return _bundles(views_db, items_db, view_ids, service.resolve_bound(views_db, as_of))
+   223	
+   224	
+   225	def library(views_db, items_db, as_of=None):
+   226	    """All theses, including closed ones, and stored groups; no search or model call."""
+   227	    with read_snapshot(views_db, items_db):
+   228	        as_of = service.resolve_bound(views_db, as_of)
+   229	        if not as_of:
+   230	            raise ValueError('The library has no completed day; supply as_of')
+   231	        date.fromisoformat(as_of)
+   232	        view_ids = [r['view_id'] for r in views_db.execute('select * from views order by created_seq, rowid')
+   233	                    if service.view_exists(views_db, r, as_of)]
+   234	        if not view_ids:
+   235	            return {'as_of': as_of, 'days': days(views_db, as_of), 'views': [], 'coverage': 'library', 'groups': []}
+   236	        return _bundles(views_db, items_db, view_ids, as_of, coverage='library')
+
+codex
+**Not yet.** The proposed proof is useful, but its timing rule can reject a correct response, and two pause descriptions need tightening before the harness is built.
+
+1. **Use the request’s pinned state, not its send time.** A request may be sent just before a day commits and pin its read transaction just after the commit. Serving that newly completed day is correct under row 2, but would fail “completed before the request was sent.” Record when the API pins its snapshot, or bracket each request with completion events and accept a day completed before the snapshot could have been pinned. Keep the separate check that each answer is internally consistent. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:588), [API connection](/Users/lchingen/hivemind/scripts/hivemind_api.py:61).
+
+2. **The January pause is not a second committed-article case.** The replay walks calendar days through the closing date; the stored news ends in September. At 2027-01-31 before closing, the useful case is a *due-day closing not yet completed*, not that day’s articles having been committed. Keep both snapshot checks, but label and assert their distinct states. [Replay’s calendar loop](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:408).
+
+3. **Make first-day 503 a readiness signal, not a startup failure.** The current harness’s readiness loop treats every HTTP error as failure; with the new required first-day 503 it would wait through its retry loop. Treat the expected 503 body as proof the server is ready, while still failing on the wrong response. Remove the old “known finding” exception so a first-day failure makes the proof fail. [Harness startup and old exception](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/page-contract/serving_while_writing.py:66).
+
+4. **Name the MCP boundary accurately.** Loading the MCP module and calling its Python functions exercises its tool implementation, but not the MCP transport. Either test calls through the transport or call this a module-level check and retain transport as a limit. Require nonempty poller samples on both sides of at least one completion, so a vacuous poll cannot pass.
+
+The later dated-library comparison is a good **test**, not a general guarantee established by row 3. The bundle derives sources, replacements and relationships from stored rows; later writes could expose a historical-filter defect. Compare decoded JSON unless byte serialization itself is part of the claim, and read any first difference before classifying it as a leak. [Bundle shaping](/Users/lchingen/hivemind/src/hivemind/bundle.py:100).
+
+CONSENSUS: no, because the send-time test can falsely reject a valid snapshot and the readiness, January pause and MCP boundaries need to be specified before the proof runs.
+tokens used
+3,597,900
+**Not yet.** The proposed proof is useful, but its timing rule can reject a correct response, and two pause descriptions need tightening before the harness is built.
+
+1. **Use the request’s pinned state, not its send time.** A request may be sent just before a day commits and pin its read transaction just after the commit. Serving that newly completed day is correct under row 2, but would fail “completed before the request was sent.” Record when the API pins its snapshot, or bracket each request with completion events and accept a day completed before the snapshot could have been pinned. Keep the separate check that each answer is internally consistent. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:588), [API connection](/Users/lchingen/hivemind/scripts/hivemind_api.py:61).
+
+2. **The January pause is not a second committed-article case.** The replay walks calendar days through the closing date; the stored news ends in September. At 2027-01-31 before closing, the useful case is a *due-day closing not yet completed*, not that day’s articles having been committed. Keep both snapshot checks, but label and assert their distinct states. [Replay’s calendar loop](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:408).
+
+3. **Make first-day 503 a readiness signal, not a startup failure.** The current harness’s readiness loop treats every HTTP error as failure; with the new required first-day 503 it would wait through its retry loop. Treat the expected 503 body as proof the server is ready, while still failing on the wrong response. Remove the old “known finding” exception so a first-day failure makes the proof fail. [Harness startup and old exception](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/page-contract/serving_while_writing.py:66).
+
+4. **Name the MCP boundary accurately.** Loading the MCP module and calling its Python functions exercises its tool implementation, but not the MCP transport. Either test calls through the transport or call this a module-level check and retain transport as a limit. Require nonempty poller samples on both sides of at least one completion, so a vacuous poll cannot pass.
+
+The later dated-library comparison is a good **test**, not a general guarantee established by row 3. The bundle derives sources, replacements and relationships from stored rows; later writes could expose a historical-filter defect. Compare decoded JSON unless byte serialization itself is part of the claim, and read any first difference before classifying it as a leak. [Bundle shaping](/Users/lchingen/hivemind/src/hivemind/bundle.py:100).
+
+CONSENSUS: no, because the send-time test can falsely reject a valid snapshot and the readiness, January pause and MCP boundaries need to be specified before the proof runs.

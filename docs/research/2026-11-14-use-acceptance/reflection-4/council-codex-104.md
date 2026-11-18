@@ -1,0 +1,11 @@
+**No-go on the diagnostic as specified.** D210 and D414 support using the code-set day for an already-taken obligation **when the question asks for a yearly figure and neither the topic nor article states the filing day**. The proposed sentence omits the yearly-figure condition, and the diagnostic’s expected answers are not yet supported for every control. [D210](</Users/lchingen/hivemind/docs/DECISIONS-log.md:2664>), [D414](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4568>)
+
+The narrower sentence should retain both conditions explicitly: *where the question asks for that year’s figure and neither source states the report day*. That preserves the brief’s existing rule for a non-annual figure and avoids treating `expected_publication` alone as proof that the basis or year is correct. [Reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:67>)
+
+The four FY2028 examples need individual D adjudication before they become fail controls. A wrong year label is a clear **Y** concern; D fails only if the date itself violates the D rule in the item, not automatically because the year label is wrong. Freeze each control’s full topic, article, choices and expected D reason, with an independent reader checking those expectations before the diagnostic. [Brief’s D and Y marks](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98>)
+
+I also cannot verify the reported **128/5** breakdown or the selected 24-item packet from the cited record: the saved census reports 133 failures but not their reasons, and the list is described as a session scratch file. Preserve the breakdown and keyed sample as reviewable evidence before reading. [Saved census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt>)
+
+The paired, blinded reading with both families and unchanged results retained is a useful next diagnostic once those points are fixed. A pass could support a dated clarification; it would not establish the readers’ overall error rate or prove the note caused all 128 marks.
+
+CONSENSUS: no, because the sentence needs D414’s yearly-figure boundary and the proposed fail controls and reason breakdown are not yet independently reviewable.

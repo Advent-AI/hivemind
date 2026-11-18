@@ -1,0 +1,505 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-7
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Council round 44: the reading is in. Decide the next step. Be brief.
+
+`score-output.txt`: all 100 reader rows are valid, both families caught every planted control, and the verdict is **INCONCLUSIVE** (2 exercised, below 3).
+
+**Per topic** (agreed fault / strict fault):
+
+| Topic | Frozen | Edited |
+|---|---|---|
+| pool-7: DRAM plus shortage | D, D, both unjustified under both countings | Q, Q, no fault from either family (the DDR4 measure accepted) |
+| pool-17: total units plus GPU split | D, D, unjustified (agreed in d1, strict only in d2) | D, D, unjustified under both countings |
+| pool-20, -32, -35, -38 | no fault | no fault |
+| the 5 controls | justified declines | justified declines |
+
+The rule's "edited worse" flag fires only on pool-17 under the agreed counting, frozen 1 against edited 2. That is one family's mark on frozen d2, not a
+change in what astra wrote.
+
+**What it shows:**
+- The two sentences fix "a main figure plus a condition" (the acc/clean-8 shape) cleanly and harm nothing on 9 other topics.
+- They do not fix "a total plus its part" (the acc/clean-9 shape).
+
+**Prediction for the 44 with the edited request:**
+- acc/clean-8's 3 misses likely clear; acc/clean-9's 3 do not; u3/clean-10's 1 is uncertain.
+- Line 4 would still miss by about 3 or 4, so gate 1 would still fail.
+- So I propose not to spend about $5 on that rerun now.
+
+**Next-step candidates:**
+- **(a)** One cross-domain example clause for the part-of-total class, after the two sentences: "for example a bank's total loans and the share that is
+  commercial, or a drug maker's total sales and one product's share". It names nothing from the 44. Test it on outside total-plus-part topics.
+  - But the pool holds only pool-17 that both classifiers agree on, so the test would be thin again.
+- **(b)** Take the part-of-total question to Alex as the ruler question it is. D631 found the main-part choice unsourced, and his six main-part cases are on
+  his page. A one-line ruling ("a total and its part: ask the total") is then written into the sentence from his words. Then one outside check, then the
+  gate.
+- **(c)** Keep the two sentences as the new candidate (better, no measured harm) and accept line 4 for now.
+
+Recommend one. CONSENSUS or DISAGREE.
+
+codex
+I’ll check the scored reading and the current rules before choosing whether this calls for another example, a ruling, or a candidate decision.
+exec
+/opt/homebrew/bin/zsh -lc 'cat score-output.txt' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-7
+ succeeded in 0ms:
+{
+ "classifier calls": {
+  "pool-35": [
+   "write",
+   "write"
+  ],
+  "pool-7": [
+   "write",
+   "write"
+  ],
+  "pool-32": [
+   "write",
+   "write"
+  ],
+  "pool-19": [
+   "decline",
+   "decline"
+  ],
+  "pool-9": [
+   "decline",
+   "decline"
+  ],
+  "pool-20": [
+   "write",
+   "write"
+  ],
+  "pool-17": [
+   "write",
+   "write"
+  ],
+  "pool-38": [
+   "write",
+   "write"
+  ],
+  "week-10-06:c1/clean-4": [
+   "decline",
+   "decline"
+  ],
+  "fortnight:c1/clean-8": [
+   "decline",
+   "decline"
+  ],
+  "week-10-06:c1/clean-12": [
+   "decline",
+   "decline"
+  ]
+ },
+ "counted targets": [
+  "pool-17",
+  "pool-20",
+  "pool-32",
+  "pool-35",
+  "pool-38",
+  "pool-7"
+ ],
+ "counted controls": [
+  "fortnight:c1/clean-8",
+  "pool-19",
+  "pool-9",
+  "week-10-06:c1/clean-12",
+  "week-10-06:c1/clean-4"
+ ],
+ "exercised": [
+  "pool-17",
+  "pool-7"
+ ],
+ "recovered": [
+  "pool-7"
+ ],
+ "controls held": {
+  "fortnight:c1/clean-8": true,
+  "pool-19": true,
+  "pool-9": true,
+  "week-10-06:c1/clean-12": true,
+  "week-10-06:c1/clean-4": true
+ },
+ "edited worse on a topic": [
+  [
+   "pool-17",
+   "agreed",
+   {
+    "frozen": 1,
+    "edited": 2
+   }
+  ]
+ ],
+ "per topic [status, agreed fault, strict fault]": {
+  "fortnight:c1/clean-8": {
+   "edited-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "no ladder",
+    false,
+    false
+   ]
+  },
+  "pool-17": {
+   "edited-d1": [
+    "no ladder",
+    true,
+    true
+   ],
+   "edited-d2": [
+    "no ladder",
+    true,
+    true
+   ],
+   "frozen-d1": [
+    "no ladder",
+    true,
+    true
+   ],
+   "frozen-d2": [
+    "no ladder",
+    false,
+    true
+   ]
+  },
+  "pool-19": {
+   "edited-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "no ladder",
+    false,
+    false
+   ]
+  },
+  "pool-20": {
+   "edited-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "ladder",
+    false,
+    false
+   ]
+  },
+  "pool-32": {
+   "edited-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "ladder",
+    false,
+    false
+   ]
+  },
+  "pool-35": {
+   "edited-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "ladder",
+    false,
+    false
+   ]
+  },
+  "pool-38": {
+   "edited-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "ladder",
+    false,
+    false
+   ]
+  },
+  "pool-7": {
+   "edited-d1": [
+    "ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "no ladder",
+    true,
+    true
+   ],
+   "frozen-d2": [
+    "no ladder",
+    true,
+    true
+   ]
+  },
+  "pool-9": {
+   "edited-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "no ladder",
+    false,
+    false
+   ]
+  },
+  "week-10-06:c1/clean-12": {
+   "edited-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "no ladder",
+    false,
+    false
+   ]
+  },
+  "week-10-06:c1/clean-4": {
+   "edited-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "edited-d2": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d1": [
+    "no ladder",
+    false,
+    false
+   ],
+   "frozen-d2": [
+    "no ladder",
+    false,
+    false
+   ]
+  }
+ }
+}
+VERDICT: INCONCLUSIVE: the frozen arm declines 2 counted targets, fewer than 3
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md | tail -22' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+| Week **13**, d1–d3 | **Silent.** Remaining commitments may be main, with cash paid and changes left out; alternatively these are separately tracked figures with none selected. |
+| Week **3**, d1–d3 | **Silent.** Contract-price change may be main, with selling prices and margins left out; alternatively the named measures compete. Even if price change is main, the separate HBM-versus-DRAM series question remains. |
+| Week **4**, d1–d3 | **Justified.** 2026 and 2027 hyperscaler spending are presented together, with neither singled out; they are separate annual figures. |
+| Week **5**, d2 | **Unjustified.** Closing the already signed acquisition is the named event; termination is an alternative outcome, while consideration and regulatory conditions are other parts to show. Both readers rejected the refusal. |
+
+The reader disagreements and matched answers are in the [refusal trace]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt:1). These verdicts are about the stated refusal reasons; they do not certify that a proposed answer would meet every other requirement.
+
+3. **Wording and boundary cases**
+
+The strongest sourced wording is already in the [request]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:5): “Judge the one the topic’s outcome names as what is tracked,” and list every other part. D436 adds “a second side of the same bet” as context. Applied to all nine topics above, that wording supports the week 5 correction, preserves the two two-year refusals and the separate theme refusal, and leaves the other five topics unresolved. It does **not** tell the model how to resolve those five; the stored trace also cannot establish that repeating it would change any model response.
+
+A ruling would need these boundaries, with both readings shown:
+
+- **CPO shipments:** description’s full-year figure is main / the outcome’s multi-period span is tracked.
+- **China restrictions:** US approval is main and Chinese acceptance is a condition / the two authorities’ decisions are separate candidates.
+- **Reflection acquisition:** signing is main and closing follows / signing and closing are separate candidates.
+- **Commitments:** remaining balance is main and funding/change are context / all are separate candidate figures.
+- **Memory:** contract-price change is main and company prices/margins are context / the figures compete; separately, whether HBM/DRAM denotes one usable figure or requires a series choice.
+
+These are the same unresolved distinctions identified by the [earlier rule review]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md:1). Neither “use the description” nor “use the first part” is sourced as a general tie-breaker.
+
+SOURCES SILENT: OWNER RULING NEEDED
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'hivemind.*council|production.readiness' /Users/lchingen/.codex/memories/MEMORY.md | head" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 30 '"'^## D436 |''^## D651 |''^## D652 '"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+110:# Task Group: Hivemind Step 2 failed revision probe and downstream impact council
+119:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+129:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+139:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+163:# Task Group: Hivemind clean-pipeline production-readiness assessment
+165:scope: assess Claude Code progress and measured production readiness across clean architecture Steps 1–4, with baselines and evidence limitations.
+168:## Task 1: Assess latest Claude Code progress and production readiness, success
+172:- rollout_summaries/2026-11-06T03-33-43-AzGn-claude_code_production_readiness_metrics.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/05/rollout-2026-11-05T19-33-43-01a1aeeb-6002-79d1-ae31-f6f8e03a228f.jsonl, updated_at=2026-11-08T00:40:03+00:00, thread_id=01a1aeeb-6002-79d1-ae31-f6f8e03a228f, frozen reader scorer rerun; production readiness not established)
+176:- Claude Code, production readiness, clean-pipeline, K6b, DeepSeek Flash, golden-v5, Step 1, Step 2, Step 3, Jev, reader test, CURRENT_STATE
+
+ succeeded in 0ms:
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+4848-
+4849-- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+4850-  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+4851-  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+4852-  - Alex: "算一个题，第三处不改 (Recommended)".
+4853-- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+4854-- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+4855-- **Scope:** clean Step 1; c8 stays in force.
+4856-
+4857-## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+4858-
+4859-- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+4860-  - Options: carry both changes to gate 2 (recommended by Claude): "分年虽然没达线，但从 0 次升到大约四分之三，而且'两年塞一题'完全消失，没发现带坏别的东西。第二关在存档上查它会不会弄坏周边情况（重复文章、同一量的另一种口径、延期的事等，约 1.5 美元，线先给你看）。代价：等于在看到结果后放宽了我自己定的线。"; stop the year change and carry only the customer sentence (the reviewer, `council/lx-codex.md`, recommended stopping the year change and keeping c8); stop both and keep c8.
+4861-  - Alex: "带着两处改动进第二关 (Recommended)".
+4862-- **Decided:** the candidate for gate 2 is c15yc (c8 with the year boundary and the scoped capacity counterexample). The year line's failure stays recorded as a failure (5 of 9 against 8 of 9); it is not presented as a pass. Gate 2's lines are written, reviewed and shown to Alex before any send. c8 stays in force.
+4863-- **Scope:** clean Step 1.
+4864-
+4865-## D438 · 2026-11-13 · Send gate 2
+4866-
+4867-- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` (version 11, reviewed clean in `council/mi-codex.md`): "第二关审完了，要发吗？…新版做错的次数比旧版多 3 次以上（9 次里），就停下报给你。共 126 次发送，约 1.8 美元，上限 2.2 美元。" Options: send (recommended): "先跑完 126 次。我和一位盲读者各自逐条读，有分歧的一律算新版错。任何一条停止线被触发就停下报给你；全过的话再设计第三关（在新文章上新旧版对比），也先给你看。"; do not send.
+4868-- Alex: "发 (Recommended)".
+4869-- **Decided:** gate 2 is sent as written; a fired stop or an unexercised control goes to Alex; a pass leads to gate 3's design, shown to him before any send. c8 stays in force.
+4870-
+4871-## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+4872-
+4873-- **Alex, 2026-11-13** (unprompted, after a recap of the goal): "把这个goal 改成更多的要求council in the loop 来自行的根据数据和目标做决策。我接下来不会active,需要你有问题的时候就fire council 然后和claude 掰扯直到你们能达到共识为止再下去执行，并仔细的测量，自己看trace 然后把每一轮log 做学习总结，不要饭一样的错，词学迭代完成我们的PRD生产目标".
+4874-- **Decided (his words):** while he is not active, every choice or next step that would have gone to him goes to the council: an independent read-only Codex review and Claude argue it on the data, the PRD and its quantified goals until they reach a consensus; the consensus is recorded as a decision citing D439, executed, measured, every trace read by Claude itself, and every round logged with a learning summary so the same mistake is not made twice; the loop iterates until the PRD's production goals are met.
+4875-- **Settled by Claude (wording and limits, not confirmed by Alex):** the standing limits of AGENTS.md stay (the frozen ruler never changes; nothing pushed, deployed, published or committed unasked; credentials and provider caps untouched). Opening a new version of a piece frozen for "a new version only Alex opens" is a council decision under D439; the frozen ruler is not. A disagreement the council cannot settle is recorded with both positions and the cheaper, reversible course is taken. **Spending ceiling:** paid model calls in this period stay within $40 at published rates in total, each paid step with its own ceiling in its council-agreed design; this figure is Claude's setting, not Alex's, and is reported in every status update.
+4876-- **Where written:** AGENTS.md, "Authority and scope" (the D439 bullet) and §7.3 "Own the loop"; `docs/CURRENT_STATE.md`; the memory file `feedback-council-decides-while-alex-away.md`. The session goal itself is set by Alex's `/goal` command; the replacement text is given to him in the reply.
+4877-- **Scope:** all modules Alex has taken up; the current work is clean Step 1 (gates 2 and 3 of `clean-arch/step1-diagnosis-2026-11-12/COMBINED-PLAN.md`), then the Step 4 judgement faults that kept Stage B from passing.
+--
+8991:## D651 · 2026-11-17 · Council rounds 40 to 42: test D436's two sentences on astra outside the 44 first; rerun gate 1 only if they pass
+8992-
+8993-- **Alex, 2026-11-17:** "你测试吧，但是你跑一下council 稍微整一下下面一步该怎么做".
+8994-- **The council** (`reflection-7/challenge-40.md` to `-42.md`, Codex thread rounds 40 to 42) **agreed:**
+8995-  - **The edit:** D436's two sentences, verbatim and with no examples, after the frozen "List every other part … not the one tracked."
+8996-    sentence. Nothing else changes.
+8997-    - A2's examples were dropped: two of them mirror the two failing 44 topics (AGENTS §6).
+8998-    - A2's "description and outcome" changes were dropped too: audit-2 found them not sound.
+8999-  - **The topics:** 11 outside the 44, from the 48 stored topics outside both the 44 and the 26.
+9000-    - Two blind source readers (one Codex, one Claude) classified them before any answer.
+9001-    - They agree on 6 targets (a main figure or event with a second side): pool-7, -17, -20, -32, -35, -38.
+9002-    - They agree on 5 decline controls: pool-9, pool-19, week-10-06 clean-4 and clean-12, fortnight clean-8.
+9003-  - **The sends:** astra, frozen against edited, 2 fresh draws each, interleaved. 44 sends; caps $2.60 an arm; expected about $1.6.
+9004-  - **The rule** (in `reflection-7/second_side_probe.py`):
+9005-    - **Exercised:** a counted target the frozen arm declines in a draw. Fewer than 3 exercised reads INCONCLUSIVE.
+9006-    - **Recovered:** both edited sends are questions with no hard-line fault marked by either family.
+9007-    - **PASS** when all of these hold:
+9008-      - at least 80% of the exercised targets recover;
+9009-      - every control is declined in both edited sends, unmarked by both families;
+9010-      - on no counted topic does the edited arm fail more sends than the frozen arm, under either counting.
+9011-    - **Otherwise FAIL.** A stopped draw or a missed planted control reads NOT MEASURED.
+9012-- **If it passes:** gate 1 on the 44 with the edited request.
+9013-  - It is reported as a reused, exposed set: the 44 informed the change.
+9014-  - Both countings are reported, and the due-day rule stays Alex's.
+9015-  - The diagnostic plus the rerun is about $6.30 to $8.20 before retries. Alex is told before the gate send.
+9016-- **Checked at $0:**
+9017-  - each edited request is the frozen astra request with only the two sentences inserted;
+9018-  - a dry run through the real runner writes 11 of 11 in every arm-draw and builds 50 reading items.
+
+codex
+**Choose (a): audit a cross-domain example at $0, then design a small outside test.** [D436](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4847>) already identifies the chip total and its AI share as one bet. A new ruling that *every* total takes priority over its part would go beyond that decision.
+
+Keep the result **inconclusive**: the edit recovered one shortage case in two sends and left the total-and-split case declined twice. That is promising evidence for one shape, not proof of a general fix. [Score](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-7/score-output.txt>)
+
+Audit the examples and boundary cases before any send. The frozen request stays in force; do not rerun the gate unless a separately fixed outside test supports the revised candidate.
+
+CONSENSUS: audit a general part-of-total example, then test it outside the 44.
+tokens used
+1,764,613
+**Choose (a): audit a cross-domain example at $0, then design a small outside test.** [D436](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4847>) already identifies the chip total and its AI share as one bet. A new ruling that *every* total takes priority over its part would go beyond that decision.
+
+Keep the result **inconclusive**: the edit recovered one shortage case in two sends and left the total-and-split case declined twice. That is promising evidence for one shape, not proof of a general fix. [Score](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-7/score-output.txt>)
+
+Audit the examples and boundary cases before any send. The frozen request stays in force; do not rerun the gate unless a separately fixed outside test supports the revised candidate.
+
+CONSENSUS: audit a general part-of-total example, then test it outside the 44.

@@ -1,0 +1,159 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e8ee-437f-74a3-ad0a-8edcbde0e3b3
+--------
+user
+# Deep council, round 6c: the verdict order is fixed
+
+- **The order:** `score` now checks lost answers first. Any lost edited answer gives `FAIL: edited answers lost …` before the exercise rule is
+  tested (`paired_probe.py`, the verdict block).
+- **New test:** `test_a_lost_answer_fails_even_when_the_frozen_arm_is_not_exercised`. In it the frozen arm writes every target, so the exercise
+  rule alone would give INCONCLUSIVE, and one edited u3/clean-10 answer is lost. The verdict is FAIL.
+- **Checks:** `check` passes, and 17 tests pass in `narrow-d436/`.
+- **The send:** `python3 paired_probe.py send poc/data/clean-narrow-d436-paired-2026-11-17/run-1`, 52 sends, shared cap $3.60. A stopped draw reads
+  NOT MEASURED.
+- **After the send,** the plan is fixed:
+  1. `reading`, with the key outside the repository;
+  2. both reader families with the planted controls, and two source reviewers;
+  3. third readers on disputes as before;
+  4. `score`;
+  5. I read every trace myself;
+  6. the result comes back to you before any further change.
+
+CONSENSUS (send) or DISAGREE.
+
+codex
+I’ll verify the verdict order and the new combined-case test, then give the send decision.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba narrow-d436/paired_probe.py | sed -n '275,302p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba narrow-d436/test_paired_probe.py | tail -40' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'third.reader|unresolved|strict|either reviewer|planted|INCONCLUSIVE|NOT MEASURED' narrow-d436/paired_probe.py | head -25" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+   275	    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+   276	    edited_share_ok = {t: [not table[t][f'edited-d{d}'][1]['strict']                      # a lost answer is strict too
+   277	                           and (table[t][f'edited-d{d}'][0] == 'no ladder'                # a decline neither family marks unjustified
+   278	                                or 'i' not in material.get(f'edited-d{d}|{t}', []))       # or a question that does not ask the total
+   279	                           for d in (1, 2)] for t in SHARE}                               # D654: it checks only that the total is not asked
+   280	    lost_edited = sorted(name for name, row in sends.items() if name.startswith('edited') and row['status'] == 'no ladder: refused')
+   281	    print(json.dumps({'frozen declines per target (of 3)': declines, 'edited targets sound': edited_targets_ok,
+   282	                      'edited controls held': edited_controls_ok, 'edited share control sound': edited_share_ok, 'edited sends lost': lost_edited,
+   283	                      'material defects (i-iii), either reviewer': {k: v for k, v in material.items() if v},
+   284	                      'material defects (i-iii), both reviewers': {k: v for k, v in material_agreed.items() if v},
+   285	                      'reported, not deciding': {t: {ad: [st, f['strict'], material.get(f'{ad}|{t}', [])] for ad, (st, f) in sorted(table[t].items())} for t in REPORTED},
+   286	                      'due-day defects (iv), reported only': {k: v for k, v in due_day.items() if v},
+   287	                      'per topic [status, agreed, strict, marks]': {t: {ad: [st, f['agreed'], f['strict'], f['marks']] for ad, (st, f) in sorted(v.items())}
+   288	                                                                    for t, v in sorted(table.items())}}, indent=1))
+   289	    if lost_edited:
+   290	        verdict = f'FAIL: edited answers lost (refused twice by code): {lost_edited}'
+   291	    elif sum(declines.values()) < 5 or sum(count > 0 for count in declines.values()) < 2:
+   292	        verdict = f'INCONCLUSIVE: the frozen arm declines {sum(declines.values())} target sends on {sum(c > 0 for c in declines.values())} targets'
+   293	    elif all(all(v) for group in (edited_targets_ok, edited_controls_ok, edited_share_ok) for v in group.values()):
+   294	        verdict = 'PASS'
+   295	    else:
+   296	        verdict = 'FAIL'
+   297	    print(f'VERDICT: {verdict}')
+   298	    return verdict
+   299	
+   300	
+   301	if __name__ == '__main__':
+   302	    command = sys.argv[1] if len(sys.argv) > 1 else ''
+
+ succeeded in 0ms:
+   125	    assert probe.score(*build(tmp_path, monkeypatch, statuses)) == 'PASS'
+   126	
+   127	
+   128	def test_a_review_row_without_a_defects_list_is_not_measured(tmp_path, monkeypatch):
+   129	    run, keys, codex, claude = build(tmp_path, monkeypatch, passing_statuses())
+   130	    lines = codex.read_text().splitlines()
+   131	    lines[0] = json.dumps({'item': 1, 'why': ''})
+   132	    codex.write_text('\n'.join(lines) + '\n')
+   133	    with pytest.raises(SystemExit, match='NOT MEASURED'):
+   134	        probe.score(run, keys, codex, claude)
+   135	
+   136	
+   137	def test_check_refuses_a_shared_cap_below_the_room_and_expected_spend(monkeypatch, tmp_path):
+   138	    monkeypatch.setattr(probe, 'TOTAL_CAP', 2.0)
+   139	    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+   140	    with pytest.raises(SystemExit, match='CHECK FAILED'):
+   141	        probe.check()
+   142	
+   143	
+   144	def test_a_share_control_decline_neither_family_faults_passes(tmp_path, monkeypatch):
+   145	    statuses = {**passing_statuses(), ('edited', 1, 'u3/clean-11'): 'no ladder'}
+   146	    assert probe.score(*build(tmp_path, monkeypatch, statuses)) == 'PASS'
+   147	
+   148	
+   149	def test_a_share_control_decline_one_family_marks_unjustified_fails(tmp_path, monkeypatch):
+   150	    statuses = {**passing_statuses(), ('edited', 1, 'u3/clean-11'): 'no ladder'}
+   151	    assert probe.score(*build(tmp_path, monkeypatch, statuses, fail={('edited', 1, 'u3/clean-11'): 'N'})) == 'FAIL'
+   152	
+   153	
+   154	def test_a_lost_answer_on_a_reported_topic_fails(tmp_path, monkeypatch):
+   155	    statuses = {**passing_statuses(), ('edited', 2, 'u2/clean-10'): 'no ladder: refused'}
+   156	    assert probe.score(*build(tmp_path, monkeypatch, statuses)).startswith('FAIL')
+   157	
+   158	
+   159	def test_a_lost_answer_fails_even_when_the_frozen_arm_is_not_exercised(tmp_path, monkeypatch):
+   160	    statuses = {**passing_statuses(), ('edited', 1, 'u3/clean-10'): 'no ladder: refused'}
+   161	    for draw in (1, 2, 3):
+   162	        for topic in probe.TARGETS:
+   163	            statuses[('frozen', draw, topic)] = 'ladder'          # no frozen decline at all: alone, INCONCLUSIVE
+   164	    assert probe.score(*build(tmp_path, monkeypatch, statuses)).startswith('FAIL')
+
+ succeeded in 0ms:
+4:whose outcome tracks the share itself), read blind by both families with planted controls, and each written answer of the edited arm on a
+15:  at least 2 of the 3 targets; otherwise INCONCLUSIVE;
+16:- PASS when all hold, otherwise FAIL (council round 5: strict throughout):
+18:  - no edited target or share-control answer carries a material defect of kinds (i) to (iii) of `review-brief.md` marked by either reviewer;
+20:  - each edited share-control send does not ask the total (D654's check): a question with no kind (i) from either reviewer, or a decline,
+28:- a stopped draw or a missed planted control reads NOT MEASURED.
+41:import opus_probe as base  # noqa: E402   (the trial harness: run_arm, the planted controls, Stage A, the ladder step, the readers' tools)
+60:                                 # only; the shared limit applies to every draw, and a draw it stops reads NOT MEASURED.
+177:                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or guard.breaches}. NOT MEASURED.')
+235:        raise SystemExit(f'NOT MEASURED: rows missing or not valid: {problems}')
+239:                raise SystemExit(f'NOT MEASURED: a family missed the planted {control} ({mark})')
+245:            raise SystemExit(f'NOT MEASURED: the {family} review does not hold each of the {len(review_key)} answers once')
+249:                raise SystemExit(f'NOT MEASURED: the {family} review row {row.get("item")} has no valid defects list')
+258:            return {'agreed': True, 'strict': True, 'marks': ['refused twice']}
+262:        return {'agreed': any(all(m.get(mark) == 'fails' for m in marks) for mark in applying), 'strict': bool(failing), 'marks': failing}
+269:                for name, by_family in reviews.items()}          # strict: marked by either reviewer
+273:    edited_targets_ok = {t: [table[t][f'edited-d{d}'][0] == 'ladder' and not table[t][f'edited-d{d}'][1]['strict']
+275:    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+276:    edited_share_ok = {t: [not table[t][f'edited-d{d}'][1]['strict']                      # a lost answer is strict too
+283:                      'material defects (i-iii), either reviewer': {k: v for k, v in material.items() if v},
+285:                      'reported, not deciding': {t: {ad: [st, f['strict'], material.get(f'{ad}|{t}', [])] for ad, (st, f) in sorted(table[t].items())} for t in REPORTED},
+287:                      'per topic [status, agreed, strict, marks]': {t: {ad: [st, f['agreed'], f['strict'], f['marks']] for ad, (st, f) in sorted(v.items())}
+292:        verdict = f'INCONCLUSIVE: the frozen arm declines {sum(declines.values())} target sends on {sum(c > 0 for c in declines.values())} targets'
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json,pathlib,hashlib; p=pathlib.Path(\"narrow-d436\"); a=json.loads((p/\"edit.json\").read_text()); b=json.loads((p/\"audit-v55-inputs/edit.json\").read_text()); print(\"audited passage and pointers unchanged:\",a[\"insert\"]==b[\"insert\"] and a.get(\"more\")==b.get(\"more\")); x=json.loads((p/\"check-passed.json\").read_text()); print(\"check record present:\",bool(x.get(\"code_sha256\")))'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+audited passage and pointers unchanged: True
+check record present: True
+
+codex
+**CONSENSUS: send** the paired test under the shared **$3.60 cap**.
+
+The verdict now checks lost edited answers before insufficient exercise, and the new test covers that combination. The passage and pointers match the audited v5.5 version. [Verdict](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:289), [test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:159)
+
+Read disputes with third readers, but retain the prewritten strict counting in the reported verdict. A stopped draw is **NOT MEASURED**; a pass is evidence on this exposed test, not a Gate 1 pass or proof of general performance.
+
+Mutation verification remains outstanding because the earlier automatic guard refused the scratch-mirror action. I did not rerun the tests or send the experiment in this review.
+tokens used
+845,231
+**CONSENSUS: send** the paired test under the shared **$3.60 cap**.
+
+The verdict now checks lost edited answers before insufficient exercise, and the new test covers that combination. The passage and pointers match the audited v5.5 version. [Verdict](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:289), [test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:159)
+
+Read disputes with third readers, but retain the prewritten strict counting in the reported verdict. A stopped draw is **NOT MEASURED**; a pass is evidence on this exposed test, not a Gate 1 pass or proof of general performance.
+
+Mutation verification remains outstanding because the earlier automatic guard refused the scratch-mirror action. I did not rerun the tests or send the experiment in this review.

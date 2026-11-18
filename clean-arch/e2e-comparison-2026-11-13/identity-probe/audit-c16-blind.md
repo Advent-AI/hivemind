@@ -1,0 +1,52 @@
+**The change is not fully consistent with the signed standard.** It correctly says that two questions need separately meaningful answers, and it explicitly says a comparison of two periods is one question. But it also moves decisions about existing questions into extraction, treats a different population too broadly as the same question, and gives two examples that the rest of this request would not permit as new questions.
+
+For example, “battery output beside vehicle deliveries” illustrates two quantities that might move apart. It does not establish that either qualifies as a new question under this request’s four permitted reasons.
+
+I ran the requested diffs and read the complete [c16 system text](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/arms/c16-system.txt), [closing check](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/arms/c16-closing.txt), and the signed [standard §§3–4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:272). For the schema check I used [c8-schema.json](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/arms/c8-schema.json), the schema identified for c8; the diff itself does not specify a separate c16 schema.
+
+### Each changed sentence
+
+The added bullet contains a heading and three long sentences, so I assessed their distinct instructions separately.
+
+| Changed instruction | Verdict | Signed standard and reason |
+|---|---|---|
+| “judged against every open thesis and every other new thesis” | **Contradicts**, as a statement of who decides against existing questions. | The standard says “抽取不判库里的” and assigns comparison with the library to matching; extraction compares questions proposed within the same article. [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:343) The part concerning other new questions is consistent. |
+| Same question: another “wording, source, estimate … or direction” | **Consistent**, provided the same result settles them. | “只是预测值、措辞、来源、方向……不同，最终核对的是同一个结果吗？是就是同一题。” [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:318) The same-result condition matters. |
+| Same question: another “population” of what a thesis tracks | **Keeps wider.** | The standard specifies “同一总量的另一种人群或代用口径” as evidence for the same aggregate. [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:346) The new wording drops “same aggregate” and can merge populations whose answers are independently meaningful. |
+| Same question: another form of one plan checked by the same final amount | **Consistent.** | “同一个计划的几种说法……最后核对的是同一个数，是一题。” [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:347) This does not by itself make every individual deal the same evidence item as the programme. |
+| Later deadline while the earlier question is open is its evidence | **Consistent**, within the stated condition. | “早的那题开着时，晚的截止日是它的证据，不另开。” [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:348) The standard separately describes a later renewal after the earlier question expires unresolved. |
+| Another question when answers can move apart and an analyst would bet on each | **Consistent**, as a necessary test, not a complete opening test. | “答案能分开走、而且分析员会分别下注的，才是另一题。” [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:345) Each question must also pass the opening tests and fit a permitted type. |
+| “another year of a yearly quantity” as another question | **Keeps wider**, if read as an automatic rule. | The standard describes “同一个量……的下一个期间” as a **renewal**, and says a company’s own quantity uses its fiscal year, with a calendar-year estimate as evidence. [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:350) It does not say every differently worded year is automatically a separately openable question. |
+| “another quantity with its own driver” | **Consistent with a qualification.** | The standard allows “有自己驱动的组成部分” when answers can move apart and the analyst would bet separately. [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:353) Having a driver alone is insufficient; the question also needs independent investment significance and must pass the other tests. |
+| An unsigned single deal can be separate from a programme amount when the deal alone could change cash or credit risk | **Consistent in principle.** | “还没签的单笔交易是‘签不签’的是非题，照旧可以开，不并进计划的金额题。” [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:354) The standard also requires sufficient scale and the other opening tests; “can” does not mean every deal opens. |
+| A comparison of two periods “asks about the later period” | **No source for the universal rule.** | The standard gives “2027 年 DRAM 合约价相对 2026 年的变化” as one question and says “一个问题只问一个量的一个期间.” [§3](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:286) That supports the illustrated year-on-year comparison, but does not establish that **every** comparison necessarily asks about its later period. |
+| Closing check: a question that is the same “by the rule in section 3” is not proposed; link its evidence | **Contradicts** the standard’s allocation of the decision against an open question; **consistent** for duplicates among new questions in the same article. | “这一条在抽取时只对同一篇文章里提出的几个问题判；和库里的比由匹配做。” [§4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:318) The new reference also carries the wider “population” and year wording into the final check. |
+
+### Conflicts within the request
+
+- **Population:** the new “population … of what a thesis tracks” is broader than “another population or wording of the **same aggregate** is evidence for it.” The former can merge a population even when it represents a separate outcome; the latter is limited to alternative measures of one aggregate.
+- **Separate quantities:** “another quantity with its own driver” can be read as sufficient, while “If the two cannot move apart” and the separate-bet test require more. The introductory qualifier applies grammatically, but the battery and deliveries example does not demonstrate it.
+- **Another estimate:** the new same-question instruction agrees with “another estimate, source or wording of what an open thesis tracks.” The risk is that “another year of a yearly quantity” pulls the other way when an estimate uses a different calendar or fiscal period for a related question.
+- **Related periods:** a different question is not necessarily unrelated evidence. The instruction to consider related-period evidence remains compatible with a separate question, but the closing instruction “link its evidence to that thesis” could make the model link only to the identity match instead of **every** question the evidence informs. Section 2 and the next closing sentence require all relevant links.
+- **Small matters:** the separate-deal example includes a cash-or-credit-risk condition, consistent with the small-matter rule. But “another decision” by itself is broader; it must not be treated as sufficient to open a question.
+
+### Examples and schema
+
+The eight examples span banking, project finance, medicine, shipping, cars, retail, raw materials and hotels. They name **no covered company, named product or numeric amount**. “September” and “June” are dates, not named products or company-specific figures.
+
+They do **not all agree with the whole request**:
+
+- The **battery output / vehicle deliveries** example demonstrates potentially distinct quantities, but neither is necessarily one of this request’s four permitted opening reasons. The schema’s `opens_as` enum has no general company-quantity reason. It should not be read as an instruction to open both.
+- **Hotel revenue per room** is a company financial measure. The request explicitly says not to open a financial measure’s level or growth on its own, and the schema likewise has no `main_driver` option. It can illustrate the shape of a comparison, but is a misleading example of a question to propose under this request.
+- The **raw-material price comparison** can fit `shared_quantity`, subject to the supported period, date, importance and evidence. Its two-period wording can be expressed in the schema’s free-text question and outcome; the period field must identify the period being settled.
+- The **unsigned retailer guarantee** can fit `binding_obligation` if the obligation is sufficiently consequential and its check date and public settlement material meet the request. “Large franchisee” alone does not prove impact on the company.
+- The **project loan** example supports treating a plan’s common final amount as one question, but the closing check separately says a deal with its own amount or capacity is its **own evidence item**. One question does not mean one evidence item.
+- The **bank forecast** and **later drug-approval deadline** examples fit the respective same-question principles, assuming they concern the same tracked outcome and the earlier event question remains open.
+
+### Could it cause the mistakes you asked about?
+
+- **Split one year-on-year comparison into two questions:** yes, as a possible misreading of **“another year of a yearly quantity”**, especially alongside the existing “one quantity for one period.” The immediately following **“One thesis although two periods appear”** directly counteracts that reading for the two examples. The text alone does not prove the model will split one; it contains competing cues.
+- **Open a small deal:** the risk comes from **“another decision”** and **“whether an unsigned single deal is signed.”** The surrounding words **“when that deal alone could change the company’s cash or credit risk”**, plus the existing small-matter rule, are explicit safeguards. A small deal that cannot meet them should remain evidence, subject to the evidence test.
+- **Open another estimate:** the most direct competing cue is **“another year of a yearly quantity.”** It could be applied to an estimate using a calendar year when the open question tracks a fiscal year. The explicit **“another … estimate”** same-question sentence and the existing prohibition against opening another estimate push against that error. The signed standard specifically says the calendar-year estimate is evidence for the fiscal-year question.
+
+These are prompt-reading risks and contradictions, not observed model outcomes; I did not run model calls or change files.

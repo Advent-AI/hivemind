@@ -1,0 +1,414 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 117: the operating contract, version 7 (`live-service/OPERATING-CONTRACT.md`): your three findings answered
+
+1. **Aliases:**
+   - The lock is named by the store file's device and inode numbers, read with `stat` (no content read), in one fixed folder
+     (`~/.hivemind-locks/<device>-<inode>.writer.lock`).
+   - A symlink resolves to the same file and a hard link shares the inode, so every alias reaches one lock.
+   - Proof 8: the store's own path, a symlink and a hard link each meet the writer's lock.
+2. **The start race:**
+   - Preflight always takes the lock without waiting, creating the file if absent, and holds it through its copy. There is no "no lock
+     file" branch.
+   - The writer creates its store file empty and takes the lock before writing anything, and refuses to start if it is held.
+   - Whichever comes first wins and the other refuses. Proof 8 covers preflight arriving just before the writer.
+3. **Published vectors on replacement:**
+   - The index records the store identity it was published for.
+   - A published vector is used only when the identity matches, the published day is on or before the store's last completed day,
+     and its text sha matches the view's text at the bound. Otherwise the view counts as unindexed and search runs lexically.
+   - A store restored from a snapshot keeps its identity, but a later published day or a changed text still disqualifies its
+     vectors.
+   - Proof 8b covers both replacement cases.
+
+The stale manifest wording is removed: no manifest remains in the file.
+
+End with `CONSENSUS: yes` (ready for its $0 proof build, which comes back to you) or `CONSENSUS: no, because …`.
+
+codex
+I’ll re-read version 7 and check the inode lock and restored-store cases against the proposed lifecycle and proofs.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '1,235p'
+rg -n 'snapshot|hivemind.*(sqlite|live)' /Users/lchingen/.codex/memories/MEMORY.md | head -5
+nl -ba src/hivemind/search.py | sed -n '15,55p;120,135p;220,263p'
+nl -ba src/hivemind/views/store.py | sed -n '80,90p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# A live new-system store: the operating contract, version 7 for the council (D592; $0 design, nothing built)
+     2	
+     3	**Status:** D575 paused the earlier design (`DESIGN.md`) as recorded input; it was not accepted. Round 110 resumed the work as this
+     4	$0 contract. Version 2 answered round 111's six findings; version 3 answered round 112's four; version 4 answered round 113's five; version 5 answered round 114's four; version 6 answered round 115's four; version 7 answers round 116's three. It returns to the council before any build or live run. The new system has
+     5	not passed its quality gates, and adopting it is Alex's choice. This contract only states what a live store would have to guarantee.
+     6	
+     7	**Falsifier (round 110):** a required operating case that cannot be served consistently under this contract without blocking the
+     8	writer's commits or exposing partial work. The proof plan names one test per case, and one failing test sends the contract back.
+     9	
+    10	## What touches a live store (searched in the code)
+    11	
+    12	- **The writer:** the new system's daily loop through `clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py`.
+    13	  - It opens the store with `store.open_db`, today in SQLite's default rollback-journal mode.
+    14	  - It commits several times within a day; `close_and_complete` closes due questions, records the day in `days_completed` and
+    15	    commits.
+    16	  - **A stopped run is never resumed** (the module's docstring; `run_stage_b.py` records a crash as the folder's outcome).
+    17	
+    18	| Toucher | How | When |
+    19	|---|---|---|
+    20	| API (`scripts/hivemind_api.py`) | `Connections`: one read-only connection per request; `search.ensure_index(ledger, index)` at start, which embeds view text through an outside service (row 4a) | every request; once at start |
+    21	| MCP server (`scripts/hivemind_mcp.py`) | one read-only connection at start (`LEDGER`), shared by every call, including overlapping calls under streamable HTTP; `ensure_index` and the object list computed at start | the whole process |
+    22	| The page | only through the API | — |
+    23	| The page's embedded snapshot (`scripts/mock_build.py` → `bundle.library`) | `service.open_ledger` | one build |
+    24	| Idea and evaluation scripts (`idea_probe`, `idea_gold`, `idea_stability`, `agent_day0`, `search_eval`) | `open_read_only` / `open_ledger` | one run |
+    25	| Research and census scripts (`docs/research/**`) | `open_read_only` | one run |
+    26	| Preflight (`scripts/preflight.py`) | **`shutil.copy` of `views.sqlite`** to a scratch file (row 7: snapshot or finished store only, then the backup API) | before a paid run |
+    27	| A run's `snapshot.sh` (a per-run file, not a repository script) | SQLite's backup API | on demand |
+    28	
+    29	## The contract
+    30	
+    31	1. **Journal mode, side files, opening.**
+    32	   - The live store is in WAL mode, set by the writer when it creates the store. Production's stores stay as they are.
+    33	   - The `-wal` and `-shm` files sit beside the store on a local disk. **No reader reaches a live store through a container bind mount
+    34	     or a network share.**
+    35	   - **Opening precondition:** every reader runs as the writer's user, and the store's directory is writable by it. SQLite needs the
+    36	     `-wal` and `-shm` files readable, or permission to create them, to open a WAL store with `mode=ro`.
+    37	   - Readers open with `mode=ro`, never `immutable=1`.
+    38	   - A reader that cannot open the store, or cannot begin a read transaction, fails loudly with the store's path. It never serves an
+    39	     empty or stale answer in its place.
+    40	   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+    41	     example while the WAL index is being rebuilt.
+    42	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+    43	2. **One committed state per request, one connection per concurrent request.**
+    44	   - Each API request and each MCP tool call runs every read inside one explicit read transaction: `BEGIN`, the reads, the end.
+    45	   - The transaction always ends, failure included (`finally`).
+    46	   - **MCP opens a connection per tool call,** as the API does per request, in place of today's one process-wide `LEDGER`.
+    47	     Overlapping calls under streamable HTTP each hold their own transaction and never share one.
+    48	   - The service's start-up reads run the same way. MCP's object list is computed per call.
+    49	3. **Every date bound, resolved in one function.**
+    50	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    51	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    52	     explicit date bypasses any check placed in `default_as_of`.
+    53	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    54	     caller's read transaction.
+    55	     - An omitted bound gives the last completed day.
+    56	     - An explicit bound later than the last completed day is refused, naming that day.
+    57	     - An explicit bound on or before it passes.
+    58	   - Every one of the 13 sites calls it, and lower bounds (`from_day`, `since_day`) are unaffected.
+    59	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    60	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    61	4. **The first day** (open defect 10).
+    62	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    63	   - An empty store (no step) and a legacy ledger read as today.
+    64	4a. **Search: visibility before ranking and limits, and a published index day.**
+    65	   - **Lexical:**
+    66	     - today `store.search_views` ranks the whole `views_fts` table by SQLite's `rank`, whose statistics cover the whole index;
+    67	     - so filtering before the limit is not enough, because unfinished views would still move the ranks of visible ones;
+    68	     - **the lexical rank is computed over the visible corpus only:** per request, the visible candidates' texts (from
+    69	       `service.summaries` at the request's bound; tens to hundreds of views) are put into an in-memory full-text table with the same
+    70	       trigram tokenizer, and ranked there;
+    71	     - its statistics are then those of the completed-day library, equal to what the same query gives on that day's backup.
+    72	   - **The store's identity:** a random identifier the writer stores in the store when it creates it (a one-row table). A store
+    73	     replaced at the same path, even with the same first sequence and day, gets a new one.
+    74	   - **The index publishes a day:**
+    75	     - it holds vectors only for views visible as of its published day, and their text as of that day;
+    76	     - a refresh embeds into a staging table, each staged row keyed by **(store identity, view, the text's sha256, the embedding
+    77	       model)**. A vector depends only on its text and model, so the target day is not part of the key;
+    78	     - only when every view visible at the target day has a row under the current store identity does one index transaction move
+    79	       those rows in and advance the published day;
+    80	     - a failure leaves the published day and its vectors unchanged;
+    81	     - **one reuse rule:** any later refresh, for the same or a newer target day, reuses a staged row exactly when all four key parts
+    82	       match. Every row under another store identity is discarded.
+    83	     - **Published vectors are tied to the store too:** the index records the store identity it was published for. Search uses a
+    84	       published vector only when:
+    85	       - that identity equals the store's;
+    86	       - the published day is on or before the store's last completed day;
+    87	       - the vector's text sha equals the view's text at the request's bound.
+    88	     - Otherwise the view counts as unindexed: search runs lexically, says so, and the replacement's index is published by a
+    89	       refresh.
+    90	     - A store restored from a snapshot keeps its identity, but a published day after its last completed day, or a changed text,
+    91	       still disqualifies the vectors.
+    92	     - A view written during an unfinished day is never embedded and never sent to the embedding service.
+    93	   - **A request's state:**
+    94	     - search reads the index's published day and uses vectors only for views visible at the smaller of that day and the request's
+    95	       bound;
+    96	     - if a visible view has no published vector, search runs lexically and says so, as today;
+    97	     - the ledger and the index are separate files, so the published day is what ties them.
+    98	   - On a first-day store nothing is indexed, and search is refused as in row 4.
+    99	5. **Checkpoints and disk: what is guaranteed, and the disk-exhaustion behaviour.**
+   100	   - The writer sets `journal_size_limit` (proposed 64 MB) and keeps SQLite's automatic passive checkpoint.
+   101	   - After each completed day it asks for a truncating checkpoint with a short busy timeout.
+   102	   - **Guaranteed:**
+   103	     - readers do not block the writer's commits;
+   104	     - after a completed day whose truncating checkpoint succeeds, the `-wal` is within the limit;
+   105	     - if the truncating checkpoint fails on 3 consecutive completed days, the writer stops before the next day with a recorded
+   106	       reason.
+   107	   - **Not guaranteed:** a byte bound on the `-wal` within an unfinished day, or across the failed days. Its growth there is the
+   108	     day's own writes, which the contract does not bound.
+   109	   - **Disk:**
+   110	     - before each day the writer checks the free space on the store's disk against a minimum stated in the run's limits file
+   111	       (proposed: 20 times the store's size), and stops before the day with a recorded reason if it is below;
+   112	     - a write that still meets a full filesystem mid-day (extending the store, its `-wal` or a side file) fails, and the writer
+   113	       exits non-zero as in a crash (row 6);
+   114	     - its stop reason may then be lost too, if the run's log is on the full disk;
+   115	     - **the guarantee in that case is the readers' boundedness** (they keep the last completed day), not the record.
+   116	       The process's exit status, seen by its supervisor, is the signal.
+   117	6. **A crash.**
+   118	   - WAL drops the unfinished transaction. The day's **already committed writes stay** in the store.
+   119	   - Readers stay bounded to the last completed day. Every row written during the unfinished day is dated by that day's processing
+   120	     steps, after the last completed day, so it is outside every allowed bound.
+   121	   - **The writer does not resume** (today's loop). The store is served as of its last completed day until it is replaced.
+   122	   - Resuming a stopped live store is a separate design, not covered here.
+   123	7. **Who is writing: a signal outside the store, and copies.**
+   124	   - **The writer's lock, named by the file, not the path:**
+   125	     - the lock file sits in one fixed lock folder (`~/.hivemind-locks/`), named by the store file's device and inode numbers
+   126	       (`<device>-<inode>.writer.lock`);
+   127	     - both are read with `stat`, which reads no content of the store;
+   128	     - a symlink resolves to the same file, and a hard link shares its inode, so every alias of a store reaches the same lock.
+   129	   - **The writer locks before it writes:** it creates the store file empty, takes the lock without waiting, and only then opens it
+   130	     as a database. If the lock is held (by preflight), it refuses to start, with that reason.
+   131	   - For its whole life the writer holds the lock (`flock`); the operating system releases it on any exit, crash included.
+   132	   - **Preflight, before it touches a store, always takes the same lock without waiting,** creating the lock file if it is absent.
+   133	     There is no "no lock file" branch, so a writer cannot start between a check and a copy:
+   134	     - **if the lock is held, a writer is running:** preflight refuses, naming the run's snapshot script (AGENTS §9's sanctioned way);
+   135	     - otherwise preflight keeps the lock through its copy (the backup API, from a `mode=ro` source) and releases it after;
+   136	     - historical stores and production's are copied the same way; taking a fresh lock on them is harmless.
+   137	     - AGENTS §9 remains the only protection for production's own writer, which takes no such lock; changing it is out of scope.
+   138	   - **Snapshots:** the snapshot script is the one toucher that copies a store while its writer runs, with the backup API.
+   139	     Preflight accepts its snapshots like any store with no writer.
+   140	   - **Orderly stop:**
+   141	     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+   142	       timeout);
+   143	     - if service readers hold it, the store stays in WAL mode and the writer records "stopped in order, WAL kept" in its run's
+   144	       outcome;
+   145	     - either way it then releases its lock.
+   146	     - Journal mode is never used as the sign of a live store; the lock is.
+   147	8. **AGENTS §9 ("Never open a live run's databases") stays in force.**
+   148	   - **Proposed decision P1, to be resolved before any live-service operation and not assumed by any proof:** the product's API and
+   149	     MCP server may read a live WAL store under rows 1 to 7. Every other toucher above uses a backup-API snapshot.
+   150	   - The proofs run on test stores made for them, never on a live run.
+   151	
+   152	## State × event (the store's state at the request's transaction × the request)
+   153	
+   154	| State | Bounds omitted | Upper bound ≤ last completed day | Upper bound > last completed day | Start-up reads | Copy |
+   155	|---|---|---|---|---|---|
+   156	| Empty store | as today | as today | as today | as today | consistent |
+   157	| First day in progress | refused (4) | — | refused (4) | wait; requests refused | consistent (an in-progress copy, read under the same rules) |
+   158	| A later day in progress | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   159	| A day completing during a request | the request's own transaction | same | same | same | consistent |
+   160	| Crashed mid-day, not resumed | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   161	| `-wal`/`-shm` absent and directory not writable | fails loudly (1) | same | same | fails loudly | — |
+   162	
+   163	## Proof plan ($0, on test stores made for it; nothing built until the council accepts the contract)
+   164	
+   165	1. **WAL mode:** the writer's store is in WAL mode with the size limit set; production's stores are unchanged.
+   166	2. **Every upper bound:**
+   167	   - the structural check that no bound is resolved outside `resolve_bound`;
+   168	   - for each of the 13 callers, an explicit future bound is refused naming the last completed day, an explicit past bound passes,
+   169	     and an omitted bound gives the last completed day;
+   170	   - lower bounds are unaffected.
+   171	3. **One state per request:** an API request held between its first and last read while the writer commits a judgement and
+   172	   completes a day returns the state at its start, and the writer's commits succeed. Run on a first-day store and a store with one
+   173	   completed day.
+   174	4. **Start-up and MCP concurrency:**
+   175	   - two overlapping MCP calls across a writer's commit each return their own transaction's state;
+   176	   - a call that fails mid-read leaves no open transaction and no open connection;
+   177	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   178	   - MCP's object list after a later day includes that day's objects;
+   179	   - no transaction is open between MCP calls.
+   180	5. **Checkpoint and disk:**
+   181	   - below the free-space minimum, the writer stops before the day with its reason, and readers serve the last completed day;
+   182	   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+   183	   - a filesystem-full error mid-day: the store on a small disk image (`hdiutil`, a few MB), filled while the `-wal` grows. The
+   184	     writer exits non-zero, and readers serve the last completed day. Whether its reason was recorded is reported, not required;
+   185	   - with a long read held, the writer commits;
+   186	   - after the read ends, a checkpoint completes, and a reset brings the `-wal` within the limit;
+   187	   - with a reader held across three completed days, the writer stops before the fourth with its reason recorded, and readers serve
+   188	     the last completed day.
+   189	6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+   190	   within the timeout.
+   191	7. **A crash:** the writer is killed after committed writes mid-day.
+   192	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+   193	   - The search index and the text sent to the embedding service (recorded by a fake transport) equal the backup's.
+   194	   - The partial day's rows are present in the file and invisible to every route and to the index.
+   195	8. **Copies:**
+   196	   - a backup taken while the writer commits passes an integrity check;
+   197	   - preflight refuses a store whose writer holds the lock under any alias (the store's own path, a symlink and a hard link
+   198	     elsewhere);
+   199	   - preflight arriving just before the writer: whichever takes the lock first wins. A writer finding preflight's lock refuses to
+   200	     start and writes nothing; preflight finding the writer's lock refuses to copy;
+   201	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   202	     and every historical input it accepts today;
+   203	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   204	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   205	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   206	8b. **The index:**
+   207	   - a refresh that fails after one successful batch leaves the published day and the search results unchanged;
+   208	   - a retry with the same target completes and advances the day;
+   209	   - a retry after another day has completed reuses exactly the staged rows whose four key parts match;
+   210	   - two stores at the same path with the same first sequence and day but different identities: no staged row of the first is
+   211	     reused for the second, and no published vector of the first is used for the second;
+   212	   - a store restored from an earlier snapshot, with the same identity but a published day after its last completed day: its
+   213	     published vectors are not used until a refresh.
+   214	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   215	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   216	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   217	   the last completed day. After the day completes, the index is extended to it, and search names the index's day until then.
+   218	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   219	   same answers before and after `resolve_bound` is introduced.
+   220	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   221	
+   222	## Not covered
+   223	
+   224	- Resuming a stopped live store.
+   225	- The Idea planner on a new-system ledger.
+   226	- A long-running service's restart and monitoring.
+   227	- The page's note when its live read fails, which is Alex's presentation choice.
+14:- frozen/TrueNorth_Dataroom.html, B. B2C snapshot, projected revenue KPI cards, BIT.com_loi.pdf, Nado_contract.pdf, embedded page images, pages array, PDF iframe, SHA-256, 2 MB, LiveSend, restricted viewer
+23:- The main artifact is `/Users/lchingen/truenorth-dataroom/frozen/TrueNorth_Dataroom.html`. Its restricted-browser-safe document viewer uses base64 rendered page images, not PDF iframes. The validated snapshot has `Nado Contract`, `Flipster LOI`, `PopDEX LOI` and `BIT.com LOI`. [Task 1]
+24:- The overview places the three projected revenue KPI cards in the `B. B2C snapshot` group (renamed from `B. B2C October snapshot`); keep `Dataroom_Story_Guide.md` aligned and parse the overview/revenue sections after layout edits. [Task 1]
+37:applies_to: cwd=/Users/lchingen/truenorth-dataroom; reuse_rule=use paths and rebuild checks for this dataroom; assumptions and outputs are a 2026-11-10 snapshot and must be rechecked.
+90:- `partner_mau_research.md` separates working estimates from public evidence and notes wallet/DAU limitations, tracker discrepancies, dated disclosures and possible opted-in billable-user pricing. Legacy Nado wallet-day data is historical, excluded from the current calculation. Pipeline snapshot: 2 pipeline / 5 LOI / 1 contracted; assertions check unique names, positive MAU, valid status and matching pipeline stage. [Task 1]
+    15	import time
+    16	import urllib.error
+    17	import urllib.request
+    18	
+    19	from . import model
+    20	from .views import store
+    21	from . import service
+    22	
+    23	EMBEDDINGS_URL = 'https://api.openai.com/v1/embeddings'
+    24	EMBEDDING_MODEL = 'text-embedding-3-small'
+    25	EMBEDDING_PRICE_PER_M = 0.02
+    26	OBJECT_BOOST = 0.08
+    27	# Below this top similarity, an idea that names no object and matches no view text is off the library's subject
+    28	# altogether (null, D91): measured 2026-10-24 on 74 sentences, the ideas with a view all score 0.33 or more, a house
+    29	# purchase 0.19, "黄仁勋是个天才" 0.22; nonsense that still scores higher goes to the model, which answers "none".
+    30	NULL_FLOOR = 0.30
+    31	TEXT_BOOST = 0.04
+    32	
+    33	SCHEMA_SQL = """
+    34	create table if not exists view_vectors (view_id text primary key, text_sha256 text, model text, vector_json text, tokens integer, built_at text);
+    35	create table if not exists query_vectors (text_sha256 text primary key, model text, vector_json text, tokens integer, built_at text);
+    36	"""
+    37	
+    38	
+    39	def open_index(path):
+    40	    conn = sqlite3.connect(path)
+    41	    conn.row_factory = sqlite3.Row
+    42	    conn.executescript(SCHEMA_SQL)
+    43	    return conn
+    44	
+    45	
+    46	def view_text(record, rungs):
+    47	    """What a view is searched by: its object, kind, what it looks at, the question and the rung conditions."""
+    48	    return ' '.join([record['object_id'], record['kind'], record['looks_at'] or '', record['question'] or '', *(r['condition'] for r in rungs)])
+    49	
+    50	
+    51	def sha(text):
+    52	    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    53	
+    54	
+    55	def openai_embeddings(texts, embedding_model=EMBEDDING_MODEL, timeout=120):
+   120	
+   121	
+   122	def fresh_vectors(ledger, index, embedding_model=EMBEDDING_MODEL):
+   123	    """view id → vector for every view whose stored vector was made from the view's current text and is usable; a
+   124	    view whose text changed since, was never embedded, or holds an empty vector is absent."""
+   125	    stored = {r['view_id']: (r['text_sha256'], json.loads(r['vector_json'])) for r in index.execute('select view_id, text_sha256, vector_json from view_vectors where model=?', (embedding_model,))}
+   126	    out = {}
+   127	    dims = None
+   128	    for record in ledger.execute('select * from views'):
+   129	        have = stored.get(record['view_id'])
+   130	        if have and have[0] == sha(view_text(record, store.rungs_of(ledger, record['view_id']))) and usable(have[1]) and (dims is None or len(have[1]) == dims):
+   131	            out[record['view_id']] = have[1]
+   132	            dims = len(have[1])
+   133	    return out
+   134	
+   135	
+   220	
+   221	def search(ledger, index, query, k=10, as_of=None, include_closed=False, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, aliases=None, semantic=True):
+   222	    """Top-k views for a query as of a day: cosine similarity on the view text, plus a small boost when the query
+   223	    names the view's object and when the ledger's trigram index also matches. The ranking is 'semantic' only when
+   224	    semantic ranking is allowed, every candidate has a usable vector made from its current text and the query could
+   225	    be embedded; otherwise it is 'lexical' (the trigram index's own order), and the answer says so and names the
+   226	    views without a fresh vector. `semantic=False` (a front started with --lexical) never calls the embedder.
+   227	    `results` is null when the library holds no view on anything the idea names as of that day (D91): no company
+   228	    or theme of the universe is named in it and the ledger's own text index matches no view; otherwise the ranked
+   229	    list comes back whole and the caller judges which views correspond (D76)."""
+   230	    as_of = as_of or service.default_as_of(ledger)
+   231	    candidates = service.summaries(ledger, as_of, include_closed)
+   232	    if not candidates:
+   233	        return {'query': query, 'as_of': as_of, 'mode': 'semantic' if semantic else 'lexical', 'missing_vectors': [], 'results': None}
+   234	    mentioned = objects_in(query, aliases or {})
+   235	    lexical_order = store.search_views(ledger, ' '.join(lexical_terms(query)), 50)          # the ledger's trigram index, best first
+   236	    lexical_rank = {view_id: i for i, view_id in enumerate(lexical_order)}
+   237	    vectors = fresh_vectors(ledger, index, embedding_model) if semantic else {}
+   238	    missing = [record['view_id'] for record in candidates if record['view_id'] not in vectors]
+   239	    mode, q = 'semantic', None
+   240	    if not semantic or missing:
+   241	        mode = 'lexical'
+   242	    else:
+   243	        try:
+   244	            q, _ = query_vector(index, query, embed, embedding_model)
+   245	        except (model.TransportError, OSError):
+   246	            mode = 'lexical'
+   247	    results = []
+   248	    for record in candidates:
+   249	        semantic = cosine(q, vectors[record['view_id']]) if q is not None else 0.0
+   250	        object_hit = record['object'] in mentioned
+   251	        text_hit = record['view_id'] in lexical_rank
+   252	        # with embeddings a text hit is a small nudge; without them the trigram index's own order is the ranking
+   253	        text_score = (TEXT_BOOST if mode == 'semantic' else 1.0 - lexical_rank[record['view_id']] / max(1, len(lexical_order))) if text_hit else 0.0
+   254	        score = semantic + (OBJECT_BOOST if object_hit else 0.0) + text_score
+   255	        results.append({'view_id': record['view_id'], 'object': record['object'], 'kind': record['kind'], 'looks_at': record['looks_at'], 'question': record['question'],
+   256	                        'due_day': record['due_day'], 'open': record['open'], 'dependencies': record['dependencies'], 'dependants': record['dependants'],
+   257	                        'score': round(score, 4), 'parts': {'semantic': round(semantic, 4), 'object_hit': object_hit, 'text_hit': text_hit}})
+   258	    results.sort(key=lambda r: -r['score'])
+   259	    named_or_matched = any(r['parts']['object_hit'] or r['parts']['text_hit'] for r in results)
+   260	    best = max((r['parts']['semantic'] for r in results), default=0.0)
+   261	    if not named_or_matched and (q is None or best < NULL_FLOOR):
+   262	        return {'query': query, 'as_of': as_of, 'mode': mode, 'missing_vectors': missing, 'results': None}     # no recorded view on anything the idea names
+   263	    return {'query': query, 'as_of': as_of, 'mode': mode, 'missing_vectors': missing, 'results': results[:k]}
+    80	
+    81	def create_view(conn, *, view_id, object_id, object_kind, kind, looks_at, question, due_day, year, rungs, seq, input_id, created_at):
+    82	    insert(conn, 'views', view_id=view_id, object_id=object_id, object_kind=object_kind, kind=kind, looks_at=looks_at,
+    83	           question=question, due_day=due_day, year=year, created_seq=seq, created_from_input=input_id, created_at=created_at)
+    84	    for position, rung in enumerate(rungs, start=1):
+    85	        insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'], lo=rung.get('lo'), hi=rung.get('hi'))
+    86	    insert(conn, 'view_switches', view_id=view_id, open=1, reason='created', by_whom='matching', after_seq=seq)
+    87	    conn.execute('insert into views_fts (view_id, text) values (?, ?)', (view_id, f'{object_id} {looks_at} {question}'))
+    88	
+    89	
+    90	def view(conn, view_id):
+
+codex
+**Not yet.** The inode lock addresses aliases of a stable file, but the contract still needs to cover a store being replaced between `stat` and the copy.
+
+1. **Lock and opened file can differ.** Preflight can `stat` store A, acquire A’s inode lock, and then open the same path after it has been replaced with store B. A writer holding B’s different lock can then write during the copy. Define how preflight verifies that the file it will copy is the one whose lock it holds, and how replacement is prevented or detected throughout the copy. Add a test that replaces the path after `stat` and before opening it. The writer needs the corresponding check between creating or identifying its file and opening it. [Contract, row 7](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:123).
+
+2. **The shared lock folder is part of the contract.** The same device and inode only lead to the same lock if writer and preflight resolve the *same* lock directory and the lock file is not removed and recreated while held. Specify the directory and permissions for both entry points, fail closed if they cannot use it, and retain lock files while they may be in use. Test the failure path and replacement of a lock file. [Contract, lock location](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:124).
+
+The published-vector identity and text checks answer my previous replacement concern. The retry rule and its test are now consistent. The proof should still verify the snapshot-restoration case stated in the design, including a changed text with the same store identity. [Contract, index](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:83).
+
+The lock also protects only writers that participate in it; the stated limitation for the existing production writer remains, and §9 continues to govern that writer. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:132).
+
+CONSENSUS: no, because the file locked must be tied to the file actually copied, and the shared lock directory’s lifecycle needs to be specified.
+tokens used
+3,171,588
+**Not yet.** The inode lock addresses aliases of a stable file, but the contract still needs to cover a store being replaced between `stat` and the copy.
+
+1. **Lock and opened file can differ.** Preflight can `stat` store A, acquire A’s inode lock, and then open the same path after it has been replaced with store B. A writer holding B’s different lock can then write during the copy. Define how preflight verifies that the file it will copy is the one whose lock it holds, and how replacement is prevented or detected throughout the copy. Add a test that replaces the path after `stat` and before opening it. The writer needs the corresponding check between creating or identifying its file and opening it. [Contract, row 7](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:123).
+
+2. **The shared lock folder is part of the contract.** The same device and inode only lead to the same lock if writer and preflight resolve the *same* lock directory and the lock file is not removed and recreated while held. Specify the directory and permissions for both entry points, fail closed if they cannot use it, and retain lock files while they may be in use. Test the failure path and replacement of a lock file. [Contract, lock location](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:124).
+
+The published-vector identity and text checks answer my previous replacement concern. The retry rule and its test are now consistent. The proof should still verify the snapshot-restoration case stated in the design, including a changed text with the same store identity. [Contract, index](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:83).
+
+The lock also protects only writers that participate in it; the stated limitation for the existing production writer remains, and §9 continues to govern that writer. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:132).
+
+CONSENSUS: no, because the file locked must be tied to the file actually copied, and the shared lock directory’s lifecycle needs to be specified.

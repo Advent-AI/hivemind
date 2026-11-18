@@ -1,0 +1,16 @@
+**The route is not ready to close:** the trace’s claim that the figure reference has no product reader is incorrect. A missing or selected reference can change the text of the middle answer choice, which both the judge and the page receive.
+
+For example, fresh `clean-14` pass 1 has a null reference, and its stored middle choice says **“no reference figure when the question opened.”** The writer also puts a quoted reference or last-reported amount into that choice when a numeric reference is present. The judge receives the choice’s condition, and the bundle carries it to the page. That establishes visibility; it does **not** establish that the recorded XR failure on this case is correct or that it changed the final answer. [Stored answer](/Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/control/send-1/outcomes.jsonl), [view writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:322), [judge request](/Users/lchingen/hivemind/src/hivemind/views/judging.py:124), [bundle](/Users/lchingen/hivemind/src/hivemind/bundle.py:100).
+
+The **X** count is correctly reported as holding on all 12 written control sends. Its rule checks whether the chosen reference number is placed in the middle range; that does not establish that the right reference was selected, or that every range is sound for the product’s purpose. [Reader brief](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:99), [fresh score](/Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt).
+
+Two corrections to the recount:
+
+- **3/5 or 2/5 without XR** is a diagnostic recount of the stored marks, not a gate result.
+- The reported **9 or 7 of 13** on the development map was calculated **without both L and XR**, not without XR alone. [Repeatability result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md).
+
+**Next, do the unfinished part of D604 at $0:** read the fresh control answers beside their source articles and trace each figure’s reference, middle choice and recorded XR ruling. D604 called for answers beside the source; the new result says the sources were not re-read for XR, so its present table is a useful accounting trace but does not complete that review. [D604](/Users/lchingen/hivemind/docs/DECISIONS.md:948), [line-5 result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/line5/RESULT.md).
+
+The result that would move the path is a recurring, sourced error that changes what the analyst or judge sees, with a general, bounded candidate for review. If the source reading finds only disputed reference choices, no product consequence, or no sourced general mechanism, close this route as proposed; keep the gate unmet and avoid paid work without a new candidate. D544 keeps the old system running meanwhile. [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6616).
+
+CONSENSUS: no, because the figure reference can reach the judge and page, and the source-backed part of the line-5 trace remains to be done.

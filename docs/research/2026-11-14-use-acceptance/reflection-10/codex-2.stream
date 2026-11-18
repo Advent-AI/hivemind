@@ -1,0 +1,390 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Council round 2: merge the two readings into one decision
+
+There are three positions:
+- mine, written first (`own-position.md`);
+- yours (`codex-1.md`);
+- the Claude family's (`claude-1.md`, condensed).
+
+**They agree on the lines:** the six lines stop blocking release. The parts code decides stay hard: figure ranges meet end to end, and the
+favourable end and due day are stable across sends. Lines 1, 2 and 4, line 5's count, and line 3's event part are reported on every run.
+
+**They agree on the comparison:** readiness is decided by a product comparison against the running system (poc-v118), three draws each, on
+unread weeks. The main quantity is big matters served, listed blind by both families from the articles and frozen.
+
+**They differ on four points:**
+
+1. **The decision rule and its size.**
+   - You: a 95% interval on new-minus-old, with Better only if its lower bound is above +10 points. That needs about 30 weeks, so six weeks is
+     only a diagnostic.
+   - The Claude reading: practical paired margins on discordant matters. With a = served only by the new system, b = only by the old and N = all
+     listed matters, Better is a−b ≥ max(3, 15% of N) and a ≥ 2b, under both split countings. The minimum is 20 matters and 30 questions per
+     system per draw. It admits that a 20-point difference is caught about half the time.
+2. **How much unread news there is.** The Claude reading extends the scored span to 09-20 if the old system is replayed: the weeks 08-29 to
+   09-20 are unread by new-system Step 1 except 14 articles (D613's census). Together with 07-20 to 08-28, that is about nine weeks.
+3. **D431's frozen-ruler reading** on 07-01 to 07-14: you keep it as a requirement; the Claude reading reports it beside, since it cannot rank at
+   this size.
+4. **Absolute floors** (80% coverage, 20% trivia, 90% supported, 5% wrong citations, zero answer-changing omissions): you propose them for the new
+   system in 2 of 3 draws; the Claude reading reports them, since they are not Alex's and the old system fails several.
+
+**My merge, for you to attack:**
+- **The span.** The comparison as the Claude reading sets it up: poc-v118 replayed against astra-frozen (hashed; v5.5 excluded), both from empty
+  at 07-01, three draws each, scored on 07-20 to 09-20 with the 14 read articles excluded, and an exposure census over all past activity.
+- **The main quantity:** big matters served, paired per matter, a matter served in at least 2 of 3 draws.
+- **The verdict:** the Claude reading's discordant-pair rule decides, computed under both split countings.
+  - Beside it are printed an exact one-sided sign test on the discordant matters, and your 95% interval on the served-share difference, with
+    the power stated.
+  - "Better" in the record says what size of difference the design could detect.
+  - A Better whose sign test is not below 0.05 is reported as "Better by the practical rule; not statistically established".
+  - Alex reads that, and it gates nothing further without his word.
+- **Guardrails, any of which makes the verdict Worse:** the unsupported share (figure and yes/no apart) or the not-worth-tracking share more than
+  10 points above the old system's.
+- **D431's frozen-ruler reading and the absolute floors** are reported beside, not deciding. They are not Alex's, and the old system fails some
+  floors. Alex sees them with the verdict.
+- **The minimum:** at least 20 matters, and at least 30 questions per system per draw; otherwise "too small".
+- **Valid only if** every plant is rejected, at least 3 of 4 supported controls are accepted, and at least 2 of 3 repeats are the same.
+- **Back to Alex:**
+  - Worse, at once;
+  - No worse, too small or invalid, with the counts;
+  - Better, with the split cards for his spot check before any gate-5 work;
+  - no verdict by 2026-12-01.
+- **Gates 2 to 5:** gate 2 folds in, and its control line waits with D658; gate 3 is the comparison; gate 4 folds in; gate 5 waits for Better.
+
+Is this sound? Is the sign test with "not statistically established" an honest way to hold both readings? Is anything missing that would let the
+finish line move after the result?
+
+Answer CONSENSUS or DISAGREE, with the smallest change.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check whether the merged rule fixes the verdict before any results are seen, especially when the draws, readers, or statistical checks point in different directions.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba docs/research/2026-11-14-use-acceptance/reflection-10/own-position.md | head -100; nl -ba docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md | head -130' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Claude's own position, written before reading either council answer (2026-11-17)
+     2	
+     3	## 1. The six lines
+     4	
+     5	| Line | Harm guarded | Reliable today? | Zero-fault achievable? | Proposal |
+     6	|---|---|---|---|---|
+     7	| 1. No question other than the topic's | High: a judged answer to the wrong question is useless for the matter | Partly: families split on "same question" boundaries | No, at the luna-era rates (D623) | Diagnostic. Its product effect is caught by the comparison's "worth tracking and asks the matter" |
+     8	| 2. No part left unlisted | Low to moderate: what is not judged is shown for transparency only | No: the heaviest family split (D656's listing point) | No | Diagnostic |
+     9	| 3. No outcome with no rung or two | High when it happens, but structural | Yes, by code: figures' contiguity, events by construction | Yes | A **code check** that refuses the answer, not a reader gate |
+    10	| 4. No unjustified decline | High: D559's core problem, an important matter with no question | Partly | No (7 misses with astra; D654's fix recovered the class on exposed targets) | Diagnostic. Its product effect is caught by "big matters covered" |
+    11	| 5. 35 of 44 right, 28 written | An aggregate of 1 to 4 | Noisy: 7 against 1 between draws (D650) | Not shown | Replaced by the comparison's measures |
+    12	| 6. Same direction; due day 9 in 10 | Moderate: an unstable direction flips the reading | Direction by code; due day by readers (D636 class) | Direction yes; due day unclear | Direction as a **code check** across sends; due day a diagnostic |
+    13	
+    14	## 2. What decides readiness: the product comparison (D663's design, still to be written)
+    15	
+    16	- **Material:** the six unread weeks 2026-07-20 to 08-24.
+    17	  - **New system:** run fresh from a library it built over 2026-07-01 to 07-19.
+    18	  - **Old system:** its stored output for the same weeks (the sealed run, D206).
+    19	- **Cards:** every question each system holds at each week's end, with its last answer, plus each week's big matters, census-listed by both
+    20	  families from the articles before any system output is read. Planted wrong answers and repeats go in every batch.
+    21	- **Reader:** the council (D663), with splits left as "cannot tell", and Alex spot-checking a fixed sample of splits.
+    22	- **Measures** (proposed; the council to set the numbers):
+    23	  - **C:** big matters covered by a question that is worth tracking;
+    24	  - **A:** answers agreed supported, among questions agreed worth tracking;
+    25	  - **N:** noise, the questions agreed not worth tracking.
+    26	- **Rule**, written before the run:
+    27	  - **Better:** C at least as high, and A higher by at least a margin the size supports.
+    28	  - **No worse:** C within 1 matter a week on average, and A within a margin.
+    29	  - **Worse:** otherwise.
+    30	  - The planted controls must be caught, or the reading is void.
+    31	- **Size:** six weeks gives about 42 new and 90 old questions, enough to see a difference of about 20 points in A, which is to be computed in
+    32	  the design. C is counted per week, so six weeks gives six paired points.
+    33	
+    34	## 3. The gates
+    35	
+    36	- **Gate 1:** its code checks (lines 3 and 6's direction) stay hard; the rest are reported.
+    37	- **Gate 2:** the judge's unsupported-answer lines fold into A. The control line waits (D658, by Alex's word).
+    38	- **Gates 3 and 4** are this comparison, which uses unseen weeks.
+    39	- **Gate 5,** integration, comes after the comparison favours the new system.
+    40	
+    41	## 4. Reconsideration
+    42	
+    43	- **Worse:** back to Alex with the named loss class: fix it, or keep the old system.
+    44	- **No worse but not better:** Alex chooses, and cost may weigh again (D657).
+    45	- **No design can reach the size:** that finding goes to him.
+    46	
+    47	## 5. Fixed before the run
+    48	
+    49	- The matter census's method and readers;
+    50	- the card selection (all questions, not a sample) and its blinding;
+    51	- the planted controls;
+    52	- the margins and the rule;
+    53	- the starting library's specification;
+    54	- the exposure check (that no development run read the weeks);
+    55	- the spend guard.
+     1	(The Claude-family council reading, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Bottom line: the six lines stop blocking release; the product comparison, with "beats" in numbers, decides readiness.
+     3	1. Lines (facts: written for "this first measurement" (log:4383), told "不能证明它比老系统好" (4378); D548 made them gate 1; D560 no measured link; disputed-point agreement 21/70 and 29/53 (R4:19); luna 7 then 1 (8986); zero faults in 131 sends needs ~0.5%/send, ~27% at 1%, ~7% at 2%):
+     4	   Q (different question): high harm; poorly measurable (11/111 vs 0; 1 or 5); reported diagnostic.
+     5	   L (unlisted part): low-moderate harm (Deck 1: missing facts "would change only the confidence"); poor; reported.
+     6	   R (no range or two): figures already refused by code (ladder_step.py:192) — keep; events reported.
+     7	   N (unjustified decline): highest harm (largest observed loss, 8386); best reader agreement; folds into the comparison's main quantity and is reported.
+     8	   35/44: a proxy; the counting swing equals the margin; the 44 were tuned on; retired, reported.
+     9	   6 (favourable end, due day): code-measured; a three-send stability code check on every new ladder version.
+    10	2. Readiness: the comparison. Main quantity: big matters served, listed blind by both families from the scored weeks' articles, settled against the source and frozen; a system serves a matter when it holds a question both mark worth tracking whose latest answer both mark supported, in at least 2 of 3 draws; paired per matter. Guardrails: unsupported shares (figure and yes/no apart, as D428), not-worth-tracking share, cited summaries departing from the source. Validity: every plant rejected, at least 3 of 4 confirmed supported accepted, at least 2 of 3 repeats the same. Margins: a = served only by new, b = only by old, N = listed matters: Better a-b >= max(3, 15% N) and a >= 2b under both split countings and no guardrail broken; Worse the reverse, or a guardrail more than 10 points worse; else No worse. Practical margins, not significance tests (a 20-point difference is caught about half the time at this size). Minimum: at least 20 big matters and 30 questions per system per draw; if the old system is replayed, extend scoring to 09-20 (unread except 14 articles, excluded); below the minimum "too small".
+    11	3. Gate 2 folds (control line waits, D658); gate 3 is the comparison, the frozen-ruler 07-01..07-14 reading reported beside, not deciding (cannot rank at this size); gate 4 folds, its proposed absolute lines reported, not pass lines (not Alex's; the old system fails several); gate 5 waits for Better.
+    12	4. Back to Alex: Worse at once (D544); No worse, too small or invalid with the counts (this uses up the only unread comparable news); Better with the split cards before any gate 5 work; no valid verdict by 2026-12-01 back to him.
+    13	5. Settle first: the old system = replay poc-v118, three draws from empty at 07-01 (~$6 a draw), fallback the stored poc-v34 run disclosed; the new system = astra-frozen by hashes (v5.5 excluded, failed its test); both from empty at 07-01, scored from 07-20; exposure census over every past activity; matter list blind and frozen, company financial figures a separate row (D505); one card template, labels hidden; "supported" on what the judge was shown; Codex memories off; splits counted both ways before Alex's spot check; rule, sizes and controls hashed before the first send.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files docs/research/2026-11-14-use-acceptance/reflection-10 | rg '(own-position|claude-1|challenge|codex-1)\\.md"'$'"'; nl -ba docs/DECISIONS-log.md | sed -n '4738,4749p;4795,4804p;8197,8202p;9383,9402p'; nl -ba docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md | sed -n '45,62p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/reflection-10/own-position.md
+docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md
+docs/research/2026-11-14-use-acceptance/reflection-10/codex-1.md
+  4738	## D427 · 2026-11-11 · Clean Step 2 is closed and frozen; it goes to production only with the whole clean path
+  4739	
+  4740	- **Asked** (on "那你jev这边可以收尾上production 了吗"): "还不能上 production。… A（我建议）：等整套新系统一起上。Step 4 过线后，跑一次“新系统对现生产”的端到端比较（冻结的尺子，各 3 次），
+  4741	  同一次运行里顺带核对 Step 2 的三条线。过了再整体上线。在那之前 Jev 不再动。 B：现在只把新 Step 2 移植进现有生产。… 我建议 A：Jev 收尾、冻结，不单独上线；先把精力放在 Step 4。"
+  4742	  - Alex: "饿、好jev 收尾冻结".
+  4743	- **Decided:** option A. The clean path's Step 2 is closed and frozen as accepted (D381) and measured (Step 2 log §§12–18): the
+  4744	  search over the entity's evidence, the Jev comparison and its request text, the rule that a repeat joins the group it is most like,
+  4745	  the forward runner, and Step 3's grouping library. It is not moved into production on its own. It goes to production with the whole
+  4746	  clean path, after Step 4 meets its lines, through an end-to-end comparison of the clean path against production on the frozen
+  4747	  ruler (three draws each), with Step 2's three lines checked on that run. A change to it is a new version that only Alex opens.
+  4748	- **Done:** `tests/test_frozen_clean_step2.py` holds the sha256 of `clean-arch/step2/compare.py`, `run_forward.py`, their tests,
+  4749	  `clean-arch/step3/library.py` and its test, and fails the suite when one moves (positive control: a one-byte flip; a scratch copy with
+  4795	## D431 · 2026-11-12 · The clean path is compared end to end with production as it now runs, with no preset questions on either side
+  4796	
+  4797	- **Asked:** "整条新线路要和谁比，才算“比线上好”（你定的上线门槛 D427）？新系统不开公司财务指标题；线上版本自 11 月 5 日起也不再预设题目。"
+  4798	  - Options: current production (recommended): "双方都不预设题目，条件相同；用冻结的标准、同一天、各跑三轮。“可评分的 7 道题”的结果单独列出。"; the seeded version with 22 preset questions ("新系统每轮天然少约 11 道公司财务指标题，几乎不可能赢"); the seven graded questions only.
+  4799	  - Alex: "和现在的线上版本比 (Recommended)".
+  4800	- **Decided:** D427's end-to-end comparison is the clean path against production as it now runs (no preset questions, D370),
+  4801	  on the frozen ruler, the same day, three draws each; the seven graded questions (D395) are reported beside. The seeded
+  4802	  comparison (D392) remains a diagnostic, not the gate. Raised by the council's read of where the path stands
+  4803	  (`clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md`).
+  4804	- **Scope:** the clean path's end-to-end acceptance (D427).
+  8197	## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+  8198	
+  8199	- **Correction:** matched against every new-system Step 1 trace (1,437 articles), the selected weeks 2026-07-20 to 08-24 have no article
+  8200	  read, and 09-07 and 09-14 have 10 and 4. D611's "no exposure-free week" held only for 09-21 to 10-26. Its conclusion stands on power
+  8201	  and on the old library's end. The check covers Step 1 traces only, not every other activity.
+  8202	- **Nothing reopens:**
+  9383	## D664 · 2026-11-17 · Alex: no budget needed for the comparison; D658 waits; the council determines whether the six lines still make sense and what decides readiness
+  9384	
+  9385	- **Asked** (after D663):
+  9386	  1. Should the six lines (D400) still block release, or be reported while readiness is decided by the product comparison, with "beats" set in
+  9387	     numbers?
+  9388	  2. May D658's new reference wait?
+  9389	  3. The comparison's budget.
+  9390	- **Alex:** "3. no need for budget, 2. wait, 1. what are the rules, does it make sense now run your council to determine".
+  9391	- **Decided:**
+  9392	  - The product comparison needs no budget set in advance. Each run still carries its own spend guard, and its price is reported. Provider caps
+  9393	    are untouched.
+  9394	  - D658 waits; design v8 is kept, and nothing is run.
+  9395	  - Question 1 goes to a council, which determines it and records its consensus with his words, as an exercise of the authority he gave. The
+  9396	    six lines were explained to him in plain words.
+    45	The smallest true difference detected four times in five (two-sided, 5%):
+    46	
+    47	| Shape | Cost | Answers supported | Trivia or duplicates |
+    48	|---|---|---|---|
+    49	| 1 week, 3 draws each | about $9 | 31 points if repeated draws were as good as new weeks; 54 if they add nothing | 34; 60 |
+    50	| 2 weeks, 3 draws each | about $18 | 22; 38 | 24; 42 |
+    51	| 3 weeks, 1 draw each | about $9 | 31 | 34 |
+    52	| 3 weeks, 2 draws each | about $18 | 22; 31 | 24; 34 |
+    53	| 4 weeks, 3 draws each (more unread news and money than there is) | about $36 | 16; 27 | 17; 30 |
+    54	
+    55	- The calculation assumes independent answers, fixed weekly question counts and particular starting shares. Questions within a
+    56	  week, and repeated draws of the same week, are correlated to a degree the stored runs do not measure for these readings. "As good
+    57	  as new weeks" is an upper bound on what repeated draws can give.
+    58	- The simulation checks the formula under the same assumptions; it does not validate the assumptions. For 3 weeks and 1 draw (21
+    59	  and 45 answers): a 31-point difference is detected in 82% of 20,000 simulated comparisons, a 10-point difference in 12%, and a
+    60	  20-point difference in roughly 40 to 60% depending on the starting shares (about 37% at 83 against 63, about 57% at 97 against
+    61	  77, the council's own runs).
+    62	- Big matters covered cannot be sized this way at all: a week gives two to seven such matters.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '4376,4389p;4756,4769p;9341,9347p;9374,9382p'; nl -ba docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md | sed -n '21,52p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/pilot-deck-1/council-marking/PROTOCOL.md | sed -n '13,42p'; nl -ba docs/research/2026-11-14-use-acceptance/pilot-deck-1/council-marking/RESULT.md | sed -n '17,31p'; nl -ba docs/research/2026-11-14-use-acceptance/comparison/sizing.py | sed -n '15,42p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  4376	## D400 · 2026-11-10 · Stage A is read against absolute lines, with no paid control arm
+  4377	
+  4378	- **Asked:** "第一段测试只测新做的“定档”这一步：44 道题各发 3 次，约 2–3 美元。我建议不再花钱重跑“老系统写法”当对照组（连续三轮评审都卡在两种写法没法公平地比），参照改用老系统存档里已写出的 36 个分档。代价：这一段只能说明新做法达没达到你定的线，不能证明它比老系统好；项目规则原本要求验收要有当场重跑的对照，所以这个例外要你点头。通过线我提议：四条硬线一个都不能有（问错题、漏列未判部分、分档有重叠或遗漏、无正当理由拒判）；44 道里至少 35 道在 3 次中至少 2 次做对，其中至少 28 道是真写出了分档；同一道题 3 次的“好坏方向”必须一致、到期日至少九成一致。你的意见？"
+  4379	  - Options: agree, no control, the lines as proposed (recommended); no control with a stricter line (40 of 44); a paid control arm.
+  4380	  - Alex: "同意：不设对照，线按提议 (Recommended)".
+  4381	- **Decided:**
+  4382	  - Stage A of the clean ladder step sends the candidate only. This is an exception, by his word, to AGENTS §7.3's "beside a fresh
+  4383	    control", for this first measurement of a step production does not have as its own call.
+  4384	  - Its lines are his: no ladder that asks another question, leaves a part unlisted, or has an outcome with no rung or two; no
+  4385	    refusal without a justified reason; at least 35 of the 44 theses right in at least two of three sends, at least 28 of them by a
+  4386	    written ladder; the favourable end the same in all three sends for every company figure and the due day the same for at least
+  4387	    nine in ten theses.
+  4388	  - Every report of Stage A says that it does not compare the step with production; the $0 reading of the 36 ladders production
+  4389	    wrote is printed beside it as a reference.
+  4756	## D428 · 2026-11-11 · Stage B's lines compare figure and yes/no questions apart with the baseline
+  4757	
+  4758	- **Asked:** "第二段（让老判断程序每天去判新系统自己出的题）怎么算通过？基准里老程序在人工写的题上：数字题站不住 8%，是非题 0%，16 道题最后一天全部站得住。"
+  4759	  - Options: compare figure and yes/no questions apart (recommended): "数字题站不住的比例不超过基准再加 5 个百分点（约 13%–14%）；是非题不超过 5%；三轮共约 30 道题里，最后一天站不住的不超过 3 道，“证据不足”的另外列出。不看总体比例，因为总体会随题型比例变化。代价：判断程序没变差时，数字题这条也有 6%–17% 的机会被误判不过。"; apart with 10 points; the design's original lines (overall 8%, last at least 90%).
+  4760	  - Alex: "数字题和是非题分开比 (Recommended)".
+  4761	- **Decided:** Stage B passes when, over its three draws, (1) the share of decided figure-question judgements that are
+  4762	  UNSUPPORTED is at most 5 points above the baseline's (4 of 52 with the unresolved left out, 7.7%; 5 of 53 counted
+  4763	  against, 9.4%: so at most 12.7% to 14.4% on the same three readings); (2) the share of decided yes/no judgements that are
+  4764	  UNSUPPORTED is at most 5%; (3) of the judged theses whose last judgement in the window is decided, at most 3 in 30 (scaled
+  4765	  to the number judged) are UNSUPPORTED, with the INSUFFICIENT last judgements reported beside. No overall line. The
+  4766	  design's other lines (no draw incomplete after one redo; nine in ten laddered theses judged at least once; the control
+  4767	  theses) and its NOT MEASURED conditions stand. Baseline: `clean-arch/step4-2026-11-10/stage_b/RESULT.md`; the lines'
+  4768	  chance behaviour: `stage_b/result/line-chance.txt`.
+  4769	- **Scope:** the clean path's Step 4, Stage B.
+  9341	  4. **If the marks support it,** a comparison design follows:
+  9342	     - both systems start on the same date, from comparable real libraries;
+  9343	     - with enough fresh material and his reading time to resolve a meaningful difference;
+  9344	     - with a written rule for what favours either system or leaves it unclear.
+  9345	
+  9346	     It is reviewed by the council and run only on his word. If no design clears the earlier feasibility objections (`comparison-feasibility/RESULT.md`,
+  9347	     D612), that finding goes to him.
+  9374	  By D662's lines (time not applicable): **enough to design the next comparison.** No ranking is claimed.
+  9375	- **Decided (D662's plan):** the next step is the product comparison's design at $0, reviewed by the council and run only on Alex's word, with the
+  9376	  council as its reader and Alex spot-checking splits.
+  9377	  - Its known constraints (`comparison-feasibility/RESULT.md` with D613's correction):
+  9378	    - power: a week yields about 7 new-system and 15 old-system questions;
+  9379	    - comparable libraries: the old system's sealed library ends 2026-08-28;
+  9380	    - exposure: the weeks 2026-07-20 to 08-24 are unread by any new-system Step 1 run.
+  9381	  - Cost is set aside (D657). Alex's testing authorization has about $2.80 left, so a run needs his budget.
+  9382	
+    21	## Readings (two reader families, blind to the system and to each other; disagreements listed; key disputes to Alex or a reader he names)
+    22	
+    23	- **Scopes, each stated with its result:** A's missed questions and C cover a sample of 80 of the 473 articles, stratified by day (seed fixed
+    24	  before the run), and are stated for those 80, not for the window; A's quality marks, B and B2 cover every question each draw opened in the
+    25	  window, every last judgement by 10-05, and every statement those judgements cite (window-level).
+    26	- **A, big questions:** each family lists from the 80 articles the questions worth tracking on their own; then each system's questions are
+    27	  marked opened / narrower / broader / missed per matter. Counted: matters both families list, and separately matters only one lists (reported
+    28	  with the disagreement, not dropped). **Covered** = opened, or narrower when the narrower question carries the matter's main outcome (each such
+    29	  call written with its reason); broader and missed are not covered. Each system's opened questions are also marked worth tracking / trivia /
+    30	  duplicate.
+    31	- **B, judgements:** every question's last judgement by 10-05, read against the request as sent. Planted wrong judgements are built on requests
+    32	  not otherwise in the packet; supported controls are confirmed by a separate reader first and any disputed control is replaced.
+    33	- **B2, statements:** every statement a last judgement cites, against its own article (the passage located in the article text): date,
+    34	  speaker and summary.
+    35	- **C, delivery:** first, a separate fact listing: each family reads each of the 80 articles and lists every statement that bears on a covered
+    36	  matter (with its passage), not only the sentences that raise a question; then code classes each listed fact per system (not extracted / no
+    37	  link / linked elsewhere / delivered in the request of a judgement after it arrived), checked by hand; the undelivered ones are read against
+    38	  the full judgement request ("would it change the rung?"). Controls of both kinds: known "would not" (facts already in the request, or
+    39	  unrelated) and a known "would change" **group** (PRD 10's custom-chip case: a group of facts moved 9 of 9 sends off the lowest rung), read
+    40	  as a group because no single-fact positive case is established.
+    41	- **Denominators and empty cases:** a system that opens no question on a matter is "missed", never excluded; a system with no judgement on a
+    42	  covered matter fails B for it; an empty denominator is reported as not measured, never as met.
+    43	
+    44	## Lines (for Alex to set; a starting proposal, not decided)
+    45	
+    46	| reading | proposed line, per system, in at least two of three draws | basis in the trial (leads only) |
+    47	|---|---|---|
+    48	| A | covers at least 4 in 5 of the matters both families list | 6–7 of 7 in the trial |
+    49	| A | at most 1 in 5 of its opened questions marked trivia or duplicate by both families | clean acceptance D386: 1 of 10 |
+    50	| B | at least 9 in 10 last judgements supported by both families | 7 of 9 and 10 of 12 in the trial |
+    51	| B2 | at most 1 in 20 cited statements wrong in date, speaker or summary against the article | 4 of 201 flagged by both, unconfirmed |
+    52	| C | no undelivered fact both families say would change a judgement | the product's purpose (PRD 10 §1) |
+
+ succeeded in 0ms:
+    13	## Readers and blinding
+    14	
+    15	- **Readers.** A is Codex, with memories off (D661). B is Claude, through the command line with no settings, tools, MCP or slash commands. Each
+    16	  card is its own fresh session, run from an empty directory, with everything inline. Logs are checked: any command, tool or file event voids the
+    17	  session.
+    18	- **What a session sees.** Only the card as the page shows it to Alex: the question, the answer choices with the present answer, its reasons, the
+    19	  cited statements with their passages, the complete request, the completeness sheet, and the linked articles' text, plus the fixed brief below.
+    20	- **What no session sees:** the key (`~/.hivemind-keys/pilot-deck-1/`), the stored model-family marks, DESIGN.md, or which cards are planted or
+    21	  repeated.
+    22	- **Claude, the orchestrator,** writes no mark. Code builds every prompt from the page.
+    23	
+    24	## Steps (fixed)
+    25	
+    26	1. **Independent marks.** For each card, A and B each mark the page's own fields:
+    27	   - `worth`: yes, no or cannot tell;
+    28	   - `supported`: yes, no or cannot tell, answer cards only;
+    29	   - per sheet fact, `bears` (yes, no or cannot tell) and `effect` (the answer, only the confidence, neither, or cannot tell);
+    30	   - a short `why`.
+    31	2. **Debate.** For each card where any field differs, both readers get a fresh session with the card, their own mark and reason, and the other
+    32	   reader's mark and reason. Each keeps or changes each disputed field, with a reason. There are at most two rounds.
+    33	3. **The council's mark.**
+    34	   - **Agreed:** that value.
+    35	   - **Still split after two rounds:** "cannot tell", listed as a split for Alex's spot check.
+    36	4. **The tally.** The council's marks are written in the page's own format (`c<n>-worth`, `c<n>-supported`, `c<n>-why`, `c<n>-fact<i>-bears`,
+    37	   `c<n>-fact<i>-effect`) and tallied by the unchanged `tally_deck.py` against the sealed key.
+    38	5. **Read against D662's lines, with the time line not applicable:**
+    39	   - **"Enough to design the next comparison":** both plants marked `supported = no`; the separately confirmed supported control `yes`; at least 2
+    40	     of 3 repeats the same on both fields.
+    41	   - **Anything unmet** is inspected for its cause.
+    42	   - **Reported:** every split; agreement with each stored model family, with D661's caveat; and the sheets.
+    17	## Against the lines fixed before marking
+    18	
+    19	| Line | Result |
+    20	|---|---|
+    21	| Both planted wrong answers rejected | **Yes:** cards 3 and 19, supported = no |
+    22	| The confirmed supported controls accepted | **4 of 5:** cards 4, 6, 7 and 15 yes; card 5 (old v1, credit support and guarantees) split, and so is its repeat, card 11 |
+    23	| Hidden repeats marked the same | **3 of 3** (cards 5/11, 6/13 and 10/16; the first pair is the same split twice) |
+    24	| Missed matters | Both judged worth a question: M01 FY2027 revenue (missed by the new system) and M04 the $279B supply commitments (missed by the old) |
+    25	| Completeness sheets | The 3 confirmed undelivered facts "bear" on their question, but "would change only the confidence". The 3 negative controls "do not bear" |
+    26	
+    27	**Card 5's split is substantive, not noise.**
+    28	- Codex: the disclosed guarantee caps do not establish what will be *outstanding* in the next commitments note.
+    29	- Claude: NVIDIA's disclosed maximum exposure is what such a note reports.
+    30	
+    31	That is a question for Alex's spot check.
+    15	# what one week holds, from the fresh week of 2026-09-22..28 (week/WEEK-RESULT.md): questions with a latest answer
+    16	PER_WEEK = {'new': 7, 'old': 15}
+    17	# charged per week and draw: the new system's ledger $2.52; the old system at listed rates $0.47, rounded up
+    18	COST = {'new': 2.52, 'old': 0.50}
+    19	# shares seen so far, as (new: hits, of), (old: hits, of), with where they come from
+    20	SEEN = {
+    21	    'answers supported by both teams': [('July window, trial, one draw each (TRIAL-RESULT.md)', (7, 9), (10, 12)),
+    22	                                        ('fresh week, one draw each (WEEK-RESULT.md)', (6, 7), (10, 15))],
+    23	    'questions that are trivia or duplicates, both teams': [('fresh week, one draw each (WEEK-RESULT.md)', (1, 7), (6, 15))],
+    24	}
+    25	SHAPES = [(1, 3), (2, 3), (3, 1), (3, 2), (4, 1), (4, 3)]   # (weeks of unread news, draws of each system)
+    26	UNREAD_WEEKS = 3   # 2026-10-06..12, 10-13..19, 10-20..26 are in the article database; the week of 09-29 has 40 articles already read
+    27	
+    28	
+    29	def smallest_detectable(p, n_new, n_old):
+    30	    """Two shares near p, two-sided 5%, detected four times in five: 2.8 standard errors."""
+    31	    return 2.8 * math.sqrt(p * (1 - p) * (1 / n_new + 1 / n_old))
+    32	
+    33	
+    34	def simulated_power(p_new, p_old, n_new, n_old, runs=20000, seed=20261201):
+    35	    rng, hits = random.Random(seed), 0
+    36	    for _ in range(runs):
+    37	        a = sum(rng.random() < p_new for _ in range(n_new)) / n_new
+    38	        b = sum(rng.random() < p_old for _ in range(n_old)) / n_old
+    39	        pooled = (a * n_new + b * n_old) / (n_new + n_old)
+    40	        se = math.sqrt(max(pooled * (1 - pooled), 1e-9) * (1 / n_new + 1 / n_old))
+    41	        hits += abs(a - b) / se > 1.96
+    42	    return hits / runs
+
+codex
+**DISAGREE as written. Keep the paired rule, but call its result a practical lead, give the middle outcome an honest name, and explicitly record which existing release requirements the council is changing.** On 20 matters, four served only by the new system and none served only by the old would pass the practical rule. Even assuming independent matters, the one-sided sign-test probability would be 0.0625. That is a lead worth showing Alex. [Proposed paired rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md:10)
+
+1. **Write the full verdict before the first send.** Use the proposed rule for a practical lead and its mirror for a practical loss. Require the result to hold under both split countings. A guardrail breach confirmed under both countings is **Worse**. If a split could change the verdict, or neither side meets the margin, say **No practical winner**. “No worse” would claim more than this rule tests. Fix the denominators and minimum count for each guardrail subgroup. An empty or undersized subgroup cannot clear a guardrail. Keep D428’s original limits visible so the new 10-point guardrail does not silently replace them. [Paired rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md:10) · [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4756)
+
+2. **Show the sign test and interval for what they measure.** The sign test asks whether the new system wins more often among matters served by only one side. Even a result below 0.05 does not establish a 10-point gain across all matters. The ordinary exact calculation also assumes independent discordant matters. Freeze how related matters and weeks are grouped. If the design cannot support that assumption or a defensible interval that accounts for the grouping, label the statistics illustrative. Keep **20 distinct matters and 30 distinct questions per system per draw** as minimum counts for the practical reading. Neither my earlier 30-week illustration nor the “about half the time” estimate establishes power for this paired measure. [Sizing assumptions and limits](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md:45)
+
+3. **Freeze the population and how a matter earns credit.** Use July 1–19 to build both libraries, then score July 20–September 20 only if the full exposure census supports that span. D613 establishes the 10 and 4 exposures for the weeks of September 7 and 14 from Step 1 traces. Freeze the actual exclusion list and apply it to both replays. Fix one scoring cutoff per matter, how repeat mentions are grouped, and what counts as the same question. A missing question or answer earns no credit. Hash the article list, versions, reader instructions, controls, and verdict rule before sending. Keep Alex’s spot checks beside the prewritten verdict. [D613](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8197) · [Source-first reading and denominators](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md:21) · [Reader protocol](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/council-marking/PROTOCOL.md:24)
+
+4. **Record the authority separately.** The absolute floors were proposals. D427 and D431 were agreed with Alex and include the frozen-reference comparison and Step 2’s three checks. If the council wants the frozen-reference result reported alongside the comparison, say explicitly what D664 supersedes and retain the Step 2 checks unless that requirement is expressly changed. Likewise, moving line 6 to code should preserve the agreed **90%** due-day consistency threshold unless the decision explicitly changes it. D658 waits. Even a practical lead goes to Alex before any release engineering resumes. [D400](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4381) · [D427](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4738) · [D431](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4795) · [D664](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9383)
+tokens used
+362,310
+**DISAGREE as written. Keep the paired rule, but call its result a practical lead, give the middle outcome an honest name, and explicitly record which existing release requirements the council is changing.** On 20 matters, four served only by the new system and none served only by the old would pass the practical rule. Even assuming independent matters, the one-sided sign-test probability would be 0.0625. That is a lead worth showing Alex. [Proposed paired rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md:10)
+
+1. **Write the full verdict before the first send.** Use the proposed rule for a practical lead and its mirror for a practical loss. Require the result to hold under both split countings. A guardrail breach confirmed under both countings is **Worse**. If a split could change the verdict, or neither side meets the margin, say **No practical winner**. “No worse” would claim more than this rule tests. Fix the denominators and minimum count for each guardrail subgroup. An empty or undersized subgroup cannot clear a guardrail. Keep D428’s original limits visible so the new 10-point guardrail does not silently replace them. [Paired rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md:10) · [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4756)
+
+2. **Show the sign test and interval for what they measure.** The sign test asks whether the new system wins more often among matters served by only one side. Even a result below 0.05 does not establish a 10-point gain across all matters. The ordinary exact calculation also assumes independent discordant matters. Freeze how related matters and weeks are grouped. If the design cannot support that assumption or a defensible interval that accounts for the grouping, label the statistics illustrative. Keep **20 distinct matters and 30 distinct questions per system per draw** as minimum counts for the practical reading. Neither my earlier 30-week illustration nor the “about half the time” estimate establishes power for this paired measure. [Sizing assumptions and limits](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md:45)
+
+3. **Freeze the population and how a matter earns credit.** Use July 1–19 to build both libraries, then score July 20–September 20 only if the full exposure census supports that span. D613 establishes the 10 and 4 exposures for the weeks of September 7 and 14 from Step 1 traces. Freeze the actual exclusion list and apply it to both replays. Fix one scoring cutoff per matter, how repeat mentions are grouped, and what counts as the same question. A missing question or answer earns no credit. Hash the article list, versions, reader instructions, controls, and verdict rule before sending. Keep Alex’s spot checks beside the prewritten verdict. [D613](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8197) · [Source-first reading and denominators](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md:21) · [Reader protocol](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/council-marking/PROTOCOL.md:24)
+
+4. **Record the authority separately.** The absolute floors were proposals. D427 and D431 were agreed with Alex and include the frozen-reference comparison and Step 2’s three checks. If the council wants the frozen-reference result reported alongside the comparison, say explicitly what D664 supersedes and retain the Step 2 checks unless that requirement is expressly changed. Likewise, moving line 6 to code should preserve the agreed **90%** due-day consistency threshold unless the decision explicitly changes it. D658 waits. Even a practical lead goes to Alex before any release engineering resumes. [D400](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4381) · [D427](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4738) · [D431](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4795) · [D664](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9383)

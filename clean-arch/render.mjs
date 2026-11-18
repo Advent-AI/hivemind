@@ -35,18 +35,21 @@ const connections = edges.map(({from, to, description}) => {
 }).join('');
 // Place nodes from the PRD graph in a readable layout. Unrecognised nodes fail
 // the build so the visual cannot silently omit a future architecture change.
-const positions = {H:[130,80],T:[560,80],X:[360,205],N:[820,150],O:[820,250],P:[360,380],S:[130,500],D:[130,650],C:[360,650],B:[820,500],U:[820,650],K:[820,800],W:[360,875],J:[360,1000],G:[1150,130],V:[1150,250],R:[1150,370]};
+const positions = {H:[130,80],T:[560,80],X:[360,205],N:[820,120],O:[820,205],M:[820,290],P:[360,380],S:[130,500],D:[130,650],C:[360,650],B:[820,500],U:[820,650],K:[820,800],W:[360,875],L:[360,1000],J:[360,1125],Z:[360,1250],Q:[820,1250],G:[1150,130],V:[1150,250],R:[1150,370]};
 for (const id of labels.keys()) if (!positions[id]) throw new Error(`Diagram layout needed for ${id}`);
 const line = (from, to) => {
   const a = positions[from], b = positions[to];
-  if (from === 'W' && to === 'T') return `M 460 875 L 1000 875 L 1000 80 L 660 80`;
+  if (from === 'W' && to === 'T') return `M 460 865 L 1000 865 L 1000 80 L 660 80`;
+  if (from === 'W' && to === 'J') return `M 460 885 L 520 885 L 520 1115 L 460 1115`;
+  if (from === 'J' && to === 'Q') return `M 460 1135 L 820 1135 L 820 1216`;
   if (from === 'W' && to === 'D') return `M 260 875 L 20 875 L 20 650 L 30 650`;
-  if (from === 'P' && to === 'C') return `M 460 380 L 510 380 L 510 650 L 460 650`;
+  if (from === 'P' && to === 'C') return `M 460 380 L 510 380 L 510 630 L 460 630`;
+  if (from === 'T' && to === 'X') return `M 520 114 L 520 140 L 400 140 L 400 171`;
   if (from === 'P' && to === 'S') return `M 260 380 L 245 380 L 245 500 L 230 500`;
   if (from === 'S' && to === 'C') return `M 230 500 L 245 500 L 245 650 L 260 650`;
   if (from === 'D' && to === 'S') return `M 130 616 L 130 534`;
-  if (from === 'X' && to === 'V') return `M 460 205 L 620 205 L 620 330 L 1030 330 L 1030 250 L 1050 250`;
-  if (from === 'X' && (to === 'N' || to === 'O')) return `M 460 205 L 600 205 L 600 ${b[1]} L 720 ${b[1]}`;
+  if (from === 'X' && to === 'V') return `M 460 205 L 620 205 L 620 350 L 1030 350 L 1030 250 L 1050 250`;
+  if (from === 'X' && (to === 'N' || to === 'O' || to === 'M')) return `M 460 205 L 600 205 L 600 ${b[1]} L 720 ${b[1]}`;
   if (from === 'C' && (to === 'B' || to === 'K')) return `M 460 650 L 600 650 L 600 ${b[1]} L 720 ${b[1]}`;
   if (a[0] === b[0]) return `M ${a[0]} ${a[1]+34} L ${b[0]} ${b[1]-34}`;
   if (a[1] === b[1]) return `M ${a[0]+(b[0]>a[0]?100:-100)} ${a[1]} L ${b[0]+(b[0]>a[0]?-100:100)} ${b[1]}`;
@@ -63,33 +66,23 @@ const nodes = [...labels].map(([id,label]) => {
   }
   return `<g><rect x="${x-100}" y="${y-34}" width="200" height="68" rx="10"/><text x="${x}" y="${y-(lines.length-1)*9}">${lines.map((s,i)=>`<tspan x="${x}" dy="${i?18:0}">${escape(s)}</tspan>`).join('')}</text></g>`;
 }).join('');
-const diagram = `<p class="diagram-hint">Scroll the diagram horizontally to see the evaluation branch.</p><div class="diagram"><svg viewBox="0 0 1300 1060" role="img" aria-label="Architecture flow, with an independent evaluation branch"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#538276"/></marker></defs><g class="arrows">${paths}</g><g class="nodes">${nodes}</g></svg></div><details class="graph-source"><summary>View all connections</summary><div class="flow-map" aria-label="Architecture connections">${connections}</div></details><details class="graph-source"><summary>View diagram source</summary><pre><code>${escape(graph[1])}</code></pre></details>`;
+const diagram = `<p class="diagram-hint">Scroll the diagram horizontally to see the evaluation branch.</p><div class="diagram"><svg viewBox="0 0 1300 1310" role="img" aria-label="Architecture flow, with an independent evaluation branch"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#538276"/></marker></defs><g class="arrows">${paths}</g><g class="nodes">${nodes}</g></svg></div><details class="graph-source"><summary>View all connections</summary><div class="flow-map" aria-label="Architecture connections">${connections}</div></details><details class="graph-source"><summary>View diagram source</summary><pre><code>${escape(graph[1])}</code></pre></details>`;
 const graphCode = `<pre><code>${escape(graph[1])}</code></pre>`;
 if (!body.includes(graphCode)) throw new Error('System picture was not rendered');
 body = body.replace(graphCode, diagram);
-// The replay is generated from local run data and is not embedded in the tracked PRD page.
-const currentReplayHeading = '<h3>Current Step 1 forward run</h3>';
-if (!body.includes(currentReplayHeading)) throw new Error('Current Step 1 replay section is missing');
-body = body.replace(currentReplayHeading, `${currentReplayHeading}<p class="replay-hint"><a href="../poc/data/clean-step1-2026-07-08-09-continuing/review.html">Open current replay full screen →</a></p><div class="replay-frame"><iframe src="../poc/data/clean-step1-2026-07-08-09-continuing/review.html" title="Current Step 1 forward run" loading="lazy"></iframe></div>`);
-const twoDayReplayHeading = '<h3>July 8–9 Step 1 replay</h3>';
-if (!body.includes(twoDayReplayHeading)) throw new Error('July 8–9 replay section is missing');
-body = body.replace(twoDayReplayHeading, `${twoDayReplayHeading}<p class="replay-hint"><a href="../poc/data/clean-step1-2026-07-08-09/review.html">Open replay full screen →</a> · This partial run is stored locally.</p><div class="replay-frame"><iframe src="../poc/data/clean-step1-2026-07-08-09/review.html" title="July 8–9 Step 1 article replay" loading="lazy"></iframe></div>`);
-const replayHeading = '<h3>Step 1 run replay</h3>';
-if (!body.includes(replayHeading)) throw new Error('Step 1 replay section is missing');
-body = body.replace(replayHeading, `${replayHeading}<p class="replay-hint"><a href="../poc/data/clean-step1-h200-2026-11-06/review.html">Open replay full screen →</a> · This run is stored locally; if the panel is empty, see the instructions below.</p><div class="replay-frame"><iframe src="../poc/data/clean-step1-h200-2026-11-06/review.html" title="Step 1 article-by-article replay" loading="lazy"></iframe></div>`);
 const toc = [];
 body = body.replace(/<h([123])>(.*?)<\/h\1>/g, (_, level, title) => {
   const plain = title.replace(/<[^>]+>/g, '');
   const id = slug(plain);
-  if (level === '2' || (level === '3' && ['Current Step 1 forward run', 'Prepared-source Step 1 replay', 'Page-time-order Step 1 replay', 'Step 1 joint review: causes and priorities', 'Execution 1: source text and event ordering', 'Execution 2–4: link, fidelity and topic review', 'July 8–9 Step 1 replay', 'Step 1 run replay', 'Exploratory playforward: H200 articles', 'System prompt', 'Closing check', 'Proposed per-item input', 'Structured-output schema', 'Illustrative output for the sample input (earlier Luna draft, kept as history)', 'Source pool and golden validation data', 'Existing extraction reference split'].includes(plain))) toc.push({ id, title: plain, level });
+  if (level === '2' || (level === '3' && ['1.1 The vision: a market world model', '1.2 The problems it answers', '1.3 Why the running pipeline was rebuilt', '1.4 What the new system does differently', '1.5 The gates before it replaces the running pipeline', 'What the model decides', 'Two parts', 'What the ladder step decides', 'Where each step stands', 'What the measurements say', 'System prompt', 'Closing check', 'Structured-output schema', 'Diagram-to-code map'].includes(plain))) toc.push({ id, title: plain, level });
   return `<h${level} id="${id}">${title}</h${level}>`;
 });
 const nav = toc.map(({ id, title, level }) => `<a${level === '3' ? ' class="subsection"' : ''} href="#${id}">${escape(title)}</a>`).join('\n');
 const lunaPrompt = toc.find(({ title }) => title.includes('Step 1 prompt: c8'));
 const jevPrompt = toc.find(({ title }) => title.includes('Step 2 prompt: Jev'));
-const implementationPlan = toc.find(({ title }) => title.includes('Implementation plan for review'));
-const compatibilityReview = toc.find(({ title }) => title.includes('Luna draft and existing production compatibility review'));
-if (!lunaPrompt || !jevPrompt || !implementationPlan || !compatibilityReview) throw new Error('Prompt sections, implementation plan and compatibility review must be present');
+const vision = toc.find(({ title }) => title.startsWith('1. Vision'));
+const standing = toc.find(({ title }) => title.startsWith('8. How the system is measured'));
+if (!lunaPrompt || !jevPrompt || !vision || !standing) throw new Error('The vision, the measurement section and both prompt sections must be present');
 const digest = createHash('sha256').update(source).digest('hex');
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -103,7 +96,7 @@ main{min-width:0;padding:52px clamp(24px,6vw,90px) 90px}.content{max-width:900px
 .intro{background:#e6f2ed;border:1px solid #c5ddd3;border-radius:12px;padding:17px 20px;margin:0 0 32px;font-size:14px}.intro p{margin:0}.prompt-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}.prompt-links a{font-weight:700}.prd__table{overflow-x:auto;margin:22px 0 30px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.55}th,td{text-align:left;vertical-align:top;padding:12px 15px;border-bottom:1px solid var(--line)}th{background:#eff5f2;color:#345049}tr:last-child td{border-bottom:0}pre{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#183530;color:#e9f5ef;padding:20px;border-radius:10px;font-size:13px;line-height:1.55}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}p code,li code{background:#e9f0ed;padding:2px 5px;border-radius:4px;font-size:.9em}.diagram{overflow-x:auto;background:white;border:1px solid var(--line);border-radius:12px;margin:22px 0}.diagram svg{display:block;width:100%;min-width:680px;height:auto}.arrows path{fill:none;stroke:#538276;stroke-width:2;marker-end:url(#arrow)}.arrows path.optional{stroke-dasharray:6 4}.nodes rect{fill:#eaf4ef;stroke:#b6d4c7;stroke-width:1.5}.nodes text{fill:#244c43;text-anchor:middle;dominant-baseline:middle;font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.flow-map{display:grid;gap:8px;margin:22px 0}.connection{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);align-items:center;gap:8px;font-size:14px;line-height:1.35}.connection>span:not(.connection-arrow){background:#e7f2ed;border:1px solid #c7ded4;border-radius:8px;padding:10px 12px}.connection-arrow{text-align:center;color:var(--teal);font-size:20px}.connection-arrow small{display:block;font-size:11px;color:var(--muted)}.graph-source summary{cursor:pointer;color:var(--teal);font-size:13px}.reference{margin-top:22px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 18px}.reference summary{cursor:pointer;color:var(--teal);font-weight:700}.reference img{display:block;width:100%;height:auto;margin:16px auto 0}
 .replay-frame{height:960px;margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:white}.replay-frame iframe{display:block;width:100%;height:100%;border:0}
 @media(max-width:760px){.shell{display:block}.side{position:static;height:auto;padding:20px 22px;border-right:0;border-bottom:1px solid var(--line)}.side p{margin-bottom:10px}.side nav{display:flex;overflow:auto;gap:5px;padding-bottom:4px}.side nav a{white-space:nowrap;background:#e3eee8}main{padding:32px 20px 70px}h2{margin-top:45px}table{min-width:600px}.connection{grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);font-size:12px}.connection>span:not(.connection-arrow){padding:8px}}
-</style></head><body><div class="shell"><aside class="side"><div class="brand">Hivemind</div><nav aria-label="On this page">${nav}</nav></aside><main><div class="content"><div class="eyebrow">Architecture / working draft</div><div class="intro"><p>This page is generated from <a href="PRD.md">PRD.md</a>. The Markdown is the source of truth; the reading page is checked against it.</p><div class="prompt-links"><a href="#step-1-run-replay">View article replay →</a><a href="#${implementationPlan.id}">Review implementation plan →</a><a href="#${compatibilityReview.id}">Review production compatibility →</a><a href="#${lunaPrompt.id}">Read the adopted Step 1 prompt (c8) →</a><a href="#${jevPrompt.id}">Read Jev prompt draft →</a></div></div>${body}
+</style></head><body><div class="shell"><aside class="side"><div class="brand">Hivemind</div><nav aria-label="On this page">${nav}</nav></aside><main><div class="content"><div class="eyebrow">Architecture / working draft</div><div class="intro"><p>This page is generated from <a href="PRD.md">PRD.md</a>. The Markdown is the source of truth; the reading page is checked against it.</p><div class="prompt-links"><a href="#${vision.id}">Read the vision and problems →</a><a href="#${standing.id}">See where each step stands →</a><a href="#${lunaPrompt.id}">Read the adopted Step 1 prompt (c8) →</a><a href="#${jevPrompt.id}">Read the frozen Jev request →</a><a href="PRD-HISTORY.md">Earlier record →</a></div></div>${body}
 <details class="reference"><summary>View the original architecture diagram</summary><img src="reference-diagram.png" alt="Original architecture diagram supplied by Alex"></details>
 </div></main></div></body></html>\n`;
 

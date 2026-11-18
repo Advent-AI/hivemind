@@ -1,0 +1,479 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 8: the same-provider model comparison is prepared at $0 (`reflection-6/model/`); send decision
+
+**Discovery.** One read-only `GET /v1/models` call through `model._key('openai')` listed 98 models; only ids were printed
+(`model/model-list.txt`). The gpt-6 family: `gpt-6-astra`, `gpt-6-luna` (the step's), `gpt-6-sol`, `gpt-6.1-sol` and `gpt-6.1-terra`.
+
+**The published pages** (developers.openai.com/api/docs/models and the model pages, read 2026-11-16):
+
+| Model | Description | Price ($ per million input / output tokens) |
+|---|---|---|
+| Astra | "most capable … the default" | 10 / 50 |
+| 6.1 Sol | "near-Astra performance for complex work at a lower cost" | 2 / 10 |
+| 6.1 Terra | | 1 / 5 |
+| Luna | "most efficient … focused, high-volume tasks" | 0.10 / 0.50 |
+
+Sol's page lists structured outputs and the Chat Completions endpoint, and the same `reasoning_effort` values as Luna's.
+
+**The candidate:** `gpt-6.1-sol`, the near-top tier at a fifth of Astra's price. Its rate is added to `model.PRICES` with its source,
+and the suite passes 346.
+
+**The design** (`model/DESIGN.md`) is D625's design with only the arms changed:
+- luna and sol, both at medium effort, three fresh draws each, interleaved, on the 26 topics outside the 44;
+- the six controls, read blind by both families;
+- the same pre-registered outcome rule: failed sends of 78 including code refusals; at most half and at least 3 fewer moves; at least
+  the control minus 1 closes; under 3 control failures is inconclusive; new harm and refusals bounded; the direction must hold when
+  unresolved points count against.
+
+**The check:** 26 of 26 luna requests equal their stored first request. Each sol request's bytes equal luna's with
+`"model": "gpt-6-luna"` replaced once. Tests 8 of 8: the effort probe's suite adapted, including a sol request that differs in more
+than its model being refused.
+
+**Spend:**
+- Today's 86 luna calls averaged 5,164 input and 1,533 output tokens. At sol's rates the three sol draws cost about $2.21, with no
+  cache discount.
+- Sol's worst-case reserve is about $0.20 an attempt, so sol runs at 4 workers under a $4.50 cap, and luna at $0.25.
+- About $9.7 is left of D439's $40. A stopped arm-draw is NOT MEASURED.
+
+**Risk:** sol may refuse an exact parameter of the request (strict schema with `max_completion_tokens` and `reasoning_effort`).
+- The first sol attempt would then fail fast, the runner stops every worker, and the ledger charges at most the reserves of the
+  attempts in flight (4 × $0.20).
+- I see no cheaper way to learn this than that first send.
+
+**Asked:** send now, or name what must change first.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll review the model-specific request check, spending guard and decision rule, then decide whether the proposed send is proportionate to what it can establish.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+26 topics: each luna request equals its stored first request and each sol request differs only in its model: True; controls 6; most attempts an arm 468; the sum of worst-case reserves if every attempt were at its worst {luna: $4.90, sol: $98.06}; caps {'luna': 0.25, 'sol': 3.5}
+check passed
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/DESIGN.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The matched model comparison, gpt-6-luna against gpt-6.1-sol on the same request (DESIGN.md, D628).
+
+  python3 effort_probe.py check                          # $0: requests, controls, spend; writes check-passed.json
+  python3 effort_probe.py send <new run folder>          # medium d1, high d1, medium d2, high d2, medium d3, high d3
+  python3 effort_probe.py reading <run folder> <key folder>
+  python3 effort_probe.py score <run folder> <key folder>
+"""
+import collections
+import concurrent.futures
+import copy
+import dataclasses
+import hashlib
+import json
+import os
+import random
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+sys.path[:0] = [str(HERE.parent / 'reference-control'), str(HERE.parents[1] / 'splitting')]
+import refcontrol  # noqa: E402   (puts Stage A, the ladder step and src on the path)
+import probe_split  # noqa: E402
+import accounting  # noqa: E402
+import budget  # noqa: E402
+import build_reader_packets  # noqa: E402
+import collect_readings as collector  # noqa: E402
+import ladder_step  # noqa: E402
+import model_calls  # noqa: E402
+import stage_a  # noqa: E402
+from hivemind import model  # noqa: E402
+
+SETTINGS = {'luna': stage_a.SETTING, 'sol': dataclasses.replace(stage_a.SETTING, model='gpt-6.1-sol')}
+ORDER = [('luna', 1), ('sol', 1), ('luna', 2), ('sol', 2), ('luna', 3), ('sol', 3)]
+CAPS = {'luna': 0.25, 'sol': 4.50}
+WORKERS = {'luna': 8, 'sol': 4}          # sol's worst-case reserve is about $0.20 an attempt: fewer in flight keeps the cap for spending
+CONTROL, CANDIDATE = 'luna', 'sol'
+RECORD = HERE / 'check-passed.json'
+CODE_FILES = [Path(__file__), Path(refcontrol.__file__), refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+NEW_CONTROLS = {'control|unlisted-part': ('c2/clean-1', 'L'), 'control|unjustified-refusal': ('c2/clean-4', 'N')}
+HARD = refcontrol.HARD
+SHUFFLE_SEED = 20261121
+
+
+def built(case, setting, rl):
+    texts = stage_a.request_texts()
+    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(setting, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+
+
+def controls():
+    """The reference control's four, and two new planted-wrong ones (an unlisted part, an unjustified refusal)."""
+    out = refcontrol.controls()
+    stored = {row['case']: row for row in map(json.loads, refcontrol.JULY_STORED.read_text().splitlines()) if row['pass'] == 1}
+    for control, (name, mark) in NEW_CONTROLS.items():
+        row, case = copy.deepcopy(stored[name]), refcontrol.july_case(name)
+        if mark == 'L':
+            parts = row['answer']['ladder']['not_judged']
+            if not parts or 'material' not in parts[0]['part']:
+                raise SystemExit(f'{control}: the stored first listed part of {name} is not the materiality part')
+            row['answer']['ladder']['not_judged'] = parts[1:]
+        else:
+            reason = 'the topic has no main figure or event: it names several with none of them the main one'
+            row = dict(row, status='no ladder', reason=reason, answer={'no_ladder': reason, 'ladder': None}, passage=None, view=None)
+        out.append((dict(row, case=control, **{'pass': 1}), case, {mark: 'fails'}))
+    return out
+
+
+def check():
+    rl = refcontrol.research_list()
+    failures, shas = [], {CONTROL: {}, CANDIDATE: {}}
+    for source, name, case, stored in refcontrol.population():
+        control, candidate = built(case, SETTINGS[CONTROL], rl), built(case, SETTINGS[CANDIDATE], rl)
+        same_as_stored = model.request_identity(control)[1] == stored['requests'][0]['request_sha256']
+        sent_control, sent_candidate = json.dumps(control, ensure_ascii=False), json.dumps(candidate, ensure_ascii=False)   # the bytes as sent
+        only_model = sent_control.count('"model": "gpt-6-luna"') == 1 and \
+            sent_candidate == sent_control.replace('"model": "gpt-6-luna"', '"model": "gpt-6.1-sol"')
+        if not (same_as_stored and only_model):
+            failures.append(f'{source}:{name} stored {same_as_stored} only-model {only_model}')
+        shas[CONTROL][f'{source}:{name}'] = model.request_identity(control)[1]
+        shas[CANDIDATE][f'{source}:{name}'] = model.request_identity(candidate)[1]
+    built_controls = controls()
+    worst = {arm: 3 * 2 * budget.ATTEMPTS * sum(budget.worst_cost(built(case, SETTINGS[arm], rl)) for *_, case, _ in refcontrol.population())
+             for arm in SETTINGS}
+    print(f'26 topics: each luna request equals its stored first request and each sol request differs only in its model: '
+          f'{not failures}; controls {len(built_controls)}; most attempts an arm {26 * 3 * 2 * budget.ATTEMPTS}; the sum of worst-case '
+          f'reserves if every attempt were at its worst {{{", ".join(f"{a}: ${w:.2f}" for a, w in worst.items())}}}; caps {CAPS}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def run_arm(cases, folder, cap_usd, setting, rl, transport=None, workers=8):
+    """One arm-draw: Stage A's runner with the setting given (its model, effort and cap)."""
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=False)
+    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+    texts = stage_a.request_texts()
+    checksum = hashlib.sha256(json.dumps([setting.model, setting.reasoning_effort, setting.max_output_tokens]).encode()).hexdigest()[:16]
+    call_config = SimpleNamespace(provider='openai', version=f'clean-ladder-model-{setting.model}', checksum=checksum)
+    archive = model.Archive(str(folder / 'archive.sqlite'))
+    write_lock, written = threading.Lock(), []
+
+    def work(case):
+        labelled = SimpleNamespace(request_number=0)
+        labelled.send = lambda provider, request: limit.send_labelled(f"{case['case']}|{labelled.request_number}", provider, request)
+        call_model = model_calls.model_caller(model, archive, call_config, setting, labelled)
+
+        def counted(system_text, user_text, schema):
+            labelled.request_number += 1
+            return call_model(system_text, user_text, schema)
+        try:
+            outcome = ladder_step.ladder_for_thesis(stage_a.payload_for(case, rl), system_text=texts['system'], closing_text=texts['closing'],
+                                                    schema=texts['schema'], call_model=counted, check=refcontrol.check_of(case, rl))
+            view = None
+            if outcome['status'] == 'ladder':
+                view = ladder_step.write_view(outcome['answer']['ladder'], outcome['passage'], thesis=case['thesis'],
+                                              article_day=case['item']['publication_date'], company=stage_a.COMPANY, research_list=rl)
+            row = {'case': case['case'], 'pass': 1, 'status': outcome['status'], 'reason': outcome['reason'], 'requests': outcome['requests'],
+                   'answer': outcome['answer'], 'passage': outcome['passage'], 'view': view}
+            with write_lock:
+                with (folder / 'outcomes.jsonl').open('a') as handle:
+                    handle.write(ladder_step.as_json(row) + '\n')
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                written.append(case['case'])
+        except (stage_a.Stopped, budget.OverBudget):
+            return
+        except Exception as error:
+            limit.stop(f"{case['case']}: {type(error).__name__}: {error}")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(work, cases))
+    return written, limit
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    population = refcontrol.population()
+    for arm in SETTINGS:
+        now = {f'{source}:{name}': model.request_identity(built(case, SETTINGS[arm], rl))[1] for source, name, case, _ in population}
+        if now != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent = collections.Counter()
+    for arm, draw in ORDER:
+        cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in population]
+        cap = CAPS[arm] - spent[arm]
+        written, limit = run_arm(cases, folder / f'{arm}-d{draw}', cap, SETTINGS[arm], rl, transport=guard, workers=WORKERS[arm])
+        known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        spent[arm] += known + in_full
+        over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        print(f'{arm} d{draw}: {len(written)} of 26 written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+        if over or guard.breaches or limit.stopped or len(written) != 26:
+            raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    print(f'spent {dict(spent)}')
+
+
+def reading(run_folder, key_folder):
+    run_folder, key_folder = Path(run_folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    rl = refcontrol.research_list()
+    population = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    rows, cases = [], {}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (run_folder / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+            if row['status'] not in ('ladder', 'no ladder'):
+                continue
+            rows.append(row)
+            cases[row['case']] = dict(population[row['case'].split('|', 1)[1]], case=row['case'])
+    expected = {}
+    for row, case, marks in controls():
+        rows.append(row)
+        cases[row['case']] = dict(case, case=row['case'])
+        expected[row['case']] = marks
+    reading_folder = run_folder / 'reading'
+    (reading_folder / 'send-1').mkdir(parents=True)
+    (reading_folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+    order = sorted(rows, key=lambda row: row['case'])
+    random.Random(SHUFFLE_SEED).shuffle(order)
+    (reading_folder / 'readers').mkdir()
+    key, packets = {}, []
+    for number, row in enumerate(order, start=1):
+        key[str(number)] = [row['case'], 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+    for packet_number, packet in enumerate(packets, start=1):
+        (reading_folder / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    print(f'{len(rows)} items in {len(packets)} packets')
+
+
+def score(run_folder, key_folder):
+    reading_folder = Path(run_folder) / 'reading'
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading_folder, Path(key_folder) / 'key.json')
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+        for mark, value in marks.items():
+            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+            if mark == 'all' and all(any(readers[reader][(control, 1)].get(hard) == 'fails' for hard in HARD) for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: both families fail a hard line on the sound {control}: the reading is too harsh')
+    sends = {arm: {} for arm in SETTINGS}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (Path(run_folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+            sends[arm][row['case']] = row
+    report = {}
+    for unresolved_as in ('holds', 'fails'):
+        faulted = {arm: collections.Counter() for arm in SETTINGS}
+        items = {arm: 0 for arm in SETTINGS}
+        for send, outcome in outcomes.items():
+            arm = send[0].split('-d')[0]
+            if arm not in SETTINGS:
+                continue
+            rows = [readers[reader][send] for reader in collector.FAMILIES]
+            found = {mark for mark in accounting.marks_that_apply(accounting.kind_of(outcome)) if mark in HARD
+                     and refcontrol.settled(rows, mark, unresolved_as) == 'fails'}
+            if found:
+                items[arm] += 1
+                faulted[arm][send[0].split('|', 1)[1]] += 1
+        statuses = {arm: collections.Counter(row['status'] for row in sends[arm].values()) for arm in SETTINGS}
+        if any(sum(counter.values()) != 78 for counter in statuses.values()):
+            raise SystemExit(f'NOT SCORED: an arm does not hold 78 sends: {statuses}')
+        unreadable = {arm: sum(any('could not be read' in str(request.get('error') or '') for request in row['requests'])
+                               for row in sends[arm].values()) for arm in SETTINGS}
+        lost = {arm: statuses[arm]['no ladder: refused'] for arm in SETTINGS}         # refused twice by code: not read, counted as failed
+        for arm in SETTINGS:
+            for case, row in sends[arm].items():
+                if row['status'] == 'no ladder: refused':
+                    faulted[arm][case.split('|', 1)[1]] += 1
+        failed = {arm: items[arm] + lost[arm] for arm in SETTINGS}
+        new_harm = [topic for topic, count in faulted[CANDIDATE].items() if count >= 2 and faulted[CONTROL][topic] == 0]
+        report[unresolved_as] = {'failed sends (agreed hard-line faults plus sends refused twice by code)': failed,
+                                 'faulted items read': items, 'sends refused twice by code': lost,
+                                 'model refusals': {arm: statuses[arm]['no ladder'] for arm in SETTINGS}, 'unreadable answers': unreadable,
+                                 'new harm topics': new_harm, 'failed per topic': {arm: dict(counter) for arm, counter in faulted.items()}}
+    key_name = 'failed sends (agreed hard-line faults plus sends refused twice by code)'
+    agreed, strict = report['holds'], report['fails']
+    medium, high = agreed[key_name][CONTROL], agreed[key_name][CANDIDATE]
+    improvement = high * 2 <= medium and medium - high >= 3
+    no_harm = not agreed['new harm topics'] and agreed['model refusals'][CANDIDATE] - agreed['model refusals'][CONTROL] <= 2 and \
+        agreed['unreadable answers'][CANDIDATE] - agreed['unreadable answers'][CONTROL] <= 2
+    same_direction = strict[key_name][CANDIDATE] < strict[key_name][CONTROL]
+    if medium < 3:
+        verdict = 'inconclusive (the luna arm fails fewer than 3 sends: too little to test against)'
+    elif improvement and no_harm and same_direction:
+        verdict = 'moves the candidate'
+    elif high >= medium - 1:
+        verdict = 'closes it'
+    else:
+        verdict = 'inconclusive'
+    print(json.dumps(report, indent=1))
+    print(f'VERDICT: {verdict}')
+    return verdict, report
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'reading':
+        reading(*sys.argv[2:4])
+    elif command == 'score':
+        score(*sys.argv[2:4])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+# Matched model comparison of the answer-choice step, gpt-6-luna against gpt-6.1-sol (D628), fixed before any send
+
+**Hypothesis.** The frozen step's model, `gpt-6-luna` (the provider's "most efficient model for focused, high-volume tasks"), leaves
+parts of a topic's outcome unlisted (L) and fuses decisions (Q) in about 1 of 6 sends on these topics (D626). A stronger model on the
+same provider and the same request, `gpt-6.1-sol` ("near-Astra performance for complex work at a lower cost"), makes fewer of these
+faults. The careful Claude writer's 0 of 26 is a lead, not a ranking.
+
+**Same provider, same credential, same transport.** The model was found by a read-only listing (`model-list.txt`). Its published
+rates are $2 and $10 per million input and output tokens (developers.openai.com/api/docs/models, read 2026-11-16), added to
+`model.PRICES` with that source. No credential or provider cap changes.
+
+## Arms and population
+
+- **The arms:** `luna` (the frozen step as it is) and `sol` (identical except `model='gpt-6.1-sol'`). Both run at medium effort. Three fresh draws each, on
+  the 26 topics outside the 44 used by the reference control (the fortnight's and the week of 10-06's, all 13 of each).
+- **Interleaving:** luna d1, sol d1, luna d2, sol d2, luna d3, sol d3, each a separate run with its own archive.
+- **Request equality:** every request is the frozen request byte for byte (system, user, schema, output cap, transport, retries),
+  except `model`. This is checked at $0 on the bytes as sent.
+
+## Reading
+
+- **What is read:** all six arm-draws' written ladders and refusals (156 items), mixed blind and shuffled, plus six controls:
+  - the reference control's four: two sound, a rung gap (R) and another question (Q);
+  - two new ones:
+    - an unlisted part (L): a stored ladder with one listed part its outcome names removed from not_judged;
+    - an unjustified refusal (N): a "no main figure" refusal put on a topic with a stated main figure.
+- **Who reads:** both families with `stage-a-reader-brief.md` (the full gate form).
+- **Disputes:** counted both ways.
+- **Validity:** a missed planted-wrong control voids the reading.
+- **Review:** every agreed hard-line fault in the sol arm, and every one that differs between the arms on a topic, is reviewed
+  against its source.
+
+## What is counted
+
+- Per arm, over 78 sends: items with an agreed fault on Q, L, R or N; refusals (the model's, and code's refused-twice); answers that
+  could not be read (a truncation signal).
+- Per topic: faulted sends in each arm.
+
+## Outcomes, fixed now
+
+- **Moves the candidate:** both of these, on agreed marks:
+  - **a material paired improvement:** the sol arm has at most half the luna arm's faulted items, and at least 3 fewer;
+  - **no new harm:** no topic faulted in 2 or more sol draws while faulted in no luna draw; sol refusals and unreadable answers no
+    more than 2 above luna.
+
+  The direction must not reverse when unresolved points count against.
+- **Closes it:** the sol arm's failed sends at least the luna arm's minus 1.
+- **Otherwise inconclusive.**
+
+**Round 3 changes:**
+- **Failed sends** are agreed hard-line faults plus sends refused twice by code. A lost answer cannot improve an arm. Each arm must
+  hold all 78 sends.
+- **Too little signal:** the result is inconclusive, never a close, when the luna arm fails fewer than 3 sends.
+- **Sound controls:** both families failing a hard line on a sound control voids the reading as too harsh.
+- **Request check:** the check compares the request bytes as built and sent. Effort is the only difference.
+
+## Spend
+
+- Caps: luna $0.25, sol $4.50, reserved per attempt at the worst cost (sol about $0.20 an attempt), with sol at 4 workers.
+- Expected: about $0.08 (luna), and about $2.2 (sol, today's luna token counts at sol's rates, no cache discount). About $9.7 is left of D439's $40.
+- A separate council decision is needed before the send.
+
+**Limits:**
+- 26 topics, chosen as all of two stored weeks;
+- one model;
+- the same readers as before.
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls docs/research/2026-11-14-use-acceptance/reflection-6/model' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+DESIGN.md
+check-output.txt
+check-passed.json
+model-list.txt
+model_probe.py
+test_model_probe.py
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'gpt-6.1-sol|PRICES|CACHED_INPUT_SHARE' src/hivemind/model.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+27:# gpt-6.1-sol: the published standard rates on 2026-11-16 (developers.openai.com/api/docs/models: "$2 / $10" per million input and output
+32:PRICES = {'gpt-6-luna': (0.10, 0.50), 'gpt-6.1-sol': (2.00, 10.00), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+34:CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
+274:    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+275:    cost = round((input_tokens - cached_tokens) / 1e6 * price_in + cached_tokens / 1e6 * price_in * CACHED_INPUT_SHARE + output_tokens / 1e6 * price_out, 6)
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json,hashlib,pathlib; h=pathlib.Path(\"docs/research/2026-11-14-use-acceptance/reflection-6/model\"); p=[h/\"model_probe.py\",h.parent/\"reference-control/refcontrol.py\",pathlib.Path(\"clean-arch/step4-2026-11-10/ladder/ladder_step.py\"),pathlib.Path(\"clean-arch/step4-2026-11-10/ladder/candidate-system.txt\"),pathlib.Path(\"clean-arch/step4-2026-11-10/ladder/candidate-closing.txt\"),pathlib.Path(\"clean-arch/step4-2026-11-10/ladder/candidate-schema.json\"),pathlib.Path(\"clean-arch/step4-2026-11-10/stage_a/stage_a.py\")]; x=hashlib.sha256(b\"\".join(v.read_bytes() for v in p)).hexdigest(); a=json.load(open(h/\"check-passed.json\"))[\"code_sha256\"]; print(\"current digest matches record:\",x==a)'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+current digest matches record: True
+
+web search: 
+web search: https://developers.openai.com/api/docs/models/gpt-6.1-sol
+codex
+**The comparison is worth sending, but first make its first Sol request a one-worker compatibility check.** If Sol rejects the exact request, that limits the initial exposure to one reservation instead of four.
+
+Use a preselected topic from the registered 26 and retain its answer as the first Sol draw; do not inspect its quality or change the test based on it. If the request succeeds, continue the registered comparison within the same caps. If it fails, stop and report the failure. Run the required $0 preflight first. This preserves the comparison while applying the project’s small-first rule.
+
+Two record corrections are also needed before the send:
+
+- The saved [check output](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/check-output.txt) says the Sol cap is **$3.50**, while the [design and runner](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/DESIGN.md) say **$4.50**. Regenerate the check output for the reviewed launcher and confirm the current caps. The stored check digest does match the current code.
+- The design’s inherited line saying **effort** is the only request difference should say **model**. The current check compares the new arms that way; the historical request match remains a canonical hash comparison.
+
+The published Sol page supports the stated **$2 input / $10 output per million tokens**, Chat Completions and structured outputs; it does not guarantee this particular request will succeed. [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+
+The 26 topics remain exposed development material. A positive result would advance a candidate, not pass gate 1. I have not sent a request.
+
+**CONSENSUS: no, because the first Sol request should run alone under the registered cap, and the preflight and reviewed check record must match the launcher before the full send.**
+tokens used
+797,468
+**The comparison is worth sending, but first make its first Sol request a one-worker compatibility check.** If Sol rejects the exact request, that limits the initial exposure to one reservation instead of four.
+
+Use a preselected topic from the registered 26 and retain its answer as the first Sol draw; do not inspect its quality or change the test based on it. If the request succeeds, continue the registered comparison within the same caps. If it fails, stop and report the failure. Run the required $0 preflight first. This preserves the comparison while applying the project’s small-first rule.
+
+Two record corrections are also needed before the send:
+
+- The saved [check output](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/check-output.txt) says the Sol cap is **$3.50**, while the [design and runner](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/DESIGN.md) say **$4.50**. Regenerate the check output for the reviewed launcher and confirm the current caps. The stored check digest does match the current code.
+- The design’s inherited line saying **effort** is the only request difference should say **model**. The current check compares the new arms that way; the historical request match remains a canonical hash comparison.
+
+The published Sol page supports the stated **$2 input / $10 output per million tokens**, Chat Completions and structured outputs; it does not guarantee this particular request will succeed. [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol)
+
+The 26 topics remain exposed development material. A positive result would advance a candidate, not pass gate 1. I have not sent a request.
+
+**CONSENSUS: no, because the first Sol request should run alone under the registered cap, and the preflight and reviewed check record must match the launcher before the full send.**

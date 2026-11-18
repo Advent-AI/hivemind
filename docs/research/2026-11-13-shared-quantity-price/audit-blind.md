@@ -1,0 +1,23 @@
+**Verdict: the new sentence is consistent with the standard’s definition of a shared quantity, but the full request still leaves important opening tests implicit.** It allows a market-wide contract price, as Alex approved; it does not by itself tell the model how to distinguish an important, publicly checkable price from a minor one.
+
+For example, the article says DDR5 contract prices have risen across the market. That is the kind of shared price the new wording can cover. But the article does not identify a public release that would settle a precisely defined annual price question. The model should not invent one.
+
+- **Against the signed standard and D191:** The definition is **consistent**. “One quantity or price outside any one company that several companies move on” closely follows [D191 point 4](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2503). The calendar-year condition and examples of combined spending and contract prices are supported by [the standard’s shared-quantity row](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:279). The standard calls the reason `shared_quantity`; the proposed sentence retains `industry_aggregate`, which the current schema requires. So the *definition* aligns, but the prescribed rename remains undone.
+
+- **Against the rest of the request:** I found no direct contradiction with “a number … does not by itself open a thesis.” Being a shared price supplies a category, not proof that the question matters. The current/next-year rule, five outcome ranges, publication-date deadline, and requirement to name public material still apply. The sentence’s “for one calendar year” does, however, leave unclear whether a price means an annual average, a year-end price, or another precisely defined measure. Those can produce different answers.
+
+- **Theme list:** The user text allows an unlisted theme when none fits. That does not conflict with the new sentence for this company article. The existing request does not state D191’s separate restriction for an article that is purely macroeconomic; the proposed sentence neither introduces nor resolves that gap.
+
+- **Examples:** Both are generic across industries and name no covered company, product, or number. “A raw material’s contract price” is a valid example, although narrower as an example than the standard’s full range, which also includes prices such as oil and interest rates. It does not say those other prices are excluded.
+
+The principal risks are in these words:
+
+1. **“One quantity or price” and “several companies move on.”** These do not explicitly require the result to be important enough to change an investment judgment, or independently worth tracking. A model could stretch “several companies” to include a single product’s retail price because several businesses react to it. The request’s evidence check rejects a minor retail-price detail, but that check governs *evidence*; it is not an explicit test of whether to open a question.
+
+2. **“Outside any one company.”** This points away from another company’s own price, but could be misread: a price charged by one supplier affects many buyers and is “outside” the subject company. The intended boundary is whether the price is a shared market price or that supplier’s own price, not simply whether it affects several companies. The standard treats another company’s own quantity as that company’s question. [Standard §3](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:292)
+
+3. **“A raw material’s contract price.”** A private contract price may satisfy that phrase but have no public release capable of settling the question. The separate instruction to name public resolving material guards against this, but a model could still name a vague or imagined source. The standard requires a real public source and a checkable outcome. [Standard §4](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:308)
+
+4. **Existing aggregates:** The named-company combined-spending example remains explicitly included, so there is no textual exclusion of today’s aggregate. Still, adding **“that several companies move on”** could cause a model to hesitate if it reads that phrase as requiring each named company to react to the combined total, rather than recognizing the total as a shared industry measure. That is a plausible reading risk, not an observed regression.
+
+This is a read-only assessment of the wording and stored request. It does not establish how often the model would make any of these mistakes.

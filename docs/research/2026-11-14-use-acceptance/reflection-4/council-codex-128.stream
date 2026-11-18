@@ -1,0 +1,351 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 128: row 4a revised (`live-service/OPERATING-CONTRACT.md`): your three points, and one simplification to test
+
+1. **Existing-store identity: I propose dropping the identity, not finding a fallback.**
+   - A vector is keyed by (view, text sha256, model), and depends only on its text and model, so it is correct whatever store it came
+     from.
+   - Search already uses a vector only for a view visible at the request's bound whose current text has that sha (`fresh_vectors`
+     compares the text's sha today).
+   - So a replaced or restored store can at worst lack a matching vector. That view counts as unindexed and search is lexical and
+     lists it, as today. It can never be given a wrong vector.
+   - The published day goes too: correctness is per vector. What did the identity protect that this key does not? Proof 8b keeps a
+     replacement at the same path with the same first step: `v1` with a different text is not used, and with the same text it is
+     used, correctly.
+2. **The refresh owner:**
+   - The service (API and MCP) builds at start, to the last completed day, and never on a first-day store. The writer never touches
+     the index.
+   - After a later day completes, the new views have no vector until a restart. Search is lexical meanwhile and lists them in
+     `missing_vectors`, which is today's reported behaviour.
+   - An automatic refresh while serving is a stated limit, not built.
+   - Proof 8b goes through the API's and MCP's own start-up and search: a day completing while the service runs, then a restart.
+3. **Other callers:**
+   - `store.search_views` stays unchanged for production matching (`views/matching.py`). Proof 8d′ checks its results and the
+     matching tests are unchanged.
+   - `build_index` keeps its signature for `scripts/search_eval.py` and the tests, and now embeds only views visible at the last
+     completed day.
+
+On slice 2's evidence, your qualification is noted: the overlapping-search test runs MCP's `connections()` and the search function
+in threads, not two calls through the MCP transport.
+
+End with `CONSENSUS: yes` (build slice 3) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the revised search contract against the vector cache, refresh behavior and existing callers, especially whether content matching is enough for a replaced store.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '72,125p;250,285p'
+nl -ba src/hivemind/search.py | sed -n '30,54p;80,150p;220,265p'
+rg -n 'ensure_index|build_index|fresh_vectors|search_views\\(' src scripts tests --glob '*.py' | head -70
+nl -ba scripts/hivemind_mcp.py | sed -n '58,75p'
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    72	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    73	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    74	4. **The first day** (open defect 10).
+    75	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    76	   - An empty store (no step) and a legacy ledger read as today.
+    77	4a. **Search: visibility before ranking and limits; an index of text-keyed vectors refreshed by the service at start** (revised in
+    78	    council rounds 127 and 128).
+    79	   - **Lexical:**
+    80	     - `search.search` ranks the visible candidates' texts (from `service.summaries` at the request's bound) in an in-memory
+    81	       full-text table with the same trigram tokenizer;
+    82	     - its statistics are those of the visible library only, so a search at the last completed day equals the same search on that
+    83	       day's backup;
+    84	     - `store.search_views`, which ranks the whole `views_fts`, stays unchanged for its one other caller, production's matching
+    85	       (`views/matching.py`), whose behaviour this slice does not touch.
+    86	   - **The index holds vectors keyed by (view, the text's sha256, the embedding model).**
+    87	     - A vector depends only on its text and model, so the key fixes its correctness whatever store it was built from.
+    88	     - Search uses a vector only for a view visible at the request's bound whose current text has that sha.
+    89	     - **The store identity of rounds 115 to 117 is therefore not needed and is dropped.**
+    90	       - A replaced or restored store can at worst find a view without a matching vector. That view counts as unindexed and search
+    91	         runs lexically, saying so, as today.
+    92	       - It can never be given a wrong vector. The proof keeps the replaced-store and restored-store cases to show this.
+    93	   - **Building:**
+    94	     - `build_index` embeds only the views visible at the last completed day (resolved by `resolve_bound`), so a view of an
+    95	       unfinished day is never embedded and never sent to the embedding service;
+    96	     - each batch commits as today. A failure leaves the vectors already stored, all still correct by their keys, and the next
+    97	       build embeds the rest;
+    98	     - no published day is needed, because correctness is per vector;
+    99	     - `build_index` keeps its signature (`scripts/search_eval.py` and the tests call it as today).
+   100	   - **Who refreshes, and when:**
+   101	     - the service (API and MCP) builds the index at start, as today, to the last completed day;
+   102	     - on a first-day store it does not build;
+   103	     - after a later day completes, the new views have no vector until the service is restarted. Meanwhile search runs lexically and
+   104	       lists them in `missing_vectors`, as it does today.
+   105	     - The writer never touches the index.
+   106	     - An automatic refresh while serving is not built; it is a stated limit.
+   107	
+   108	5. **Checkpoints and disk: what is guaranteed, and the disk-exhaustion behaviour.**
+   109	   - The writer sets `journal_size_limit` (proposed 64 MB) and keeps SQLite's automatic passive checkpoint.
+   110	   - After each completed day it asks for a truncating checkpoint with a short busy timeout.
+   111	   - **Guaranteed:**
+   112	     - readers do not block the writer's commits;
+   113	     - after a completed day whose truncating checkpoint succeeds, the `-wal` is within the limit;
+   114	     - if the truncating checkpoint fails on 3 consecutive completed days, the writer stops before the next day with a recorded
+   115	       reason.
+   116	   - **Not guaranteed:** a byte bound on the `-wal` within an unfinished day, or across the failed days. Its growth there is the
+   117	     day's own writes, which the contract does not bound.
+   118	   - **Disk:**
+   119	     - before each day the writer checks the free space on the store's disk against a minimum stated in the run's limits file
+   120	       (proposed: 20 times the store's size), and stops before the day with a recorded reason if it is below;
+   121	     - a write that still meets a full filesystem mid-day (extending the store, its `-wal` or a side file) fails, and the writer
+   122	       exits non-zero as in a crash (row 6);
+   123	     - its stop reason may then be lost too, if the run's log is on the full disk;
+   124	     - **the guarantee in that case is the readers' boundedness** (they keep the last completed day), not the record.
+   125	       The process's exit status, seen by its supervisor, is the signal.
+   250	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   251	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   252	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   253	8b. **The index:**
+   254	   - a build failing after one batch leaves only correct vectors, and the next build embeds the rest;
+   255	   - a store replaced at the same path, with the same first step, whose view `v1` has a different text: the old `v1` vector is not
+   256	     used, and search is lexical and lists `v1` as missing;
+   257	   - with the same text, the vector is used, being correct by its key;
+   258	   - a store restored from an earlier snapshot: only its visible views' vectors are used;
+   259	   - a later day completing while the service runs: its views are listed missing and search is lexical until a restart; after a
+   260	     restart they are embedded and search is semantic.
+   261	   - All through the API's and MCP's own start-up and search entry points.
+   262	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   263	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   264	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   265	   the last completed day.
+   266	8d′. **Production matching unchanged:** `store.search_views` gives the same results as before on a stored ledger, and the matching
+   267	   tests pass unchanged.
+   268	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   269	   same answers before and after `resolve_bound` is introduced.
+   270	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   271	
+   272	## Row 3's product-facing contract (council rounds 120 to 123; A1, clamping, withdrawn)
+   273	
+   274	**The rule.**
+   275	
+   276	- **On every store with a `days_completed` table**, finished or not, partial rows or not, an explicit upper bound later than the last
+   277	  completed day is refused. The same date gets the same answer whenever it is asked.
+   278	- An omitted bound gives the last completed day, as today.
+   279	- **Steps but no completed day:** refused as the first day.
+   280	- **`days_completed` present with no steps and no completed day** (an empty new store): read as today. An omitted bound gives what
+   281	  `default_as_of` gives today (none), and an explicit bound passes.
+   282	- **A ledger without the `days_completed` table:** today's default already queries that table (`store.last_completed_day`), so such
+   283	  a ledger already fails today with SQLite's "no such table" for an omitted bound. Through the resolver, an explicit bound fails
+   284	  the same way too, where before it skipped the default and could answer: a change, with none among the 143 stored ledgers.
+   285	- **Ranges** (amended in council round 124): a start after its resolved end is refused, for `changes` and `history` alike. A start
+    30	NULL_FLOOR = 0.30
+    31	TEXT_BOOST = 0.04
+    32	
+    33	SCHEMA_SQL = """
+    34	create table if not exists view_vectors (view_id text primary key, text_sha256 text, model text, vector_json text, tokens integer, built_at text);
+    35	create table if not exists query_vectors (text_sha256 text primary key, model text, vector_json text, tokens integer, built_at text);
+    36	"""
+    37	
+    38	
+    39	def open_index(path):
+    40	    conn = sqlite3.connect(path)
+    41	    conn.row_factory = sqlite3.Row
+    42	    conn.executescript(SCHEMA_SQL)
+    43	    return conn
+    44	
+    45	
+    46	def view_text(record, rungs):
+    47	    """What a view is searched by: its object, kind, what it looks at, the question and the rung conditions."""
+    48	    return ' '.join([record['object_id'], record['kind'], record['looks_at'] or '', record['question'] or '', *(r['condition'] for r in rungs)])
+    49	
+    50	
+    51	def sha(text):
+    52	    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    53	
+    54	
+    80	
+    81	
+    82	def build_index(ledger, index, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, batch=64):
+    83	    """Embed every view whose text is new or changed, batch by batch, each batch committed as it lands. Returns
+    84	    (embedded, unchanged, tokens, error): on a failure the counts are what was done before it, never zero, and the
+    85	    error is the message without the provider's body. Never raises."""
+    86	    rows = [dict(r) for r in ledger.execute('select * from views order by created_seq')]
+    87	    todo, unchanged = [], 0
+    88	    for record in rows:
+    89	        text = view_text(record, store.rungs_of(ledger, record['view_id']))
+    90	        digest = sha(text)
+    91	        have = index.execute('select text_sha256, model, vector_json from view_vectors where view_id=?', (record['view_id'],)).fetchone()
+    92	        if have and have['text_sha256'] == digest and have['model'] == embedding_model and usable(json.loads(have['vector_json'])):
+    93	            unchanged += 1
+    94	        else:
+    95	            todo.append((record['view_id'], digest, text))
+    96	    embedded = tokens = 0
+    97	    for start in range(0, len(todo), batch):
+    98	        chunk = todo[start:start + batch]
+    99	        try:
+   100	            vectors, used = embed([t for _, _, t in chunk], embedding_model)
+   101	        except (model.TransportError, OSError) as error:
+   102	            return embedded, unchanged, tokens, str(error)[:120]
+   103	        if len(vectors) != len(chunk) or not all(usable(v) for v in vectors):
+   104	            return embedded, unchanged, tokens, 'the embedding answer did not hold one usable vector per text'
+   105	        tokens += used
+   106	        now = time.strftime('%Y-%m-%dT%H:%M:%S')
+   107	        index.executemany('insert or replace into view_vectors (view_id, text_sha256, model, vector_json, tokens, built_at) values (?,?,?,?,?,?)',
+   108	                          [(view_id, digest, embedding_model, json.dumps(vector), used // max(1, len(chunk)), now) for (view_id, digest, _), vector in zip(chunk, vectors)])
+   109	        index.commit()
+   110	        embedded += len(chunk)
+   111	    return embedded, unchanged, tokens, None
+   112	
+   113	
+   114	ensure_index = build_index
+   115	
+   116	
+   117	def usable(vector):
+   118	    """A vector the ranking can use: a non-empty list of numbers."""
+   119	    return isinstance(vector, list) and len(vector) > 0 and all(isinstance(x, (int, float)) for x in vector)
+   120	
+   121	
+   122	def fresh_vectors(ledger, index, embedding_model=EMBEDDING_MODEL):
+   123	    """view id → vector for every view whose stored vector was made from the view's current text and is usable; a
+   124	    view whose text changed since, was never embedded, or holds an empty vector is absent."""
+   125	    stored = {r['view_id']: (r['text_sha256'], json.loads(r['vector_json'])) for r in index.execute('select view_id, text_sha256, vector_json from view_vectors where model=?', (embedding_model,))}
+   126	    out = {}
+   127	    dims = None
+   128	    for record in ledger.execute('select * from views'):
+   129	        have = stored.get(record['view_id'])
+   130	        if have and have[0] == sha(view_text(record, store.rungs_of(ledger, record['view_id']))) and usable(have[1]) and (dims is None or len(have[1]) == dims):
+   131	            out[record['view_id']] = have[1]
+   132	            dims = len(have[1])
+   133	    return out
+   134	
+   135	
+   136	def query_vector(index, query, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL):
+   137	    digest = sha(query)
+   138	    row = index.execute('select vector_json from query_vectors where text_sha256=? and model=?', (digest, embedding_model)).fetchone()
+   139	    if row:
+   140	        return json.loads(row['vector_json']), True
+   141	    vectors, tokens = embed([query], embedding_model)
+   142	    index.execute('insert or replace into query_vectors (text_sha256, model, vector_json, tokens, built_at) values (?,?,?,?,?)',
+   143	                  (digest, embedding_model, json.dumps(vectors[0]), tokens, time.strftime('%Y-%m-%dT%H:%M:%S')))
+   144	    index.commit()
+   145	    return vectors[0], False
+   146	
+   147	
+   148	def warm_queries(index, queries, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL):
+   149	    """Embed every query not yet in the cache in one embeddings call, so the searches that follow find their vectors
+   150	    locally. Measured 2026-10-24: a never-seen query costs a 0.6–1.9 s round trip and an idea made seven of them in
+   220	
+   221	def search(ledger, index, query, k=10, as_of=None, include_closed=False, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, aliases=None, semantic=True):
+   222	    """Top-k views for a query as of a day: cosine similarity on the view text, plus a small boost when the query
+   223	    names the view's object and when the ledger's trigram index also matches. The ranking is 'semantic' only when
+   224	    semantic ranking is allowed, every candidate has a usable vector made from its current text and the query could
+   225	    be embedded; otherwise it is 'lexical' (the trigram index's own order), and the answer says so and names the
+   226	    views without a fresh vector. `semantic=False` (a front started with --lexical) never calls the embedder.
+   227	    `results` is null when the library holds no view on anything the idea names as of that day (D91): no company
+   228	    or theme of the universe is named in it and the ledger's own text index matches no view; otherwise the ranked
+   229	    list comes back whole and the caller judges which views correspond (D76)."""
+   230	    as_of = service.resolve_bound(ledger, as_of)
+   231	    candidates = service.summaries(ledger, as_of, include_closed)
+   232	    if not candidates:
+   233	        return {'query': query, 'as_of': as_of, 'mode': 'semantic' if semantic else 'lexical', 'missing_vectors': [], 'results': None}
+   234	    mentioned = objects_in(query, aliases or {})
+   235	    lexical_order = store.search_views(ledger, ' '.join(lexical_terms(query)), 50)          # the ledger's trigram index, best first
+   236	    lexical_rank = {view_id: i for i, view_id in enumerate(lexical_order)}
+   237	    vectors = fresh_vectors(ledger, index, embedding_model) if semantic else {}
+   238	    missing = [record['view_id'] for record in candidates if record['view_id'] not in vectors]
+   239	    mode, q = 'semantic', None
+   240	    if not semantic or missing:
+   241	        mode = 'lexical'
+   242	    else:
+   243	        try:
+   244	            q, _ = query_vector(index, query, embed, embedding_model)
+   245	        except (model.TransportError, OSError):
+   246	            mode = 'lexical'
+   247	    results = []
+   248	    for record in candidates:
+   249	        semantic = cosine(q, vectors[record['view_id']]) if q is not None else 0.0
+   250	        object_hit = record['object'] in mentioned
+   251	        text_hit = record['view_id'] in lexical_rank
+   252	        # with embeddings a text hit is a small nudge; without them the trigram index's own order is the ranking
+   253	        text_score = (TEXT_BOOST if mode == 'semantic' else 1.0 - lexical_rank[record['view_id']] / max(1, len(lexical_order))) if text_hit else 0.0
+   254	        score = semantic + (OBJECT_BOOST if object_hit else 0.0) + text_score
+   255	        results.append({'view_id': record['view_id'], 'object': record['object'], 'kind': record['kind'], 'looks_at': record['looks_at'], 'question': record['question'],
+   256	                        'due_day': record['due_day'], 'open': record['open'], 'dependencies': record['dependencies'], 'dependants': record['dependants'],
+   257	                        'score': round(score, 4), 'parts': {'semantic': round(semantic, 4), 'object_hit': object_hit, 'text_hit': text_hit}})
+   258	    results.sort(key=lambda r: -r['score'])
+   259	    named_or_matched = any(r['parts']['object_hit'] or r['parts']['text_hit'] for r in results)
+   260	    best = max((r['parts']['semantic'] for r in results), default=0.0)
+   261	    if not named_or_matched and (q is None or best < NULL_FLOOR):
+   262	        return {'query': query, 'as_of': as_of, 'mode': mode, 'missing_vectors': missing, 'results': None}     # no recorded view on anything the idea names
+   263	    return {'query': query, 'as_of': as_of, 'mode': mode, 'missing_vectors': missing, 'results': results[:k]}
+   264	
+   265	
+tests/test_idea.py:47:    search.build_index(ledger, conn, embed=search.fake_embed, embedding_model='fake')
+tests/test_idea.py:640:    search.build_index(ledger, conn, embed=search.fake_embed, embedding_model=search.EMBEDDING_MODEL)
+scripts/hivemind_api.py:277:            embedded, unchanged, tokens, error = search.ensure_index(db.ledger, db.index)
+scripts/hivemind_mcp.py:65:            embedded, _unchanged, _tokens, error = search_module.ensure_index(ledger, index)
+src/hivemind/views/matching.py:146:        hits = store.search_views(conn, f'{c["object"]} {c["looks_at"]} {c["question"]}', top_n)
+src/hivemind/views/store.py:325:def search_views(conn, text, top_n):
+src/hivemind/search.py:82:def build_index(ledger, index, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, batch=64):
+src/hivemind/search.py:114:ensure_index = build_index
+src/hivemind/search.py:122:def fresh_vectors(ledger, index, embedding_model=EMBEDDING_MODEL):
+src/hivemind/search.py:235:    lexical_order = store.search_views(ledger, ' '.join(lexical_terms(query)), 50)          # the ledger's trigram index, best first
+src/hivemind/search.py:237:    vectors = fresh_vectors(ledger, index, embedding_model) if semantic else {}
+scripts/search_eval.py:44:    embedded, unchanged, tokens, error = search.build_index(ledger, index)
+tests/test_search.py:41:    embedded, unchanged, _, error = search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:43:    again = search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:58:    assert search.build_index(conn, index, embed=search.fake_embed, embedding_model='fake')[0] == 1
+tests/test_search.py:62:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:77:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:85:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:90:    assert search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')[0] == 1    # and it is rebuilt
+tests/test_search.py:99:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:125:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:139:    embedded, unchanged, tokens, error = search.build_index(ledger, index, embed=flaky, embedding_model='fake', batch=40)
+tests/test_search.py:145:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:172:    monkeypatch.setattr(search_eval.search, 'build_index', lambda *a, **k: (0, 94, 0, None))
+    58	
+    59	
+    60	def start_objects():
+    61	    """The object list for the server's instructions, computed once at start and labelled with its day; every tool reads the current
+    62	    last completed day. Start-up indexing is unchanged until row 4a's slice: it can still read an unfinished day's views."""
+    63	    with connections() as (ledger, _items, index):
+    64	        if not ARGS.lexical:
+    65	            embedded, _unchanged, _tokens, error = search_module.ensure_index(ledger, index)
+    66	            if error:
+    67	                sys.stderr.write(f'hivemind: embedding stopped ({error}) after {embedded} views; search runs lexical until the rest is built\n')
+    68	        try:
+    69	            day = service.resolve_bound(ledger, None)
+    70	        except service.FirstDayNotCompleted:
+    71	            return "No day of this ledger has completed yet; every tool refuses until one has."
+    72	        return (f'Objects as of {day}, when this server started; every tool reads the current last completed day. '
+    73	                + idea_module.object_list(ledger, day, ALIASES))
+    74	
+    75	
+
+codex
+**Not yet.** Matching a vector’s model and the hash of the exact text being embedded is a reasonable way to reuse it across stores; it can replace store identity for that purpose. The revised contract still needs to settle what a request sees while the separate index is changing.
+
+1. **The ledger transaction does not pin the index.** A search reads the index and may write the query cache. With batch-by-batch index builds and overlapping API or MCP processes, the index can change during a request even though the ledger is pinned. Specify whether each search must see one index snapshot or whether mixed index states are an accepted limit, and test a build committing between the search’s index reads. The current query-cache write commits on the index connection, so simply adding a read transaction needs care. [Index reads and cache write](/Users/lchingen/hivemind/src/hivemind/search.py:122), [one-state contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:44).
+
+2. **A newly visible view does not necessarily lack a vector.** A reused index may already contain the same view ID, text hash and model from another store. Under the proposed key, using it is legitimate, so the unconditional claim that every new view appears in `missing_vectors` until restart is too strong. State the two cases and test both a matching cached vector and a genuinely missing one. [Revised refresh rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:100).
+
+3. **State the first-day restart consequence explicitly.** If the service starts before its first day completes, it builds no index; under the new rule it also will not build one when that day completes. Search then remains lexical until restart. Include that exact transition through both startup paths in the proof. [Revised contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:100).
+
+The matching and `search_eval` compatibility provisions answer the caller concern. The vector-key claim should also remain conditional on the hash covering the **complete embedding input**, the model identifier matching, and the stored vector being usable; the current `view_text` defines that input. [Embedding text](/Users/lchingen/hivemind/src/hivemind/search.py:46).
+
+CONSENSUS: no, because the separate index’s consistency during a request and the cached-vector and first-day cases need to be specified before the slice is built.
+tokens used
+3,484,864
+**Not yet.** Matching a vector’s model and the hash of the exact text being embedded is a reasonable way to reuse it across stores; it can replace store identity for that purpose. The revised contract still needs to settle what a request sees while the separate index is changing.
+
+1. **The ledger transaction does not pin the index.** A search reads the index and may write the query cache. With batch-by-batch index builds and overlapping API or MCP processes, the index can change during a request even though the ledger is pinned. Specify whether each search must see one index snapshot or whether mixed index states are an accepted limit, and test a build committing between the search’s index reads. The current query-cache write commits on the index connection, so simply adding a read transaction needs care. [Index reads and cache write](/Users/lchingen/hivemind/src/hivemind/search.py:122), [one-state contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:44).
+
+2. **A newly visible view does not necessarily lack a vector.** A reused index may already contain the same view ID, text hash and model from another store. Under the proposed key, using it is legitimate, so the unconditional claim that every new view appears in `missing_vectors` until restart is too strong. State the two cases and test both a matching cached vector and a genuinely missing one. [Revised refresh rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:100).
+
+3. **State the first-day restart consequence explicitly.** If the service starts before its first day completes, it builds no index; under the new rule it also will not build one when that day completes. Search then remains lexical until restart. Include that exact transition through both startup paths in the proof. [Revised contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:100).
+
+The matching and `search_eval` compatibility provisions answer the caller concern. The vector-key claim should also remain conditional on the hash covering the **complete embedding input**, the model identifier matching, and the stored vector being usable; the current `view_text` defines that input. [Embedding text](/Users/lchingen/hivemind/src/hivemind/search.py:46).
+
+CONSENSUS: no, because the separate index’s consistency during a request and the cached-vector and first-day cases need to be specified before the slice is built.

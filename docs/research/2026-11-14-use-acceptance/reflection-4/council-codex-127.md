@@ -1,0 +1,11 @@
+**Not yet.** The search plan departs from row 4a in how it identifies existing stores, and it does not yet say who refreshes the index after startup.
+
+1. **The fallback identity is not a replacement check.** A path and first step can be the same for two different stores. Calling an existing store “never replaced” would bypass row 4a’s requirement to reject both staged and published vectors from a different store. Define a safe identity or a conservative fallback for stores without the new identifier, and test replacement at the same path with the same first step. [Row 4a](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:85).
+
+2. **Name the refresh owner after the first day.** The proposal refreshes at API and MCP startup, but row 4a also requires publication after later completed days. Specify what triggers that refresh, how the first-day-started service begins indexing after its first completion, and what search reports while publication is pending or fails. Test those transitions through the entry points. [Index contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:87).
+
+3. **Keep the other search caller in scope for compatibility.** `store.search_views` is also used by production matching. Leaving it in place avoids changing that caller, but the census and tests should establish that its behavior and the frozen matching path remain unchanged. The standalone `search_eval` script also calls `build_index` directly and needs the new arguments or an explicitly compatible interface. [Matching caller](/Users/lchingen/hivemind/src/hivemind/views/matching.py:134), [search evaluator](/Users/lchingen/hivemind/scripts/search_eval.py:43).
+
+Slice 2’s code and tests show the pinned ledger connections and pre-header refusals. One evidence qualification: the overlapping-search test exercises the MCP connection context and search function in threads; it is not itself two calls through the MCP transport. I did not rerun the suites. [Live-read tests](/Users/lchingen/hivemind/tests/test_live_reads.py:135).
+
+CONSENSUS: no, because existing-store identity and the post-startup index refresh need a reviewed contract before slice 3 is built.

@@ -6,6 +6,8 @@ CLI with the operator's usual model and setting.
 
   python3 clean-arch/step4-2026-11-10/stage_b/run_codex_readers.py first <data folder>     # the 40 packets
   python3 clean-arch/step4-2026-11-10/stage_b/run_codex_readers.py third <data folder>     # the third reader's packets
+  python3 clean-arch/step4-2026-11-10/stage_b/run_codex_readers.py trial <data folder>     # Stage B: the planted answers' trial
+  python3 clean-arch/step4-2026-11-10/stage_b/run_codex_readers.py controls <data folder>  # Stage B: the control theses (line 3)
 """
 import concurrent.futures
 import json
@@ -20,7 +22,12 @@ MOST_SECONDS, MOST_ATTEMPTS, AT_ONCE = 3600, 2, 6
 KINDS = {'first': {'packets': 'readers', 'answers': 'readers-answers', 'packet_name': 'packet-{n}.json', 'answer_name': 'reader-codex-packet-{n}.jsonl',
                    'brief': LADDER / 'stage-b-reader-brief.md', 'unit': 'judgements, each of a different research question'},
          'third': {'packets': 'third-reader', 'answers': 'third-reader', 'packet_name': 'ruling-packet-{n}.json', 'answer_name': 'rulings-codex-{n}.jsonl',
-                   'brief': LADDER / 'stage-b-third-reader-brief.md', 'unit': 'judgements to rule on'}}
+                   'brief': LADDER / 'stage-b-third-reader-brief.md', 'unit': 'judgements to rule on'},
+         'trial': {'packets': 'validation', 'answers': 'validation-answers', 'packet_name': 'packet-{n}.json', 'answer_name': 'reader-codex-packet-{n}.jsonl',
+                   'brief': LADDER / 'stage-b-reader-brief.md', 'unit': 'judgements, each of a different research question'},
+         'controls': {'packets': 'controls', 'answers': 'controls-answers', 'packet_name': 'control-packet-{n}.json', 'answer_name': 'reader-codex-control-packet-{n}.jsonl',
+                      'brief': Path(__file__).resolve().parent / 'control-reader-brief.md', 'unit': 'control theses', 'number': 'control',
+                      'read': "Read every evidence entry of each item before marking its items."}}
 
 
 def handoff(kind, packet_file, count):
@@ -29,8 +36,8 @@ def handoff(kind, packet_file, count):
             + (f"; it sends you to the form `{LADDER / 'stage-b-reader-brief.md'}`, which you read first" if kind == 'third' else '') + ". It is your whole task.\n\n"
             f"The packet it speaks of is `{packet_file}` ({count} {settings['unit']}).\n\n"
             "Rules: the only files you may open are " + ('those two briefs' if kind == 'third' else 'that brief') + " and that packet. Do not open or list any other file or folder, in the "
-            "repository or anywhere else. Do not run model calls or start runs. Read each judgement's whole request before judging its answer.\n\n"
-            f"Output: exactly {count} lines, one JSON object per line, in packet order, each with the `judgement` number the packet gives and the fields the brief lists, "
+            "repository or anywhere else. Do not run model calls or start runs. " + settings.get('read', "Read each judgement's whole request before judging its answer.") + "\n\n"
+            f"Output: exactly {count} lines, one JSON object per line, in packet order, each with the `{settings.get('number', 'judgement')}` number the packet gives and the fields the brief lists, "
             "and nothing else (no prose, no code fence).\n")
 
 

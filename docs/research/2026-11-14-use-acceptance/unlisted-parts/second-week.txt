@@ -1,0 +1,45 @@
+sends read 39; sends with L failing in at least one first reader 4
+
+=== c1/clean-1 pass 2 (ladder)
+  description: How much will Nvidia's maximum potential guarantee liability under the SB Energy/OpenAI affiliate infrastructure leases be at its next annual report?
+  outcome:     The maximum potential amount guaranteed, any amounts paid or accrued, and the remaining term of the guarantees disclosed in Nvidia's next annual report.
+  period:      Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken.
+  ladder question: What maximum potential guarantee liability under the SB Energy/OpenAI affiliate infrastructure leases will Nvidia disclose in its FY2027 annual report, as reported in the guarantees note?
+  this send lists: []
+  reader 1: L fails | April 1 is later than the next annual report in February, and amounts paid or accrued and the remaining term are missing from not_judged.
+  reader 2: L fails | L fails because not_judged is empty although the thesis's outcome also names 'any amounts paid or accrued' and 'the remaining term of the guarantees', which the question leaves out.
+  pass 1 lists: ["Any amounts paid or accrued under the guarantees", "The remaining term of the guarantees"]
+  pass 3 lists: []
+
+=== c1/clean-1 pass 3 (ladder)
+  description: How much will Nvidia's maximum potential guarantee liability under the SB Energy/OpenAI affiliate infrastructure leases be at its next annual report?
+  outcome:     The maximum potential amount guaranteed, any amounts paid or accrued, and the remaining term of the guarantees disclosed in Nvidia's next annual report.
+  period:      Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken.
+  ladder question: What maximum potential guarantee liability will Nvidia disclose in its FY2027 annual report, as stated in its Form 10-K?
+  this send lists: []
+  reader 1: L fails | The question omits the SB Energy/OpenAI affiliate leases, April 1 is later than the next annual report in February, and amounts paid or accrued and the remaining term are missing from not_judged.
+  reader 2: L fails | L fails because not_judged is empty although the outcome also names 'any amounts paid or accrued' and 'the remaining term of the guarantees'; and the question asks only 'What maximum potential guarantee liability will Nvidia disclose' where the thesis names the guarantee 'under the SB Energy/OpenAI affiliate infrastructure leases'.
+  pass 1 lists: ["Any amounts paid or accrued under the guarantees", "The remaining term of the guarantees"]
+  pass 2 lists: []
+
+=== c1/clean-3 pass 2 (ladder)
+  description: By how much will contract prices for AI-server memory (HBM/DRAM) — the memory input cost embedded in Nvidia's GPUs — rise or fall in calendar 2027?
+  outcome:     The change in HBM/DRAM contract prices over calendar 2027, and the memory makers' reported average selling prices and memory gross margins for the periods covering 2027.
+  period:      Calendar 2027 (overlapping Micron's fiscal 2027, roughly September 2026–August 2027), as supported by Micron management's fiscal 2027 price guidance in the October 6, 2026 article.
+  ladder question: By what percentage will HBM/DRAM contract prices for AI-server memory change over calendar 2027, as determined from TrendForce/DRAMeXchange contract-price releases?
+  this send lists: []
+  reader 1: L fails | The omitted memory makers' selling prices and gross margins are not listed, and Micron's fiscal 2027 price expectation is not an expectation for calendar 2027 HBM/DRAM contract prices.
+  reader 2: L fails | L: the outcome also names 'the memory makers' reported average selling prices and memory gross margins', which the question leaves out while not_judged is empty; W: 'HBM/DRAM contract prices' covers two separately priced series and 'change over calendar 2027' gives no start and end point.
+  pass 1 lists: ["Memory makers’ reported average selling prices and gross margins for periods covering 2027."]
+  pass 3 lists: ["Memory makers’ reported average selling prices for periods covering 2027", "Memory makers’ reported gross margins for periods covering 2027"]
+
+=== c1/clean-8 pass 1 (ladder)
+  description: How much residual-value/loss-share exposure has Nvidia taken on under its customer data center financing support — the commitment to cover up to 25% of the loss if financed chips lose value — and how much is disclosed at its next annual report?
+  outcome:     The maximum potential amount of Nvidia's loss coverage on customer data center chip values, any amounts paid or accrued, and the terms and remaining duration of that support, as disclosed in Nvidia's next annual report.
+  period:      Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken.
+  ladder question: What is the maximum potential USD amount of Nvidia’s loss-coverage exposure outstanding as of FY2027 year-end, as disclosed in its FY2027 Form 10-K guarantees and contingent-liability note or related customer-financing disclosures?
+  this send lists: ["Any amounts paid or accrued under the support.", "The terms and remaining duration of the support."]
+  reader 1: L fails | The existing obligation is due at the next annual filing, around February 2027, rather than April 1, and the omitted 25% loss-coverage limit is not specifically listed.
+  reader 2: L holds | 
+  pass 2 lists: ["Any amounts paid or accrued under the support.", "The terms and remaining duration of the support."]
+  pass 3 lists: ["The commitment to cover up to 25% of losses if financed chips lose value.", "Any amounts paid or accrued under the support.", "The terms and remaining duration of the support."]

@@ -24,10 +24,15 @@ CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
 ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
              'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
 # USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+# gpt-6.1-sol: the published standard rates on 2026-11-16 (developers.openai.com/api/docs/models: "$2 / $10" per million input and output
+# tokens; D628's model comparison only). gpt-6-astra: the published standard rates on 2026-11-16 (developers.openai.com/api/docs/models/
+# gpt-6-astra: "$10 input … $50 output" per million tokens; D632's comparison only).
+# claude-opus-5-5: Anthropic's first-party list price, $4 input and $20 output per million tokens (the claude-api skill's model table,
+# cached 2026-11-03); Alex's Opus trial only (2026-11-16, "你试试看opus"). Cache reads ($0.20) are priced at CACHED_INPUT_SHARE, an over-estimate.
 # gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
 # cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
 # the published rate; the token columns are the measurement, the bill is the provider's.
-PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+PRICES = {'gpt-6-luna': (0.10, 0.50), 'gpt-6.1-sol': (2.00, 10.00), 'gpt-6-astra': (10.00, 50.00), 'claude-opus-5-5': (4.00, 20.00), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
           'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
 CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
 

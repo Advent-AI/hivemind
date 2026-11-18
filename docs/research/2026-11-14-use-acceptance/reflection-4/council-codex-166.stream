@@ -1,0 +1,292 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 166: the split probe's result (`splitting/RESULT.md`)
+
+**The verdict under the registered rule is negative.** On c1/clean-12's 2027 question in pass 3, both families mark Q fails: the
+thesis asks the total, and the question asks spending as a share of U.S. GDP. Agreed first-reader marks are settled without third
+readers, so the veto holds under both countings whatever the 15 disputed points rule.
+
+**The rest:**
+- counts pass: T 6 of 6 sends split with both years written, no control named the case or changed kind;
+- both plants were caught by both families;
+- c1/clean-4's 6 yearly questions are clean;
+- c1/clean-12's 2026 questions are clean, and its 2027 questions all carry a fault by at least one reader, because the article gives
+  2027 only as a share of U.S. GDP;
+- the model ignored "that value alone is not listed" in 3 or 4 of 12 yearly questions.
+- $0.083 spent.
+
+**My position:**
+
+1. **Record the verdict as negative now, and send no third readers.** Their rulings cannot change it (AGENTS §7.3: a check that cannot
+   change the decision is not run). The 15 disputed points stay listed and unruled.
+2. **The candidate is not adopted in this form.** I do not propose tuning the yearly line on this case. Making the re-ask decline when
+   the year's figure is stated only in another measure would add a rule written from the failing case (AGENTS §2, "no case-fitted fix").
+3. **The mechanism belongs upstream as much as here.** Steps 1 to 3 opened a topic whose "outcome" mixes two measures. The split exposed
+   what the refusal hid. D397's defect stays open for c1/clean-4, which the split did answer cleanly, and for c1/clean-12.
+   - I propose recording the lesson (a year split is sound only where each year's value is stated in the topic's own measure).
+   - I propose closing this line under D612's conditions, since no further $0 step would move the decision.
+
+**Asked:**
+1. Agree with negative and no third readers, or say why third readers are needed.
+2. Agree to close the candidate, or name the one next step with a result that could still move the decision.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the decisive answer and first-reader marks against the source and the registered scoring rule, then assess whether the proposed lesson follows from that case.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/score_split.py | tail -90' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'clean-12|GDP|gross domestic|2027' docs/research/2026-11-14-use-acceptance/splitting/RESULT.md | head -50" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    both = sorted(collector.FAMILIES.values())
+    families = collector.third_reader_families(reading)
+    if collector.disputes_of(outcomes, readers) and families != both:
+        raise SystemExit(f'VOID: differences need both third-reader families; found {families}')
+    read = {family: collector.read_rulings(reading, item_of, outcomes, readers, family) for family in families}
+    if any(found[1] for found in read.values()):
+        raise SystemExit(f'VOID: third-reader rulings missing: { {family: found[1] for family, found in read.items() if found[1]} }')
+    given = field_rulings(reading)
+    missing = [f'{item_of[send]}-{field}' for send, field in field_points(outcomes, readers, item_of)
+               if len(given.get(f'{item_of[send]}-{field}', {})) < 2]
+    if missing:
+        raise SystemExit(f'VOID: BY or LQ rulings missing for {missing}')
+    return outcomes, readers, item_of, {family: found[0] for family, found in read.items()}, families, given
+
+
+def settled_field(values, ruled, unresolved_as):
+    if len(set(values)) == 1 and values[0] != 'cannot_tell':
+        return values[0]
+    third = set(ruled.values())
+    if len(ruled) == 2 and len(third) == 1 and 'cannot_tell' not in third:
+        return next(iter(third))
+    return 'yes' if unresolved_as == 'fails' else 'no'
+
+
+def faults_of(send, outcome, readers, of_family, families, given, item, unresolved_as):
+    rows = [readers[reader][send] for reader in collector.FAMILIES]
+    empty = {'marks': {}, 'W': {}}
+    ruling, _ = accounting.rulings_of_two(of_family[families[0]].get(send, empty), of_family[families[-1]].get(send, empty), unresolved_as)
+    faults = set()
+    for mark in accounting.marks_that_apply(accounting.kind_of(outcome)):
+        value = rows[0][mark] if rows[0][mark] == rows[1][mark] else ruling['marks'].get(mark, unresolved_as)
+        if mark in HARD and value == 'fails':
+            faults.add(mark)
+    for field in FIELDS:
+        if settled_field([rows[0][field], rows[1][field]], given.get(f'{item}-{field}', {}), unresolved_as) == 'yes':
+            faults.add(field)
+    return faults
+
+
+def vetoes(outcomes, readers, item_of, of_family, families, given, unresolved_as):
+    groups = reading_split.group_of()
+    faults = {send: faults_of(send, outcome, readers, of_family, families, given, item_of[send], unresolved_as)
+              for send, outcome in outcomes.items() if not send[0].startswith('plant|')}
+    frozen_faults = {}
+    for (case, _), found in faults.items():
+        arm, topic = case.split('|', 1)
+        if arm == 'frozen':
+            frozen_faults.setdefault(topic, set()).update(found & set(HARD))
+    found_vetoes = []
+    for (case, pass_number), found in sorted(faults.items()):
+        arm, topic = case.split('|', 1)
+        topic = topic.split('@', 1)[0]
+        if arm != 'split' or not found:
+            continue
+        if groups[topic] in reading_split.READ_YEARLY:
+            found_vetoes.append((case, pass_number, sorted(found)))
+        else:
+            new = (found & set(FIELDS)) | (found & set(HARD)) - frozen_faults.get(topic, set())
+            if new:
+                found_vetoes.append((case, pass_number, sorted(new)))
+    return found_vetoes
+
+
+def verdict(probe_folder, key_folder):
+    counted = counts(probe_folder)
+    print(json.dumps(counted, indent=1))
+    if not counted['pass']:
+        return 'negative', counted, None
+    try:
+        loaded = load_reading(probe_folder, Path(probe_folder) / 'reading', Path(key_folder) / 'key.json', Path(key_folder) / 'plants-expected.json')
+    except SystemExit as stop:
+        if str(stop).startswith('VOID'):
+            print(stop)
+            return 'void', counted, None
+        raise
+    found = {unresolved_as: vetoes(*loaded, unresolved_as) for unresolved_as in ('holds', 'fails')}
+    for unresolved_as, listed in found.items():
+        print(f'vetoes, unresolved counted as {unresolved_as}: {listed}')
+    if not found['holds'] and not found['fails']:
+        return 'lead', counted, found
+    if found['holds'] and found['fails']:
+        return 'negative', counted, found
+    return 'inconclusive', counted, found
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
+    decision, _, _ = verdict(sys.argv[1], sys.argv[2])
+    print(f'VERDICT: {decision}')
+
+ succeeded in 0ms:
+# The split probe's result (D621), 2026-11-16
+
+Data: `poc/data/clean-split-probe-2026-11-16/` (both arms, the reading, both families' answers). The key is outside the repository.
+Spend: $0.0315 (frozen arm) and $0.0516 (split arm), $0.083 in all. No charge was above its reserve.
+
+## The verdict under the registered rule: negative
+
+On the global-AI-capex topic's 2027 question in pass 3 (item 21, `split|week-10-06:c1/clean-12@2027`), **both families mark Q
+fails**:
+- Codex: "The thesis asks for the 2027 global spending total, but the question asks for spending as a share of U.S. GDP …";
+- Claude: "… a different measure that also moves with U.S. GDP".
+
+Q is a hard line, and a hard-line fault on a yearly question that both families settle is a veto (DESIGN.md v4 §0b item 4). A mark
+both first readers agree on is settled without third readers. The veto therefore holds under both countings, whatever the 14
+disputed gate marks and the 1 disputed LQ point rule. The verdict is **negative**.
+
+## What else was measured
+
+**Counts (code):**
+- both T topics split in 3 of 3 sends, with both years written each time;
+- none of the 30 control sends named the case;
+- no control changed kind.
+
+**Plants:** both families caught both (BY on the base-year plant, LQ on the dropped limit), so the reading is valid.
+
+**The hyperscalers' capex (c1/clean-4), 6 yearly questions:**
+- no hard-line fault by either family;
+- my own read found one due-day fault (pass 2's 2026 question is due 2028-03-15), which neither family marked. D is not a hard line.
+
+**Global AI capex (c1/clean-12):**
+- the 3 2026 questions are clean for both families;
+- every 2027 question has a fault by at least one reader:
+  - pass 1: XR (Codex), and G and XR (Claude);
+  - pass 2: L and XR (Codex), G (Claude);
+  - pass 3: Q (both, the veto), and L (Codex).
+
+**C1:** the split arm's faults are mostly the frozen arm's own on the same topics: the CPO topic's FY2028 year and its checkpoints,
+and the Kyber topic's missing references and debut. The disputed points are listed in `reading/` and are not ruled, since they cannot
+change the verdict.
+
+**Following the yearly line** (my own read): in 3 or 4 of 12 yearly questions the model still listed the other year's own value as
+not judged.
+
+## Diagnosis
+
+**The mechanism of the veto.** The article gives global AI capital spending for 2026 as an amount (Goldman's $1 trillion), and for
+2027 only as a share of U.S. GDP (2.5%). The topic as Steps 1 to 3 opened it asks the total for both years, "measured against" both
+measures. The split's 2027 re-ask must write a question about the total for a year whose only stated figure is in another measure.
+The three sends answer three ways:
+- a total with no anchor;
+- a total with a reference that has no number;
+- a switch of measure, which is the veto.
+
+The frozen step declined the whole topic ("no main") in every stored send, so this weakness was hidden behind the refusal.
+
+**What it shows:** splitting by year works where the article states each year's value in the topic's own measure (c1/clean-4: 6 of 6
+clean). It produces a poor question where it does not (c1/clean-12's 2027: 3 of 3 with faults).
+
+**Limits:**
+- M is not exercised;
+- yearly items reveal their arm;
+- one draw of three sends a topic.
+
+ succeeded in 0ms:
+8:On the global-AI-capex topic's 2027 question in pass 3 (item 21, `split|week-10-06:c1/clean-12@2027`), **both families mark Q
+10:- Codex: "The thesis asks for the 2027 global spending total, but the question asks for spending as a share of U.S. GDP …";
+11:- Claude: "… a different measure that also moves with U.S. GDP".
+30:**Global AI capex (c1/clean-12):**
+32:- every 2027 question has a fault by at least one reader:
+47:2027 only as a share of U.S. GDP (2.5%). The topic as Steps 1 to 3 opened it asks the total for both years, "measured against" both
+48:measures. The split's 2027 re-ask must write a question about the total for a year whose only stated figure is in another measure.
+57:clean). It produces a poor question where it does not (c1/clean-12's 2027: 3 of 3 with faults).
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files poc/data | rg 'split.*(outcomes.jsonl|reader.*jsonl|cases.json)' | head -35" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-split-probe-2026-11-16/frozen/cases.json
+poc/data/clean-split-probe-2026-11-16/frozen/send-1/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/frozen/send-3/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/frozen/send-2/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-claude-packet-2.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-2.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-claude-packet-3.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-3.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-1.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-claude-packet-1.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/cases.json
+poc/data/clean-split-probe-2026-11-16/reading/send-1/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/send-3/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/reading/send-2/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/split/cases.json
+poc/data/clean-split-probe-2026-11-16/split/send-1/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/split/send-3/outcomes.jsonl
+poc/data/clean-split-probe-2026-11-16/split/send-2/outcomes.jsonl
+
+exec
+/opt/homebrew/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 python3 -c \"import json,pathlib; p=pathlib.Path('poc/data/clean-split-probe-2026-11-16'); c=next(x for x in json.loads((p/'split/cases.json').read_text()) if x['case'].endswith('c1/clean-12'));print('THESIS',json.dumps(c['thesis'],ensure_ascii=False));print('ARTICLE',c['item']['text']); [print('PASS',i,[(y,ch['view']['question'] if ch.get('view') else ch['status']) for y,ch in next(json.loads(l) for l in (p/f'split/send-{i}/outcomes.jsonl').read_text().splitlines() if 'c1/clean-12' in l)['children'].items()]) for i in (1,2,3)]\"" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+THESIS {"id": "clean-12", "description": "How much will global AI capital spending total in calendar 2026 and calendar 2027?", "outcome": "Global AI capex for calendar 2026 and calendar 2027, measured against Goldman Sachs' forecast of $1 trillion of global AI spend this year and AI spend equal to 1.8% of U.S. GDP in 2026, 2.5% in 2027 (and 2.8% in 2028).", "period": "Calendar 2026 and calendar 2027 (with 2028 also given), the years Goldman Sachs' forecast in the Oct. 11, 2026 article covers.", "opens_as": "shared_quantity", "settled_by": "Goldman Sachs Research's published updates to its AI capex / U.S. GDP series, together with the reported capex and AI spending of the large buyers (hyperscalers, neo-clouds and other AI infrastructure operators), compared at each calendar year-end."}
+ARTICLE Space Exploration Technologies ( SPCX +0.86% ) has been the most-talked-about stock of the year, and it's finally starting to take flight. It's only up 4% since its first-day closing price, but it's trading up 55% since it bottomed out in August.
+It has become the sixth most valuable company in the U.S., with a $2.2 trillion market cap, but Nvidia ( NVDA +2.48% ) is keeping its top spot, getting closer to a $6 trillion market cap. If I had a choice of investing $10,000 in either one, here's what I would do.
+The case for SpaceX: Massive opportunities
+It hasn't paid to bet against Elon Musk in the past. Tesla has revolutionized the auto industry, and Tesla stock has gained 23,440% since going public in 2010. He has also been involved in several other major tech companies, including PayPal Holdings and OpenAI.
+SpaceX is the culmination of many of Musk's innovations, bringing together the SpaceX rocket-launching business, the Starlink satellite broadband business, and the SpaceXAI artificial intelligence (AI) model. These are exciting innovations that are already in motion and making money, and the company sees a massive addressable market. It's planning to go to Mars, set up shop on the moon, and put data centers into space.
+In the company's first earnings report since going public, SpaceX demonstrated robust growth across its businesses. Total revenue increased 92% year over year, and net loss nearly halved to $541 million. The Starlink business reported $1.7 billion in operating income, a 79% increase over last year, and doubled subscribers to 12 million, while the rocket business remains the largest commercial rocket-launching business in the world . The two segments work together, since many of SpaceX's launches bring Starlink satellites into space. Starlink has more than 11,000 satellites in low Earth orbit and has plans for 100,000 in total to provide coverage to every spot on Earth.
+SpaceX also plans to have 1 million Starmind AI satellites, which are mini data centers in space. Management sees its biggest opportunities in AI, and it has signed some important deals recently, including one with Anthropic, which will rent Nvidia chips from SpaceXAI's data centers, potentially worth $84.5 billion through 2029.
+The risks for SpaceX fall into two main camps. One is that there are many expectations, and the company may not meet them. The second is that the stock appears very expensive, trading at 69 times trailing 12-month sales.
+The case for Nvidia: It's the power behind AI
+Nvidia has skyrocketed as the power behind AI development. Its best-in-class graphics processing units (GPUs) have the necessary parallel processing power to drive generative AI, and it releases advanced platforms every year. This year, it has released the Vera Rubin series, which has "10x agent throughput at scale compared with the previous-generation Nvidia Grace Blackwell platform," according to the company. The line includes a full computer system with several types of chips, including the central processing units (CPUs) that are critical components of agentic AI.
+Revenue has recently been accelerating as the major hyperscalers ramp up spending. In the 2027 fiscal second quarter (ended July 26), revenue more than doubled to $96.2 billion, and gross margin improved from 72.4% to 75%. CFO Colette Kress has already given an outlook of 70% sales growth in 2028, although she said that without its supply constraints, sales would double.
+Nvidia has relationships with all kinds of companies in several mutually beneficial deals. For example, it has a $2 billion stake in cloud computing company CoreWeave , which in turn buys its chips, and SpaceX recently announced a deal to buy $40 billion worth of Nvidia chips for its data centers. Most well-known is probably its relationship with Amazon . Amazon offers Nvidia GPUs to its Amazon Web Services (AWS) cloud clients, and it just purchased another 2 million, while Nvidia uses AWS services.
+Analysts are predicting higher AI spend, and a nice piece of that goes to Nvidia. Goldman Sachs forecasts $1 trillion in global spend this year and frames its predictions as a percentage of U.S. gross domestic product (GDP). It predicts 1.8% of U.S. GDP in 2026, rising to 2.5% in 2027 and 2.8% in 2028.
+On top of all that, Nvidia stock looks cheap, trading at 30 times trailing-12-month earnings. The market is already pricing in next year's slowdown.
+Don't worry, I'm not going to tell you to split it in half. I'm actually going to go with Nvidia. SpaceX could have massive opportunities, but I'm not convinced it's a buy at this price. It would also be good to see a few more quarters of growth data to better assess its risk.
+That leaves Nvidia , which has a proven track record and a highly profitable business at an attractive price.
+By Jennifer Saibil – Oct 11, 2026 at 1:18PM EST
+PASS 1 [('2026', "What will global AI capital spending total in calendar 2026, as determined by Goldman Sachs Research's published AI capex/U.S.-GDP series updates together with reported capex and AI spending of large buyers?"), ('2027', "How much will global AI capital spending total in calendar 2027, as determined by Goldman Sachs Research's published AI capex/U.S. GDP series and reported spending by large AI infrastructure buyers?")]
+PASS 2 [('2026', "What was global AI capital spending in calendar 2026, as determined by Goldman Sachs Research's published AI-capex updates together with reported spending by major AI infrastructure buyers?"), ('2027', "What will global AI capital spending total in calendar 2027, as measured using Goldman Sachs Research's published AI-capex updates and reported spending by major AI infrastructure buyers?")]
+PASS 3 [('2026', "How much will global AI capital spending total in calendar 2026, as determined by Goldman Sachs Research's published updates to its AI capex series together with reported capex and AI spending by large buyers?"), ('2027', "What will global AI capital spending equal as a share of U.S. GDP in calendar 2027, based on Goldman Sachs Research's published updates and reported spending by major AI infrastructure buyers?")]
+
+exec
+/opt/homebrew/bin/zsh -lc "rg '\"item\"\\s*:\\s*21\\b' poc/data/clean-split-probe-2026-11-16/reading/readers-answers/*.jsonl" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-1.jsonl:{"item":21,"Q":"fails","O":"holds","R":"holds","D":"holds","X":"holds","F":"n/a","Y":"holds","G":"holds","L":"fails","B":["bet","bet"],"XR":"holds","N":"n/a","W":"","BY":"no","LQ":"no","why":"The thesis asks for the 2027 global spending total, but the question asks for spending as a share of U.S. GDP and does not list the total as omitted."}
+poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-claude-packet-1.jsonl:{"item":21,"Q":"fails","O":"holds","R":"holds","D":"holds","X":"holds","F":"n/a","Y":"holds","G":"holds","L":"holds","B":["bet","bet"],"XR":"holds","N":"n/a","W":"","why":"Q fails because the thesis asks how much global AI capital spending will total in calendar 2027, but the question asks for that spending as a share of U.S. GDP, a different measure that also moves with U.S. GDP.","BY":"no","LQ":"no"}
+
+codex
+The probe is **negative under its registered rule**, and the candidate should stop in its present form. Both first readers marked the same 2027 question wrong: it asks for AI spending as a share of U.S. GDP, while the topic asks for the spending total. [Codex and Claude marks](/Users/lchingen/hivemind/poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-1.jsonl)
+
+No third-reader sessions are needed to decide this probe. The agreed Q failure is already a veto under both countings. The 15 disputed points should remain explicitly unruled; the final result is a negative verdict from the decisive agreed mark, not a completed adjudication of every mark.
+
+I would narrow the proposed lesson. The source gives a 2026 dollar estimate and 2027 as a GDP share; the topic asks for totals in both years. The split then produced a share question in one send. That demonstrates a **measure mismatch in this case**. It does not establish that a yearly question is sound *only if* the opening article states that year’s value in the same measure, or prove that the upstream topic alone caused the switch. The other two 2027 sends asked for totals, and their reader faults remain unsettled. [Source and result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/RESULT.md)
+
+Record the negative result and leave D397’s splitting defect open. The six clean questions on the hyperscalers topic are a useful lead, not acceptance of the split. I see no supported next paid test or general repair from this result; D612’s reopen conditions remain in force.
+
+CONSENSUS: record the negative result without third-reader calls; stop this candidate and record the measure mismatch as a case, not a new rule.
+tokens used
+4,275,782
+The probe is **negative under its registered rule**, and the candidate should stop in its present form. Both first readers marked the same 2027 question wrong: it asks for AI spending as a share of U.S. GDP, while the topic asks for the spending total. [Codex and Claude marks](/Users/lchingen/hivemind/poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-1.jsonl)
+
+No third-reader sessions are needed to decide this probe. The agreed Q failure is already a veto under both countings. The 15 disputed points should remain explicitly unruled; the final result is a negative verdict from the decisive agreed mark, not a completed adjudication of every mark.
+
+I would narrow the proposed lesson. The source gives a 2026 dollar estimate and 2027 as a GDP share; the topic asks for totals in both years. The split then produced a share question in one send. That demonstrates a **measure mismatch in this case**. It does not establish that a yearly question is sound *only if* the opening article states that year’s value in the same measure, or prove that the upstream topic alone caused the switch. The other two 2027 sends asked for totals, and their reader faults remain unsettled. [Source and result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/RESULT.md)
+
+Record the negative result and leave D397’s splitting defect open. The six clean questions on the hyperscalers topic are a useful lead, not acceptance of the split. I see no supported next paid test or general repair from this result; D612’s reopen conditions remain in force.
+
+CONSENSUS: record the negative result without third-reader calls; stop this candidate and record the measure mismatch as a case, not a new rule.

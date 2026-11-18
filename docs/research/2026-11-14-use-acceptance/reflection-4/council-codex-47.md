@@ -1,0 +1,9 @@
+**No-go on B’s startup-only guard; A is ready to build.** The guard can pass before the first processing record exists, then leave the server running while the writer reaches exactly the partial state it is meant to block.
+
+The clean writer creates and commits an empty store first. It later writes article processing records and commits them before judging and completing the first day. If the API starts in that initial interval, `first_day_unfinished` would be false; after the first judgement, the existing default can expose the unfinished day. Completed days growing monotonically does not close that startup race. [ladder_adapter.py](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:164), [daily loop](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:352)
+
+Revise B to identify the intended live-store mode and refuse or withhold reads until its first day completes, including when the service starts **before** the first processing record. Keep legacy compatibility explicit. Test the real API starting on the empty store, then advance the writer through a first judgement and first completion; exercise MCP’s corresponding path too. Also record the crash-left state without saying it necessarily ends when the first day would have completed. [LIVE-READ-DESIGN.md](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/page-contract/LIVE-READ-DESIGN.md:23)
+
+A now matches the actual library interface: the initial successful load can select the served `as_of`, while later replacements keep the clamp. The delayed user-date case was correctly removed.
+
+CONSENSUS: no, because the startup-only guard can admit an empty store that subsequently becomes an unfinished first-day store.

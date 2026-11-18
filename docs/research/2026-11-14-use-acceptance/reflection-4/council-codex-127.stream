@@ -1,0 +1,795 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 127: slice 2 built and proven (D595); go for slice 3, search (row 4a)?
+
+## Slice 2
+
+- **API:** a request's ledger state is pinned by `BEGIN` and a first read, the transaction ends on every path, and an opening failure
+  closes what was opened.
+- **MCP:** connections per tool call, and a labelled start-up object list through the resolving `idea.object_list`.
+- **The streamed route:** refuses a first-day store or future date before headers. `/days` refuses a first-day store.
+- **Tests:** `tests/test_live_reads.py`, 8 tests on WAL test stores written through the store's own functions. The suite passes
+  (317), and so do the new system's folders (164). Mutants: 6 of 6 caught.
+- **One build finding, corrected:** my pre-header check first validated the whole body, which broke D281's existing test (a malformed
+  body answered in the stream with status 400). It now checks only the contract's date refusals, and the malformed body stays in the
+  stream.
+- The page reads a non-200 JSON answer as an Idea error (`readIdea`), so a 409 or 503 before headers is shown.
+
+## Slice 3, as the contract's row 4a states it
+
+1. **Lexical search over the visible corpus:**
+   - `search.search` ranks the visible candidates' texts in an in-memory full-text table (the same trigram tokenizer), in place of
+     `store.search_views`' ranking over the whole `views_fts`.
+   - `store.search_views` stays for its other callers, which a census will list.
+2. **The index publishes a day:**
+   - `build_index` takes the store's identity (a new one-row table the writer creates; for an existing store without it, the
+     identity is its path and first step, and the store is then never treated as replaced) and the target day.
+   - It embeds only views visible at that day, into a staging table keyed by (store identity, view, text sha256, model), and moves
+     them in and advances the published day in one index transaction when every visible view has a row.
+   - A failure leaves the published day as it was.
+   - `fresh_vectors` uses a published vector only when the identity matches, the published day is on or before the store's last
+     completed day, and the text sha matches.
+3. **Start-up** (API and MCP): the index is refreshed to the last completed day, not built from every view. On a first-day store
+   it is not built.
+4. **Proofs:**
+   - 8a: lexical search at the last completed day, with more than 50 matching unfinished views, equals the same search on the
+     backup;
+   - 8b: a refresh failing after one batch, then a retry; another day completing before the retry; a replaced store; a restored store
+     with a later published day or a changed text;
+   - 8c: the views sent to a fake embedding transport are exactly those visible at the last completed day.
+
+**Asked of you:** anything in this slice's plan that departs from row 4a or misses a caller.
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the slice 2 evidence and trace the search and index callers against row 4a, including how existing stores are identified.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '43,112p;250,278p'
+rg -n 'search_views\\(|build_index\\(|ensure_index\\(|fresh_vectors\\(|open_index\\(' src scripts clean-arch tests --glob '*.py' | head -100
+nl -ba scripts/hivemind_api.py | sed -n '55,160p;218,245p'
+nl -ba scripts/hivemind_mcp.py | sed -n '20,145p'
+rg -n 'D595' docs/DECISIONS.md
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    43	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+    44	2. **One committed state per request, one connection per concurrent request** (detailed in council rounds 125 and 126).
+    45	   - **Pinned, not only begun:** each API request and each MCP tool call opens its connections and runs `BEGIN`, then a first read,
+    46	     which in WAL mode fixes the committed state the later reads see. The bound resolution is that first read.
+    47	     - The transaction always ends (`finally`).
+    48	     - A failure while opening (for example the items or index file) closes whatever was already opened before the error leaves
+    49	       `__enter__`, since `__exit__` is not called then.
+    50	   - **MCP opens its ledger, items and index connections per tool call,** as the API does per request, in place of today's
+    51	     process-wide `LEDGER`, `ITEMS` and `INDEX`.
+    52	     - The index is written during a search (the query-embedding cache, `query_vectors`), so overlapping searches must not share a
+    53	       connection.
+    54	   - **MCP's object list stays in its server instructions, labelled with its day.**
+    55	     - It is computed once at start-up through `idea.object_list`, which resolves its bound; the direct `service.default_as_of` call
+    56	       in `scripts/hivemind_mcp.py` goes.
+    57	     - The instructions name the day: "objects as of <day>, when this server started; every tool reads the current last completed
+    58	       day".
+    59	     - On a first-day store the instructions say no day has completed yet, and every tool refuses until one has.
+    60	     - No new tool is added, so the public tool list is unchanged.
+    61	3. **Every date bound, resolved in one function.**
+    62	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    63	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    64	     explicit date bypasses any check placed in `default_as_of`.
+    65	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    66	     caller's read transaction.
+    67	     - An omitted bound gives the last completed day.
+    68	     - An explicit bound later than the last completed day is refused, naming that day.
+    69	     - An explicit bound on or before it passes.
+    70	   - Every one of the 13 sites calls it. A lower bound (`from_day`, `since_day`) is checked only against its resolved upper bound,
+    71	     through `resolve_range` (see the section on row 3's product-facing contract).
+    72	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    73	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    74	4. **The first day** (open defect 10).
+    75	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    76	   - An empty store (no step) and a legacy ledger read as today.
+    77	4a. **Search: visibility before ranking and limits, and a published index day.**
+    78	   - **Lexical:**
+    79	     - today `store.search_views` ranks the whole `views_fts` table by SQLite's `rank`, whose statistics cover the whole index;
+    80	     - so filtering before the limit is not enough, because unfinished views would still move the ranks of visible ones;
+    81	     - **the lexical rank is computed over the visible corpus only:** per request, the visible candidates' texts (from
+    82	       `service.summaries` at the request's bound; tens to hundreds of views) are put into an in-memory full-text table with the same
+    83	       trigram tokenizer, and ranked there;
+    84	     - its statistics are then those of the completed-day library, equal to what the same query gives on that day's backup.
+    85	   - **The store's identity:** a random identifier the writer stores in the store when it creates it (a one-row table). A store
+    86	     replaced at the same path, even with the same first sequence and day, gets a new one.
+    87	   - **The index publishes a day:**
+    88	     - it holds vectors only for views visible as of its published day, and their text as of that day;
+    89	     - a refresh embeds into a staging table, each staged row keyed by **(store identity, view, the text's sha256, the embedding
+    90	       model)**. A vector depends only on its text and model, so the target day is not part of the key;
+    91	     - only when every view visible at the target day has a row under the current store identity does one index transaction move
+    92	       those rows in and advance the published day;
+    93	     - a failure leaves the published day and its vectors unchanged;
+    94	     - **one reuse rule:** any later refresh, for the same or a newer target day, reuses a staged row exactly when all four key parts
+    95	       match. Every row under another store identity is discarded.
+    96	     - **Published vectors are tied to the store too:** the index records the store identity it was published for. Search uses a
+    97	       published vector only when:
+    98	       - that identity equals the store's;
+    99	       - the published day is on or before the store's last completed day;
+   100	       - the vector's text sha equals the view's text at the request's bound.
+   101	     - Otherwise the view counts as unindexed: search runs lexically, says so, and the replacement's index is published by a
+   102	       refresh.
+   103	     - A store restored from a snapshot keeps its identity, but a published day after its last completed day, or a changed text,
+   104	       still disqualifies the vectors.
+   105	     - A view written during an unfinished day is never embedded and never sent to the embedding service.
+   106	   - **A request's state:**
+   107	     - search reads the index's published day and uses vectors only for views visible at the smaller of that day and the request's
+   108	       bound;
+   109	     - if a visible view has no published vector, search runs lexically and says so, as today;
+   110	     - the ledger and the index are separate files, so the published day is what ties them.
+   111	   - On a first-day store nothing is indexed, and search is refused as in row 4.
+   112	5. **Checkpoints and disk: what is guaranteed, and the disk-exhaustion behaviour.**
+   250	     holder's next check. The writer rechecks its lock file's identity before each day and stops if it changed; preflight rechecks
+   251	     after its copy and discards it. The test shows detection at those points, not prevention;
+   252	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   253	     and every historical input it accepts today;
+   254	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   255	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   256	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   257	8b. **The index:**
+   258	   - a refresh that fails after one successful batch leaves the published day and the search results unchanged;
+   259	   - a retry with the same target completes and advances the day;
+   260	   - a retry after another day has completed reuses exactly the staged rows whose four key parts match;
+   261	   - two stores at the same path with the same first sequence and day but different identities: no staged row of the first is
+   262	     reused for the second, and no published vector of the first is used for the second;
+   263	   - a store restored from an earlier snapshot, with the same identity but a published day after its last completed day: its
+   264	     published vectors are not used until a refresh;
+   265	   - a restored store with the same identity and published day but one view's text changed: that view's vector is not used, and
+   266	     search runs lexically and says so.
+   267	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   268	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   269	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   270	   the last completed day. After the day completes, the index is extended to it, and search names the index's day until then.
+   271	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   272	   same answers before and after `resolve_bound` is introduced.
+   273	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   274	
+   275	## Row 3's product-facing contract (council rounds 120 to 123; A1, clamping, withdrawn)
+   276	
+   277	**The rule.**
+   278	
+tests/test_idea.py:46:    conn = search.open_index(str(tmp_path / 'index.sqlite'))
+tests/test_idea.py:47:    search.build_index(ledger, conn, embed=search.fake_embed, embedding_model='fake')
+tests/test_idea.py:639:    conn = search.open_index(str(tmp_path / 'real-name.sqlite'))
+tests/test_idea.py:640:    search.build_index(ledger, conn, embed=search.fake_embed, embedding_model=search.EMBEDDING_MODEL)
+scripts/hivemind_api.py:75:            self.index = None if self.read_only else search.open_index(PATHS['index'])
+scripts/hivemind_api.py:277:            embedded, unchanged, tokens, error = search.ensure_index(db.ledger, db.index)
+scripts/idea_stability.py:46:    index, cfg = search.open_index(args.index), config.load(args.config)
+src/hivemind/views/matching.py:146:        hits = store.search_views(conn, f'{c["object"]} {c["looks_at"]} {c["question"]}', top_n)
+scripts/hivemind_mcp.py:47:        index = search_module.open_index(ARGS.index)
+scripts/hivemind_mcp.py:65:            embedded, _unchanged, _tokens, error = search_module.ensure_index(ledger, index)
+tests/test_search.py:37:    return search.open_index(str(tmp_path / 'index.sqlite'))
+tests/test_search.py:41:    embedded, unchanged, _, error = search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:43:    again = search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:58:    assert search.build_index(conn, index, embed=search.fake_embed, embedding_model='fake')[0] == 1
+tests/test_search.py:62:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:77:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:85:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:90:    assert search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')[0] == 1    # and it is rebuilt
+tests/test_search.py:91:    empty = search.open_index(':memory:')
+tests/test_search.py:99:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:125:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+tests/test_search.py:139:    embedded, unchanged, tokens, error = search.build_index(ledger, index, embed=flaky, embedding_model='fake', batch=40)
+tests/test_search.py:145:    search.build_index(ledger, index, embed=search.fake_embed, embedding_model='fake')
+src/hivemind/views/store.py:325:def search_views(conn, text, top_n):
+scripts/idea_eval.py:34:    index, archive, cfg = search.open_index(args.index), model.Archive(args.archive), config.load(args.config)
+scripts/idea_gold.py:72:    index, cfg = search.open_index(args.index), config.load(args.config)
+scripts/idea_probe.py:37:    index, archive, cfg = search.open_index(args.index), model.Archive(args.archive), config.load(args.config)
+src/hivemind/search.py:39:def open_index(path):
+src/hivemind/search.py:82:def build_index(ledger, index, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, batch=64):
+src/hivemind/search.py:122:def fresh_vectors(ledger, index, embedding_model=EMBEDDING_MODEL):
+src/hivemind/search.py:235:    lexical_order = store.search_views(ledger, ' '.join(lexical_terms(query)), 50)          # the ledger's trigram index, best first
+src/hivemind/search.py:237:    vectors = fresh_vectors(ledger, index, embedding_model) if semantic else {}
+scripts/search_eval.py:43:    index = search.open_index(args.index)
+scripts/search_eval.py:44:    embedded, unchanged, tokens, error = search.build_index(ledger, index)
+clean-arch/step1/test_quote_lookup.py:10:        return quote_lookup.find_quote(quote, source, quote_lookup.build_index(source))
+clean-arch/step1/test_quote_lookup.py:34:                quote_lookup.build_index('Source text')
+clean-arch/step1/quote_lookup.py:7:def build_index(text):
+clean-arch/step1/runner.py:144:                        lookup_index = quote_lookup.build_index(item['text'])
+    55	        return 500, {'error': str(error)}
+    56	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    57	        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    58	    return 400, {'error': str(error)}
+    59	
+    60	
+    61	class Connections:
+    62	    """The databases one request reads: opened on entry, closed on exit, never shared between threads. The ledger's committed state
+    63	    is pinned by BEGIN and a first read, so every read of the request sees one state while a writer commits (live-service/
+    64	    OPERATING-CONTRACT.md, row 2); a failure while opening closes what was already opened."""
+    65	
+    66	    def __init__(self, read_only=False):
+    67	        self.read_only = read_only
+    68	
+    69	    def __enter__(self):
+    70	        self.ledger = self.index = self.items = self.archive = None
+    71	        try:
+    72	            self.ledger = service.open_ledger(PATHS['views'])
+    73	            self.ledger.execute('begin')
+    74	            self.ledger.execute('select 1 from sqlite_master limit 1').fetchone()
+    75	            self.index = None if self.read_only else search.open_index(PATHS['index'])
+    76	            self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+    77	            self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+    78	        except BaseException:
+    79	            self._close()
+    80	            raise
+    81	        return self
+    82	
+    83	    def _close(self):
+    84	        if self.ledger is not None and self.ledger.in_transaction:
+    85	            self.ledger.rollback()
+    86	        for conn in (self.ledger, self.index, self.items):
+    87	            if conn is not None:
+    88	                conn.close()
+    89	
+    90	    def __exit__(self, *exc):
+    91	        self._close()
+    92	
+    93	
+    94	class Handler(http.server.BaseHTTPRequestHandler):
+    95	    def log_message(self, fmt, *args):   # one line per request, no query text or body (an idea can carry anything)
+    96	        sys.stderr.write(f'{self.address_string()} {self.command} {self.path.split("?")[0]}\n')
+    97	
+    98	    def _send(self, status, payload):
+    99	        body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+   100	        self.send_response(status)
+   101	        self.send_header('Content-Type', 'application/json; charset=utf-8')
+   102	        self._cors()
+   103	        self.send_header('Content-Length', str(len(body)))
+   104	        self.end_headers()
+   105	        self.wfile.write(body)
+   106	
+   107	    def _cors(self):
+   108	        self.send_header('Access-Control-Allow-Origin', '*')
+   109	        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+   110	        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+   111	
+   112	    def do_OPTIONS(self):          # a browser's preflight before a JSON POST
+   113	        self.send_response(204)
+   114	        self._cors()
+   115	        self.end_headers()
+   116	
+   117	    def _answer(self, work, read_only=False):
+   118	        try:
+   119	            with Connections(read_only) as db:
+   120	                self._send(200, work(db))
+   121	        except REQUEST_ERRORS as error:
+   122	            status, body = error_response(error)
+   123	            self._send(status, body)
+   124	
+   125	    def _stream_answer(self, work, prepare):
+   126	        """The streamed Idea answer, in one read transaction: `prepare` checks the request (its date resolved, the first day refused)
+   127	        before any header, so a refusal is a normal status and body; then the 200 headers and the work, in the same transaction."""
+   128	        headers_sent = False
+   129	
+   130	        def emit(event):
+   131	            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+   132	            self.wfile.flush()
+   133	
+   134	        try:
+   135	            with Connections() as db:
+   136	                prepare(db)
+   137	                self.send_response(200)
+   138	                self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+   139	                self.send_header('Cache-Control', 'no-store')
+   140	                self._cors()
+   141	                self.end_headers()
+   142	                headers_sent = True
+   143	                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+   144	                emit({'type': 'result', 'data': card})
+   145	        except (BrokenPipeError, ConnectionResetError):
+   146	            return
+   147	        except REQUEST_ERRORS as error:
+   148	            status, body = error_response(error)
+   149	            if not headers_sent:
+   150	                self._send(status, body)
+   151	                return
+   152	            try:
+   153	                emit({'type': 'error', 'status': status, 'message': body['error'], **{k: v for k, v in body.items() if k != 'error'}})
+   154	            except (BrokenPipeError, ConnectionResetError):
+   155	                pass
+   156	
+   157	    def do_GET(self):
+   158	        url = urllib.parse.urlsplit(self.path)
+   159	        q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
+   160	        parts = [p for p in url.path.split('/') if p]
+   218	            raise KeyError(parts[1])
+   219	        return record
+   220	    if len(parts) == 3 and parts[0] == 'views':
+   221	        view_id, what = parts[1], parts[2]
+   222	        if what == 'history':
+   223	            return service.history(ledger, view_id, q.get('from') or None, q.get('to') or None)
+   224	        if what == 'evidence':
+   225	            return service.evidence(ledger, view_id, as_of, q.get('tier') or None)
+   226	        if what == 'record':
+   227	            return service.record(ledger, view_id, as_of)
+   228	        raise KeyError(what)
+   229	    if parts == ['changes']:
+   230	        if not q.get('since'):
+   231	            raise ValueError('changes needs since=YYYY-MM-DD')
+   232	        return service.changes(ledger, q['since'], q.get('to') or None)
+   233	    if parts == ['evaluate']:
+   234	        if not all(k in q for k in ('view_id', 'comparator', 'value_usd')):
+   235	            raise ValueError('evaluate needs view_id, comparator and value_usd')
+   236	        answer = service.evaluate(ledger, q['view_id'], q['comparator'], float(q['value_usd']), as_of)
+   237	        if answer is None:
+   238	            raise KeyError(q['view_id'])
+   239	        return answer
+   240	    if parts == ['days']:
+   241	        service.resolve_bound(ledger, None)          # a first-day store is refused here too (OPERATING-CONTRACT.md, row 4)
+   242	        row = ledger.execute('select min(day), max(day) from days_completed').fetchone()
+   243	        return {'first_day': row[0], 'last_day': row[1]}
+   244	    raise KeyError('/'.join(parts))
+   245	
+    20	
+    21	parser = argparse.ArgumentParser()
+    22	parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+    23	parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
+    24	parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
+    25	parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'))
+    26	parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
+    27	parser.add_argument('--transport', choices=['stdio', 'streamable-http'], default='stdio', help='stdio for a local agent; streamable-http to serve /mcp over HTTP (Docker)')
+    28	parser.add_argument('--host', default='127.0.0.1')
+    29	parser.add_argument('--port', type=int, default=8789)
+    30	ARGS = parser.parse_args()
+    31	ALIASES = search_module.object_aliases(ARGS.universe)
+    32	
+    33	from hivemind import idea as idea_module  # noqa: E402
+    34	
+    35	
+    36	@contextlib.contextmanager
+    37	def connections():
+    38	    """One tool call's databases (live-service/OPERATING-CONTRACT.md, row 2): the ledger, items and index opened per call, never shared
+    39	    between calls (a search writes the index's query cache); the ledger's committed state pinned by BEGIN and a first read; every
+    40	    connection closed on every path, a failure while opening included."""
+    41	    opened = []
+    42	    try:
+    43	        ledger = service.open_ledger(ARGS.views)
+    44	        opened.append(ledger)
+    45	        ledger.execute('begin')
+    46	        ledger.execute('select 1 from sqlite_master limit 1').fetchone()
+    47	        index = search_module.open_index(ARGS.index)
+    48	        opened.append(index)
+    49	        items = store.open_read_only(ARGS.items) if os.path.exists(ARGS.items) else None
+    50	        if items is not None:
+    51	            opened.append(items)
+    52	        yield ledger, items, index
+    53	    finally:
+    54	        if opened and opened[0].in_transaction:
+    55	            opened[0].rollback()
+    56	        for conn in reversed(opened):
+    57	            conn.close()
+    58	
+    59	
+    60	def start_objects():
+    61	    """The object list for the server's instructions, computed once at start and labelled with its day; every tool reads the current
+    62	    last completed day. Start-up indexing is unchanged until row 4a's slice: it can still read an unfinished day's views."""
+    63	    with connections() as (ledger, _items, index):
+    64	        if not ARGS.lexical:
+    65	            embedded, _unchanged, _tokens, error = search_module.ensure_index(ledger, index)
+    66	            if error:
+    67	                sys.stderr.write(f'hivemind: embedding stopped ({error}) after {embedded} views; search runs lexical until the rest is built\n')
+    68	        try:
+    69	            day = service.resolve_bound(ledger, None)
+    70	        except service.FirstDayNotCompleted:
+    71	            return "No day of this ledger has completed yet; every tool refuses until one has."
+    72	        return (f'Objects as of {day}, when this server started; every tool reads the current last completed day. '
+    73	                + idea_module.object_list(ledger, day, ALIASES))
+    74	
+    75	
+    76	OBJECTS = start_objects()
+    77	mcp = FastMCP('hivemind', host=ARGS.host, port=ARGS.port, instructions=(
+    78	    'Hivemind is a ledger of research views (a dated question with a five-step ladder, judged every day on evidence) '
+    79	    'with a search engine on top. To read an idea against it: first break the idea into its parts, the one to four '
+    80	    'questions whose answers decide it (each about one concrete quantity, date or event); search with the idea and with '
+    81	    'each part (k=20); map each part to every view whose question answers it or whose outcome would move it, leaving out '
+    82	    'views that only share a company or a word; then read each mapped view (state as of a day, history, evidence) and '
+    83	    'say what the judged positions tell about each part and which parts no view covers. Say judged, never true. Every '
+    84	    'tool takes as_of, a calendar day; the default is the ledger\'s last completed day. Nothing here changes the ledger. '
+    85	    'search matches each view\'s own text (question, what it looks at, ladder conditions; Chinese, English queries work): '
+    86	    'ask for one object and one quantity or event per query; views(object) lists everything under one object. '
+    87	    + OBJECTS))
+    88	
+    89	
+    90	@mcp.tool()
+    91	def thesis_library(as_of: str = '') -> dict:
+    92	    """All collected theses and their stored research groups, including ungrouped and closed theses.
+    93	    Membership is not a dependency or a parent-child relationship. No model call or ledger write."""
+    94	    with connections() as (ledger, items, _index):
+    95	        return bundle.library(ledger, items, as_of or None)
+    96	
+    97	
+    98	@mcp.tool()
+    99	def thesis_bundles(view_ids: list[str], as_of: str = '') -> dict:
+   100	    """Complete UI inputs for selected thesis ids: dated states, assessments, sources, evidence and relationships.
+   101	    Pass this envelope to the frontend's fromBundles adapter. Read-only; does not call a model."""
+   102	    with connections() as (ledger, items, _index):
+   103	        return bundle.thesis_bundles(ledger, items, view_ids, as_of or None)
+   104	
+   105	
+   106	@mcp.tool()
+   107	def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+   108	    """Top-k views for an idea or sentence: id, object, kind, what it looks at, the question, due day, dependencies
+   109	    (the views it is judged after) and dependants, with the score and its parts. Views, never evidence: evidence is
+   110	    anchored under its view."""
+   111	    with connections() as (ledger, _items, index):
+   112	        return search_module.search(ledger, index, query, k, as_of or None, include_closed, aliases=ALIASES, semantic=not ARGS.lexical)
+   113	
+   114	
+   115	@mcp.tool()
+   116	def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+   117	    """The views of one object (a ticker like NVDA or a theme id like ai-capex), or all views, as of a day."""
+   118	    with connections() as (ledger, _items, _index):
+   119	        return service.views(ledger, object or None, as_of or None, include_closed)
+   120	
+   121	
+   122	@mcp.tool()
+   123	def view(view_id: str, as_of: str = '') -> dict:
+   124	    """One view as of a day: the question, the ladder (positions 1..5, position 1 the most bullish outcome; or 2 for
+   125	    yes/no), the judged position with its label and condition and since when, whether open, dependencies and
+   126	    dependants, counts of rounds, evidence and facts."""
+   127	    with connections() as (ledger, _items, _index):
+   128	        record = service.view(ledger, view_id, as_of or None)
+   129	    if record is None:
+   130	        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+   131	    return record
+   132	
+   133	
+   134	@mcp.tool()
+   135	def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+   136	    """Every judgement round in the span (day, position, whether it changed, why, the cited evidence ids and the push
+   137	    each gave), evidence arrivals per day, position changes, replacements of guidance, open/close switches."""
+   138	    with connections() as (ledger, _items, _index):
+   139	        return service.history(ledger, view_id, from_day or None, to_day or None)
+   140	
+   141	
+   142	@mcp.tool()
+   143	def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+   144	    """Evidence in force under the view as of a day: one line, the source's own words, tier (发生的事 fact, 当事人说的
+   145	    party statement, 第三方看法 third-party view, 传闻 rumour), speaker, when it arrived, its sources."""
+939:| D595 | 2026-11-16 | Slice 2 built and proven at $0: one pinned read transaction per API request and MCP call, MCP connections per call (overlapping searches never share the index), MCP's start-up object list labelled with its day, the streamed Idea route refusing a first-day store or future date before headers; 317 + 164 tests, 6 of 6 mutants; nothing deployed | in force | `tests/test_live_reads.py`; `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba tests/test_live_reads.py | sed -n '1,240p'
+nl -ba scripts/hivemind_api.py | sed -n '265,285p'
+nl -ba src/hivemind/views/matching.py | sed -n '134,152p'
+nl -ba src/hivemind/search.py | sed -n '35,48p;82,110p;220,245p'
+rg -n 'mutant|317 passed|164 passed' docs/research/2026-11-14-use-acceptance/live-service --glob '*.txt' | tail -12
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""One committed state per request while a writer commits (docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md,
+     2	row 2; proofs 3, 4 and 2e): the API's `Connections` and MCP's per-call `connections()` pin the ledger's state by BEGIN and a first read;
+     3	a writer's commits during a request are invisible to it and never blocked by it; a failure while opening leaves nothing open; the streamed
+     4	Idea route refuses a first-day store or a future date before any header; MCP's instructions name their start day while its tools read the
+     5	current one. Real stores in WAL mode on temporary paths, written through the store's own functions; no model call."""
+     6	import importlib.util
+     7	import json
+     8	import os
+     9	import sqlite3
+    10	import sys
+    11	import threading
+    12	import urllib.error
+    13	import urllib.request
+    14	
+    15	import pytest
+    16	
+    17	HERE = os.path.dirname(os.path.abspath(__file__))
+    18	ROOT = os.path.dirname(HERE)
+    19	sys.path[:0] = [os.path.join(ROOT, 'src'), os.path.join(ROOT, 'scripts')]
+    20	from hivemind import dispatch, search, service  # noqa: E402
+    21	from hivemind.views import store  # noqa: E402
+    22	
+    23	RUNGS = [{'label': 'Yes', 'condition': 'It ships by 2027-01-31.'}, {'label': 'Ruled out', 'condition': 'It is cancelled.'},
+    24	         {'label': 'Still open', 'condition': 'Neither holds on 2027-01-31.'}]
+    25	
+    26	
+    27	def add_day(writer, day, seq, view_id):
+    28	    """One article's processing, one view opened under it, and the day completed, committed: what the loop writes for a day."""
+    29	    dispatch.mark(writer, {'input_id': f'gnews:{view_id}', 'publication_day': day}, seq, 'handed_over')
+    30	    store.create_view(writer, view_id=view_id, object_id='NVDA', object_kind='asset', kind='asset', looks_at=f'shipments {view_id}',
+    31	                      question=f'Will product {view_id} ship by 2027-01-31?', due_day='2027-01-31', year='2027', rungs=RUNGS, seq=seq,
+    32	                      input_id=f'gnews:{view_id}', created_at=f'{day}T00:00:00Z')
+    33	    store.complete_day(writer, day, seq, day)
+    34	    writer.commit()
+    35	
+    36	
+    37	def a_wal_store(path, *, first_day=False):
+    38	    writer = store.open_db(str(path))
+    39	    writer.execute('pragma journal_mode=wal')
+    40	    if first_day:
+    41	        dispatch.mark(writer, {'input_id': 'gnews:first', 'publication_day': '2026-10-01'}, 1, 'handed_over')
+    42	        writer.commit()
+    43	    else:
+    44	        add_day(writer, '2026-10-01', 1, 'v1')
+    45	    return writer
+    46	
+    47	
+    48	def view_ids(conn):
+    49	    return [v['view_id'] for v in service.views(conn, None, None, include_closed=True)]
+    50	
+    51	
+    52	@pytest.fixture
+    53	def api(tmp_path, monkeypatch):
+    54	    import hivemind_api
+    55	    monkeypatch.setitem(hivemind_api.PATHS, 'views', str(tmp_path / 'views.sqlite'))
+    56	    monkeypatch.setitem(hivemind_api.PATHS, 'index', str(tmp_path / 'index.sqlite'))
+    57	    monkeypatch.setitem(hivemind_api.PATHS, 'items', str(tmp_path / 'no-items.sqlite'))
+    58	    monkeypatch.setitem(hivemind_api.PATHS, 'archive', str(tmp_path / 'archive.sqlite'))
+    59	    return hivemind_api
+    60	
+    61	
+    62	def test_an_api_request_keeps_its_state_while_the_writer_commits_a_day(tmp_path, api):
+    63	    writer = a_wal_store(tmp_path / 'views.sqlite')
+    64	    with api.Connections(read_only=True) as db:
+    65	        assert view_ids(db.ledger) == ['v1'] and service.resolve_bound(db.ledger, None) == '2026-10-01'
+    66	        add_day(writer, '2026-10-02', 2, 'v2')                                     # commits while the request is open: not blocked
+    67	        assert view_ids(db.ledger) == ['v1'] and service.resolve_bound(db.ledger, None) == '2026-10-01'
+    68	    with api.Connections(read_only=True) as db:
+    69	        assert view_ids(db.ledger) == ['v1', 'v2'] and service.resolve_bound(db.ledger, None) == '2026-10-02'
+    70	
+    71	
+    72	def test_a_failure_while_opening_leaves_no_connection_open(tmp_path, api, monkeypatch):
+    73	    a_wal_store(tmp_path / 'views.sqlite')
+    74	    opened = []
+    75	    real_open = service.open_ledger
+    76	    monkeypatch.setattr(service, 'open_ledger', lambda path: opened.append(real_open(path)) or opened[-1])
+    77	    monkeypatch.setattr(api.search, 'open_index', lambda path: (_ for _ in ()).throw(OSError('index unavailable')))
+    78	    with pytest.raises(OSError, match='index unavailable'):
+    79	        with api.Connections():
+    80	            pass
+    81	    with pytest.raises(sqlite3.ProgrammingError):                                   # closed
+    82	        opened[0].execute('select 1')
+    83	
+    84	
+    85	def serve(api):
+    86	    server = api.http.server.ThreadingHTTPServer(('127.0.0.1', 0), api.Handler)
+    87	    threading.Thread(target=server.serve_forever, daemon=True).start()
+    88	    return server
+    89	
+    90	
+    91	def post_idea(server, body):
+    92	    request = urllib.request.Request(f'http://127.0.0.1:{server.server_address[1]}/ideas', data=json.dumps(body).encode(),
+    93	                                     headers={'Content-Type': 'application/json', 'Accept': 'application/x-ndjson'}, method='POST')
+    94	    try:
+    95	        with urllib.request.urlopen(request, timeout=10) as response:
+    96	            return response.status, response.headers.get('Content-Type'), response.read().decode()
+    97	    except urllib.error.HTTPError as error:
+    98	        return error.code, error.headers.get('Content-Type'), error.read().decode()
+    99	
+   100	
+   101	@pytest.mark.parametrize('first_day, body, status, payload', [
+   102	    (True, {'text': 'an idea'}, 503, {'error': "the store's first day has not completed"}),
+   103	    (False, {'text': 'an idea', 'as_of': '2026-10-05'}, 409, {'error': 'day not completed', 'requested': '2026-10-05', 'last_completed_day': '2026-10-01'}),
+   104	])
+   105	def test_the_streamed_idea_route_refuses_before_any_header(tmp_path, api, first_day, body, status, payload):
+   106	    a_wal_store(tmp_path / 'views.sqlite', first_day=first_day)
+   107	    server = serve(api)
+   108	    try:
+   109	        got_status, content_type, text = post_idea(server, body)
+   110	    finally:
+   111	        server.shutdown()
+   112	    assert (got_status, content_type.split(';')[0], json.loads(text)) == (status, 'application/json', payload)
+   113	
+   114	
+   115	def load_mcp(tmp_path, monkeypatch):
+   116	    """The MCP server's module as its entry point builds it, on the test store, lexical (no network)."""
+   117	    monkeypatch.setattr(sys, 'argv', ['hivemind_mcp.py', '--views', str(tmp_path / 'views.sqlite'), '--index', str(tmp_path / 'index.sqlite'),
+   118	                                      '--items', str(tmp_path / 'no-items.sqlite'), '--lexical'])
+   119	    spec = importlib.util.spec_from_file_location(f'hivemind_mcp_{tmp_path.name}', os.path.join(ROOT, 'scripts', 'hivemind_mcp.py'))
+   120	    module = importlib.util.module_from_spec(spec)
+   121	    spec.loader.exec_module(module)
+   122	    return module
+   123	
+   124	
+   125	def test_mcp_tools_read_the_current_day_while_its_instructions_keep_their_start_day(tmp_path, monkeypatch):
+   126	    writer = a_wal_store(tmp_path / 'views.sqlite')
+   127	    mcp = load_mcp(tmp_path, monkeypatch)
+   128	    assert mcp.OBJECTS.startswith('Objects as of 2026-10-01, when this server started')
+   129	    assert [v['view_id'] for v in mcp.views()] == ['v1']
+   130	    add_day(writer, '2026-10-02', 2, 'v2')
+   131	    assert [v['view_id'] for v in mcp.views()] == ['v1', 'v2']
+   132	    assert mcp.OBJECTS.startswith('Objects as of 2026-10-01')
+   133	
+   134	
+   135	def test_overlapping_mcp_calls_each_keep_their_own_state_and_index_connection(tmp_path, monkeypatch):
+   136	    writer = a_wal_store(tmp_path / 'views.sqlite')
+   137	    mcp = load_mcp(tmp_path, monkeypatch)
+   138	    with mcp.connections() as (first, _, first_index):
+   139	        assert view_ids(first) == ['v1']
+   140	        add_day(writer, '2026-10-02', 2, 'v2')
+   141	        with mcp.connections() as (second, _, second_index):
+   142	            assert view_ids(second) == ['v1', 'v2'] and view_ids(first) == ['v1']
+   143	            assert first_index is not second_index
+   144	    with pytest.raises(sqlite3.ProgrammingError):                                   # both closed when their calls ended
+   145	        first.execute('select 1')
+   146	
+   147	    fake = lambda texts, model: ([[1.0, 0.0] for _ in texts], 1)
+   148	    errors, start = [], threading.Barrier(2)
+   149	
+   150	    def a_search_call(text):
+   151	        """What a search tool call does with its own connections, in its own thread: read the ledger, write the query cache."""
+   152	        try:
+   153	            with mcp.connections() as (ledger, _, index):
+   154	                start.wait(timeout=5)
+   155	                view_ids(ledger)
+   156	                search.query_vector(index, text, fake)
+   157	        except Exception as error:                                               # noqa: BLE001 - any error is the finding
+   158	            errors.append(repr(error))
+   159	    threads = [threading.Thread(target=a_search_call, args=(text,)) for text in ('one', 'two')]
+   160	    for thread in threads:
+   161	        thread.start()
+   162	    for thread in threads:
+   163	        thread.join()
+   164	    assert errors == []
+   165	    cached = sqlite3.connect(str(tmp_path / 'index.sqlite')).execute('select count(*) from query_vectors').fetchone()[0]
+   166	    assert cached == 2
+   167	
+   168	
+   169	def test_mcp_on_a_first_day_store_says_so_and_every_tool_refuses(tmp_path, monkeypatch):
+   170	    a_wal_store(tmp_path / 'views.sqlite', first_day=True)
+   171	    mcp = load_mcp(tmp_path, monkeypatch)
+   172	    assert mcp.OBJECTS == 'No day of this ledger has completed yet; every tool refuses until one has.'
+   173	    for tool in (lambda: mcp.views(), lambda: mcp.thesis_library(), lambda: mcp.changes('2026-09-01'), lambda: mcp.search('ship')):
+   174	        with pytest.raises(service.FirstDayNotCompleted):
+   175	            tool()
+   176	
+   177	
+   178	def test_an_mcp_opening_failure_leaves_no_connection_open(tmp_path, monkeypatch):
+   179	    a_wal_store(tmp_path / 'views.sqlite')
+   180	    mcp = load_mcp(tmp_path, monkeypatch)
+   181	    opened = []
+   182	    real_open = service.open_ledger
+   183	    monkeypatch.setattr(mcp.service, 'open_ledger', lambda path: opened.append(real_open(path)) or opened[-1])
+   184	    monkeypatch.setattr(mcp.search_module, 'open_index', lambda path: (_ for _ in ()).throw(OSError('index unavailable')))
+   185	    with pytest.raises(OSError, match='index unavailable'):
+   186	        mcp.views()
+   187	    with pytest.raises(sqlite3.ProgrammingError):
+   188	        opened[0].execute('select 1')
+   265	    if not os.path.exists(args.items):
+   266	        print(f'items database not found ({args.items}): idea cards name sources by input id', flush=True)
+   267	    if CFG is None:
+   268	        print('no config: GET routes only, POST /ideas answers 502', flush=True)
+   269	    else:
+   270	        print(f'config {CFG.version}: ideas read by {CFG.idea.model} ({CFG.idea.prompt_version}, effort {CFG.idea.reasoning_effort}); archive {os.path.basename(args.archive)}', flush=True)
+   271	        if CFG.idea_summary is not None:
+   272	            print(f'analyst summary: {CFG.idea_summary.model} ({CFG.idea_summary.prompt_version}, effort {CFG.idea_summary.reasoning_effort})', flush=True)
+   273	    if args.lexical:
+   274	        print('--lexical: no embedding; every search answers in lexical mode', flush=True)
+   275	    else:
+   276	        with Connections() as db:
+   277	            embedded, unchanged, tokens, error = search.ensure_index(db.ledger, db.index)
+   278	        print(f'index: {embedded} views embedded, {unchanged} unchanged, {tokens} tokens' + (f'; embedding stopped ({error}): search runs lexical until the rest is built' if error else ''), flush=True)
+   279	    print(f'hivemind api on http://{args.host}:{args.port}  ledger {os.path.basename(os.path.dirname(args.views))}/{os.path.basename(args.views)}  index {os.path.basename(args.index)}', flush=True)
+   280	    server = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
+   281	    server.daemon_threads = True
+   282	    server.serve_forever()
+   283	
+   284	
+   285	if __name__ == '__main__':
+   134	    candidate_lists = {}
+   135	    for c in handover.candidates:
+   136	        same_key = key_matches(conn, c)
+   137	        if identity.is_shared(c):         # D197: a shared quantity is compared with every thesis of its theme and measure, its predecessors included
+   138	            family = [r['view_id'] for r in conn.execute('select k.view_id from view_keys k join views v using(view_id) where v.object_id=? and k.measure=? order by k.period_end desc',
+   139	                                                         (c['object'], c['measure']))]
+   140	            candidate_lists[c['id']] = list(dict.fromkeys(store.exact_key_views(conn, c) + family))[:top_n]
+   141	            continue
+   142	        if same_key:                      # a keyed candidate is compared with the views that share its key, a narrow question
+   143	            exact = store.exact_key_views(conn, c)
+   144	            candidate_lists[c['id']] = list(dict.fromkeys(exact + same_key))[:top_n]
+   145	            continue
+   146	        hits = store.search_views(conn, f'{c["object"]} {c["looks_at"]} {c["question"]}', top_n)
+   147	        for v in shown_views:
+   148	            if v['view_id'] not in hits and v['object_id'] == c['object']:
+   149	                hits.append(v['view_id'])
+   150	        candidate_lists[c['id']] = hits[:top_n]
+   151	    evidence_lists = {}
+   152	    candidate_ids = {c['id'] for c in handover.candidates}
+    35	create table if not exists query_vectors (text_sha256 text primary key, model text, vector_json text, tokens integer, built_at text);
+    36	"""
+    37	
+    38	
+    39	def open_index(path):
+    40	    conn = sqlite3.connect(path)
+    41	    conn.row_factory = sqlite3.Row
+    42	    conn.executescript(SCHEMA_SQL)
+    43	    return conn
+    44	
+    45	
+    46	def view_text(record, rungs):
+    47	    """What a view is searched by: its object, kind, what it looks at, the question and the rung conditions."""
+    48	    return ' '.join([record['object_id'], record['kind'], record['looks_at'] or '', record['question'] or '', *(r['condition'] for r in rungs)])
+    82	def build_index(ledger, index, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, batch=64):
+    83	    """Embed every view whose text is new or changed, batch by batch, each batch committed as it lands. Returns
+    84	    (embedded, unchanged, tokens, error): on a failure the counts are what was done before it, never zero, and the
+    85	    error is the message without the provider's body. Never raises."""
+    86	    rows = [dict(r) for r in ledger.execute('select * from views order by created_seq')]
+    87	    todo, unchanged = [], 0
+    88	    for record in rows:
+    89	        text = view_text(record, store.rungs_of(ledger, record['view_id']))
+    90	        digest = sha(text)
+    91	        have = index.execute('select text_sha256, model, vector_json from view_vectors where view_id=?', (record['view_id'],)).fetchone()
+    92	        if have and have['text_sha256'] == digest and have['model'] == embedding_model and usable(json.loads(have['vector_json'])):
+    93	            unchanged += 1
+    94	        else:
+    95	            todo.append((record['view_id'], digest, text))
+    96	    embedded = tokens = 0
+    97	    for start in range(0, len(todo), batch):
+    98	        chunk = todo[start:start + batch]
+    99	        try:
+   100	            vectors, used = embed([t for _, _, t in chunk], embedding_model)
+   101	        except (model.TransportError, OSError) as error:
+   102	            return embedded, unchanged, tokens, str(error)[:120]
+   103	        if len(vectors) != len(chunk) or not all(usable(v) for v in vectors):
+   104	            return embedded, unchanged, tokens, 'the embedding answer did not hold one usable vector per text'
+   105	        tokens += used
+   106	        now = time.strftime('%Y-%m-%dT%H:%M:%S')
+   107	        index.executemany('insert or replace into view_vectors (view_id, text_sha256, model, vector_json, tokens, built_at) values (?,?,?,?,?,?)',
+   108	                          [(view_id, digest, embedding_model, json.dumps(vector), used // max(1, len(chunk)), now) for (view_id, digest, _), vector in zip(chunk, vectors)])
+   109	        index.commit()
+   110	        embedded += len(chunk)
+   220	
+   221	def search(ledger, index, query, k=10, as_of=None, include_closed=False, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL, aliases=None, semantic=True):
+   222	    """Top-k views for a query as of a day: cosine similarity on the view text, plus a small boost when the query
+   223	    names the view's object and when the ledger's trigram index also matches. The ranking is 'semantic' only when
+   224	    semantic ranking is allowed, every candidate has a usable vector made from its current text and the query could
+   225	    be embedded; otherwise it is 'lexical' (the trigram index's own order), and the answer says so and names the
+   226	    views without a fresh vector. `semantic=False` (a front started with --lexical) never calls the embedder.
+   227	    `results` is null when the library holds no view on anything the idea names as of that day (D91): no company
+   228	    or theme of the universe is named in it and the ledger's own text index matches no view; otherwise the ranked
+   229	    list comes back whole and the caller judges which views correspond (D76)."""
+   230	    as_of = service.resolve_bound(ledger, as_of)
+   231	    candidates = service.summaries(ledger, as_of, include_closed)
+   232	    if not candidates:
+   233	        return {'query': query, 'as_of': as_of, 'mode': 'semantic' if semantic else 'lexical', 'missing_vectors': [], 'results': None}
+   234	    mentioned = objects_in(query, aliases or {})
+   235	    lexical_order = store.search_views(ledger, ' '.join(lexical_terms(query)), 50)          # the ledger's trigram index, best first
+   236	    lexical_rank = {view_id: i for i, view_id in enumerate(lexical_order)}
+   237	    vectors = fresh_vectors(ledger, index, embedding_model) if semantic else {}
+   238	    missing = [record['view_id'] for record in candidates if record['view_id'] not in vectors]
+   239	    mode, q = 'semantic', None
+   240	    if not semantic or missing:
+   241	        mode = 'lexical'
+   242	    else:
+   243	        try:
+   244	            q, _ = query_vector(index, query, embed, embedding_model)
+   245	        except (model.TransportError, OSError):
+docs/research/2026-11-14-use-acceptance/live-service/resolver-mutants.txt:9:M7 is an equivalent mutant: view_bundle ends by calling not_judged, which raises the same refusal, so removing view_bundle's early check
+
+codex
+**Not yet.** The search plan departs from row 4a in how it identifies existing stores, and it does not yet say who refreshes the index after startup.
+
+1. **The fallback identity is not a replacement check.** A path and first step can be the same for two different stores. Calling an existing store “never replaced” would bypass row 4a’s requirement to reject both staged and published vectors from a different store. Define a safe identity or a conservative fallback for stores without the new identifier, and test replacement at the same path with the same first step. [Row 4a](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:85).
+
+2. **Name the refresh owner after the first day.** The proposal refreshes at API and MCP startup, but row 4a also requires publication after later completed days. Specify what triggers that refresh, how the first-day-started service begins indexing after its first completion, and what search reports while publication is pending or fails. Test those transitions through the entry points. [Index contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:87).
+
+3. **Keep the other search caller in scope for compatibility.** `store.search_views` is also used by production matching. Leaving it in place avoids changing that caller, but the census and tests should establish that its behavior and the frozen matching path remain unchanged. The standalone `search_eval` script also calls `build_index` directly and needs the new arguments or an explicitly compatible interface. [Matching caller](/Users/lchingen/hivemind/src/hivemind/views/matching.py:134), [search evaluator](/Users/lchingen/hivemind/scripts/search_eval.py:43).
+
+Slice 2’s code and tests show the pinned ledger connections and pre-header refusals. One evidence qualification: the overlapping-search test exercises the MCP connection context and search function in threads; it is not itself two calls through the MCP transport. I did not rerun the suites. [Live-read tests](/Users/lchingen/hivemind/tests/test_live_reads.py:135).
+
+CONSENSUS: no, because existing-store identity and the post-startup index refresh need a reviewed contract before slice 3 is built.
+tokens used
+3,476,366
+**Not yet.** The search plan departs from row 4a in how it identifies existing stores, and it does not yet say who refreshes the index after startup.
+
+1. **The fallback identity is not a replacement check.** A path and first step can be the same for two different stores. Calling an existing store “never replaced” would bypass row 4a’s requirement to reject both staged and published vectors from a different store. Define a safe identity or a conservative fallback for stores without the new identifier, and test replacement at the same path with the same first step. [Row 4a](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:85).
+
+2. **Name the refresh owner after the first day.** The proposal refreshes at API and MCP startup, but row 4a also requires publication after later completed days. Specify what triggers that refresh, how the first-day-started service begins indexing after its first completion, and what search reports while publication is pending or fails. Test those transitions through the entry points. [Index contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:87).
+
+3. **Keep the other search caller in scope for compatibility.** `store.search_views` is also used by production matching. Leaving it in place avoids changing that caller, but the census and tests should establish that its behavior and the frozen matching path remain unchanged. The standalone `search_eval` script also calls `build_index` directly and needs the new arguments or an explicitly compatible interface. [Matching caller](/Users/lchingen/hivemind/src/hivemind/views/matching.py:134), [search evaluator](/Users/lchingen/hivemind/scripts/search_eval.py:43).
+
+Slice 2’s code and tests show the pinned ledger connections and pre-header refusals. One evidence qualification: the overlapping-search test exercises the MCP connection context and search function in threads; it is not itself two calls through the MCP transport. I did not rerun the suites. [Live-read tests](/Users/lchingen/hivemind/tests/test_live_reads.py:135).
+
+CONSENSUS: no, because existing-store identity and the post-startup index refresh need a reviewed contract before slice 3 is built.

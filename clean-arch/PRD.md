@@ -1,130 +1,295 @@
-# Hivemind architecture: the hedge fund research brain
+# Hivemind architecture: a market world model built the way a hedge-fund analyst works
 
-**Status: working draft.** This document defines the architecture being developed from Alex's diagram and the discussion around it. It is a design, not a claim that the system has been built or that its quality has been proven. Decided parts: Step 1 runs the adopted request c8 (section 12; D387, D391); Step 2 and Step 3's grouping library are frozen (section 5; D427). Step 4 has not passed. Nothing here is joined to production storage; the clean path goes to production as a whole, after Step 4 meets its lines.
+**Status, 2026-11-16: working design of the rebuilt pipeline ("the new system", this folder).** Step 1 runs the adopted request c8
+(D387). Step 2 and Step 3's grouping are frozen (D427). Step 4's ladder step is built and frozen as it ran (D426); production's frozen
+judge follows it. The new system has not yet passed the gates that would let it replace the running pipeline (section 8). Until it
+does, the running pipeline (`poc/config/poc-v118.json`) stays the default and both are kept (D544). Six choices wait on Alex
+([decision page](../docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md)). Nothing here is deployed.
 
-## 1. What the system does
+**How to read this document.** Section 1 says what the system is for, the problems it answers and what it does differently. Section 2
+is the picture. Sections 3 to 7 define the information and each step. Section 8 says how each step is measured and where it stands.
+Sections 9 to 11 walk one item through, list what is open and draw the boundary. Sections 12 and 13 hold the two frozen requests word
+for word. Sections 14 to 16 map the code, record the future design for links across companies and point to the earlier record.
 
-Hivemind is building a hedge fund brain: a system that follows the decision process of an investment analyst. It receives source material, identifies information and ideas that may matter to assets or events in the world, connects that information to the research being followed, and maintains a dossier of the evidence and events behind each thesis.
+## 1. Vision, problems and what is done differently
 
-A thesis is a research idea, issue or question the system is tracking. Evidence is information that can inform it. A judgement is an assessment of what the accumulated evidence means for the thesis. The thesis, its evidence and its judgement are different things. The agreed minimum for a new thesis is its entity, research question, outcome to track and period when known; further details remain open.
+### 1.1 The vision: a market world model
 
-For example, the thesis could be **“How much will a company's capital spending grow this year?”** An article reporting a 25% forecast is evidence. The judgement is what that and the other evidence imply for the answer.
+Alex set the purpose when this architecture started: "the purpose of this system is to build a hedge fund brain, it is building the
+decison process for hedgefund analyst to source data and extract information (thesis) and link evidences for keeping it's dossier of
+events that impact the assets and events in the world" (2026-11-06).
 
-The dossier should preserve how the research develops: the events and statements that inform a thesis, where they came from, how they relate to earlier information and what they imply for an asset or a broader event. The system must keep those connections clear enough that a reader can understand why a judgement exists.
+He now calls it a market world model (2026-11-16). In this document the phrase means one concrete thing: **a standing, dated record of
+the open investment questions about each company and theme, which only new information moves and which closes each
+question on its due day.** For each question
+the record holds:
+
+- **The question, fixed when it opened**, with its possible answers and its due day written before any evidence is judged. Alex:
+  "一条观点一定是有一个明确的 ladder 和到期日，这样才构成一个观点呀" (D38).
+- **Every statement that bears on it**: who said it, when, where it was reported, and every later report or revision of it.
+- **The current answer and its history.** The answer moves only when new information arrives. Alex: "有相关的信息抽取出现，自然会影响整个系统抽取的thesis 向前" (D13).
+- **The final answer on the due day.** Alex: "最后到期日的状态就定格就好" (D54).
+
+The whole system builds, updates and retires that record. Alex: "其实整个system做的事情就是建构，更新，删除这个data structure" (D26).
+
+**One picture.** On NVIDIA, a report says it may back OpenAI's lease of a large data center in Ohio. The record opens one question:
+"Will NVIDIA sign a guarantee or backstop for OpenAI's Ohio data-center lease by 2027-12-31?" Its answers are fixed at opening: it
+happened, it is ruled out, or still open; due 2027-12-31. The amount of the guarantee is listed as a part not judged. Every later
+report of the same story joins one group instead of counting again. A company denial is filed as a later version of the report. The
+answer moves only on a statement that changes it. On the due day the answer is closed and kept.
+
+**Why a reader uses it.** Alex: "it's like a dossier, right? Or it's like a reference where people can anchor their beliefs, or they
+can check whatever they're thinking, whether it's already priced in, or, you know, how single factors evolve. I don't think the value
+is in, like, having an idea and basically just constructing alpha" (2026-10-22). The gap it closes: "大部分的人, 每一天都会有很多信息,
+但这些信息怎么变成交易? … 你要拆解这个信息, 理解它背后的驱动力啊, 哪些因子会影响他 … 这个才是真正中间转移的痛点" (2026-10-22). On a
+page: "一个用户的thesis 可以直接被拆解成可以理解的证据，并且看得到证据过去变化的历史" (2026-10-24).
+
+**What it is not.**
+- Not a tracker for a view the user already holds. Alex rejected that framing: "我只是把这个东西当成一个跟踪工具, 我就是完全是不对的呀"
+  (2026-10-22). The system forms the questions itself, before any user asks.
+- Not a price forecast or an alpha engine (his words above).
+- Not yet a judge of what is priced in. The record keeps the expectations it reads (a consensus estimate, a company's guidance) as
+  evidence, and a figure's ranges may be set against a consensus (section 7). But no step compares a judged answer with what the
+  market already prices, so the record cannot by itself say whether an answer is in the price (section 10).
+
+### 1.2 The problems it answers
+
+Three things make an analyst's job hard, and the record is built against each:
+
+1. **Most of what arrives is noise; the increment is rare.** Alex: "不是什么事情都是惊弓之鸟需要抽取，杂音还是很大的，我们整体应该倾向谨慎…同时我们要敏感一些新的信息带来的增量不要错过" (D243).
+   The system keeps few statements and only big questions. Alex: "我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息" (D248).
+2. **One statement arrives many times.** The same forecast comes through many outlets and reposts. Counted as many, it fakes
+   conviction. The record keeps it as one statement with all its sources (section 6).
+3. **An answer written from scratch has no memory and no score.** It cannot say what it concluded two weeks ago, what changed it, or
+   whether it was right. The record fixes the question and its answers first, dates every judgement with its evidence, and closes the
+   answer on the due day.
+
+**Why one model call over everything does not do this.** Alex, on asking a general model to research theses: "it's actually very, very
+hard because it hallucinates, it, you know, it doesn't really work" (2026-10-22). Two measurements point at what breaks:
+- **Too much material in one request fails.** In a three-month run the data-center revenue question held 1,768 linked pieces. Its
+  judging request was 292 KB with 698 evidence ids. The judge mislabelled ids, its answers were refused, and whole days halted (D358;
+  Alex: "bloating evidence 的问题 … 很严重，需要解决").
+- **The reasoning is not the bottleneck; delivering the right facts to the right question is.** The custom-chip question, sent as it
+  was, answered "below $40 billion" 9 times of 9. With the Broadcom and Trainium facts the ledger already held added, it left the
+  lowest range 9 times of 9 and reasoned as the expert readers did (`docs/prd/10-filing-phase.md`, Evidence).
+
+So the architecture puts its effort into reading, filing and grouping, and keeps the judge small and fixed. No test has compared the
+system with a single general-model call on the same questions; the case rests on the measurements above.
+
+### 1.3 Why the running pipeline was rebuilt
+
+On 2026-11-06 Alex sealed the running pipeline's line of work and restarted the design. "好的我觉得你先clean up封存这个版本吧。我要重新梳理系统设计" (D379).
+"之前所有的rules decisions 你可以参考，但是我们要重新开始做一个干净的". "之前很多的carry over 是不正确的 … 我觉的我们first principle 重来".
+He named the shape that does not scale: "thesis counts are okay after it grows, like <100, but evidence attached grows, so if feeding
+into the extraction it's too much context". And he drew the new one: "{thesis, evidences} extraction in pairs, with what existing thesis
+that is outstanding as input context … then in the nex stage I can just dedup this evidence without having the need to read the full
+evidence"; "there should be like a search engine overlay on top of evidence db for a {thesis, evidence} to return the top-10
+semantically relevant evidence" (all 2026-11-06; his [diagram](reference-diagram.png)).
+
+The running pipeline's measured problems:
+
+| Problem | What was measured | Source |
+|---|---|---|
+| Evidence piles up under a few questions | 1,768 pieces under one question; a 292 KB judging request; refused answers halted days. | D358 |
+| A fact with no question is thrown away | 441 statements dropped as "no home" over three draws; 60 of 213 missed helpful matters were written, then dropped. In one fresh week, 278 thrown away. | `docs/prd/11-production-experiments-from-split.md` E1; `docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md` |
+| A fallback parks what filing cannot place | Under the total-revenue question, 32–39% of its reports are ones the standard does not keep and only 7–10% are what the gold uses; 24–44% of its judgement citations are about other companies or the whole market. | `docs/prd/10-filing-phase.md` |
+| Narrow questions starve | The custom-chip question received none of Broadcom's figures in three draws; operating margin and NVIDIA's capital spending were never judged. | `docs/prd/10-filing-phase.md` |
+| Questions crowd into financial lines | Alex: "永远都是一堆财务指标，真正的观点呢？" | D164 |
+| The same bet opens twice | One bet split on a fine detail; ten re-sends of one stored request opened a duplicate twice. | D354 |
+| Earlier versions are searched by shared words inside one question | 82.1% of known earlier versions found; a newly opened question gets no history. | [Step 2 log](step2-validation-2026-11-07/LOG.md) |
+| Answer choices written by extraction can be inverted or empty | A favourable rung holding the unfavourable range; a band missing its reference; a rung with no value. | `docs/prd/11-production-experiments-from-split.md` E3 |
+
+### 1.4 What the new system does differently
+
+| Choice | Running pipeline | New system | Shown so far |
+|---|---|---|---|
+| What reading an item sees | Open questions with filing guidance, from the start of the day. | Every open thesis as the previous item left it, and never the evidence history (section 4). | The request no longer grows with the evidence. |
+| What opens a question | Extraction proposes candidates with answer choices; a matcher and a collision judge decide. | Step 1 decides in the same reading, and only for a big matter; a company's own figures are conditions, not questions (D382, D384). | 1 of 10 opened wrongly on 50 fresh articles (D386). Opening is also where it loses most against the ruler (section 8). |
+| A useful fact no question takes | Thrown away. | Kept without links, and offered to each new question when it opens (D383). | 0 thrown away against 278 in one fresh week; but 389 of 569 kept statements were read by no judgement that week (section 10). |
+| Finding the earlier version of a statement | Shared words, inside one question. | Semantic search across the company, then Jev compares (section 5). | 141 of 143 earlier versions found; 1 clear wrong merge in 57 (D386). |
+| The same statement reported again | A separate record. | One group; each report keeps its own text and source (section 6). | Later details are kept (22 = 22, a storage check). Copies are still 31–34% of what the judge reads, against 26–31% in the running pipeline. |
+| Answer choices | Written by extraction with the candidate. | A separate step at opening: an event has three outcomes; a figure has five ranges against a reference with the favourable end registered; the due day follows rules (section 7). | Its quality gate is not met (section 8). |
+| Judging and closing | The frozen judge, daily; closing on the due day. | The same judge and the same closing, unchanged (D354, D567). | By design, differences come only from what reaches the judge. |
+
+On the frozen extraction gold, Step 1 keeps more of what matters: helpful 214, 211 and 212 of 234 in three draws, against 167, 171 and
+162 for the running extraction (core 85–86 of 86 against 75–76). The running pipeline's draws were stored runs from another day, so
+this is a lead, not a same-day comparison.
+
+**What is not shown yet.** That the new system gives better answers end to end. Every comparison so far is a diagnostic: the seeded
+test was inconclusive (18, 18, 17 against 17, 15, 16 of 23); on one fresh week the difference was "not clear" by the rule written
+beforehand (D489). The weakest point is named (D559): the system often cannot turn an important matter into a question it can answer
+and follow. It also costs more: about $3 a draw for the whole new system (Step 1 about $2.5 of it) against about $0.45 for the running
+pipeline, and about 2 hours 20 minutes a draw because items are read one after another (an estimate,
+`e2e-comparison-2026-11-13/SLICE-RESULT.md`). Correct comes
+before cheap; cost is recorded as a baseline.
+
+### 1.5 What decides that it replaces the running pipeline (D665, superseding D548's gate order)
+
+Alex asked the council to determine whether the six lines still make sense and what decides readiness (D664: "does it make sense now run your
+council to determine"). The council's consensus is D665.
+
+**The release decision is one product comparison against the running pipeline.**
+- **The systems.** poc-v118 is replayed against the new system as configured and hashed (astra-frozen; v5.5 excluded). Both start from empty
+  over 2026-07-01 to 07-19, three draws each, and are scored on the unread weeks from 07-20 up to 09-20, as far as the full exposure census
+  supports.
+- **The main quantity: big matters served.**
+  - Both reader families list the scored weeks' big matters from the articles, blind to any output, and freeze the list.
+  - A system serves a matter when, in at least two of three draws, it holds a question both families mark worth tracking and whose latest
+    answer both mark supported. The cards are read by the council (D663), with Alex spot-checking splits.
+  - With a = matters served only by the new system, b = only by the old, and N = all listed matters, written before the first send and computed
+    under both split countings:
+    - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both
+      countings.
+    - **Practical loss:** the mirror of the lead, or a guardrail breach confirmed under both countings.
+    - **No practical winner:** everything else, including a verdict a split could change, or a guardrail that was not exercised.
+    - **Too small:** fewer than 20 distinct matters, or fewer than 30 distinct questions per system per draw.
+    - **Invalid:** a planted wrong answer accepted, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same.
+- **The guardrails:** the unsupported share for figures, the unsupported share for yes/no questions, and the not-worth-tracking share, none
+  more than 10 points above the old system's. D428's original limits are printed beside them.
+- **Printed beside the verdict, not deciding:** a sign test and an interval (illustrative unless the frozen grouping supports them); the
+  frozen-reference reading of 07-01 to 07-14 (D431, superseded on this point only); and the proposed absolute floors.
+- **Kept from the earlier gates:**
+  - **The six lines of D400** are measured and reported on every ladder run. They no longer block release.
+  - **The parts code decides stay hard checks:** figure ranges meet end to end; the favourable end is the same across sends; the due day is
+    consistent in at least nine of ten.
+  - **Step 2's three checks stay,** as D427 and D431 set them.
+  - **Stage B's control line waits** with D658.
+- **Back to Alex,** before any release engineering resumes:
+  - a practical lead, with the split cards for his spot check;
+  - a practical loss, at once (D544);
+  - no practical winner, too small, or invalid, with the counts;
+  - no verdict by 2026-12-01.
+
+| Earlier gate | Now |
+|---|---|
+| 1. The ladder step (Stage A), Alex's six lines (D400) | Reported on every run. Its code-decidable parts are hard checks. Not passed in nine readings |
+| 2. The judge on the system's own questions (Stage B, D428) | Its unsupported shares become the comparison's guardrails. Its control line waits (D658). Not passed: 4 of 8 controls |
+| 3. End to end against the running pipeline (D427, D431) | **The comparison above.** The frozen-reference reading is printed beside it |
+| 4. Use on unseen news (D484) | Folded into the comparison, which runs on unseen weeks. Its proposed lines are printed beside it |
+| 5. Integration and release | Waits for a practical lead and Alex's word. Partly built (D570–D573; the D593 test-store contract); held by D662 |
 
 ## 2. Architecture at a glance
 
 ```mermaid
 flowchart TD
-    H[Hummingbird: incoming item] -->|Lookup using available tags| T[(Thesis library)]
-    H --> X[Step 1: Luna extraction]
-    T[(Thesis library)] -->|Open thesis descriptions| X
-    X --> N[Propose new thesis and evidence]
-    X --> O[Propose evidence for existing thesis]
-    X --> P[Proposed theses and evidence links]
-    P -->|Thesis and incoming evidence| S[Semantic search: top N]
+    H[Hummingbird: incoming item] -->|Company tags| T[(Thesis library)]
+    H --> X[Step 1: read the item]
+    T[(Thesis library)] -->|Open theses as they stand now| X
+    X --> N[New thesis for a big matter]
+    X --> O[Evidence for an open thesis]
+    X --> M[Material statement kept without a thesis]
+    X --> P[Proposed theses and evidence]
+    P -->|Thesis and incoming evidence| S[Semantic search: top 10]
     D[(Evidence library)] --> S
     S --> C[Step 2: compare evidence with Jev]
     P --> C
-    C --> B[Repeat of a statement]
-    C --> U[Revision of a statement]
+    C --> B[Repeat: joins its group]
+    C --> U[Revision: a later version]
     C --> K[New evidence]
     C --> W[Step 3: save records and links]
     W --> T
     W --> D
-    W --> J[Step 4: judge affected theses]
-    X -. evaluation only .-> V[Evaluate Step 1]
+    W -->|A thesis opened| L[Step 4a: write the judged question]
+    L -->|Answer choices and due day| J[Step 4b: judge once a day]
+    W -->|Questions with new evidence| J
+    J --> Z[Close the question on its due day]
+    J -->|Current answer and evidence trail| Q[Thesis page and Idea API]
+    Z --> Q
+    X -. measured offline .-> V[Measure each step]
     G[(Run traces and state)] -. review material .-> V
-    V -.-> R[Review findings]
+    V -.-> R[Findings and decisions]
 ```
 
-The live path processes an incoming item through extraction, comparison and saving. Judgement uses the saved evidence downstream; its trigger and timing are open. Evaluation is a separate test of extraction. The thesis library and evidence library are logical stores in this picture; the physical database design is open. The image Alex supplied is available as the [original diagram](reference-diagram.png); the text below explains each box and arrow.
+An item travels down the left half: it is read once, its statements are compared with what the library already holds, and the result is
+saved. The bottom of the picture is the judgement, which runs on the saved library and never on the item alone. Measurement sits to the
+side: it reads traces and never gates the live path. The thesis library and the evidence library are logical stores; today both live in
+one ledger file. The [original diagram](reference-diagram.png) is Alex's starting picture; this section is its clarified form.
 
-| Part of the diagram | What it receives | What it produces |
-|---|---|---|
-| Hummingbird stream | Incoming material from its event pipeline. | An item and its available source information. |
-| Thesis lookup | The relevant company tags for the item. | All open thesis descriptions in scope for those tags. |
-| Step 1: Luna | The item, relevant company tags and open thesis descriptions. | Existing or proposed new theses, each associated with evidence from the item. |
-| Step 1 evaluation | Source articles, model inputs and outputs, and thesis state before and after each article. | Human review findings about extraction, thesis reuse and state changes; this is separate from the live path. |
-| Semantic search | A thesis and incoming evidence. | Up to N related evidence records from the evidence library. |
-| Step 2: Jev | Incoming evidence and the returned evidence candidates. | An evidence relationship: repeat, revision or new. |
-| Step 3 | The Step 1 proposals and Step 2 results. | Saved theses, evidence, sources and relationships. |
-| Step 4 | The affected thesis and its saved evidence. | A thesis judgement; the detailed contract remains open. |
+| Part | What it receives | What it produces | Where it stands |
+|---|---|---|---|
+| Hummingbird stream | Incoming material from its event pipeline. | An item with its source information. | Stand-in: the local source database (section 14). The live Hummingbird contract is not established. |
+| Thesis lookup | The item's company tags. | Every open thesis for those tags, as the library stands after the previous item was saved. | One company at a time; links across companies are future design (section 15). |
+| Step 1 | The item and the open theses. | Evidence for open theses; a new thesis, with its evidence, for a big matter; material statements no thesis takes, kept without links. | Adopted: request c8 on DeepSeek Flash at high effort (D387; section 12). |
+| Semantic search | Each thesis and incoming evidence. | Up to 10 earlier records of the same company per query. | Frozen (D427; section 5). |
+| Step 2: Jev | The incoming record and the returned candidates. | Repeat, revision or new; and, when a thesis opens, whether each earlier unlinked record informs it. | Frozen (D427; sections 5 and 13). |
+| Step 3 | Step 1's proposals and Step 2's outcomes. | Saved theses, evidence groups, revision links and later links. | The grouping library is frozen (D427); the writer into the judge's ledger is measurement code (section 6). |
+| Step 4a: the ladder step | A newly opened thesis and the article that opened it. | One judged question, its answer choices, its due day and the parts not judged; or a decline with its reason. | Built and frozen as it ran (D426); its quality gate is not met (section 7). |
+| Step 4b: the judge | Each judged question whose evidence changed, once a day. | The current answer with the evidence it cites. | Production's frozen judge, unchanged (D354); its test on the new system's questions has not passed (section 7). |
+| Closing | The questions due that day. | The final answer at the due day. | Production's closing step (D567). |
+| Thesis page and Idea API | The stored library. | The page a reader uses: question, answer choices, current answer, evidence trail, parts not judged. | Serves a store of the new system (D573); live operation is not authorized (D593). |
+| Measurement | Traces, state, the frozen ruler and independent readers. | Findings, and the decisions taken on them. | Offline (section 8). |
 
 ## 3. The information the system works with
 
 | Information | What it is for |
 |---|---|
-| Incoming item | The article or other material Hummingbird supplies for processing, with its available source information. |
-| Thesis | A research idea, issue or question about an asset or event that is either already open or proposed as new. |
-| Evidence | A statement, number, event or view from the item that is relevant to a thesis. |
-| Evidence source | The material and relevant passage or location behind the evidence, with speaker and date when known. |
-| Evidence relationship | A connection showing that evidence repeats or revises an earlier statement. |
-| Judgement | An assessment of what the available evidence implies for a thesis. |
-| Run trace | The source item, the thesis context shown to the model, its output and the resulting thesis state, available for review. |
+| Incoming item | The article or other material Hummingbird supplies, with its source, speaker and publication information when known. |
+| Thesis | A big matter an analyst would follow for a company or a theme, written as a question with the outcome to track and its period when known. |
+| Evidence | A statement, number, event or view from an item that an analyst would note, with its source passages, speaker, original party, statement date and tier. It may link to one or more theses, or to none yet. |
+| Evidence group | One statement and every later report of it. Each report keeps its own text and source inside the group; the first record is never rewritten. |
+| Revision link | A later version of a statement (a revised forecast, an official denial of a report), linked to the earlier one; the earlier statement stays. |
+| Judged question | The one part of a thesis that is judged: an event (it happened, it is ruled out, or still open) or a figure (five ranges set against a reference, with the favourable end registered), with its due day. Other parts of the thesis are listed as not judged. |
+| Judgement | The current answer to a judged question, with the evidence it cites, written by the daily judge. |
+| Closing | The final answer recorded on the due day. |
+| Run trace | The item, everything the model was shown, its raw answer and the library before and after, kept for review. |
 
-A thesis can have many pieces of evidence. An article can contain evidence for more than one thesis, propose a new thesis, do both, or produce neither. The draft response represents one statement once and links it to each relevant thesis; its mapping to persisted records remains to be verified.
+A thesis can have many pieces of evidence. One statement can inform several theses and is stored once. An article can feed open theses,
+open a new one, add statements kept without links, or add nothing.
 
-## 4. Step 1: extract theses and evidence
+## 4. Step 1: read the item
 
 ### Input
 
-Hummingbird supplies an item. Step 1 receives the item, all relevant company tags and all open thesis identities and descriptions in scope for those tags, with each tracked outcome and period when available. These descriptions give the model the context needed to identify existing research. For the current single-entity flow, this means the complete open thesis list for the entity being processed.
-
-The model does not need the full history of evidence for every thesis in this step. This input assumes that the relevant tags are available; how to discover affected companies across entities is separate future work (section 16).
+Step 1 receives the whole item and every open thesis for the item's company: its identity, question, the outcome it tracks and its
+period when known. Items are read one at a time, and each sees the library as the previous item left it. Step 1 does not see the
+history of evidence; finding earlier versions of a statement is Step 2's job. The current flow covers one company at a time; finding
+the other companies an item affects is future design (section 15).
 
 ### What the model decides
 
-The model reads the item and proposes linked theses and evidence:
+For each statement an analyst would note, one of four results:
 
-1. **Existing thesis:** identify an open thesis that the item informs and propose the relevant new evidence for it.
-2. **New thesis:** identify an important research idea, issue or question not already covered by the supplied open thesis list and propose it together with the article evidence that supports it.
+1. **Evidence for an open thesis.** The statement is linked to every open thesis it informs, with the reason.
+2. **A new thesis.** Only for a big matter, by one of the standard's four reasons: an obligation the company takes on, its main
+   product's next node, a policy stage, or a checkable shared quantity (D384; Alex: "按金标：只开大事"). Another company's single
+   project, partnership or product line is evidence, not a thesis. A new thesis carries the entity (supplied by code), the question,
+   the outcome to track and the period when known (Alex, 2026-11-06); a meaningful matter may open without a known decision date when
+   later developments can settle it.
+3. **A material statement no thesis takes yet.** It is kept in the company's record without links and linked when a thesis that
+   covers it opens (D383; Alex: "先存着，有观点再挂").
+4. **Nothing.** What the closing check rejects is dropped with its reason, never parked.
 
-These are two possible results from the same reading, not two required calls. Every proposed evidence statement is paired with an existing or proposed new thesis, and a new thesis is proposed with evidence. An existing thesis retains its identity; finding evidence for it does not require renaming it. The Step 1 prompt should define duplicate theses clearly so the model can use an existing thesis when the idea is already covered; the precise definition still needs to be worked out and evaluated.
+Three of Alex's rules shape the reading:
+- **A financial figure is a condition, not a thesis** (D382; Alex: "我觉得财务类型不应该是thesis，而更多的是条件。观点应该是独特的view，而不是喊出来的数字，除非有理由 - 这个理由恰恰才是观点").
+  A statement of the company's own useful figures lists them, and code checks each value against a verified passage. Those figures are
+  evidence for the judgements of related questions (D505).
+- **Target prices and valuation conclusions are not kept**; the estimates they rest on are (D385).
+- **Lean cautious, catch the increment** (D243): most of an item is common knowledge and is not kept; new information that can change
+  an answer is never missed.
 
-Step 1 proposes records. Saving them happens in Step 3. The direction discussed for this architecture is that Step 1 decides whether a thesis is new; there is no separate thesis-routing stage in the proposed flow. Whether the model makes that distinction reliably enough must be evaluated. A concrete working draft of the Luna request appears in [section 12](#12-step-1-prompt-luna-working-draft).
+Step 1 decides in the same reading whether a matter is already tracked; there is no separate thesis-routing stage. That is a choice
+of this design, and where it fails it fails at opening (section 8).
 
 ### Output
 
-Conceptually, the output is a collection of `{thesis, evidence}` associations:
-
-- The thesis is either a reference to an existing open thesis or a proposed new thesis. A new thesis states the research question and the outcome to track, with a period when known. For the current single-entity flow, code assigns the supplied entity.
-- The evidence contains the relevant statement and enough source information to find and interpret it.
-- One thesis may have multiple evidence statements.
-
-Section 12 shows a proposed JSON response shape: one list of new theses and one list of evidence, with links from each evidence item to the existing or new theses it informs. Local references connect records in one response; application code assigns persistent identities. The runtime schema has not been finalized or enforced. Preserve the meaning of the source and distinguish what the source says from what is inferred. Do not invent a speaker, date or figure absent from the item.
-
-| What Step 1 finds | Proposed handoff |
-|---|---|
-| Evidence for an existing thesis | Existing thesis reference plus one or more evidence statements and their sources. |
-| A new thesis | Proposed thesis plus the article evidence supporting it. |
-| Both | Both kinds of association in the same item output. |
-| Neither | An empty result for the item. |
-
-The item itself is the source of the new evidence. The open thesis descriptions provide context for deciding where it belongs. The historical evidence search happens later.
-
-### Step 1 contract and the existing ledger
-
-Step 1's research result is a collection of thesis–evidence pairs. The structured-output example in section 12 is a **proposed model response**, not the existing production response or a final database write contract. A pair can refer to an existing thesis or propose a new one; each pair has one or more source-backed evidence items. One statement can inform more than one thesis.
-
-The first forward run can advance a separate, isolated test thesis library using those proposals. It can review Luna's output and the evolving thesis state without creating production-compatible judgement records. This test library must not be presented as proof that the existing ledger writer or Step 4 can consume the result.
-
-On 2026-11-06, Alex agreed that a new thesis should carry the entity, research question and outcome being tracked, with a period when known. For this single-entity flow, code supplies the entity from the input; Luna supplies the question, outcome and known period. The proposed `period` field is null when the period is unknown. Whether Step 4 needs predefined outcome ranges is a separate open decision; this minimum is not sufficient to claim compatibility with the current production writer.
-
-Alex clarified that a meaningful topic may be opened without a known decision date when later observable developments can help assess it. It must be specific enough to guide what to watch and matter to the research; vague or noisy topics should not be opened. This clean-design decision does not alter the historical signed standard or its frozen ruler.
-
-For reuse of the existing ledger, the new handoff must preserve the fields actually needed by its writer and readers. Section 18 maps the current draft to those fields and separates straightforward mappings, values the system can supply, and unresolved research decisions. The new path must not manufacture evidence tiers, thesis dates or outcome ranges to make an old contract pass. If the user chooses different thesis or judgement semantics, their effect on the writer and readers must be designed and tested explicitly.
+One answer per item with two lists: new theses and evidence. Each evidence item carries its source passages (each checked by code
+against the item), a standalone summary, the reporting speaker, the original party, the statement date and the date as written, the
+period it describes, its tier (fact, party statement, third-party view, rumour), the company's figures where it states them, and its
+links with a reason for each. References inside the answer are local; code assigns every stored identity. A format failure or a cut
+answer is sent again once; a second failure marks the item failed and the run goes on (D380). A dropped connection is tried again
+by the transport up to three times, as production does (D488); another failure that survives those tries stops the run. The full request is in section 12.
 
 ### Example
 
-The open list contains **“How much will Company A's capital spending grow this year?”** The item says Company A raised its forecast to 25% and also announces a new manufacturing partnership that could matter for future supply.
+The open list holds **"How much will Company A's capital spending grow this year?"** An item says Company A raised its forecast to 25%,
+announces a supply agreement that commits it to buy a stated volume for three years, and repeats its quarterly revenue.
 
-Step 1 could return:
+- **Evidence for the open thesis:** the new 25% forecast.
+- **New thesis:** the supply agreement, if it is the kind of obligation that can change revenue, profit, cash or credit risk, with the
+  agreement as its evidence.
+- **Kept without links:** the quarterly revenue, a condition of the company that a later revenue question can use.
 
-- **Existing thesis:** capital-spending growth → **evidence:** the new 25% forecast.
-- **Proposed new thesis:** the manufacturing partnership's future supply impact → **evidence:** the partnership announcement.
-
-These examples illustrate the flow; they do not define a fixed list of what is important or establish that a particular item merits a new thesis. The model has to judge relevance in context.
+The examples illustrate the flow; they are not a list of what matters. The model judges relevance in context.
 
 ## 5. Step 2: find and compare related evidence
 
@@ -134,7 +299,7 @@ An open thesis may accumulate many evidence records. Step 1 needs to understand 
 
 ### Find candidate evidence
 
-The proposed design places semantic search over the evidence library. It uses the thesis and incoming evidence to find top-N related evidence across the current entity, including evidence linked to other theses. The thesis is search context, not a restriction to evidence already linked to that thesis. This also applies when the proposed thesis is new. For example, “raised its revenue outlook” and “expects higher sales” can be related despite different wording. Alex chose this entity-wide scope on 2026-11-06.
+Semantic search runs over the evidence library. It uses the thesis and incoming evidence to find top-N related evidence across the current entity, including evidence linked to other theses. The thesis is search context, not a restriction to evidence already linked to that thesis. This also applies when the proposed thesis is new. For example, “raised its revenue outlook” and “expects higher sales” can be related despite different wording. Alex chose this entity-wide scope on 2026-11-06.
 
 Search returns **candidates**, not a final decision. As built and frozen (`step2/compare.py`; D381, D427): one query per association (the thesis question, then the incoming summary and passages), plus one query of the record's own text when it has no association or lists the company's figures; each query ranks the original record of every stored group by cosine similarity of `text-embedding-3-small` embeddings and keeps the top 10; the union is compared. Figures never enter a search or comparison text. Measured: the earlier version of a repeat was among the candidates for 112 of 113 known pairs in the first forward run and 141 of 143 at the acceptance on fresh articles (D386). Speed and cost under production load are not measured.
 
@@ -177,7 +342,7 @@ The result “new evidence” is the outcome of the comparison performed; it is 
 
 The first measurement against these lines is in the [Step 2 log](step2-validation-2026-11-07/LOG.md) §12; the isolated modules are `step2/compare.py` and `step3/library.py`.
 
-**Frozen (D427, Alex, 2026-11-11: "好jev 收尾冻结").** Step 2 and Step 3's grouping library stay as accepted and measured (Step 2 log §§12–18); `tests/test_frozen_clean_step2.py` fails the suite when one of their files moves. They go to production only with the whole clean path, after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each), with these three lines checked on that run. A change is a new version that only Alex opens. Five open defects are carried with the freeze (Step 2 log §17).
+**Frozen (D427, Alex, 2026-11-11: "好jev 收尾冻结").** Step 2 and Step 3's grouping library stay as accepted and measured (Step 2 log §§12–18); `tests/test_frozen_clean_step2.py` fails the suite when one of their files moves. They go to production only with the whole clean path, after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each), with these three lines checked on that run. A change is a new version that only Alex opens; while he is not active, the council may open it (D439), never the frozen ruler. Five open defects are carried with the freeze (Step 2 log §17).
 
 The diagram's intended sequence is: use `{thesis, incoming evidence}` to search the evidence library; pass the returned candidates and incoming evidence to Jev; pass the comparison result and the proposed association to Step 3. For a new thesis, search the same entity-wide evidence library. The frozen Jev request appears in [section 13](#13-step-2-prompt-jev-request-frozen).
 
@@ -190,345 +355,150 @@ Step 3 takes the proposals from Step 1 and the comparison outcomes from Step 2 a
 | New thesis with supporting evidence | The new thesis and its evidence link; save new evidence or reuse a matching record according to Step 2. |
 | New evidence for an existing thesis | The evidence and its link to the thesis. |
 | Repeat | Place the incoming record in the existing evidence record's group: add its source and any missing link to the relevant thesis, and keep the incoming record's own text and fields inside the group. Do not rewrite the existing record, and do not create a separate evidence record for the same statement. |
+| Material statement no thesis takes | The evidence, kept in the company's record without links (D383). When a thesis opens, Jev is asked of each earlier unlinked group whether it informs the thesis; a yes adds the link (section 13). |
 | Revision | The new evidence and its source, linked to the earlier statement as a revision. In the judge's ledger the new record also takes the earlier record's thesis links (D202's rule, kept on the clean path by D424; written by the D392 adapter until Step 3 is joined to production storage). |
 
-A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). In the judge's ledger each member of a group is its own evidence record, related to the original as the same claim (D204), and the judge reads each copy with that note; a second or later copy of a statement already in the same request is 31% to 34% of what the judge is shown in the saved clean draws (26% to 31% in production's), and how a judgement weighs copies is not tested further (Step 2 log §17). Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the chosen thesis, evidence and relationships are saved. How they are physically stored and written is a separate implementation decision.
+A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). In the judge's ledger each member of a group is its own evidence record, related to the original as the same claim (D204), and the judge reads each copy with that note; a second or later copy of a statement already in the same request is 31% to 34% of what the judge is shown in the saved clean draws (26% to 31% in production's), and how a judgement weighs copies is not tested further (Step 2 log §17). Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the theses, evidence and relationships are saved. The grouping library (`step3/library.py`, frozen) holds them; a measurement writer (`step4-2026-11-10/stage_b/ladder_adapter.py`) writes them into the judge's ledger together with the judged questions, processing steps, completed days and closings (D429, D564, D567). Joining Step 3 to production storage is part of gate 5 (section 1.5).
 
 ## 7. Step 4: judge the thesis
 
-Judgement is separate from processing and saving an article. It assesses what the evidence implies for an affected thesis and whether the thesis's current assessment should change.
-
-For the capital-spending example, saving the revised forecast records **what the company said**. Judgement later considers **what that means for the investment question**. The saved evidence and its relationships must be available to that work.
-
-This discussion has not yet defined the judgement's input selection, output, timing or decision method. Those are open design questions, not implicit requirements of the earlier steps.
-
-**2026-11-12 (built; the ladder step measured four times and frozen without passing its lines, D426; Stage B built, D429):** originally written 2026-11-10 (D396–D398): the [Step 4 design](step4-2026-11-10/DESIGN.md) proposes a ladder step, which writes one judged question, its answer ladder and its due day when a thesis opens, followed by production's frozen judge. Alex decided two of its rules: a topic that asks more than one thing gets one judged question, the other parts shown as not judged (D397); the ladder step carries D186, with ranges against the reference and the favourable end registered (D398). The build waits for his word.
-
-## 8. Evaluate Step 1
-
-Step 1 evaluation is an offline forward run followed by a source-by-source review of the trace and the changing thesis state. Alex's direction is to inspect what the system actually does instead of first constructing a hypothetical golden library of thesis–evidence pairs. This does not change the existing frozen references used by historical measurements.
-
-The evaluation should allow us to answer:
-
-- Did the model identify the research ideas an analyst would follow, without proposing already tracked research as new?
-- Did it find the relevant evidence in the article, and did it include information that should not have been kept?
-- Did it preserve what the source says, including the speaker and date when available?
-- Did it connect evidence to the right thesis, given the open theses it was shown?
-
-Review the complete article beside the exact thesis context and the model's raw output. Inspect evidence the model missed as well as what it kept. After each item, inspect what was added to the thesis library and whether a duplicate or incorrect link affects later articles. Alex agreed to review the first run's traces and resulting state before deciding what quality is sufficient to proceed. The articles and review coverage remain to be selected; a trace review does not by itself establish system-wide accuracy.
-
-### Forward run and state review
-
-Run selected articles in a fixed order against a known initial library. Capture, for each article, the source text, the exact open-thesis context, the raw Step 1 output, and the resulting library state. The next article sees the state actually produced by the preceding article. Review the trace and state against the source to identify misses, incorrect evidence or links, and duplicate theses. Document mistakes and their downstream effects rather than silently correcting the run's history.
-
-This can begin with Step 1 and a test library; it does not require completing Jev or the full production pipeline. A separate golden library or validation split is not required by this proposed approach. A selected three-article forward run used the earlier single-passage schema; the partial July 8–9 run below uses the revised multi-passage schema. Broader review coverage remains open.
-
-### Current Step 1 forward run
-
-The [current article replay](../poc/data/clean-step1-2026-07-08-09-continuing/review.html) completed all 49 selected source items from an empty isolated library. It contains 22 thesis records and 160 evidence items; two proposed source passages could not be matched and remain visible as unverified. These are counts from one exploratory run, not a quality score. Unmatched passages and unresolved links are kept for review; affected and subsequent state is provisional. After a stop on article 21, the run continued in a new trace from article 20's recorded state. The [first attempt at article 21](../poc/data/clean-step1-2026-07-08-09-continuing/first-attempt.html#article-21) remains available; the current replay shows the completed prefix and new attempt in order. The source collection has known related-article contamination, and its fixed processing order is not necessarily publication-time order. [Run decisions and learning](STEP1-RUN-LOG.md) record blockers, investigation, changes and their checks.
-
-The [49-article trace review](step1-trace-review.html) explains the source-backed findings and includes an article-by-article assessment. Its [Markdown source](STEP1-TRACE-REVIEW.md) is rendered with `node clean-arch/render_trace_review.mjs`; check synchronization with the same command plus `--check`. This review is not a frozen-ruler acceptance result.
-
-### Prepared-source Step 1 replay
-
-The [seven-article prepared-source replay](../poc/data/clean-step1-prepared-2026-11-06/review.html) uses a separate experimental source database assembled from recorded source-role answers and the original page lines. It ran the existing clean Step 1 prompt in the earlier selected order, starting from an empty isolated library. The viewer shows the selected article, earlier cleaned text, full archived page, source-role decisions, provider response, and before/after thesis state. The recorded source selection is not an integrated live source-preparation service, and neither the selected order nor the underlying captured page is asserted to be complete or chronologically authoritative. This historical replay's `cleaning` metadata describes the earlier cleaned text, not the model-selected text; that field was not included in the model request. New materializations retain the earlier cleaning metadata separately and identify the selected-source preparation.
-
-The seven calls completed, producing four new thesis proposals and 21 evidence items with 33 source passages. Every passage was located contiguously in both the selected text and the archived page, but that **does not prove it supports the whole summary**. Independent readers found that Firmus evidence-1 omits the preceding passage supporting the US$2 billion fundraising amount in its summary; FEV ev-2 omits the passage supporting the limited/no-internet condition. Several other quotations need preceding context to identify the named party. These are visible in the replay. The model's later review identified the Firmus omission and missing FEV party context but did not identify the missing internet condition; those leading follow-ups do not prove why the original answers missed the passages. A controlled comparison completed on the same seven source inputs and before-states, testing the location of the existing final check and a general citation-support clarification. Independent readers assessed anonymous answers before the settings were revealed. In three draws per arrangement, moving the check or adding the clarification reduced this particular Firmus citation miss, but some changed arrangements omitted a named SambaNova customer/deployment or weakened the FEV connectivity condition. Seven Firmus answers also added a currency to a $15.5bn valuation whose currency was not explicit in the source. Neither prompt change is adopted; the [blind review](../poc/data/clean-step1-prepared-2026-11-06/citation-placement-comparison/BLIND-REVIEW.md) records all four arrangements and limitations. The cases were already known and cannot establish production accuracy.
-
-The prepared input restored the article 1 CFO outlook line, which Luna included in E3; it excluded the unrelated October recommendations from the Firmus input while retaining the reported investment. It also restored the article 4 SambaNova funding paragraph, which the model did not extract; whether it matters to NVIDIA's competitive research is a separate judgment. The FEV source is a hosted page with an FEV-issued release; the output does not fully preserve that issuer-versus-host distinction. The FEV and Firmus displayed local dates and stored New York dates are consistent with their timezone-aware timestamps; listing timestamps are separate values. The SambaNova page, however, gives 20:19 UTC in machine-readable metadata and 21:19 UTC in its visible byline. Both are the same New York day, but its exact publication time is unresolved.
-
-This replay uses recorded source-role answers rather than calling the source selector live. The selected source and citations remain provisional; exact source location cannot guarantee complete citation support, correct attribution, or relevance. No production database or frozen prompt was changed.
-
-### Citation-completion diagnostic
-
-A separate model-assisted review was tested on nine saved, known source-and-evidence packets, with three calls per packet and two independent readers. All three Firmus reviews found the missing US$2 billion fundraising passage, but all three FEV reviews missed the source passage for limited or unavailable internet. All three also missed a different FEV record’s reversed local-versus-cloud backup relationship; only two of three identified an unsupported US-dollar currency on the Firmus valuation. Six of 69 expected evidence reviews were left unaddressed because returned identifiers did not match the evidence identifiers. These are selected examples, not a quality rate. [The detailed review](../poc/data/clean-step1-prepared-2026-11-06/citation-completion-probe/BLIND-REVIEW.md) keeps the source-backed examples and limitations.
-
-**Status:** This extra review is an experiment and is not part of the runtime. Additional passages can support a missing citation, but cannot repair a wrong summary or link. A located quotation does not establish that every claim in its evidence is correct. The recorded source-preparation and contiguous-page quotation checks are separate improvements; they do not decide whether a claim matters or is semantically supported.
-
-### Page-time-order Step 1 replay
-
-The [page-time-order replay](../poc/data/clean-step1-page-time-2026-11-06/review.html) runs the same seven prepared source texts in the order of the archived pages' timezone-aware publication metadata, starting from an empty isolated library. It produced three new theses, 17 evidence items and 30 located source passages. The earlier selected-order replay produced four new theses and 21 evidence items. These are two single exploratory draws with different preceding states, not a controlled model-quality comparison. Page publication time is not proof of event time or pipeline arrival order; the SambaNova page's visible and machine-readable times disagree by an hour, although both give it the same position in this selected subset. [Recorded ordering evidence](../poc/data/clean-step1-page-time-2026-11-06/page-time-order.json) keeps the original timestamps.
-
-The Parasail/d-Matrix release appeared first and opened a heterogeneous-inference question; the later d-Matrix report reused that question rather than opening a duplicate. The same run still has material errors: the SambaNova benchmark is described as a deployment although its cited text establishes a test; a named planned customer/deployment present in the source was omitted; and the FEV link explanation reverses which system is the backup, even though its summary states the direction correctly. The FEV summary also omits the source's explicit no-internet case and treats an example model as if it were a definite selection. Firmus cites both investment paragraphs in this draw but assigns a currency to the $15.5bn valuation that the source does not explicitly specify. These findings are annotated in the replay. In a later leading self-review, Luna identified the omitted planned customer but did not identify the reversed FEV backup direction; this does not prove why the original answer failed. Exact source location does not establish a correct link, complete summary or correct attribution.
-
-### Step 1 source-faithfulness council
-
-Codex and Claude Code reviewed the current source, prompt, code and saved answers, then challenged each other over four rounds. Their [detailed council record](STEP1-COUNCIL-REVIEW.md) links to each exchange and distinguishes observed errors from unproven causes. Claude could see earlier experiment reviews during its first pass, so this was not a blind independent assessment.
-
-The shared conclusion is that no tested semantic fix is ready. One evidence item can simultaneously have an incomplete citation, an altered claim, a questionable attribution or an incorrect thesis explanation. Exact source location alone cannot verify these. The tested follow-up review found Firmus's missing financing paragraph in three draws, but missed FEV's missing connectivity condition and a reversed backup relationship in all three; it is not adopted. A quote-first output or stronger reasoning setting may be worth testing later, but neither is proven and either could change or omit useful evidence.
-
-The agreed next investigation is a source-backed review of the 49-item historical forward run and its 160 returned evidence records, with separate, overlapping flags and a separate article-level review for omitted facts. Preserve source contamination and incompleteness as distinct findings, and adjudicate difficult cases with another reader. Then compare the two seven-item replays separately: all seven source IDs are already in the 49-item manifest, and their inputs and order differ. Before the full review, check the review method against known problems and independently checked ordinary records. This is an investigation of recorded runs, not a production-quality rate or a change to the prompt.
-
-### Proposed Step 1 link implementation
-
-Codex and Claude Code challenged concrete implementation options over five rounds. A separate reader audited the final wording against the prompt and clean design. The agreed first candidate preserves the existing one-call, thesis–evidence pair contract: retain valid links to open or newly proposed theses, consider a meaningful new thesis when no existing thesis covers the idea, and omit only an idea that does not inform a thesis and does not merit a new one. No standalone evidence, numerical semantic detector or code-based investment judgment is introduced.
-
-The isolated candidate replaces the existing item-level `NONE` bullet with:
-
-```text
-- NONE: If an idea informs no open or proposed thesis and merits no new thesis, omit that idea. If no idea yields a pair, return both lists empty.
-
-Do not link an idea to a thesis it does not inform.
-```
-
-This is a proposed clarification, **not a verified fix**: the current request already implies much of the same behavior. Relevant context, counterevidence, multiple valid links and meaningful new topics must remain. The first comparison reuses six stored article requests and their actual open-thesis states, with the original request as a same-day control; it will compare all outputs and useful omissions. The prepared request files pass the existing structural checks, but have not been sent to Luna. [The implementation council plan](STEP1-IMPLEMENTATION-COUNCIL.md) records the exact approach, source examples, independent audit, controls and limitations. The earlier 49-item fidelity review remains incomplete.
-
-### Step 1 link candidate: completed comparison
-
-The [article-by-article comparison](../poc/data/clean-step1-link-none-2026-11-06/review.html) ran the original prompt and the proposed clarification on six saved articles, three times each. All 36 calls completed. Independent readers examined the source, open theses and answers before the prompt labels were revealed. This is a known-case diagnostic with frozen historical states, not a representative accuracy score or a stateful forward replay.
-
-The candidate did not reliably eliminate the problem. On the GeForce NOW article, the answer attached the server expansion to the Shield TV thesis while saying it did not inform it in **1 of 3 candidate draws**, versus **2 of 3 original draws**. In the DeepSeek article, two original answers attached the reported custom chip to an NVIDIA inference-chip partnership thesis; none of the three candidate answers did. These small counts are observations, not proof of a durable improvement. In another article, named domestic-competitor evaluations were absent in two candidate answers versus one original answer; the source and full answer require an analyst's assessment.
-
-Both arms also omitted the DeepSeek article's reported Kyber delay **and** NVIDIA's denial in all six answers, even though the article contains both and the Kyber thesis was open. Its revenue and margin guidance appeared in one of three answers in each arm. These omissions show that avoiding a particular wrong link does not ensure the system captures other important evidence. The active prompt is unchanged. [The detailed blind review](../poc/data/clean-step1-link-none-2026-11-06/BLIND-REVIEW.md) records all six articles, attribution concerns, known source limitations and the blind arm mapping. The next investigation is to trace the persistent missed-evidence case and its full request before proposing another change.
-
-### Trace: Kyber evidence omitted during extraction
-
-Article 34's supplied text reported a possible Kyber delay to 2028 and NVIDIA's denial. An open Kyber thesis explicitly asked whether the roadmap or planned 2027 timeline would be affected. The model's original response and all six later comparison responses omitted the two statements; the runner did not remove them. Current revenue and margin guidance appeared in only two of the six later responses. The [source and request trace](../poc/data/clean-step1-kyber-trace-2026-11-06/TRACE.md) records the inputs, answers and limitations.
-
-Earlier article 10 had reported manufacturing setbacks and a company roadmap statement, but not the specific possible 2028 delay. Step 1 sees open theses, not prior evidence; the later evidence comparison is responsible for deciding repeats. The model can recover the missing statements in a leading follow-up, but a separate neutral self-account said it could not know its earlier reasoning and did not identify Kyber. Neither account proves why the original extraction missed it. In article 10, Kyber appeared later in the text and was returned in all six comparison answers; the different articles and thesis states do not establish that position or an existing thesis caused article 34's omission. No prompt change is adopted from this trace.
-
-### Kyber trace: thesis-visibility diagnostic
-
-A six-call follow-up kept the same article and all request settings, while comparing the full 20-thesis list with a hypothetical list that omitted the Kyber thesis. In both conditions, all three answers omitted the Kyber delay report and company denial. Current revenue and margin guidance appeared in two answers with the thesis shown and none with it hidden; with only three draws this is an observation, not a reliable difference. All six retained the main DeepSeek chip report.
-
-The independent reader first assessed anonymous source and evidence without seeing thesis identities or links. The second pass checked links against the actual input; at that point the condition could be inferred. No thesis state advanced. This result does not support claiming that the mere presence of the existing Kyber thesis caused the omission in this example, and it does not establish the underlying cause. Removing a thesis is a diagnostic only and is not a proposed production change. [The complete trace](../poc/data/clean-step1-kyber-trace-2026-11-06/TRACE.md) preserves the source, self-account, requests and limitations.
-
-### Kyber trace: full article versus its source paragraph
-
-With the same model, prompt, title, source metadata and all 20 open theses, an isolated comparison sent either the full saved article or just its exact 408-character Kyber paragraph, three times each. The full-article answers omitted the reported possible 2028 delay and company denial in **3/3 draws**; the paragraph-only answers returned both and linked them to the existing Kyber thesis in **3/3 draws**. The [six-answer replay](../poc/data/clean-step1-kyber-trace-2026-11-06/review.html) shows the text actually sent, thesis links, source quotations and attribution fields.
-
-This selected example shows the outcome differs between the two inputs; it does not establish whether length, position or competing content caused the omission. The shorter input deliberately lacks the rest of the article and is not a production solution. Its answers combine the report and denial under one party/tier, which may blur provenance; some date and attribution fields also need review. Source-content and exact-passage findings were reviewed anonymously before input conditions were revealed; the later actual-input check was not blind. No production database or prompt changed.
-
-### Whole-article coverage council: prior attempts and next candidate
-
-Codex and Claude Code reviewed the saved extraction traces, older paragraph-by-paragraph experiments, source-first extraction and later split-prompt results. They agree that article 34's Kyber omission is in Luna's raw answer, but that its cause is not established and no complete coverage fix has been validated. The historical experiments found useful content as well as noise, incorrect links and lost context; the paragraph-only Kyber test also changed several input characteristics at once. The [council record](STEP1-COVERAGE-COUNCIL.md) maps each attempt to its results, limitations and original sources.
-
-The council initially proposed moving the existing evidence-reading instructions before the thesis-opening instructions. The subsequent comparison below tested that proposal; its mixed results do not establish a fix. The original council did not itself run a new Luna experiment.
-
-### Whole-article coverage: completed order comparison
-
-The proposed evidence-block reorder was tested without changing the clean prompt in the PRD. On nine previously inspected articles, three fresh answers per arm completed: **54/54 responses**. Each used the saved article and pre-item thesis state; no production state advanced. Independent readers assessed all answers against their source and thesis list before the arm mapping was revealed. The [interactive comparison](../poc/data/clean-step1-coverage-order-2026-11-06/review.html) shows each article, six answers, source passages and review observations.
-
-The candidate returned article 34's Kyber delay report and company denial in **1/3** answers, compared with **0/3** controls; its recovered answer combined the report, denial and journalist's 2027 expectation under one company-statement record. Q2 guidance appeared in **1/3 candidate** answers versus **2/3 controls**. In article 27, **2/3 candidates** linked a cloud-gaming server to the AI-infrastructure-spending thesis without a supported connection; no control did. In article 10, all answers retained the Kyber facts, but **2/3 candidates** did not open a distinct roadmap topic where no Kyber thesis was already open; all controls did. Whether a distinct topic is warranted is a research judgment. In article 8, both arms retained vendor self-benchmark details in every answer alongside the IBM technical preview.
-
-This selected-case comparison does **not** validate the reorder as a fix, and it is not adopted. It also found an attribution error even when the citation locates: an article 41 control summary attributes an Ayar Labs executive's 2028 forecast to a Lightmatter executive, while its own quotation identifies the Ayar speaker. The [detailed results](STEP1-COVERAGE-ORDER-RESULTS.md) distinguish facts, uncertain judgments, blind review, source limitations and the next source-fidelity investigation. The original active prompt and frozen production configuration remain unchanged.
-
-### Completed review: 49 articles and 160 evidence items
-
-The original isolated forward run's **49 articles, 160 evidence items and 199 links** have now been reviewed against the complete text supplied to Luna, citations, attribution, dates, conditions and before-state. Independent readers checked the concrete findings and selected controls; that second pass was focused, not a second complete annotation of all 160 records. The [article-by-article fidelity replay](../poc/data/clean-step1-fidelity-review-2026-11-07/review.html) shows the sent text, captured page, thesis state, each evidence item, citations, links and review notes.
-
-Four records were judged to change source meaning or qualification, including article 29's stock-market investment becoming infrastructure spending and article 28's example model becoming a definite selection. Eight records were flagged for incomplete citation support or an unverified quote; ten records across three articles were flagged for unsupported thesis links, seven of them from one robotics article under a different agent-stack question. Four date-field cases were identified; other date interpretations remain concerns. These categories overlap, include human judgment and describe one selected run, not a population accuracy rate. The source itself was contaminated in article 3, while article 2 and article 16 lost relevant captured-page text before the model saw it. The [full review](STEP1-FIDELITY-REVIEW.md) records controls, uncertainty and the distinction between source losses, model errors and the unimplemented clean writer.
-
-A completed isolated comparison moved only `source_passages` before `summary` in the output schema. Across 11 previously inspected articles, three answers per condition were reviewed with condition labels hidden. The provider followed the requested field order, but both conditions omitted article 34’s Kyber delay and denial in all three answers, and all six article 11 answers stated a $1bn financing without citing the sentence that establishes the amount. Article 28 still turned an example model into an actual selection in one candidate answer, and one candidate turned investment in stocks into infrastructure investment in article 29. The small, selected comparison does not establish a general rate or a fix; the change is not adopted. See the [full results](STEP1-CITATION-ORDER-RESULTS.md) and [66-answer replay](../poc/data/clean-step1-citation-first-2026-11-07/review.html). The original prompt, production configuration and databases remain unchanged.
-
-### Source handoff council: ongoing investigation
-
-Codex and Claude Code are examining the source-to-extraction handoff and prior attempts. The original 49 saved requests and seven prepared-source requests had empty author fields; the prepared records retained proposed source roles, but those roles were not sent in the extraction request. Roles can mix bylines, outlets, dates and uncertain page material, so they cannot safely be promoted to an author field. A 20-article overlap check found that previously cited passages excluded by the recorded selections were an unrelated recommendation or explicitly labeled AI summaries; it does not establish full body coverage. Sixteen repeated article-34 controls omitted the same Kyber report and denial; the cause remains unproven. The [council record](STEP1-SOURCE-HANDOFF-COUNCIL.md) links the reproduced comparisons and previous failures. An isolated ten-article comparison completed 60 calls with the same prompt, schema and pre-item thesis states. Prepared text removed a known unrelated-story error in article 3 (2/3 original, 0/3 prepared) and generated-summary citations in article 8 (2/3, 0/3), but did not reliably improve extraction: article 16’s restored financing paragraph was in all three prepared inputs and in none of their answers; article 28’s example model was stated as a selection in all six answers; and article 34’s delay report and denial appeared in 2/3 controls and 0/3 prepared answers despite being present in both inputs. These are selected-case observations, not general rates or established causes. The [full results](STEP1-SOURCE-TEXT-RESULTS.md) and [60-answer replay](../poc/data/clean-step1-source-text-comparison-2026-11-07/review.html) show source and output. In two retrospective follow-ups, the model recognized that the article 28 wording did not establish a fixed model selection, but could not recover its original reasoning; the article 16 follow-up did not identify the financing paragraph. These accounts are diagnostic, not a fix. No production change is adopted. An isolated low-versus-medium reasoning comparison on six known prepared articles completed and was reviewed with setting labels hidden. Both settings stated an example model as actually used in all three article-28 answers. In article 29, stock-market flows were blurred into infrastructure spending in 3/3 low and 0/3 medium answers, but the medium answers did not retain that stock-flow statement. Other attribution and context concerns remained. These are selected-case observations, not a production acceptance or proof of cause. See the [full results](STEP1-REASONING-FIDELITY-RESULTS.md) and [36-answer replay](../poc/data/clean-step1-reasoning-fidelity-2026-11-07/review.html). The [source-fidelity prompt audit](STEP1-FIDELITY-PROMPT-AUDIT.md) maps observed failures to the complete request and signed standards. The council and an independent reader reviewed a field-local wording hypothesis that asks summaries to preserve source qualifications. In a six-article isolated comparison, all three answers in each arm still described an example model as part of the proposed system without preserving the “such as” qualification; other context and linking concerns remained. The field-description candidate is not adopted. [Full results](STEP1-SUMMARY-FIDELITY-RESULTS.md) and [36-answer replay](../poc/data/clean-step1-summary-fidelity-2026-11-07/review.html) preserve the cases and limits; the council is investigating the next step.
-
-The continuing council has reviewed a possible structured representation of source statements and link explanations within the same extraction call. It is an untested diagnostic, not an adopted design or demonstrated fix. A prior reviewer missed a reversed relationship even with the full article and one evidence record; the proposed representation must still preserve legitimate inference, multiple sources and existing pairs. An independent audit found that the first draft could exclude the very link explanation being investigated, and the council chose not to run this enlarged diagnostic as the next test. A further low-versus-medium comparison completed on six manually selected real articles outside the original 49-item replay, with one fixed 22-thesis exploratory state for both settings. These use the corpus cleaned text, not the earlier prepared-source path; their prior exposure outside the clean replay is unknown. Earlier mixed results and regressions remain unresolved. The [council record](STEP1-SOURCE-HANDOFF-COUNCIL.md) and [draft experiment](../poc/data/clean-step1-structured-claims-2026-11-07/design.md) preserve the discussion, offline checks and limits.
-
-The additional-source comparison produced mixed results: both settings retained several central claims, while the higher setting also produced unsupported CPU-related links and date-field errors in individual answers. An independent review also found 13 fields across eight repeated answers that appear to use an event or data period as the original statement date; ambiguous cases were kept separate. In three later, specifically prompted continuations, the model correctly distinguished those time references; this does not establish the original cause or a fix. A quotation found in the cleaned input was not contiguous in the captured original page. These are selected-case observations, not population rates or a reason to change the production setting. [Results](STEP1-ADDITIONAL-SOURCES-RESULTS.md) and [article-by-article replay](../poc/data/clean-step1-reasoning-new-sources-2026-11-07/review.html) show the source, context, answers and limitations.
-
-An additional [date and link support review](STEP1-DATE-AND-LINK-CENSUS.md) examined the original replay's non-null date-text fields and 76 links from three later test articles. It separates event periods, uncertain original dates, source facts found elsewhere in an article, and clearly labeled inference. The results identify recurring issues and an open link-citation contract question; they do not establish a fix or a population-wide error rate.
-
-An isolated date diagnostic compared one revised `statement_date_text` schema description with the saved request on eight known source/context pairs. It leaves all schema types, evidence pairing, prompt body and production configuration unchanged. Controls include a third-party statement independently dated to the article day, explicit announcements and a dated party release. Independent review identified risks of losing valid metadata-only or announcement dates; these were inspected alongside omissions and linkage. The results were mixed, including persistent date mistakes, unsupported-link concerns and literal `"null"` text in two fields; the candidate is not adopted. [Results](STEP1-DATE-DESCRIPTION-RESULTS.md) and [48-answer replay](../poc/data/clean-step1-date-description-2026-11-07/review.html) retain the details. The [design](../poc/data/clean-step1-date-description-2026-11-07/design.md) records the exact scope and prior attempts.
-
-Two retrospective continuations of the robotics-link answers recognized that the cited article did not establish adoption of the specific Nemotron/NemoClaw stack when asked directly. They were leading follow-ups and do not prove the original cause. A distinct robotics topic may be considered on its merits; demonstrated commercial impact is not required merely to open a useful question. [Full trace](../poc/data/clean-step1-robotics-link-accounts-2026-11-07/).
-
-A further isolated comparison completed on eight new source IDs selected before reading article contents using a recorded seed and a structured inventory of available clean-Step-1 artifacts. It reuses the same unmodified date-text candidate and the same fixed exploratory thesis context for both arms. The selection cannot prove absence from all past work or exclude syndicated stories under different IDs. An independent source review found related-story contamination and unlabeled generated summaries in some cleaned inputs; these were assessed separately. One company article lost its supported full statement date in all three candidate answers, while another preserved its date in both arms; the candidate is not adopted. [Results and replay](STEP1-DATE-NEW-SOURCES-RESULTS.md) and the [selection design](../poc/data/clean-step1-date-unseen-2026-11-07/design.md) retain the evidence.
-
-An independent [thesis-link review](STEP1-ROUTING-CENSUS.md) examined all 214 links across the eight preregistered articles. It records unsupported topic bridges and explanations that negate their own link, alongside valid indirect context and source-supported prospective topics. These are selected-case findings, not population error rates or a hardcoded relevance filter.
-
-A [source-provenance census](STEP1-SOURCE-PROVENANCE-CENSUS.md) found 163 records across three explicitly recognizable page components where generated-summary content was retained but its label was removed. This is a bounded source-structure count, not a count of model errors. On two NVIDIA pages, the cleaner's template removal and long-line restoration reproduce the mismatch; a general provenance-preserving handoff is under review. An offline probe reproduced the current cleaned text for 163 affected pages and 200 seed-selected additional pages. It retains all candidate original positions, marks transformed bylines, and shows one missing-HTML fallback; positions do not by themselves establish source role. [Lineage replay](../poc/data/clean-step1-source-lineage-2026-11-07/review.html). Source content remains available and no production data or prompt has been changed.
-
-An [offline source-context observation](STEP1-SOURCE-CONTEXT-OBSERVATIONS.md) compared immediate original-page neighbors with complete adjacent unmatched runs, without modifying inputs. They exposed 144 and 149 respectively of 163 known labels but also many unrelated page lines, and did not cover the TradingKey cases. Thirty preselected pages received a line-by-line human review. These are partial diagnostics, not an adopted cleaning rule. A replay of 153 quotations from 18 saved answers across three selected articles found no changes in quote-verification status under either hypothetical text, but the Ising quotation falsely accepted after cleaning remained falsely accepted because both approaches omitted the intervening lines. A further full-page quote check flagged that Ising passage as unverified; this does not test extraction on the full page. This limited replay does not establish general safety or source meaning. In the earlier 49 completed forward-play articles, a separate count found 248 of 250 saved passage instances located in the captured page and two already unverified; the [observations](STEP1-SOURCE-CONTEXT-OBSERVATIONS.md) distinguish this from semantic accuracy. [Source-context viewer](../poc/data/clean-step1-context-restoration-2026-11-07/review.html).
-
-A [saved quote-integrity census](STEP1-QUOTE-INTEGRITY-CENSUS.md) independently matched 360 answers in eight overlapping cohorts to their original requests and results, and reconstructed a further 60-answer source-text comparison separately. It distinguishes exact page location, unverified quotations and cleaned-text-only joins. Five unverified passage instances are full matches under the existing normalizer, including spaces before punctuation. The isolated Step 1 runner now locates a complete normalized match when every matching source slice has the same original bytes. It retains the model quotation, displays the located source text, and records lookup errors without stopping the exploratory stream. The [installed-path review](STEP1-QUOTE-INTEGRITY-CENSUS.md) covers saved-answer replays, Unicode and duplicate controls, resource checks and limitations. This fixes a narrow location issue in the isolated runner; semantic accuracy, original-page provenance and production compatibility remain unproven.
-
-A [source-first 49-article coverage review](STEP1-COVERAGE-CENSUS.md) separates text removed before extraction from material present in the input but absent from Luna’s raw answer. It records concrete cases and uncertain matter boundaries, without creating a new golden set or asserting a population recall rate. Previously tested source selection, prompt order and reasoning changes remain unproven. Seven older production-era raw answers returned the same article’s Kyber report and denial, but differed in request context, schema and run date, so the [continuing council](STEP1-COVERAGE-COUNCIL.md) treats the difference as a lead rather than a proven cause.
-
-In the continuing council, Codex and Claude Code agreed that repeating one article alone would measure variation rather than identify a remedy. The complete clean prompt already includes examples and asks for a full article reading; no single prompt sentence has been established as the cause of the omissions. One proposed general clarification to the standard's named-party claims and estimates is an untested audit hypothesis, not an adopted prompt. A useful future comparison would hold each article and its pre-article thesis state fixed, interleave control and one candidate, and review complete outputs against the source for missed information, noise, attribution, conditions and links. Its chosen articles and review procedure must be recorded before the sends; selected cases cannot establish production quality. Source text lost before the model call is a separate problem, to diagnose against the existing cleaning code and saved pages. Step 1 remains one call with thesis–evidence pairs. [Council exchange and limits](STEP1-COVERAGE-COUNCIL.md).
-
-The [source-loss investigation](STEP1-SOURCE-LOSS-CENSUS.md) traced two different ways the historical cleaner can discard article content before Step 1: a financial statement grouped with related-story headlines, and a financing paragraph omitted by the HTML extractor whose final marker prevented the long-line fallback from keeping it. A corpus-wide count identifies thousands of lines meeting the underlying structural conditions, including many unrelated titles, code and advertisements; these are not all lost investment facts. No general source-cleaning repair has been established. A new read-only council is examining the trace and previous source-selection attempts; the original corpus remains unchanged.
-
-**Test-data correction:** Alex confirmed on 2026-11-07 that the source-cleaning script and source test data may be changed when their defects are confirmed to affect testing. Preserve the original inputs for comparison and verify the effect of a candidate on real sources. This permission concerns the test source data; it does not change the frozen evaluation standard, gold, production configuration or production database.
-
-The investigation also found that the historical extractor-matching key removes non-ASCII characters and can accidentally match an empty key. Two Unicode-aware offline alternatives had different effects on the saved articles, including adding unrelated page titles; neither is adopted. A proposed punctuation change recovered the financing paragraph but also added serialized HTML and navigation on other pages. The [investigation](STEP1-SOURCE-LOSS-CENSUS.md) records the full-corpus comparisons and their limits. Source identity and article boundaries need to be evaluated alongside text matching.
-
-An existing HTML-tag-based candidate was also replayed across all 6,463 originally fed articles. It reproduced its earlier 49-article comparison, but would change 1,054 pages. For example, it adds unrelated news recommendations to an AI investment report and removes a sourced timeline from an AI training article. This does not establish a general error rate; it shows why HTML tags alone cannot decide whether material belongs to the article. No candidate has been integrated.
-
-A [full-page diagnostic](STEP1-FULL-PAGE-DIAGNOSTIC.md) compares the cleaned text with the saved captured page under the same thesis state and instructions. It checks whether Luna can find the target article while preserving its source and ignoring unrelated page material. The captured page can itself be wrong or incomplete, and using it is not an adopted implementation.
-
-Two independent readers have completed [source-first notes for the 17 proposed articles](STEP1-FULL-PAGE-SOURCE-NOTES.md), before any new comparison outputs. These notes identify source roles, incomplete captures, uncertain statements and later page material; they are not a new golden set or mandatory extraction checklist.
-
-The isolated full-page comparison completed all **102 calls** across 17 articles, with three answers for each input per article. Three independent readers examined the answers against the source, with imperfect condition hiding. In one selected article the page exposed an outlook qualification absent from the cleaned input, and all three page answers included it; in another, all three cleaned-input answers misattributed an unrelated later-story teaser, while the page answers did not. In a third, five of six answers turned an example model into a definite selection despite both inputs preserving the qualification. The [source-backed results](STEP1-FULL-PAGE-RESULTS.md) distinguish source loss, attribution and model meaning errors, and the [article-by-article replay](../poc/data/clean-step1-full-page-diagnostic-2026-11-07/review.html) shows the inputs and answers. These selected cases do not establish a general accuracy rate or production readiness.
-
-The cleaner also switched off 615 of 6,463 articles originally marked for processing. A replay of the current cleaner reproduces all 615 switches, and one confirmed example contains a 9,874-character article compressed to a single line: it fails the cleaner's requirement for three long lines. Other excluded captures are a paywall, a weather page or challenge code. An offline candidate that replaces long-line counts with long-sentence counts would recover 89 records but disable 49 currently processed records, including readable reports; a sample of the 89 includes unrelated pages. These are concrete evidence of a source-test problem and of why simply adjusting a length or count threshold would not resolve it. How many articles were wrongly excluded remains unknown; the [results](STEP1-FULL-PAGE-RESULTS.md) link the cases and reproducible comparisons.
-
-A [test-source preservation candidate](STEP1-SOURCE-PRESERVATION-DESIGN.md) describes a separately versioned comparison that retains the saved page, the previous cleaned input and both historical processing flags. It is a proposal for making source losses inspectable and exposing previously excluded inputs; it does not assert that a saved page is a complete or correctly identified article. Its database mapping, runner behavior and offline checks are specified before implementation. The existing production source and frozen configuration are not changed by this candidate.
-
-The isolated candidate has now been built and its 34,084 records compared with the two source snapshots. A fake-answer run through the actual Step 1 runner confirms that the previously excluded CNBC article reaches the runner with its saved page. Replays also preserve the recorded validation results for 102 saved comparison answers and 49 completed forward-run answers. This verifies the handoff and historical checks, not model extraction or article identity. The [council regroup](STEP1-SOURCE-REGROUP-COUNCIL.md) records why source cleanup comes first for a stable test and which model-processing errors remain separate.
-
-The [source-only controls](STEP1-SOURCE-CONTROLS.md) document a real article, a wrong-page capture and two partial or paywalled captures before any new model run. A partial headline may itself carry a useful attributed statement; a wrong page does not establish that the missing target article was irrelevant. Two additional non-NVDA-tagged bad captures are source controls only and are not placed into an NVIDIA thesis context.
-
-The [control-run design](STEP1-CAPTURE-CONTROLS-DESIGN.md) sends four eligible captured pages independently with one fixed hypothetical thesis state, plus one comparison using the CNBC article's previous cleaned text. It preserves the existing extraction request and treats missing article content, source attribution and model interpretation as separate questions. All five calls completed; the [replay](../poc/data/clean-step1-capture-controls-2026-11-07/review.html) shows the actual inputs and proposals. In these selected draws, the wrong page yielded no pairs, while the two partial pages yielded qualified proposals. Source review also found summary details whose supporting headline or article passage was not included in the attached quotations. The [results](STEP1-CAPTURE-CONTROLS-RESULTS.md) record the evidence and remaining uncertainty; these draws are not a general quality measurement. A [request audit](STEP1-CITATION-SUPPORT-AUDIT.md) confirms that the current prompt already asks for all passages needed to support each summary; the cause of these omissions is not established.
-
-A subsequent [numeric citation triage](STEP1-NUMERIC-CITATION-TRIAGE.md) looked for exact digit tokens in summaries that were absent from their own passages and sent the flags to readers. Several items combined facts from later paragraphs without attaching those paragraphs; other flags were formatting or date-context differences. This is a case-finding aid, not an automatic citation judgment, a quality rate, or a rule that decides what the analyst should keep.
-
-An independent [citation review of all 160 returned records](STEP1-CITATION-COMPLETENESS-49.md) in the historical 49-article run found nine preliminary cases where details appear in the supplied article but not in their own evidence passages. A second reader checked those cases, distinguishing substantive missing conditions from source-identity or contextual antecedents. Meaning changes and whole-article omissions are separate problems, measured in different units; this selected run does not establish which problem is largest in production.
-
-The council is also examining whether selecting source-unit IDs could reduce copying errors. An [offline boundary and size check](STEP1-SOURCE-ID-OBSERVATIONS.md) found that the existing quote-repair boundary heuristic splits real abbreviations and that many saved quotations cross its units; a simple numbered JSON representation also increased source-only input size on the checked pages. IDs would not establish semantic support or article identity. No such representation is adopted.
-
-### Source-fidelity council: what must be preserved
-
-Codex and Claude Code completed five rounds of review of the source-fidelity failures, existing trace and downstream code, and previous experiments. They agree that no tested fix has yet been established. An article 41 answer quotes an Ayar Labs executive accurately but names a Lightmatter executive in its standalone summary; a previous FEV link explanation reverses the relationship described by its source. Missing citation context, incorrect source meaning and contaminated inputs are different failures. Exact quotation matching cannot settle them.
-
-The agreed record-by-record review of the original 49-article, 160-evidence run is now complete, with the later 54-answer comparison kept separate. For each evidence item, compare its claims, citations, actor, reporting source, time, qualifications and thesis-link explanation with the complete source. Check real downstream readers and include correct records as controls. The subsequently completed field-order comparison is described above; it did not establish a fix. No automatic split, semantic gate or arbitrary count threshold is adopted. [Full council analysis and prior attempts](STEP1-FIDELITY-COUNCIL.md).
-
-The existing clean trace keeps multiple passages, but its Step 3 mapping to the older single-quote evidence store has not been implemented. The existing writer stores an unknown original day as empty; the older Jev comparison and revision-order path can use publication day as a fallback. These are different paths and do not establish that a clean production write has already lost information.
-
-### Step 1 joint review: causes and priorities
-
-**Execution order approved by Alex:** (1) source text and event ordering, (2) thesis links, (3) faithful summaries and omissions, (4) thesis granularity and noise. Investigate and validate each in that order; retain the original traces and distinguish proven causes from proposals. The detailed findings below are the recorded joint-review consensus.
-
-Codex and Claude Code (`claude-fable-5-1`) reviewed the 49 source records, original requests and answers, state, and the clean runner over three rounds. They challenged each other's claims against the saved records and code. Claude read the earlier Codex review before completing its first pass through all 49 articles, so this was **not a fully blind independent review**. The [first](../poc/data/clean-step1-review-consensus/claude-round1.md), [second](../poc/data/clean-step1-review-consensus/claude-round2.md) and [third](../poc/data/clean-step1-review-consensus/claude-round3.md) responses, [Codex's checks](../poc/data/clean-step1-review-consensus/CODEX-OBSERVATIONS.md), and local packets are retained for inspection. These are findings and proposed investigations, not approved changes to the architecture or production behavior.
-
-| Priority | What is observed | Cause established, or still a hypothesis | Direction to investigate |
+Judgement is separate from reading and saving an item. Saving the revised capital-spending forecast records **what the company said**;
+judgement says **what that means for the question**, from all the saved evidence. Alex opened this step's design on 2026-11-10:
+"设计新系统自己的“判断”环节" (D396). The full design is [Step 4 design](step4-2026-11-10/DESIGN.md) (version 35); this section states
+what it does.
+
+### Two parts
+
+1. **The ladder step (Step 4a).** One call per newly opened thesis, after Step 3 has saved the item that opened it and before that
+   day's judging. It reads the thesis, the article that opened it, the company and its fiscal-year note, and the list of themes; it
+   reads nothing later than the opening article. It writes the judged question, its answer choices and its due day, and lists every
+   other part of the thesis as not judged. Model: gpt-6-luna at medium effort as frozen (D426); astra (gpt-6-astra) is the candidate under test (D648, D649, D653).
+2. **The judge (Step 4b).** Production's frozen judge (judging-v7, D354), unchanged. Once a day it judges every judged question whose
+   evidence changed, citing the evidence it used. On a question's due day production's closing step records the final answer (D567).
+
+### What the ladder step decides
+
+- **One judged question per thesis**, the part the thesis's outcome names. Every other part is listed as not judged and shown beside
+  the answer (D397). A second side of the same bet is context, not a second question (D436).
+- **An event** has at most three outcomes: it happened, it is ruled out, or still open by the due day. Code writes "still open"
+  (D409). Ruling out is stated as who decides and what they decide (D416); a proceeding that formally ends without the conclusion
+  asked for is ruled out (D420).
+- **A figure** has exactly five ranges set against a reference, with the favourable end registered and its reason; code orders and
+  labels the ranges (D398, carrying D186). An amount already reported may be the reference, labelled as that and never as the market's
+  expectation (D411). Where the texts do not settle it, an amount the company owes or guarantees has the lower end favourable (D413).
+- **The owner**: the company, or a theme. A government's permission or ban on a class of product belongs to the theme (D418).
+- **The due day**: for an event, a stated date or the last day of the thesis's period (D403); for a year's figure, code sets it to the
+  fiscal year-end plus 60 days for a company and the calendar year-end plus 90 days for a theme (D414).
+- **A decline** is allowed with its reason: no main part, a rolling twelve months with no publication day (D417), or no theme that
+  covers the matter. An answer refused twice by code writes no question (D405). A thesis without a judged question is kept, and the
+  links to it are counted, not judged.
+
+### Where it stands
+
+- **Built and frozen as it ran in the fourth Stage A** (D426). A second look by the model at its own answer was tested and not adopted
+  (D425).
+- **Gate 1 (Stage A) is not met.** With astra on the frozen request (D649), lines 1, 3 and 6 were met and line 4 missed by 7 (the D436 class); with D414 applied to 12 due-day points, line 5 is met and line 2 hinges on one disputed point (D653). In the fourth run on Alex's 44 theses, lines 2 and 6 were met, line 5 on two of three readings, and
+  lines 1, 3 and 4 missed by 1, 2 and 3 answers of 131. Every later reading on fresh topics also missed it (nine readings in all).
+- **Gate 2 (Stage B) is not met.** Three draws, 236 judgements: unsupported figure answers 3.4%, 3.2% and 10.5% against a limit of
+  12.7–14.4%, and yes/no answers 0.9%, 0.8% and 4.9% against 5% (both met); the control line could not be exercised (4 comparable
+  controls of 8 needed), and the strictest reading of the last-answer line missed (3 of 24)
+  ([result](step4-2026-11-10/stage_b/STAGE_B_RESULT.md)). Re-sending the judge cannot close the control shortfall (D576, D592).
+- **On the product's page** the judged question, its answer choices and the parts not judged are shown without any invented direction
+  (D570–D573).
+
+## 8. How the system is measured, and where it stands
+
+### The measuring stick
+
+- **One frozen ruler** for historical comparison (AGENTS §7.1; D261, D262): the signed extraction standard with its gold
+  (golden-v5), the 22 seed questions, and reader B's judgement gold at the window end 2026-07-14. None of its files changes. Since
+  D372 future evidence scoring counts the gold's core and supporting entries as helpful and its not-kept entries as unhelpful.
+- **Each step's own acceptance protocol.** Steps 1 and 2 were accepted on 50 fresh articles no run had used, read against the source
+  by two readers and a third on disputes (D386). The ladder step is read on stored theses against Alex's six lines by two model
+  families (D400). The judge's answers are each read alone by both families against a baseline, with planted wrong answers (D428).
+- **The traces themselves.** A score is a lead. Every measurement is followed by reading the raw answers beside their sources.
+- **Use on unseen news** (gate 4, D484): readers first list the big matters in a week of news, then check what each system covered,
+  whether its last answers are supported, and which key facts never reached an answer.
+
+### Where each step stands
+
+| Step | Its lines | Result | Source |
 |---|---|---|---|
-| 1. Wrong thesis links | In article 4, valuation and revenue are linked to Nemotron performance; in article 27, a cloud-gaming server is linked to the Shield TV thesis. Three of the 199 returned links explicitly say the item does not inform the selected thesis. Article 18 puts robotics evidence under the Nemotron/NemoClaw thesis; article 41 links general networking details to a specific Kyber setback. One 2027 roadmap statement in article 41 can also be defensible context for that thesis. | Luna returned these links; the clean runner checks reference identity and source location, not whether the link answers the thesis. That separation is deliberate: code does not decide importance. The cause of the model's decision is **not proven**. A forced pairing or insufficient deliberation may contribute; neither is established by one run. | Compare matching decisions against the complete question and outcome, including valid indirect links. Preserve the user's thesis–evidence pairing rule. Do not add a hard-coded list of keywords or make code decide investment relevance. |
-| 2. Source contamination and order | Article 3's July Firmus text includes two October related-story summaries; the model uses one as Firmus evidence. Article 28 also includes later recommendations, though its output did not cite them. Of 46 records with parseable timezone-aware page timestamps, 26 of 45 adjacent comparisons in that known-timestamp subsequence are inverted relative to the run order; one crosses a New York day. The other three lack comparable timestamps, and page metadata may itself be wrong. An earlier count of 45 and 25 missed a valid `+0000` timestamp. | In article 3, the clean pipeline re-adds long lines the structural extractor omitted; both unrelated snippets meet that fallback. The same fallback retains real guidance and other article text in article 34. In article 28, the structural extractor itself includes the recommendations. The manifest follows fixed processing order, not guaranteed page-publication order; a Google listing time is not automatically the page's original time. | Test source extraction and time provenance separately from model changes. Any cleaning proposal must remove unrelated content without losing real article tails. For a stateful chronological test, define and inspect the timestamp source and missing-time handling; do not rewrite the recorded run. |
-| 3. Meaning, attribution and omissions | Article 29 turns funds flowing into AI-infrastructure **stocks** into infrastructure **spending**. Articles 17 and 37 combine results and attributed commentary in fact-labeled items; whether they are one matter or should be separated needs review. Article 34 omits reported revenue guidance and Kyber claims; article 36 omits reported $1 trillion revenue visibility. | The statements are present in the inputs and the problematic summaries or omissions are in the raw model answers. Exact quote matching cannot establish semantic support, attribution or completeness. The reason for each model choice is not yet established. | Audit the assembled prompt, schema and affected traces against the analyst standard. Keep reports, expectations and forecasts distinct from completed results. Review what the model omitted as well as what it returned. |
-| 4. Thesis granularity and noise | Some vendor technical benchmarks and broad comments were returned despite the draft's not-kept guidance; some narrowly scoped topics may be noisy. Other specific launches, partnerships or investments can still be meaningful. | The trace proves what was returned, not a general precision rate or why the model chose it. Alex explicitly permits an observable, meaningful topic without requiring a proven financial impact. | Judge the actual investment question and subsequent observable evidence. Do not impose a universal financial-size rule or automatically exclude an industry, product or partnership. |
-| 5. Handoff and provenance | The clean trace stores per-link `relevance`; the inspected existing `evidence_links` table stores evidence ID, thesis ID and sequence, not that explanation. Step 2 and the clean Step 3 writer were not run. | This is a future integration risk, not a claim that this experiment wrote or lost data in production. Unmatched source passages and unresolved links remain visible and provisional in the exploratory path. | Verify the actual writer and reader mapping before claiming the explanation or a multi-passage source survives into a dossier. Compare repeated evidence in Step 2, rather than counting Step 1 repeats as a dedup failure. |
+| Step 1 (c8) | Helpful kept; wrongly opened theses "50 篇里最多 2 个" (D386). | 50 fresh articles, one draw: helpful 132 of 139 (core 83 of 83); wrongly opened 1 of 10. Dev, three draws on golden-v5: helpful 214, 211, 212 of 234. Weak point: link clutter (19 of 34 disputed links weak, 2 wrong). | Section 12; [round log](step1-unfiled-2026-11-08/LOG.md) §§40–44 |
+| Step 2 | The three lines of section 5. | Search 141 of 143; clear wrong merges 1 of 57; details kept 22 = 22 (one draw). | Section 5; D386 |
+| Step 4a (gate 1) | Alex's six lines (D400). | Not met in nine readings. | Section 7 |
+| Step 4b (gate 2) | D428. | Not met: controls unexercised; strictest last-answer reading missed. | Section 7 |
+| End to end (gate 3) | D427, D431. | Owed. Diagnostics so far: seeded 18, 18, 17 against 17, 15, 16 of 23, inconclusive (D392–D394); same-day July census 2, 1, 0 against 1, 1, 1 settled agreements, every loss at opening (D451). | [Comparison](e2e-comparison-2026-11-13/) |
+| Use on unseen news (gate 4) | Proposed, not Alex's. | One fresh week, one draw: big matters covered 2 of 5 against 4 of 5; last answers supported 6 of 7 against 10 of 15; "not clear" (D489). | [Week result](../docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md) |
 
-**Reasoning-token observation, not a root-cause verdict:** 13 of 49 recorded Luna answers report zero reasoning tokens. The three links whose own explanations explicitly reject the match occur in two of those answers. However, other questionable links, the article-29 meaning change and article-34 omissions also occur in answers with nonzero reported reasoning tokens. The zero/nonzero categories were examined after seeing the run; they cannot establish cause or predict production performance. Claude's initial stronger claim that no nonzero answer had a relevant error was corrected in discussion.
+### What the measurements say
 
-**Link-setting diagnostic (completed; results below):** use the same stored source and before-state for a few wrong-link examples and valid direct/indirect-link controls; compare same-day `low` and `medium` settings with repeated sends. Have readers inspect source, output, thesis and attribution without seeing the setting or reported token count. Record both wrong attachments and useful evidence lost. This can indicate whether a setting is worth studying; it cannot prove why the model erred or establish production improvement. The frozen historical ruler and gold remain unchanged, and no new golden dataset is required for this exploratory trace review.
+- **In the end-to-end diagnostics, answers were lost before judging.** On the seven graded ruler questions no eligible judgement
+  disagreed with reader B in either system; every loss came at opening: the question was not opened, or not in a shape the ruler
+  grades (D395, D451). Where it was given the facts, the judge reasoned as the expert readers did (section 1.2). The judge's own test
+  on the new system's questions has still not passed (gate 2).
+- **The core problem is forming answerable questions** (D559): a worthwhile matter is left without an answerable question, or a
+  delivered question asks a materially different or unresolvable thing. No single cause is proven.
+- **Model readers disagree.** Since 2026-11-10 every quality judgement has come from model readers, and their two families disagree.
+  Alex's own marks on a pilot deck come first ([decision page](../docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md),
+  choice 1).
 
-**First no-cost source test, completed as an investigation, not a replacement pipeline:** compare saved HTML, the structural extractor and the current cleaned text for article 3 and article 28, with article 34 as a positive control for real text that the fallback preserves. Count both unrelated content retained and relevant article content lost before proposing a change. The [candidate census](../poc/data/clean-step1-review-consensus/source_fallback_census.py) found 112 long retained lines across 23 of these 49 records that are absent from the extractor output; these are candidates, **not 112 proven errors**. The [timestamp census](../poc/data/clean-step1-review-consensus/timestamp_census.py) and raw outputs record its scope and limitations.
-
-### Execution 1: source text and event ordering
-
-The source investigation used the 49 archived pages and the exact text sent to Luna. It identified both added and missing content:
-
-- Article 3 includes two later related-story summaries. The existing cleaner adds long lines excluded by the structural extractor; Luna used one unrelated summary as evidence. Article 28 also contains related-story recommendations, but those already appear in the structural extractor output. One fallback rule does not explain both.
-- Article 2 loses a genuine statement that NVIDIA excluded China revenue from its outlook because the headline-removal step removes it. Article 16 loses the reported $1 billion funding and $11 billion valuation sentence because the fallback does not recognize its final symbol as punctuation. These are defects in the supplied source, before Luna reads it.
-- The same long-line fallback preserves real guidance and other body text in article 34. The default extraction mode removes the unrelated article 3 and 28 examples and restores article 34, but returns unrelated headlines instead of the actual article 16 body. Another existing extractor loses substantive article 28 content. Neither is a safe wholesale replacement. A separate structural candidate recovered the omitted article 2 and 16 passages and removed article 3’s recommendations, but added unrelated headlines and promotional text and missed article 28’s recommendations. Its narrower variant proposed 14 additions across six articles, not all valid. Extractor agreement also either retained promotion or lost real content. These are observed controls, not a complete measurement of all source errors.
-- Of 46 comparable page timestamps, 26 of 45 adjacent known-time comparisons are reversed in the saved processing order. Three pages lack comparable timestamps. Page times need provenance and are not automatically authoritative. Article 20 precedes article 18 by page time but was processed later; whether a different order would change the model's links is untested. The original run is retained unchanged.
-
-The author gap is wider than one article: all 34,084 records in both the saved page and cleaned snapshots have an empty `authors` field; the clean runner forwards that value. The assembly script initializes it empty and the cleaner does not populate it. In the 5,848 cleaned, feed-eligible article rows it is also empty. On 16 selected pages with visible named bylines, the existing HTML metadata extractor captured all visible names on 11, some on two and none on three; some wrong names appeared in page metadata even when the metadata identified the correct article URL. It is a source hint, not a safe automatic author replacement. Article 6's cleaned text also omitted the visible author. The [source-only diagnostic design](STEP1-DESIGN.md) tests byline handling without changing a production writer or selecting an unverified name.
-
-A separate model-assisted source-preparation experiment asked Luna to identify article lines in the archived whole-page text without rewriting them. One draw on six known pages recovered the real body paragraphs checked in articles 2, 3, 16, 28, 34 and 42, including the previously missing CFO and funding statements; it excluded the identified unrelated recommendations in articles 3, 28 and 34. An independent reader checked the selected text against the page and HTML. But article 2's selected text presents the page's AI-generated summary without its label, and also includes a photo caption and credit. Articles 3 and 16 lose visible author names while the stored author field is empty. All six returned no uncertain lines. Each selected line was copied unchanged from the stored normalized page, with no invalid or repeated IDs; exact copying does not solve source attribution. These six selected pages and one draw do not establish production safety, quality across the source pool, or completeness of a paywalled article.
-
-A second isolated source-boundary experiment separated article text, bylines, captions, page-generated summaries and uncertain material, allowing a line to have several roles. An independent reviewer compared one draw on ten selected pages with the saved page and HTML. They found no wholly missing authored body paragraph or visible byline name among those pages, and the explicitly labeled AI summaries were separate from the article role. The CFO and funding statements remained, and the known unrelated recommendations were excluded. Figure captions on two pages were available only in the caption role; article 7's AI-widget disclosure was omitted; and the source of some widget “Next Steps” text is unclear even though the model marked no lines uncertain. A downstream consumer would need the separate source roles and their provenance, not just the article text. These are selected-case observations, not a completeness or accuracy guarantee. A further check used three sends each on ten other articles, randomly selected from the same 49-article corpus. Independent readers found the substantive paragraphs visible in the archived article regions in all 30 outputs, but one output omitted a visible author whose stored `authors` field was empty. Some outlet labels, contributor roles and article/caption roles also require care. The model later identified the missed author when prompted, which does not prove why it missed her initially. These articles appeared in the earlier extraction review, so this is not a fully unseen corpus; the [independent check](../poc/data/clean-step1-review-consensus/source-prep-check/INDEPENDENT-REVIEW.md) is not a population accuracy estimate. The [second probe](../poc/data/clean-step1-review-consensus/source-prep-probe-v2/) is not integrated into the pipeline.
-
-A subsequent blinded source-role comparison fixed a caption field-name mismatch in both arms, then tested a byline clarification against the corrected baseline: ten sends per arm on article 6 and three per arm on six provenance controls. The author was retained in the source role in 8/10 baseline and 10/10 candidate answers. However, two of three candidate outputs for article 28 incorrectly labeled the host's introduction as generated; all three also selected a site clock as source information. The introduction itself remained selected as article text. The candidate therefore fails the source-attribution controls and is not adopted. This is a selected-case diagnostic, not a population score; [the blind review](../poc/data/clean-step1-review-consensus/source-byline-comparison/BLIND-REVIEW.md) records the cases and their limits.
-
-For the 49 selected records, the archived whole-page text contains about 107,119 local tokenizer tokens versus 49,656 for the current cleaned text; a separate source-preparation call would add those input tokens and another model call before extraction. This is a local token estimate, not a provider bill or a projection over all records. The [six source-preparation traces](../poc/data/clean-step1-review-consensus/source-prep-probe/) are isolated; no model-selected text has been substituted into the replay or production pipeline.
-
-**Status:** the causes above have been traced, but no general source-cleaning or ordering fix is established. Do not silently remove the fallback, switch extractors or invent times for missing records. Compare a candidate against both contamination and genuine-body controls before using it in a new stateful run. The [source fallback census](../poc/data/clean-step1-review-consensus/source_fallback_census.json), [headline-filter census](../poc/data/clean-step1-review-consensus/headline-filter-census.json), [extractor comparison](../poc/data/clean-step1-review-consensus/default-extractor-comparison.json), and [corrected timestamp census](../poc/data/clean-step1-review-consensus/timestamp_census_v2.json) preserve the local investigation. The censuses identify candidates, not independently adjudicated error counts.
-
-The earlier review's Firmus date concern is corrected: the archived page timestamp is `2026-07-09T01:03:59Z`, which is July 9 in Sydney and July 8 in New York. The stored New York day and displayed Sydney day therefore represent the same instant. The separate listing timestamp and the order of the run still need their own evaluation.
-
-### Execution 2–4: link, fidelity and topic review
-
-A second reader independently checked eight saved link cases. Across their 41 evidence items and 47 links, the stored links match the raw provider answers; the runner did not choose them. The reader confirmed article 4's two links and article 27's one link explicitly contradict the model's own explanations. Article 18 attaches seven robotics statements to a Nemotron/NemoClaw thesis without a named connection in the item. Article 41 requires care: its general networking facts do not state a connection to the Kyber setback, but its 2027 plan can be relevant context to the roadmap. Article 10's provider commitments and roadmap counter-evidence are examples of links that can legitimately inform more than one question. Source contamination and the original order limit all these observations.
-
-For articles 4 and 27, Luna was shown its own stored answer and the original context and asked to review the links. It acknowledged both contradictions. In article 4 it suggested a new, evidence-backed revenue thesis; in article 27 it suggested no pair. It attributed the errors to an overly broad interpretation of indirect relevance. This is a **retrospective account**, not proof of the original cause. The full [requests and responses](../poc/data/clean-step1-review-consensus/link-account-probes/) are retained. A controlled exploratory comparison resent eight unchanged saved requests and their original before-states three times at low and three at medium reasoning. Independent readers reviewed anonymous outputs before the settings were revealed. In five selected wrong-link scenarios, 6 of 15 low-setting answers contained at least one clear wrong-product or unrelated-question link, compared with 0 of 15 medium-setting answers in that specific class. Other links and source-fidelity issues remained, and the examples were selected after the original run, so this is not a general accuracy estimate or proof of cause. The 24 low responses used 45,091 completion tokens versus 106,839 for the 24 medium responses; these are usage counts, not a cost or latency comparison. [Blind review and limitations](../poc/data/clean-step1-review-consensus/link-setting-probe/BLIND-REVIEW.md) records the cases. The experiment did not advance state or change the production setting. A second isolated test compared the saved prompt with a candidate that makes the existing final check actionable and makes the technical-comparison exclusion explicit. Three independent readers inspected six unlabeled answers for each of three known articles before the prompt labels were revealed. Every candidate and baseline answer still retained excluded technical comparisons, while also retaining the IBM integration, relevant AMD competitor comparison and Perplexity usage in the applicable controls. A candidate answer additionally misstated which company’s hardware was in a 100 kW rack. The candidate is not adopted. This small, selected test does not establish a general rate; the [blind review](../poc/data/clean-step1-review-consensus/benchmark-prompt-probe/BLIND-REVIEW.md) records the outputs and limits. Neither test changes the current prompt or database.
-
-For source fidelity, article 29 changes flows into AI infrastructure **stocks** into infrastructure **spending**, which the source does not say. Article 34's input contains revenue guidance, margins, its China assumption, and a reported delay and denial, none of which appear in the answer. Article 36 omits reported management revenue **visibility**, not realized revenue. In articles 17 and 37, a factual result and an analyst or author's interpretation appear under one fact tier. The summaries identify the commentary as such; article 37's `original_party` field names only the company, so whether that field alone gives a downstream reader enough context needs review. The standard allows a mixed single matter to use its main claim's tier; separate matters should be evaluated separately. Article 34 also attributes a report to unnamed sources although the supplied article only says reports. The exact source and raw answer establish these examples, but not why the model made each choice. The request instructs the model to preserve meaning, attribution and guidance; it asks for separation when attribution would blur, while allowing a mixed statement to use its main claim's tier. Those instructions can coexist when applied to the correct unit; whether they were applied correctly to these items remains an analyst judgment. Article 34's supplied text also contains unrelated recommendations.
-
-For topic and evidence noise, article 8's company-reported technical benchmark items and article 33's benchmark conflict with the saved prompt's final check. An independent reader inspected all 160 output items and flagged 13 primarily technical test or comparison items, two mixed items whose non-benchmark content needs separate review, two competitor-comparison controls and six uncertain boundary items. These are item-level leads from one run, not a count of research matters or a general error rate. This does not prove every technical detail is unhelpful. In article 1 the only evidence for the newly opened performance thesis is a company-reported benchmark; excluding that item under the existing standard would leave that proposed thesis without evidence. Its separate adoption thesis has other evidence and must be considered independently. Article 8 also reports IBM production-workload testing and integration, which should not be discarded with the benchmark. A rival's comparison and reported use in article 19, the named robotics integration in article 20, and NVIDIA-backed financing in article 44 require their own relevance judgment. The user's rule remains: an observable, meaningful topic can be opened before its financial impact is known; avoid noise without imposing a blanket size or industry threshold.
-
-**Status:** these reviews identify source-backed errors and prompt tensions; they do not yet establish a general fix or justify editing the prompt. The original 49-item answers and states remain unchanged. In a separate follow-up, the model recognized article 29’s substitution and several omissions in article 34; on article 8 it described the benchmark items but read the rival-comparison exception more broadly than the original prompt states. These are retrospective answers to leading questions, not proof of the original decision. The [full continuation requests and answers](../poc/data/clean-step1-review-consensus/fidelity-account-probes/) and [request audit](STEP1-PROMPT-AUDIT.md) are preserved. The controlled comparison is a diagnostic on selected known cases, not a fresh stream, acceptance test or general accuracy estimate.
-
-### July 8–9 Step 1 replay
-
-The [July 8–9 article replay](../poc/data/clean-step1-2026-07-08-09/review.html) records an exploratory run of 49 selected NVDA-tagged articles in source order, starting with an empty isolated thesis library. Five July 8 articles completed; article 6 failed source-passage validation and stopped the run. The remaining 43 articles were not processed. Four theses were in the isolated library after the completed articles. This is not a production write or a golden evaluation.
-
-The failed article's model proposals are visible as unaccepted output; they were not added to the library. The first proposed quotation replaced the source words “The GPU giant” with “Nvidia,” so it was not an exact source passage. On a copy of the answer, restoring the full original phrase makes all three proposed evidence items pass source-location checks; this is a manual diagnostic, not an automatic recovery or a semantic correctness check. Article 5 reused the revenue-growth thesis opened by article 4.
-
-The third completed article returned no pairs even though its stored excerpt reports a proposed NVIDIA investment of about US$500 million in Firmus. This is a useful new company action to follow, with the reported terms and uncertainty preserved. A follow-up model account suggested it required a stated business benefit; that account does not establish why the original answer was empty. Three additional sends of the original request and three of an initial revised prompt all extracted the investment, so this small comparison does not establish that the prompt change improves recall. The prompt now removes a universal scale restriction that conflicted with Alex's broader clean-design topic rule.
-
-The stored article text also includes two recommendations from October that were appended to the July article; the underlying stored page identifies them as related articles. All six comparison outputs quoted one of those later snippets as evidence. The article's stored day is July 8 in New York while its page displays July 9 in Sydney; the page timestamp represents the same instant in both time zones. The listing timestamp is a separate value. This is not itself a date error. The replay's fixed source order is not proof of publication-time order, and even a verified quotation can be wrong evidence if the supplied source text contains later material. These issues must be addressed before treating this replay as a reliable chronological assessment; the stored run is preserved unchanged.
-
-The trace and reading page are local run artifacts, not included in Git. If available, regenerate the page with `python3 clean-arch/step1/render_replay.py --source poc/data/clean-step1-2026-07-08-09/trace.sqlite --output poc/data/clean-step1-2026-07-08-09/review.html --annotations poc/data/clean-step1-2026-07-08-09/replay-notes.json`.
-
-The [subsequent rerun](../poc/data/clean-step1-2026-07-08-09-rerun/review.html) used the revised prompt, the same 49 selected items and an empty isolated library. It stopped on article 1: one proposed source passage added “NVIDIA” before the source's “NemoClaw,” so the quotation was not contiguous. No thesis state advanced and the other 48 articles were not processed. The failed answer and its proposed pairs are preserved in the rerun replay. The known source contamination and publication-time ordering limitations remain unresolved.
-
-### Step 1 run replay
-
-The [article replay](../poc/data/clean-step1-h200-2026-11-06/review.html) shows the actual three-article Luna run: the thesis proposals or existing thesis references, associated evidence and recorded source passages for each article. The reader shows review notes for the known incomplete citation and source limitations. It is an exploratory run using the earlier single-passage schema, not a golden answer or a test of the revised multi-passage prompt.
-
-The replay is generated from a local run database, which is not included in Git. If that local run is available, regenerate the reading page with `python3 clean-arch/step1/render_replay.py --source poc/data/clean-step1-h200-2026-11-06/trace.sqlite --output poc/data/clean-step1-h200-2026-11-06/review.html --annotations poc/data/clean-step1-h200-2026-11-06/replay-notes.json`. The architecture page and prompt drafts remain readable without the local trace.
-
-### Exploratory playforward: H200 articles
-
-This is a manual simulation of Step 1, not a Luna model run, a frozen golden reference or a measurement. It uses three cleaned records from the local source database in their stored replay-day order, with an initially empty hypothetical NVIDIA thesis library. This is a selected example for inspecting the design, not evidence of broad performance. The old production Luna prompt was consulted as a reference, but it proposes candidates and leaves folding into an existing question to later code; the clean design asks Step 1 itself to identify the existing thesis.
-
-Source limitations: the first record's stored `publication_day` is July 8 while its `published_at` says July 9; the order below follows the stored replay day and is not proof of real publication order. The second cleaned text is only 855 characters and appears to contain a short article excerpt; conclusions are limited to the stored text. In all cases the quoted reports and uncertain estimates remain attributed, not treated as confirmed outcomes.
-
-**Initial library:** empty.
-
-**1. July 8 — [China to let AI firms buy Nvidia H200s, says report](https://www.straitstimes.com/business/china-to-let-ai-firms-buy-nvidia-h200s-information-says).** The Information reports that China plans to permit limited purchases by selected AI companies, subject to applications; it reports that the possible total may be fewer than 200,000 chips. Separately, the article says NVIDIA's CFO had said in May that H200s had generated no China revenue and that imports were uncertain.
-
-| Proposed thesis | State | Evidence from this article |
-|---|---|---|
-| Will China permit selected companies to purchase and import NVIDIA H200 chips, and under what limits? | New | The Information's reported plan, application conditions and possible scale, all as reports rather than a confirmed final quota: "the total may end up being fewer than 200,000". |
-| Will NVIDIA realize H200 shipments and revenue from China? | New | The CFO's earlier statement that H200 chips "had yet to generate any revenue for the company in China", with its original May timing. The reported possible purchases are also relevant, but do not establish sales or revenue. |
-
-**Library after article 1:** two open theses: purchase and import permissions; actual shipments and revenue.
-
-**2. July 9 — [Why China is finally letting AI firms buy the Nvidia H200](https://www.scmp.com/tech/policy/article/3360027/game-changer-why-china-finally-letting-its-ai-firms-buy-nvidia-h200).** A source with knowledge of the matter tells the South China Morning Post that China plans to allow selected companies, including Alibaba, to buy limited numbers.
-
-| Proposed thesis | State | Evidence from this article |
-|---|---|---|
-| China purchase and import permissions | Existing: reuse thesis 1 | The article's separately attributed report of a plan for selected companies to "buy limited numbers of the device". It does not establish that purchases or shipments happened. |
-
-**Library after article 2:** the same two theses. Step 1 proposes the article's evidence with the existing thesis; deciding whether it repeats an earlier statement belongs to Step 2, not this simulation.
-
-**3. July 14 — [U.S. trade official says very few Nvidia H200 AI chips have been shipped to China](https://www.cnbc.com/2026/07/14/nvidia-h200-ai-chips-china.html).** U.S. official Jeffery Kessler says that very few shipments against licenses for H200s and equivalents have occurred, involving a very small quantity, to China and Hong Kong. He also describes case-by-case U.S. licensing. The article says whether China will ultimately approve large quantities remains unclear.
-
-| Proposed thesis | State | Evidence from this article |
-|---|---|---|
-| NVIDIA H200 shipments and revenue from China | Existing: reuse thesis 2 | Kessler's statement that "very few shipments against licenses for H200s and equivalents have taken place" to China and Hong Kong. It does not specify revenue, a precise count or China alone. |
-| China purchase and import permissions | Existing: reuse thesis 1 | The article says it "remains unclear whether China will ultimately approve the import of large quantities". This is the article's assessment, not a new government decision. The U.S. licensing process is a related but distinct policy constraint and must not be represented as Chinese approval. |
-
-**Library after article 3:** still two theses. The earlier CFO statement and later shipment statement have different dates and geographic scopes; the later statement does not establish an amount of revenue or automatically revise the earlier statement.
-
-The precise boundaries between these two theses, and which additional material an analyst would retain from each complete source, need independent review. The exercise illustrates how to save before-state, article, proposed pairs and after-state. It does not establish a finalized golden answer or acceptance rule.
-
-The diagram's evaluation branch uses the captured run traces and state for review. It does not gate the live flow or write to the live thesis and evidence records. A live item goes from Step 1's output to Step 2 without waiting for offline review.
-
-Separately, Step 2 requires evaluation of two things: whether search finds the relevant prior evidence, and whether Jev correctly identifies the relationship once it is shown that evidence. The saved result and its effect on a later reader also need to be assessed. No accuracy, cost or speed claim is established by this PRD.
+The records of each round are in the step logs linked above and in
+[`docs/research/2026-11-14-use-acceptance/LEAN-LOG.md`](../docs/research/2026-11-14-use-acceptance/LEAN-LOG.md). The first Step 1
+investigations of 2026-11-06 and 11-07 are kept word for word in [PRD-HISTORY.md](PRD-HISTORY.md).
 
 ## 9. Walk one item through the system
 
-Assume the thesis library already contains **“How much will Company A's capital spending grow this year?”** Its evidence library contains Company A's earlier 12% forecast. A new article reports that Company A has raised the forecast to 25%.
+The library holds the thesis **"How much will Company A's capital spending grow this year?"**, laddered with five ranges against last
+year's 12% growth, the high end favourable, due 60 days after the fiscal year-end. Its evidence holds Company A's earlier 12% forecast.
+A new article reports that Company A has raised the forecast to 25% and gives its quarterly revenue.
 
-1. **Receive and read:** Hummingbird supplies the article. Step 1 receives the open capital-spending thesis and reads the article.
-2. **Extract:** Step 1 returns the existing thesis linked to the 25% statement and its source. It does not need to read all of the thesis's old evidence to extract this pair.
-3. **Find history:** search uses the thesis and 25% statement to retrieve related prior evidence, including the 12% forecast if search works correctly.
-4. **Compare:** Jev identifies the 25% statement as a revision of the earlier forecast, if it is given enough information and judges the relationship correctly.
-5. **Save:** Step 3 saves the 25% statement, its source and its link to the thesis, and records its revision relationship to the 12% statement. The earlier evidence remains available.
-6. **Judge separately:** Step 4 may assess the thesis using the evidence. Its decision process is not specified here.
+1. **Receive and read.** Hummingbird supplies the article. Step 1 sees the open thesis list as the previous item left it.
+2. **Extract.** Step 1 links the 25% statement to the capital-spending thesis. It keeps the quarterly revenue without links: it is a
+   condition of the company, not a thesis.
+3. **Find history.** Search uses the thesis and the 25% statement and returns the 12% forecast among its top 10.
+4. **Compare.** Jev judges the 25% statement a later version of the 12% forecast.
+5. **Save.** Step 3 saves the 25% statement with its source and its link, and records it as a revision of the 12% statement, which
+   stays.
+6. **Judge.** The question's evidence changed, so that day's judge answers it again from all its saved evidence and cites the
+   statements it used. On the due day the answer is closed.
 
-If search misses the 12% statement or Jev chooses the wrong relationship, the saved record may be wrong. Those are different failure points and should be tested separately. This example describes intended behavior, not a test result.
+If the article had opened a new thesis instead, the ladder step would write its judged question before that day's judging, and Jev
+would first ask whether each earlier statement kept without links informs it.
 
-## 10. Open design questions
+If search misses the 12% statement, or Jev picks the wrong relation, the saved record is wrong. Those are separate failure points and
+are measured separately (section 8).
 
-1. **Thesis lookup:** Step 1 is to receive all relevant company tags and all open theses in scope for those tags. How tags are supplied and how this input performs in practice still need verification; cross-entity discovery and linkage are separate future work in section 16.
-2. **New thesis identity:** How should the Step 1 prompt define duplicate theses, and how accurately does the model apply that definition without a separate thesis-routing stage?
-3. **Search:** built and measured for recall (section 5; frozen, D427). Open: its speed and cost under production load.
-4. **Evidence comparison:** settled for conflicting candidates (a repeat joins the group it is most like, D381) and frozen (D427). Open, recorded: the accuracy of "later version" relations (D423) and whether readers are misled by a wrong group when not prompted (Step 2 log §17).
-5. **Saving:** What are the exact record, link and write contracts for theses, evidence, sources and relationships when Steps 2 and 3 are joined to production storage? Today only the D392 measurement adapter writes the clean library into the judge's ledger; its revision rule is decided (section 6, D424).
-6. **Evaluation:** Which articles and review coverage should the first forward run use? Review its traces and state first, then decide what quality is sufficient to proceed. Step 2 was reviewed against its three lines and accepted (D381; acceptance on fresh articles, D386).
-7. **Judgement:** What evidence does Step 4 use, when does it run, and what does it produce?
-8. **Integration:** What exactly does Hummingbird deliver, and how does a new item see the appropriate library state?
+## 10. Open questions
+
+1. **Forming answerable questions** (gate 1; D559). How the system turns more worthwhile matters into questions it can answer, without
+   answering questions it should decline. The ladder step is frozen; a change is a new version (D426).
+2. **The judge's control line** (gate 2; D576, D592). Four comparable controls exist against eight needed, and re-sending cannot add
+   more.
+3. **What "beats" means** for the end-to-end comparison (gate 3): not yet defined in numbers.
+4. **The six choices on Alex's page** ([decision page](../docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md)): mark
+   the pilot deck; the role of his six lines; the starting library for the next product test; a band named with nothing behind it; the
+   directions the running product invents; running the new system live.
+5. **Kept statements no judgement reads.** In one fresh week 389 of 569 kept statements sat in no question. Alex's rule is that the
+   company's kept figures reach the judgements of related questions (D505); the delivery gap is an open defect.
+6. **Priced in.** The record keeps the expectations it reads, but no step compares a judged answer with what the market already
+   prices, so it cannot yet say whether an answer is in the price.
+7. **Step 2's carried defects** (D423, Step 2 log §17): "later version" relations that join two different statements; the context links
+   a revision carries; wrong groups never tested on an unprompted reader.
+8. **Integration.** What Hummingbird delivers; joining Step 3 to production storage; the live store (its contract is agreed for test
+   stores only, D593); the Idea planner on a store of the new system.
+9. **Whether an announced postponement rules out a deadline question.** No decision settles it; the 37 affected company answers and
+   one authority answer are listed beside the gate counts, and the question is on Alex's page (D591).
+10. **Cost and speed**, measured only as a baseline (section 1.4).
+11. **Links across companies** (section 15).
 
 ## 11. Design boundary
 
-This PRD owns the new architecture described here. The [original diagram](reference-diagram.png) is the starting picture; this document contains the clarified flow. Open questions are intentionally open. No search provider, database product, model-call count, pass threshold, judgement schedule or runtime behavior has been selected by this draft.
+This document owns the new system's architecture. The [original diagram](reference-diagram.png) is the starting picture; section 2 is
+its clarified form. The decisions in force are in `docs/DECISIONS.md` and the log; where this document and a decision differ, the
+decision governs and this document is corrected. Sections 12 and 13 hold the frozen requests; the code is their owner and the tests
+named there fail when they move. The frozen ruler is outside this document and never changes (AGENTS §7.1). Nothing here authorizes
+a deployment, a switch of the default, or a paid run.
 
 ## 12. Step 1 prompt: c8, adopted (D387)
 
@@ -1260,45 +1230,26 @@ The existing frozen extraction reference is a small labelled selection, not a sp
 
 All 148 IDs resolve in the local source database. Of the 118 development records, 117 are currently marked `feed = 1`; all 30 test records are. The source categories in each set are 20/73/25 and 5/19/6 for T6/T7/T8 respectively. The two sets have different time windows, but the test set has been used in prior experiments, including full-set runs in the [historical experiment log](../docs/research/2026-10-29-ledger-standard/loop-log.md); it must not be described as a fresh unseen test for the rebuild. NVDA appears in the stored company identifiers of all 118 development records and 26 of the 30 test records.
 
-These files are the existing frozen reference, not an approved evaluation set for the clean architecture. Their applicability to the new thesis-and-evidence output and linking needs to be assessed; no new split or acceptance criteria is decided here. The source item database and the golden references serve different purposes: source items are input material, while golden references are expected answers for selected items.
+These files are the frozen ruler's extraction gold. For the new system they are a lead: Step 1's dev draws are scored on them, while acceptance uses fresh articles read by independent readers against the source (D386). The source item database and the golden references serve different purposes: source items are input material, while golden references are expected answers for selected items.
 
 ### Diagram-to-code map
 
-| Diagram block | Existing artifact | What it offers and what remains to be checked |
+| Part | New system | Running pipeline counterpart |
 |---|---|---|
-| Hummingbird stream | [Item dispatch](../src/hivemind/dispatch.py), [replay entry](../scripts/replay.py), [source item database](../poc/data/items-nvda-2026-07-01-10-27.sqlite) | The existing path accepts stored items and records processing. A live Hummingbird event connector and its contract have not been verified in this map. |
-| Thesis database and lookup | [Ledger store](../src/hivemind/views/store.py), [extraction thesis selection](../src/hivemind/extraction.py), [historical research reader](../src/hivemind/research_context.py) | Existing records and readers provide thesis identities and descriptions. Their scope and timing must be checked against the clean design's input contract. |
-| Step 1: Luna | [Extraction](../src/hivemind/extraction.py), [model transport](../src/hivemind/model.py), [existing extraction prompt](../src/hivemind/prompts/role-v74i.txt), [replay configuration](../poc/config/poc-v118.json) | Existing extraction uses Luna and produces evidence and thesis proposals. Its prompt, response shape and selection behavior are not the clean draft in section 12 and require an explicit compatibility review. |
-| Step 1 golden evaluation | [Golden development set](../docs/research/2026-10-29-ledger-standard/golden-v5/golden-v5-dev.json), [golden test set](../docs/research/2026-10-29-ledger-standard/golden-v5/golden-v5-test.json), [extraction scorer](../docs/research/2026-10-29-ledger-standard/score_gold.py) | Existing references and scoring code can be inspected. Their coverage and scoring assumptions must be matched to the new test before claiming they evaluate every proposed output or thesis-evidence link. |
-| `{thesis, evidence}` handoff | [Extraction handover](../src/hivemind/extraction.py), [item orchestration](../src/hivemind/views/round.py) | Existing extraction returns evidence, candidates and links. The clean architecture's exact handoff contract is still open. |
-| Evidence database | [Ledger store](../src/hivemind/views/store.py), [evidence writer](../src/hivemind/views/writing.py) | Evidence, sources and thesis links already exist in the same ledger. Verify the new writes and existing reader behavior on a copy before choosing how to reuse the writer. |
-| Semantic search over evidence | [Current evidence ranking](../src/hivemind/views/matching.py), [existing semantic search](../src/hivemind/search.py) | The current evidence candidate ranking uses word overlap. The semantic index in `search.py` indexes **theses**, not evidence. It is a reference for a search implementation, not the evidence search required by this diagram. |
-| Step 2: Jev | [Jev transport and request](../src/hivemind/jev.py), [evidence comparison](../src/hivemind/views/jev_matching.py) | The clean path uses the same transport with its own criteria and outcome rule (section 13, `clean-arch/step2/compare.py`, frozen D427); production's criteria and threshold stay in `jev_matching.py`. |
-| Step 2 evaluation | [Evidence decision reference](../poc/eval/gold/evidence-decisions-seed-2026-10-25.json), [evidence decision scorer](../scripts/score_evidence_gold.py) | Existing cases and a scorer cover evidence outcomes and targets for an earlier setup. Their applicability to semantic retrieval and the clean architecture has not been established. |
-| Repeat, revision and new outcomes | [Evidence comparison](../src/hivemind/views/jev_matching.py), [evidence writer](../src/hivemind/views/writing.py) | Existing code records these relationships. The clean design must specify the outcome and uncertainty contract before reuse is accepted. |
-| Step 3: save and link | [Writer](../src/hivemind/views/writing.py), [store](../src/hivemind/views/store.py), [item orchestration](../src/hivemind/views/round.py) | Existing code writes theses, evidence, source links and relationships. Its current input contract includes old matching decisions and must not be assumed to accept the new handoff directly. |
-| Step 4: thesis judgement | [Judgement](../src/hivemind/views/judging.py), [round orchestration](../src/hivemind/views/round.py) | An existing judgement path can be inspected. What to reuse depends on the clean design's still-open judgement contract. |
-| Dossier and source reading | [Bundle reader](../src/hivemind/bundle.py), [service](../src/hivemind/service.py), [HTTP entry](../scripts/hivemind_api.py) | Existing readers assemble thesis, evidence and source information. Their coverage of repeat, revision and provenance relationships must be checked against the new dossier requirements. |
-
-One concrete reader boundary matters for this reuse: the local serving snapshot records a revision from `e191` to `e280` under `v8`, and a repeat from `e6` to `e16` under `v1`. A read-only call to the existing bundle reader returns the newer evidence records without those revision or same-claim relationships. The ledger retains them, and the [store's evidence reader](../src/hivemind/views/store.py) reads them; the [bundle reader](../src/hivemind/bundle.py) currently reads the older `replacements` relationship instead. These are the existing matcher's recorded decisions; their semantic correctness was not reviewed here. This is a reader compatibility finding for these inspected cases, not a claim that the underlying evidence is missing or that every reader has the same behavior.
+| Hummingbird stream | Stand-in: the [source item database](../poc/data/items-nvda-2026-07-01-10-27.sqlite) and the prepared-page source (`step1/materialize_source.py`, `step1/preserve_page_source.py`). | [Item dispatch](../src/hivemind/dispatch.py), [replay entry](../scripts/replay.py). |
+| Step 1 | [`step1/runner.py`](step1/runner.py) (reads the request from section 12), [`step1/live.py`](step1/live.py), [`step1/run_live.py`](step1/run_live.py); [Step 1 README](step1/README.md). | [Extraction](../src/hivemind/extraction.py) with the frozen prompt v74i. |
+| Semantic search and Step 2 | [`step2/compare.py`](step2/compare.py) and [`step2/run_forward.py`](step2/run_forward.py), frozen (D427). | [Word-overlap ranking](../src/hivemind/views/matching.py) and [Jev matching](../src/hivemind/views/jev_matching.py). |
+| Step 3 | [`step3/library.py`](step3/library.py), frozen (D427); the writer into the judge's ledger, [`e2e-2026-11-09/adapter.py`](e2e-2026-11-09/adapter.py) extended by [`step4-2026-11-10/stage_b/ladder_adapter.py`](step4-2026-11-10/stage_b/ladder_adapter.py). | [Writer](../src/hivemind/views/writing.py) and [store](../src/hivemind/views/store.py). |
+| Step 4a: the ladder step | [`step4-2026-11-10/ladder/ladder_step.py`](step4-2026-11-10/ladder/ladder_step.py) and `model_calls.py`; its request is `ladder/candidate-system.txt`, `candidate-closing.txt` and `candidate-schema.json`. | Answer choices written by extraction with each candidate question. |
+| Step 4b and closing | Production's [judge](../src/hivemind/views/judging.py) (judging-v7, frozen) and [closing](../src/hivemind/pull.py), driven by the ladder adapter. | The same. |
+| Thesis page and API | [Bundle reader](../src/hivemind/bundle.py), [service](../src/hivemind/service.py), [HTTP entry](../scripts/hivemind_api.py), [MCP entry](../scripts/hivemind_mcp.py), the page under `poc/ui/`. | The same readers, on the running pipeline's ledger. |
+One reader boundary was observed on 2026-11-06 and has not been re-checked since the page work of D570–D573: the local serving snapshot records a revision from `e191` to `e280` under `v8`, and a repeat from `e6` to `e16` under `v1`. A read-only call to the existing bundle reader returns the newer evidence records without those revision or same-claim relationships. The ledger retains them, and the [store's evidence reader](../src/hivemind/views/store.py) reads them; the [bundle reader](../src/hivemind/bundle.py) currently reads the older `replacements` relationship instead. These are the existing matcher's recorded decisions; their semantic correctness was not reviewed here. This is a reader compatibility finding for these inspected cases, not a claim that the underlying evidence is missing or that every reader has the same behavior.
 
 Do not write to the documented serving snapshot as part of this mapping. Any future compatibility exercise must identify the actual target database and source store, use an appropriate copy, and verify both new writes and existing reads. Reusing data and storage does not imply adopting every old prompt, routing rule or judgement behavior.
 
-## 15. Architecture challenge: questions before building
+## 15. Future design: entity relationships and cross-entity linkage
 
-This section records the read-only challenge of the clean design, including the independent Claude Code Fable 5.1 review and discussion. The reviewers found no evidence requiring the existing thesis and evidence ledger or its records to be discarded. Reuse still requires checking the actual readers, writers and meaning of the historical relationships. The points below are risks or open contracts unless a specific observation is identified. They are not new product rules or evidence that the proposed system has failed.
-
-1. **Can Luna see the right research? Resolved as an input design.** Step 1 receives all relevant company tags and all open theses in scope for those tags. For the current single-entity flow, it receives the entity's complete open thesis list. This addresses the concern that a relevant in-scope open thesis is excluded from the model's input. It does not establish that the model will always recognize a matching thesis; that is an evaluation question. How relevant tags are supplied and cross-entity discovery and linkage remain separate questions (section 16).
-2. **What makes a thesis new? Prompt design and evaluation.** Alex's direction is to define duplicate theses clearly in the Step 1 prompt, so Luna associates evidence with an existing thesis when the idea is already covered. The exact definition and the model's ability to apply it remain to be worked out and evaluated. This does not introduce a separate thesis-routing stage. Articles processed concurrently against an older library may present a separate implementation issue; handling it is not decided here.
-3. **Evidence without a thesis: resolved as an output design.** Alex's direction is that Step 1 outputs thesis and evidence together: either evidence for an existing thesis or a proposed new thesis with evidence. The working prompt states this pairing. There is no separate standalone-evidence output in this design; this is a product choice, not proof that every source fact will be extracted.
-4. **Can the evidence history be reconstructed? An implementation and validation question for the existing flow.** Jev's role in Step 2 is to decide whether evidence repeats or revises a prior statement, or is new. Search must first return the relevant prior evidence, and the saved relationship must reach the dossier reader. In the inspected local database, repeat and revision relationships exist, but the existing bundle reader does not expose the two inspected relationships described in section 14. This does not require a new architecture stage; it identifies retrieval and reader behavior to verify when implementing the existing stages.
-5. **What should judgement see?** Two different sources can independently support or contradict one another without being a repeat or revision. Step 2 can save them as different evidence, but whether those relationships must be recorded explicitly or can be understood by Step 4 remains open. Step 4's input and output are not yet designed.
-
-The next proposed work is the Step 1 forward run and source-by-source trace review in section 17. The stored repeat and revision relationships and the dossier reader remain relevant to the later saving-and-reading milestone. Their historical model-generated labels are observations, not automatically verified reference answers.
-
-## 16. Future design: entity relationships and cross-entity linkage
-
-**Status: discussion and open design, not part of the current extraction flow.** The current architecture focuses on one entity at a time. Before supporting cross-entity relationships and impact propagation in production, the relationship data structure, maintenance process and linking behavior need a deeper design and validation. This section records the direction discussed; it does not prescribe a schema or add a new step to Luna, Jev or the four-step flow.
+**Status: discussion and open design, not part of the current extraction flow.** The current architecture focuses on one entity at a time. Before supporting cross-entity relationships and impact propagation in production, the relationship data structure, maintenance process and linking behavior need a deeper design and validation. This section records the direction discussed; it does not prescribe a schema or add a new step to Step 1, Jev or the four-step flow. Alex, 2026-11-06: "I think this is a totally separate design thing that should be maintained async, meaning that the relation should have a cold start mapping of entities that can be pre-processed."
 
 ### Why this is needed
 
@@ -1330,170 +1281,6 @@ This is a hypothetical example, not a statement about actual companies. Suppose 
 
 These are cross-entity design questions. They do not change the current single-entity extraction inputs, prompts, evidence routing or database write contract.
 
-## 17. Implementation plan for review
+## 16. Earlier record
 
-**Status: proposed plan, not an authorization to change the production path or a claim that the work is built.** This plan turns the four-step architecture into a sequence of reviewable milestones. Each milestone ends with something that can be inspected before moving on. The immediate goal is a Step 1 forward run on real articles, not a new end-to-end system built all at once.
-
-**Implementation progress:** the isolated [Step 1 runner](step1/README.md) and its [design](STEP1-DESIGN.md) exercise the handoff with recorded responses. The bounded live path reuses the existing model client and archive and records source, request, raw response and changing test state. The [prompt audit](STEP1-PROMPT-AUDIT.md) records the evidence-boundary review and Alex’s opening rule. On 2026-11-06, a selected three-article Luna forward run completed on an isolated test library. Its local trace and source-by-source review are exploratory, not a production-compatible extractor or a general quality result. A source-passage repair in the first article lost part of the cited support; investigate it before relying on that path.
-
-### Working boundaries
-
-- Work in the clean-architecture area on the `clean-arch` branch. The existing source database and thesis/evidence ledger are inputs and references; inspect and reuse their components where they fit. Establish compatibility before treating any existing code as the new contract.
-- Use an isolated test library and run artifacts for development. Do not write the forward run into the existing serving snapshot. Where existing records are needed, first identify the target data and use a copy.
-- The existing production prompt, configuration, frozen evaluation references and historical runs remain unchanged. The draft Luna and Jev prompts in this PRD are starting points for the new design, not replacements already adopted. Prompt and evaluation work must follow the repository's applicable frozen-reference and audit rules.
-- The current slice processes one entity at a time. Cross-entity relationship maintenance remains future design work in section 16. Live Hummingbird integration and Step 4 judgement are not prerequisites for the first Step 1 run.
-- The PRD is the architecture source; regenerate the HTML after each document change. Keep run traces and findings identifiable by run, separate from the agreed architecture and from historical artifacts.
-
-### Milestone 0 — Prepare the first Step 1 run
-
-**Goal:** define the request, references, test-library behavior and failure handling needed for an isolated Step 1 forward run. A complete production writer and reader census is not a prerequisite to this run.
-
-1. Use the field map in section 18 to identify the source data and fields needed for the first run. Keep the meaning of unknown values explicit. A full census of production writers and readers belongs before milestone 3, not before the isolated Step 1 test.
-2. Review the proposed list-and-link response in section 12 against the system prompt and schema field by field. Keep the agreed existing/new/empty outcomes and the requirement that each thesis and evidence coexist. One evidence item can link to several theses using local references; those references are not persistent IDs. The example is not production-compatible as written.
-3. Decide how the isolated test library assigns an ID to a new thesis and carries its description into the next item's open list. Existing IDs must resolve to the exact list Luna saw. The code owns IDs; the model judges whether an idea merits tracking and which thesis it informs.
-4. Separate Step 1 testing from production compatibility. The test library needs enough information to advance and inspect theses; using the existing production writer additionally requires the evidence and new-thesis contracts described in section 18. A fresh isolated database using the existing store schema is a candidate, but check its open-thesis reads and writes on real objects before relying on it; table nullability alone does not prove reader compatibility. Do not fill missing values by guessing.
-5. Review the complete assembled request and response checks as a unit: instructions, source and open-thesis payload, structured-output schema and field descriptions, followed by the code that reads them. The prompt must not ask for a value the schema or reader cannot represent. Apply the repository's prompt-audit and independent-review rules; the draft has not had a measured clean-design run to audit.
-
-**Milestone output:** a reviewed Step 1 request and test-library contract, with the production-ledger mapping questions recorded for milestone 3. This is the prerequisite to building the first runner, not a claim that the existing production writer is already compatible.
-
-### Milestone 1 — Make Step 1 runnable and inspectable
-
-**Goal:** send an ordered selection of real source articles to Luna, one at a time, while the test thesis library grows.
-
-1. **Choose the input and starting state.** Read the local source database through an explicit path. Select one entity, a bounded date range and an ordered list of eligible articles. Record their IDs, dates, source information and the order used. Define the initial open-thesis library explicitly: an empty library can exercise new theses, while a copied existing library can exercise reuse. The exact first selection and initial state are still to be chosen.
-2. **Implement the reviewed handoff.** Supply the article and source fields, relevant company tags, and complete open-thesis identities and descriptions. Consume the reviewed response for existing-thesis evidence, new thesis with evidence, and no result. Keep source passages and attribution. The field mapping and any unresolved thesis-identity boundary must be reviewed in milestone 0.
-3. **Prepare the request and runner.** Use the reviewed prompt, input and schema from milestone 0. Build a separate runner that accepts explicit input, configuration and output paths, and uses a supplied model transport. It must not overwrite the frozen production prompt or configuration. The existing extractor accepts only the frozen prompt version, so the new draft is not runnable by pointing that extractor at the PRD.
-4. **Advance the test library.** For each article, send the current open-thesis list, capture Luna's proposals, and make the resulting thesis state available to the next article. This is a Step 1 test-library update, not the final production evidence writer or a Jev decision. Use the reviewed identity and reference contract from milestone 0. Start with ordered, one-at-a-time processing so the next item sees the prior result; the existing production selector uses the start-of-day list and cannot simply be assumed to do this.
-5. **Capture a readable trace.** For every item preserve the source article, the exact company tags and thesis context supplied, request configuration and schema, raw model answer, interpreted thesis–evidence pairs, and library state before and after. Record failures with their cause and the state reached. Preserve the run's sequence so a reviewer can follow a mistake into later items.
-6. **Keep the exploratory replay moving.** If a source passage cannot be matched, retain the article, model's original passage and evidence, mark that passage unverified, and advance the isolated test-library state so the remaining articles can be reviewed. If an evidence link references a thesis the model did not supply, retain the unresolved link for review without inventing or adding a thesis; a proposed new thesis without a resolved evidence link is not added to the open state. The affected and subsequent states are provisional and are not production records. Do not present a partial or inferred passage as a verified quotation. Malformed responses and schema failures retain the raw response and stop the run. Record any source correction and its original wording; do not silently drop a pair or retry. Alex chose this exploratory behavior on 2026-11-06 to avoid mechanical checks stopping the whole review.
-7. **Review the forward run.** Read the complete articles beside the traces and states. Inspect both what Luna returned and information it missed; check source meaning, attribution, new-versus-existing thesis decisions, links and duplicate accumulation. Report the articles inspected and concrete findings. The intended review is not a prebuilt golden set; a limited run does not prove overall quality.
-
-**Milestone output:** a reproducible ordered run, its before/after state and raw traces, and a source-backed review of what worked and failed. Before any model send, check the exact assembled request and its reader using stored or fake responses, and run the applicable no-cost preflight. The existing production preflight is not assumed to exercise the new clean-design path; establish what it covers and what no-cost checks the new path needs. The first-run size, model cost budget and article selection remain open and should be explicit before a paid run. Review the resulting traces and state before deciding what quality is sufficient to proceed. This exploratory review does not replace the frozen ruler for historical measurements or product acceptance; no such run has been performed for this plan.
-
-**Review before moving on:** Does Step 1 produce useful pairs, retain the relevant source meaning, and reuse the existing thesis when the library contains it? Which observed failures are prompt, input, output-shape or test-library issues? A finding is traced to the article and raw output before changing the request or code.
-
-### Milestone 2 — Retrieve and compare prior evidence
-
-**Goal:** implement the Step 2 path for a proposed thesis–evidence pair.
-
-1. Review the existing evidence store and Jev integration using the component map in section 14. Decide the evidence search representation and how the thesis and incoming evidence contribute to the entity-wide query. The current evidence ranking is word-based; the existing semantic index searches theses, so neither is assumed to be the proposed evidence search.
-2. Build candidate retrieval over evidence with an explicit top-N setting and return the IDs and content needed for comparison. Search across the entity for existing and new theses, as Alex chose. Measure retrieval separately: inspect whether the relevant previous evidence appeared in the returned candidates.
-3. Connect Jev to compare incoming evidence with retrieved candidates for repeat, revision or new evidence. Define the response and what happens when several candidates conflict or the comparison is uncertain before choosing write behavior. Keep attribution, original date, amount and source available to the comparison.
-4. Review search and Jev traces against real source passages. A correct Jev decision with a missed candidate does not prove retrieval works; a retrieved candidate does not prove the comparison is correct. Choose the review set and criteria as part of this milestone.
-
-**Milestone output:** an inspectable search-and-comparison path, including candidate lists and Jev decisions, with separate findings for retrieval and comparison. The search technology, N and performance requirements remain open.
-
-### Milestone 3 — Save and read evidence and links
-
-**Goal:** make the outcomes of Steps 1–2 available as a coherent dossier using the existing ledger where it fits.
-
-1. Specify the write contract for a new thesis, new evidence for an existing thesis, a repeat and a revision. For a repeat, reuse the existing evidence and add the incoming source and any missing thesis link, per Alex's decision. Earlier statements remain available for revisions. Decide the storage mapping for one evidence item linked to multiple theses before implementing that case.
-2. On a copy of the intended ledger, check the existing store, writer and reader against the new contract. In particular, trace saved repeat and revision relationships through the actual dossier reader; section 14 records two local examples that the existing bundle reader does not expose. Check source passages before treating an old relationship as correct.
-3. Implement or adapt the smallest compatible write-and-read path and verify that the resulting thesis, evidence, sources and relationships can be read back. Define how repeated processing and an interrupted write should behave before connecting an ongoing stream.
-
-**Milestone output:** an isolated ledger and a readable dossier showing the saved records and their relationships, with compatibility findings for the existing data. This milestone does not by itself establish that the historical data or every reader is correct.
-
-### Milestone 4 — Connect and review the four-step flow
-
-**Goal:** take a bounded source sequence through the completed extraction, comparison and saving path; design judgement before implementing it.
-
-1. Define Step 4's input, output, timing and treatment of accumulated evidence. This is an open design, not a contract already determined by the diagram.
-2. Run the completed Steps 1–3 together on an isolated library and inspect the source-to-dossier trace, including search misses, comparison decisions and saved links. Verify that a later item sees the state produced by the earlier item.
-3. Only after the Step 4 contract is decided, integrate and review judgement using saved evidence. Define the actual Hummingbird event contract and live integration separately; the local source database remains the stand-in until then.
-
-**Milestone output:** a bounded, inspectable end-to-end research flow for the parts implemented, plus a report of what has and has not been validated. Cross-entity propagation and asynchronous relationship maintenance remain outside this first single-entity implementation.
-
-### Decisions to resolve as the work reaches them
-
-| Before | Decision |
-|---|---|
-| First Step 1 implementation | Exact thesis–evidence response shape, thesis identity and duplicate definition; how the isolated test library advances. The agreed minimum for a new thesis is entity, question, tracked outcome and period when known. |
-| First paid forward run | Entity, initial state, ordered source items, run size, budget and what the review will inspect. |
-| Evidence search and Jev | Search representation and N within the agreed entity-wide scope; comparison response and uncertain or conflicting outcomes. |
-| Production-compatible saving | Existing ledger compatibility, write and read contracts, repeated processing and interrupted writes. |
-| Step 4 and live integration | Judgement contract, source event contract and timing. |
-
-**Recommendation for the first implementation slice:** define and review the Step 1 input/output and test-library contract, then run a small ordered set of real articles and inspect every resulting trace and state. The exact run and its limits remain to be selected.
-
-## 18. Luna draft and existing production compatibility review
-
-**Finding: the draft in section 12 cannot be plugged into the existing production extraction and writer as-is.** The architecture's desired pair is a reasonable way to express the result, but the current production response and its readers use a different contract. This review compares local code and a draft example; it does not claim that the new prompt has been run or that a live deployment was inspected.
-
-### The concrete compatibility check
-
-The existing [production extraction schema](../src/hivemind/extraction.py) has three top-level arrays: `evidence`, `candidates` and `new_groups`. The clean draft now returns `evidence` and `new_theses`, linked by response-local references. Running the section 12 example through the existing local schema checker with production `v74i` still returns errors, including:
-
-```text
-$.candidates: required
-$.new_groups: required
-$.new_theses: not allowed
-$.evidence[0].id: required
-$.evidence[0].quote: required
-$.evidence[0].original_day: required
-$.evidence[0].links[0]: expected string
-```
-
-This is a local, no-model contract check. It proves the example cannot pass that schema; it does not test semantic extraction or any deployed endpoint.
-
-### What differs and why it matters
-
-| Area | Existing production path | Clean-architecture draft | Consequence |
-|---|---|---|---|
-| Shape and links | Separate evidence and new-candidate arrays; each evidence item has an ID and links to open thesis IDs or local candidate IDs. | Separate evidence and new-thesis arrays; each evidence item carries typed references and per-thesis relevance. | A new reader or explicit conversion is needed. Both shapes express thesis–evidence relationships, but no conversion has been built or verified. |
-| Evidence and attribution | Evidence includes `id`, `quote`, `one_line`, `speaker`, `original_who`, `original_day`, `tier`, `event_time` and `links`. | Evidence has a response-local ID, source passages, summary, attribution, tier, original statement date and date text, described period and per-link relevance. | Analogous fields need a tested mapping; the described period is not automatically equivalent to `event_time`, and local identity differs from a stored ID. The current writer does not write per-link relevance. In the 49-article exploratory forward trace, 63 of 160 evidence items have multiple passages; one survey item needs its second passage to identify the 60-person population. This confirms that dropping additional passages loses source context in an actual output, while the correct storage and reader mapping is still open. [Handoff evidence and counts](STEP1-QUOTE-INTEGRITY-CENSUS.md). Unknown-date representation also differs. |
-| New thesis | A candidate includes the object, question, kind, year, due date, outcome ranges, typed identity fields, opening reason and evidence IDs. | A new proposal has a question, tracked outcome, period when known and response-local ID, referenced by evidence; code supplies the entity. | The existing thesis creation and downstream judgement contracts need additional information that the draft does not supply. Missing dates, outcome ranges, source tiers or research meaning cannot safely be manufactured just to satisfy the old writer. Whether Step 4 needs outcome ranges remains open. |
-| Thesis reuse | The existing path can propose candidates and then match them against stored theses. | Luna uses the supplied open list and proposes either an existing ID or a new thesis. | The routing behavior is deliberately different. Reusing the old matcher unchanged would not by itself implement the new diagram. |
-| Thesis context over time | The local production `shown_views` reads theses open at the start of the item's day. | The proposed forward run lets each item see the preceding item's resulting library state. | The same-day visibility behavior must be addressed and tested in the new path; the existing default cannot be assumed to provide the proposed sequence. |
-| Prior evidence search | The current evidence ranking uses word overlap within a thesis, followed by Jev comparison. | The diagram proposes semantic retrieval before Jev; Alex chose entity-wide search, including evidence linked to other theses and evidence for a new thesis. | The existing matcher is useful reference code but is not the proposed semantic evidence search. |
-
-The existing [writer](../src/hivemind/views/writing.py) consumes the production-shaped evidence and candidate records. It stores source, speaker, original party, original day, tier and event time; tier and original timing also participate in its revision checks. The [ledger tables](../src/hivemind/views/store.py) already represent thesis–evidence links, repeat relationships and revisions. The finding is about the contracts and behavior of the current readers and writer; it is not evidence that the database or its existing records must be replaced.
-
-### Field ownership and proposed mapping
-
-This is a **design map**, not a built adapter or a decision to preserve every old rule. The current reader examples below are grounded in the linked code; a complete reader and writer census belongs before milestone 3. In the test run, an application-assigned ID is a test-library identity until an eventual ledger write; it is not automatically a production ledger ID.
-
-| Information | Proposed source for the clean path | Existing field and reader | What still needs to be decided or verified |
-|---|---|---|---|
-| Source item, publisher, URL and publication date | Supplied with the article by the source database or later Hummingbird input. | The writer records `input_id`, category, publication day and location in `evidence_sources`; the source item database supplies document details. | Confirm the selected target has the source records and the dossier can resolve them. Publication day is not automatically the original statement day. |
-| Source passages and standalone statement | Luna returns `source_passages` and `summary`. Each evidence item has one or more separately checked passages from the same article. | Existing evidence uses one `quote` and `one_line`; the extraction checker and writer read them. | Verify each nonempty passage against the item; the production storage mapping for multiple passages is not yet designed. |
-| Reporting speaker, original party and original statement day | Luna returns `reporting_speaker`, `original_party`, a full `statement_date` when known and `statement_date_text` for the date as stated, including partial dates. | Existing evidence uses `speaker`, `original_who` and `original_day`; Jev, the writer and judgement read these. | Validate actual calendar dates and the null-to-empty mapping; a publisher, actor and original claimant may differ. Preserve partial dates without inventing a day. The existing normal path does not retain a partial date as `original_day`. |
-| Evidence tier | Luna returns `tier`: `fact`, `party_statement`, `third_party_view` or `rumour`, following the signed standard's precedence. | The existing writer stores `tier`; Jev and judgement receive it, and revision checks use it. | Verify the mapping and how source-specific tier and attribution are retained when several reports link to one evidence record. Do not assume the current source table already retains all such distinctions. |
-| Described period and event time | Luna returns `evidence_period` as supported by the source, or null when unknown. | The existing writer expects `event_time`. | Verify whether and how these meanings map and which readers require them. A described period is not automatically publication day, original statement day or the old `event_time`. |
-| Evidence identity and links | Luna uses response-local IDs and attaches typed links with per-thesis relevance; code assigns persistent IDs. | Existing evidence has a local `id` and `links`; the writer assigns stored IDs and writes `evidence_links`. | Verify how response-local IDs become stored IDs and how per-link relevance is retained. Do not collapse records solely because their text is equal. |
-| Existing thesis | Luna references an ID from the supplied open list; code retrieves its unchanged description. | The existing ledger stores `view_id`, `question` and other fields in `views`. | Verify the ID belongs to the exact list shown. Existing stored fields remain associated with that ID; Luna does not need to recreate them. |
-| New thesis proposal | Luna returns a question, the outcome to track and a period when known, with evidence; code supplies the current entity. | The current candidate and thesis writer expect object, kind, question, due date, year, rungs and additional typed identity and admission fields. | The minimum is agreed. Verify how it maps to the writer and what judgement requires; whether outcome ranges are needed remains open. Do not invent dates, categories or ranges to force compatibility. An isolated Step 1 test library may track a proposal before those production questions are settled. |
-| Why the evidence matters | Luna returns `relevance` for the pair. | The inspected evidence writer does not store this field. | Decide whether a downstream reader needs the explanation and, if so, its destination; do not silently discard it while claiming it is preserved. |
-| Groups and old candidate matching | No direct equivalent is specified by the pair draft. | The current response includes `new_groups`; the old round matches candidate theses before writing. | Decide which existing behaviors, if any, are needed by the clean design. Neither is automatically implied by the diagram. |
-
-### Acceptance of the Step 1 handoff
-
-Before any paid forward run, a no-cost check should exercise the **actual new path**, not just parse the example JSON. Use one example for each outcome: existing thesis with evidence, new thesis with evidence, both in one item, and no pairs. Verify that source passages and supplied IDs resolve, that each pair has evidence, that unknown values remain unknown, and that the test library's next item sees the preceding result. Check the captured request and output as the runner actually constructs and consumes them. A separate check on a copy of the intended ledger is required before claiming compatibility with its writer and dossier reader. The prior single-passage path has been exercised locally and in one selected three-article run. The revised multi-passage schema was sent to Luna in the exploratory run; its output has not been validated against the production writer.
-
-### Prompt review and next design task
-
-The draft prompt describes the new Step 1 decision, evidence pairing, source attribution and examples, but the **full request and its downstream path are not ready to run**. In particular, the precise thesis identity boundary and what the existing writer and judgement require for a new thesis need further work. The production prompt's opening rules and its later thesis matcher are not automatically part of the clean design. The old production configuration is frozen; the new draft is not a supported production prompt version.
-
-The recommended next task is to finish the Step 1 request and isolated test-library contract, including the open product decisions, and perform the no-cost checks in section 17. The full field-to-reader census and production-compatible writer test are required before milestone 3, not before the first isolated Step 1 run. The new shape must carry the required meaning without inventing fields or silently dropping information.
-
-## 19. Claude review: verified findings and open choices
-
-This section records the verification of [Claude's review](CLAUDE-REVIEW-FINDINGS.md). The snapshot counts below are local observations, not a semantic audit or a claim about live production. Alex has decided the repeat behavior, minimum new-thesis fields, Step 1 evidence tier/date/period fields, entity-wide evidence search and review of the first run before deciding whether quality is sufficient; other product choices remain open.
-
-| Finding | Verification and disposition |
-|---|---|
-| 1. Repeat handling | The local snapshot has 2,023 `same_claims` rows for 4,298 evidence records, and the current writer saves a separate linked record. These are model-generated relation labels, not 2,023 independently confirmed duplicates. On 2026-11-06 Alex selected option B: reuse the evidence record and add the new source and missing thesis link. Sections 5, 6 and 13 record the decision and Jev handoff. |
-| 2. Multiple thesis links and search | 1,918 of 4,298 stored evidence records link to two or more theses. The nested draft lacked one explicit shared local evidence identity. Section 12 now proposes separate new-thesis and evidence lists, typed links and response-local IDs; code must verify that all links resolve and every new thesis has evidence. This handles one statement linked to multiple theses **within the response**. Alex chose entity-wide evidence search, including for a new thesis; the count does not prove the proposed cross-thesis failure happened. |
-| 3. What not to retain | The draft lacked the signed standard's explicit boundaries and a final check of what was kept. Section 12 now includes scoped counterexamples and exceptions for meaningful actions, current plans, competitor comparisons and named-party statements without amounts or dates. The exploratory run returned both useful items and possible technical-detail noise; it is not a formal noise measurement. Claude's reference to the evidence-bloat D206 is the retired worktree's number, carried into this repository as [D358](../docs/DECISIONS-log.md); this repository's D206 is a different decision. |
-| 4. Thesis shape and significance | The draft example was broad and its prompt requested a thesis explanation without a corresponding thesis field. The example is now a concrete question about completion; the prompt asks Luna to consider business relevance rather than demanding an output field that does not exist. On 2026-11-06 Alex agreed to the entity, question, outcome and period when known as the minimum. A separate explanation field and outcome ranges remain open. For deals, investments, products and projects, the clean draft asks for a relevance judgment rather than requiring an established financial impact. This broader clean-design topic rule does not change the historical standard's narrower binding-obligation rule. |
-| 5. Period and population boundaries | [E1](../docs/research/2026-11-06-e1-no-home-drops/README.md) found 12 agreed cases involving another period, quarter or product variant among 17 agreed linking misses in the studied population. Its model-account probes named question IDs, and the report does not establish that a generic instruction fixes those misses. Section 12 now tells Luna to consider whether related-period, population or variant evidence informs a thesis while preserving the differences; it does not force unrelated periods or populations to be the same thesis. |
-| 6. Identity and tags | The response now references an existing thesis by ID only; code retrieves its description. A new thesis and each evidence item have response-local references; persistent IDs are assigned by code. Existing and new target namespaces are explicit. The first run's entity comes from its input rather than an invented company tag; cross-entity discovery remains outside scope. |
-| 7. Evidence tier, date and period | Alex approved returning tier, original statement date and the period described. The draft separates a full ISO statement day from date text and evidence period; unknown values remain null. The current production `statement_day` converts a month or other non-ISO value to an empty day before writing, so Claude's example that `"May"` passes through this normal path as a literal comparison is not established. Writer fallbacks for revision ordering do not prove the original statement date. Mapping and source-specific provenance still need verification. |
-| 8. First-run workload | The cited archive has 243 extraction calls averaging about 4,964 input and 1,207 output tokens; median recorded duration is 12.5 seconds. Median times 118 is about 25 minutes, but the first 118 recorded durations sum to about 31 minutes, before any new-run overhead. The clean request may be different. Of the 118 old development articles, one is not marked for the normal feed. These figures are estimates, not a commitment to a run, cost or eligible sample. Section 17 now separates first-run preparation from the later production writer/reader census. |
-| 9. Pass line | Alex agreed to review the first forward run's traces and state before deciding what quality is sufficient to proceed. A review sheet should record missed material, noise, incorrect links, duplicate or unhelpful theses and attribution/date errors, with source passages; a sample of reviewed traces does not establish general accuracy. Formal acceptance remains governed by the frozen ruler where applicable. |
-| 10. Failed checks | The first-run plan originally stopped on schema, reference or source failures. Alex subsequently chose to keep unmatched source passages and unresolved references visible and provisional while continuing the isolated run; schema and other blocking failures retain their recorded behavior. The existing production path can drop individual evidence items; this isolated-run behavior is not a claim about production. Existing source-preserving quote normalization and repair are candidates for reuse only after their behavior is checked on the new path; an accepted repair and its source passage must be visible. |
-
-The pending choices include whether Step 4 needs outcome ranges and what quality the first trace review will establish as sufficient to proceed. The original review's recommended answers on those items are proposals, not decisions. The revised multi-passage prompt and schema have been exercised in an exploratory Luna run, not formally accepted; Jev and the production writing path are not implemented by this clean Step 1 slice.
-
-In the Claude-review revisions, the system-prompt draft grew from 7,579 to 10,469 characters. The added text supplied the signed standard's previously missing not-kept boundaries, their exceptions, the related-period distinction, the list-and-link handoff and the supplied-entity boundary. The subsequent clarification of Alex's new-thesis minimum increased that draft to 10,753 characters. The approved evidence tier and time fields brought the prior draft to 12,397 characters. The topic, evidence audit and multi-passage changes increased the system prompt from 12,397 to 13,419 characters and from 2,498 to 2,696 tokens using the local o200k_base tokenizer. The added wording states the agreed topic rule, the signed evidence boundaries and how to return multiple source passages; no model quality result is claimed. The earlier prompt bytes were not archived for a token-count comparison; no token-cost or model-quality improvement is claimed. The assembled-request review is recorded in the Step 1 audit. The provider accepted the exploratory multi-passage requests; output quality remains under review and has not been formally accepted.
-
-Additional checked boundaries: the current `service.evidence_record` and bundle evidence responses read legacy `replacements`, while `store.evidence_in_force` reads `same_claims` and `revisions`; this is a reader-contract gap, not proof about every UI. The snapshot has zero `replacements` rows. Production's Jev evidence question uses the same three choice names as section 13 with its own wording (`jev_matching.PIECES`); its `cannot_tell` criterion belongs to thesis comparison. The current repository's `docs/check.py` invokes the clean-architecture renderer check; whether that coupling should remain is a maintenance choice, not an extraction-quality finding.
+The first Step 1 investigations (2026-11-06 to 11-07), the architecture challenge, the first implementation plan, the review of compatibility with the running writer and the verified findings of the first Claude review are kept word for word in [PRD-HISTORY.md](PRD-HISTORY.md). Their section numbers are those of the PRD as it stood on 2026-11-12. The round logs since then are linked from sections 4 to 8; the decisions are in `docs/DECISIONS-log.md`.

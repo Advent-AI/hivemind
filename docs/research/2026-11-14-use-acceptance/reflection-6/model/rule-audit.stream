@@ -1,0 +1,1307 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e73f-af34-7d92-aedc-381cbafb596d
+--------
+user
+You are an independent auditor. Read-only: do not edit files or start runs. No conclusion is preferred.
+
+**The question.** The answer-choice step must turn a research topic into one judged question, or decline. A stronger model
+(gpt-6.1-sol) declines more often than the current one, with the reason "the outcome names several parts, none of them the main one",
+on topics where readers disagree whether a main part exists. Decide, from the sources, how the main part should be identified when
+a topic's outcome names several parts. Then decide whether any general wording the sources support would reduce wrong declines
+without making the step decline true no-main topics less, or pick one of two genuinely separate bets.
+
+**Read:**
+- the request: `clean-arch/step4-2026-11-10/ladder/candidate-system.txt`, `candidate-closing.txt` and `candidate-schema.json`;
+- the reader form: `clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md` (the Q, L and N lines);
+- the decisions: D397, D436 and D417 in `docs/DECISIONS-log.md` (search "## D397 ", "## D436 ", "## D417 ");
+- the earlier rule review: `docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md`;
+- the cases:
+  - `docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt`, sol's 24 declines with the readers' N marks and
+    luna's matched answers;
+  - the topics' text in `poc/data/clean-carried-run-2026-11-16/c1/cases/cases.json` and
+    `poc/data/clean-second-week-2026-11-15/week-continued/c1/cases/cases.json`.
+
+**Answer:**
+1. What do D397, D436 and D417 say about the main part, quoted? Where are they silent?
+2. For each topic in the trace, which part is main by the sources, or is there none? Mark each sol decline as justified,
+   unjustified or the standard is silent.
+3. Is there a wording, quoting only what the sources say, that would tell the model how to find the main part? Test it against
+   every topic in the trace, including the justified declines, and say what it would change. If the sources do not settle it, say so,
+   and list the boundary cases a ruling by the owner (Alex) would need, each with the two readings.
+
+Be concise. End with one line: SOURCED WORDING EXISTS, or SOURCES SILENT: OWNER RULING NEEDED.
+
+codex
+I’ll compare the decisions and reader instructions with each topic and its recorded decline, then separate supported conclusions from cases the sources leave open.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D(397|436|417) '"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat clean-arch/step4-2026-11-10/ladder/candidate-system.txt clean-arch/step4-2026-11-10/ladder/candidate-closing.txt clean-arch/step4-2026-11-10/ladder/candidate-schema.json clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D397|D436|D417|unlisted.parts|answer.choice' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4606:## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+ exited 1 in 0ms:
+ succeeded in 0ms:
+You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+
+What the question asks
+- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+Whose question it is
+- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+
+The ladder
+- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+- Fill exactly one of event and figure; the other is null.
+- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}
+# Stage A reading form: is each answer a sound judged question for its thesis, or a justified refusal? (read-only)
+
+You are an independent reader. Do not edit files, run model calls or start runs. Do not read any other reader's answers.
+
+## What you are reading
+
+The packet you are given holds a list of items. Each item is one research topic ("thesis") a system opened
+while reading one news article, with a proposed **judged question** for it:
+- `thesis`: the fields the system wrote when it opened the topic: `description` (the topic's wording), `outcome` (what is tracked),
+  `period`, `opens_as`, `settled_by`;
+- `article`: the opening article's publication date, title and full text;
+- `fiscal_year_note`: how the company names its fiscal years and which is this year and which next year on the article's day,
+  the same note the step was given. Use it wherever a mark turns on a year;
+- `ladder_as_the_judge_is_shown_it`: the proposed judged question exactly as a later judge will see it: its `object` (the company's
+  ticker NVDA, or a theme id), `kind`, its `focus` (the line the judge is shown beside the question: the thesis's `outcome`),
+  `question`, `year`, `due_day` and its `rungs` (each a label and a condition; exactly one rung
+  is meant to hold on the due day). An event's rungs are `Yes`, then `Ruled out` when the step named something that can rule
+  the event out, then a last rung that code writes as the complement of the others (`Still open`, or `No` when there are
+  two rungs). In the `Ruled out` rung the step wrote the first sentence; the sentence after it is code's ("This rung
+  holds when that, or any other decision against the event of rung 1 as a whole taken after <the article's day>, or a formal
+  abandonment or withdrawal of it as a whole after that day, stands on <due day>, and only when rung 1 does not"), so that a
+  rejection the step did not name is still `Ruled out`, and one that was lifted, that concerns only a part of the event, or
+  that was already in place when the article appeared, is not. Or `no_ladder` with a reason: the step
+  declined to write a question;
+- `other_fields`: what the step recorded beside the ladder and the judge does not see: `not_judged` (parts of the topic's wording
+  the question leaves out, with why), `reference` (what the question is measured against, quoted from the article: its `kind` is `expected` for what
+  the article says the market expects, or `last_reported` for the amount most recently reported for a figure when the article
+  states no expectation; its number when the article states one, with `value_to` as the upper end when the article states a
+  range; when it has a number, the judge also sees the quoted passage, inside the middle rung's condition, introduced as "the
+  reference" or as "the amount last reported"), `favourable_end` and
+  `favourable_why` (for a company's figure: which end is good for the business, and the reason given), `ruled_out_by` (for
+  an event with a `Ruled out` rung: who the step names as the one whose decision would rule the event out; the first sentence
+  of that rung is the decision it names for them), `due_day_basis`.
+
+Some items are sound and some carry a fault. Judge each on its own against its thesis and its article.
+
+## The rules a judged question must meet
+
+- One judged question asks **one** figure for a named period or **one** event: the one the thesis's `outcome` names. Every other
+  part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) must be listed
+  in `not_judged`.
+- An event has at most three outcomes: it has happened by the due day; it is ruled out by the due day though it has not happened
+  (decided against, or formally abandoned or withdrawn); neither. The step writes the first condition and, when something can
+  rule the event out, the way it names for that; the rest is code's, so every outcome has exactly one rung. An event that has
+  happened by the due day is `Yes` even if it is undone afterwards, unless the question asks whether it still stands. What
+  rules an event out is a decision by someone (the company, an authority, a court, a party): the due day arriving without the
+  event, or a decision to go on waiting, is no ruling out, and the step names who decides in `ruled_out_by` (D416). A proceeding
+  an authority conducts, where the question asks for its published decision or conclusion, always has a ruling out: a published
+  closing decision, with or without a penalty, is `Yes`; the authority formally abandoning or withdrawing the proceeding without
+  that decision or conclusion is `Ruled out`; the proceeding still going on the due day is the last rung (D420). A
+  difference inside an outcome (an approval with conditions against one without) is not a rung; when the thesis's wording names
+  it, it belongs in `not_judged`. A figure has five ranges,
+  and exactly one holds for every value: no overlap, no gap.
+- A question about the company's revenue, profit, share, product progress or its own obligations is the company's (object NVDA,
+  kind asset). A question about what happens in the world (licensing, aggregate spending, a policy) is a theme's. A question
+  whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade is the
+  theme's that covers it, also when the product is the company's own; when the tracked outcome is the company's own sales,
+  shipments or revenue under such a decision, or a proceeding against the company itself (an investigation of its conduct, a
+  fine), the question is the company's (D418).
+- A company's figure runs from Strongly bullish to Strongly bearish, meaning good or bad for the company's business. An event's
+  rungs carry no such labels.
+- The reference is what the question is measured against when it opens. Its kind is `expected` for what the market expects: a
+  consensus, the company's guidance, a stated plan or deadline. For a figure, where the article states no expectation and gives
+  the amount most recently reported for the same quantity, that amount is the reference and its kind is `last_reported`; a
+  reported amount is never called an expectation (D411). When the article states a number, the field carries it and a
+  figure's middle rung holds it; a stated range is carried by its two ends, and the middle rung runs from at or below its lower end to at or above its upper end. When the
+  article states it in words alone, the field carries the words and no number, and the ranges are the step's own estimate.
+- The due day is when the question can be resolved: a figure's publication date; for an event, the date its outcome is assessed. Where
+  the thesis or the article states the day a figure is published, that day is right. Where neither does (`due_day_basis` is
+  `expected_publication`), code sets the day and the step's own estimate is not shown: 60 days after the company's fiscal
+  year-end for a company's figure, 90 days after the calendar year-end for a theme's (D414). That day is right when the figure
+  is a figure for that year; it is wrong when the figure the question asks for is not a year's figure (a quarter, a survey's
+  rolling twelve months), which is then a fault of the question's period and of the due day both.
+- A company's figure for a quarter or a half-year is never a judged question: the step must decline it. A ladder written for
+  one is wrong even when it asks exactly what the thesis names (mark `Y`). An annual figure that only names quarterly reports as
+  the material that settles it is not such a case.
+- A step may decline (`no_ladder`) only in the seven cases its instructions allow: the thesis has no main figure or event (its
+  outcome names none, or several things and none is the main one); nothing in it can be checked on a date (for an event:
+  neither the thesis nor the article gives a date, and the thesis names no period, unless it is a pending regulatory decision,
+  which is due at the company's fiscal year-end); it is the company's figure for a
+  quarter or a half-year; it is a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve
+  months, and neither the thesis nor the article gives the day it is published (D417); it is a figure for a year that had already
+  ended on the article's day; it is a figure for a year beyond
+  next year, unless the thesis's `opens_as` is binding_obligation; or the question belongs to another company, or to a matter that
+  none of the listed themes covers (the listed themes are given with the packet). Declining for any other reason, or when the case
+  named does not truly apply, is not justified.
+
+## What to return
+
+One JSON object per item, one per line, in item order, as your final message: no prose before or after, no code fence. Fields:
+
+| field | values | the mark |
+|---|---|---|
+| `item` | the item number | |
+| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+| `F` | `holds`, `fails`, `n/a` | for a company's figure only: the direction is defensible (which end is bullish), and the reason given in `favourable_why` supports the favourable end. For an amount the company owes, guarantees or has committed to pay, where neither the thesis nor the article settles which end is good for the business (they argue both ends or say nothing on it), the lower end is the favourable one (D413), and "higher" fails unless the thesis's own words say that more of it is good. `n/a` for an event and for a theme |
+| `Y` | `holds`, `fails`, `n/a` | for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails, whatever the thesis asks |
+| `G` | `holds`, `fails`, `not_assessable`, `n/a` | for a figure, always one of the first three: where the article gives any figure for this quantity, `holds` when an analyst would accept the ranges as a fair division of the outcomes around it and `fails` when not; `not_assessable` when the article gives none. `n/a` only for an event's ladder and for a `no_ladder` |
+| `L` | `holds`, `fails`, `n/a` | every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else holds with an empty list |
+| `B` | a list | exactly one entry for each part listed in `not_judged`, in its order: `"bet"` when an analyst would hold a separate view on it, `"not_a_bet"` when it is a detail of the judged question; `[]` when nothing is listed and for a `no_ladder` |
+| `XR` | `holds`, `fails`, `n/a` | the `reference` field quotes what the article states the market expects, with `kind` `expected`, or, for a figure where the article states no expectation, the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), with `kind` `last_reported`; the kind says truly which. It carries the number when the article states one (a range by its two ends), and no number the article does not state. It is null only when the article states no expectation and, for a figure, no amount last reported for the same quantity either; an event's is null whenever the article states no expectation |
+| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+| `W` | a string | any other fault that would mislead a reader of this judged question, in a short sentence; the empty string `""` when there is none. The field is always present |
+| `why` | a string | one sentence giving the reason for every `fails` and for a non-empty `W`, naming the words or the figure; it may be empty only when no mark fails and `W` is empty |
+
+Read each item's article before answering it. Judge only what is in the item.
+
+ succeeded in 0ms:
+I count **63 of the 66 outcomes as naming more than one part**, including a named comparison, checkpoint, consequence, or way to verify the answer. For example, “first shipments, confirmed by NVIDIA” counts as a shipment event plus a settlement source. This is a count of what the outcome text contains; it does not mean every extra part is a separate bet.
+
+In the table, **D397** means the main part is identifiable from the outcome under its words: “the part its `outcome` names.” A source, comparison, or checkpoint can describe that part without becoming the part judged. **Choice** means the outcome names competing parts without identifying which one is main. D397 says a topic with “no main part gets no judged question”; the question in the table is the choice needed to identify one.
+
+`↔` marks a related matter in another run. These are grouped by subject for the matter count; the questions may cover different products, dates, or details.
+
+| Topic | More than one part? Extra parts and main part |
+|---|---|
+| **July c1/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA disclosure. **D397:** credit-support commitments. |
+| July c1/2 | **Yes.** Second figures: carrying amount and additional commitment; checkpoint/source: annual report. **Choice:** Should the judged figure be stake size, carrying amount, or additional commitment? |
+| July c1/3 ↔ fortnight c1/4; week c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Vera Rubin shipments. |
+| July c1/4 ↔ July c2/3, c3/11; related China restrictions in later runs | **Yes.** Settlement sources: official decision or NVIDIA-confirmed shipments/revenue. **D397:** Chinese permission for H200 sales. |
+| July c1/5 | **Yes.** Alternative events: finding, penalty, or export measure. **Choice:** Is the main event a finding, a penalty, or a new measure? |
+| July c1/6 | **Yes.** Comparison: $650bn plan. **D397:** four hyperscalers’ 2026 capex. |
+| July c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Kyber shipments. |
+| July c1/8 | **Yes.** Comparison: forecast above $1tn. **D397:** four hyperscalers’ 2027 capex. |
+| July c1/9 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: FY2027 10-K. **D397:** supply commitments. |
+| July c1/10 | **Yes.** Comparisons: 46% planned and 30% current. **D397:** domestic suppliers’ share. **D417:** the audit says this rolling-period figure lacks a publication day, so it is declined. |
+| July c1/11 | **Yes.** Second figure: equity stake; checkpoint: conversion at IPO. **Choice:** Should the judged figure be the amount invested or the resulting stake? The two readers disagreed on the refusal. |
+| July c1/12 | **Yes.** Comparison: May H100 rental-price peak. **D397:** 2026 H100 rental price. |
+| July c1/13 | **Yes.** Comparison: prior-year price increase. **D397:** change in HBM/DRAM prices. **D417:** the audit says the rolling-period figure lacks a publication day, so it is declined. |
+| July c1/14 | **No.** One event: the French authority’s final decision. |
+| July c1/15 | **Yes.** Second figure: potential awards; comparisons: prior amounts. **Choice:** Should the judged figure be obligations or potential awards? |
+| **July c2/1** ↔ fortnight c1/1 | **Yes.** Second assessment/consequence: materiality to cash and credit risk. **D397:** disclosed support and revenue-share commitments. |
+| July c2/2 ↔ fortnight c1/4; week c1/7 | **No.** One event: Vera Rubin begins shipping. |
+| July c2/3 ↔ July c1/4 and c3/11 | **Yes.** Second event: Chinese permission; consequence: NVIDIA records revenue. **Choice:** Should the judged event be permission or revenue from shipments? |
+| July c2/4 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c2/5 | **Yes.** Checkpoints: 2027 versus 2028; further timing: when shipments occur. **D397:** whether Kyber ships in 2027; later timing is also named. |
+| July c2/6 ↔ related memory-price topics in later runs | **Yes.** Second figure: memory cost per rack; consequences: rack economics and infrastructure spending. **Choice:** Should the judged figure be memory-price change or cost per rack? |
+| July c2/7 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn and growth versus revenue; consequence: write-down/utilisation risk. **D397:** supply-commitment balance. |
+| July c2/8 | **Yes.** Comparison: May peak; settlement source: Ornn index. **D397:** H100 rental-price trajectory. |
+| July c2/9 | **No.** One event: the French authority issues its decision; remedies and fines are examples of that decision. |
+| July c2/10 | **Yes.** Comparison: NVIDIA GPU purchases; settlement source: ASIC-vendor revenue. **Choice:** Should the judged figure be custom-ASIC purchases, GPU purchases, or their relative size? The two readers disagreed on the refusal. |
+| **July c3/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA filings. **D397:** committed credit support/revenue-share-backed capacity. |
+| July c3/2 | **Yes.** Second event: completion; settlement sources: annual and related filings. **Choice:** Should the judged part be stake amount or completion of the investment? |
+| July c3/3 ↔ week c1/6 | **Yes.** Second figure/consequence: permitted China sales. **Choice:** Should the judged part be export-approval status or sales scale? |
+| July c3/4 ↔ fortnight c1/4; week c1/7 | **Yes.** Second event: initial revenue; settlement source: NVIDIA confirmation. **Choice:** Should the judged event be first shipments or initial revenue? |
+| July c3/5 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c3/6 | **Yes.** Comparison: reported delay to 2028; settlement source: company confirmation. **D397:** first Kyber shipments. |
+| July c3/7 ↔ fortnight c1/11 | **Yes.** Second condition: whether the shortage persists. **Choice:** Should the judged part be the price change or persistence of the shortage? D436 treats a shortage beside shipments as one bet, but does not select a main part for this price/shortage wording. |
+| July c3/8 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: annual report. **D397:** supply commitments. |
+| July c3/9 | **Yes.** Comparison: domestic-share baseline; second figure: direction of NVIDIA’s share; settlement sources: surveys and NVIDIA revenue. **Choice:** Should the judged figure be domestic suppliers’ share or NVIDIA’s share? The audit declined for the rolling period; it does not settle this choice. |
+| July c3/10 | **Yes.** Comparison: May peak; second condition: continuing decline. **D397:** H100 rental-price direction. |
+| July c3/11 ↔ July c1/4 and c2/3 | **Yes.** Second figure: purchase scale; second event: subsequent broadening or tightening. **Choice:** Should the judged part be permission, permitted volume, or later policy change? |
+| July c3/12 | **Yes.** Alternative event: closure without action; consequence: fine or remedy. **Choice:** Should the judged event be a formal decision or closure without action? |
+| July c3/13 ↔ week c1/3 | **Yes.** Comparison: 2026 levels; alternative: normalisation. **D397:** 2027 DRAM/HBM price level. |
+| July c3/14 | **Yes.** Second event: initial revenue; settlement source: company confirmation. **Choice:** Should the judged event be first Vera CPU shipments or initial revenue? |
+| July c3/15 | **Yes.** Comparisons: reported obligations and potential awards. **D397:** 2026 federal AI spending obligations. |
+| **Fortnight c1/1** ↔ July c1/1, c2/1, c3/1 | **Yes.** Comparison: equity investments; checkpoint/source: annual report. **D397:** disclosed support and guarantees. |
+| Fortnight c1/2 ↔ July c1/9, c2/7, c3/8; week c1/2 | **Yes.** Comparison: prior year; settlement source: 10-K. **D397:** purchase/supply commitments. |
+| Fortnight c1/3 ↔ related China restrictions in July and week | **Yes.** Second event: Chinese restrictions stop; consequence: China revenue resumes. **Choice:** Should the judged event be US approval or removal of Chinese restrictions? |
+| Fortnight c1/4 ↔ July c1/3, c2/2, c3/4; week c1/7 | **Yes.** Second event: first revenue recognition; settlement sources: quarterly results and 10-K. **Choice:** Should the judged event be volume shipments or first revenue recognition? |
+| Fortnight c1/5 ↔ week c1/4 | **Yes.** Comparison: nearly $800bn plan. **D397:** five hyperscalers’ 2026 capex. |
+| Fortnight c1/6 ↔ week c1/5 | **Yes.** Alternatives: repricing, delay, or termination; settlement source: NVIDIA filings. **D397:** completion of the acquisition. |
+| Fortnight c1/7 | **Yes.** Alternatives: blocking, delay, or quantity caps; consequences: shipments and revenue. **D397:** MIIT approval of RTX Pro 5500 purchases. |
+| Fortnight c1/8 | **Yes.** Comparisons: 2025 and first-half 2026 funding; settlement source: PitchBook. **D397:** 2026 physical-AI venture funding. The audit’s refusal concerns the absence of a matching theme, not selection of the main figure. |
+| Fortnight c1/9 ↔ week c1/4 | **Yes.** Comparisons: 2027 projection and 2026 expected spending. **D397:** five hyperscalers’ 2027 capex. |
+| Fortnight c1/10 | **Yes.** Comparison: cited GW pace; second assessment: labour constraint. **Choice:** Should the judged part be capacity added or how much labour constrains it? |
+| Fortnight c1/11 ↔ July c3/7 | **Yes.** Comparison: 2025; settlement source: TrendForce/DRAMeXchange. **D397:** 2026 DRAM/HBM price change. |
+| Fortnight c1/12 ↔ week c1/8 | **Yes.** Second figure: amount signed; alternatives: proposal remains, is reduced, or withdrawn. **D397:** whether the guarantee is signed and disclosed. |
+| Fortnight c1/13 | **Yes.** Checkpoints: Q4 2026, early 2027 and mid-2027; second annual figure: full-year 2027; settlement sources: networking revenue and supplier shipments. **Choice:** Which shipment period or checkpoint should be judged? |
+| **Week c1/1** | **Yes.** Second figure: paid/accrued amounts; checkpoint: remaining term; settlement source: annual report. **Choice:** Should the judged figure be maximum guarantee, paid/accrued amount, or remaining term? |
+| Week c1/2 ↔ July c1/9, c2/7, c3/8; fortnight c1/2 | **Yes.** Second figure: adjustable/cancellable portion; settlement source: annual report. **Choice:** Should the judged figure be total commitments or the adjustable/cancellable portion? |
+| Week c1/3 ↔ July c3/13 | **Yes.** Second figures: memory makers’ selling prices and gross margins. **Choice:** Should the judged figure be contract-price change, selling prices, or gross margins? |
+| Week c1/4 ↔ fortnight c1/5 and c1/9 | **Yes.** Second figure/checkpoint: 2027 capex; comparisons: 2026 and 2027 plans. **Choice:** Should the judged figure be 2026 or 2027 capex? |
+| Week c1/5 ↔ fortnight c1/6 | **Yes.** Second figure: consideration; second condition: regulatory terms; alternative event: termination. **Choice:** Should the judged part be closing/termination, consideration, or regulatory conditions? |
+| Week c1/6 ↔ July c3/3; related China restrictions in fortnight | **Yes.** Second event/consequence: NVIDIA resumes China revenue. **Choice:** Should the judged event be licence status or revenue resumption? |
+| Week c1/7 ↔ July c1/3, c2/2, c3/4; fortnight c1/4 | **Yes.** Second condition: sales timing slips; checkpoints: stated quarter versus 2027. **Choice:** Should the judged part be volume ramp/shipments or reported sales timing? |
+| Week c1/8 ↔ fortnight c1/12 | **Yes.** Second figure: paid/accrued amounts; additional terms and remaining duration; settlement source: annual report. **Choice:** Should the judged part be maximum coverage, amounts paid/accrued, or support terms and duration? |
+| Week c1/9 | **Yes.** Second event: contribution to revenue; checkpoints: stated quarter versus later periods. **Choice:** Should the judged event be volume shipments or revenue contribution? |
+| Week c1/10 | **Yes.** Comparison: March B200 rental price. **D397:** year-end B200 rental price. The two readers disagreed on the separate theme-based refusal. |
+| Week c1/11 | **Yes.** Second event: closing or collapse; second figure: consideration; second condition: regulatory terms. **Choice:** Should the judged part be agreement, closing, consideration, or regulatory conditions? |
+| Week c1/12 | **Yes.** Second figure/checkpoint: 2027 global capex; comparisons: Goldman’s forecasts and GDP shares. **Choice:** Should the judged figure be 2026 or 2027 global capex? |
+| Week c1/13 | **Yes.** Second figures: cash paid and change in commitments; settlement source: annual report. **Choice:** Should the judged figure be remaining balance, cash paid, or change in commitments? The two readers disagreed on the refusal. |
+
+**Counts under the classification above:**
+
+- Outcomes naming more than one part: **63 of 66**.
+- Distinct matters among those rows: **40**, grouping repeated subjects across runs as indicated. This grouping is an interpretive count; related topics are not necessarily identical questions.
+- Rows where the main part is identified: **34**.
+- Rows needing a choice of main part: **29**.
+
+The decisions give a **limited distinction**, but not a general procedure for choosing a main part whenever an outcome names several things. D397 says to judge “the part its `outcome` names” and says a topic with “no main part gets no judged question.” It does not say that the first-mentioned part, a consequence, a comparison, or the description always wins.
+
+D436 says “a second side of the same bet … is one question” and that it “stays as context … and is shown as not judged.” Its examples include “the shortage beside the shipments.” That supports keeping a second side as context when it is already identifiable as such; it does **not** provide a general test for deciding which of two equally stated parts is main. D417 supplies a separate refusal rule for certain non-annual figures without a publication day; it does not choose between competing parts of an outcome.### fortnight:c1/clean-13
+  luna d1: ladder: How many CPO switches will Nvidia ship in calendar 2027, as determined from Nvidia's quarterly results and Lum | agreed fails ['L']
+  luna d2: ladder: How many CPO switches will Nvidia ship during calendar 2027, as determined from Nvidia's quarterly results and | agreed fails ['L']
+  luna d3: ladder: Will Nvidia's CPO switch shipments reach at least 100,000 units during calendar 2027, as determined from Nvidi | agreed fails ['Q', 'L']
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome is Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027, a period longer than one fiscal or calendar year, with several interim checkpoints rather than one main annual figure. Neither the topic nor the item gives a publication day for that multi-period shipment figure; forecast checkpoints a
+      claude why: N fails: the thesis's main figure is Nvidia's CPO switch shipments for calendar 2027 (period 'Calendar 2027', the 100,000-unit full-year forecast), one calendar year; the Q4 2026, early-2027 and mid-2027 checkpoints are 
+  sol-d2: N codex fails / claude fails | reason: The tracked shipment-volume period runs from Q4 2026 through calendar 2027, rather than one fiscal or calendar year, and neither the topic nor the item gives a publication day for that figure. The forecast checkpoints are not publication dates.
+      codex why: The thesis identifies calendar 2027 shipment volume as the main figure, with the earlier checkpoints separable from it.
+      claude why: The thesis's description and period name calendar 2027 (the 100,000 units for the full year) as the main figure, one calendar year, so the 'period that is not one year' case does not truly apply; the Q4 2026 and mid-2027
+  sol-d3: N codex fails / claude fails | reason: The tracked outcome is CPO switch shipment volume from Q4 2026 through calendar 2027, with multiple checkpoints and no single main annual figure identified. That span is not one fiscal or calendar year, and neither the topic nor the item gives a publication date for the shipment total; the forecast checkpoints are not publicatio
+      codex why: The description identifies calendar 2027 shipments as the main annual figure, with earlier checkpoints as additional measures.
+      claude why: The thesis's period is calendar 2027 and its headline figure is the 100,000 full-year 2027 shipments, one calendar year, so neither 'no main figure' nor 'a period that is not one year' truly applies; the Q4 2026 and mid-
+### fortnight:c1/clean-3
+  luna d1: ladder: By 2027-01-31, will U.S. export authorization and Chinese acceptance allow Nvidia to sell its current Blackwel | agreed fails ['L']
+  luna d2: ladder: Will U.S. authorities authorize, and Chinese authorities permit, Nvidia to ship Blackwell-generation AI chips  | agreed fails ['L']
+  luna d3: ladder: By January 31, 2027, will Nvidia be permitted to sell its current Blackwell-generation AI chips to customers i | agreed fails ['L']
+  sol-d1: N codex holds / claude fails | reason: The topic tracks two separate regulatory events—U.S. approval of Blackwell-generation chip exports to China and Chinese authorities lifting restrictions on Nvidia shipments—with neither identified as the main outcome. They cannot be combined into one judged event.
+      claude why: U.S. approval of Blackwell-generation chip exports to China is the main event (named first and the only part specific to Blackwell, a pending decision due at the FY2027 year-end), and Chinese authorities lifting their re
+  sol-d2: N codex holds / claude fails | reason: The outcome tracks two distinct regulatory events—U.S. authorization of Blackwell-generation chip exports to approved Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main event. They cannot be combined into one judged ladder.
+      claude why: The thesis names one main event, Nvidia being permitted to sell its Blackwell chips into China, so the 'no main event' case does not truly apply; the second authority's step could be judged within that event or listed in
+  sol-d3: N codex holds / claude fails | reason: The outcome names two separate regulatory events—U.S. export approval for Blackwell-generation chips for Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main tracked event. A single ladder would improperly combine both decisions.
+      claude why: The thesis is about selling Blackwell chips into China and its outcome leads with the U.S. extending export approval to Blackwell, the main event; Chinese restrictions on shipments are a second condition for not_judged, 
+### fortnight:c1/clean-8
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d2: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial performance. No listed theme covers robotics venture funding; AI capital spending concerns expenditure rather than venture capital raised.
+  sol-d3: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial results. No listed theme covers robotics venture fundraising; AI capital spending concerns spending rather than capital raised.
+### week-10-06:c1/clean-11
+  luna d1: ladder: Will NVIDIA complete its acquisition of Reflection AI by April 10, 2028, as verified by a definitive agreement | agreed fails []
+  luna d2: ladder: Will NVIDIA complete its acquisition of Reflection AI by 2028-04-10, as verifiable from NVIDIA's completion di | agreed fails []
+  luna d3: ladder: Will NVIDIA complete its acquisition of Reflection AI by April 10, 2028, as verified by NVIDIA's completion di | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The topic names several outcomes without identifying one as the main tracked outcome: signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions imposed.
+      claude why: The acquisition of Reflection AI is the main event the thesis names ('Will Nvidia sign and complete an acquisition'), checkable by its April 2028 date; the closing, the consideration and any regulatory conditions are det
+  sol-d2: N codex holds / claude fails | reason: The topic names several tracked outcomes—signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions—without identifying one as the main outcome.
+      claude why: N fails: the outcome has a main event, the acquisition of Reflection AI (a definitive agreement through closing, with the talks' collapse as its ruling out), while the consideration and regulatory conditions are details 
+  sol-d3: N codex holds / claude fails | reason: The topic names several outcomes—a definitive acquisition agreement, completion or collapse of the deal, final consideration, and regulatory conditions—without identifying one as the main tracked event or figure.
+      claude why: The description asks whether Nvidia will sign and complete an acquisition of Reflection AI, so the deal itself (a definitive agreement, for one not yet signed) is the main event; the consideration and regulatory conditio
+### week-10-06:c1/clean-12
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not define one judged figure.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not specify one figure for a judged question.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027, without identifying either year's figure as the main outcome; selecting one would arbitrarily discard an equally tracked figure.
+### week-10-06:c1/clean-13
+  luna d1: no ladder | agreed fails ['N']
+  luna d2: ladder: What will Nvidia’s remaining equity-investment commitments balance be at the end of FY2027, as disclosed in it | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The topic names three figures—the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts—without identifying one as the main tracked outcome.
+      claude why: The outcome leads with the remaining balance of the equity-investment commitments (last disclosed at $25 billion), which is the main figure; the cash paid and changes in committed amounts are secondary parts for not_judg
+  sol-d2: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+      claude why: The description asks how much of the $25 billion of commitments will remain outstanding at the next annual report, so the remaining commitment balance is the main figure (an obligation tracked by its amount at the next a
+  sol-d3: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitments, the cash paid to fund them, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+      claude why: The description asks how much of the $25 billion of commitments will remain outstanding at the next annual report, so the remaining commitment balance is the main figure (an obligation tracked by its amount at the next a
+### week-10-06:c1/clean-3
+  luna d1: ladder: What is the percentage change from the start to the end of calendar 2027 in contract prices for AI-server HBM/ | agreed fails []
+  luna d2: ladder: By what percentage will the average contract price for AI-server HBM/DRAM change in calendar 2027 versus calen | agreed fails []
+  luna d3: ladder: What is the percentage change in HBM/DRAM contract prices over calendar 2027, according to TrendForce/DRAMeXch | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome names several figures—HBM and DRAM contract-price changes, memory makers’ average selling prices, and their gross margins—without selecting one price series, a defined aggregate, or another single figure as the main judged outcome.
+      claude why: The description asks one figure, the calendar-2027 change in AI-server memory (HBM/DRAM) contract prices; the memory makers' selling prices and gross margins are secondary and belong in not_judged, and choosing which con
+  sol-d2: N codex holds / claude fails | reason: The topic does not identify one verifiable main figure: HBM and DRAM have distinct contract-price series, and no single series or aggregation method is specified for their calendar-2027 change. The outcome also names memory makers' selling prices and gross margins without selecting one measure to settle the question.
+      claude why: The description asks one figure, the calendar-2027 change in AI-server memory (HBM/DRAM) contract prices; the memory makers' selling prices and gross margins are secondary and belong in not_judged, and choosing which con
+  sol-d3: N codex fails / claude fails | reason: The topic does not identify one uniquely defined figure to judge: HBM and DRAM contract prices comprise distinct price series, with no single series or aggregation method specified. Its outcome additionally names memory makers’ reported average selling prices and gross margins without selecting one measure as the main tracked fi
+      codex why: The description identifies the change in HBM/DRAM contract prices as the main figure; the other named measures do not justify refusing the question.
+      claude why: The thesis's description names one main figure, the rise or fall of AI-server memory (HBM/DRAM) contract prices in calendar 2027 (next calendar year, a theme's figure the semiconductor-cycle theme covers), with the memor
+### week-10-06:c1/clean-4
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main outcome. A single judged question cannot combine both years in one ladder.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers' combined capital expenditure in calendar 2026 and in calendar 2027—without identifying either as the main outcome. A single-year judged question cannot be selected, and combining both years into one ladder would violate the one-figure, one-year requirement.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main figure. A single judged question cannot cover both years or select one without changing the topic.
+### week-10-06:c1/clean-5
+  luna d1: ladder: Will Nvidia close its acquisition of Hugging Face by June 30, 2027? | agreed fails []
+  luna d2: ladder: Will Nvidia complete its acquisition of Hugging Face by 2027-02-28? | agreed fails []
+  luna d3: ladder: Will Nvidia complete its acquisition of Hugging Face by June 30, 2027, as confirmed by Nvidia's closing announ | agreed fails []
+  sol-d2: N codex fails / claude fails | reason: The outcome jointly tracks closing or termination of the Hugging Face acquisition, final consideration paid, and regulatory conditions, without identifying one as the main tracked outcome.
+      codex why: The description identifies completion of the Hugging Face acquisition as the main event; final cost and regulatory conditions can be listed separately.
+      claude why: The description asks 'Will Nvidia complete its approximately $12.93 billion acquisition of Hugging Face', so closing is the main event and the final cost and regulatory conditions are secondary parts for not_judged; the 
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '4326,4365p;4606,4638p;4847,4895p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+I count **63 of the 66 outcomes as naming more than one part**, including a named comparison, checkpoint, consequence, or way to verify the answer. For example, “first shipments, confirmed by NVIDIA” counts as a shipment event plus a settlement source. This is a count of what the outcome text contains; it does not mean every extra part is a separate bet.
+
+In the table, **D397** means the main part is identifiable from the outcome under its words: “the part its `outcome` names.” A source, comparison, or checkpoint can describe that part without becoming the part judged. **Choice** means the outcome names competing parts without identifying which one is main. D397 says a topic with “no main part gets no judged question”; the question in the table is the choice needed to identify one.
+
+`↔` marks a related matter in another run. These are grouped by subject for the matter count; the questions may cover different products, dates, or details.
+
+| Topic | More than one part? Extra parts and main part |
+|---|---|
+| **July c1/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA disclosure. **D397:** credit-support commitments. |
+| July c1/2 | **Yes.** Second figures: carrying amount and additional commitment; checkpoint/source: annual report. **Choice:** Should the judged figure be stake size, carrying amount, or additional commitment? |
+| July c1/3 ↔ fortnight c1/4; week c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Vera Rubin shipments. |
+| July c1/4 ↔ July c2/3, c3/11; related China restrictions in later runs | **Yes.** Settlement sources: official decision or NVIDIA-confirmed shipments/revenue. **D397:** Chinese permission for H200 sales. |
+| July c1/5 | **Yes.** Alternative events: finding, penalty, or export measure. **Choice:** Is the main event a finding, a penalty, or a new measure? |
+| July c1/6 | **Yes.** Comparison: $650bn plan. **D397:** four hyperscalers’ 2026 capex. |
+| July c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Kyber shipments. |
+| July c1/8 | **Yes.** Comparison: forecast above $1tn. **D397:** four hyperscalers’ 2027 capex. |
+| July c1/9 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: FY2027 10-K. **D397:** supply commitments. |
+| July c1/10 | **Yes.** Comparisons: 46% planned and 30% current. **D397:** domestic suppliers’ share. **D417:** the audit says this rolling-period figure lacks a publication day, so it is declined. |
+| July c1/11 | **Yes.** Second figure: equity stake; checkpoint: conversion at IPO. **Choice:** Should the judged figure be the amount invested or the resulting stake? The two readers disagreed on the refusal. |
+| July c1/12 | **Yes.** Comparison: May H100 rental-price peak. **D397:** 2026 H100 rental price. |
+| July c1/13 | **Yes.** Comparison: prior-year price increase. **D397:** change in HBM/DRAM prices. **D417:** the audit says the rolling-period figure lacks a publication day, so it is declined. |
+| July c1/14 | **No.** One event: the French authority’s final decision. |
+| July c1/15 | **Yes.** Second figure: potential awards; comparisons: prior amounts. **Choice:** Should the judged figure be obligations or potential awards? |
+| **July c2/1** ↔ fortnight c1/1 | **Yes.** Second assessment/consequence: materiality to cash and credit risk. **D397:** disclosed support and revenue-share commitments. |
+| July c2/2 ↔ fortnight c1/4; week c1/7 | **No.** One event: Vera Rubin begins shipping. |
+| July c2/3 ↔ July c1/4 and c3/11 | **Yes.** Second event: Chinese permission; consequence: NVIDIA records revenue. **Choice:** Should the judged event be permission or revenue from shipments? |
+| July c2/4 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c2/5 | **Yes.** Checkpoints: 2027 versus 2028; further timing: when shipments occur. **D397:** whether Kyber ships in 2027; later timing is also named. |
+| July c2/6 ↔ related memory-price topics in later runs | **Yes.** Second figure: memory cost per rack; consequences: rack economics and infrastructure spending. **Choice:** Should the judged figure be memory-price change or cost per rack? |
+| July c2/7 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn and growth versus revenue; consequence: write-down/utilisation risk. **D397:** supply-commitment balance. |
+| July c2/8 | **Yes.** Comparison: May peak; settlement source: Ornn index. **D397:** H100 rental-price trajectory. |
+| July c2/9 | **No.** One event: the French authority issues its decision; remedies and fines are examples of that decision. |
+| July c2/10 | **Yes.** Comparison: NVIDIA GPU purchases; settlement source: ASIC-vendor revenue. **Choice:** Should the judged figure be custom-ASIC purchases, GPU purchases, or their relative size? The two readers disagreed on the refusal. |
+| **July c3/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA filings. **D397:** committed credit support/revenue-share-backed capacity. |
+| July c3/2 | **Yes.** Second event: completion; settlement sources: annual and related filings. **Choice:** Should the judged part be stake amount or completion of the investment? |
+| July c3/3 ↔ week c1/6 | **Yes.** Second figure/consequence: permitted China sales. **Choice:** Should the judged part be export-approval status or sales scale? |
+| July c3/4 ↔ fortnight c1/4; week c1/7 | **Yes.** Second event: initial revenue; settlement source: NVIDIA confirmation. **Choice:** Should the judged event be first shipments or initial revenue? |
+| July c3/5 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c3/6 | **Yes.** Comparison: reported delay to 2028; settlement source: company confirmation. **D397:** first Kyber shipments. |
+| July c3/7 ↔ fortnight c1/11 | **Yes.** Second condition: whether the shortage persists. **Choice:** Should the judged part be the price change or persistence of the shortage? D436 treats a shortage beside shipments as one bet, but does not select a main part for this price/shortage wording. |
+| July c3/8 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: annual report. **D397:** supply commitments. |
+| July c3/9 | **Yes.** Comparison: domestic-share baseline; second figure: direction of NVIDIA’s share; settlement sources: surveys and NVIDIA revenue. **Choice:** Should the judged figure be domestic suppliers’ share or NVIDIA’s share? The audit declined for the rolling period; it does not settle this choice. |
+| July c3/10 | **Yes.** Comparison: May peak; second condition: continuing decline. **D397:** H100 rental-price direction. |
+| July c3/11 ↔ July c1/4 and c2/3 | **Yes.** Second figure: purchase scale; second event: subsequent broadening or tightening. **Choice:** Should the judged part be permission, permitted volume, or later policy change? |
+| July c3/12 | **Yes.** Alternative event: closure without action; consequence: fine or remedy. **Choice:** Should the judged event be a formal decision or closure without action? |
+| July c3/13 ↔ week c1/3 | **Yes.** Comparison: 2026 levels; alternative: normalisation. **D397:** 2027 DRAM/HBM price level. |
+| July c3/14 | **Yes.** Second event: initial revenue; settlement source: company confirmation. **Choice:** Should the judged event be first Vera CPU shipments or initial revenue? |
+| July c3/15 | **Yes.** Comparisons: reported obligations and potential awards. **D397:** 2026 federal AI spending obligations. |
+| **Fortnight c1/1** ↔ July c1/1, c2/1, c3/1 | **Yes.** Comparison: equity investments; checkpoint/source: annual report. **D397:** disclosed support and guarantees. |
+| Fortnight c1/2 ↔ July c1/9, c2/7, c3/8; week c1/2 | **Yes.** Comparison: prior year; settlement source: 10-K. **D397:** purchase/supply commitments. |
+| Fortnight c1/3 ↔ related China restrictions in July and week | **Yes.** Second event: Chinese restrictions stop; consequence: China revenue resumes. **Choice:** Should the judged event be US approval or removal of Chinese restrictions? |
+| Fortnight c1/4 ↔ July c1/3, c2/2, c3/4; week c1/7 | **Yes.** Second event: first revenue recognition; settlement sources: quarterly results and 10-K. **Choice:** Should the judged event be volume shipments or first revenue recognition? |
+| Fortnight c1/5 ↔ week c1/4 | **Yes.** Comparison: nearly $800bn plan. **D397:** five hyperscalers’ 2026 capex. |
+| Fortnight c1/6 ↔ week c1/5 | **Yes.** Alternatives: repricing, delay, or termination; settlement source: NVIDIA filings. **D397:** completion of the acquisition. |
+| Fortnight c1/7 | **Yes.** Alternatives: blocking, delay, or quantity caps; consequences: shipments and revenue. **D397:** MIIT approval of RTX Pro 5500 purchases. |
+| Fortnight c1/8 | **Yes.** Comparisons: 2025 and first-half 2026 funding; settlement source: PitchBook. **D397:** 2026 physical-AI venture funding. The audit’s refusal concerns the absence of a matching theme, not selection of the main figure. |
+| Fortnight c1/9 ↔ week c1/4 | **Yes.** Comparisons: 2027 projection and 2026 expected spending. **D397:** five hyperscalers’ 2027 capex. |
+| Fortnight c1/10 | **Yes.** Comparison: cited GW pace; second assessment: labour constraint. **Choice:** Should the judged part be capacity added or how much labour constrains it? |
+| Fortnight c1/11 ↔ July c3/7 | **Yes.** Comparison: 2025; settlement source: TrendForce/DRAMeXchange. **D397:** 2026 DRAM/HBM price change. |
+| Fortnight c1/12 ↔ week c1/8 | **Yes.** Second figure: amount signed; alternatives: proposal remains, is reduced, or withdrawn. **D397:** whether the guarantee is signed and disclosed. |
+| Fortnight c1/13 | **Yes.** Checkpoints: Q4 2026, early 2027 and mid-2027; second annual figure: full-year 2027; settlement sources: networking revenue and supplier shipments. **Choice:** Which shipment period or checkpoint should be judged? |
+| **Week c1/1** | **Yes.** Second figure: paid/accrued amounts; checkpoint: remaining term; settlement source: annual report. **Choice:** Should the judged figure be maximum guarantee, paid/accrued amount, or remaining term? |
+| Week c1/2 ↔ July c1/9, c2/7, c3/8; fortnight c1/2 | **Yes.** Second figure: adjustable/cancellable portion; settlement source: annual report. **Choice:** Should the judged figure be total commitments or the adjustable/cancellable portion? |
+| Week c1/3 ↔ July c3/13 | **Yes.** Second figures: memory makers’ selling prices and gross margins. **Choice:** Should the judged figure be contract-price change, selling prices, or gross margins? |
+| Week c1/4 ↔ fortnight c1/5 and c1/9 | **Yes.** Second figure/checkpoint: 2027 capex; comparisons: 2026 and 2027 plans. **Choice:** Should the judged figure be 2026 or 2027 capex? |
+| Week c1/5 ↔ fortnight c1/6 | **Yes.** Second figure: consideration; second condition: regulatory terms; alternative event: termination. **Choice:** Should the judged part be closing/termination, consideration, or regulatory conditions? |
+| Week c1/6 ↔ July c3/3; related China restrictions in fortnight | **Yes.** Second event/consequence: NVIDIA resumes China revenue. **Choice:** Should the judged event be licence status or revenue resumption? |
+| Week c1/7 ↔ July c1/3, c2/2, c3/4; fortnight c1/4 | **Yes.** Second condition: sales timing slips; checkpoints: stated quarter versus 2027. **Choice:** Should the judged part be volume ramp/shipments or reported sales timing? |
+| Week c1/8 ↔ fortnight c1/12 | **Yes.** Second figure: paid/accrued amounts; additional terms and remaining duration; settlement source: annual report. **Choice:** Should the judged part be maximum coverage, amounts paid/accrued, or support terms and duration? |
+| Week c1/9 | **Yes.** Second event: contribution to revenue; checkpoints: stated quarter versus later periods. **Choice:** Should the judged event be volume shipments or revenue contribution? |
+| Week c1/10 | **Yes.** Comparison: March B200 rental price. **D397:** year-end B200 rental price. The two readers disagreed on the separate theme-based refusal. |
+| Week c1/11 | **Yes.** Second event: closing or collapse; second figure: consideration; second condition: regulatory terms. **Choice:** Should the judged part be agreement, closing, consideration, or regulatory conditions? |
+| Week c1/12 | **Yes.** Second figure/checkpoint: 2027 global capex; comparisons: Goldman’s forecasts and GDP shares. **Choice:** Should the judged figure be 2026 or 2027 global capex? |
+| Week c1/13 | **Yes.** Second figures: cash paid and change in commitments; settlement source: annual report. **Choice:** Should the judged figure be remaining balance, cash paid, or change in commitments? The two readers disagreed on the refusal. |
+
+**Counts under the classification above:**
+
+- Outcomes naming more than one part: **63 of 66**.
+- Distinct matters among those rows: **40**, grouping repeated subjects across runs as indicated. This grouping is an interpretive count; related topics are not necessarily identical questions.
+- Rows where the main part is identified: **34**.
+- Rows needing a choice of main part: **29**.
+
+The decisions give a **limited distinction**, but not a general procedure for choosing a main part whenever an outcome names several things. D397 says to judge “the part its `outcome` names” and says a topic with “no main part gets no judged question.” It does not say that the first-mentioned part, a consequence, a comparison, or the description always wins.
+
+D436 says “a second side of the same bet … is one question” and that it “stays as context … and is shown as not judged.” Its examples include “the shortage beside the shipments.” That supports keeping a second side as context when it is already identifiable as such; it does **not** provide a general test for deciding which of two equally stated parts is main. D417 supplies a separate refusal rule for certain non-annual figures without a publication day; it does not choose between competing parts of an outcome.
+ succeeded in 0ms:
+### fortnight:c1/clean-13
+  luna d1: ladder: How many CPO switches will Nvidia ship in calendar 2027, as determined from Nvidia's quarterly results and Lum | agreed fails ['L']
+  luna d2: ladder: How many CPO switches will Nvidia ship during calendar 2027, as determined from Nvidia's quarterly results and | agreed fails ['L']
+  luna d3: ladder: Will Nvidia's CPO switch shipments reach at least 100,000 units during calendar 2027, as determined from Nvidi | agreed fails ['Q', 'L']
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome is Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027, a period longer than one fiscal or calendar year, with several interim checkpoints rather than one main annual figure. Neither the topic nor the item gives a publication day for that multi-period shipment figure; forecast checkpoints a
+      claude why: N fails: the thesis's main figure is Nvidia's CPO switch shipments for calendar 2027 (period 'Calendar 2027', the 100,000-unit full-year forecast), one calendar year; the Q4 2026, early-2027 and mid-2027 checkpoints are 
+  sol-d2: N codex fails / claude fails | reason: The tracked shipment-volume period runs from Q4 2026 through calendar 2027, rather than one fiscal or calendar year, and neither the topic nor the item gives a publication day for that figure. The forecast checkpoints are not publication dates.
+      codex why: The thesis identifies calendar 2027 shipment volume as the main figure, with the earlier checkpoints separable from it.
+      claude why: The thesis's description and period name calendar 2027 (the 100,000 units for the full year) as the main figure, one calendar year, so the 'period that is not one year' case does not truly apply; the Q4 2026 and mid-2027
+  sol-d3: N codex fails / claude fails | reason: The tracked outcome is CPO switch shipment volume from Q4 2026 through calendar 2027, with multiple checkpoints and no single main annual figure identified. That span is not one fiscal or calendar year, and neither the topic nor the item gives a publication date for the shipment total; the forecast checkpoints are not publicatio
+      codex why: The description identifies calendar 2027 shipments as the main annual figure, with earlier checkpoints as additional measures.
+      claude why: The thesis's period is calendar 2027 and its headline figure is the 100,000 full-year 2027 shipments, one calendar year, so neither 'no main figure' nor 'a period that is not one year' truly applies; the Q4 2026 and mid-
+### fortnight:c1/clean-3
+  luna d1: ladder: By 2027-01-31, will U.S. export authorization and Chinese acceptance allow Nvidia to sell its current Blackwel | agreed fails ['L']
+  luna d2: ladder: Will U.S. authorities authorize, and Chinese authorities permit, Nvidia to ship Blackwell-generation AI chips  | agreed fails ['L']
+  luna d3: ladder: By January 31, 2027, will Nvidia be permitted to sell its current Blackwell-generation AI chips to customers i | agreed fails ['L']
+  sol-d1: N codex holds / claude fails | reason: The topic tracks two separate regulatory events—U.S. approval of Blackwell-generation chip exports to China and Chinese authorities lifting restrictions on Nvidia shipments—with neither identified as the main outcome. They cannot be combined into one judged event.
+      claude why: U.S. approval of Blackwell-generation chip exports to China is the main event (named first and the only part specific to Blackwell, a pending decision due at the FY2027 year-end), and Chinese authorities lifting their re
+  sol-d2: N codex holds / claude fails | reason: The outcome tracks two distinct regulatory events—U.S. authorization of Blackwell-generation chip exports to approved Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main event. They cannot be combined into one judged ladder.
+      claude why: The thesis names one main event, Nvidia being permitted to sell its Blackwell chips into China, so the 'no main event' case does not truly apply; the second authority's step could be judged within that event or listed in
+  sol-d3: N codex holds / claude fails | reason: The outcome names two separate regulatory events—U.S. export approval for Blackwell-generation chips for Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main tracked event. A single ladder would improperly combine both decisions.
+      claude why: The thesis is about selling Blackwell chips into China and its outcome leads with the U.S. extending export approval to Blackwell, the main event; Chinese restrictions on shipments are a second condition for not_judged, 
+### fortnight:c1/clean-8
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d2: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial performance. No listed theme covers robotics venture funding; AI capital spending concerns expenditure rather than venture capital raised.
+  sol-d3: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial results. No listed theme covers robotics venture fundraising; AI capital spending concerns spending rather than capital raised.
+### week-10-06:c1/clean-11
+  luna d1: ladder: Will NVIDIA complete its acquisition of Reflection AI by April 10, 2028, as verified by a definitive agreement | agreed fails []
+  luna d2: ladder: Will NVIDIA complete its acquisition of Reflection AI by 2028-04-10, as verifiable from NVIDIA's completion di | agreed fails []
+  luna d3: ladder: Will NVIDIA complete its acquisition of Reflection AI by April 10, 2028, as verified by NVIDIA's completion di | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The topic names several outcomes without identifying one as the main tracked outcome: signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions imposed.
+      claude why: The acquisition of Reflection AI is the main event the thesis names ('Will Nvidia sign and complete an acquisition'), checkable by its April 2028 date; the closing, the consideration and any regulatory conditions are det
+  sol-d2: N codex holds / claude fails | reason: The topic names several tracked outcomes—signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions—without identifying one as the main outcome.
+      claude why: N fails: the outcome has a main event, the acquisition of Reflection AI (a definitive agreement through closing, with the talks' collapse as its ruling out), while the consideration and regulatory conditions are details 
+  sol-d3: N codex holds / claude fails | reason: The topic names several outcomes—a definitive acquisition agreement, completion or collapse of the deal, final consideration, and regulatory conditions—without identifying one as the main tracked event or figure.
+      claude why: The description asks whether Nvidia will sign and complete an acquisition of Reflection AI, so the deal itself (a definitive agreement, for one not yet signed) is the main event; the consideration and regulatory conditio
+### week-10-06:c1/clean-12
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not define one judged figure.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not specify one figure for a judged question.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027, without identifying either year's figure as the main outcome; selecting one would arbitrarily discard an equally tracked figure.
+### week-10-06:c1/clean-13
+  luna d1: no ladder | agreed fails ['N']
+  luna d2: ladder: What will Nvidia’s remaining equity-investment commitments balance be at the end of FY2027, as disclosed in it | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The topic names three figures—the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts—without identifying one as the main tracked outcome.
+      claude why: The outcome leads with the remaining balance of the equity-investment commitments (last disclosed at $25 billion), which is the main figure; the cash paid and changes in committed amounts are secondary parts for not_judg
+  sol-d2: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+      claude why: The description asks how much of the $25 billion of commitments will remain outstanding at the next annual report, so the remaining commitment balance is the main figure (an obligation tracked by its amount at the next a
+  sol-d3: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitments, the cash paid to fund them, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+      claude why: The description asks how much of the $25 billion of commitments will remain outstanding at the next annual report, so the remaining commitment balance is the main figure (an obligation tracked by its amount at the next a
+### week-10-06:c1/clean-3
+  luna d1: ladder: What is the percentage change from the start to the end of calendar 2027 in contract prices for AI-server HBM/ | agreed fails []
+  luna d2: ladder: By what percentage will the average contract price for AI-server HBM/DRAM change in calendar 2027 versus calen | agreed fails []
+  luna d3: ladder: What is the percentage change in HBM/DRAM contract prices over calendar 2027, according to TrendForce/DRAMeXch | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome names several figures—HBM and DRAM contract-price changes, memory makers’ average selling prices, and their gross margins—without selecting one price series, a defined aggregate, or another single figure as the main judged outcome.
+      claude why: The description asks one figure, the calendar-2027 change in AI-server memory (HBM/DRAM) contract prices; the memory makers' selling prices and gross margins are secondary and belong in not_judged, and choosing which con
+  sol-d2: N codex holds / claude fails | reason: The topic does not identify one verifiable main figure: HBM and DRAM have distinct contract-price series, and no single series or aggregation method is specified for their calendar-2027 change. The outcome also names memory makers' selling prices and gross margins without selecting one measure to settle the question.
+      claude why: The description asks one figure, the calendar-2027 change in AI-server memory (HBM/DRAM) contract prices; the memory makers' selling prices and gross margins are secondary and belong in not_judged, and choosing which con
+  sol-d3: N codex fails / claude fails | reason: The topic does not identify one uniquely defined figure to judge: HBM and DRAM contract prices comprise distinct price series, with no single series or aggregation method specified. Its outcome additionally names memory makers’ reported average selling prices and gross margins without selecting one measure as the main tracked fi
+      codex why: The description identifies the change in HBM/DRAM contract prices as the main figure; the other named measures do not justify refusing the question.
+      claude why: The thesis's description names one main figure, the rise or fall of AI-server memory (HBM/DRAM) contract prices in calendar 2027 (next calendar year, a theme's figure the semiconductor-cycle theme covers), with the memor
+### week-10-06:c1/clean-4
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main outcome. A single judged question cannot combine both years in one ladder.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers' combined capital expenditure in calendar 2026 and in calendar 2027—without identifying either as the main outcome. A single-year judged question cannot be selected, and combining both years into one ladder would violate the one-figure, one-year requirement.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main figure. A single judged question cannot cover both years or select one without changing the topic.
+### week-10-06:c1/clean-5
+  luna d1: ladder: Will Nvidia close its acquisition of Hugging Face by June 30, 2027? | agreed fails []
+  luna d2: ladder: Will Nvidia complete its acquisition of Hugging Face by 2027-02-28? | agreed fails []
+  luna d3: ladder: Will Nvidia complete its acquisition of Hugging Face by June 30, 2027, as confirmed by Nvidia's closing announ | agreed fails []
+  sol-d2: N codex fails / claude fails | reason: The outcome jointly tracks closing or termination of the Hugging Face acquisition, final consideration paid, and regulatory conditions, without identifying one as the main tracked outcome.
+      codex why: The description identifies completion of the Hugging Face acquisition as the main event; final cost and regulatory conditions can be listed separately.
+      claude why: The description asks 'Will Nvidia complete its approximately $12.93 billion acquisition of Hugging Face', so closing is the main event and the final cost and regulatory conditions are secondary parts for not_judged; the 
+
+ succeeded in 0ms:
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+
+- **Asked**, with the census of production's own ladders (one request, the same in three draws, gave three different ladders, one
+  with its direction reversed): "你 10 月 26 日定过、11 月 5 日说“我们要做”的那条规矩还没实现：答案分段要对着市场预期或公司指引写成“高于／接近／低于”，并且每道题登记“数字越高对公司是好还是坏”。新做的“定档”这一步要不要直接带上它？"
+  - Options:
+    - both halves here (recommended). The option stated its costs: 7 to 9 of 18 number questions have no reference figure in their
+      opening article, so their ranges are the model's estimate and are marked "no reference"; a direction can still be registered
+      wrong, which the first test measures;
+    - the direction half only;
+    - not here: write ladders as production does, and leave D186 to a later version.
+  - Alex: "两半都带上 (Recommended)".
+- **Decided:**
+  - The clean ladder step builds D186 in full. The model states the reference the opening article gives and, for a company's figure,
+    which end is good for the business, with one sentence why. Code orders and labels the rungs from that end, writes each range's
+    text from its bounds, and checks that a stated reference value lies in the middle range.
+  - The reference is what D260 lists: a consensus, the company's guidance, the stated plan or deadline. This is wider than D186's
+    word "guidance"; the question put to him said "市场预期或公司指引".
+  - A number question whose opening article states no reference still gets a ladder, marked "no reference".
+- **Scope:** the clean path's ladder step. D368 item 1 still holds for the next production extraction version.
+
+## D399 · 2026-11-10 · The ladder request may teach how to build an event's five states
+## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+
+- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  - Alex: "确认：这类题不出题 (Recommended)".
+- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+- **Scope:** the clean path's ladder step; mark N of the readers' form.
+
+## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+
+- **Asked:** "“中国政府是否放行英伟达 H200 芯片在华销售”这类题，系统大多归在“英伟达”名下，有时归在行业主题“芯片出口管制”名下，同一道题三次归属还会不一致。第三次测试里归在公司名下的 5 份，两类读者都判为归错了，认为应归行业主题。区别是：归行业主题的题会给每家相关公司的判断都看到，归公司的只给这一家看。归哪边？"
+  - Options: the theme "chip-export-controls" (recommended): "两类读者意见一致。我需要在提示词里加一条归属规则（政府对某类产品的放行或禁令归行业主题），并先小额验证不带坏别的题，比如法国对英伟达本身的反垄断调查仍归公司。"; the company (the readers' form would then be changed to that reading).
+  - Alex: "归行业主题“芯片出口管制” (Recommended)".
+- **Decided:** a question about a government's or regulator's permission, restriction or ban on a class of products or trade
+  belongs to the theme that covers it, also when the product is the company's own. A proceeding against the company itself (an
+  investigation of its conduct, a fine) stays the company's. A rule in the request, proved small before any measurement, with
+  the French investigation as the case that must not move.
+- **Scope:** the clean path's ladder step; mark O of the readers' form.
+
+## D419 · 2026-11-10 · The fourth Stage A is sent without asking again once each change is proved small and reviewed
+
+- **Asked:** "上面你选的改动，各自小额验证通过并过评审之后，第四次正式测试（同样 44 道题各三次，约 0.11 美元；目前累计约 0.76 美元，上限 3 美元）怎么发？再测一次也不能保证一份错都没有，读者松紧不一的问题也还在。"
+  - Options: send once the checks pass (recommended): "和上次一样：每项改动先单独小额验证并过评审，任何一项没通过就停下来找你，不发正式测试。"; ask again before the send.
+  - Alex: "验证通过就直接发 (Recommended)".
+- **Decided:** as D415, for the changes of D416, D417 and D418: each is proved small and reviewed in the council; when all pass
+  the fourth Stage A (the same 44 theses, three sends each, within D401's $3) is sent without asking again; a change that does
+  not pass stops the line and goes to him. He was told that a further run cannot be promised to have no fault and that the
+  reader families still part. Stage B still needs his word.
+- **Scope:** the clean path's ladder step.
+
+## D420 · 2026-11-10 · A proceeding that formally ends without the conclusion the question asks for is ruled out; the question stays
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+
+- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+  - Options: carry both changes to gate 2 (recommended by Claude): "分年虽然没达线，但从 0 次升到大约四分之三，而且'两年塞一题'完全消失，没发现带坏别的东西。第二关在存档上查它会不会弄坏周边情况（重复文章、同一量的另一种口径、延期的事等，约 1.5 美元，线先给你看）。代价：等于在看到结果后放宽了我自己定的线。"; stop the year change and carry only the customer sentence (the reviewer, `council/lx-codex.md`, recommended stopping the year change and keeping c8); stop both and keep c8.
+  - Alex: "带着两处改动进第二关 (Recommended)".
+- **Decided:** the candidate for gate 2 is c15yc (c8 with the year boundary and the scoped capacity counterexample). The year line's failure stays recorded as a failure (5 of 9 against 8 of 9); it is not presented as a pass. Gate 2's lines are written, reviewed and shown to Alex before any send. c8 stays in force.
+- **Scope:** clean Step 1.
+
+## D438 · 2026-11-13 · Send gate 2
+
+- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` (version 11, reviewed clean in `council/mi-codex.md`): "第二关审完了，要发吗？…新版做错的次数比旧版多 3 次以上（9 次里），就停下报给你。共 126 次发送，约 1.8 美元，上限 2.2 美元。" Options: send (recommended): "先跑完 126 次。我和一位盲读者各自逐条读，有分歧的一律算新版错。任何一条停止线被触发就停下报给你；全过的话再设计第三关（在新文章上新旧版对比），也先给你看。"; do not send.
+- Alex: "发 (Recommended)".
+- **Decided:** gate 2 is sent as written; a fired stop or an unexercised control goes to Alex; a pass leads to gate 3's design, shown to him before any send. c8 stays in force.
+
+## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+
+- **Alex, 2026-11-13** (unprompted, after a recap of the goal): "把这个goal 改成更多的要求council in the loop 来自行的根据数据和目标做决策。我接下来不会active,需要你有问题的时候就fire council 然后和claude 掰扯直到你们能达到共识为止再下去执行，并仔细的测量，自己看trace 然后把每一轮log 做学习总结，不要饭一样的错，词学迭代完成我们的PRD生产目标".
+- **Decided (his words):** while he is not active, every choice or next step that would have gone to him goes to the council: an independent read-only Codex review and Claude argue it on the data, the PRD and its quantified goals until they reach a consensus; the consensus is recorded as a decision citing D439, executed, measured, every trace read by Claude itself, and every round logged with a learning summary so the same mistake is not made twice; the loop iterates until the PRD's production goals are met.
+- **Settled by Claude (wording and limits, not confirmed by Alex):** the standing limits of AGENTS.md stay (the frozen ruler never changes; nothing pushed, deployed, published or committed unasked; credentials and provider caps untouched). Opening a new version of a piece frozen for "a new version only Alex opens" is a council decision under D439; the frozen ruler is not. A disagreement the council cannot settle is recorded with both positions and the cheaper, reversible course is taken. **Spending ceiling:** paid model calls in this period stay within $40 at published rates in total, each paid step with its own ceiling in its council-agreed design; this figure is Claude's setting, not Alex's, and is reported in every status update.
+- **Where written:** AGENTS.md, "Authority and scope" (the D439 bullet) and §7.3 "Own the loop"; `docs/CURRENT_STATE.md`; the memory file `feedback-council-decides-while-alex-away.md`. The session goal itself is set by Alex's `/goal` command; the replacement text is given to him in the reply.
+- **Scope:** all modules Alex has taken up; the current work is clean Step 1 (gates 2 and 3 of `clean-arch/step1-diagnosis-2026-11-12/COMBINED-PLAN.md`), then the Step 4 judgement faults that kept Stage B from passing.
+
+## D440 · 2026-11-13 · Gate 2 failed; a memory diagnostic decides whether c15yc goes on (council consensus under D439)
+
+- **Council** (D439; Alex not active): an independent Codex member and Claude argued four rounds (`clean-arch/step1-unfiled-2026-11-08/council/mj-*`). Agreed facts: gate 2 failed under its declared rules (two stop lines on the memory article); the link line measured the wrong thing (c8's request returns an uncovered statement with empty links); the 3-of-9 against 0-of-9 memory-thesis difference is real and its cause is not established. The council's first position was to keep c8; Claude's was a larger re-send. The consensus, after Claude adopted the council's changes (a margin fixed in advance, a three-way result in which inconclusive is not a pass, retained statements decisive, an exercised-control rule, a named and simulation-validated interval): "Council position: consensus on the rule in mj-challenge-2.md as amended by mj-challenge-3.md" (`mj-codex-4.md`).
+- **Decided:** the diagnostic in `clean-arch/step1-diagnosis-2026-11-12/gate2/MEMORY-DIAGNOSTIC.md` runs (108 sends, ceiling $2.0); its rule is `gate2/memory_rule.py`, frozen by sha256. c15yc goes on to gate 3's design only on "proceed" for both decisive outcomes; otherwise c8 stays and the council decides the next step. The gate-2 failure stays recorded.
+- **Amended 2026-11-13 (council round mj-5, `council/mj-codex-5.md`: "Council position: consensus on (a)"):** the 11 jobs the $2.0 ceiling never sent are sent alone, same requests, under a $1.2 completion ceiling (a recorded departure from D440's step ceiling; the $40 total unchanged), before any diagnostic answer is read; the combined sample must hold 18 per arm per draw, or the diagnostic is inconclusive.
+
+## D441 · 2026-11-13 · The memory diagnostic does not let c15yc go on: the year change stops, c8 stays (rule fixed by council consensus, D440)
+
+- **Result** (`clean-arch/step1-diagnosis-2026-11-12/gate2/MEMORY-RESULT.md`): memory-price thesis 17 of 54 (c15yc) against 28 of 54 (c8), difference -20.4 points, 90% interval (-34.6, -4.8): inconclusive under the frozen rule; retention 49 against 49: proceed. The rule required both to proceed, so c15yc does not go on.
+- **Decided (by the rule the council fixed before the send, D440; no new judgement):** the combined Step 1 candidate c15yc stops; c8 stays in force. The year change moved its error to a neighbouring case (capex years separated, the memory question pushed from the ruler's 2027-against-2026 shape to 2026), so under D391 it is not tuned further on these articles. Change 2 alone (the scoped capacity counterexample) is not carried as its own version without a council decision: its measured target without change 1 is one doubtful aggregate in 729 c8 calls.
+- **Next:** the council chooses the next step toward the PRD's production goal (D439).
+
+## D442 · 2026-11-13 · Next step: D431's same-day end-to-end comparison, run as a diagnostic (council consensus under D439)
+
+- **Council** (`clean-arch/step1-unfiled-2026-11-08/council/mk-*`): Claude's reflection written first (`mk-my-reflection.md`); an independent Codex member investigated cold and reached the same recommendation (`mk-codex.md`: "Run the bounded D431 comparison as a diagnostic, then choose the repair from the final-answer losses"), correcting two of Claude's statements (the comparison does not by itself identify the largest cause; Stage B also missed its last-judgement line on the strictest reading). Consensus: "Council position: consensus on the next step in mk-challenge-1.md" (`mk-codex-2.md`).
+- **Decided:** the next step is D431's same-day comparison as a diagnostic, never an acceptance and never waiving Step 4's failed lines: the clean path (c8, frozen Steps 2–3, the ladder step as it ran in the fourth Stage A, the frozen judge) against production as it now runs (poc-v116, no preset questions), the 14-day window, three draws each, the seven graded questions reported one by one, every lost answer read back through the opened question, the evidence it received and the judgement. Before any send: the comparison, matching rules, stop conditions and ceiling frozen in a design document; both paths' requests verified at no cost by replay; a component-by-component cost estimate from stored runs; a council review of the design until a round finds nothing serious.
+- **Correction, 2026-11-13:** "production as it now runs" is `poc-v118` (D370, D374, the replay default; `scripts/replay.py` refuses `poc-v116`, which carries the retired baseline block). D442's "poc-v116" above is a factual error of mine; the decision means v118, as D431 says ("production as it now runs").
+
+ succeeded in 0ms:
+# Stage A reading form: is each answer a sound judged question for its thesis, or a justified refusal? (read-only)
+
+You are an independent reader. Do not edit files, run model calls or start runs. Do not read any other reader's answers.
+
+## What you are reading
+
+The packet you are given holds a list of items. Each item is one research topic ("thesis") a system opened
+while reading one news article, with a proposed **judged question** for it:
+- `thesis`: the fields the system wrote when it opened the topic: `description` (the topic's wording), `outcome` (what is tracked),
+  `period`, `opens_as`, `settled_by`;
+- `article`: the opening article's publication date, title and full text;
+- `fiscal_year_note`: how the company names its fiscal years and which is this year and which next year on the article's day,
+  the same note the step was given. Use it wherever a mark turns on a year;
+- `ladder_as_the_judge_is_shown_it`: the proposed judged question exactly as a later judge will see it: its `object` (the company's
+  ticker NVDA, or a theme id), `kind`, its `focus` (the line the judge is shown beside the question: the thesis's `outcome`),
+  `question`, `year`, `due_day` and its `rungs` (each a label and a condition; exactly one rung
+  is meant to hold on the due day). An event's rungs are `Yes`, then `Ruled out` when the step named something that can rule
+  the event out, then a last rung that code writes as the complement of the others (`Still open`, or `No` when there are
+  two rungs). In the `Ruled out` rung the step wrote the first sentence; the sentence after it is code's ("This rung
+  holds when that, or any other decision against the event of rung 1 as a whole taken after <the article's day>, or a formal
+  abandonment or withdrawal of it as a whole after that day, stands on <due day>, and only when rung 1 does not"), so that a
+  rejection the step did not name is still `Ruled out`, and one that was lifted, that concerns only a part of the event, or
+  that was already in place when the article appeared, is not. Or `no_ladder` with a reason: the step
+  declined to write a question;
+- `other_fields`: what the step recorded beside the ladder and the judge does not see: `not_judged` (parts of the topic's wording
+  the question leaves out, with why), `reference` (what the question is measured against, quoted from the article: its `kind` is `expected` for what
+  the article says the market expects, or `last_reported` for the amount most recently reported for a figure when the article
+  states no expectation; its number when the article states one, with `value_to` as the upper end when the article states a
+  range; when it has a number, the judge also sees the quoted passage, inside the middle rung's condition, introduced as "the
+  reference" or as "the amount last reported"), `favourable_end` and
+  `favourable_why` (for a company's figure: which end is good for the business, and the reason given), `ruled_out_by` (for
+  an event with a `Ruled out` rung: who the step names as the one whose decision would rule the event out; the first sentence
+  of that rung is the decision it names for them), `due_day_basis`.
+
+Some items are sound and some carry a fault. Judge each on its own against its thesis and its article.
+
+## The rules a judged question must meet
+
+- One judged question asks **one** figure for a named period or **one** event: the one the thesis's `outcome` names. Every other
+  part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) must be listed
+  in `not_judged`.
+- An event has at most three outcomes: it has happened by the due day; it is ruled out by the due day though it has not happened
+  (decided against, or formally abandoned or withdrawn); neither. The step writes the first condition and, when something can
+  rule the event out, the way it names for that; the rest is code's, so every outcome has exactly one rung. An event that has
+  happened by the due day is `Yes` even if it is undone afterwards, unless the question asks whether it still stands. What
+  rules an event out is a decision by someone (the company, an authority, a court, a party): the due day arriving without the
+  event, or a decision to go on waiting, is no ruling out, and the step names who decides in `ruled_out_by` (D416). A proceeding
+  an authority conducts, where the question asks for its published decision or conclusion, always has a ruling out: a published
+  closing decision, with or without a penalty, is `Yes`; the authority formally abandoning or withdrawing the proceeding without
+  that decision or conclusion is `Ruled out`; the proceeding still going on the due day is the last rung (D420). A
+  difference inside an outcome (an approval with conditions against one without) is not a rung; when the thesis's wording names
+  it, it belongs in `not_judged`. A figure has five ranges,
+  and exactly one holds for every value: no overlap, no gap.
+- A question about the company's revenue, profit, share, product progress or its own obligations is the company's (object NVDA,
+  kind asset). A question about what happens in the world (licensing, aggregate spending, a policy) is a theme's. A question
+  whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade is the
+  theme's that covers it, also when the product is the company's own; when the tracked outcome is the company's own sales,
+  shipments or revenue under such a decision, or a proceeding against the company itself (an investigation of its conduct, a
+  fine), the question is the company's (D418).
+- A company's figure runs from Strongly bullish to Strongly bearish, meaning good or bad for the company's business. An event's
+  rungs carry no such labels.
+- The reference is what the question is measured against when it opens. Its kind is `expected` for what the market expects: a
+  consensus, the company's guidance, a stated plan or deadline. For a figure, where the article states no expectation and gives
+  the amount most recently reported for the same quantity, that amount is the reference and its kind is `last_reported`; a
+  reported amount is never called an expectation (D411). When the article states a number, the field carries it and a
+  figure's middle rung holds it; a stated range is carried by its two ends, and the middle rung runs from at or below its lower end to at or above its upper end. When the
+  article states it in words alone, the field carries the words and no number, and the ranges are the step's own estimate.
+- The due day is when the question can be resolved: a figure's publication date; for an event, the date its outcome is assessed. Where
+  the thesis or the article states the day a figure is published, that day is right. Where neither does (`due_day_basis` is
+  `expected_publication`), code sets the day and the step's own estimate is not shown: 60 days after the company's fiscal
+  year-end for a company's figure, 90 days after the calendar year-end for a theme's (D414). That day is right when the figure
+  is a figure for that year; it is wrong when the figure the question asks for is not a year's figure (a quarter, a survey's
+  rolling twelve months), which is then a fault of the question's period and of the due day both.
+- A company's figure for a quarter or a half-year is never a judged question: the step must decline it. A ladder written for
+  one is wrong even when it asks exactly what the thesis names (mark `Y`). An annual figure that only names quarterly reports as
+  the material that settles it is not such a case.
+- A step may decline (`no_ladder`) only in the seven cases its instructions allow: the thesis has no main figure or event (its
+  outcome names none, or several things and none is the main one); nothing in it can be checked on a date (for an event:
+  neither the thesis nor the article gives a date, and the thesis names no period, unless it is a pending regulatory decision,
+  which is due at the company's fiscal year-end); it is the company's figure for a
+  quarter or a half-year; it is a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve
+  months, and neither the thesis nor the article gives the day it is published (D417); it is a figure for a year that had already
+  ended on the article's day; it is a figure for a year beyond
+  next year, unless the thesis's `opens_as` is binding_obligation; or the question belongs to another company, or to a matter that
+  none of the listed themes covers (the listed themes are given with the packet). Declining for any other reason, or when the case
+  named does not truly apply, is not justified.
+
+## What to return
+
+One JSON object per item, one per line, in item order, as your final message: no prose before or after, no code fence. Fields:
+
+| field | values | the mark |
+|---|---|---|
+| `item` | the item number | |
+| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+| `F` | `holds`, `fails`, `n/a` | for a company's figure only: the direction is defensible (which end is bullish), and the reason given in `favourable_why` supports the favourable end. For an amount the company owes, guarantees or has committed to pay, where neither the thesis nor the article settles which end is good for the business (they argue both ends or say nothing on it), the lower end is the favourable one (D413), and "higher" fails unless the thesis's own words say that more of it is good. `n/a` for an event and for a theme |
+| `Y` | `holds`, `fails`, `n/a` | for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails, whatever the thesis asks |
+| `G` | `holds`, `fails`, `not_assessable`, `n/a` | for a figure, always one of the first three: where the article gives any figure for this quantity, `holds` when an analyst would accept the ranges as a fair division of the outcomes around it and `fails` when not; `not_assessable` when the article gives none. `n/a` only for an event's ladder and for a `no_ladder` |
+| `L` | `holds`, `fails`, `n/a` | every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else holds with an empty list |
+| `B` | a list | exactly one entry for each part listed in `not_judged`, in its order: `"bet"` when an analyst would hold a separate view on it, `"not_a_bet"` when it is a detail of the judged question; `[]` when nothing is listed and for a `no_ladder` |
+| `XR` | `holds`, `fails`, `n/a` | the `reference` field quotes what the article states the market expects, with `kind` `expected`, or, for a figure where the article states no expectation, the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), with `kind` `last_reported`; the kind says truly which. It carries the number when the article states one (a range by its two ends), and no number the article does not state. It is null only when the article states no expectation and, for a figure, no amount last reported for the same quantity either; an event's is null whenever the article states no expectation |
+| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+| `W` | a string | any other fault that would mislead a reader of this judged question, in a short sentence; the empty string `""` when there is none. The field is always present |
+| `why` | a string | one sentence giving the reason for every `fails` and for a non-empty `W`, naming the words or the figure; it may be empty only when no mark fails and `W` is empty |
+
+Read each item's article before answering it. Judge only what is in the item.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"poc/data/clean-carried-run-2026-11-16/c1/cases/cases.json\"; x=json.load(open(p)); print(type(x)); print(str(x)[:4000])' " in /Users/lchingen/hivemind
+ succeeded in 0ms:
+<class 'list'>
+[{'case': 'c1/clean-1', 'thesis': {'id': 'clean-1', 'description': 'What total of credit support and minimum-revenue guarantees to AI labs and cloud partners will NVIDIA disclose at its next annual report?', 'outcome': "The disclosed amount of guarantees, credit-support commitments and revenue backstops NVIDIA has extended to AI labs and cloud partners (including the credit support for nearly 2 gigawatts of computing capacity for one additional AI lab), versus the equity investments it has made, at NVIDIA's next annual report.", 'period': "Fiscal 2027 annual report (fiscal year ending late January 2027; Form 10-K expected around February 2027) — set as the next annual report following this 22 September 2026 item, per section 3 (obligation already undertaken tracked by its amount at the next annual report; the additional AI lab's credit support is not yet signed and is checked within 18 months).", 'opens_as': 'binding_obligation', 'settled_by': "NVIDIA's Form 10-K for fiscal 2027 (guarantees, commitments and contingencies note) and any 8-K or earnings disclosure quantifying the credit support for the additional AI lab's ~2 GW of computing capacity and the minimum-revenue guarantees to cloud partners."}, 'item': {'publication_date': '2026-09-22', 'publisher': 'trefis.com', 'title': 'Is NVIDIA Funding Its Own Stock Rally?', 'text': 'Is NVIDIA Funding Its Own Stock Rally?\nIf you hold NVIDIA (NVDA) stock, one number deserves your attention: roughly a quarter. That is the share of fiscal 2028 business management expects from AI labs it will back with its own balance sheet. NVIDIA’s revenue more than doubled year over year in fiscal Q2 2027, so this number is easy to miss. An important thing to watch is how much future demand depends on NVIDIA backing its own customers.\nWhy Does NVIDIA Put Its Own Money Behind Its Customers?\nHere is how this kind of support works, as a made-up example. A chipmaker invests in a young customer. That customer then spends the money on the chipmaker’s products.\nThe sale is real, but the chipmaker’s own money sits on both sides of it. Management said in the fiscal Q2 2027 call that some will call NVIDIA’s support circular financing.\nManagement says a surge in AI demand is driving a global buildout of computing infrastructure. It also describes revenue-sharing deals with cloud partners.\nManagement says these deals matter because, over time, they can expand NVIDIA’s addressable market. They can also create a recurring revenue stream tied to usage. That explains why NVIDIA does it, but not how big the support has become.\nHow Big Has NVIDIA’s Support For Its Customers Become?\nNVIDIA has already invested nearly $50 billion in frontier AI labs, according to management. For one more AI lab, it will provide credit support for nearly 2 gigawatts of computing capacity. With some cloud partners, it guarantees a minimum level of revenue on part of a facility’s capacity.\nThose lab investments are part of a broader expansion: Business Insider reported that NVIDIA’s overall equity portfolio has reached $99 billion. In summer 2025, that portfolio was roughly $7 billion. That is a 14-fold increase, so this is not a mild change.\nThere is also a change in how quickly NVIDIA gets paid. Days of sales outstanding, the average time to collect cash after a sale, increased to 60 days. Management said this reflects extended payment terms for large purchases by certain investment-grade customers, shipped over multiple quarters. So some buyers with strong credit are taking longer to pay.\nWhat Are You Paying For NVIDIA Stock Today?\nNVIDIA stock trades at 28.1 times its past year’s earnings. The S&P 500 trades at 22.5 times. The multiple also sits in the bottom tenth of NVIDIA’s own 10-year range.\nThe price likely assumes that growth holds up and that the backed customers keep paying . Management points to the size of its customers’ commitments. OpenAI’s existing and planned commitments represent about 12 gigawatts of NVID
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^'"\\| "'`?(Q|L|N)`?'"' clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg '"'^###|''^  sol-'"' docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+95:| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+103:| `L` | `holds`, `fails`, `n/a` | every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else holds with an empty list |
+106:| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+
+ succeeded in 0ms:
+### fortnight:c1/clean-13
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome is Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027, a period longer than one fiscal or calendar year, with several interim checkpoints rather than one main annual figure. Neither the topic nor the item gives a publication day for that multi-period shipment figure; forecast checkpoints a
+  sol-d2: N codex fails / claude fails | reason: The tracked shipment-volume period runs from Q4 2026 through calendar 2027, rather than one fiscal or calendar year, and neither the topic nor the item gives a publication day for that figure. The forecast checkpoints are not publication dates.
+  sol-d3: N codex fails / claude fails | reason: The tracked outcome is CPO switch shipment volume from Q4 2026 through calendar 2027, with multiple checkpoints and no single main annual figure identified. That span is not one fiscal or calendar year, and neither the topic nor the item gives a publication date for the shipment total; the forecast checkpoints are not publicatio
+### fortnight:c1/clean-3
+  sol-d1: N codex holds / claude fails | reason: The topic tracks two separate regulatory events—U.S. approval of Blackwell-generation chip exports to China and Chinese authorities lifting restrictions on Nvidia shipments—with neither identified as the main outcome. They cannot be combined into one judged event.
+  sol-d2: N codex holds / claude fails | reason: The outcome tracks two distinct regulatory events—U.S. authorization of Blackwell-generation chip exports to approved Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main event. They cannot be combined into one judged ladder.
+  sol-d3: N codex holds / claude fails | reason: The outcome names two separate regulatory events—U.S. export approval for Blackwell-generation chips for Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main tracked event. A single ladder would improperly combine both decisions.
+### fortnight:c1/clean-8
+  sol-d2: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial performance. No listed theme covers robotics venture funding; AI capital spending concerns expenditure rather than venture capital raised.
+  sol-d3: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial results. No listed theme covers robotics venture fundraising; AI capital spending concerns spending rather than capital raised.
+### week-10-06:c1/clean-11
+  sol-d1: N codex holds / claude fails | reason: The topic names several outcomes without identifying one as the main tracked outcome: signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions imposed.
+  sol-d2: N codex holds / claude fails | reason: The topic names several tracked outcomes—signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions—without identifying one as the main outcome.
+  sol-d3: N codex holds / claude fails | reason: The topic names several outcomes—a definitive acquisition agreement, completion or collapse of the deal, final consideration, and regulatory conditions—without identifying one as the main tracked event or figure.
+### week-10-06:c1/clean-12
+  sol-d1: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not define one judged figure.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not specify one figure for a judged question.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027, without identifying either year's figure as the main outcome; selecting one would arbitrarily discard an equally tracked figure.
+### week-10-06:c1/clean-13
+  sol-d1: N codex holds / claude fails | reason: The topic names three figures—the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts—without identifying one as the main tracked outcome.
+  sol-d2: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+  sol-d3: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitments, the cash paid to fund them, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+### week-10-06:c1/clean-3
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome names several figures—HBM and DRAM contract-price changes, memory makers’ average selling prices, and their gross margins—without selecting one price series, a defined aggregate, or another single figure as the main judged outcome.
+  sol-d2: N codex holds / claude fails | reason: The topic does not identify one verifiable main figure: HBM and DRAM have distinct contract-price series, and no single series or aggregation method is specified for their calendar-2027 change. The outcome also names memory makers' selling prices and gross margins without selecting one measure to settle the question.
+  sol-d3: N codex fails / claude fails | reason: The topic does not identify one uniquely defined figure to judge: HBM and DRAM contract prices comprise distinct price series, with no single series or aggregation method specified. Its outcome additionally names memory makers’ reported average selling prices and gross margins without selecting one measure as the main tracked fi
+### week-10-06:c1/clean-4
+  sol-d1: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main outcome. A single judged question cannot combine both years in one ladder.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers' combined capital expenditure in calendar 2026 and in calendar 2027—without identifying either as the main outcome. A single-year judged question cannot be selected, and combining both years into one ladder would violate the one-figure, one-year requirement.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main figure. A single judged question cannot cover both years or select one without changing the topic.
+### week-10-06:c1/clean-5
+  sol-d2: N codex fails / claude fails | reason: The outcome jointly tracks closing or termination of the Hugging Face acquisition, final consideration paid, and regulatory conditions, without identifying one as the main tracked outcome.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; files=[(\"fortnight\",\"poc/data/clean-carried-run-2026-11-16/c1/cases/cases.json\",[13,3,8]),(\"week\",\"poc/data/clean-second-week-2026-11-15/week-continued/c1/cases/cases.json\",[11,12,13,3,4,5])];
+for name,p,ids in files:
+ x=json.load(open(p));
+ for v in x:
+  if v[\"case\"] in [\"c1/clean-\"+str(i) for i in ids]: print(name, v[\"case\"], json.dumps(v[\"thesis\"],ensure_ascii=False), \"\\nTHEMES\",json.dumps(v.get(\"themes\")),\"\\n\")' " in /Users/lchingen/hivemind
+ succeeded in 0ms:
+fortnight c1/clean-3 {"id": "clean-3", "description": "Will Nvidia be permitted to sell its current Blackwell-generation AI chips into China — through U.S. export approval and Chinese acceptance of shipments — by the end of fiscal 2027?", "outcome": "Whether U.S. authorities extend export approval beyond the older H200 to Nvidia's current Blackwell-generation chips for approved Chinese customers, and whether Chinese authorities stop restricting Nvidia chip shipments, so that China data-center revenue can resume; the item reports H200 shipments are already U.S.-permitted while Chinese authorities still restrict them.", "period": "NVIDIA fiscal year ending late January 2027 — the current fiscal year-end, used as the check date for a pending regulatory decision per section 3 (item gives no date of its own).", "opens_as": "policy_stage", "settled_by": "Official U.S. Commerce Department / Bureau of Industry and Security export-control and licence decisions covering Blackwell-generation chips for China, Chinese regulatory or customs actions on Nvidia shipments, and Nvidia's own disclosure of China revenue in quarterly results and the Form 10-K."} 
+THEMES null 
+
+fortnight c1/clean-8 {"id": "clean-8", "description": "How much venture funding will physical AI (robotics) companies raise globally in calendar 2026?", "outcome": "Total global venture capital raised by physical AI/robotics startups in calendar 2026, versus the $28.7 billion raised in all of 2025 and the $33.4 billion already raised in the first half of 2026, per PitchBook data.", "period": "Calendar year 2026, checked at PitchBook's full-year 2026 venture funding release (expected early 2027); the item gives H1 2026 and full-year 2025 figures only.", "opens_as": "shared_quantity", "settled_by": "PitchBook's full-year 2026 venture funding data for physical AI/robotics companies (and any interim quarterly updates), as reported by outlets such as Business Insider."} 
+THEMES null 
+
+fortnight c1/clean-13 {"id": "clean-13", "description": "Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts?", "outcome": "Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.", "period": "Calendar 2027, with the item's stated checkpoints at Q4 2026, early 2027 and mid-2027, checked against Nvidia's quarterly results and supplier disclosures. The item gives no confirmation date, so the forecast periods it states fix the check dates.", "opens_as": "product_node", "settled_by": "Nvidia's quarterly results (Networking revenue and management commentary on CPO switch shipments) and supplier Lumentum's quarterly disclosures of CPO and NPO laser revenue."} 
+THEMES null 
+
+week c1/clean-3 {"id": "clean-3", "description": "By how much will contract prices for AI-server memory (HBM/DRAM) — the memory input cost embedded in Nvidia's GPUs — rise or fall in calendar 2027?", "outcome": "The change in HBM/DRAM contract prices over calendar 2027, and the memory makers' reported average selling prices and memory gross margins for the periods covering 2027.", "period": "Calendar 2027 (overlapping Micron's fiscal 2027, roughly September 2026–August 2027), as supported by Micron management's fiscal 2027 price guidance in the October 6, 2026 article.", "opens_as": "shared_quantity", "settled_by": "TrendForce/DRAMeXchange monthly and quarterly memory contract price releases, together with the quarterly reports of Micron, SK Hynix and Samsung covering calendar 2027."} 
+THEMES null 
+
+week c1/clean-4 {"id": "clean-4", "description": "How much combined capital expenditure will the five largest hyperscalers — Amazon, Alphabet, Microsoft, Meta Platforms and Oracle — spend in calendar 2026 and calendar 2027?", "outcome": "The big five hyperscalers' combined capex for calendar 2026 and calendar 2027, versus the approximately $800 billion for 2026 and roughly $1.3 trillion for 2027 the article reports they plan to spend.", "period": "Calendar 2026 and calendar 2027 (the two years the Oct. 6, 2026 article gives), settled at the hyperscalers' quarterly earnings releases reporting capex through the fourth quarter of 2027.", "opens_as": "shared_quantity", "settled_by": "The five hyperscalers' quarterly earnings releases and 10-Q/10-K cash-flow disclosures of purchases of property and equipment, aggregated by calendar year."} 
+THEMES null 
+
+week c1/clean-5 {"id": "clean-5", "description": "Will Nvidia complete its approximately $12.93 billion acquisition of Hugging Face — and at what final cost and regulatory conditions — by the check date?", "outcome": "Closing or termination of the signed Hugging Face acquisition, the final consideration paid (roughly $11.9 billion to shareholders plus up to $1 billion of equity-based retention awards), and any conditions regulators impose.", "period": "Check date: the first half of calendar 2027, the closing window the Sept. 3, 2026 agreement states (within 18 months of the Oct. 6, 2026 item).", "opens_as": "binding_obligation", "settled_by": "Nvidia's closing announcement and the regulatory (antitrust and any foreign-investment) clearance decisions, plus the purchase accounting and cash outflow disclosed in Nvidia's subsequent quarterly and annual filings."} 
+THEMES null 
+
+week c1/clean-11 {"id": "clean-11", "description": "Will Nvidia sign and complete an acquisition of Reflection AI — and at what consideration and terms — by the check date?", "outcome": "A definitive agreement to acquire Reflection AI, its closing (or the talks' collapse), and the final consideration paid and any regulatory conditions imposed.", "period": "Check date: April 2028, the outer limit of a date within 18 months of the Oct. 10, 2026 item for an acquisition not yet signed.", "opens_as": "binding_obligation", "settled_by": "Nvidia's 8-K/press release announcing a definitive merger agreement and its subsequent completion disclosure (and any antitrust or regulatory clearance filings), compared with the state of talks described in the Oct. 10, 2026 report."} 
+THEMES null 
+
+week c1/clean-12 {"id": "clean-12", "description": "How much will global AI capital spending total in calendar 2026 and calendar 2027?", "outcome": "Global AI capex for calendar 2026 and calendar 2027, measured against Goldman Sachs' forecast of $1 trillion of global AI spend this year and AI spend equal to 1.8% of U.S. GDP in 2026, 2.5% in 2027 (and 2.8% in 2028).", "period": "Calendar 2026 and calendar 2027 (with 2028 also given), the years Goldman Sachs' forecast in the Oct. 11, 2026 article covers.", "opens_as": "shared_quantity", "settled_by": "Goldman Sachs Research's published updates to its AI capex / U.S. GDP series, together with the reported capex and AI spending of the large buyers (hyperscalers, neo-clouds and other AI infrastructure operators), compared at each calendar year-end."} 
+THEMES null 
+
+week c1/clean-13 {"id": "clean-13", "description": "How much of Nvidia's $25 billion of equity-investment commitments outstanding at July 26, 2026 will be funded or remain outstanding at its next annual report?", "outcome": "The remaining balance of Nvidia's equity-investment commitments, the cash paid to fund them, and any change in the committed amounts, as disclosed in Nvidia's next annual report.", "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken.", "opens_as": "binding_obligation", "settled_by": "Nvidia's annual report on Form 10-K for fiscal 2027, including the commitments/contractual-obligations note and the investing section of the cash-flow statement."} 
+THEMES null 
+
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '4326,4343p;4606,4615p;4847,4859p' " in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step4-2026-11-10/ladder/candidate-system.txt | sed -n '1,13p'; nl -ba docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt | rg '"'^'"\\s*[0-9]+\\s+###' " in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  4326	## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+  4327	
+  4328	- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  4329	  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  4330	  - Options:
+  4331	    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+  4332	      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+  4333	      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+  4334	    - split into two questions, each judged, as D38 says;
+  4335	    - do not judge such a topic until Step 1 opens it as one thing.
+  4336	  - Alex: "只判主要那件 (Recommended)".
+  4337	- **Decided:**
+  4338	  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+  4339	    its wording is listed and shown beside the answer as not judged.
+  4340	  - A thesis with no main part gets no judged question, with the reason recorded.
+  4341	  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+  4342	    test: readers mark each part left out as a bet an analyst would hold or not.
+  4343	- **Scope:** the clean path's ladder step only. D38 stands for production.
+  4606	## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+  4607	
+  4608	- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  4609	  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  4610	  - Alex: "确认：这类题不出题 (Recommended)".
+  4611	- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  4612	  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  4613	  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+  4614	- **Scope:** the clean path's ladder step; mark N of the readers' form.
+  4615	
+  4847	## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+  4848	
+  4849	- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  4850	  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  4851	  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  4852	  - Alex: "算一个题，第三处不改 (Recommended)".
+  4853	- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+  4854	- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+  4855	- **Scope:** clean Step 1; c8 stays in force.
+  4856	
+  4857	## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+  4858	
+  4859	- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+
+ succeeded in 0ms:
+     1	You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+     2	
+     3	What the question asks
+     4	- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+     5	- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+     6	- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+     7	
+     8	Whose question it is
+     9	- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+    10	
+    11	The ladder
+    12	- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+    13	- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+     1	### fortnight:c1/clean-13
+    13	### fortnight:c1/clean-3
+    23	### fortnight:c1/clean-8
+    29	### week-10-06:c1/clean-11
+    39	### week-10-06:c1/clean-12
+    46	### week-10-06:c1/clean-13
+    56	### week-10-06:c1/clean-3
+    67	### week-10-06:c1/clean-4
+    74	### week-10-06:c1/clean-5
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; x=json.load(open(\"poc/data/clean-carried-run-2026-11-16/c1/cases/cases.json\")); v=x[7]; print(v.keys()); print(json.dumps({k:v[k] for k in v if k not in (\"item\",\"thesis\")},ensure_ascii=False,indent=2))' " in /Users/lchingen/hivemind
+ succeeded in 0ms:
+dict_keys(['case', 'thesis', 'item'])
+{
+  "case": "c1/clean-8"
+}
+
+codex
+**The sources do not give a general rule for finding the main part when several parts are named.** They support judging one part and showing the rest, but they do not say when the topic’s description, a first-mentioned part, a later milestone, or a closely related second figure makes one part primary.
+
+For example, the CPO topic asks about **2027 shipments** in its description, but its outcome names shipments from **Q4 2026 through 2027**. Treating the full-year figure as primary is reasonable; treating the whole named span as the tracked figure is also consistent with the sources.
+
+1. **What the decisions say**
+
+   - [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) records Alex’s choice: “只判主要那件.” It says to judge “the part its `outcome` names,” show the other parts as not judged, and give no question when there is “no main part.” It does not explain how to choose when the outcome names several candidates.
+   - [D436]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4847) says “a second side of the same bet” stays as context and is “shown as not judged.” Its examples include shortage beside shipments. It does not say how to identify the main side in every multi-part topic.
+   - [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606) declines a figure covering “a period which is not one fiscal or calendar year” when neither text gives a publication day. It does not say which period to select when the topic names several.
+
+   The [reader form]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:95) checks that the question asks what the outcome names, omitted parts are shown, and a refusal’s stated reason applies. It supplies no further selection rule.
+
+2. **The 24 declines**, grouped where all draws have the same source-level verdict. “Silent” means the available standard does not settle the disputed selection; it is not a finding that the decline is wrong.
+
+| Topic and sol draws | Main part and verdict |
+|---|---|
+| Fortnight **13**, d1–d3 | **Silent.** Full-year 2027 shipments may be main, with earlier checkpoints left out; alternatively the outcome tracks the Q4 2026–2027 span. D417 applies only if that span is the selected figure and has no publication day. |
+| Fortnight **3**, d1–d3 | **Silent.** US authorization may be main, with Chinese restrictions as another condition; alternatively both authorities’ actions are separately tracked with neither main. |
+| Fortnight **8**, d2–d3 | **Justified on the recorded theme finding.** The main figure is 2026 physical-AI venture funding; the refusal is about no matching theme, not multiple parts. Both readers held it. The case file itself does not contain the request’s theme list, so that finding rests on the recorded trace. |
+| Week **11**, d1–d3 | **Silent.** Signing may be main, with closing and terms left out; alternatively signing and closing are distinct tracked events with neither selected. |
+| Week **12**, d1–d3 | **Justified.** 2026 and 2027 global AI spending are presented together, with neither singled out. They are separate annual figures; choosing one would require an additional rule. |
+| Week **13**, d1–d3 | **Silent.** Remaining commitments may be main, with cash paid and changes left out; alternatively these are separately tracked figures with none selected. |
+| Week **3**, d1–d3 | **Silent.** Contract-price change may be main, with selling prices and margins left out; alternatively the named measures compete. Even if price change is main, the separate HBM-versus-DRAM series question remains. |
+| Week **4**, d1–d3 | **Justified.** 2026 and 2027 hyperscaler spending are presented together, with neither singled out; they are separate annual figures. |
+| Week **5**, d2 | **Unjustified.** Closing the already signed acquisition is the named event; termination is an alternative outcome, while consideration and regulatory conditions are other parts to show. Both readers rejected the refusal. |
+
+The reader disagreements and matched answers are in the [refusal trace]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt:1). These verdicts are about the stated refusal reasons; they do not certify that a proposed answer would meet every other requirement.
+
+3. **Wording and boundary cases**
+
+The strongest sourced wording is already in the [request]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:5): “Judge the one the topic’s outcome names as what is tracked,” and list every other part. D436 adds “a second side of the same bet” as context. Applied to all nine topics above, that wording supports the week 5 correction, preserves the two two-year refusals and the separate theme refusal, and leaves the other five topics unresolved. It does **not** tell the model how to resolve those five; the stored trace also cannot establish that repeating it would change any model response.
+
+A ruling would need these boundaries, with both readings shown:
+
+- **CPO shipments:** description’s full-year figure is main / the outcome’s multi-period span is tracked.
+- **China restrictions:** US approval is main and Chinese acceptance is a condition / the two authorities’ decisions are separate candidates.
+- **Reflection acquisition:** signing is main and closing follows / signing and closing are separate candidates.
+- **Commitments:** remaining balance is main and funding/change are context / all are separate candidate figures.
+- **Memory:** contract-price change is main and company prices/margins are context / the figures compete; separately, whether HBM/DRAM denotes one usable figure or requires a series choice.
+
+These are the same unresolved distinctions identified by the [earlier rule review]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md:1). Neither “use the description” nor “use the first part” is sourced as a general tie-breaker.
+
+SOURCES SILENT: OWNER RULING NEEDED
+tokens used
+40,326
+**The sources do not give a general rule for finding the main part when several parts are named.** They support judging one part and showing the rest, but they do not say when the topic’s description, a first-mentioned part, a later milestone, or a closely related second figure makes one part primary.
+
+For example, the CPO topic asks about **2027 shipments** in its description, but its outcome names shipments from **Q4 2026 through 2027**. Treating the full-year figure as primary is reasonable; treating the whole named span as the tracked figure is also consistent with the sources.
+
+1. **What the decisions say**
+
+   - [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) records Alex’s choice: “只判主要那件.” It says to judge “the part its `outcome` names,” show the other parts as not judged, and give no question when there is “no main part.” It does not explain how to choose when the outcome names several candidates.
+   - [D436]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4847) says “a second side of the same bet” stays as context and is “shown as not judged.” Its examples include shortage beside shipments. It does not say how to identify the main side in every multi-part topic.
+   - [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606) declines a figure covering “a period which is not one fiscal or calendar year” when neither text gives a publication day. It does not say which period to select when the topic names several.
+
+   The [reader form]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:95) checks that the question asks what the outcome names, omitted parts are shown, and a refusal’s stated reason applies. It supplies no further selection rule.
+
+2. **The 24 declines**, grouped where all draws have the same source-level verdict. “Silent” means the available standard does not settle the disputed selection; it is not a finding that the decline is wrong.
+
+| Topic and sol draws | Main part and verdict |
+|---|---|
+| Fortnight **13**, d1–d3 | **Silent.** Full-year 2027 shipments may be main, with earlier checkpoints left out; alternatively the outcome tracks the Q4 2026–2027 span. D417 applies only if that span is the selected figure and has no publication day. |
+| Fortnight **3**, d1–d3 | **Silent.** US authorization may be main, with Chinese restrictions as another condition; alternatively both authorities’ actions are separately tracked with neither main. |
+| Fortnight **8**, d2–d3 | **Justified on the recorded theme finding.** The main figure is 2026 physical-AI venture funding; the refusal is about no matching theme, not multiple parts. Both readers held it. The case file itself does not contain the request’s theme list, so that finding rests on the recorded trace. |
+| Week **11**, d1–d3 | **Silent.** Signing may be main, with closing and terms left out; alternatively signing and closing are distinct tracked events with neither selected. |
+| Week **12**, d1–d3 | **Justified.** 2026 and 2027 global AI spending are presented together, with neither singled out. They are separate annual figures; choosing one would require an additional rule. |
+| Week **13**, d1–d3 | **Silent.** Remaining commitments may be main, with cash paid and changes left out; alternatively these are separately tracked figures with none selected. |
+| Week **3**, d1–d3 | **Silent.** Contract-price change may be main, with selling prices and margins left out; alternatively the named measures compete. Even if price change is main, the separate HBM-versus-DRAM series question remains. |
+| Week **4**, d1–d3 | **Justified.** 2026 and 2027 hyperscaler spending are presented together, with neither singled out; they are separate annual figures. |
+| Week **5**, d2 | **Unjustified.** Closing the already signed acquisition is the named event; termination is an alternative outcome, while consideration and regulatory conditions are other parts to show. Both readers rejected the refusal. |
+
+The reader disagreements and matched answers are in the [refusal trace]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt:1). These verdicts are about the stated refusal reasons; they do not certify that a proposed answer would meet every other requirement.
+
+3. **Wording and boundary cases**
+
+The strongest sourced wording is already in the [request]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:5): “Judge the one the topic’s outcome names as what is tracked,” and list every other part. D436 adds “a second side of the same bet” as context. Applied to all nine topics above, that wording supports the week 5 correction, preserves the two two-year refusals and the separate theme refusal, and leaves the other five topics unresolved. It does **not** tell the model how to resolve those five; the stored trace also cannot establish that repeating it would change any model response.
+
+A ruling would need these boundaries, with both readings shown:
+
+- **CPO shipments:** description’s full-year figure is main / the outcome’s multi-period span is tracked.
+- **China restrictions:** US approval is main and Chinese acceptance is a condition / the two authorities’ decisions are separate candidates.
+- **Reflection acquisition:** signing is main and closing follows / signing and closing are separate candidates.
+- **Commitments:** remaining balance is main and funding/change are context / all are separate candidate figures.
+- **Memory:** contract-price change is main and company prices/margins are context / the figures compete; separately, whether HBM/DRAM denotes one usable figure or requires a series choice.
+
+These are the same unresolved distinctions identified by the [earlier rule review]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md:1). Neither “use the description” nor “use the first part” is sourced as a general tie-breaker.
+
+SOURCES SILENT: OWNER RULING NEEDED

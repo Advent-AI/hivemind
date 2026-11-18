@@ -1,0 +1,138 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 133: your two points in slice 4a's design
+
+1. **The run-level stop reason:** a small launcher change. For a `WriterStopped`, `limit.stop` and the run record's `stopped` carry
+   `"<run> incomplete: <the stop's reason>"`, not only the exception's name. The tests assert the exact reason in both the attempt and
+   the run-level record.
+2. **The size limit:** it belongs to a connection, so it is set on the writer's own connection returned by `store.open_db`. The test
+   reads both `journal_mode` and `journal_size_limit` back on that connection, after `open_db` and after the first day.
+
+End with `CONSENSUS: yes` (build 4a) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check that both changes are written into the 4a design and that the proposed launcher behavior matches its existing stop path.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '395,455p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/run_stage_b.py | sed -n '75,118p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   395	## The writer's start, stops and end (slice 4a; council rounds 131 and 132)
+   396	
+   397	**Opening in WAL mode before anything is written.**
+   398	
+   399	- `store.open_db` creates tables and commits as it opens, so WAL is set before it:
+   400	  1. the writer creates the store file empty and exclusively (create-new);
+   401	  2. it opens it with `sqlite3`, sets `journal_mode=wal` and **checks that the pragma answers `wal`**, refusing to start otherwise;
+   402	  3. it closes;
+   403	  4. it opens the store through `store.open_db`, which writes its schema in WAL mode (the mode is kept in the file);
+   404	  5. **it sets `journal_size_limit` (64 MB) on that writer connection,** since the limit belongs to a connection, not to the file.
+   405	- A test reads both `journal_mode` and `journal_size_limit` back on the writer's own connection after `open_db`, and again after the
+   406	  first day.
+   407	
+   408	**Stops, through the real launcher (`run_stage_b.send`).**
+   409	
+   410	- **The stop:** `ladder_adapter.WriterStopped(reason, last_completed_day)`, an `Exception` that `run_stage_b.resendable` does not
+   411	  accept.
+   412	- **Where it is raised:** in `replay`, before a day when the free space is below 20 times the store's size (main file and `-wal`), or
+   413	  when the truncating checkpoint after a completed day has failed for 3 consecutive days. Before raising, `replay` writes
+   414	  `adapter-counts.json` with the stop's reason and the last completed day, so the partial result is on disk.
+   415	- **What the launcher does with it:** its existing handling of a stop no resend can change, with one small change so the stop's
+   416	  own reason reaches the run (round 132):
+   417	  - `limit.stop(reason)`, where the reason for a `WriterStopped` is `"<run> incomplete: <the stop's reason>"` and not only the
+   418	    exception's name;
+   419	  - the attempt recorded with its reason;
+   420	  - the draw's state `incomplete`;
+   421	  - no redo, and every later launch stopped.
+   422	  - It is never recorded as complete.
+   423	- **The store keeps every completed day,** because the stop comes before a day starts or after a day's checkpoint. Readers keep
+   424	  serving the last completed day.
+   425	- **A stop before the first day** leaves the store empty (its tables, no step), which readers read as an empty store, and is recorded
+   426	  `incomplete` with its reason.
+   427	- **Tests through `run_stage_b.send` with the fake judge:**
+   428	  - low space before the first day;
+   429	  - low space before the third day (the last completed day is the second);
+   430	  - three failed checkpoints;
+   431	  - in each case: the exact reason in the attempt **and** in the run-level record (`stopped`), the draw's state, no redo, the
+   432	    store's last completed day, and the counts file's reason.
+   433	
+   434	**Its end.** After the last day the writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store,
+   435	it stays in WAL mode and "stopped in order, WAL kept" is recorded in `adapter-counts.json`. Tested with and without a reader.
+   436	
+   437	**Limit of 4a, stated:** until slice 4b the writer takes no lock. 4a's proofs run on isolated test stores and do not make a live run,
+   438	or preflight beside one, safe. P1 stays unresolved.
+   439	
+   440	## Not covered
+   441	
+   442	- Resuming a stopped live store.
+   443	- The Idea planner on a new-system ledger.
+   444	- A long-running service's restart and monitoring.
+   445	- The page's note when its live read fails, which is Alex's presentation choice.
+    75	        record['spent usd (ledger)'] = round(ladder_adapter.ledger_total(root / 'spend.jsonl'), 4)
+    76	        record_path.write_text(json.dumps(record, indent=1) + '\n')
+    77	
+    78	    def end(run, reason):
+    79	        record[run]['state'] = 'incomplete'
+    80	        record['stopped'] = reason
+    81	        limit.stop(reason)
+    82	        save()
+    83	        return record
+    84	
+    85	    for run in runs:
+    86	        entry = record.setdefault(run, {'attempts': []})
+    87	        if entry.get('state') == 'complete':
+    88	            continue
+    89	        for folder_name in (f'draw-{run}', f'draw-{run}-redo'):
+    90	            if (root / folder_name).exists():
+    91	                if not any(attempt['folder'] == folder_name for attempt in entry['attempts']):
+    92	                    # a folder with no recorded outcome: the process that wrote it ended mid-replay (a crash); it is never resumed
+    93	                    entry['attempts'].append({'folder': folder_name, 'stopped': 'the process ended without recording an outcome (a crash)'})
+    94	                    save()
+    95	                if folder_name.endswith('-redo'):
+    96	                    return end(run, f'{run} incomplete: its redo did not finish')
+    97	                continue
+    98	            try:
+    99	                runner = ladder_adapter.replay(run, root / folder_name, transport=transport, limit=limit, inputs=inputs_of.get(run))
+   100	            except BaseException as error:              # a second send only where it can differ
+   101	                attempt = {'folder': folder_name, 'stopped': f'{type(error).__name__}: {error}', 'traceback': traceback.format_exc()[-2000:]}
+   102	                if not isinstance(error, (Exception, SystemExit)):
+   103	                    entry['attempts'].append(attempt)
+   104	                    save()
+   105	                    raise
+   106	                if isinstance(error, ladder_adapter.budget.OverBudget):
+   107	                    reason = limit.stopped or f'the spending cap: {error}'
+   108	                elif folder_name.endswith('-redo') or not resendable(error):
+   109	                    reason = f'{run} incomplete: {type(error).__name__}'
+   110	                else:
+   111	                    reason = None
+   112	                if reason is not None:
+   113	                    limit.stop(reason)                  # the stop is on disk before the attempt is: a crash between them cannot lead to a redo
+   114	                    entry['attempts'].append(attempt)
+   115	                    return end(run, reason)
+   116	                entry['attempts'].append(attempt)
+   117	                save()
+   118	                continue
+
+codex
+**Yes: build slice 4a on isolated test stores.** The design now puts the size limit on the writer connection and specifies the launcher change and exact stop-reason assertions. [Slice 4a design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:395).
+
+The proof should check that the launcher records each stop as incomplete, does not retry, and preserves the stated last completed day. Slice 4a still provides no writer lock and does not authorize live operation or concurrent preflight.
+
+CONSENSUS: yes
+tokens used
+3,524,459
+**Yes: build slice 4a on isolated test stores.** The design now puts the size limit on the writer connection and specifies the launcher change and exact stop-reason assertions. [Slice 4a design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:395).
+
+The proof should check that the launcher records each stop as incomplete, does not retry, and preserves the stated last completed day. Slice 4a still provides no writer lock and does not authorize live operation or concurrent preflight.
+
+CONSENSUS: yes

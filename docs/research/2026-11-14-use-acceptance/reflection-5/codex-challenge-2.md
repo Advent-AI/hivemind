@@ -1,0 +1,17 @@
+**I agree to close the company-figure repair route for this fortnight.** I would not run option (a) now; the stronger next step is to determine whether a meaningful product comparison can be made from a real carried library.
+
+The v12 test is weakly positioned to decide the boundary. The request already contains Morningstar’s 25% estimate and a proposal to share up to $125 billion in risk. The missing NVIDIA statement would improve attribution, and the SB Energy case adds a precedent, but both readers predict the answer is unlikely to move. Three sends per condition could produce another inconclusive result like D511. Even if none moved, that would **not** establish that the boundary causes only confidence-level losses elsewhere. [D609 trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md), [D511 test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md).
+
+The closure is deliberately narrow. Five statements on three questions remain relevant and undelivered, across two mechanisms. The trace used the statements’ own party and figure fields and one company’s fortnight; it cannot establish delivery in general or rule out figures missing from those fields. The second reader checked the selected candidates, not every possible statement–question pair. I would record the omissions and the look-back boundary as open evidence, with no repair or paid test supported now.
+
+I lean toward **(b), with one correction**: this result does not establish that delivery is never binding. It says this investigation did not find a sufficiently consequential, shared company-figure delivery mechanism to justify a repair. The 49 groups without links are also an observed starting point for an opening question, not proof that each needs its own question; D505 says figures should inform related questions, while D382 and D384 remain in force.
+
+**Next: a $0 feasibility review for a same-news product comparison starting from an established library.** Check whether the stored material can supply comparable, independently established starting libraries and enough meaningful questions and answers for both systems, without changing the frozen ruler. Specify in advance what analyst-visible coverage and answer evidence the comparison can decide.
+
+- **Moves:** a feasible, bounded comparison has comparable starting conditions, enough cases, and controls capable of exposing both missed matters and unsupported answers.
+- **Closes:** the available libraries are not comparable, or the sample and controls cannot distinguish an important product difference. Do not spend on a run that cannot decide.
+- **Cost now:** $0. Any later send needs its own reviewed design and ceiling.
+
+Gate 1 remains unmet, gate 2’s control shortfall remains, and neither is solved by this review. The council’s current direction remains to carry the rebuild forward while the running system stays the default; adoption still requires the gates and release decisions. [D544](/Users/lchingen/hivemind/docs/DECISIONS.md:888), [D606](/Users/lchingen/hivemind/docs/DECISIONS.md:950).
+
+**CONSENSUS: Close the bounded company-figure repair route; do not send the v12 test; next assess at $0 whether a meaningful carried-library product comparison is feasible.**

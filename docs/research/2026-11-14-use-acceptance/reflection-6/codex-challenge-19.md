@@ -1,0 +1,16 @@
+**Agree with the $0 audit and census, with one correction: do not assume the two date fixes are already settled.** A question can ask whether shipments happened by January while the report confirming them appears in February. Moving the answer date must not silently change the question to “did shipments happen by February?”
+
+The evidence warrants the investigation. The review found **11 material defects in 51 written questions**, confirmed by a second reader on the flagged sample; the seven date findings repeat across a few topics and sends. The dates could change what the judge records, but the review has not measured an actual changed final answer. [Review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md)
+
+The audit needs to resolve four points before a rewrite:
+
+- **D210 is specifically about an obligation’s amount** at the next annual filing. But the clean-step design and reader form also state the broader existing instruction for an obligation already taken on. Trace that later design and its decisions rather than assuming D210 alone decides the conflict. [D210](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2664), [clean-step design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:291)
+- **D403 is directly relevant:** Alex chose an event date stated by the topic or article, or the end of the topic’s period. A new estimated publication day cannot simply replace that decision. The schema and code currently allow an event only `stated` or `period_end` as its basis. [D403](/Users/lchingen/hivemind/docs/DECISIONS.md:747), [date check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:214)
+- **Separate the event deadline from when evidence becomes available.** Trace the affected question through its rungs, due-day closing and judge. Check whether another stated source can settle it earlier before declaring the report indispensable.
+- **Correct the gate claim:** date accuracy is not one of the four zero-fault lines, but mark D contributes to line 5’s count of right questions; line 6 separately checks date consistency. Keep that accounting and the reading form unchanged. [Stage A accounting](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1307)
+
+Census all applicable stored answers outside the 44, with repeated sends and distinct matters reported separately; classify uncertain publication dates rather than guessing. **D426 permits diagnosis outside the 44 but still bars tuning on them and a fifth Stage A.** A new version needs council review under D439.
+
+**Moves:** the audit establishes a general conflict and a candidate preserves both the intended event deadline and the applicable decisions, while passing stored counterexamples. **Closes the proposed rewrite:** those requirements cannot be reconciled as proposed. Rarity alone should not close a confirmed product defect; report its actual reach and impact.
+
+**CONSENSUS: Run the $0 due-date audit and census first; review any rewrite against D403, D210, the code and the unchanged gate before a separate probe decision.**

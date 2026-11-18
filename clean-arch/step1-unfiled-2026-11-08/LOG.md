@@ -4795,3 +4795,572 @@ stopped or voided by the count's conditions.
   "due day equal the ruler's" read literally fails five figure controls on a date that marks the same publication (D414).
 - The second review of the build is running (`council/kp-handoff.md`).
 
+**Second review of the build (`council/kp-codex.md`): not ready; then Alex's control rule (D430).** A second launch could
+spend against the same balance (now: one launch at a time, an exclusive lock); the control's due-date rule changed the
+verdict and had to be settled before the send (Alex: "指同一份年报就算相同", D430); per-draw spend was cumulative (now its own
+beside the limit's); failure paths: overlapping launch, a call in flight at a crash, an unwritable reserve (tests); the mutant
+runner now keeps each output and requires each named test to fail by an assertion (13 of 13); the real stored judge answers
+of the unseeded replays pass the judge's own check (159 of 159, `stage_b/judge_answer_replay.py`), recorded as the preflight
+the project's script does not run for the judge. 19 tests.
+
+**The council's read of where the clean path stands (Alex: "你能先准备搞一个段落让整个council看一下你的过去跑的整体进度和反馈
+结果吗？我们到底做到哪里了").** `step4-2026-11-10/PROGRESS-2026-11-12.md`, read cold by a Codex and a Claude Opus member against
+the record (`council/kr-codex.md`, `kr-consensus.md`). The numbers held; the emphasis was too favourable in four places, each
+checked and corrected: the Stage A table gave only the strict reading; the seeded end-to-end result is INCONCLUSIVE under its
+frozen rule; the remaining ladder faults sit on theses that name two things or two periods, not scattered; the unseeded gap is
+mostly company-figure questions the product does not open. Agreed: Stage B next; the largest gap is how Step 1 cuts a matter
+into theses. Alex: the gate is against production as it now runs (D431); after Stage B, the Step 1 diagnosis (D432); commit
+locally (commit 053c957, not pushed; model archives and the parallel session's files left out). Full suite 287 passed.
+
+**Third and fourth reviews of the build (`council/kq-codex.md`, `ks-codex.md`): not ready, each on the stop paths.** Third: a
+later launch could send after a recorded cap stop; a draw with no judgement counted complete; a crash left an ambiguous restart;
+the preflight record missing. Fourth: a cap refusal did not stop other judge threads at once; an incomplete draw did not end
+the send. **The stop paths drew findings four rounds running, so one structural rule replaced the case-by-case fixes (AGENTS
+§1):** the first stop of any kind (the cap, an incomplete draw, an unfinished redo) is written to the ledger under the limit's
+lock and ends every later send and launch; the design's one redo is the only second chance. 26 tests; 19 mutants each caught
+by its own test's assertion; the preflight record kept (`stage_b/preflight.output.txt`: 0 extraction or matching cases, exit 1,
+"UNEXERCISED"; the judge's answers covered by `judge_answer_replay.py`, 159 of 159); the whole send replayed at $0 with a judge
+that always picks the last rung: three draws complete, 79, 80 and 77 judgements.
+
+**Fifth and sixth reviews; Stage B sent (D429).** The fifth (`council/kt-codex.md`) found one serious crash window (a terminal
+failure written to `run.json` before its stop reached the ledger): the stop now reaches the ledger first, with a test that dies
+at that write and a mutant that reverses the order; a thesis with no ladder keeps its reason in `checked_answer`; the mutant
+count corrected (20). **The sixth (`council/ku-codex.md`): "Ready — the three draws may be sent."** Limits disclosed: the cap
+rests on each reservation covering the provider's bill; identity by case name; crash tests in process, not a killed process.
+Sent 2026-11-12 21:23 after a machine and network check, detached (`poc/data/clean-stage-b-2026-11-11/run.log`, `run.pid`),
+the code as sent with its checksums in `code-as-sent/`. 27 tests; 20 mutants.
+
+**Stage B ran (2026-11-12 21:23 to 21:58).** Three draws complete: 79, 80 and 77 judgements; $0.4161 from the ledger (the
+estimate was $0.45); 237 calls, one judgement refused once and answered again; no stop. Links to a thesis with no ladder:
+92, 65 and 41. *My error, corrected:* while it ran I told Alex the calls far outnumbered the judgements (291); I had counted the
+ledger's lines, two an attempt (a reserve and a charge). Nobody has read a verdict yet.
+- *The reading built:* the first build gave 14 packets of 17 or 18 judgements (Stage B's questions are worded differently in
+  each draw, so "no two of one question" alone made few packets), 345 to 405 thousand characters: set aside unread. Rebuilt with
+  a length cap: 39 packets of 6 or 7 judgements (236 stored, six planted, three repeats). Line 3: all 16 controls laddered and
+  judged by 2026-07-14; 8 with the ruler's due day literally; four control packets.
+- The reading plan and tools go to a fresh review before any reader (`council/kv-handoff.md`).
+- *Reading review, round 1 (`council/kv-codex.md`): Not ready.* The baseline's planted answers were identifiable in Stage B
+  (two-rung events; questions no Stage B judgement has); the control count accepted incomplete rows and rulings, trusted its
+  facts, took material as one answer; no zero-denominator refusal; repeat and planted reports dropped. Fixed: six planted
+  answers written on Stage B's own judgements, with a trial first; control count rebuilt to refuse incomplete records, marks
+  item by item, facts outside the readers' folder; refusals and reports restored; a made-up-reading check and mutants.
+- *Round 2 (`council/kw-codex.md`): Not ready.* The trial's result was not enforced (the count trusted the in-use file; no
+  three-test coverage); the control readers searched only the last request where the design says the judge's requests by that
+  day; incomplete rows passed; two plants identifiable by a shared sentence and one open to a good-faith INSUFFICIENT. Fixed:
+  `stage_b_trial.py` derives and checks the trial, the count derives it again; every evidence entry of every request through
+  2026-07-14 goes to the control readers; complete rows and written ruling reasons required; plants rewritten (u2 v4 #3, the
+  four companies' own plan cut 15%, replaces the projection plant). Check 18 of 18; eight mutants caught (two by a crash,
+  traceback read). *My slips:* a self-calling row check after the substitution (caught before any run), and a check fixture
+  written in another order than the trial writes (7 cases failed for the fixture's reason; fixed by letting the trial script
+  write it). *Disclosure:* an earlier mutant printout showed me the code's comparison with reader B for three controls; no
+  reader's verdict exists.
+- Round 3 sent (`council/kx-handoff.md`).
+- *Round 3 (`council/kx-codex.md`): Not ready.* Real: the draws word one matter differently, so the exact-text rule let two
+  versions of one matter share a packet (the trial had two Vera Rubin answers together); an unresolved material dispute was
+  reported as a confirmed miss; a SUPPORTED row's rung and reason values were not checked; the trial-row mutant was caught only
+  through the reading case. Fixed: one draw a packet, trial packets set by hand; unresolved reported apart; value checks; the
+  missing-field cases now drop a field the baseline check does not read (check 19 of 19; ten mutants caught). The recurring
+  "a planted answer is open to another verdict" (three rounds) is answered by one rule, not a fourth rewrite: the trial decides
+  (the baseline's own rule), and a test left with no planted answer is rewritten and tried again before the reading.
+- Round 4 sent (`council/ky-handoff.md`).
+- *Round 4 (`council/ky-codex.md`): Not ready, on smaller points.* The trial rule accepted as a minimum screen; the plants'
+  errors real, no form clue left, packets separate the matters. Open: the builder accepted planted-in-use.json directly (the
+  reading could start before the trial passed); no record of the trial's sessions; an unresolved item could hide a confirmed
+  missing one; a missing item was blamed on Steps 1 to 3 without tracing; the trial's limit and the all-requests search's limit
+  not stated. Fixed all; check 21 of 21; thirteen mutants caught (a first builder mutant removed one of two guards and was not
+  caught, because the other guard refuses too; it now removes the gate whole).
+- Round 5 sent (`council/kz-handoff.md`).
+- *Round 5 (`council/kz-codex.md`): no new serious defect.* Two small points: a leftover plan sentence still blamed missing
+  material on Steps 1 to 3 before any trace (removed; 0 left), and line 2 reported only the total (now per draw too: 9 of 9,
+  8 of 8, 9 of 9 on the made-up reading). Check 21 of 21 after both. The trial starts (two packets, one fresh session a packet
+  and family: Codex through `run_codex_readers.py trial`, Claude Opus subagents).
+- *The trial (22:30):* all six planted answers passed, both families naming the stored rung; one stored judgement (u3 v10 #2)
+  read INSUFFICIENT by both. *The reading (22:36 to about 23:45):* Codex 41 packets and 4 control packets in 22 minutes of
+  sessions (few visible reasoning tokens, as in the baseline); Claude Opus 41 packets in 2.4 hours of sessions, the controls,
+  the third readers. Three Claude sessions reported a size-check or grep command on their own packet; disclosed, rows kept.
+- **Result (`stage_b/STAGE_B_RESULT.md`): Stage B does not pass.** Line 3 unexercised: 7 controls eligible, 4 with reader B's
+  material shown (all 4 agree), fewer than 8. 6 of the 15 non-Ohio controls ask another question than the ruler's and 2 are
+  unresolved; 3 eligible ones had part of reader B's material not shown. Lines 1 and 2 met (26 of 26). Figure 3/88, 3/95,
+  10/95 against 12.7/12.5/14.4%: met. Yes/no 1/117, 1/122, 6/122 (4.9%) against 5%: met. Last judgements 0/21, 0/24 met, 3/24
+  missed on the strictest reading. The families differ on 22 of 236; the third readers split on 12 (9 along family lines).
+  Mechanisms from my own read: "Still open" kept because nothing is settled yet on the three-outcome Kyber events (7); figure
+  questions opened with no reference figure that the evidence cannot size (19 INSUFFICIENT on five questions); a figure carried
+  forward instead of re-derived (u2 v7 $28bn). Council B sent (`council/la-handoff.md`).
+- *Council B (`council/la-codex.md`): stands with corrections.* Applied: counted UNSUPPORTED, Stage B's overall share is higher
+  than the baseline's (16/217, 7.4%, against 5/152, 3.3%), though the figure and yes/no lines are met; eight questions on five
+  matters, not "five questions"; last judgements 21 of 26 with 3 unresolved and 2 INSUFFICIENT; the Kyber seven are my reading,
+  not settled errors (the bad reason is real, the right rung is not); "can never resolve" and "a cautious share crosses $30bn"
+  withdrawn as beyond the evidence; the 8 controls excluded on the question are not shown to be Step 1's: the pairing rule is
+  deliberately broad and the ladder step writes the question and due day. **Consensus next step:** a $0 trace of those 8 and the
+  3 with missing material, inside the D432 Step 1 diagnosis, reported to Alex before any change.
+- *The control trace (`stage_b/CONTROL_TRACE.md`, $0), checked by `council/lb-codex.md`: stands with corrections, applied.*
+  Most of the 8 question differences are already in the Step 1 thesis (a programme inside a total, u1 and u3 clean-1, u2
+  clean-7; the article's reported date, u3 clean-7; a later milestone, u2 clean-3, u3 clean-5), kept by the ladder step;
+  u1/clean-6 is both the thesis period and the ladder's wording; u1/clean-11 is the ladder's wording (disputed). Of the 3
+  missing items, i090 and i143 are stored exactly, with no link to any thesis, in u1 and u3 (i090 by the very call that opened
+  the capex thesis, i143 by a later call); i295 left no record (my first trace wrongly took e392, another article's statement,
+  for it; corrected). My slip, corrected: the first headline said "10 of 11 trace to Step 1", more than the evidence holds.
+  These go into the D432 diagnosis as leads.
+
+## 70. The Step 1 diagnosis (D432): the merge rules beat the year unit and the signing rule (2026-11-12)
+
+- *All 19 INSUFFICIENT Stage B judgements read beside their answers:* in each the answer itself says the evidence does not size
+  the amount and picks a range anyway (credit support before a comparable arrives, custom-chip revenue and spend, HBM capacity).
+- *Diagnosis version 1 (`clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md`): did not stand (`council/lc-codex.md`).* It said
+  c8 does not carry D38's unit; c8 says "A thesis asks one quantity for one period, or one event". **My mistake:** I searched the
+  request for other words and did not read section 3 whole (AGENTS §1). The proposed typed field was withdrawn.
+- *The model's own account (`model_account_choices.py`, `model-account.json`; about $0.02 at published rates; a first send went
+  to the wrong provider and was refused with no charge):* on the three capital-spending draws and the two Ohio draws, the model
+  names the merge rules ("Another population or wording of the same aggregate is evidence for it"; "A new thesis that asks the
+  same underlying question … is not proposed"; "cannot move apart") and says it let them beat "one quantity for one period" and
+  the unsigned-obligation rule; two of three capital-spending replies say an analyst would track both years; the memory reply
+  calls "2026–2027" a slip.
+- *Diagnosis version 2:* c8 states its merge rule four times, without the two boundaries Alex decided (D38, one view per year;
+  D248 H1 and D210, an unsigned deal's signing question stays apart from an amount question). Proposed change for Alex: state
+  the merge rule once with those two boundaries and remove the three restatements. Other mechanisms stay findings. Council
+  round 2 sent (`council/ld-handoff.md`).
+- *Council rounds on the diagnosis, versions 3 to 8 (`council/le`–`li-codex.md`).* Each round closed the last one's points and
+  found fewer: the "5 of 5" count was 4 of 5; the memory misses are three different things; D388–D391 had to be quoted, so Ohio left
+  the proposal (that line was stopped by Alex, D391); the closing-check edit was limited to yearly quantities (D248 keeps an event
+  under another deadline one bet); the first test gained a c8 arm on the same states and a stop line per control; the Stage A
+  "three refusals" are u3/clean-11 s1, s3 and acc/clean-9 s2, the ladder step's wrong declines (my error); every recorded Stage A
+  fault was traced (all the ladder step's; in six of nine a Step 1 wording is the input); a second class of shapes (an outcome
+  that also names a second period, event, figure or alternative) is recorded as a class to investigate. Round 7: **ready to put
+  to Alex, with changes**, applied in version 8. My repeated error this phase: claims stated before the whole source was read
+  (the prompt's section 3; the Stage A list); each was caught by a reviewer, not by me.
+- *D433 (Alex: "开 c14，先小测").* Before the first send: production sends an adapted request (the schema in the system text, JSON-
+  object mode, reasoning effort), kept as `sent_request`; my first probe would have sent the built request (`council/lj-codex.md`):
+  rebuilt on production's own adapter with a byte check against every stored sent request. The runner's retry rule mirrored
+  (format failures only); each response written on arrival; the standard preflight run (it does not cover clean Step 1); the
+  clean Step 1 replay: 24 of 24 stored answers pass, a synthetic two-year answer passes. A blind second read (`ll-codex.md`) found
+  the first wording barred another year's figure as evidence; reworded (identity only; closing edit limited to shared quantities by
+  calendar year; +206 characters; wording note appended to D433). The second blind read (`ln-codex.md`) finds both edits consistent
+  and says "no" only on c8's pre-existing conflicts, which c14 does not touch and both arms share. *Cost correction told to Alex:*
+  the full test is about $2.0, not $0.5; stage 1 alone (18 sends, about $0.25) is sent; stage 2 waits for his word.
+- **c14 stage 1 (`clean-arch/step1-diagnosis-2026-11-12/STAGE1-RESULT.md`): does not pass.** The two years of hyperscaler capex
+  opened as separate theses in 7 of 9 c14 sends against a line of 8 (c8: 0 of 9; c8's sends: both years in one thesis 5, one year 4).
+  One c14 send opened no capex thesis at all (c8 never). 18 sends, $0.24. The saved reasoning: that send met c8's counterexample "A
+  customer expanding capacity … is not a thesis of its own" and kept everything as evidence; the other miss chose 2027 as "the bet"
+  and the 2026 plan as "a baseline fact". Council B: stands with corrections (my c8 breakdown was reversed); stop c14, keep c8.
+  D391's pattern (an error moving to a neighbouring rule): not tuned further on this set. Stage 2 not sent. Goes to Alex.
+
+## 71. D434: Step 1's other defects diagnosed; a combined plan staged by gates (2026-11-13)
+
+- *The customer collision:* a search of all 729 completed c8 calls' reasoning finds the counterexample near an aggregate in 10 calls
+  (`step1-diagnosis-2026-11-12/COMBINED-PLAN-v2-census.md`; a reviewer found the tenth): 9 hold back a single customer or supplier,
+  1 (draw-d2 step 237, Gulf) an aggregate, mixed with doubts about date and figure. One found by this search, not a rate.
+- *The second-thing shapes* (`second-thing/`): two blind wording readers agree on 41 of 44 shapes and find 17 "more than one" each;
+  two blind source-backed families then read 24 against their articles: 6 theses hold two bets or no main one, 6 are one bet with a
+  reference, the same event's alternative or context (allowed, D397), 4 disputed; 6 of 6 controls one. Step 1's reasoning drafts the
+  outcome as a full description ("Either supply or price. I'll combine"). Stage A's faults on an event's own alternative (u1/clean-6,
+  acc/clean-2) are the ladder step's.
+- *The plan* (`COMBINED-PLAN.md`): three reviews (`council/lq`, `lr`, `ls-codex.md`), each finding fewer and smaller points, but each
+  asking for more of the later stages. *Rule adopted* (AGENTS §1, a recurring finding answered by one structural rule; §7.3 "Small
+  first"): only gate 1 is fixed in detail; later gates are fixed and reviewed when reached. Gate 1 adds the reviewers' two real points:
+  a source pre-read of which matters meet the opening tests (so a lost bet fails the proof) and a positive aggregate that must still
+  open. 78 sends, about $1.3, ceiling $2. Goes to Alex.
+
+## 72. D435 gate 1: set up, G1-c stopped before any send, G1-a and G1-b readied (2026-11-13)
+
+- *Arms built from c8* (`arms/c15yc`, `c15c`, `c15o`, `c15`), each edit asserted to hit its sentence once; the probe takes each arm's
+  schema. Final sizes against c8: c15yc +332 characters, c15c +91.
+- *Wording rounds:* a blind whole-request read (`council/lt-codex.md`) found the year sentence called a period another quantity, the
+  closing check's "scope" could split populations, the outcome definition's later date could open a second deadline, and "single" had
+  no source in the standard. All four answered (`PROMPT-AUDIT-c15.md`, rounds 2 and 3); the deployment-plan sentence is restored exactly
+  as the standard has it, and only the capacity counterexample, the one c14 d3 send 3 and every census hit cite, gains row D's
+  distinction. A re-read (`lv-codex.md`) finds every changed sentence consistent and the findings closed.
+- *G1-c stopped* (`gate1/PREREAD-RESULT.md`): two blind source readers, asked whether each matter meets the opening tests on its own,
+  agree on no second matter in the six two-bet theses (Codex yes in 5, Claude no in 6): a family threshold, not a decided line. Change
+  3 has no positive line; it goes to Alex. *My mistake:* the earlier source reading's "two_bets" asked whether two things are named, not
+  whether each deserves a card; I took it as the defect's size.
+- *Harness and rules* (`lu-codex.md`, `lv-codex.md`): one network attempt per send as production; a ceiling with production's own
+  reservation, waiting for attempts in flight, usage-less responses counted at their reservation (fake-transport check); lost sends make
+  a state unexercised; the stop column is comparative. Preflight `gate1/PREFLIGHT.md`. A confirming read of the two fixes is running.
+
+## 73. Gate 1 result: G1-b passes, G1-a fails (5 of 9 against 8 of 9); goes to Alex (2026-11-13)
+
+- *Runs* (`poc/data/clean-step1-gate1-2026-11-13/`): G1-a and G1-b in parallel, 45 attempts, 3 lost to the network (DNS once, a
+  connection cut after one byte twice). G1-a made unexercised by its lost sends under the rule fixed in advance; re-sent in full with
+  network resends allowed (both decisions recorded in the plan before any answer was read; the harness's printed lead count of the
+  first run had been seen, disclosed). The re-send: 18 of 18 answered at the first attempt. Spend at published rates: $0.24 + $0.35 +
+  $0.24 = $0.83, under the $2 ceiling.
+- *G1-b* (`gate1/G1B-READING.md`): passes. The aggregate opens 3 of 3; Goldman's estimate stays evidence on the open thesis 3 of 3;
+  the single-customer article opens only NVIDIA's own credit-support question; the doubtful Gulf aggregate is not pushed open (0 of 3).
+- *G1-a* (`gate1/G1A-READING.md`): fails on the judged re-send, c15yc 5 of 9, c8 0 of 9; the merge is gone (no c15yc send holds both
+  years in one thesis), and every miss opens one year. The four misses' reasoning quotes the year sentence and declines the second year
+  as "excessive", "overkill", "over-proposing". Across all year-wording sends on this article: 20 of 26 against c8's 0 of 26.
+- *Council* (`council/lx-codex.md`; my reflection first, `lx-my-reflection.md`): counts and mechanism confirmed, with limits (the
+  misses also weigh how settled each year's figure is; one article). Agreed: the line failed; going on is Alex's call; a firmer rule
+  (c) is not warranted (a third wording on one article, D391). Disagreement recorded: the reviewer recommends stopping the year change
+  and keeping c8 (a), on the ground that going on moves a line after a result; I recommend carrying changes 1 and 2 to gate 2 (b), on
+  the ground that they move the product the right way by a wide margin with no harm found, that the misses come from the judgement the
+  request leaves to the model under D243's caution, and that the line was mine. Both go to Alex.
+
+## 74. D437; gate 2 designed in ten review rounds (2026-11-13)
+
+- *Alex (D437):* "带着两处改动进第二关 (Recommended)": c15yc goes to gate 2; the year line's failure stays recorded.
+- *Gate 2* (`step1-diagnosis-2026-11-12/GATE2.md`): c15yc against c8 on seven stored neighbours in three draws, 126 sends, about $1.8,
+  ceiling $2.2; preflight `gate2/PREFLIGHT.md` (126 requests byte-checked, 21 stored answers pass the checks).
+- *Review rounds* `council/ly` to `mh`: each round found fewer and narrower points, in two recurring mechanisms, each answered by one
+  structural rule rather than finding by finding (AGENTS §1): (1) bad outcomes listed case by case missed a case each round (a dropped
+  statement, a lost amount thesis, an exception), answered by a closed set of good sends per control, everything else bad; (2) a kept
+  statement recognised by its words let a lost claim count as kept, answered by written claims judged by meaning, read twice, with
+  disagreements counted against the candidate and details required only where the state's stored c8 item states them. The harness
+  gained, under the same reviews: an error while processing an answer is recorded; a network loss is defined by HTTP status; every
+  reservation settles; nine asserted cases and four recorded mutants (`gate1/check_probe_ceiling.py`, `gate1/PREFLIGHT.md`).
+- *My process note:* the rule-writing took ten rounds because I wrote rules as lists of cases; the closed-set rule should have been
+  the first draft (AGENTS §2 already says so).
+
+## 75. Gate 2 result, D439 (the council decides), and the memory diagnostic (D440) (2026-11-13)
+
+- *Alex (D439):* he is not active; every choice goes to the council (Codex and Claude) until consensus. Written into AGENTS.md
+  "Authority and scope" with his words; spending ceiling $40 (my setting, reported).
+- *Gate 2* (`gate2/READING.md`): 126 sends, all usable, $1.84. Six of seven controls show no regression (repeats, Goldman, Kyber,
+  credit support, Ohio). The memory article fires two stop lines: kept-and-linked claims (c15yc 7 bad, c8 3) and sends with a
+  memory-price thesis (c15yc 0 of 9, c8 3 of 9; the ruler's seed v5 asks a 2027-against-2026 memory price question). Gate 2 failed.
+- *The rejection checked:* the link line was my measuring error. c8's request returns an uncovered statement with empty links (lines
+  7–9, 53); I copied the stored answers' loose links into the rule. The thesis line is real; both arms' declining sends give the same
+  reasons (no figure, no release date, vague) and no c15yc send declines because of a new sentence.
+- *Council round mj* (four rounds, one resumed session): positions moved from "keep c8" (council) and "re-send, pass if not significant"
+  (mine) to a consensus: a 108-send non-inferiority diagnostic with a margin fixed in advance, a three-way result (inconclusive keeps c8),
+  retained statements decisive, an exercised-control rule, and a named interval validated by simulation at the margin (D440,
+  `gate2/MEMORY-DIAGNOSTIC.md`). Spend so far $2.67; the diagnostic's ceiling $2.0.
+- *Lessons, so the same mistake is not made twice:*
+  1. A rule over a step's output is written from that step's own contract (c8's request), never from the habits of a stored answer.
+  2. "Not significant" is not "within tolerance": a decision after a failed line needs a margin fixed in advance and a result that can
+     come out inconclusive (non-inferiority), and the control must be shown to exercise the behaviour.
+  3. A three-way rule needs its interval named and checked at the boundary before the send; the council asks for it every time.
+
+## 76. The memory diagnostic: c15yc stops (D441) (2026-11-13)
+
+- *Run:* 108 sends; my ceiling held back 11 (the council-loop skill's recorded trap, "a budget limit copied from a smaller run stops a
+  big run halfway", repeated by me: I priced at 9,500 output tokens and the article averaged about 12,500, and each attempt reserves its
+  whole cap); the 11 were sent alone on council consensus before any answer was read. Spend $2.10; total so far $4.77 of $40.
+- *Result:* memory-price thesis 17 against 28 of 54 (interval -34.6 to -4.8): inconclusive; retention 49 against 49: proceed. c15yc
+  stops; c8 stays. The year sentence pushes the memory question from 2027-against-2026 (the ruler's seed v5) to 2026: its error moved
+  to a neighbouring case (D391).
+- *Reader incident:* three of four retention packets were too large for the blind reader, which said so and returned nothing; slimmed
+  packets (claims, reference summaries, kept items and links only) in six parts of 18 all returned.
+- *Lessons:* (1) set a ceiling from the reservation rule (cap × attempts in flight) plus the longest output seen, never from the mean;
+  (2) keep reader packets under about 120 kB and only the fields the judgement needs; (3) a fixed-state neighbour probe found what the
+  year probe could not: a wording that fixes one article's shape can move another's away from the ruler.
+
+## 77. The next step toward production (D442, D443): the end-to-end census; the slice passes; three production draws launched (2026-11-13)
+
+- *Council mk* (independent cold investigation, then consensus): the next step is D431's comparison as a diagnostic (D442). The
+  investigation (`clean-arch/e2e-comparison-2026-11-13/DESIGN.md`) found: production as it now runs is `poc-v118` (v116 is refused by
+  replay.py; D442's "v116" corrected); no stored v118 run was found; the frozen scorer cannot score own questions; the clean path's whole
+  chain already ran (unseeded draws 2026-11-10, Stage A run-4 ladders, Stage B judgements).
+- *Council ml* (six rounds, one resumed session) agreed shape B' (D443): the stored clean chain against fresh production draws, an
+  exploratory census. What the rounds built and checked, each with mutants: a production record reader that reproduces the frozen
+  scorer (69 outcomes, 0 mismatches); an evidence-visibility reader checked against an independent build (711 sets, cutoff, cross-view,
+  missing-call cases); preflight per check; the outcome and cause order ("unresolved" and "not judged" before fact causes); a shared
+  budget transport over production's own replay (ten checks; its first run caught a ledger race; Jev settled at its whole reservation).
+- *Slice* (`SLICE.md`): 13 of 13 items, 2 own views, both judged, readers read it, $0.021. Council: "send the three draws".
+- *Clean arm, from stored data, by the same rules* (strict eligibility, own ladders): graded questions agreeing with reader B per draw:
+  u1 1 (q13), u2 2 (q04, q18), u3 1 (q13); the rest not opened in the ruler's shape, opened but not eligible, or unresolved.
+- *Lessons:* (1) a check that never calls the function it claims to validate validates nothing (the council caught it); (2) a validation
+  needs negatives that can actually occur (the first negative set was empty on this data); (3) a ledger read outside its lock is a race;
+  (4) a retrying client hides billed attempts: account at the whole reservation.
+- *Spend under D439:* $4.77 + $0.021 slice; the draws under the $5.00 ledger.
+
+## 78. The first production draws stopped at the ledger; three fresh draws (D444) (2026-11-13)
+
+- *What happened:* p1–p3 stopped on 07-12/13 when the $5 ledger was exhausted: the Jev settlement agreed in round 5 charged each Jev call
+  its whole three-attempt byte-bound reservation (about 84,000 input tokens) against about 3,300 billed; ledger $4.999, archive $0.98.
+  The slice had shown the ratio (ledger $0.021, archive $0.013) and I did not compare them before the draws.
+- *Council ml-7 to ml-9:* resuming needed a recovery proof I could not complete at low cost (a fake judge cannot answer views opened on
+  the stopped day); three fresh draws instead. Jev now settles at three times its reported input (uncapped, so an excess trips the
+  overrun flag; zero or missing usage at the whole reservation); its retry check goes through the real client with a fake network
+  failure; 12 of 12, mutants caught. New ledger $3.00 (D444); fresh draws q1–q3 launched 03:29.
+- *Lessons:* (1) before a full run, compare the slice's ledger charge with its archived cost: a control instrument priced far above the
+  real cost can stop the run as surely as a real overspend; (2) "the most conservative option" needs its price computed before it is
+  adopted; (3) a cap like min(estimate, actual) can hide the very overrun the flag exists to catch.
+
+## 79. The census result: level on the graded questions, every loss at opening (2026-11-13)
+
+- *Fresh draws q1–q3* (D444): 243 items each, 0 failed, 13/12/15 own views, recorded $1.35 (ledger $1.77).
+- *Matching* (`matching/MATCHING-RESULT.md`): 6 disputes, all Codex-narrower against Claude-SAME, all ruled SAME by the third reader, as
+  the clean draws' 7. Production opens both capex years in 2 of 3 draws and the Ohio guarantee in 3 of 3.
+- *Eligibility* (`eligibility/`): 23 controls by Stage B's brief and builder; 10 disputed points to both third readers: 2 agreed, 8 split
+  along family lines (left unresolved). Codex's answer files were written to the wrong folder (a relative `-o` path under `-C`) and
+  recovered from the event streams; nothing re-read.
+- *Result* (`RESULT.md`): agrees with reader B on graded questions: production 1/1/1, clean 1/2/1; unresolved 2 each; no eligible
+  judgement disagrees in either arm; every loss is at opening. Read against the standard: q08 (production's 2026-12-31 against the
+  standard's fiscal year-end rule, 2027-01-31) and q18 (asking the slipped 2028 date against D248 boundary 2) breach the standard; q23
+  (2027-07-01 or 2027-12-31 against the ruler's 2027-06-30, all inside the standard's 18-month range) is a measuring-stick concern under
+  D373, scoring unchanged. q05 opened in the ruler's shape in no draw of either system.
+- *Lessons:* (1) under `codex exec -C <folder>`, give `-o` an absolute path; (2) the census's decisive finding came from reading the
+  readers' reasons against the standard, not from the counts; (3) a same-deadline rule (D430) can make answers that follow the standard
+  ineligible: record such concerns apart, never relax the frozen rule.
+
+## 80. After the census: the trace, the typed-unit audit, and the next step (D445–D447) (2026-11-13)
+
+- *Council mm* (five rounds): my first lean (event deadlines by code) withdrawn on the council's evidence; the $0 trace of the clean
+  path's 17 graded opening losses (`TRACE.md`): no single mechanism, 7 certain and 2 uncertain breaches of the standard's unit rules;
+  the typed-unit audit (`AUDIT-CONTRACT.md`, `AUDIT-RESULT.md`): 2 of 16 detectable, none recovered: the line stops (D447).
+- *Next* (D447): a reviewed $0 design for wiring the ladder step end to end and a diagnostic same-day run; the send decided after review.
+- *Lessons:* (1) an accounting summary must be reconciled with its own table before it is used ("seven breaches" against nine labelled);
+  (2) a reading rule changed after the design ("decisive reading") is reported beside the design's order, never in place of it; (3) the
+  losses that remain are judgement-level opening choices; structure can only refuse malformed theses, which the ladder step already
+  leaves without a ladder; (4) the census's sample (21 graded outcomes a side, different days) cannot call the systems level, only
+  close.
+
+## 81. The wiring: design settled (D448), the build started (2026-11-13)
+
+- *Council mn* (three rounds on `clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md`, now version 4): the contract settled; a
+  structural rule adopted (integration details settled in code and its $0 tests, not further prose; the trap of reviewing imagined
+  behaviour, which this loop fell into twice: v1 and v2 each held code facts I had not read, a type test and an inner retry loop).
+- *Built so far ($0):*
+  1. `budget_replay.SharedLedger`: a persisted stop (the first refusal, an overrun or an explicit stop refuses every later reservation in
+     any process); `check_budget.py` 14 of 14, including a cross-process check; mutant "no persisted stop" caught.
+  2. `clean-arch/step1/live.py`: `LiveTransport(..., ledger=None)`: with a ledger, each attempt reserves before it is sent and settles at
+     usage, the cumulative `max_usd` check skipped; without one, unchanged. `clean-arch/step1/test_live_ledger.py` 7 tests (byte-identical
+     requests with and without a ledger; reserve then settle; refusal sends nothing; failure and missing usage settle at the
+     reservation; call and time limits kept; the old cap without a ledger); Step 1's suite 66 passed; mutants (no reservation; limits
+     skipped) caught.
+  3. The ledger inside `StageALimit.send_labelled` and `LedgerBudget.send` (each attempt reserves in the locked step after the local cap
+     check, settles at its charge; a refusal stops the local limit): `clean-arch/step4-2026-11-10/test_shared_ledger_hooks.py` 4 tests,
+     mutants (no reservation; no settlement) caught. Stage A `--cases-file` and `--shared-ledger`; the adapter's inputs as arguments
+     (`replay(..., inputs=, shared=)`); `run_stage_b.py` `--root --runs --cap --inputs --shared-ledger` (defaults read at call time: two
+     existing tests caught my first version, which bound the defaults at definition). `run_live.py --shared-ledger`.
+  4. `build_cases.py --fresh`: the default path rebuilds `cases.json` byte for byte; the fresh path on stored u1 gives exactly the stored
+     u1 cases (12).
+  5. `budget_step2.py` (frozen `run_forward.py` wrapped from outside; embeddings at `search.EMBEDDING_PRICE_PER_M`, Jev as production's
+     wrapper, both calling the captured originals); `run_fresh.py`, one process per draw on the shared ledger (a new file: the old
+     launcher is in the unseeded freeze), with `test_run_fresh.py` 15 state × event tests and mutants (no crash detection, no ledger
+     check between components or at launch, configuration mismatch treated as redoable, preconditions ignored) caught; one mutant
+     survived and showed an unreachable guard, which was removed.
+- *The $0 proof (§C), all passed:* `proof_wiring.py` (9 checks): the parametrized adapter rebuilds Stage B's three views databases row for
+  row over all 24 tables (1,700–1,800 rows a draw), with the defaults and with the inputs passed explicitly; a wrong ladder file, trace
+  or cases file is detected; a live replay outside its output root is refused; a one-field change is found (positive control).
+  `proof_interception.py` (6 components): `urlopen` trapped; Step 1 one stored day (13 items: results and states as stored, sent bytes
+  identical), Step 2 the whole stored u1 draw (635 calls; library.json and decisions.json byte for byte), Stage A run 4 by pass (148
+  calls; every outcome of the three passes as stored), the judge on its live path (80 calls; every table as stored), production v118 one
+  day with 16 workers (19 calls; every request in q1's archive): every network call held a live reservation, ledger attempts = calls,
+  nothing left reserved; a Step 1 ledger refusal stops every other component before it sends; a crashed child's reservation stays
+  counted. Bypass mutants (Step 1 without the ledger, the judge without it, Step 2's Jev sending before reserving) are caught.
+- *Mistakes of my own, this round:* (a) the first rebuild failed on a refused judge answer, because my recorded transport ignored the
+  archive's `:refused:` key suffix (the proof's fault, not the wiring's); (b) the first cross-component stop test was refused by Step 1's
+  own output-cap rule and never reached the ledger, so it proved nothing; caught only because the report printed the ledger's empty stop
+  reason; the check now requires the ledger's own stop. Lesson: a refusal test asserts *which* rule refused.
+- *Implementation choices for the code review (D448's structural rule: settled in code, read by the reviewer):* the redo for Step 1, Step
+  2, the ladder and production waits for a relaunch with `--redo` after the reason is read (design §D said automatic for a stop a second
+  send can change; from outside a component's process that class is not reliably separable); Step 1's reservation uses its limits' rates
+  (input $0.50, above `model.PRICES`' $0.30) and settles at `model.PRICES`; the ledger's persisted stop is the run-wide stop signal.
+- Suites: frozen pieces 21 passed; Step 1, Step 4, the orchestrator and the Stage 2 adapter 262 passed; the full suite 287 passed.
+
+## 82. The code review of the wiring (council mo, D449, 2026-11-13)
+
+- *Review:* a fresh read-only Codex session read the code against WIRING-DESIGN v4 (`council/mo-handoff.md`; my notes written first,
+  `mo-claude.md`). Eight findings, all confirmed against the code: a helper's internal retry (Jev, embeddings) could send after another
+  process stopped the run; a SIGKILLed child was treated as a redoable stop; an orchestrator's death was seen only at its own relaunch;
+  local stops (Stage A's cap and stops, the judge's final stops) stayed local; the ladder and judge reserved `budget.worst_cost` (1 ×
+  bytes) instead of the agreed 2 × bytes + 4,096; launch inputs were not persisted; zero or negative usage could settle a paid request at
+  nothing; the proof ran components apart, not through the orchestrator. Of my seven self-noted weak points, two overlapped (the orphan
+  child, the manual redo); the reservation bound and the retry gap I had not seen.
+- *Consensus in three rounds* (`mo-codex-2.md`, `mo-codex-3.md`): four structural rules instead of eight patches (R1 shared stops read
+  before every actual send; R2 the draw record's identity and outcome class, launcher liveness as its lock registered on the ledger; R3
+  one reservation bound and one settlement rule; R4 the proof through the real orchestration), plus the relaunch race (a new launcher
+  must check its stale entry under the ledger's lock before taking its own lock). Two changes to §D recorded as D449, not as readings:
+  the reasoned manual redo (Step 1, Step 2, production only) and a crash stopping the whole run.
+- *Built and proved ($0):* see D449's record; `proof_end_to_end.py` runs one day through the real orchestrator (5 children, 55 calls, all
+  reserved) and both kill scenarios.
+- *My mistakes this round:* (a) I built the hooks on `worst_cost` although the contract I had written said 2 × bytes + 4,096: I read
+  the contract's table and then reused the nearest function without checking it against the table; (b) `REDO_ALLOWED` held the ladder
+  against §D's own table; (c) the first identity record shared its options dict with the live options (a later launch would always have
+  been refused); caught by reading, before a test; (d) two proof slips (a wrong `parents[1]`; a delayed admitted send counted as a send
+  after the kill). Lesson: when a contract has a table of values (bounds, redo per component), check each code value against the table
+  cell by cell before review, not after.
+- *Rounds 4–7 and the structural rule:* round 4 found the probe-then-lock race and an unregister on unexpected errors; round 5 the stop
+  written after the child wait and a signal between `started` and its flag; round 6 an interruption between components. Three rounds from
+  one mechanism: I stopped answering findings and wrote one rule, fail closed (D449 R5): the claim is one ledger-locked step; every exit
+  goes through `close`; any abnormal exit after work began writes the shared stop first; the registration goes only after a safe end.
+  Round 6 showed my first version of the rule had too narrow a premise ("an attempt is started" instead of "work began"); widened, round 7
+  found nothing serious: **ready for the slice**.
+- *Lesson (process):* the first answer to a class of findings should have been the rule, at round 4, not at round 6: when two findings in
+  one round share a mechanism, write the invariant that would have prevented both and test every exit against it before sending code back.
+
+## 83. The slice (D450, 2026-11-13)
+
+- *Council on the slice* (`mo-slice-proposal.md`, `mo-codex-8.md` to `mo-codex-10.md`): two changes before the send, both made: the
+  preflight (`preflight/PREFLIGHT-SLICE.md`: v118 q1–q3 through the current code, about 1% extraction refusals of known kinds, matching 0,
+  no wiring cause) and measurement records that substantiate per-component spend and time (the ledger's attempt lines written after its
+  state, best-effort, with pid, kind and tokens; attempt times in the draw record; `spend_by_component.py`). A lesson from round 2: a
+  measurement added inside a safety path must never be able to block it; write the safety state first.
+- *Launched* 2026-11-13 05:31:38: `poc/data/clean-e2e-slice-2026-11-13/` (ledger $1.50; `s1` clean, ladder pass 1; `sp1` production;
+  code checksums in `code-sha256.txt`). Health: load 2.8, 241 GB free, the three provider hosts answering.
+- *Result* (`clean-arch/e2e-comparison-2026-11-13/SLICE-RESULT.md`): both draws complete 05:39:40; 60 ledger lines, all attributed, summing
+  exactly to the ledger ($0.1593; about $0.152 at `model.call`'s formula); Step 1 13 items in 7 min 23 s ($0.132, equal to its archive),
+  two theses (the same two matters as u1's day 1), two sound ladders (a figure ladder, an event ladder with the amount not judged), two
+  judgements on the evidence shown (credit support rung 3, about $9.8bn from CoreWeave + lease guarantees; Ohio rung 3, unresolved);
+  production 13 items, one view at rung 2 (without the CoreWeave backstop in its evidence), no Ohio view. Spend under D439 about $7.26.
+  Projection for the full run about $10.4 of ledger, Step 1 about 2 h 20 min a draw. Next: the council's decision on the full run.
+
+## 84. The full run (D451, 2026-11-13)
+
+- *Council mp* (`mp-full-run-proposal.md`, `mp-codex.md`, `mp-codex-2.md`): agreed after one change, a written reading commitment before
+  any spend (`clean-arch/e2e-comparison-2026-11-13/READING-COMMITMENT.md`): a run whose lines depend on readings is worth sending only
+  when the readings are committed. Lesson: put the reading capacity in the proposal, not after the run.
+- *Launched* 2026-11-13 05:44:12: `poc/data/clean-e2e-full-2026-11-13/` (ledger $14.84), clean c1–c3 (ladder three passes) and production
+  p1–p3, 2026-07-01..07-14. Health: load 2.1, 241 GB free, the provider hosts answering.
+- *While it runs:* production p1–p3 completed at about 06:02 (0 failed; 12/13/14 views; 92/80/104 judgements; p3 opened the credit-support
+  amount twice; the Ohio guarantee only in p1, due 2027-07-01). The reading plan reviewed in council mq (three rounds) and recorded as D452:
+  the census's rules carried as written (my draft had shortened the loss trace to three stages, the first finding), Stage A line 5 scaled
+  as a council-set diagnostic line, new planted answers, two gates of fresh-input checks (my draft's single gate needed the census mapping
+  before the census readers ran: a circular order). Lesson: a plan that "carries a procedure over" cites it line by line, never a summary.
+- *c2's Step 1 stopped at 06:15* on a dropped response (`IncompleteRead(32718 bytes read)` at item 56; the same item completed in c1 and c3
+  with about 100 KB answers). Read before anything else; council mr agreed the D449 redo; recorded as D453; relaunched 06:16:35 with the
+  reason in the record (Step 1 from empty in `step1-redo`). The first real use of the reasoned-redo rule: the stop reached only its own
+  draw, c1 and c3 went on, nothing else was sent before the reading.
+- *The run ended 08:33* (all six complete; c2 after its redo): ledger $11.43 (every line attributed, summing to the ledger), Step 1 about
+  $2.4–2.5 and 2 h 8 min a draw (plus $0.69 lost to c2's first attempt), Step 2 about $0.37, the ladder $0.03–0.05, the judge $0.12–0.14,
+  production $0.53–0.66 a draw. Clean: 15/10/15 theses, ladders on 9/8/12 at the first pass, 69/72/92 judgements. Production: 12/13/14 views,
+  92/80/104 judgements, 0 failed.
+- *My first read* (every thesis, every ladder-step outcome of the three passes, every view's judgement path): the core matters recur in
+  all three clean draws and largely overlap production's; the clean draws open no company revenue or profit question (production does in
+  each), and none opened the Ohio guarantee this time (the slice's same configuration did); the step's refusals fall in three allowed
+  cases (several figures with no main one, a rolling 12-month period, a market no listed theme covers) and one refused twice (a reference
+  not verbatim); judgements are steady across draws on Rubin, 2026 capital spending, the French decision and Kyber; the credit-support
+  amount spreads $15bn / $36bn / $20–22bn by how far the judge scales Sharon AI's disclosed backstop to Firmus (the scaling the Stage B
+  readers split on before), and the supply commitments sit at $119bn against about $130bn. These are leads for the readings, not results.
+
+## 85. The readings, gate 1 (D452, 2026-11-13)
+
+- *Built and checked ($0):* Stage A's packets from the three draws (`build_reader_packets.py` now takes several runs; its default rebuilds
+  run 4's six packets byte for byte; a mismatched cases file is refused): 119 answers in 6 packets. The census matching packets under
+  neutral run names and ids (`full-matching-sources/build_matching_packets.py`; key outside the readers' folder; the article field made an
+  input id for both arms; disclosed: the period field's wording still differs by system).
+- *Matching* (MATCHING-v2, both families, 12 sessions; SAME = relation "same", last time's convention): 73 of 79 agree; 6 disputes to a third
+  reader of each family: the Codex third reader ruled 5 NOT SAME, the Claude one all 6 SAME, so 1 resolved and 5 unresolved (last time a
+  single Claude third reader would have made all six SAME; the two-third-reader rule is the reading commitment's). Graded subset opened:
+  c1 q04 q08 q13 q18; c2 q04 q18; c3 q04 q18 (+ q05, q08 unresolved); p1 q04 q13 q18 q23; p2 q04 q13 (+ q18 unresolved); p3 q04 q13 q18;
+  q09 nowhere (both readers "narrower", last time's limit).
+- *Stage A* (`clean-arch/e2e-comparison-2026-11-13/STAGE-A-FULL-RESULT.md`): lines 1–5 missed under both countings (favourable: Q 2, L 2,
+  R 2, N 1, right 32 / right by a ladder 22 of 40 against the council-set 32 / 26); line 6 met. The two third readers split on 41 of 80
+  points, by rule class (H100 price under semiconductor-cycle; the Intel stake as one figure; an obligation's due day at the report month
+  or at code's day; "nearing a conclusion" as a reference). The fresh run repeats the fourth Stage A's shape.
+- *Eligibility* (Stage B's control-reader brief, both families, 14 sessions; one Claude row asked again for an invalid JSON shape): 17
+  points differ, the Codex reader stricter on every one; the Codex third reader sided with Codex on all 17. *Lesson (recorded before, seen
+  again):* model readers carry their family's threshold; with one third reader of each family a family split becomes "unresolved", which
+  the design reports with both counts rather than settling.
+- *Census result and council ms* (D454): settled agreements clean 2/1/0, production 1/1/1 (2/2/1 against 2/2/2 with unresolved counted
+  eligible); no eligible judgement disagrees; every loss at opening. *My mistake:* I proposed skipping Stage B's reading because "line 3
+  cannot reach eight controls", counting only the seven graded questions; Codex showed Stage B's control population includes q07, so the
+  favourable bound is eight. Lesson: before calling a line decided, count its own population from its rule's text, not from a neighbouring
+  table.
+- *Loss trace read* (both families agree on all 110 marks): the clean path kept 51 of 55 decisive facts of its lost questions and lost
+  them purely at opening; production kept 39 of 55 and left extracted Kyber and Ohio facts unlinked. *Stage B line 3 computed* from the
+  control reading already made: 0 settled, at most 4 controls with material shown, against 8: unexercised; the judgement reading stops
+  (D455). Two corrections in one round, both found by computing instead of reasoning: my own (the population), then the council's (the
+  material-shown condition). *Lesson:* a line's verdict is computed by code from its full rule before anyone argues about it.
+
+## 86. The reflection (council mt, D456)
+
+- I leaned to opening as the next phase; a cold Codex read showed it is out of PRD 10's scope (§3), that production's kept-but-unlinked
+  facts are the phase's own blocker, that my falsifier did not test one mechanism, and that D447's typed fields argue against presuming a
+  required field. Consensus: trace production's unlinked facts at $0 beside the clean path's delivery of the same facts (D456).
+- *Lesson:* I skipped the phase PRD's §0 check (its out-of-scope table) when proposing a direction; the reflection's first question is
+  "what does the current PRD put in and out of scope", before which loss is largest.
+- *Unlinked-facts trace (D456 → D457):* three mechanisms in production (no back-filling; the parking lot; sibling filing), no final-answer
+  loss shown: every eligible production answer agrees, and repeated statements re-arrive after a late question opens. The falsifier fired;
+  next, a $0 review of the opening losses with four outcomes per case. *Lessons:* (1) an article-level census hides fact-level misses both
+  ways (p1's $3.5bn guarantee looked linked because a sibling item was): count at the fact level by hand before naming a mechanism's size;
+  (2) I first counted 12/8/3 and corrected to 11/4+3/4 by listing the 30 cases one by one; (3) the council removed my majority thresholds:
+  a minority class can still be a product defect, and a majority does not prove one mechanism.
+- *Opening review (D457 → D458):* 71 question-draws read against the standard; shown breaches small and spread; the largest classes are
+  choices the standard leaves open; no opening phase. Next: Stage A's agreed answer-choice failures at $0. *Lessons:* (1) "may open" is not
+  "must open": a statement filed elsewhere shows a breach only when the model's own reason shows the rule it broke (the council moved five
+  Ohio cases back to unresolved); (2) an ambiguous word ("launch") is not a wrong milestone until shown; (3) I wrote "one or two" in the
+  answer and "up to three" in the table: read the summary against the table before sending.
+- *Stage A trace (D458 → D459):* the judge reads only the first pass; three first-pass faults of three rules; no class. *Standard's tests and
+  accounts (D459 → D460, $0.0211):* M1 and M4 are strong recurring leads; the standard's unsigned-deal keep-apart line is missing from the
+  clean Step 1 request; next a whole-request prompt audit. *Lessons:* (1) check which pass the product reads before counting a step's faults
+  (two of five agreed faults were in passes the judge never sees); (2) a follow-up that names the omitted alternative invites agreement:
+  the replies locate an instruction, they do not prove the cause; (3) a "case by case" promise is met by a case table, not a class row.
+- *Prompt audit (D460 → D461):* two readers apart agree the clean request settles identity with §4's general rule only (the clean
+  architecture gives the decision to Step 1, while §4's boundaries were written for matching); F6 narrows the standard. *F6 (D461 → D462):*
+  two readers: decisive in one or two of 26 declines. *Status report:* written in plain words, 20 corrections over two council rounds.
+  *Lessons:* (1) a pattern count over reasoning ("22 of 26") measured mentions, not decisions; two readers classifying roles cut it to one or
+  two decisive; (2) my first report overstated in the same direction every time (no wrong answer "ever", gap "small", causes "proven"): read
+  a summary for the claim each number can carry before it goes to Alex.
+
+## 87. The identity lever: comparison, candidate c16 and a case-specific diagnostic (D463, D464)
+
+- Production, which also sees the open questions, carries the clause clean lacks ("a different quantity, period or decision is another")
+  and opens both capex years 5 of 6 and the Ohio signing 4 of 6; it never opens memory, the warning D441 already gave. The council chose the
+  prompt clause first (a matching stage cannot recover a question never proposed).
+- c16 went through five versions and four blind audits: population narrowed to "the same aggregate", "another year" narrowed to "next
+  year's figure of a shared quantity tracked as its own outcome", the later deadline separated as evidence, the unsigned deal tied to the
+  standard's size test, the comparison case written in, examples that fit the permitted opening reasons. +1,914 characters, reason written.
+- The fresh selection was done three times by blind readers. The finding: in 2026-07-15..09-04 each target boundary has **one** fresh story
+  (next year's hyperscaler capex; the OpenAI Ohio guarantee, 19 of 20 deal articles) and there is no independent comparison story in 40
+  candidates. The probe became a case-specific diagnostic; round 15 required a memory validity minimum and a ledger that never settles a paid
+  response at zero (fixed in a copy of the reviewed probe, proved with five tests and a mutant). Sent under D464.
+- *Lessons:* (1) a keyword selector's twenty-candidate window said nothing about the corpus until the next twenty were read: report a census
+  as "among the reviewed candidates"; (2) a reader asked to mark eighty articles marked five: split blind reading to one category per reader;
+  (3) a wait loop with a wrong pattern ended at once and looked like a failure: test the wait condition before trusting its exit; (4) the
+  harness's zero-usage rule was a latent undercount found by review, not by running: read the accounting path before any paid send.
+
+## 88. Deep reflection (D465, D466; Alex active again)
+
+- The identity diagnostic moved its error (2026 swapped for 2027); c16 not adopted. Alex asked whether I was circling; I said yes, and he
+  asked for a deep council. Cold read and two rounds: the stack's first gap (6.33 against 4.0) is real but uses the key's questions; the
+  second (to about 1.7) is not the ladder step's; D370 forbids rebuilding preset seeds; the three-month library is no starting library.
+- *Lessons:* (1) I chose each angle from the last result's leftovers instead of re-ranking from the goal; (2) I proposed a design (D208)
+  without reading the later decision that removed it (D370): read decisions in time order; (3) I subtracted scores from different runs and
+  called the difference a step's cost; (4) I told Alex "day 43" for a processing sequence number: check a field's meaning before quoting it.
+- *Ladder-cost proofs (D467 → D468):* the seeded control rebuilds from its archives (759 requests, a mutant caught); the swap changes only the
+  swapped views; blind-chosen case articles. Round 4 found more owed (future information, net counts); round 5 applied D466's guard lines and
+  stopped the design. *Lesson:* the first guard line ("which final answers can it change?") stopped a fourth design round that the council's
+  rigor alone would have continued; ask it before the first round, not the fourth.
+
+## 89. After the reflection: the ladder refusals, the Stage A splits, the period candidate (D467–D473)
+
+- Ladder-cost proofs built and kept (D467–D468); the ladder-refusal candidate stopped on a contested boundary (D469–D470); the 41 Stage A
+  splits recorded, none changing the verdict (D470); the ten right-by-refusal theses traced, three to the period rule read as a horizon (D471);
+  the period candidate c17 probed and failed: no calendar-year openings, memory and federal openings suppressed (D472–D473; $1.68).
+- *Lessons:* (1) a model's own account locates a misread but does not predict its response to a correction: c17 made the model decline, not
+  reshape; (2) a ledger that charges timeouts at their reservations can stop a probe before its real cost: size the ceiling for the
+  reservations, not the tokens; (3) an automatic count of thesis shapes by pattern was wrong twice: count shapes by reading each send;
+  (4) the council's rounds before each send were each right, and each send still failed: the cheap probe answered faster than more design.
+
+## 90. The unsigned-deal candidate (D474–D475) and the reflection round (D476)
+
+- c18 (D388 at the binding-obligation definition, four blind audits) on unseen articles against the acceptance library: the one qualifying
+  target story in seven weeks (Anthropic, up to $10bn under discussion) opened by c18 in 4 of 6 and by c8 in 3 of 6: not moved; no regression on
+  six fresh negatives and six identity guards; Ohio 6 of 9 against 0 of 9 (reported). Not adopted ($2.40).
+- The same stored federal request gave c8 3 of 3 in the period probe and 0 of 3 here: three sends a case sit inside c8's own variance.
+- Reflection (two failed angles in a row, D466): the ladder-cost comparison is not sent (look-ahead; cannot attribute the historical gap). The
+  open product decision is whether Step 4's Stage A line is reachable with the shapes the articles support; a $0 two-reader source check of
+  the eleven first-pass refusals runs first (D476).
+- *Lessons:* (1) screen unseen material for the target class before designing a probe around it: the D388 class is rare outside its
+  motivating story; (2) "c8 already does it half the time" is a result: a line needs a no-room outcome written before the send, as this one
+  had; (3) a guard's control can swing 3/3 to 0/3: a guard line read on three sends needs the control's own spread before it is called a
+  regression.
+
+## 91. Reflection rounds 19–23: is Stage A reachable? (D476–D477)
+
+- Two blind readers on the eleven first-pass refusals: six right (four catch Step 1 over-opening), four runs on two matters reachable on paper
+  (H100 rental price, memory price), federal split. The H100 decline is a coin flip on a thin theme ("Semiconductor cycle"), not a missing
+  theme; where laddered, 20 company judgements cite it by id and one ungraded question's reasons mention it.
+- Consensus D477: Stage A not passed; no H100 or Step 1 change; production stays the default; the choices go to Alex
+  (`clean-arch/e2e-comparison-2026-11-13/CHOICES-FOR-ALEX-2026-11-13.md`, council-checked in round 23); no paid clean-path send until a choice.
+- *Lessons (my mistakes this round, each caught by the council):* (1) I searched answers' text for "H100" and reported "none mentions it"; the
+  answers cite views by id: search the structured field a reader of the record uses, not the prose; (2) I miscounted the H100 theme
+  assignments (four under one theme, really three plus one wrong theme): count from the rows, never from a summary line; (3) my first page
+  for Alex promoted an untested structural test to a priced recommendation that the consensus had not made: a page states the consensus, not
+  my own next idea.
+
+## 92. The council takes the choices itself (D478–D480)
+
+- Choice 2 tested (c19: the first step writes each new thesis's settling figure or event and its fixed outcomes, schema only, three blind
+  audits): fails: outcomes written in the same call fail the standard's checks (1 of 21 by a strict blind reader); no target reshaped; the
+  memory question at c2 step 56 opened less ($1.88). Choice 3 taken (D479): production stays the default; the next test comes from production's
+  losses.
+- Production's largest consistent loss: the memory-price question q05 never opened in 6 of 6 production draws, traced to v74i's
+  industry_aggregate sentence ("one aggregate quantity") leaving out the price Alex already approved (D191 point 4, "好") and ordered built
+  (D368 item 1, "这个你记住，我们要做"). Probe sent (D480).
+- *Lessons:* (1) before designing a fix, search the decisions for the mechanism: the price rule was decided by Alex two weeks ago and never
+  built; (2) a one-call output contract moves work but not quality: the separate ladder step's code checks are where outcomes become sound.
+

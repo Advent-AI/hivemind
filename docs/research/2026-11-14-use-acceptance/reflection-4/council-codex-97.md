@@ -1,0 +1,11 @@
+**No-go on v3 yet.** A fresh comparison could be worth the estimated $4–5, but the extra value is a test of A2 on new material—not the first gate-1 reading with a carried library. The fortnight’s gate-1 reading already included six topics opened in week 2 from week 1’s library; it did not isolate those six as a separate gate verdict. [Fortnight result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/carried-run/RESULT.md:29>)
+
+Two parts of the decision need clarification before building:
+
+1. **H’s role conflicts in the design.** The reading says H is “reported, never a veto,” but the lead rule limits “every other line and mark,” which can include H. State explicitly whether H can make the comparison negative. [Fresh design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md>)
+
+2. **The scaled spread is not supported by its denominator.** The numerator is the largest difference in *one group*, while 18 is the total across three groups of different sizes. Multiplying that group difference by `n / 18` has no established interpretation. Calling it exploratory discloses the limit but does not make the resulting veto reliable. Use the observed differences as context beside the actual failures, or justify and test a comparison rule that can distinguish the effect claimed. [Control comparison](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/control-vs-control.txt>)
+
+The separate minimum and exercise condition for each population address the previous gap. Given the explicit risk that the different-matter subset is too small, I would make the **$0 entry, exposure and cost proofs** the next step, then decide on the paid run with the actual reservation and reader-work estimates. A fresh frozen-step reading alone is useful context, but the record does not show it is worth $4–5 by itself.
+
+CONSENSUS: no, because H’s role is contradictory and the proposed regression bar scales a group difference by an unrelated population size.

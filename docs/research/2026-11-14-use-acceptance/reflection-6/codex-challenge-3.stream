@@ -1,0 +1,984 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 3: the matched effort comparison is prepared at $0 (`reflection-6/effort/`); send decision
+
+Your round-2 changes are applied in `effort/DESIGN.md` (fixed before any send) and `effort/effort_probe.py`:
+
+- **Arms:** fresh medium and high, three draws each, interleaved (medium d1, high d1, …), on the 26 topics outside the 44. Each
+  arm-draw has its own archive, so nothing is answered from a stored answer.
+- **The check** (`effort/check-output.txt`): 26 of 26 medium requests equal their stored first request (sha256). Each high request
+  differs only in `reasoning_effort`: same keys in the same order, same schema, same cap (16,000 output tokens), same runner, limit,
+  retries and transport.
+- **Controls, six:**
+  - the reference control's four: two sound, an R gap, a Q other-question;
+  - two new planted-wrong ones from stored July ladders outside the population:
+    - L: c2/clean-1 with its materiality part removed from not_judged, though the outcome names "whether the exposure is material";
+    - N: c2/clean-4, the big four's 2026 capex, turned into a "no main figure" refusal.
+  - A miss of any planted-wrong control by either family voids the reading.
+- **Counted:**
+  - per arm over 78 sends: agreed hard-line faulted items, refusals, and unreadable answers (the truncation signal);
+  - per topic: faulted sends;
+  - every agreed high-arm fault, and every fault that differs between the arms on a topic, is reviewed against its source.
+- **Outcomes, fixed:**
+  - **moves:** high faulted items at most half of medium and at least 3 fewer; no topic faulted in 2 or more high draws but in no
+    medium draw; refusals and unreadable answers no more than 2 above medium; the direction is unreversed when unresolved points count
+    against;
+  - **closes:** high at least medium minus 1;
+  - **otherwise inconclusive.**
+- **Spend:**
+  - caps $0.25 (medium) and $0.75 (high), $1.00 together, reserved per attempt at the worst cost;
+  - a breach guard;
+  - a stopped arm-draw is NOT MEASURED;
+  - expected about $0.08 medium and an unmeasured $0.15–0.30 high;
+  - about $9.7 left of D439's $40.
+- **Tests** (`effort/test_effort_probe.py`, 4 of 4): the six arm-draws through the real runner with a fake transport, each at its own
+  effort; equal arms close; four medium faults against none in high move; a missed planted control voids.
+
+**Known risk:** high effort may hit the 16,000-token output cap more often. The cap is kept equal, as you required, and unreadable
+answers are counted separately and bounded in the outcome rule.
+
+**Asked:** send now, or name what must change first. After the send: the reading (both families, 162 items), the review, and a
+result round.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the frozen design, the request comparison and the stop rules against the actual probe before deciding whether this send can answer the question.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+26 topics: each medium request equals its stored first request and each high request differs only in reasoning_effort: True; controls 6; most attempts an arm 468; the sum of worst-case reserves if every attempt were at its worst {medium: $4.90, high: $4.90}; caps {'medium': 0.25, 'high': 0.75}
+check passed
+
+ succeeded in 0ms:
+"""The matched reasoning-effort comparison (DESIGN.md, D624).
+
+  python3 effort_probe.py check                          # $0: requests, controls, spend; writes check-passed.json
+  python3 effort_probe.py send <new run folder>          # medium d1, high d1, medium d2, high d2, medium d3, high d3
+  python3 effort_probe.py reading <run folder> <key folder>
+  python3 effort_probe.py score <run folder> <key folder>
+"""
+import collections
+import concurrent.futures
+import copy
+import dataclasses
+import hashlib
+import json
+import os
+import random
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+sys.path[:0] = [str(HERE.parent / 'reference-control'), str(HERE.parents[1] / 'splitting')]
+import refcontrol  # noqa: E402   (puts Stage A, the ladder step and src on the path)
+import probe_split  # noqa: E402
+import accounting  # noqa: E402
+import budget  # noqa: E402
+import build_reader_packets  # noqa: E402
+import collect_readings as collector  # noqa: E402
+import ladder_step  # noqa: E402
+import model_calls  # noqa: E402
+import stage_a  # noqa: E402
+from hivemind import model  # noqa: E402
+
+SETTINGS = {'medium': stage_a.SETTING, 'high': dataclasses.replace(stage_a.SETTING, reasoning_effort='high')}
+ORDER = [('medium', 1), ('high', 1), ('medium', 2), ('high', 2), ('medium', 3), ('high', 3)]
+CAPS = {'medium': 0.25, 'high': 0.75}
+RECORD = HERE / 'check-passed.json'
+CODE_FILES = [Path(__file__), Path(refcontrol.__file__), refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+NEW_CONTROLS = {'control|unlisted-part': ('c2/clean-1', 'L'), 'control|unjustified-refusal': ('c2/clean-4', 'N')}
+HARD = refcontrol.HARD
+SHUFFLE_SEED = 20261120
+
+
+def built(case, setting, rl):
+    texts = stage_a.request_texts()
+    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(setting, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+
+
+def controls():
+    """The reference control's four, and two new planted-wrong ones (an unlisted part, an unjustified refusal)."""
+    out = refcontrol.controls()
+    stored = {row['case']: row for row in map(json.loads, refcontrol.JULY_STORED.read_text().splitlines()) if row['pass'] == 1}
+    for control, (name, mark) in NEW_CONTROLS.items():
+        row, case = copy.deepcopy(stored[name]), refcontrol.july_case(name)
+        if mark == 'L':
+            parts = row['answer']['ladder']['not_judged']
+            if not parts or 'material' not in parts[0]['part']:
+                raise SystemExit(f'{control}: the stored first listed part of {name} is not the materiality part')
+            row['answer']['ladder']['not_judged'] = parts[1:]
+        else:
+            reason = 'the topic has no main figure or event: it names several with none of them the main one'
+            row = dict(row, status='no ladder', reason=reason, answer={'no_ladder': reason, 'ladder': None}, passage=None, view=None)
+        out.append((dict(row, case=control, **{'pass': 1}), case, {mark: 'fails'}))
+    return out
+
+
+def check():
+    rl = refcontrol.research_list()
+    failures, shas = [], {'medium': {}, 'high': {}}
+    for source, name, case, stored in refcontrol.population():
+        medium, high = built(case, SETTINGS['medium'], rl), built(case, SETTINGS['high'], rl)
+        same_as_stored = model.request_identity(medium)[1] == stored['requests'][0]['request_sha256']
+        only_effort = {k: v for k, v in high.items() if k != 'reasoning_effort'} == {k: v for k, v in medium.items() if k != 'reasoning_effort'} \
+            and list(high) == list(medium) and medium.get('reasoning_effort') == 'medium' and high.get('reasoning_effort') == 'high'
+        if not (same_as_stored and only_effort):
+            failures.append(f'{source}:{name} stored {same_as_stored} only-effort {only_effort}')
+        shas['medium'][f'{source}:{name}'] = model.request_identity(medium)[1]
+        shas['high'][f'{source}:{name}'] = model.request_identity(high)[1]
+    built_controls = controls()
+    worst = {arm: 3 * 2 * budget.ATTEMPTS * sum(budget.worst_cost(built(case, SETTINGS[arm], rl)) for *_, case, _ in refcontrol.population())
+             for arm in SETTINGS}
+    print(f'26 topics: each medium request equals its stored first request and each high request differs only in reasoning_effort: '
+          f'{not failures}; controls {len(built_controls)}; most attempts an arm {26 * 3 * 2 * budget.ATTEMPTS}; the sum of worst-case '
+          f'reserves if every attempt were at its worst {{{", ".join(f"{a}: ${w:.2f}" for a, w in worst.items())}}}; caps {CAPS}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def run_arm(cases, folder, cap_usd, setting, rl, transport=None, workers=8):
+    """One arm-draw: Stage A's runner with the setting given (its model, effort and cap)."""
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=False)
+    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+    texts = stage_a.request_texts()
+    checksum = hashlib.sha256(json.dumps([setting.model, setting.reasoning_effort, setting.max_output_tokens]).encode()).hexdigest()[:16]
+    call_config = SimpleNamespace(provider='openai', version=f'clean-ladder-effort-{setting.reasoning_effort}', checksum=checksum)
+    archive = model.Archive(str(folder / 'archive.sqlite'))
+    write_lock, written = threading.Lock(), []
+
+    def work(case):
+        labelled = SimpleNamespace(request_number=0)
+        labelled.send = lambda provider, request: limit.send_labelled(f"{case['case']}|{labelled.request_number}", provider, request)
+        call_model = model_calls.model_caller(model, archive, call_config, setting, labelled)
+
+        def counted(system_text, user_text, schema):
+            labelled.request_number += 1
+            return call_model(system_text, user_text, schema)
+        try:
+            outcome = ladder_step.ladder_for_thesis(stage_a.payload_for(case, rl), system_text=texts['system'], closing_text=texts['closing'],
+                                                    schema=texts['schema'], call_model=counted, check=refcontrol.check_of(case, rl))
+            view = None
+            if outcome['status'] == 'ladder':
+                view = ladder_step.write_view(outcome['answer']['ladder'], outcome['passage'], thesis=case['thesis'],
+                                              article_day=case['item']['publication_date'], company=stage_a.COMPANY, research_list=rl)
+            row = {'case': case['case'], 'pass': 1, 'status': outcome['status'], 'reason': outcome['reason'], 'requests': outcome['requests'],
+                   'answer': outcome['answer'], 'passage': outcome['passage'], 'view': view}
+            with write_lock:
+                with (folder / 'outcomes.jsonl').open('a') as handle:
+                    handle.write(ladder_step.as_json(row) + '\n')
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                written.append(case['case'])
+        except (stage_a.Stopped, budget.OverBudget):
+            return
+        except Exception as error:
+            limit.stop(f"{case['case']}: {type(error).__name__}: {error}")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(work, cases))
+    return written, limit
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    population = refcontrol.population()
+    for arm in SETTINGS:
+        now = {f'{source}:{name}': model.request_identity(built(case, SETTINGS[arm], rl))[1] for source, name, case, _ in population}
+        if now != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent = collections.Counter()
+    for arm, draw in ORDER:
+        cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in population]
+        cap = CAPS[arm] - spent[arm]
+        written, limit = run_arm(cases, folder / f'{arm}-d{draw}', cap, SETTINGS[arm], rl, transport=guard)
+        known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        spent[arm] += known + in_full
+        over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        print(f'{arm} d{draw}: {len(written)} of 26 written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+        if over or guard.breaches or limit.stopped or len(written) != 26:
+            raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    print(f'spent {dict(spent)}')
+
+
+def reading(run_folder, key_folder):
+    run_folder, key_folder = Path(run_folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    rl = refcontrol.research_list()
+    population = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    rows, cases = [], {}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (run_folder / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+            if row['status'] not in ('ladder', 'no ladder'):
+                continue
+            rows.append(row)
+            cases[row['case']] = dict(population[row['case'].split('|', 1)[1]], case=row['case'])
+    expected = {}
+    for row, case, marks in controls():
+        rows.append(row)
+        cases[row['case']] = dict(case, case=row['case'])
+        expected[row['case']] = marks
+    reading_folder = run_folder / 'reading'
+    (reading_folder / 'send-1').mkdir(parents=True)
+    (reading_folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+    order = sorted(rows, key=lambda row: row['case'])
+    random.Random(SHUFFLE_SEED).shuffle(order)
+    (reading_folder / 'readers').mkdir()
+    key, packets = {}, []
+    for number, row in enumerate(order, start=1):
+        key[str(number)] = [row['case'], 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+    for packet_number, packet in enumerate(packets, start=1):
+        (reading_folder / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    print(f'{len(rows)} items in {len(packets)} packets')
+
+
+def score(run_folder, key_folder):
+    reading_folder = Path(run_folder) / 'reading'
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading_folder, Path(key_folder) / 'key.json')
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+        for mark, value in marks.items():
+            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+    sends = {arm: {} for arm in SETTINGS}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (Path(run_folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+            sends[arm][row['case']] = row
+    report = {}
+    for unresolved_as in ('holds', 'fails'):
+        faulted = {arm: collections.Counter() for arm in SETTINGS}
+        items = {arm: 0 for arm in SETTINGS}
+        for send, outcome in outcomes.items():
+            arm = send[0].split('-d')[0]
+            if arm not in SETTINGS:
+                continue
+            rows = [readers[reader][send] for reader in collector.FAMILIES]
+            found = {mark for mark in accounting.marks_that_apply(accounting.kind_of(outcome)) if mark in HARD
+                     and refcontrol.settled(rows, mark, unresolved_as) == 'fails'}
+            if found:
+                items[arm] += 1
+                faulted[arm][send[0].split('|', 1)[1]] += 1
+        refusals = {arm: sum(row['status'] != 'ladder' for row in sends[arm].values()) for arm in SETTINGS}
+        unreadable = {arm: sum(any('could not be read' in str(request.get('error') or '') for request in row['requests'])
+                               for row in sends[arm].values()) for arm in SETTINGS}
+        new_harm = [topic for topic, count in faulted['high'].items() if count >= 2 and faulted['medium'][topic] == 0]
+        report[unresolved_as] = {'faulted items': items, 'refusals': refusals, 'unreadable answers': unreadable, 'new harm topics': new_harm,
+                                 'faulted per topic': {arm: dict(counter) for arm, counter in faulted.items()}}
+    agreed, strict = report['holds'], report['fails']
+    improvement = agreed['faulted items']['high'] * 2 <= agreed['faulted items']['medium'] and \
+        agreed['faulted items']['medium'] - agreed['faulted items']['high'] >= 3
+    no_harm = not agreed['new harm topics'] and agreed['refusals']['high'] - agreed['refusals']['medium'] <= 2 and \
+        agreed['unreadable answers']['high'] - agreed['unreadable answers']['medium'] <= 2
+    same_direction = strict['faulted items']['high'] < strict['faulted items']['medium']
+    if improvement and no_harm and same_direction:
+        verdict = 'moves the candidate'
+    elif agreed['faulted items']['high'] >= agreed['faulted items']['medium'] - 1:
+        verdict = 'closes it'
+    else:
+        verdict = 'inconclusive'
+    print(json.dumps(report, indent=1))
+    print(f'VERDICT: {verdict}')
+    return verdict, report
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'reading':
+        reading(*sys.argv[2:4])
+    elif command == 'score':
+        score(*sys.argv[2:4])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+"""The effort comparison end to end at $0 (DESIGN.md): the check, the six interleaved arm-draws through the real runner and limit with a
+fake transport answering each topic's stored answer, the blind reading, made-up reader rows, and the verdict rule fixed before."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import effort_probe  # noqa: E402
+import accounting  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 5000, 'completion_tokens': 1500}
+
+
+def transport():
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    seen = []
+
+    def send(provider, request):
+        seen.append(request.get('reasoning_effort'))
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+    send.seen = seen
+    return send
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('effort')
+    original, effort_probe.RECORD = effort_probe.RECORD, folder / 'check-passed.json'
+    try:
+        effort_probe.check()
+        fake = transport()
+        effort_probe.send(folder / 'run', transport=fake)
+        effort_probe.reading(folder / 'run', folder / 'keys')
+    finally:
+        effort_probe.RECORD = original
+    return folder, fake
+
+
+def test_each_arm_draw_sends_every_topic_at_its_own_effort(run):
+    folder, fake = run
+    for arm, draw in effort_probe.ORDER:
+        rows = (folder / 'run' / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()
+        assert len(rows) == 26 and all(json.loads(row)['case'].startswith(f'{arm}-d{draw}|') for row in rows)
+    assert fake.seen.count('medium') >= 78 and fake.seen.count('high') >= 78 and set(fake.seen) == {'medium', 'high'}
+
+
+def write_rows(folder, fail):
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    expected = json.loads((folder / 'keys' / 'controls-expected.json').read_text())
+    outcomes = {row['case']: row for row in map(json.loads, (folder / 'run' / 'reading' / 'send-1' / 'outcomes.jsonl').read_text().splitlines())}
+    answers = folder / 'run' / 'reading' / 'readers-answers'
+    answers.mkdir(exist_ok=True)
+    for family in ('codex', 'claude'):
+        lines = []
+        for item, (case, _) in key.items():
+            outcome = outcomes[case]
+            kind = accounting.kind_of(outcome)
+            applicable = accounting.marks_that_apply(kind)
+            row = {'item': int(item), 'W': '', 'why': ''}
+            for mark in accounting.ALL_MARKS:
+                row[mark] = ('not_assessable' if kind in ('company figure', 'theme figure') else 'n/a') if mark == 'G' \
+                    else 'holds' if mark in applicable else 'n/a'
+            row['B'] = [] if kind == 'refusal' else ['not_a_bet'] * len(outcome['answer']['ladder']['not_judged'])
+            for mark, value in expected.get(case, {}).items():
+                if mark != 'all':
+                    row[mark], row['why'] = value, 'planted'
+            if fail(case) and 'L' in applicable:
+                row['L'], row['why'] = 'fails', 'a part unlisted'
+            lines.append(json.dumps(row))
+        (answers / f'reader-{family}-packet-1.jsonl').write_text('\n'.join(lines) + '\n')
+
+
+def test_equal_arms_close_the_candidate(run):
+    folder, _ = run
+    write_rows(folder, lambda case: False)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert verdict == 'closes it' and report['holds']['faulted items'] == {'medium': 0, 'high': 0}
+
+
+def test_a_medium_arm_faulted_on_four_topics_where_high_is_clean_moves_the_candidate(run):
+    folder, _ = run
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2']
+    write_rows(folder, lambda case: case.startswith('medium-d1|') and case.split('|', 1)[1] in topics)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds']['faulted items'] == {'medium': 4, 'high': 0} and verdict == 'moves the candidate'
+
+
+def test_a_missed_planted_control_voids_the_reading(run):
+    folder, _ = run
+    write_rows(folder, lambda case: False)
+    path = folder / 'run' / 'reading' / 'readers-answers' / 'reader-claude-packet-1.jsonl'
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    item = next(int(item) for item, (case, _) in key.items() if case == 'control|unlisted-part')
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    for row in rows:
+        if row['item'] == item:
+            row['L'], row['why'] = 'holds', ''
+    path.write_text('\n'.join(json.dumps(row) for row in rows) + '\n')
+    with pytest.raises(SystemExit, match='VOID: a family missed the planted control\\|unlisted-part'):
+        effort_probe.score(folder / 'run', folder / 'keys')
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Matched reasoning-effort comparison of the answer-choice step (D624), fixed before any send
+
+**Hypothesis.** The frozen step (`gpt-6-luna`, medium reasoning effort) leaves parts of a topic's outcome unlisted (L) and asks
+another question (Q) more often than a careful writer does (`../reference-control/RESULT.md`). The same model at high effort makes
+fewer of these errors. This is a hypothesis, not an established cause.
+
+## Arms and population
+
+- **The arms:** `medium` (the frozen step as it is) and `high` (identical except `reasoning_effort='high'`). Three fresh draws each, on
+  the 26 topics outside the 44 used by the reference control (the fortnight's and the week of 10-06's, all 13 of each).
+- **Interleaving:** medium d1, high d1, medium d2, high d2, medium d3, high d3, each a separate run with its own archive.
+- **Request equality:** every request is the frozen request byte for byte (system, user, schema, output cap, transport, retries),
+  except `reasoning_effort`. This is checked at $0.
+
+## Reading
+
+- **What is read:** all six arm-draws' written ladders and refusals (156 items), mixed blind and shuffled, plus six controls:
+  - the reference control's four: two sound, a rung gap (R) and another question (Q);
+  - two new ones:
+    - an unlisted part (L): a stored ladder with one listed part its outcome names removed from not_judged;
+    - an unjustified refusal (N): a "no main figure" refusal put on a topic with a stated main figure.
+- **Who reads:** both families with `stage-a-reader-brief.md` (the full gate form).
+- **Disputes:** counted both ways.
+- **Validity:** a missed planted-wrong control voids the reading.
+- **Review:** every agreed hard-line fault in the high arm, and every one that differs between the arms on a topic, is reviewed
+  against its source.
+
+## What is counted
+
+- Per arm, over 78 sends: items with an agreed fault on Q, L, R or N; refusals (the model's, and code's refused-twice); answers that
+  could not be read (a truncation signal).
+- Per topic: faulted sends in each arm.
+
+## Outcomes, fixed now
+
+- **Moves the candidate:** both of these, on agreed marks:
+  - **a material paired improvement:** the high arm has at most half the medium arm's faulted items, and at least 3 fewer;
+  - **no new harm:** no topic faulted in 2 or more high draws while faulted in no medium draw; high refusals and unreadable answers no
+    more than 2 above medium.
+
+  The direction must not reverse when unresolved points count against.
+- **Closes it:** the high arm's faulted items at least the medium arm's minus 1.
+- **Otherwise inconclusive.**
+
+## Spend
+
+- Caps: medium $0.25, high $0.75, reserved per attempt at the worst cost.
+- Expected: about $0.08 (medium) and an unmeasured $0.15 to $0.30 (high).
+- A separate council decision is needed before the send.
+
+**Limits:**
+- 26 topics, chosen as all of two stored weeks;
+- one model;
+- the same readers as before.
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/reference-control/refcontrol.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""Gate 1's reading measured with a blinded reference control outside the 44 (DESIGN.md, D623). $0 in API calls: the writers and
+readers are read-only subscription sessions.
+
+  python3 refcontrol.py inputs                                   # the writers' input files (writers/)
+  python3 refcontrol.py accept <writer> <source> <answers.jsonl>  # check a writer's answers; prints refusals to send back once
+  python3 refcontrol.py reading <run folder> <key folder>         # the blind reading folder (a Stage A run folder) and its key
+  python3 refcontrol.py score <run folder> <key folder>           # per arm, settled faults per line both ways; the review list
+"""
+import collections
+import copy
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+STAGE_A = ROOT / 'clean-arch/step4-2026-11-10/stage_a'
+LADDER = ROOT / 'clean-arch/step4-2026-11-10/ladder'
+sys.path[:0] = [str(STAGE_A), str(LADDER), str(ROOT / 'src'), str(ROOT / 'clean-arch/e2e-2026-11-09')]
+import accounting  # noqa: E402
+import build_reader_packets  # noqa: E402
+import collect_readings as collector  # noqa: E402
+import ladder_step  # noqa: E402
+import stage_a  # noqa: E402
+from hivemind import extraction, model, universe  # noqa: E402
+
+DATA = ROOT / 'poc/data'
+SOURCES = {'fortnight': (DATA / 'clean-carried-run-2026-11-16/c1/cases/cases.json', DATA / 'clean-carried-run-2026-11-16/stage-a'),
+           'week-10-06': (DATA / 'clean-second-week-2026-11-15/week-continued/c1/cases/cases.json',
+                          DATA / 'clean-second-week-2026-11-15/week-continued/stage-a')}
+WRITERS = ('ref-codex', 'ref-claude')
+ARMS = ('frozen',) + WRITERS
+SOUND = [('july', 'c3/clean-5'), ('july', 'c1/clean-7')]           # both families marked clean on every mark (split probe reading)
+SOUND_RUN = DATA / 'clean-split-probe-2026-11-16/frozen/send-1/outcomes.jsonl'
+JULY_STORED = DATA / 'clean-e2e-full-2026-11-13/stage-a/send-1/outcomes.jsonl'
+JULY_CASES = [DATA / f'clean-e2e-full-2026-11-13/c{n}/cases/cases.json' for n in (1, 2, 3)]
+WRONG = {   # planted-wrong controls: (stored July case, the edit, the mark a reader must fail)
+    'control|gap': ('c2/clean-8', 'gap', 'R'),
+    'control|other-question': ('c3/clean-13', 'other question', 'Q'),
+}
+SHUFFLE_SEED = 20261119
+HARD = ('Q', 'L', 'R', 'N')                                        # gate 1's lines 1 to 4
+
+
+def research_list():
+    return universe.load(str(ROOT / 'poc' / 'universe.json'))
+
+
+def population():
+    """[(source, name, case, stored first send)] for every topic of the two sources; refuses one that is among the 44."""
+    the_44 = {case['thesis']['description'] for case in json.loads((STAGE_A / 'cases.json').read_text())}
+    out = []
+    for source, (cases_path, folder) in SOURCES.items():
+        stored = {row['case']: row for row in map(json.loads, (folder / 'send-1/outcomes.jsonl').read_text().splitlines()) if row['pass'] == 1}
+        for case in json.loads(cases_path.read_text()):
+            if case['thesis']['description'] in the_44:
+                raise SystemExit(f"{source}:{case['case']} is among the 44 (D426)")
+            out.append((source, case['case'], case, stored[case['case']]))
+    if len(out) != 26:
+        raise SystemExit(f'{len(out)} topics, not 26')
+    return out
+
+
+def check_of(case, rl):
+    def check(answer):
+        return ladder_step.check_answer(answer, thesis=case['thesis'], article=case['item'], company=stage_a.COMPANY, research_list=rl,
+                                        repair_quote=extraction.repair_quote, normalise=extraction.normalise, quote_tokens=extraction._quote_tokens,
+                                        beyond_next_year=extraction.beyond_next_year, binding_horizon_days=extraction.BINDING_HORIZON_DAYS)
+    return check
+
+
+def inputs():
+    """writers/<source>.md: the step's system text and schema once, then each topic's user message exactly as the step sends it."""
+    texts, rl = stage_a.request_texts(), research_list()
+    folder = HERE / 'writers'
+    folder.mkdir(exist_ok=True)
+    by_source = collections.defaultdict(list)
+    for source, name, case, _ in population():
+        by_source[source].append((name, ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])))
+    for source, topics in by_source.items():
+        parts = ['# The answer-choice step\'s requests for 13 topics', '', '## The system text (the same for every topic)', '', texts['system'],
+                 '', '## The answer schema (strict JSON; the same for every topic)', '', json.dumps(texts['schema'], ensure_ascii=False, indent=1), '']
+        for name, user in topics:
+            parts += [f'## Topic {name}: the user message', '', user, '']
+        (folder / f'{source}.md').write_text('\n'.join(parts))
+    print({source: len(topics) for source, topics in by_source.items()})
+
+
+def accepted(answer_obj, case, rl):
+    """(row or None, reasons): a writer's answer through the schema check and the step's checks, rendered as the step renders it."""
+    text = json.dumps(answer_obj, ensure_ascii=False)
+    schema_errors = model.check_schema(json.loads(text), stage_a.request_texts()['schema'])
+    if schema_errors:
+        return None, [f'the answer does not fit the schema: {error}' for error in schema_errors]
+    answer = ladder_step.parse_exactly(text)
+    reasons, passage = check_of(case, rl)(answer)
+    if reasons:
+        return None, reasons
+    if answer.get('no_ladder') is not None:
+        return {'status': 'no ladder', 'reason': answer['no_ladder'], 'answer': answer, 'passage': None, 'view': None}, []
+    view = ladder_step.write_view(answer['ladder'], passage, thesis=case['thesis'], article_day=case['item']['publication_date'],
+                                  company=stage_a.COMPANY, research_list=rl)
+    return json.loads(ladder_step.as_json({'status': 'ladder', 'reason': None, 'answer': answer, 'passage': passage, 'view': view})), []
+
+
+def accept(writer, source, answers_path):
+    """Writes writers/accepted-<writer>-<source>.json ({topic: row}) and prints the refusals (to send back once)."""
+    rl = population_cases = None
+    rl = research_list()
+    cases = {name: case for src, name, case, _ in population() if src == source}
+    given = {}
+    for line in Path(answers_path).read_text().splitlines():
+        line = line.strip()
+        if line.startswith('{'):
+            entry = json.loads(line)
+            given[entry['topic']] = entry['answer']
+    if set(given) != set(cases):
+        raise SystemExit(f'answers for {sorted(given)}; topics are {sorted(cases)}')
+    out_path = HERE / 'writers' / f'accepted-{writer}-{source}.json'
+    out = json.loads(out_path.read_text()) if out_path.exists() else {}
+    refused = {}
+    for name, answer in given.items():
+        if name in out:
+            continue
+        row, reasons = accepted(answer, cases[name], rl)
+        if row is None:
+            refused[name] = reasons
+        else:
+            out[name] = row
+    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + '\n')
+    print(f'{writer} {source}: accepted {len(out)} of 13; refused {len(refused)}')
+    for name, reasons in refused.items():
+        print(f'  {name}: {reasons}')
+    return refused
+
+
+def july_case(name):
+    return next(case for path in JULY_CASES for case in json.loads(path.read_text()) if case['case'] == name)
+
+
+def controls():
+    """[(row, case, expected)]: the two sound controls as stored, and the two planted-wrong ones (stored July ladders, edited once)."""
+    out = []
+    stored_sound = {row['case']: row for row in map(json.loads, SOUND_RUN.read_text().splitlines())}
+    for _, name in SOUND:
+        row = copy.deepcopy(stored_sound[f'frozen|july:{name}'])
+        out.append((dict(row, case=f'control|sound-{name.split("/")[1]}', **{'pass': 1}), july_case(name), {'all': 'holds'}))
+    stored = {row['case']: row for row in map(json.loads, JULY_STORED.read_text().splitlines()) if row['pass'] == 1}
+    for control, (name, edit, mark) in WRONG.items():
+        row = copy.deepcopy(stored[name])
+        if row['status'] != 'ladder':
+            raise SystemExit(f'{control}: the stored send of {name} wrote no ladder')
+        case = july_case(name)
+        answer = ladder_step.parse_exactly(row['requests'][-1]['answer_text'])        # the stored answer, every number exact
+        if edit == 'gap':
+            if not answer['ladder'].get('figure'):
+                raise SystemExit(f'{control}: {name} is not a figure')
+            ranges = answer['ladder']['figure']['ranges']
+            ranges[2]['lo'] = ranges[2]['lo'] + (ranges[2]['hi'] - ranges[2]['lo']) / 2   # a gap between the second and the middle rung
+        else:
+            answer['ladder']['question'] = 'Will NVIDIA announce a new chief executive officer before the due day?'
+        view = ladder_step.write_view(answer['ladder'], row['passage'], thesis=case['thesis'], article_day=case['item']['publication_date'],
+                                      company=stage_a.COMPANY, research_list=research_list())        # rendered as the step renders it
+        row = json.loads(ladder_step.as_json(dict(row, answer=answer, view=view)))
+        out.append((dict(row, case=control, **{'pass': 1}), case, {mark: 'fails'}))
+    return out
+
+
+def reading(run_folder, key_folder):
+    run_folder, key_folder = Path(run_folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    rl = research_list()
+    rows, cases = [], {}
+    for source, name, case, stored in population():
+        for arm in ARMS:
+            if arm == 'frozen':
+                row = stored
+            else:
+                accepted_rows = json.loads((HERE / 'writers' / f'accepted-{arm}-{source}.json').read_text())
+                if name not in accepted_rows:
+                    continue                                           # refused twice: the writer's failure, not read
+                row = accepted_rows[name]
+            label = f'{arm}|{source}:{name}'
+            rows.append(dict(row, case=label, **{'pass': 1}))
+            cases[label] = dict(case, case=label)
+    expected = {}
+    for row, case, marks in controls():
+        rows.append(row)
+        cases[row['case']] = dict(case, case=row['case'])
+        expected[row['case']] = marks
+    run_folder.mkdir(parents=True, exist_ok=False)
+    (run_folder / 'send-1').mkdir()
+    (run_folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+    (run_folder / 'cases.json').write_text(json.dumps(list(cases.values()), ensure_ascii=False, indent=1) + '\n')
+    order = sorted(rows, key=lambda row: row['case'])
+    random.Random(SHUFFLE_SEED).shuffle(order)
+    (run_folder / 'readers').mkdir()
+    key, packets = {}, []
+    for number, row in enumerate(order, start=1):
+        key[str(number)] = [row['case'], 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+    for packet_number, packet in enumerate(packets, start=1):
+        (run_folder / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    counts = collections.Counter(row['case'].split('|')[0] for row in rows)
+    print(f'{len(rows)} items in {len(packets)} packets: {dict(counts)}')
+
+
+def settled(rows, mark, unresolved_as):
+    """A mark from the two families: their value where they agree, else counted as `unresolved_as`."""
+    values = [row[mark] for row in rows]
+    return values[0] if values[0] == values[1] else unresolved_as
+
+
+def score(run_folder, key_folder):
+    key_path = Path(key_folder) / 'key.json'
+    key, item_of, outcomes, readers, problems = collector.read_rows(run_folder, key_path)
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    expected = json.loads((Path(key_folder) / 'controls-expected.json').read_text())
+    for control, marks in expected.items():
+        rows = [readers[reader][(control, 1)] for reader in collector.FAMILIES]
+        for mark, value in marks.items():
+            if mark != 'all' and any(row[mark] != value for row in rows):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+    report = {}
+    for unresolved_as in ('holds', 'fails'):
+        faults = {}
+        for send, outcome in outcomes.items():
+            rows = [readers[reader][send] for reader in collector.FAMILIES]
+            applicable = accounting.marks_that_apply(accounting.kind_of(outcome))
+            faults[send[0]] = {mark for mark in applicable if settled(rows, mark, unresolved_as) == 'fails'}
+        per_arm = {arm: collections.Counter(mark for case, found in faults.items() if case.startswith(f'{arm}|') for mark in found)
+                   for arm in ARMS}
+        topics = sorted({case.split('|', 1)[1] for case in faults if not case.startswith('control|')})
+        hard = lambda arm, topic: bool(faults.get(f'{arm}|{topic}', {'missing'}) & set(HARD + ('missing',)))
+        favour = [topic for topic in topics if hard('frozen', topic) and not hard('ref-codex', topic) and not hard('ref-claude', topic)]
+        against = [topic for topic in topics if not hard('frozen', topic) and hard('ref-codex', topic) and hard('ref-claude', topic)]
+        sound_faults = {case: sorted(found) for case, found in faults.items() if case.startswith('control|sound') and found}
+        reference_faults = {case: sorted(found & set(HARD)) for case, found in faults.items()
+                            if case.split('|')[0] in WRITERS and found & set(HARD)}
+        report[unresolved_as] = {'faults per arm': {arm: dict(counter) for arm, counter in per_arm.items()},
+                                 'topics favouring the references': favour, 'topics against them': against,
+                                 'sound controls with settled faults': sound_faults, 'reference items with settled hard-line faults': reference_faults}
+    print(json.dumps(report, indent=1))
+    return report
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'inputs':
+        inputs()
+    elif command == 'accept':
+        accept(*sys.argv[2:5])
+    elif command == 'reading':
+        reading(*sys.argv[2:4])
+    elif command == 'score':
+        score(*sys.argv[2:4])
+    else:
+        sys.exit(__doc__)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'class BreachGuard|def over_reserve|def worst_cost|class StageALimit|def send_labelled|def ledger_total' docs/research/2026-11-14-use-acceptance/splitting/probe_split.py clean-arch/step4-2026-11-10/stage_a/stage_a.py clean-arch/step4-2026-11-10/stage_a/budget.py" in /Users/lchingen/hivemind
+ exited 2 in 0ms:
+rg: clean-arch/step4-2026-11-10/stage_a/budget.py: No such file or directory (os error 2)
+clean-arch/step4-2026-11-10/stage_a/stage_a.py:40:class StageALimit(budget.Budget):
+clean-arch/step4-2026-11-10/stage_a/stage_a.py:67:    def send_labelled(self, label, provider, request):
+clean-arch/step4-2026-11-10/stage_a/stage_a.py:108:def ledger_total(ledger_path):
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:337:class BreachGuard:
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py:357:def over_reserve(spend_path):
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'status|could not be read|return.*refus|no ladder|requests|error' clean-arch/step4-2026-11-10/ladder/ladder_step.py clean-arch/step4-2026-11-10/stage_a/collect_readings.py clean-arch/step4-2026-11-10/stage_a/accounting.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/stage_a/accounting.py:4:A send is one case in one pass. Its outcome is a ladder, a refusal by the model ("no ladder"), or "no ladder: refused" (refused
+clean-arch/step4-2026-11-10/stage_a/accounting.py:21:    if outcome['status'] == 'no ladder: refused':
+clean-arch/step4-2026-11-10/stage_a/accounting.py:22:        return 'refused twice'
+clean-arch/step4-2026-11-10/stage_a/accounting.py:23:    if outcome['status'] == 'no ladder':
+clean-arch/step4-2026-11-10/stage_a/accounting.py:24:        return 'refusal'
+clean-arch/step4-2026-11-10/stage_a/accounting.py:105:    outcomes: one dict a send with `case`, `pass`, `status`, `answer`, `view` (as the runner writes them).
+clean-arch/step4-2026-11-10/stage_a/collect_readings.py:44:    """{(case, pass): row} for one reader, with the lines that could not be read as a row."""
+clean-arch/step4-2026-11-10/stage_a/collect_readings.py:222:                                                                    for request in outcome['requests']))
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:328:    reference_status = None
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:336:        reference_status = 'no reference figure'
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:340:                reference_status = 'last reported figure'
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:343:                reference_status = 'reference figure'
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:357:            'reference_status': reference_status}
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:360:# ---- check 8: one thesis, one or two requests -------------------------------------------------------------------------------
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:372:    None when the response carried none), `input_tokens`, `output_tokens`, `request_sha256`, `cached` and `error` (None, or the
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:373:    reason the answer could not be read or did not fit the schema). `check(answer)` returns (reasons, passage) as `check_answer`
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:376:    requests = []
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:385:        if sent['error']:
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:386:            reasons = [sent['error']]
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:390:            except (ValueError, RecursionError) as error:
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:391:                reasons = [f'the answer could not be read: {type(error).__name__}']
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:396:                record['result'] = 'no ladder'
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:397:                requests.append(record)
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:398:                return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder', 'reason': answer['no_ladder'], 'requests': requests,
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:401:            requests.append(record)
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:402:            return {'thesis_id': payload['thesis']['id'], 'status': 'ladder', 'reason': None, 'requests': requests, 'answer': answer,
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:406:        requests.append(record)
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:407:        if answer is None:                               # the answer could not be read or did not fit the schema: nothing to show back
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:411:    return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder: refused', 'reason': None, 'requests': requests, 'answer': None,
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,135p' clean-arch/step4-2026-11-10/stage_a/stage_a.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""Stage A of the clean ladder step (DESIGN.md §8; D400, D401, D408, D409): the step alone, on 44 stored theses, three sends each.
+
+The run folder is created once and refused if it exists. Each of the three passes has its own model archive, so an identical
+request is sent again and never answered from a stored answer. One spending limit covers every request; it stops every worker at
+the first refusal of the cap or the first error that is not an answer's own, and a stopped run is not started again. What was
+spent is on disk as it happens, in `spend.jsonl`.
+
+  python3 clean-arch/step4-2026-11-10/stage_a/stage_a.py --folder <new folder> --cap 3.00            # the 132 sends
+  python3 clean-arch/step4-2026-11-10/stage_a/stage_a.py --folder <new folder> --cap 0.20 --passes 1 --cases u1/clean-3,u1/clean-4
+"""
+import argparse
+import concurrent.futures
+import hashlib
+import json
+import os
+import sys
+import threading
+import time
+from pathlib import Path
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+STEP = HERE.parent
+ROOT = STEP.parents[1]
+sys.path[:0] = [str(ROOT / 'src'), str(ROOT / 'clean-arch' / 'e2e-2026-11-09'), str(STEP / 'ladder')]
+import budget  # noqa: E402
+import ladder_step  # noqa: E402
+import model_calls  # noqa: E402
+from hivemind import config, extraction, model, universe  # noqa: E402
+
+COMPANY = 'NVDA'
+SETTING = config.Setting(name='clean_ladder', model='gpt-6-luna', prompt_version='clean-ladder-three-outcomes', reasoning_effort='medium',
+                         max_output_tokens=16000)        # the judge's setting (cfg.rejudging): model, effort and output cap
+
+
+class Stopped(Exception):
+    """The run was stopped before this send began."""
+
+
+class StageALimit(budget.Budget):
+    """The adapter's spending limit (the same reserve, charge and retries) with two additions inside the locked step it takes
+    before every send, a transport retry included: the stop flag is read, and the ledger's reserve line is written. A send
+    either took its reserve before the flag was set, and then runs, finishes and is charged, or it never begins."""
+
+    def __init__(self, cap_usd, ledger_path, attempt=None, sleep=time.sleep, shared=None):
+        super().__init__(cap_usd, attempt=attempt, sleep=sleep)
+        self.ledger_path = Path(ledger_path)
+        self.shared = shared            # a run's shared ledger (WIRING-DESIGN.md §B2, D448): reserved and settled inside each attempt
+        self.stopped = False
+        self.stop_reason = None
+
+    def stop(self, reason):
+        """Set the stop flag, once; no send begins after it. With a shared ledger, the run stops too (every Stage A stop is final)."""
+        with self.lock:
+            if not self.stopped:
+                self.stopped, self.stop_reason = True, reason
+        if self.shared is not None:
+            self.shared.stop(f'the ladder step: {reason}')
+
+    def _write_line(self, line):
+        """One whole JSON object a line, flushed and synced; called under the lock, so lines never interleave."""
+        with self.ledger_path.open('a') as handle:
+            handle.write(json.dumps(line) + '\n')
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    def send_labelled(self, label, provider, request):
+        """Send one request; `label` names the case, the pass and the request (1, or 2 for the resend)."""
+        reserve = budget.worst_cost(request)
+        for attempt_number in range(budget.ATTEMPTS):
+            attempt_id = f'{label}|{attempt_number + 1}'
+            with self.lock:
+                if self.stopped:
+                    raise Stopped(self.stop_reason)
+                if self.spent_usd + self.reserved_usd + reserve > self.cap_usd:
+                    self.stopped, self.stop_reason = True, 'the spending cap'
+                    if self.shared is not None:
+                        self.shared.stop('the ladder step: its local spending cap')
+                    raise budget.OverBudget(f'spent ${self.spent_usd:.4f}, ${self.reserved_usd:.4f} in flight; '
+                                            f'${reserve:.4f} more would pass the ${self.cap_usd:.2f} cap')
+                shared_reserve = self.shared.estimate(request) if self.shared is not None else None
+                if self.shared is not None and not self.shared.reserve(shared_reserve):
+                    self.stopped, self.stop_reason = True, 'the shared ledger'
+                    raise budget.OverBudget('the shared ledger refused the reservation')
+                self.reserved_usd += reserve
+                self._write_line({'attempt': attempt_id, 'reserve': reserve})
+            response, failure = None, None
+            try:
+                response = self.attempt(provider, request)
+            except model.TransportError as error:
+                failure = error
+            finally:
+                with self.lock:
+                    self.reserved_usd -= reserve
+                    charged = budget.cost(request, response) if response is not None else None
+                    self.spent_usd += reserve if charged is None else charged
+                    self._write_line({'attempt': attempt_id, 'charge': reserve if charged is None else charged, 'known': charged is not None})
+                    if self.shared is not None:
+                        self.shared.settle(shared_reserve, charged)       # the ledger settles a missing or zero charge at its reservation
+            if response is not None:
+                return response
+            retried = getattr(failure, 'http_status', None) not in budget.NOT_RETRIED and str(failure) not in budget.UNDECODABLE
+            if not retried or attempt_number + 1 == budget.ATTEMPTS:
+                raise failure
+            self.sleep(5 * (attempt_number + 1))
+
+
+def ledger_total(ledger_path):
+    """What the ledger says was spent: over its attempt ids, the charge where there is one and the reserve where there is none.
+    Returns (known charges, reserves counted in full, whether a last line that was not whole was dropped)."""
+    reserves, charges, dropped = {}, {}, False
+    lines = Path(ledger_path).read_text().split('\n') if Path(ledger_path).exists() else []
+    for index, line in enumerate(lines):
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            if index != len(lines) - 1:
+                raise
+            dropped = True
+            continue
+        if 'reserve' in entry:
+            reserves[entry['attempt']] = entry['reserve']
+        else:
+            charges[entry['attempt']] = (entry['charge'], entry['known'])
+    known = sum(charge for charge, is_known in charges.values() if is_known)
+    in_full = sum(charge for charge, is_known in charges.values() if not is_known)
+    in_full += sum(reserve for attempt, reserve in reserves.items() if attempt not in charges)
+    return known, in_full, dropped
+
+
+def request_texts():
+    """The request the build uses: the system text, the closing check and the schema (the request as first sent, D407, with an
+    event answered in three outcomes, D409)."""
+
+codex
+**Do not send yet.** The matched comparison is worth preparing, but its scorer can call a result favourable when the high-effort arm has lost answers, and it can close the candidate when neither arm provides a meaningful test.
+
+The changes needed are:
+
+1. **Account for every send in the decision.** `reading()` skips answers refused twice by code, while `score()` counts hard-line faults only among answers shown to readers. A high-effort arm could therefore appear to have fewer faults because its answers disappeared. Report all 78 outcomes per arm, distinguish model refusals, code refusals and unreadable attempts, and make missing answers unable to improve the verdict. Test a case where high loses answers and the old scorer would have called that an improvement. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py)
+
+2. **Make an uninformative tie inconclusive.** The current rule closes the candidate even when both arms have zero faults; the test explicitly asserts that result. Zero versus zero shows no improvement, but it does not establish that high effort failed to fix the observed problem. Predeclare the minimum medium-arm signal needed to distinguish a close from an inconclusive result. [Tests](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py)
+
+3. **Check the sound controls as well as the planted errors.** The scorer explicitly skips their `all: holds` expectation. Predefine how a false failure on a sound control affects validity, and test it. The four planted faults alone cannot detect an overly harsh reader.
+
+4. **Verify actual request order, not just canonical hashes.** The check is useful, but the stored-request comparison uses the archive’s sorted-key identity, and dictionary equality does not establish nested key order. Compare the production-serialized requests, including nested order, with effort as the only difference.
+
+Keep the spending caps and stopped-draw rule. After these $0 corrections and decisive checks, the council can make the send decision; the existing **$1 ceiling** need not change. The outcome remains a small, previously exposed-topic diagnostic, not acceptance on the 44.
+
+**CONSENSUS: no, because the decision and control checks need the four corrections above before a paid send.**
+tokens used
+419,711
+**Do not send yet.** The matched comparison is worth preparing, but its scorer can call a result favourable when the high-effort arm has lost answers, and it can close the candidate when neither arm provides a meaningful test.
+
+The changes needed are:
+
+1. **Account for every send in the decision.** `reading()` skips answers refused twice by code, while `score()` counts hard-line faults only among answers shown to readers. A high-effort arm could therefore appear to have fewer faults because its answers disappeared. Report all 78 outcomes per arm, distinguish model refusals, code refusals and unreadable attempts, and make missing answers unable to improve the verdict. Test a case where high loses answers and the old scorer would have called that an improvement. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py)
+
+2. **Make an uninformative tie inconclusive.** The current rule closes the candidate even when both arms have zero faults; the test explicitly asserts that result. Zero versus zero shows no improvement, but it does not establish that high effort failed to fix the observed problem. Predeclare the minimum medium-arm signal needed to distinguish a close from an inconclusive result. [Tests](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py)
+
+3. **Check the sound controls as well as the planted errors.** The scorer explicitly skips their `all: holds` expectation. Predefine how a false failure on a sound control affects validity, and test it. The four planted faults alone cannot detect an overly harsh reader.
+
+4. **Verify actual request order, not just canonical hashes.** The check is useful, but the stored-request comparison uses the archive’s sorted-key identity, and dictionary equality does not establish nested key order. Compare the production-serialized requests, including nested order, with effort as the only difference.
+
+Keep the spending caps and stopped-draw rule. After these $0 corrections and decisive checks, the council can make the send decision; the existing **$1 ceiling** need not change. The outcome remains a small, previously exposed-topic diagnostic, not acceptance on the 44.
+
+**CONSENSUS: no, because the decision and control checks need the four corrections above before a paid send.**

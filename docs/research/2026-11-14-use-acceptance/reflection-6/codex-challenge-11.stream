@@ -1,0 +1,788 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 11: sol's refusals traced (`reflection-6/model/REFUSAL-TRACE.md`, `refusal-trace.txt`)
+
+**One mechanism.**
+- Sol declines with "several with none of them the main one" whenever the outcome lists several parts, even when the description
+  asks one.
+- All 4 agreed-unjustified refusals (CPO ×2, Hugging Face, memory prices) and all 13 disputed ones (Claude fails, Codex holds) are
+  this.
+- The 8 refusals both families justify are other cases: another matter (robotics funding), or two annual figures (the two capex
+  topics).
+
+**The gap in the request.** "Judge the one the topic's outcome names as what is tracked" (system, line 5) assumes the outcome names
+one thing. It does not say how to find the main one when it names several. The readers use the description.
+
+**The proposed repair, one sentence, sourced from D436** ("a second side of the same bet … is one question, with the second side
+shown as not judged"), added to line 5 of the system text:
+
+> "When the outcome names several parts, the main one is the one the topic's description asks about; judge it and list the others in
+> not_judged, and decline as having no main one only when the description singles out none of them."
+
+It narrows the decline case to its own words ("none of them the main one") and adds no new case.
+
+**The stored-data check before any reading** (your moving condition):
+- **Mechanism topics, where the repair must recover a question:** the sol requests of week c1/clean-5, c1/clean-3, c1/clean-11 and
+  c1/clean-13, and fortnight c1/clean-13 and c1/clean-3.
+- **Correct-refusal controls, where the repair must not overturn the decline:** fortnight c1/clean-8 (another matter), and week
+  c1/clean-12 and c1/clean-4 (two annual figures; the description of each asks both years).
+- **The send:** the stored sol request plus the one sentence, 3 sends each (27 calls). About $0.25 at sol's measured cost of about
+  $0.008 a call, under a $0.60 cap.
+- **Moves:** at least 5 of the 6 mechanism topics write a ladder in 2 of 3 sends, and all 3 controls still decline in 2 of 3. The
+  candidate "sol plus this sentence" then goes to the prompt audit and a full matched comparison against luna on the 26 topics, with
+  the outcome rule fixed before.
+- **Closes:** fewer than 4 of 6 recovered, or any control flipped to a ladder.
+
+**Asked:**
+1. Is the mechanism right?
+2. Is the sentence sourced and general, or does it add a rule?
+3. Is this small stored-request check the right one step?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the refusal trace against the actual topic wording and the decisions on one bet versus multiple bets, then assess whether the proposed test can distinguish a sound recovery from a new error.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/DECLINE-AUDIT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/REFUSAL-TRACE.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D397|D436|D417|D582|D580|D391' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The decline rules against the outcome's extra parts: the $0 audit D579 asked for (2026-11-16)
+
+**Answer: one general rule, from D397, fits every case read; nothing in it names a field as an exemption.** The rule: identify the
+main part first, from both fields, and apply the decline cases to it alone.
+
+Against the stored refusals:
+- it keeps all 20 refusals on cases 1 and 4 that both readers judged justified (8 topics);
+- it removes the 2 refusals both readers judged unjustified (the probe's);
+- it settles the 4 topics the families split on 2 and 2, so it does not take one family's threshold.
+
+Sources:
+- `decline_audit.py` → `decline-audit-refusals.txt`: every refusal in the three stored readings outside Alex's 44 (40 refusals,
+  with reasons and both first readers' N marks).
+- `refusal-accounts-output.txt`.
+- The 66 stored topics' descriptions and outcomes, read by me. One reader; to be checked blind if the council relies on a count.
+
+## 1. Line 6's seven decline cases, and which can be triggered by a part other than the main one
+
+| Case | Reads | Triggered by an extra part the outcome names? | Seen |
+|---|---|---|---|
+| no main figure or event, or several with none the main one | the topic | yes: an outcome that adds figures | the probe's memory refusal; control refusals on July c2/clean-10 and week clean-13 (families split) |
+| nothing can be checked on a date | the topic | no | — |
+| a company's figure for a quarter or half-year | the figure | yes: an outcome's checkpoints ("15,000 in Q4 2026") | — |
+| a period that is not one year, with no publication day | the figure | yes: an outcome's span ("from Q4 2026 through calendar 2027") | the probe's shipment refusal |
+| a year already ended | the figure | yes: an outcome's comparison year ("versus 2025") | — |
+| a year beyond next year | the figure | yes: an outcome's later year ("2.8% in 2028") | — |
+| another company, or no theme covers it | the question | no | — |
+
+Five of the seven read "the figure" or "the topic". None says how to find the main part when the outcome names more than one thing.
+
+## 2. How often the outcome names more than the description's main part
+
+By my reading, about 30 of the 66 stored topics have an outcome that adds a second figure, a period, an event or a consequence
+beyond the main part the description asks about. Examples:
+
+- the earlier checkpoints of a shipment forecast;
+- amounts paid and the remaining term of a guarantee;
+- the next year's projection;
+- whether revenue resumes;
+- a cap on an approval.
+
+It is the usual shape, not an exception. Under the frozen request the step declined on two of these, both on case 1 (July c2/clean-10,
+week clean-13): Codex judged each refusal justified, Claude did not. Under arm A it declined on two more (case 1 and case 4), both
+judged unjustified by both.
+
+## 3. The rule, and its source
+
+D397, Alex's choice "只判主要那件":
+- "a thesis gets at most one judged question: the part its `outcome` names. Every other part of its wording is listed and shown
+  beside the answer as not judged";
+- "A thesis with no main part gets no judged question, with the reason recorded".
+
+The rule fills the case D397 leaves open, an outcome that names more than one part:
+
+> The main part is the one the outcome names. When the outcome names more than one, it is the one the description also asks about.
+> A topic has no main part only when neither field singles one out. The decline cases apply to the main part; every other part of
+> the description and the outcome is listed in not_judged.
+
+The rule takes no field as an exemption. A period or figure counts as main when the outcome names it alone, or when both fields
+name it. A topic stays declined when the main figure itself breaks a case: the rolling twelve months of a survey still decline (D417).
+
+## 4. The rule against every stored refusal on cases 1 and 4
+
+| Topic | Both fields | The rule | First readers |
+|---|---|---|---|
+| July c1/clean-15 (federal AI obligations and contract awards) | both ask both | no main part: decline | both justified ✓ |
+| July c2/clean-6 (memory contract prices and memory cost per rack) | both ask both | decline | both justified ✓ |
+| July c3/clean-3 (approval status and the scale of sales) | both ask both | decline | both justified ✓ |
+| week clean-12 (global AI capex 2026 and 2027) | both ask both years | decline | both justified ✓ |
+| week clean-4 (hyperscaler capex 2026 and 2027) | both ask both years | decline (case 1) | passes 1 and 2 both justified ✓; pass 3 cited case 4 (not one year) and both judged that reason unjustified, while the topic still has no main part |
+| July c1/clean-10, c1/clean-13, c3/clean-9 (twelve months from mid-2026) | the main figure is a rolling twelve months | decline (case 4, D417) | both justified ✓ |
+| July c1/clean-11 (amount invested and equity stake) | both ask both | decline | split (Codex justified) |
+| July c1/clean-2 (stake size, carrying amount, commitment) | both ask several | decline | split (Codex justified) |
+| July c2/clean-10 (custom-ASIC purchases versus GPU purchases) | the description asks custom-accelerator spend; the GPU purchases are the outcome's comparison | ladder on custom-ASIC spend; the GPU comparison listed | split (Claude unjustified) |
+| week clean-13 (equity-investment commitments: remaining balance, cash paid, changes) | the description asks how much "will be funded or remain outstanding"; the outcome's first figure is the remaining balance | ladder on the remaining balance; cash paid and changes listed | split (Claude unjustified) |
+| probe: fortnight clean-13 (shipments, "from Q4 2026 through calendar 2027") | the description asks calendar 2027 | ladder on calendar-2027 volume; checkpoints listed | both unjustified ✓ |
+| probe: July c3/clean-7 (commodity DRAM/graphics memory) | the description makes commodity DRAM main | ladder on commodity DRAM; graphics memory listed | both unjustified ✓ |
+
+## 5. What stays open
+
+- **Comparisons with the reference** (the disputed kind): arm A listed them more often. Under the strict counting, H (9 against 4)
+  and XR (9 against 5) passed the harm limit, and the third readers split by family on H. The rule above does not settle whether a
+  comparison the middle rung carries is a part to list. D436 keeps a second side of a bet as context, shown as not judged. The July
+  third readers passed unlisted comparisons with the reference (PROMPT-AUDIT-LINE-2.md §7). The two families' H readers disagree on
+  them. This stays reported, not scored, and is not written into any arm.
+- **The count of about 30 is one reader's.**
+- **Whether the rule, once written, changes the step's answers** can only be shown by sends.
+
+ succeeded in 0ms:
+# Sol's 24 refusals traced at $0 (D630), 2026-11-16
+
+Source: `refusal-trace.txt`, each sol refusal with its reason, the two families' N marks and luna's matched answers.
+
+| Topic | Sol refusals | N (Codex / Claude) | Luna's answers | Sol's reason |
+|---|---:|---|---|---|
+| fortnight c1/clean-8 (robotics venture funding) | 2 | holds / holds ×2 | 3 refusals | no listed theme covers it: **justified** |
+| week c1/clean-12 (global AI capex 2026 and 2027) | 3 | holds / holds ×3 | 3 refusals | two annual figures, neither main: **justified by both** |
+| week c1/clean-4 (hyperscalers' capex 2026 and 2027) | 3 | holds / holds ×3 | 3 refusals | the same: **justified by both** |
+| fortnight c1/clean-13 (CPO shipments) | 3 | 1 split, 2 fails / fails | 3 ladders, all faulted (L) | "Q4 2026 through 2027 … several checkpoints rather than one main annual figure" |
+| week c1/clean-5 (Hugging Face) | 1 | fails / fails | 3 clean ladders | "closing, consideration and regulatory conditions, none the main one" |
+| week c1/clean-3 (AI-server memory prices 2027) | 3 | 1 both fail, 2 split | 3 clean ladders | "HBM and DRAM are distinct series … selling prices and margins, none the main one" |
+| fortnight c1/clean-3 (Blackwell into China) | 3 | holds / fails ×3 | 3 ladders, all faulted (L) | "U.S. approval and Chinese acceptance, neither the main one" |
+| week c1/clean-11 (Reflection AI) | 3 | holds / fails ×3 | 3 clean ladders | "signing, completing, consideration, conditions, none the main one" |
+| week c1/clean-13 (equity commitments) | 3 | holds / fails ×3 | 1 ladder, 2 refusals | "remaining balance, cash paid, changes, none the main one" |
+
+**One mechanism behind every unjustified or disputed refusal:**
+- Sol applies the decline case "naming several with none of them the main one" whenever the topic's outcome lists several parts.
+- It does so even when the topic's description asks one of them, and the others are comparisons, details or second sides.
+- **All 4 agreed-unjustified refusals are this mechanism** (CPO ×2, Hugging Face, memory prices), and so are all 13 disputed ones.
+- The 8 refusals both families call justified are a different case: another matter, or two annual figures.
+
+**Where the request leaves the gap.** The frozen system text says "Judge the one the topic's outcome names as what is tracked". It
+assumes the outcome names one thing, and says nothing on how to find the main one when it names several. The readers find it in
+the topic's description ("The description asks …").
+
+**The source for a repair.** D436, in Alex's words: "a second side of the same bet … is one question, with the second side shown as
+not judged". The repair names where the main part is found, and does not add a rule. Luna, which picks the leading part, faults L on
+those topics in 6 of 9 sends: it picks the part but leaves others unlisted.
+
+ succeeded in 0ms:
+I count **63 of the 66 outcomes as naming more than one part**, including a named comparison, checkpoint, consequence, or way to verify the answer. For example, “first shipments, confirmed by NVIDIA” counts as a shipment event plus a settlement source. This is a count of what the outcome text contains; it does not mean every extra part is a separate bet.
+
+In the table, **D397** means the main part is identifiable from the outcome under its words: “the part its `outcome` names.” A source, comparison, or checkpoint can describe that part without becoming the part judged. **Choice** means the outcome names competing parts without identifying which one is main. D397 says a topic with “no main part gets no judged question”; the question in the table is the choice needed to identify one.
+
+`↔` marks a related matter in another run. These are grouped by subject for the matter count; the questions may cover different products, dates, or details.
+
+| Topic | More than one part? Extra parts and main part |
+|---|---|
+| **July c1/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA disclosure. **D397:** credit-support commitments. |
+| July c1/2 | **Yes.** Second figures: carrying amount and additional commitment; checkpoint/source: annual report. **Choice:** Should the judged figure be stake size, carrying amount, or additional commitment? |
+| July c1/3 ↔ fortnight c1/4; week c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Vera Rubin shipments. |
+| July c1/4 ↔ July c2/3, c3/11; related China restrictions in later runs | **Yes.** Settlement sources: official decision or NVIDIA-confirmed shipments/revenue. **D397:** Chinese permission for H200 sales. |
+| July c1/5 | **Yes.** Alternative events: finding, penalty, or export measure. **Choice:** Is the main event a finding, a penalty, or a new measure? |
+| July c1/6 | **Yes.** Comparison: $650bn plan. **D397:** four hyperscalers’ 2026 capex. |
+| July c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Kyber shipments. |
+| July c1/8 | **Yes.** Comparison: forecast above $1tn. **D397:** four hyperscalers’ 2027 capex. |
+| July c1/9 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: FY2027 10-K. **D397:** supply commitments. |
+| July c1/10 | **Yes.** Comparisons: 46% planned and 30% current. **D397:** domestic suppliers’ share. **D417:** the audit says this rolling-period figure lacks a publication day, so it is declined. |
+| July c1/11 | **Yes.** Second figure: equity stake; checkpoint: conversion at IPO. **Choice:** Should the judged figure be the amount invested or the resulting stake? The two readers disagreed on the refusal. |
+| July c1/12 | **Yes.** Comparison: May H100 rental-price peak. **D397:** 2026 H100 rental price. |
+| July c1/13 | **Yes.** Comparison: prior-year price increase. **D397:** change in HBM/DRAM prices. **D417:** the audit says the rolling-period figure lacks a publication day, so it is declined. |
+| July c1/14 | **No.** One event: the French authority’s final decision. |
+| July c1/15 | **Yes.** Second figure: potential awards; comparisons: prior amounts. **Choice:** Should the judged figure be obligations or potential awards? |
+| **July c2/1** ↔ fortnight c1/1 | **Yes.** Second assessment/consequence: materiality to cash and credit risk. **D397:** disclosed support and revenue-share commitments. |
+| July c2/2 ↔ fortnight c1/4; week c1/7 | **No.** One event: Vera Rubin begins shipping. |
+| July c2/3 ↔ July c1/4 and c3/11 | **Yes.** Second event: Chinese permission; consequence: NVIDIA records revenue. **Choice:** Should the judged event be permission or revenue from shipments? |
+| July c2/4 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c2/5 | **Yes.** Checkpoints: 2027 versus 2028; further timing: when shipments occur. **D397:** whether Kyber ships in 2027; later timing is also named. |
+| July c2/6 ↔ related memory-price topics in later runs | **Yes.** Second figure: memory cost per rack; consequences: rack economics and infrastructure spending. **Choice:** Should the judged figure be memory-price change or cost per rack? |
+| July c2/7 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn and growth versus revenue; consequence: write-down/utilisation risk. **D397:** supply-commitment balance. |
+| July c2/8 | **Yes.** Comparison: May peak; settlement source: Ornn index. **D397:** H100 rental-price trajectory. |
+| July c2/9 | **No.** One event: the French authority issues its decision; remedies and fines are examples of that decision. |
+| July c2/10 | **Yes.** Comparison: NVIDIA GPU purchases; settlement source: ASIC-vendor revenue. **Choice:** Should the judged figure be custom-ASIC purchases, GPU purchases, or their relative size? The two readers disagreed on the refusal. |
+| **July c3/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA filings. **D397:** committed credit support/revenue-share-backed capacity. |
+| July c3/2 | **Yes.** Second event: completion; settlement sources: annual and related filings. **Choice:** Should the judged part be stake amount or completion of the investment? |
+| July c3/3 ↔ week c1/6 | **Yes.** Second figure/consequence: permitted China sales. **Choice:** Should the judged part be export-approval status or sales scale? |
+| July c3/4 ↔ fortnight c1/4; week c1/7 | **Yes.** Second event: initial revenue; settlement source: NVIDIA confirmation. **Choice:** Should the judged event be first shipments or initial revenue? |
+| July c3/5 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c3/6 | **Yes.** Comparison: reported delay to 2028; settlement source: company confirmation. **D397:** first Kyber shipments. |
+| July c3/7 ↔ fortnight c1/11 | **Yes.** Second condition: whether the shortage persists. **Choice:** Should the judged part be the price change or persistence of the shortage? D436 treats a shortage beside shipments as one bet, but does not select a main part for this price/shortage wording. |
+| July c3/8 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: annual report. **D397:** supply commitments. |
+| July c3/9 | **Yes.** Comparison: domestic-share baseline; second figure: direction of NVIDIA’s share; settlement sources: surveys and NVIDIA revenue. **Choice:** Should the judged figure be domestic suppliers’ share or NVIDIA’s share? The audit declined for the rolling period; it does not settle this choice. |
+| July c3/10 | **Yes.** Comparison: May peak; second condition: continuing decline. **D397:** H100 rental-price direction. |
+| July c3/11 ↔ July c1/4 and c2/3 | **Yes.** Second figure: purchase scale; second event: subsequent broadening or tightening. **Choice:** Should the judged part be permission, permitted volume, or later policy change? |
+| July c3/12 | **Yes.** Alternative event: closure without action; consequence: fine or remedy. **Choice:** Should the judged event be a formal decision or closure without action? |
+| July c3/13 ↔ week c1/3 | **Yes.** Comparison: 2026 levels; alternative: normalisation. **D397:** 2027 DRAM/HBM price level. |
+| July c3/14 | **Yes.** Second event: initial revenue; settlement source: company confirmation. **Choice:** Should the judged event be first Vera CPU shipments or initial revenue? |
+| July c3/15 | **Yes.** Comparisons: reported obligations and potential awards. **D397:** 2026 federal AI spending obligations. |
+| **Fortnight c1/1** ↔ July c1/1, c2/1, c3/1 | **Yes.** Comparison: equity investments; checkpoint/source: annual report. **D397:** disclosed support and guarantees. |
+| Fortnight c1/2 ↔ July c1/9, c2/7, c3/8; week c1/2 | **Yes.** Comparison: prior year; settlement source: 10-K. **D397:** purchase/supply commitments. |
+| Fortnight c1/3 ↔ related China restrictions in July and week | **Yes.** Second event: Chinese restrictions stop; consequence: China revenue resumes. **Choice:** Should the judged event be US approval or removal of Chinese restrictions? |
+| Fortnight c1/4 ↔ July c1/3, c2/2, c3/4; week c1/7 | **Yes.** Second event: first revenue recognition; settlement sources: quarterly results and 10-K. **Choice:** Should the judged event be volume shipments or first revenue recognition? |
+| Fortnight c1/5 ↔ week c1/4 | **Yes.** Comparison: nearly $800bn plan. **D397:** five hyperscalers’ 2026 capex. |
+| Fortnight c1/6 ↔ week c1/5 | **Yes.** Alternatives: repricing, delay, or termination; settlement source: NVIDIA filings. **D397:** completion of the acquisition. |
+| Fortnight c1/7 | **Yes.** Alternatives: blocking, delay, or quantity caps; consequences: shipments and revenue. **D397:** MIIT approval of RTX Pro 5500 purchases. |
+| Fortnight c1/8 | **Yes.** Comparisons: 2025 and first-half 2026 funding; settlement source: PitchBook. **D397:** 2026 physical-AI venture funding. The audit’s refusal concerns the absence of a matching theme, not selection of the main figure. |
+| Fortnight c1/9 ↔ week c1/4 | **Yes.** Comparisons: 2027 projection and 2026 expected spending. **D397:** five hyperscalers’ 2027 capex. |
+| Fortnight c1/10 | **Yes.** Comparison: cited GW pace; second assessment: labour constraint. **Choice:** Should the judged part be capacity added or how much labour constrains it? |
+| Fortnight c1/11 ↔ July c3/7 | **Yes.** Comparison: 2025; settlement source: TrendForce/DRAMeXchange. **D397:** 2026 DRAM/HBM price change. |
+| Fortnight c1/12 ↔ week c1/8 | **Yes.** Second figure: amount signed; alternatives: proposal remains, is reduced, or withdrawn. **D397:** whether the guarantee is signed and disclosed. |
+| Fortnight c1/13 | **Yes.** Checkpoints: Q4 2026, early 2027 and mid-2027; second annual figure: full-year 2027; settlement sources: networking revenue and supplier shipments. **Choice:** Which shipment period or checkpoint should be judged? |
+| **Week c1/1** | **Yes.** Second figure: paid/accrued amounts; checkpoint: remaining term; settlement source: annual report. **Choice:** Should the judged figure be maximum guarantee, paid/accrued amount, or remaining term? |
+| Week c1/2 ↔ July c1/9, c2/7, c3/8; fortnight c1/2 | **Yes.** Second figure: adjustable/cancellable portion; settlement source: annual report. **Choice:** Should the judged figure be total commitments or the adjustable/cancellable portion? |
+| Week c1/3 ↔ July c3/13 | **Yes.** Second figures: memory makers’ selling prices and gross margins. **Choice:** Should the judged figure be contract-price change, selling prices, or gross margins? |
+| Week c1/4 ↔ fortnight c1/5 and c1/9 | **Yes.** Second figure/checkpoint: 2027 capex; comparisons: 2026 and 2027 plans. **Choice:** Should the judged figure be 2026 or 2027 capex? |
+| Week c1/5 ↔ fortnight c1/6 | **Yes.** Second figure: consideration; second condition: regulatory terms; alternative event: termination. **Choice:** Should the judged part be closing/termination, consideration, or regulatory conditions? |
+| Week c1/6 ↔ July c3/3; related China restrictions in fortnight | **Yes.** Second event/consequence: NVIDIA resumes China revenue. **Choice:** Should the judged event be licence status or revenue resumption? |
+| Week c1/7 ↔ July c1/3, c2/2, c3/4; fortnight c1/4 | **Yes.** Second condition: sales timing slips; checkpoints: stated quarter versus 2027. **Choice:** Should the judged part be volume ramp/shipments or reported sales timing? |
+| Week c1/8 ↔ fortnight c1/12 | **Yes.** Second figure: paid/accrued amounts; additional terms and remaining duration; settlement source: annual report. **Choice:** Should the judged part be maximum coverage, amounts paid/accrued, or support terms and duration? |
+| Week c1/9 | **Yes.** Second event: contribution to revenue; checkpoints: stated quarter versus later periods. **Choice:** Should the judged event be volume shipments or revenue contribution? |
+| Week c1/10 | **Yes.** Comparison: March B200 rental price. **D397:** year-end B200 rental price. The two readers disagreed on the separate theme-based refusal. |
+| Week c1/11 | **Yes.** Second event: closing or collapse; second figure: consideration; second condition: regulatory terms. **Choice:** Should the judged part be agreement, closing, consideration, or regulatory conditions? |
+| Week c1/12 | **Yes.** Second figure/checkpoint: 2027 global capex; comparisons: Goldman’s forecasts and GDP shares. **Choice:** Should the judged figure be 2026 or 2027 global capex? |
+| Week c1/13 | **Yes.** Second figures: cash paid and change in commitments; settlement source: annual report. **Choice:** Should the judged figure be remaining balance, cash paid, or change in commitments? The two readers disagreed on the refusal. |
+
+**Counts under the classification above:**
+
+- Outcomes naming more than one part: **63 of 66**.
+- Distinct matters among those rows: **40**, grouping repeated subjects across runs as indicated. This grouping is an interpretive count; related topics are not necessarily identical questions.
+- Rows where the main part is identified: **34**.
+- Rows needing a choice of main part: **29**.
+
+The decisions give a **limited distinction**, but not a general procedure for choosing a main part whenever an outcome names several things. D397 says to judge “the part its `outcome` names” and says a topic with “no main part gets no judged question.” It does not say that the first-mentioned part, a consequence, a comparison, or the description always wins.
+
+D436 says “a second side of the same bet … is one question” and that it “stays as context … and is shown as not judged.” Its examples include “the shortage beside the shipments.” That supports keeping a second side as context when it is already identifiable as such; it does **not** provide a general test for deciding which of two equally stated parts is main. D417 supplies a separate refusal rule for certain non-annual figures without a publication day; it does not choose between competing parts of an outcome.
+ succeeded in 0ms:
+# Topics declined for "several figures, none the main one": the boundary, read again with the new week (D555, under D439), 2026-11-15, $0
+
+The council's question: among the topics the answer-choice step declines for having no main part, is there a general,
+evidence-backed change, consistent with Alex's rule (D397) and with D436, that recovers a question on at least two distinct
+worthwhile matters while keeping the topics that should stay declined? Read from stored material only: the twelve cases of the
+earlier boundary check (D469, D470; `clean-arch/e2e-comparison-2026-11-13/ladder-refusal/`, two readers, one of them blind), the
+earlier source check of July's refusals (D476, D477; `reachability/RESULT.md`), this week's reading (`RESULT.md`) and the stored
+attempts of every run. No model was asked anything; no file of a frozen piece was touched.
+
+## The answer
+
+**No candidate meets the condition, among those considered; that does not prove no future design exists.** On the topics
+two readers call "none main" the step declines every time; on the topics they call "one main" it answers four attempts of
+five, so on that side the line is not applied steadily. What is lost on
+worthwhile matters is lost by the rule itself (a topic that really asks two separately tracked things gets no question), and
+the two ways to recover it both break a guard: taking one of the two things discards a bet an analyst holds apart (the
+ordering rule D469 refused), and writing a question for each thing also writes questions for the topics that should never
+have been opened.
+
+## 1. The cases
+
+"Declined" counts the stored attempts of the run named. "Main part" is the two readers' verdict of the earlier check, or this
+week's rulings. "Worth a question" is the earlier two-reader source check where it covered the case, else Claude's reading of
+the article, marked so.
+
+| Case | What the topic asks | Declined | Main part? | Worth a question? |
+|---|---|---|---|---|
+| July c1, topic 2 | how much equity Nvidia holds in Intel, and at what committed amount | 3 of 3 | none (both readers) | no (both): a completed, sized investment. **Guard** |
+| July c1, topic 11 | how much Nvidia invested in Firmus, and what stake it holds | 3 of 3 | none (both) | no (both): about $500 million cannot move Nvidia's results. **Guard** |
+| July c1, topic 15 | U.S. federal AI obligations in 2026, and new contract awards | 3 of 3 | none (both) | readers split |
+| July c2, topic 6 | memory contract prices in 2026, and the memory cost of one rack | 3 of 3 | none (both) | yes for the price (both): a DRAM contract price for 2026; the rack figure is one bank's estimate that nothing public settles |
+| Alex's topics, u2 topic 10 | new HBM capacity, and whether record prices persist | 3 of 3 (15 of 15 over five runs) | none (both) | not read for worth |
+| Alex's topics, u1 topic 5 | AI-memory contract prices through 2026-2027, and the rack's memory cost | 3 of 3 (12 of 15) | readers split | not read for worth |
+| **This week, topic 4** | the five cloud companies' capital spending in 2026 and in 2027 | 3 of 3 | none (both families held the refusals of attempts 1 and 2) | yes (Claude's reading; the fresh week answered the same matter for one year) |
+| **This week, topic 12** | global AI spending in 2026 and in 2027, against one bank's forecast | 3 of 3 | none (both families) | doubtful (Claude's reading): only that bank's own series settles it |
+| July c3, topic 3 | whether the U.S. keeps, widens or tightens its approval of China sales, and their scale | 1 of 3 | readers split | no (both): one background sentence, no pending decision |
+| Alex's topics, u3 topic 11 | the split of 2027 accelerator spending between custom chips and GPUs | 2 of 3 (2 of 15) | readers split | not read for worth |
+| July c2, topic 10 | cloud companies' custom-chip spending in 2026, against their GPU purchases | 1 of 3 | one (both) | no (both): no dated outcome the article supports |
+| Alex's topics, acc topic 8 | HBM shipment growth in 2027, still short of demand | 0 of 3 (2 of 15) | one (both; D436's own example) | not read for worth |
+| Alex's topics, acc topic 9 | 2026 semiconductor revenue, including the AI-chip part | 1 of 3 (1 of 15) | one (both) | not read for worth |
+| Alex's topics, u3 topic 10 | new HBM capacity in 2027, and whether it arrives early | 1 of 3 (5 of 15) | one (both) | not read for worth |
+| **This week, topic 13** | how much of $25 billion of equity-investment commitments remains at the next annual report | 2 of 3 | one by three of four readings (both third readers on one attempt; they part on the other) | yes (Claude's reading): an obligation a third the size of half a year's free cash flow |
+
+## 2. What the table shows
+
+- **On the agreed no-main cases the step applies the rule as the readers do; on the agreed one-main cases, not steadily.**
+  The five topics both earlier readers call "none main" were declined in
+  every stored attempt (27 of 27: three attempts each for the four July topics, fifteen over five runs for the one of
+  Alex's); the four they both call "one main" were declined in 9 of 48 attempts over
+  five runs. This week adds two topics of the first kind (declined 6 of 6) and one of the second (declined 2 of 3).
+- **A topic that names two years was declined every time.** Over all 104 stored topics three name two years in their own
+  wording (this week's two, and one of Alex's): 9 of 9 attempts declined. On Alex's one the two earlier readers split on
+  whether it has a main part, so "two years" is not by itself "none main" in the readers' eyes.
+- **Which of the always-declined topics lose something worth having:** the cloud companies' spending (this week) and the
+  2026 memory price (July); the federal obligations are disputed; global AI spending is doubtful; the Intel stake and the
+  Firmus investment are the two the readers said should never have been opened. So in these cases two worthwhile matters are lost to the
+  rule outright, and a further one or two topics a run are decided by chance. That describes the stored cases; it is not a
+  rate: the 104 topics include repeated runs of the same news and populations read in different ways.
+
+## 3. The candidates, each against the condition
+
+| Candidate | Recovers | Keeps the guards? | Keeps D397's refusal of a true no-main topic? | Standing |
+|---|---|---|---|---|
+| Take the first-named thing, or the nearer year, as the main one | the two spending topics, the memory price, the federal obligations | **no**: the Intel stake and the Firmus investment would each get a question | **no**: it answers topics both readers call "none main", and leaves the other thing unjudged though an analyst holds it apart | refused: D469 ("order alone is wider than the step's rule and D436"), again in D555 |
+| Say in the rule that another side of the same bet, a component of the tracked total or a comparison with it is not a second main one (the clause the earlier check tested) | only the topics decided by chance: this week's commitments topic, and more steady answers on three of Alex's | yes, by the blind reader's application | yes | stopped in D470: it changed one case of twelve and the blind reader found seven where it could make a model join things tracked apart. This week adds one case it would change. Its effect on the counts is about one topic in a hundred: the other topics of this kind are already answered in two attempts of three |
+| Write a question for each separately tracked thing (the "splitting" D397 names as the gap) | every "none main" topic | **no**: three questions for the Intel stake, two for Firmus | it replaces the refusal | not built; as a change to this step alone it fails the guards. It would need the first step to stop opening such topics, which is a different defect (opening what is not worth a question) |
+| Have the first step open one figure for one year | the two-year topics and the memory price | **no**, as it stands: an Intel topic that asks one figure would be answered | yes (the answer-choice step is untouched) | the first step's sentence changes on the July articles are stopped (D473, D477); three earlier attempts at the year boundary moved the error instead of removing it (D441, D465, D473) |
+
+## 4. What follows from it
+
+- The refusals of true no-main topics are the rule working, with the cost Alex was told of when he chose it. On the news read so far it has fallen on
+  two worthwhile matters, one of them central (the cloud companies' spending this week).
+- The guards are kept today by accident: the two unworthy topics happen to ask two things. Any change that makes the system
+  answer more two-thing topics has to face first that the first step opens topics an analyst would not hold a card for. That
+  is the proposed line "at most one in five questions trivia or duplicate" of the use-oriented acceptance, not a matter of
+  this step.
+- Nothing here is a candidate to send. What remains is a product choice no decision yet makes: when one matter carries two
+  figures an analyst tracks apart (two years of the same spending), is that one topic with no judged question (today), two
+  topics, or one topic with two judged questions. Alex named the third as the gap when he chose the first.
+
+ succeeded in 0ms:
+4221:## D391 · 2026-11-09 · Close clean Step 1 on c8; state each change's effect on the judgement first
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4510:  (D397). The wording of the request, the schema and the checks are designed, checked at no cost and reviewed before any send
+4606:## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+4632:- **Decided:** as D415, for the changes of D416, D417 and D418: each is proved small and reviewed in the council; when all pass
+4655:- **Decided:** D417 goes into the working request. Then, each beside the working request and on its own: (a) D420's rule in the
+4814:  measured on fresh articles, go to Alex before any build. c8 stays until then (D391).
+4822:- **Decided:** a candidate Step 1 version c14 is opened: c8 with D38's year boundary carried into two sentences (shared_quantity: "another year of it is not: this year's and next year's figure are two theses when an analyst would bet on each"; the closing check: "(for a yearly quantity, the same year)"), +151 characters, nothing removed. Its first test is the small probe of the diagnosis (c8 and c14, three sends each from each draw's stored state, the pass line and stop lines fixed there, about $0.5). It goes to the prompt audit and a council read of the changed request before its first send. A failed probe stops the line and goes to Alex; a passed probe leads to the fresh-article comparison against c8 on his protocol (D386). c8 stays in force (D387, D391) until c14 is shown better on new, unused articles.
+4823:- **Scope:** clean Step 1. Ohio (D388–D391), the second-thing shapes and the other findings of the diagnosis stay recorded, not changed.
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+4854:- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+4888:- **Decided (by the rule the council fixed before the send, D440; no new judgement):** the combined Step 1 candidate c15yc stops; c8 stays in force. The year change moved its error to a neighbouring case (capex years separated, the memory question pushed from the ruler's 2027-against-2026 shape to 2026), so under D391 it is not tuned further on these articles. Change 2 alone (the scoped capacity counterexample) is not carried as its own version without a council decision: its measured target without change 1 is one doubtful aggregate in 729 c8 calls.
+4915:- **Trace** (`clean-arch/e2e-comparison-2026-11-13/TRACE.md`): no single mechanism explains most of the clean path's 16 graded opening losses; 7 certainly and 2 possibly breach a rule of the question's unit the frozen standard states; two sentence-level attempts on these classes failed (D441, D391). Accounting corrected on the council's findings: the reconciled breach count, and both unresolved counts in `RESULT.md` (by the design's order, and by the decisive reading, disclosed as a departure).
+5088:  warrants a phase and one test, with D391, D441 and D447 in view. Evidence gathering only; no change to opening follows from it alone.
+5163:  memory articles serve as regression checks, not material for repeated tuning (D391, D441); the identity lever waits for a comparison of the
+5175:- **Decided:** F6 is not tested on its own; its correction, with the date safeguards of round 8 (no invented release day; D417 intact), waits
+5231:- **Decided:** c16 is not adopted; no further year-sentence version on these articles (D391); the Ohio clause and F6 are leads; c8 stays.
+5246:- **Decided:** (1) no further Step 1 sentence tuning against the key's shapes (D391, D465). (2) Two choices go to Alex: whether the product
+5293:  not sent: order alone is wider than the step's rule and D436. Next, at $0: every "no main figure or event" refusal of the Stage A runs, with
+5345:- **Decided:** c17 is not adopted; c8 stays; no further Step 1 sentence change on these articles (D391; the third such change today to move or
+5380:  D417's rolling windows not); only then are they shown the thesis and say whether one of theirs is the same matter and what it loses.
+6698:## D547 · 2026-11-15 · Under D439: the audit of line 2 finds an undefined term; the description-only reading is refused; the recount against D397, D436 and the July rulings opens no prompt change (council consensus)
+6706:  listed and the six marks fall. The council (`reflection-2/cold-codex-6.md`): D397 judges the main part and shows the rest as
+6707:  unjudged, and D436 (Alex: "算一个题，第三处不改") keeps a second side of the same bet "as context in that question ... shown as
+6745:  changes on those articles are stopped; a rolling window is declined by Alex's ruling, D417); the rental-price refusals come
+6875:  one whose `outcome` lists several is decided by chance (3 topics). Declining a topic with no main part is Alex's rule (D397),
+6893:  Alex chose that a topic with no main part gets no judged question (D397); the council had already rejected a candidate
+6902:  worthwhile matters while keeping the guards and D397's refusal of a true no-main topic, that is recorded and returned to the
+6993:    rental price, federal spending, the Intel stake). Refused in both: 1 (the China-share survey, right by D417). Opened by
+7272:## D569 · 2026-11-16 · Under D439: gate 1's verdict reproduced by its method on the fortnight; D397's display of the parts not judged is missing from the product, the next work (council consensus on the course, round 32)
+7281:  and read by no judging request and no page. D397 (Alex: "只判主要那件 (Recommended)") decided that every other part of a topic's
+7285:  design and proof of D397's display path from the stored ladder row to the question's answer on the product's page, with judge
+7289:## D570 · 2026-11-16 · Under D439: D397's display built and unit-proved, its browser proof pending; the product page refuses the new system's three-choice events; next, the page contract for the new system's answer shapes (council consensus, rounds 33 to 37)
+7309:## D571 · 2026-11-16 · Under D439: the product page reads the new system's questions without inventing a direction, and shows D397's parts not judged (council consensus on the designs, rounds 38 to 40)
+7455:- **Refused:** the proposed A2 clause, "a part only the outcome names is listed and is not by itself a reason to decline". D397 makes
+7457:  triggers D417. So the field cannot alone decide that a clause is an extra.
+7462:  - Map the disputed comparison and consequence cases against D397, D436 and the July rulings, with H and XR's strict-count
+7467:## D580 · 2026-11-16 · Under D439: no reviewed repair for the unlisted parts; arm A stays stopped; next, a $0 check of the Idea planner on new-system answer shapes (council consensus, rounds 68 and 69)
+7471:  was refused in round 68: D397 does not establish it, "every other part" is wider than the open question, and the refusal table was
+7501:  parts have no sourced main-part rule (D580); the live service is paused (D575); the planner is parked (this record). The main-part
+7508:## D582 · 2026-11-16 · Alex's standing instruction lifts D581's hold; arm A2 (arm A plus D436's rule for a second side of the same bet) is probed (council consensus, rounds 73 to 77)
+7513:  with full articles, applied D397, D417, D436 and D437.
+7517:- **Arm A2** (`DESIGN-A2.md` v4, `make_arm2.py`, `arm-a2/`) is arm A plus one clause from D436, with D436's three examples given as
+7551:    D397.
+7552:  - **Rejected on the way:** a test of what follows logically (it would remove a second side D436 keeps, round 85); a clause on the
+7592:  (D391). Its falsifier is: no improvement in omitted parts, unjustified refusals, or a reproducible regression elsewhere. The design
+8213:## D614 · 2026-11-16 · Under D439 (council round 153): the refusal census maps to the closed main-part class; D612 stands; next, a $0 design review of splitting against D397, D436 and D38
+8216:  figures, none main". This is the class of D397, D469, D470, D555, D556 and D580.
+8218:  - D397 records Alex's choice: at most one judged question per topic, and none when no main part. Its departure from one bet per
+8220:  - D439 lets the council take choices that would go to Alex, but does not erase his decisions. A departure from D397 must be named,
+8223:  topic) against D397, D436 and D38. It covers the six refusal topics, true two-bet cases, and the Intel and Firmus guards, and reports
+8231:## D615 · 2026-11-16 · Under D439 (council round 154): the period split is developed at $0 as a lead on D397's open defect; no gate movement claimed, no probe authorized
+8237:  - it is a design lead on the product defect D397 left open, not evidence for a gate;
+8241:  - the unit and writer path (two topics or two views; identity, evidence, dates, updates; D397's one question per topic);
+8249:## D616 · 2026-11-16 · Under D439 (council rounds 155 to 158): the period split's design v4 is accepted for a $0 scratch build; the narrow D397 departure is recorded as a reversible proposal; nothing is sent
+8262:  question per year, as D38 (Alex) requires. Every other multi-part topic keeps D397's one judged question. It takes effect only if a
+8375:- D397's splitting defect stays open.
+
+ succeeded in 0ms:
+### fortnight:c1/clean-13
+  luna d1: ladder: How many CPO switches will Nvidia ship in calendar 2027, as determined from Nvidia's quarterly results and Lum | agreed fails ['L']
+  luna d2: ladder: How many CPO switches will Nvidia ship during calendar 2027, as determined from Nvidia's quarterly results and | agreed fails ['L']
+  luna d3: ladder: Will Nvidia's CPO switch shipments reach at least 100,000 units during calendar 2027, as determined from Nvidi | agreed fails ['Q', 'L']
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome is Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027, a period longer than one fiscal or calendar year, with several interim checkpoints rather than one main annual figure. Neither the topic nor the item gives a publication day for that multi-period shipment figure; forecast checkpoints a
+      claude why: N fails: the thesis's main figure is Nvidia's CPO switch shipments for calendar 2027 (period 'Calendar 2027', the 100,000-unit full-year forecast), one calendar year; the Q4 2026, early-2027 and mid-2027 checkpoints are 
+  sol-d2: N codex fails / claude fails | reason: The tracked shipment-volume period runs from Q4 2026 through calendar 2027, rather than one fiscal or calendar year, and neither the topic nor the item gives a publication day for that figure. The forecast checkpoints are not publication dates.
+      codex why: The thesis identifies calendar 2027 shipment volume as the main figure, with the earlier checkpoints separable from it.
+      claude why: The thesis's description and period name calendar 2027 (the 100,000 units for the full year) as the main figure, one calendar year, so the 'period that is not one year' case does not truly apply; the Q4 2026 and mid-2027
+  sol-d3: N codex fails / claude fails | reason: The tracked outcome is CPO switch shipment volume from Q4 2026 through calendar 2027, with multiple checkpoints and no single main annual figure identified. That span is not one fiscal or calendar year, and neither the topic nor the item gives a publication date for the shipment total; the forecast checkpoints are not publicatio
+      codex why: The description identifies calendar 2027 shipments as the main annual figure, with earlier checkpoints as additional measures.
+      claude why: The thesis's period is calendar 2027 and its headline figure is the 100,000 full-year 2027 shipments, one calendar year, so neither 'no main figure' nor 'a period that is not one year' truly applies; the Q4 2026 and mid-
+### fortnight:c1/clean-3
+  luna d1: ladder: By 2027-01-31, will U.S. export authorization and Chinese acceptance allow Nvidia to sell its current Blackwel | agreed fails ['L']
+  luna d2: ladder: Will U.S. authorities authorize, and Chinese authorities permit, Nvidia to ship Blackwell-generation AI chips  | agreed fails ['L']
+  luna d3: ladder: By January 31, 2027, will Nvidia be permitted to sell its current Blackwell-generation AI chips to customers i | agreed fails ['L']
+  sol-d1: N codex holds / claude fails | reason: The topic tracks two separate regulatory events—U.S. approval of Blackwell-generation chip exports to China and Chinese authorities lifting restrictions on Nvidia shipments—with neither identified as the main outcome. They cannot be combined into one judged event.
+      claude why: U.S. approval of Blackwell-generation chip exports to China is the main event (named first and the only part specific to Blackwell, a pending decision due at the FY2027 year-end), and Chinese authorities lifting their re
+  sol-d2: N codex holds / claude fails | reason: The outcome tracks two distinct regulatory events—U.S. authorization of Blackwell-generation chip exports to approved Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main event. They cannot be combined into one judged ladder.
+      claude why: The thesis names one main event, Nvidia being permitted to sell its Blackwell chips into China, so the 'no main event' case does not truly apply; the second authority's step could be judged within that event or listed in
+  sol-d3: N codex holds / claude fails | reason: The outcome names two separate regulatory events—U.S. export approval for Blackwell-generation chips for Chinese customers and Chinese authorities lifting restrictions on Nvidia shipments—without identifying either as the main tracked event. A single ladder would improperly combine both decisions.
+      claude why: The thesis is about selling Blackwell chips into China and its outcome leads with the U.S. extending export approval to Blackwell, the main event; Chinese restrictions on shipments are a second condition for not_judged, 
+### fortnight:c1/clean-8
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d2: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial performance. No listed theme covers robotics venture funding; AI capital spending concerns expenditure rather than venture capital raised.
+  sol-d3: N codex holds / claude holds | reason: The tracked figure is global venture funding raised by physical AI/robotics startups, not NVDA's own funding or financial results. No listed theme covers robotics venture fundraising; AI capital spending concerns spending rather than capital raised.
+### week-10-06:c1/clean-11
+  luna d1: ladder: Will NVIDIA complete its acquisition of Reflection AI by April 10, 2028, as verified by a definitive agreement | agreed fails []
+  luna d2: ladder: Will NVIDIA complete its acquisition of Reflection AI by 2028-04-10, as verifiable from NVIDIA's completion di | agreed fails []
+  luna d3: ladder: Will NVIDIA complete its acquisition of Reflection AI by April 10, 2028, as verified by NVIDIA's completion di | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The topic names several outcomes without identifying one as the main tracked outcome: signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions imposed.
+      claude why: The acquisition of Reflection AI is the main event the thesis names ('Will Nvidia sign and complete an acquisition'), checkable by its April 2028 date; the closing, the consideration and any regulatory conditions are det
+  sol-d2: N codex holds / claude fails | reason: The topic names several tracked outcomes—signing a definitive acquisition agreement, completing the acquisition or abandoning talks, final consideration paid, and regulatory conditions—without identifying one as the main outcome.
+      claude why: N fails: the outcome has a main event, the acquisition of Reflection AI (a definitive agreement through closing, with the talks' collapse as its ruling out), while the consideration and regulatory conditions are details 
+  sol-d3: N codex holds / claude fails | reason: The topic names several outcomes—a definitive acquisition agreement, completion or collapse of the deal, final consideration, and regulatory conditions—without identifying one as the main tracked event or figure.
+      claude why: The description asks whether Nvidia will sign and complete an acquisition of Reflection AI, so the deal itself (a definitive agreement, for one not yet signed) is the main event; the consideration and regulatory conditio
+### week-10-06:c1/clean-12
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not define one judged figure.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027 without identifying either year's figure as the main outcome, so it does not specify one figure for a judged question.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks global AI capital spending for both calendar 2026 and calendar 2027, without identifying either year's figure as the main outcome; selecting one would arbitrarily discard an equally tracked figure.
+### week-10-06:c1/clean-13
+  luna d1: no ladder | agreed fails ['N']
+  luna d2: ladder: What will Nvidia’s remaining equity-investment commitments balance be at the end of FY2027, as disclosed in it | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The topic names three figures—the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts—without identifying one as the main tracked outcome.
+      claude why: The outcome leads with the remaining balance of the equity-investment commitments (last disclosed at $25 billion), which is the main figure; the cash paid and changes in committed amounts are secondary parts for not_judg
+  sol-d2: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitment balance, cash paid to fund the commitments, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+      claude why: The description asks how much of the $25 billion of commitments will remain outstanding at the next annual report, so the remaining commitment balance is the main figure (an obligation tracked by its amount at the next a
+  sol-d3: N codex holds / claude fails | reason: The topic names three figures without identifying one as the main tracked outcome: the remaining equity-investment commitments, the cash paid to fund them, and changes in committed amounts. These cannot be combined into one judged figure or ladder.
+      claude why: The description asks how much of the $25 billion of commitments will remain outstanding at the next annual report, so the remaining commitment balance is the main figure (an obligation tracked by its amount at the next a
+### week-10-06:c1/clean-3
+  luna d1: ladder: What is the percentage change from the start to the end of calendar 2027 in contract prices for AI-server HBM/ | agreed fails []
+  luna d2: ladder: By what percentage will the average contract price for AI-server HBM/DRAM change in calendar 2027 versus calen | agreed fails []
+  luna d3: ladder: What is the percentage change in HBM/DRAM contract prices over calendar 2027, according to TrendForce/DRAMeXch | agreed fails []
+  sol-d1: N codex holds / claude fails | reason: The tracked outcome names several figures—HBM and DRAM contract-price changes, memory makers’ average selling prices, and their gross margins—without selecting one price series, a defined aggregate, or another single figure as the main judged outcome.
+      claude why: The description asks one figure, the calendar-2027 change in AI-server memory (HBM/DRAM) contract prices; the memory makers' selling prices and gross margins are secondary and belong in not_judged, and choosing which con
+  sol-d2: N codex holds / claude fails | reason: The topic does not identify one verifiable main figure: HBM and DRAM have distinct contract-price series, and no single series or aggregation method is specified for their calendar-2027 change. The outcome also names memory makers' selling prices and gross margins without selecting one measure to settle the question.
+      claude why: The description asks one figure, the calendar-2027 change in AI-server memory (HBM/DRAM) contract prices; the memory makers' selling prices and gross margins are secondary and belong in not_judged, and choosing which con
+  sol-d3: N codex fails / claude fails | reason: The topic does not identify one uniquely defined figure to judge: HBM and DRAM contract prices comprise distinct price series, with no single series or aggregation method specified. Its outcome additionally names memory makers’ reported average selling prices and gross margins without selecting one measure as the main tracked fi
+      codex why: The description identifies the change in HBM/DRAM contract prices as the main figure; the other named measures do not justify refusing the question.
+      claude why: The thesis's description names one main figure, the rise or fall of AI-server memory (HBM/DRAM) contract prices in calendar 2027 (next calendar year, a theme's figure the semiconductor-cycle theme covers), with the memor
+### week-10-06:c1/clean-4
+  luna d1: no ladder | agreed fails []
+  luna d2: no ladder | agreed fails []
+  luna d3: no ladder | agreed fails []
+  sol-d1: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main outcome. A single judged question cannot combine both years in one ladder.
+  sol-d2: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers' combined capital expenditure in calendar 2026 and in calendar 2027—without identifying either as the main outcome. A single-year judged question cannot be selected, and combining both years into one ladder would violate the one-figure, one-year requirement.
+  sol-d3: N codex holds / claude holds | reason: The topic tracks two separate annual figures—the five hyperscalers’ combined capital expenditure for calendar 2026 and for calendar 2027—with neither identified as the main figure. A single judged question cannot cover both years or select one without changing the topic.
+### week-10-06:c1/clean-5
+  luna d1: ladder: Will Nvidia close its acquisition of Hugging Face by June 30, 2027? | agreed fails []
+  luna d2: ladder: Will Nvidia complete its acquisition of Hugging Face by 2027-02-28? | agreed fails []
+  luna d3: ladder: Will Nvidia complete its acquisition of Hugging Face by June 30, 2027, as confirmed by Nvidia's closing announ | agreed fails []
+  sol-d2: N codex fails / claude fails | reason: The outcome jointly tracks closing or termination of the Hugging Face acquisition, final consideration paid, and regulatory conditions, without identifying one as the main tracked outcome.
+      codex why: The description identifies completion of the Hugging Face acquisition as the main event; final cost and regulatory conditions can be listed separately.
+      claude why: The description asks 'Will Nvidia complete its approximately $12.93 billion acquisition of Hugging Face', so closing is the main event and the final cost and regulatory conditions are secondary parts for not_judged; the 
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat .claude/skills/prompt-audit/SKILL.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+---
+name: prompt-audit
+description: After every measurement of an extraction configuration, and before any prompt change, map each failure class in the stored draws to the sentence of the request that produced it, check that sentence against the frozen standard and the prompt principles, and write the audit table. Alex, 2026-11-02 - "你应该看着prompt，然后对比失败的trace，然后仔细的根据尺子做对比，并且我们prompt的principle也要带入，是尝试教他general hedge fund analyst skill，不是要hardcode或是benchmark farming；你把这个写成一个skill以后固定跑".
+---
+
+# Prompt audit: failures → the request's sentences → the standard → the principle
+
+Run this after every measured configuration (three draws scored on the frozen ruler) and before any edit to a prompt file, a schema
+description or a takes line. A measurement without this audit is a score without a diagnosis (AGENTS §7.2, §6). The audit is read,
+not scripted: the scripts below only produce the lists to read.
+
+## 0. Inputs
+
+- The arm's run folders (`docs/research/2026-11-01-e2e-loop/arms/<arm>/d1..3`) and the baseline's.
+- The frozen ruler (AGENTS §7.1): the extraction standard `docs/prd/05-extraction-standard.html` (version 3, D243, with D250's
+  boundaries), golden-v5, the questions standard, the judgement gold. Never edited; every disagreement is a gap in the system.
+- The prompt principles (AGENTS §6 and §8): the prompt carries the standard and no new rule; it teaches a general hedge-fund
+  analyst, so every sentence and example reads the same for a bank, a drug maker, a retailer or a chip maker, names no covered
+  company, product or number, and takes no example from a test article; a classification is a closed set with examples; never grow a
+  prompt to fix quality without cutting as much elsewhere; a field's definition sits in the schema beside the field; code owns
+  identity, never importance.
+
+## 1. Dump the request as the model reads it
+
+One stored request of the configuration (any article), printed whole: the system text (the role), every user block before the item
+(category block, subjects, research reference, open questions with their takes lines, research groups), the closing sentence, the
+end-of-request check, and every schema field description (evidence and candidates). Read it top to bottom once. List every
+instruction that decides keep, reject, link, open, or a field value, with its location (role paragraph, check row, schema field,
+takes line, category block). This list is the thing the failures are mapped onto.
+
+```sh
+python3 - <<'PY'
+import sqlite3, json
+a = sqlite3.connect('file:<run folder>/archive.sqlite?mode=ro', uri=True)
+req = json.loads(a.execute("select request_json from model_calls where purpose='extract' and request_json like '%<title fragment>%' order by call_id desc limit 1").fetchone()[0])
+print(req['messages'][0]['content']); print(req['messages'][1]['content'].split('[Item]')[0]); print(req['messages'][1]['content'].rsplit('\n\n', 2)[-2:])
+print(json.dumps({k: v.get('description') for k, v in req['response_format']['json_schema']['schema']['properties']['evidence']['items']['properties'].items() if v.get('description')}, ensure_ascii=False, indent=1))
+PY
+```
+
+## 2. Produce the failure lists (all at no model cost, on the stored draws)
+
+| List | Script | What it gives |
+|---|---|---|
+| Matter states across draws | `harness/matter_states.py arm=d1,d2,d3 base=d1,d2,d3` | every gold core/supporting matter: extracted or reaching in 3/2/1/0 draws; the systematic misses (0 of 3) and the coin flips (1 of 3) |
+| Written noise by the standard's row | the `rows_all` count in `design-v72.md` §10 (the gold's `not_kept[].row`) | which row of the standard the written noise falls under, with examples |
+| No-home drops | `harness/dropped_census.py d1 d2 d3` | gold matters written but dropped, with the questions open at the time |
+| Where links go | `harness/links_by_question.py d1 d2 d3 --sample 20` | the pile per question, the revenue-sink share, statements under several questions, noise under revenue |
+| Quote refusals | the `dropped` reasons of the handovers (`quote not in item`), each diffed against its closest source window | paraphrase against a word or two off |
+| Question recall | `harness/question_recall.py d1 d2 d3` | must_open / may_open covered by seeds and by article-opened questions |
+| Fields | 15 random stored statements with speaker, original_who, original_day, tier | read against the quote and the item's day and publisher |
+
+For every list, read the items, not the counts: the raw answer beside the article for every systematic miss (a miss the scorer reports
+may be the matter written in other words: check before counting it), a sample of twenty for every pile.
+
+## 3. Map each failure class to the request
+
+For each class with more than a handful of cases, fill one row:
+
+| Failure class (count, share) | The sentence(s) of the request that produced it, quoted | The standard's line on the same case (section, decision) | Verdict | The model's own account (when the sentence is not obvious) |
+|---|---|---|---|---|
+
+Verdicts, one of: **contradiction** (two sentences of the request pull opposite ways, or a request sentence removes what the standard
+keeps, D240), **missing** (no sentence decides the case; the model guesses, a coin flip per send), **abstract** (a clause without an
+example, read differently each send), **misread** (the sentence is right, the model does not apply it; needs the model's own account
+before any change), **not the prompt** (code, scorer or sampler).
+
+The model's own account: continue the stored conversation with one question about one case (`harness/probe_v72_link.py`,
+`probe_v72_missing.py`), a cent a case, for every "misread" and for any class whose sentence is not obvious from reading.
+
+## 4. Check every proposed fix against the principles before writing it
+
+- It is written from the standard's line, not from the failing article: the example comes from another domain, names no covered
+  company, product or number, and reads the same for every industry. A fix that only recovers the bench's misses is benchmark
+  farming and is not written.
+- It removes a contradiction, supplies a missing definition at its owner (schema field, takes line, check row, category block), or
+  replaces an abstract clause with a closed set and examples. It never adds a rule the standard does not hold.
+- It cuts at least as much as it adds, or the growth has a written reason; report characters before and after.
+- One class per change; the change is proved on the stored requests of that class, three sends as stored against three changed,
+  with the noise guards of the same articles; the whole bench accepts it (three draws) only when Alex asks for a run.
+
+## 5. Output
+
+Write the table and the verdicts into the arm's design document (a numbered section), one row per class, in the order of the loss;
+the report to Alex states each class in a reader's words (what the system does wrong, which sentence makes it do that, what the
+standard says), never in the loop's own words (AGENTS, "Authority and scope": explain as to a sixteen-year-old).
+
+ succeeded in 0ms:
+I count **63 of the 66 outcomes as naming more than one part**, including a named comparison, checkpoint, consequence, or way to verify the answer. For example, “first shipments, confirmed by NVIDIA” counts as a shipment event plus a settlement source. This is a count of what the outcome text contains; it does not mean every extra part is a separate bet.
+
+In the table, **D397** means the main part is identifiable from the outcome under its words: “the part its `outcome` names.” A source, comparison, or checkpoint can describe that part without becoming the part judged. **Choice** means the outcome names competing parts without identifying which one is main. D397 says a topic with “no main part gets no judged question”; the question in the table is the choice needed to identify one.
+
+`↔` marks a related matter in another run. These are grouped by subject for the matter count; the questions may cover different products, dates, or details.
+
+| Topic | More than one part? Extra parts and main part |
+|---|---|
+| **July c1/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA disclosure. **D397:** credit-support commitments. |
+| July c1/2 | **Yes.** Second figures: carrying amount and additional commitment; checkpoint/source: annual report. **Choice:** Should the judged figure be stake size, carrying amount, or additional commitment? |
+| July c1/3 ↔ fortnight c1/4; week c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Vera Rubin shipments. |
+| July c1/4 ↔ July c2/3, c3/11; related China restrictions in later runs | **Yes.** Settlement sources: official decision or NVIDIA-confirmed shipments/revenue. **D397:** Chinese permission for H200 sales. |
+| July c1/5 | **Yes.** Alternative events: finding, penalty, or export measure. **Choice:** Is the main event a finding, a penalty, or a new measure? |
+| July c1/6 | **Yes.** Comparison: $650bn plan. **D397:** four hyperscalers’ 2026 capex. |
+| July c1/7 | **Yes.** Settlement source: NVIDIA confirmation. **D397:** first Kyber shipments. |
+| July c1/8 | **Yes.** Comparison: forecast above $1tn. **D397:** four hyperscalers’ 2027 capex. |
+| July c1/9 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: FY2027 10-K. **D397:** supply commitments. |
+| July c1/10 | **Yes.** Comparisons: 46% planned and 30% current. **D397:** domestic suppliers’ share. **D417:** the audit says this rolling-period figure lacks a publication day, so it is declined. |
+| July c1/11 | **Yes.** Second figure: equity stake; checkpoint: conversion at IPO. **Choice:** Should the judged figure be the amount invested or the resulting stake? The two readers disagreed on the refusal. |
+| July c1/12 | **Yes.** Comparison: May H100 rental-price peak. **D397:** 2026 H100 rental price. |
+| July c1/13 | **Yes.** Comparison: prior-year price increase. **D397:** change in HBM/DRAM prices. **D417:** the audit says the rolling-period figure lacks a publication day, so it is declined. |
+| July c1/14 | **No.** One event: the French authority’s final decision. |
+| July c1/15 | **Yes.** Second figure: potential awards; comparisons: prior amounts. **Choice:** Should the judged figure be obligations or potential awards? |
+| **July c2/1** ↔ fortnight c1/1 | **Yes.** Second assessment/consequence: materiality to cash and credit risk. **D397:** disclosed support and revenue-share commitments. |
+| July c2/2 ↔ fortnight c1/4; week c1/7 | **No.** One event: Vera Rubin begins shipping. |
+| July c2/3 ↔ July c1/4 and c3/11 | **Yes.** Second event: Chinese permission; consequence: NVIDIA records revenue. **Choice:** Should the judged event be permission or revenue from shipments? |
+| July c2/4 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c2/5 | **Yes.** Checkpoints: 2027 versus 2028; further timing: when shipments occur. **D397:** whether Kyber ships in 2027; later timing is also named. |
+| July c2/6 ↔ related memory-price topics in later runs | **Yes.** Second figure: memory cost per rack; consequences: rack economics and infrastructure spending. **Choice:** Should the judged figure be memory-price change or cost per rack? |
+| July c2/7 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn and growth versus revenue; consequence: write-down/utilisation risk. **D397:** supply-commitment balance. |
+| July c2/8 | **Yes.** Comparison: May peak; settlement source: Ornn index. **D397:** H100 rental-price trajectory. |
+| July c2/9 | **No.** One event: the French authority issues its decision; remedies and fines are examples of that decision. |
+| July c2/10 | **Yes.** Comparison: NVIDIA GPU purchases; settlement source: ASIC-vendor revenue. **Choice:** Should the judged figure be custom-ASIC purchases, GPU purchases, or their relative size? The two readers disagreed on the refusal. |
+| **July c3/1** ↔ fortnight c1/1 | **Yes.** Settlement source: NVIDIA filings. **D397:** committed credit support/revenue-share-backed capacity. |
+| July c3/2 | **Yes.** Second event: completion; settlement sources: annual and related filings. **Choice:** Should the judged part be stake amount or completion of the investment? |
+| July c3/3 ↔ week c1/6 | **Yes.** Second figure/consequence: permitted China sales. **Choice:** Should the judged part be export-approval status or sales scale? |
+| July c3/4 ↔ fortnight c1/4; week c1/7 | **Yes.** Second event: initial revenue; settlement source: NVIDIA confirmation. **Choice:** Should the judged event be first shipments or initial revenue? |
+| July c3/5 | **Yes.** Comparisons: 2026 plan and 2027 projection. **D397:** four hyperscalers’ 2026 capex. |
+| July c3/6 | **Yes.** Comparison: reported delay to 2028; settlement source: company confirmation. **D397:** first Kyber shipments. |
+| July c3/7 ↔ fortnight c1/11 | **Yes.** Second condition: whether the shortage persists. **Choice:** Should the judged part be the price change or persistence of the shortage? D436 treats a shortage beside shipments as one bet, but does not select a main part for this price/shortage wording. |
+| July c3/8 ↔ fortnight c1/2; week c1/2 | **Yes.** Comparison: $119bn; checkpoint/source: annual report. **D397:** supply commitments. |
+| July c3/9 | **Yes.** Comparison: domestic-share baseline; second figure: direction of NVIDIA’s share; settlement sources: surveys and NVIDIA revenue. **Choice:** Should the judged figure be domestic suppliers’ share or NVIDIA’s share? The audit declined for the rolling period; it does not settle this choice. |
+| July c3/10 | **Yes.** Comparison: May peak; second condition: continuing decline. **D397:** H100 rental-price direction. |
+| July c3/11 ↔ July c1/4 and c2/3 | **Yes.** Second figure: purchase scale; second event: subsequent broadening or tightening. **Choice:** Should the judged part be permission, permitted volume, or later policy change? |
+| July c3/12 | **Yes.** Alternative event: closure without action; consequence: fine or remedy. **Choice:** Should the judged event be a formal decision or closure without action? |
+| July c3/13 ↔ week c1/3 | **Yes.** Comparison: 2026 levels; alternative: normalisation. **D397:** 2027 DRAM/HBM price level. |
+| July c3/14 | **Yes.** Second event: initial revenue; settlement source: company confirmation. **Choice:** Should the judged event be first Vera CPU shipments or initial revenue? |
+| July c3/15 | **Yes.** Comparisons: reported obligations and potential awards. **D397:** 2026 federal AI spending obligations. |
+| **Fortnight c1/1** ↔ July c1/1, c2/1, c3/1 | **Yes.** Comparison: equity investments; checkpoint/source: annual report. **D397:** disclosed support and guarantees. |
+| Fortnight c1/2 ↔ July c1/9, c2/7, c3/8; week c1/2 | **Yes.** Comparison: prior year; settlement source: 10-K. **D397:** purchase/supply commitments. |
+| Fortnight c1/3 ↔ related China restrictions in July and week | **Yes.** Second event: Chinese restrictions stop; consequence: China revenue resumes. **Choice:** Should the judged event be US approval or removal of Chinese restrictions? |
+| Fortnight c1/4 ↔ July c1/3, c2/2, c3/4; week c1/7 | **Yes.** Second event: first revenue recognition; settlement sources: quarterly results and 10-K. **Choice:** Should the judged event be volume shipments or first revenue recognition? |
+| Fortnight c1/5 ↔ week c1/4 | **Yes.** Comparison: nearly $800bn plan. **D397:** five hyperscalers’ 2026 capex. |
+| Fortnight c1/6 ↔ week c1/5 | **Yes.** Alternatives: repricing, delay, or termination; settlement source: NVIDIA filings. **D397:** completion of the acquisition. |
+| Fortnight c1/7 | **Yes.** Alternatives: blocking, delay, or quantity caps; consequences: shipments and revenue. **D397:** MIIT approval of RTX Pro 5500 purchases. |
+| Fortnight c1/8 | **Yes.** Comparisons: 2025 and first-half 2026 funding; settlement source: PitchBook. **D397:** 2026 physical-AI venture funding. The audit’s refusal concerns the absence of a matching theme, not selection of the main figure. |
+| Fortnight c1/9 ↔ week c1/4 | **Yes.** Comparisons: 2027 projection and 2026 expected spending. **D397:** five hyperscalers’ 2027 capex. |
+| Fortnight c1/10 | **Yes.** Comparison: cited GW pace; second assessment: labour constraint. **Choice:** Should the judged part be capacity added or how much labour constrains it? |
+| Fortnight c1/11 ↔ July c3/7 | **Yes.** Comparison: 2025; settlement source: TrendForce/DRAMeXchange. **D397:** 2026 DRAM/HBM price change. |
+| Fortnight c1/12 ↔ week c1/8 | **Yes.** Second figure: amount signed; alternatives: proposal remains, is reduced, or withdrawn. **D397:** whether the guarantee is signed and disclosed. |
+| Fortnight c1/13 | **Yes.** Checkpoints: Q4 2026, early 2027 and mid-2027; second annual figure: full-year 2027; settlement sources: networking revenue and supplier shipments. **Choice:** Which shipment period or checkpoint should be judged? |
+| **Week c1/1** | **Yes.** Second figure: paid/accrued amounts; checkpoint: remaining term; settlement source: annual report. **Choice:** Should the judged figure be maximum guarantee, paid/accrued amount, or remaining term? |
+| Week c1/2 ↔ July c1/9, c2/7, c3/8; fortnight c1/2 | **Yes.** Second figure: adjustable/cancellable portion; settlement source: annual report. **Choice:** Should the judged figure be total commitments or the adjustable/cancellable portion? |
+| Week c1/3 ↔ July c3/13 | **Yes.** Second figures: memory makers’ selling prices and gross margins. **Choice:** Should the judged figure be contract-price change, selling prices, or gross margins? |
+| Week c1/4 ↔ fortnight c1/5 and c1/9 | **Yes.** Second figure/checkpoint: 2027 capex; comparisons: 2026 and 2027 plans. **Choice:** Should the judged figure be 2026 or 2027 capex? |
+| Week c1/5 ↔ fortnight c1/6 | **Yes.** Second figure: consideration; second condition: regulatory terms; alternative event: termination. **Choice:** Should the judged part be closing/termination, consideration, or regulatory conditions? |
+| Week c1/6 ↔ July c3/3; related China restrictions in fortnight | **Yes.** Second event/consequence: NVIDIA resumes China revenue. **Choice:** Should the judged event be licence status or revenue resumption? |
+| Week c1/7 ↔ July c1/3, c2/2, c3/4; fortnight c1/4 | **Yes.** Second condition: sales timing slips; checkpoints: stated quarter versus 2027. **Choice:** Should the judged part be volume ramp/shipments or reported sales timing? |
+| Week c1/8 ↔ fortnight c1/12 | **Yes.** Second figure: paid/accrued amounts; additional terms and remaining duration; settlement source: annual report. **Choice:** Should the judged part be maximum coverage, amounts paid/accrued, or support terms and duration? |
+| Week c1/9 | **Yes.** Second event: contribution to revenue; checkpoints: stated quarter versus later periods. **Choice:** Should the judged event be volume shipments or revenue contribution? |
+| Week c1/10 | **Yes.** Comparison: March B200 rental price. **D397:** year-end B200 rental price. The two readers disagreed on the separate theme-based refusal. |
+| Week c1/11 | **Yes.** Second event: closing or collapse; second figure: consideration; second condition: regulatory terms. **Choice:** Should the judged part be agreement, closing, consideration, or regulatory conditions? |
+| Week c1/12 | **Yes.** Second figure/checkpoint: 2027 global capex; comparisons: Goldman’s forecasts and GDP shares. **Choice:** Should the judged figure be 2026 or 2027 global capex? |
+| Week c1/13 | **Yes.** Second figures: cash paid and change in commitments; settlement source: annual report. **Choice:** Should the judged figure be remaining balance, cash paid, or change in commitments? The two readers disagreed on the refusal. |
+
+**Counts under the classification above:**
+
+- Outcomes naming more than one part: **63 of 66**.
+- Distinct matters among those rows: **40**, grouping repeated subjects across runs as indicated. This grouping is an interpretive count; related topics are not necessarily identical questions.
+- Rows where the main part is identified: **34**.
+- Rows needing a choice of main part: **29**.
+
+The decisions give a **limited distinction**, but not a general procedure for choosing a main part whenever an outcome names several things. D397 says to judge “the part its `outcome` names” and says a topic with “no main part gets no judged question.” It does not say that the first-mentioned part, a consequence, a comparison, or the description always wins.
+
+D436 says “a second side of the same bet … is one question” and that it “stays as context … and is shown as not judged.” Its examples include “the shortage beside the shipments.” That supports keeping a second side as context when it is already identifiable as such; it does **not** provide a general test for deciding which of two equally stated parts is main. D417 supplies a separate refusal rule for certain non-annual figures without a publication day; it does not choose between competing parts of an outcome.
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '4326,4360p;4847,4856p;7445,7477p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+
+- **Asked**, with the census of production's own ladders (one request, the same in three draws, gave three different ladders, one
+  with its direction reversed): "你 10 月 26 日定过、11 月 5 日说“我们要做”的那条规矩还没实现：答案分段要对着市场预期或公司指引写成“高于／接近／低于”，并且每道题登记“数字越高对公司是好还是坏”。新做的“定档”这一步要不要直接带上它？"
+  - Options:
+    - both halves here (recommended). The option stated its costs: 7 to 9 of 18 number questions have no reference figure in their
+      opening article, so their ranges are the model's estimate and are marked "no reference"; a direction can still be registered
+      wrong, which the first test measures;
+    - the direction half only;
+    - not here: write ladders as production does, and leave D186 to a later version.
+  - Alex: "两半都带上 (Recommended)".
+- **Decided:**
+  - The clean ladder step builds D186 in full. The model states the reference the opening article gives and, for a company's figure,
+    which end is good for the business, with one sentence why. Code orders and labels the rungs from that end, writes each range's
+    text from its bounds, and checks that a stated reference value lies in the middle range.
+  - The reference is what D260 lists: a consensus, the company's guidance, the stated plan or deadline. This is wider than D186's
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+  checked. An account is a lead, not proof. The evidence returns to the council before any A2 design. An A2 would be a new arm with
+  its own audit of the whole request and of the decline rules, a sized class, harm controls and a council review.
+
+## D579 · 2026-11-16 · Under D439: the refusal accounts read; no A2 rule yet; a bounded $0 audit of the decline rules and the outcome's extra parts first (council consensus, round 67)
+
+- **The accounts** (`docs/research/2026-11-14-use-acceptance/unlisted-parts/refusal-accounts-output.txt`, $0.0012). Each conversation
+  was rebuilt and checked against the sent sha256.
+  - Both refusals name a decline rule of system line 6: the period that is not one year, and several figures with none the main one.
+  - Both apply that rule to words of the topic's outcome, and both call the application a mistake.
+  - They are leads; neither says the new definition caused the refusal.
+- **Refused:** the proposed A2 clause, "a part only the outcome names is listed and is not by itself a reason to decline". D397 makes
+  the part the outcome names the main part. An outcome-only clause can itself name the main thing, or a period that rightly
+  triggers D417. So the field cannot alone decide that a clause is an extra.
+- **Decided, citing D439:** a bounded $0 audit.
+  - Trace the seven decline cases against the whole request and their decisions.
+  - Count the stored topics whose outcome names a period or figure beyond the description. Include refusals that must stay
+    refusals, and cases where the outcome supplies the main thing.
+  - Map the disputed comparison and consequence cases against D397, D436 and the July rulings, with H and XR's strict-count
+    regressions kept visible.
+  - Return to the council with a sourced general rule, or with no candidate. A fresh-material probe would need its own design and
+    decision.
+
+## D580 · 2026-11-16 · Under D439: no reviewed repair for the unlisted parts; arm A stays stopped; next, a $0 check of the Idea planner on new-system answer shapes (council consensus, rounds 68 and 69)
+
+- **The audit** (`docs/research/2026-11-14-use-acceptance/unlisted-parts/DECLINE-AUDIT.md`): five of line 6's seven decline cases can
+  be triggered by a part the outcome names besides the main one. The proposed tie-breaker (the main part is the one both fields ask)
+  was refused in round 68: D397 does not establish it, "every other part" is wider than the open question, and the refusal table was
+  a paper application.
+- **The independent review** (`rule-review.md`; a fresh read-only Codex session, not shown the audit):
+  - 63 of 66 outcomes name more than one clause, comparisons and settlement sources included, on 40 distinct matters;
+  - the decisions settle the main part in 34 and leave 29 open for this reader;
+  - "not a general procedure for choosing a main part whenever an outcome names several things".
+  - Its 29 are cases one reader could not settle from the fields, not proven ambiguities, nor decisions only Alex can take.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json,glob; p=\"poc/data/clean-model-probe-2026-11-16/reading/readers/packet-1.json\"; print(p)'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-model-probe-2026-11-16/reading/readers/packet-1.json
+
+codex
+**Do not send the proposed sentence yet.** The trace identifies a useful pattern, but D436 does not establish the proposed rule that the description always selects the main part.
+
+1. **The mechanism is a lead, not yet one proven cause.** Sol often declined when the outcome named several things. But its reasons differ: the CPO answer treats a span of checkpoints as a nonannual figure; the memory answer says HBM and DRAM have separate price series; the China answer names two authorities’ decisions. The record does not yet show that the same instruction caused all three.
+
+   There is also a count to correct: the trace table contains **4 agreed-unjustified, 12 disputed and 8 agreed-justified refusals**, totalling 24—not 13 disputed. [Refusal trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/REFUSAL-TRACE.md)
+
+2. **The sentence adds a rule.** D436 says two sides of an already identified bet stay together; it does not say the description decides which part is main whenever the fields differ. D397 says the judged part is the one named by the outcome. The proposed “only when the description singles out none” could override a more precise outcome or choose one of two genuinely separate bets. The earlier independent review expressly identified this boundary. [D397 and D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [prior rule review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md)
+
+3. **The proposed check is not a $0 stored-data check:** it is **27 paid model calls**. Writing a ladder would not alone show recovery; it could fuse decisions, omit a part, or ask a different question. The stop rules also need reconciliation: “all controls decline in 2 of 3” permits a flipped control, while “any control flipped” closes the arm.
+
+The **one next step** is a $0, independent audit of the whole request and the proposed description-priority rule against D397, D436 and the stored cases, including true no-main topics and descriptions that conflict with their outcomes. A sourced rule that survives those counterexamples moves to a separately reviewed probe; an unsourced or overbroad rule closes this candidate. Any probe must judge the written questions and their omissions, not merely whether a ladder appears.
+
+**CONSENSUS: no, because the sentence introduces an unconfirmed priority rule and the proposed paid test does not establish sound recovery; audit the rule and request first at $0.**
+tokens used
+834,069
+**Do not send the proposed sentence yet.** The trace identifies a useful pattern, but D436 does not establish the proposed rule that the description always selects the main part.
+
+1. **The mechanism is a lead, not yet one proven cause.** Sol often declined when the outcome named several things. But its reasons differ: the CPO answer treats a span of checkpoints as a nonannual figure; the memory answer says HBM and DRAM have separate price series; the China answer names two authorities’ decisions. The record does not yet show that the same instruction caused all three.
+
+   There is also a count to correct: the trace table contains **4 agreed-unjustified, 12 disputed and 8 agreed-justified refusals**, totalling 24—not 13 disputed. [Refusal trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/REFUSAL-TRACE.md)
+
+2. **The sentence adds a rule.** D436 says two sides of an already identified bet stay together; it does not say the description decides which part is main whenever the fields differ. D397 says the judged part is the one named by the outcome. The proposed “only when the description singles out none” could override a more precise outcome or choose one of two genuinely separate bets. The earlier independent review expressly identified this boundary. [D397 and D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [prior rule review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md)
+
+3. **The proposed check is not a $0 stored-data check:** it is **27 paid model calls**. Writing a ladder would not alone show recovery; it could fuse decisions, omit a part, or ask a different question. The stop rules also need reconciliation: “all controls decline in 2 of 3” permits a flipped control, while “any control flipped” closes the arm.
+
+The **one next step** is a $0, independent audit of the whole request and the proposed description-priority rule against D397, D436 and the stored cases, including true no-main topics and descriptions that conflict with their outcomes. A sourced rule that survives those counterexamples moves to a separately reviewed probe; an unsourced or overbroad rule closes this candidate. Any probe must judge the written questions and their omissions, not merely whether a ladder appears.
+
+**CONSENSUS: no, because the sentence introduces an unconfirmed priority rule and the proposed paid test does not establish sound recovery; audit the rule and request first at $0.**

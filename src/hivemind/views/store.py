@@ -213,9 +213,16 @@ def has_judgement(conn, view_id, seq):
     return conn.execute('select 1 from judgements where view_id=? and seq=?', (view_id, seq)).fetchone() is not None
 
 
+READ_BUSY_TIMEOUT_SECONDS = 5.0     # a reader's busy timeout: SQLite's busy handler retries SQLITE_BUSY within it (live-service row 1)
+
+
 def open_read_only(path):
-    """The views database for a reader (the agent layer, reports): no schema creation, no writes."""
-    conn = sqlite3.connect(f'file:{os.path.abspath(path)}?mode=ro', uri=True)
+    """The views database for a reader (the agent layer, reports): no schema creation, no writes. Opened by its own path: a symlink
+    resolved, a store with another hard link refused (`live_lock.LockRefused`; live-service/OPERATING-CONTRACT.md, row 7), since
+    SQLite finds a WAL store's side files by the opened path."""
+    from hivemind import live_lock
+    real, _ = live_lock.own_path(path)
+    conn = sqlite3.connect(f'file:{real}?mode=ro', uri=True, timeout=READ_BUSY_TIMEOUT_SECONDS)
     conn.row_factory = sqlite3.Row
     return conn
 

@@ -1,0 +1,17 @@
+**The required field is a reasonable idea to examine at $0, but it is not ready to build as proposed.** It can make the model enumerate parts; it cannot guarantee that the enumeration is complete or that the part marked “judged” is actually answered.
+
+1. **Is it the right lever?** It addresses the largest observed class: **6 of 78 medium sends** omitted a part, sometimes alongside another fault. But the proposed field targets L, while Q—the next-largest class—includes fused decisions. It has not yet shown that either class will improve. Also, **13 of 78** includes one code refusal; **12 of 78** had agreed answer faults. [Effort result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/RESULT.md), [trace review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/review.md)
+
+   The prior A2 probe is a warning: it removed omissions on its motivating topics but also listed outcomes already decided and sources used to settle the question. A required list could repeat that problem. [A2 result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-A2.md)
+
+2. **The proposed checks are identity checks only in a narrow sense.** Code can check that a quoted span exists and that two identifiers or exact strings match. It cannot establish that the model found **every** relevant part, that a span expresses a complete part, or that “judged” describes what the answer actually decides. If the model omits a part from both lists, the checks pass.
+
+   The proposed contract also narrows the existing rule: the form covers **all the topic’s wording**, including the description, not only its outcome. Exact copied words can reject a valid paraphrase or a combined part that preserves the meaning. Requiring exactly one `judged` part could also force a false split of one event or mishandle a justified refusal. Those are behavioural decisions, not mere identity checks. [Reading form](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md), [D397 and D436](/Users/lchingen/hivemind/docs/DECISIONS.md:741)
+
+3. **Before preparation, do one $0 counterexample audit of the contract.** Read the stored L and Q failures alongside correct answers and justified refusals. For each, write a valid proposed field and `not_judged` list, then check whether the proposed contract accepts it. Include parts stated only in the description, paraphrases, combined parts, an event’s already-decided outcomes and a case where the model leaves the same part out of both lists.
+
+   **Move to design** only if a general contract accepts the sound answers, exposes the omissions it claims to address, and does not force the model to split or invent parts. **Close this proposed contract** if it either rejects sound answers or passes the same omitted-part failure. A later schema or prompt change still needs the full blind prompt audit, stored-data checks and a separately decided probe.
+
+The Claude reference is a useful lead, but one writer’s result does not isolate model family or prove that a provider switch would fix the step.
+
+**CONSENSUS: no, because the field’s coverage and identity contract must first survive the $0 counterexample audit; do not build or send the proposed arm yet.**

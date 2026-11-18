@@ -126,7 +126,8 @@ def run(*, testdb_path, views_path, archive, cfg, universe, from_day, until_day,
             raise RuntimeError(f'judging failed; day {day} remains resumable: {judged.failed}')
         closed = pull.end_of_day(conn, day, seq)
         day_stats['closed'] = len(closed)
-        store.complete_day(conn, day, seq, time.strftime('%Y-%m-%dT%H:%M:%S'))
+        # The day ends at the last sequence it wrote, a closing's own sequence on a day without items included, so the next day starts after it.
+        store.complete_day(conn, day, store.next_sequence(conn) - 1, time.strftime('%Y-%m-%dT%H:%M:%S'))
         conn.commit()
         for key in totals:
             totals[key] += day_stats[key]

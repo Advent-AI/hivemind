@@ -1,0 +1,654 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 131: slice 3 built and proven (D596); the writer's slices 4a and 4b proposed
+
+## Slice 3 (D596)
+
+- **Built:**
+  - lexical ranking over the views visible at the bound, in an in-memory full-text table;
+  - `fresh_vectors` over visible candidates in creation order;
+  - `build_index` embeds only views visible at the last completed day and refuses a first-day store;
+  - both start-ups skip a first-day store;
+  - `store.search_views` unchanged for matching.
+- **Tests:** `tests/test_search_live.py` (10), including the backup equality with 60 matching unfinished views, both newly visible
+  cases through MCP, and the first-day start through MCP and the API. The suite passes (327), and so do the new system's folders
+  (164).
+- **Mutants:** 4 of 4 caught. My first invisible-view control was not decisive, because my creation-order walk kept the invisible view
+  last. It was rebuilt so the invisible view has the lower sequence.
+- **Found:** a backup of a WAL store keeps WAL mode, and a read-only reader of the copy fails ("unable to open database file"). Row 7
+  now says the copy is set to `journal_mode=delete` first.
+- **My error:** a fake embedder wrapped `search.fake_embed` twice. I had not read the function, and five tests failed for that before
+  any real result.
+
+## The writer (`ladder_adapter.LadderAdapter` and `replay`), proposed in two slices
+
+**4a: the store's mode and life, rows 1, 5 and 6.**
+
+1. `LadderAdapter` creates its store file empty and exclusively, then sets WAL and `journal_size_limit` (64 MB) before writing.
+2. **Before each day** `replay` checks the free space (at least 20 times the store's size, stated in its limits). Below that, it
+   stops before the day with its reason recorded in `adapter-counts.json`.
+3. **After each completed day** it asks for a truncating checkpoint with a short busy timeout. Three consecutive failures stop it
+   before the next day with its reason.
+4. **At its end** it tries `journal_mode=delete`. If readers hold the store, it keeps WAL and records "stopped in order, WAL kept".
+5. **Proofs:**
+   - 1: WAL and the limit set; production's stores unchanged;
+   - 5: a long reader held across three completed days stops the writer, and readers keep the last completed day; below the free
+     space, a stop before the day; a database-full error mid-day (`max_page_count`) as a crash;
+   - 6: the writer killed after committed partial-day writes, then every service, bundle and search answer at every allowed bound
+     equal to a converted backup at the last completed day, with nothing of the partial day embedded;
+   - 8d: orderly stop with and without a reader.
+   - The filesystem-full test on a small disk image goes in 4b, with the lock.
+
+**4b: who writes, and copies, row 7.**
+
+- A `live_lock` module: the one lock folder (`~/.hivemind-locks`, 0700, fail closed), locks named by device and inode, checked on
+  both sides of the open, symlinks resolved, hard links refused.
+- The writer creates, locks, opens and verifies before writing.
+- Preflight locks without waiting, copies with the backup API and sets `journal_mode=delete` on the copy.
+- A repository snapshot helper does the same.
+- The filesystem-full test.
+
+**Asked of you:** whether this split and 4a's plan are faithful to rows 1, 5, 6 and 8d, and anything missing.
+
+End with `CONSENSUS: yes` (build 4a) or `CONSENSUS: no, because …`.
+
+codex
+I’ll review the search evidence and the writer’s actual lifecycle, then check whether slice 4a can be built and proved independently of the lock and copy work.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '28,43p;126,159p;176,206p;234,306p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '158,175p;275,400p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/run_stage_b.py | sed -n '75,125p'
+rg -n 'D596' docs/DECISIONS.md
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    28	| A run's `snapshot.sh` (a per-run file, not a repository script) | SQLite's backup API | on demand |
+    29	
+    30	## The contract
+    31	
+    32	1. **Journal mode, side files, opening.**
+    33	   - The live store is in WAL mode, set by the writer when it creates the store. Production's stores stay as they are.
+    34	   - The `-wal` and `-shm` files sit beside the store on a local disk. **No reader reaches a live store through a container bind mount
+    35	     or a network share.**
+    36	   - **Opening precondition:** every reader runs as the writer's user, and the store's directory is writable by it. SQLite needs the
+    37	     `-wal` and `-shm` files readable, or permission to create them, to open a WAL store with `mode=ro`.
+    38	   - Readers open with `mode=ro`, never `immutable=1`.
+    39	   - A reader that cannot open the store, or cannot begin a read transaction, fails loudly with the store's path. It never serves an
+    40	     empty or stale answer in its place.
+    41	   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+    42	     example while the WAL index is being rebuilt.
+    43	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+   126	
+   127	5. **Checkpoints and disk: what is guaranteed, and the disk-exhaustion behaviour.**
+   128	   - The writer sets `journal_size_limit` (proposed 64 MB) and keeps SQLite's automatic passive checkpoint.
+   129	   - After each completed day it asks for a truncating checkpoint with a short busy timeout.
+   130	   - **Guaranteed:**
+   131	     - readers do not block the writer's commits;
+   132	     - after a completed day whose truncating checkpoint succeeds, the `-wal` is within the limit;
+   133	     - if the truncating checkpoint fails on 3 consecutive completed days, the writer stops before the next day with a recorded
+   134	       reason.
+   135	   - **Not guaranteed:** a byte bound on the `-wal` within an unfinished day, or across the failed days. Its growth there is the
+   136	     day's own writes, which the contract does not bound.
+   137	   - **Disk:**
+   138	     - before each day the writer checks the free space on the store's disk against a minimum stated in the run's limits file
+   139	       (proposed: 20 times the store's size), and stops before the day with a recorded reason if it is below;
+   140	     - a write that still meets a full filesystem mid-day (extending the store, its `-wal` or a side file) fails, and the writer
+   141	       exits non-zero as in a crash (row 6);
+   142	     - its stop reason may then be lost too, if the run's log is on the full disk;
+   143	     - **the guarantee in that case is the readers' boundedness** (they keep the last completed day), not the record.
+   144	       The process's exit status, seen by its supervisor, is the signal.
+   145	6. **A crash.**
+   146	   - WAL drops the unfinished transaction. The day's **already committed writes stay** in the store.
+   147	   - Readers stay bounded to the last completed day. Every row written during the unfinished day is dated by that day's processing
+   148	     steps, after the last completed day, so it is outside every allowed bound.
+   149	   - **The writer does not resume** (today's loop). The store is served as of its last completed day until it is replaced.
+   150	   - Resuming a stopped live store is a separate design, not covered here.
+   151	7. **Who is writing: a signal outside the store, and copies.**
+   152	   - **The lock folder: one owner, fixed, fail closed.**
+   153	     - One function (`live_lock.lock_folder()`) gives the folder to both the writer and preflight: `~/.hivemind-locks/`,
+   154	       created on first use with owner-only permissions (0700).
+   155	     - If it cannot be created, opened or written, both refuse and name it. Neither falls back to running without a lock.
+   156	     - **Lock files are never deleted or replaced** by any part of the system; only a person removes them, by hand, when no process
+   157	       runs.
+   158	     - After taking a lock, and again at each later check point (the writer before each day; preflight after its copy), the holder
+   159	       checks that the lock file's path still names the inode it locked. If not (someone replaced the file by hand), it stops or
+   176	     - preflight checks once more after its copy;
+   177	     - any difference discards what was opened or copied, releases and refuses.
+   178	   - **What they cannot detect, stated:** a path swapped away and back (A, then B at the moment of the open, then A again) passes
+   179	     both checks. The contract does not claim to bind the opened file to the locked one in that case; the rule above excludes it.
+   180	   - **The writer locks before it writes:**
+   181	     - it creates its store file empty and exclusively (create-new, failing if the path exists);
+   182	     - it takes that file's lock without waiting;
+   183	     - it opens it as a database and verifies its identity as above, and only then writes;
+   184	     - if the lock is held (by preflight), it refuses to start, with that reason.
+   185	     - It holds the lock (`flock`) for its whole life; the operating system releases it on any exit, crash included.
+   186	   - **Preflight, before it touches a store, always takes that store's lock without waiting,** creating the lock file if it is
+   187	     absent. There is no "no lock file" branch:
+   188	     - **if the lock is held, a writer is running:** preflight refuses, naming the run's snapshot script (AGENTS §9's sanctioned way);
+   189	     - otherwise it keeps the lock through its verified copy (the backup API, from a `mode=ro` source) and releases it after;
+   190	     - historical stores and production's are copied the same way; taking a fresh lock on them is harmless.
+   191	     - AGENTS §9 remains the only protection for production's own writer, which takes no such lock; changing it is out of scope.
+   192	   - **Snapshots:** the snapshot script is the one toucher that copies a store while its writer runs, with the backup API.
+   193	     Preflight accepts its snapshots like any store with no writer.
+   194	   - **A copy leaves WAL mode** (found in slice 3's build):
+   195	     - a backup of a WAL store keeps WAL mode;
+   196	     - a read-only reader of that copy then fails with "unable to open database file", since it cannot create the shared-memory
+   197	       file;
+   198	     - so the snapshot script, and preflight's own copy, set `journal_mode=delete` on the copy before anyone reads it.
+   199	   - **Orderly stop:**
+   200	     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+   201	       timeout);
+   202	     - if service readers hold it, the store stays in WAL mode and the writer records "stopped in order, WAL kept" in its run's
+   203	       outcome;
+   204	     - either way it then releases its lock.
+   205	     - Journal mode is never used as the sign of a live store; the lock is.
+   206	8. **AGENTS §9 ("Never open a live run's databases") stays in force.**
+   234	   - two overlapping MCP calls across a writer's commit each return their own transaction's state, two overlapping **search**
+   235	     calls included (each with its own index connection, both writing the query cache);
+   236	   - after a later day completes, a tool call on the actual MCP entry point sees that day's views; the instructions still name their
+   237	     start day;
+   238	   - an error while opening connections leaves none open;
+   239	   - a call that fails mid-read leaves no open transaction and no open connection;
+   240	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   241	   - MCP's object list after a later day includes that day's objects;
+   242	   - no transaction is open between MCP calls.
+   243	5. **Checkpoint and disk:**
+   244	   - below the free-space minimum, the writer stops before the day with its reason, and readers serve the last completed day;
+   245	   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+   246	   - a filesystem-full error mid-day: the store on a small disk image (`hdiutil`, a few MB), filled while the `-wal` grows. The
+   247	     writer exits non-zero, and readers serve the last completed day. Whether its reason was recorded is reported, not required;
+   248	   - with a long read held, the writer commits;
+   249	   - after the read ends, a checkpoint completes, and a reset brings the `-wal` within the limit;
+   250	   - with a reader held across three completed days, the writer stops before the fourth with its reason recorded, and readers serve
+   251	     the last completed day.
+   252	6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+   253	   within the timeout.
+   254	7. **A crash:** the writer is killed after committed writes mid-day.
+   255	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+   256	   - The search index and the text sent to the embedding service (recorded by a fake transport) equal the backup's.
+   257	   - The partial day's rows are present in the file and invisible to every route and to the index.
+   258	8. **Copies:**
+   259	   - a backup taken while the writer commits passes an integrity check;
+   260	   - preflight refuses a store whose writer holds the lock, opened by its own path or by a symlink to it;
+   261	   - a store with a hard link elsewhere is refused by every entry point;
+   262	   - a crashed writer's store with committed data still in its WAL: a copy through a symlink equals a copy through the own path;
+   263	   - preflight arriving just before the writer: whichever takes the lock first wins. A writer finding preflight's lock refuses to
+   264	     start and writes nothing; preflight finding the writer's lock refuses to copy;
+   265	   - the store's path replaced after preflight's `stat` and before its open, and again during its copy: each is detected, the
+   266	     copy discarded and the request refused;
+   267	   - the writer's path replaced between its create and its open: the writer refuses;
+   268	   - the lock folder unwritable: both refuse and name it;
+   269	   - a held lock file deleted and recreated by hand: a second process can lock the new file, so exclusion is broken until the
+   270	     holder's next check. The writer rechecks its lock file's identity before each day and stops if it changed; preflight rechecks
+   271	     after its copy and discards it. The test shows detection at those points, not prevention;
+   272	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   273	     and every historical input it accepts today;
+   274	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   275	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   276	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   277	8b. **The index:**
+   278	   - a build failing after one batch leaves only correct vectors, and the next build embeds the rest;
+   279	   - a store replaced at the same path, with the same first step, whose view `v1` has a different text: the old `v1` vector is not
+   280	     used, and search is lexical and lists `v1` as missing;
+   281	   - with the same text, the vector is used, being correct by its key;
+   282	   - a store restored from an earlier snapshot: only its visible views' vectors are used;
+   283	   - a later day completing while the service runs: a new view with no matching vector is listed missing and search is lexical until a
+   284	     restart, after which it is embedded and search is semantic; a new view whose matching vector is already in the shared index is
+   285	     used at once;
+   286	   - a service started on a first-day store, through the API's and MCP's own start-up: after the first day completes, search is
+   287	     lexical when a visible view lacks a matching vector, and semantic when the shared index already holds one for every visible
+   288	     view; after a restart it is semantic;
+   289	   - an invisible view (an unfinished day's) whose cached vector has a different length does not change a search at the last
+   290	     completed day: the same results, mode and `missing_vectors`;
+   291	   - two concurrent searches for one new query: both answers are well formed, and the cache holds one vector for it; no equality with
+   292	     a fresh embedding is asserted;
+   293	   - an index build committing between a search's vector read and its scoring changes nothing in that search's answer.
+   294	   - All through the API's and MCP's own start-up and search entry points.
+   295	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   296	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   297	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   298	   the last completed day.
+   299	8d′. **Production matching unchanged:** `store.search_views` gives the same results as before on a stored ledger, and the matching
+   300	   tests pass unchanged.
+   301	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   302	   same answers before and after `resolve_bound` is introduced.
+   303	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   304	
+   305	## Row 3's product-facing contract (council rounds 120 to 123; A1, clamping, withdrawn)
+   306	
+   158	        conn.close()
+   159	
+   160	
+   161	class LadderAdapter(adapter.Adapter):
+   162	    """The Stage 2 adapter in its ladder mode: no seed, no ruler view; views come only from the ladder step's answers."""
+   163	
+   164	    def __init__(self, views_path, archive_path, ledger_path, *, transport=None, cap_usd=0.66, sleep=None, limit=None, shared=None):
+   165	        self.conn = store.open_db(views_path)
+   166	        self.conn.execute(f"create table if not exists clean_ladders ({', '.join(LADDER_COLUMNS)}, primary key (thesis_id))")
+   167	        self.conn.commit()
+   168	        self.archive = model.Archive(archive_path)
+   169	        self.cfg = config.load(adapter.CONFIG)
+   170	        self.transport = transport
+   171	        self.budget = limit if limit is not None else LedgerBudget(cap_usd, ledger_path, attempt=transport, sleep=sleep, shared=shared)
+   172	        self.q23 = None
+   173	        self.views = set()
+   174	        self.mapping = {}
+   175	        self.unjudged = set()            # theses with a ladder row and no view
+   275	    opening_day = {thesis_id: days_of[k] for k, theses in opened.items() for thesis_id in theses}
+   276	    if {name.split('/', 1)[1] for name in cases} != set(opened_theses):
+   277	        raise SystemExit(f'the stored cases of {run} are not the theses its trace opened')
+   278	    for name, case in cases.items():
+   279	        thesis_id = name.split('/', 1)[1]
+   280	        in_trace = opened_theses[thesis_id]
+   281	        differing = [field for field in ('description', 'outcome', 'period') if field not in in_trace or case['thesis'].get(field) != in_trace[field]]
+   282	        if differing:
+   283	            raise SystemExit(f'{name}: the stored case and the trace describe different theses ({differing})')
+   284	        if case['item']['publication_date'] != opening_day[thesis_id]:
+   285	            raise SystemExit(f'{name}: the stored case\'s article is of {case["item"]["publication_date"]}, the trace opened it on {opening_day[thesis_id]}')
+   286	        if len(outcomes[name]) != 1 or outcomes[name][0]['pass'] != 1 or outcomes[name][0]['status'] not in STATUS:
+   287	            raise SystemExit(f'{name}: not exactly one first-send outcome with a known status in {ladders_path.name}')
+   288	    return {name.split('/', 1)[1]: outcomes[name][0] for name in cases}
+   289	
+   290	
+   291	def ladder_configuration(archive_path=None):
+   292	    """The checksum of the ladder configuration that wrote the stored answers, as its model archive records it: exactly one."""
+   293	    import sqlite3
+   294	    conn = sqlite3.connect(f'file:{Path(archive_path or LADDER_ARCHIVE)}?mode=ro', uri=True)
+   295	    try:
+   296	        found = conn.execute('select distinct config_version, config_checksum from model_calls').fetchall()
+   297	    finally:
+   298	        conn.close()
+   299	    if len(found) != 1:
+   300	        raise SystemExit(f'the ladder archive names {len(found)} configurations, not one')
+   301	    return f'{found[0][0]} {found[0][1]}'
+   302	
+   303	
+   304	def calendar_days(first, last):
+   305	    day = datetime.date.fromisoformat(first)
+   306	    while day.isoformat() <= last:
+   307	        yield day.isoformat()
+   308	        day += datetime.timedelta(days=1)
+   309	
+   310	
+   311	def replay(run, output_folder, *, transport=None, cap_usd=0.66, sleep=None, limit=None, inputs=None, shared=None, end_day=None):
+   312	    """`inputs` (WIRING-DESIGN.md §A, D448) names a fresh draw's files: {'trace', 'step2', 'ladders', 'ladder_archive', 'cases',
+   313	    'output_root'}; any key left out takes Stage B's value for `run`. `shared` is the run's shared ledger. The loop walks every
+   314	    calendar day from the first article's day to `end_day` (the last article's day when left out) and closes due questions at each
+   315	    day's end as production does (D566, CLOSING-DESIGN.md)."""
+   316	    inputs = dict(inputs or {})
+   317	    output_root = Path(inputs.get('output_root', OUTPUT_ROOT))
+   318	    output = Path(output_folder).resolve()
+   319	    if transport is None and output_root.resolve() not in output.parents:
+   320	        raise SystemExit(f'a live replay writes only under {output_root}')
+   321	    output.mkdir(parents=True, exist_ok=False)
+   322	    trace_path, step2_folder = (inputs['trace'], Path(inputs['step2'])) if 'trace' in inputs else DRAWS[run]
+   323	    ladders_path = Path(inputs.get('ladders', LADDERS))
+   324	    by_article, library = adapter.load_draw(trace_path, step2_folder)
+   325	    days_of, opened, failed = adapter.trace_articles(trace_path)
+   326	    ladders = ladders_for(run, opened, days_of, inputs.get('cases'), ladders_path)
+   327	    source = ladder_configuration(inputs.get('ladder_archive'))
+   328	    revisions_by_record = collections.defaultdict(list)
+   329	    for group in library['groups'].values():
+   330	        for revision in group['revises']:
+   331	            revisions_by_record[revision['by']].append(revision['group'])
+   332	    later_by_article = collections.defaultdict(list)
+   333	    for entry in library['later_log']:
+   334	        later_by_article[entry['article']].append(entry)
+   335	    days = collections.OrderedDict()
+   336	    for k in sorted(days_of):
+   337	        days.setdefault(days_of[k], []).append(k)
+   338	    if list(days) != sorted(days):
+   339	        raise SystemExit('the Step 1 articles are not in day order')
+   340	    runner = LadderAdapter(output / 'views.sqlite', output / 'archive.sqlite', output / 'spend.jsonl', transport=transport, cap_usd=cap_usd, sleep=sleep,
+   341	                           limit=limit, shared=shared)
+   342	    spent_before = runner.budget.spent_usd
+   343	    runner.counts['articles not completed by Step 1'] = len(failed)
+   344	    runner.counts['ladder configuration'] = source
+   345	    runner.counts['ladder answers file sha256'] = hashlib.sha256(ladders_path.read_bytes()).hexdigest()
+   346	    inputs_of = article_inputs(trace_path)
+   347	    last_article_day = list(days)[-1]
+   348	    end_day = end_day or last_article_day
+   349	    if end_day < last_article_day:
+   350	        raise SystemExit(f'the end day {end_day} is before the last article day {last_article_day}: refused')
+   351	    sequences = {}                                   # the trace's article number k -> the store's sequence (CLOSING-DESIGN.md §1)
+   352	    for day in calendar_days(list(days)[0], end_day):
+   353	        articles = days.get(day, [])
+   354	        runner.overdue_invariant(day)
+   355	        changed = set()
+   356	        for k in articles:
+   357	            seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+   358	            input_id = by_article[k][0]['input_id'] if k in by_article else f'article:{k}'
+   359	            opened_here = sorted(opened.get(k, {}), key=lambda name: int(name.split('-', 1)[1]))
+   360	            for thesis_id in opened_here:
+   361	                runner.open_thesis(thesis_id, ladders[thesis_id], k, seq, day, input_id, source)
+   362	            runner.article(seq, by_article.get(k, []), library, revisions_by_record, later_by_article.get(k, []), changed)
+   363	            runner.record_article(seq, inputs_of[k], day)       # after its records are written, as production marks a handover
+   364	            for thesis_id in opened_here:
+   365	                for view_id in runner.mapping.get(thesis_id, []):
+   366	                    if runner.conn.execute('select count(*) from evidence_links where view_id=?', (view_id,)).fetchone()[0] == 0:
+   367	                        runner.counts['views with no opening evidence'] += 1
+   368	        runner.conn.commit()
+   369	        if changed:
+   370	            runner.judge(day, sequences[max(articles)], changed)
+   371	        runner.close_and_complete(day)
+   372	    (output / 'sequences.json').write_text(json.dumps({str(k): seq for k, seq in sequences.items()}, indent=1) + '\n')
+   373	    runner.counts['judging usd this draw (charged: from tokens, or the reserve when no usage came back)'] = round(runner.budget.spent_usd - spent_before, 4)
+   374	    runner.counts['judging usd of the whole limit so far (from its ledger)'] = round(ledger_total(runner.budget.ledger_path), 4)
+   375	    (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   376	    (output / 'judge-requests.json').write_text(json.dumps(runner.sent, indent=1))
+   377	    return runner
+   378	
+   379	
+   380	if __name__ == '__main__':
+   381	    raise SystemExit('Stage B is sent through run_stage_b.py, which runs the three draws under one spending limit')
+    75	        record['spent usd (ledger)'] = round(ladder_adapter.ledger_total(root / 'spend.jsonl'), 4)
+    76	        record_path.write_text(json.dumps(record, indent=1) + '\n')
+    77	
+    78	    def end(run, reason):
+    79	        record[run]['state'] = 'incomplete'
+    80	        record['stopped'] = reason
+    81	        limit.stop(reason)
+    82	        save()
+    83	        return record
+    84	
+    85	    for run in runs:
+    86	        entry = record.setdefault(run, {'attempts': []})
+    87	        if entry.get('state') == 'complete':
+    88	            continue
+    89	        for folder_name in (f'draw-{run}', f'draw-{run}-redo'):
+    90	            if (root / folder_name).exists():
+    91	                if not any(attempt['folder'] == folder_name for attempt in entry['attempts']):
+    92	                    # a folder with no recorded outcome: the process that wrote it ended mid-replay (a crash); it is never resumed
+    93	                    entry['attempts'].append({'folder': folder_name, 'stopped': 'the process ended without recording an outcome (a crash)'})
+    94	                    save()
+    95	                if folder_name.endswith('-redo'):
+    96	                    return end(run, f'{run} incomplete: its redo did not finish')
+    97	                continue
+    98	            try:
+    99	                runner = ladder_adapter.replay(run, root / folder_name, transport=transport, limit=limit, inputs=inputs_of.get(run))
+   100	            except BaseException as error:              # a second send only where it can differ
+   101	                attempt = {'folder': folder_name, 'stopped': f'{type(error).__name__}: {error}', 'traceback': traceback.format_exc()[-2000:]}
+   102	                if not isinstance(error, (Exception, SystemExit)):
+   103	                    entry['attempts'].append(attempt)
+   104	                    save()
+   105	                    raise
+   106	                if isinstance(error, ladder_adapter.budget.OverBudget):
+   107	                    reason = limit.stopped or f'the spending cap: {error}'
+   108	                elif folder_name.endswith('-redo') or not resendable(error):
+   109	                    reason = f'{run} incomplete: {type(error).__name__}'
+   110	                else:
+   111	                    reason = None
+   112	                if reason is not None:
+   113	                    limit.stop(reason)                  # the stop is on disk before the attempt is: a crash between them cannot lead to a redo
+   114	                    entry['attempts'].append(attempt)
+   115	                    return end(run, reason)
+   116	                entry['attempts'].append(attempt)
+   117	                save()
+   118	                continue
+   119	            entry['attempts'].append({'folder': folder_name, 'judgements': runner.counts['judgements'],
+   120	                                      'views': runner.counts['views written from a ladder']})
+   121	            if runner.counts['judgements'] == 0:      # design §8: a draw with no judgement is incomplete
+   122	                return end(run, f'{run} incomplete: no judgement')
+   123	            entry['state'] = 'complete'
+   124	            save()
+   125	            break
+940:| D596 | 2026-11-16 | Slice 3 built and proven at $0: lexical ranking over the views visible at the bound only; the index embeds only views visible at the last completed day (none on a first-day store); vectors keyed by view, embedding-input hash and model, checked over visible candidates; a backup of a WAL store must leave WAL mode before read-only readers; 327 + 164 tests, 4 of 4 mutants; nothing deployed | in force | `tests/test_search_live.py`; `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba tests/test_search_live.py | sed -n '1,90p;115,205p'
+rg -n 'adapter-counts.json|runner\\.conn|\\.replay\\(' clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py docs/research/2026-11-14-use-acceptance/carried-run/closing_replay.py | head -35
+nl -ba src/hivemind/views/store.py | sed -n '54,70p'
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Search on a store being written (docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md, row 4a; proofs 8a to 8c):
+     2	the lexical ranking counts only views visible at the request's bound; the index embeds only views visible at the last completed day;
+     3	a vector is used only for a visible view whose text and model match; a newly visible view is served from a matching cached vector or
+     4	lexically; a service started on a first-day store builds no index; a build committing during a search changes nothing in it. Real
+     5	stores in WAL mode on temporary paths; embeddings from a deterministic fake; no network."""
+     6	import importlib.util
+     7	import json
+     8	import os
+     9	import sqlite3
+    10	import sys
+    11	import threading
+    12	
+    13	import pytest
+    14	
+    15	HERE = os.path.dirname(os.path.abspath(__file__))
+    16	ROOT = os.path.dirname(HERE)
+    17	sys.path[:0] = [os.path.join(ROOT, 'src'), os.path.join(ROOT, 'scripts')]
+    18	from hivemind import dispatch, search, service  # noqa: E402
+    19	from hivemind.views import store  # noqa: E402
+    20	
+    21	RUNGS = [{'label': 'Yes', 'condition': 'It ships by 2027-01-31.'}, {'label': 'Ruled out', 'condition': 'It is cancelled.'},
+    22	         {'label': 'Still open', 'condition': 'Neither holds on 2027-01-31.'}]
+    23	QUERY = 'accelerator shipments'
+    24	
+    25	
+    26	def add_view(writer, day, seq, view_id, question, *, complete=True):
+    27	    dispatch.mark(writer, {'input_id': f'gnews:{view_id}', 'publication_day': day}, seq, 'handed_over')
+    28	    store.create_view(writer, view_id=view_id, object_id='NVDA', object_kind='asset', kind='asset', looks_at=question, question=question,
+    29	                      due_day='2027-01-31', year='2027', rungs=RUNGS, seq=seq, input_id=f'gnews:{view_id}', created_at=f'{day}T00:00:00Z')
+    30	    if complete:
+    31	        store.complete_day(writer, day, seq, day)
+    32	    writer.commit()
+    33	
+    34	
+    35	def a_store(path, *, first_day=False):
+    36	    writer = store.open_db(str(path))
+    37	    writer.execute('pragma journal_mode=wal')
+    38	    if first_day:
+    39	        dispatch.mark(writer, {'input_id': 'gnews:first', 'publication_day': '2026-10-01'}, 1, 'handed_over')
+    40	        writer.commit()
+    41	        return writer
+    42	    for n, question in enumerate(('Will accelerator shipments reach 5 million units?', 'Will data center revenue grow 50%?',
+    43	                                  'Will memory prices rise in 2027?'), start=1):
+    44	        add_view(writer, '2026-10-01', n, f'v{n}', question)
+    45	    return writer
+    46	
+    47	
+    48	def backup(writer, path):
+    49	    """A copy by SQLite's backup API, taken out of WAL mode: a backup of a WAL store keeps WAL mode, and a read-only reader of it then
+    50	    fails ("unable to open database file") because it cannot create the shared-memory file (a finding of this slice, for row 7)."""
+    51	    target = sqlite3.connect(str(path))
+    52	    writer.backup(target)
+    53	    target.execute('pragma journal_mode=delete')
+    54	    target.close()
+    55	    return service.open_ledger(str(path))
+    56	
+    57	
+    58	def unfinished_views(writer, count):
+    59	    """`count` views of 2026-10-02 written and committed, the day not completed: what an unfinished day leaves."""
+    60	    for n in range(count):
+    61	        add_view(writer, '2026-10-02', 100 + n, f'u{n}', f'Will accelerator shipments of model {n} accelerate accelerator shipments?', complete=False)
+    62	
+    63	
+    64	def text_of(ledger, view_id):
+    65	    record = ledger.execute('select * from views where view_id=?', (view_id,)).fetchone()
+    66	    return search.view_text(record, store.rungs_of(ledger, view_id))
+    67	
+    68	
+    69	def put_vector(index, ledger, view_id, vector, model=search.EMBEDDING_MODEL):
+    70	    index.execute('insert or replace into view_vectors (view_id, text_sha256, model, vector_json, tokens, built_at) values (?,?,?,?,?,?)',
+    71	                  (view_id, search.sha(text_of(ledger, view_id)), model, json.dumps(vector), 1, '2026-10-01T00:00:00'))
+    72	    index.commit()
+    73	
+    74	
+    75	def put_query(index, text, vector, model=search.EMBEDDING_MODEL):
+    76	    index.execute('insert or replace into query_vectors (text_sha256, model, vector_json, tokens, built_at) values (?,?,?,?,?)',
+    77	                  (search.sha(text), model, json.dumps(vector), 1, '2026-10-01T00:00:00'))
+    78	    index.commit()
+    79	
+    80	
+    81	def fake(texts, model=search.EMBEDDING_MODEL):
+    82	    """`search.fake_embed` already answers (vectors, tokens), as the embedding call does."""
+    83	    return search.fake_embed(texts, model, dims=8)
+    84	
+    85	
+    86	def test_lexical_search_at_the_last_completed_day_equals_the_same_search_on_its_backup(tmp_path):
+    87	    writer = a_store(tmp_path / 'views.sqlite')
+    88	    kept = backup(writer, tmp_path / 'backup.sqlite')
+    89	    unfinished_views(writer, 60)                                   # more than the 50 the ranking keeps, every one matching the query
+    90	    live = service.open_ledger(str(tmp_path / 'views.sqlite'))
+   115	    as a restored or reordered store can hold), so a check over every view in sequence order meets it first and would take its
+   116	    vector's length, rejecting the visible view's."""
+   117	    path = tmp_path / 'views.sqlite'
+   118	    writer = store.open_db(str(path))
+   119	    writer.execute('pragma journal_mode=wal')
+   120	    dispatch.mark(writer, {'input_id': 'gnews:u0', 'publication_day': '2026-10-02'}, 1, 'handed_over')
+   121	    store.create_view(writer, view_id='u0', object_id='NVDA', object_kind='asset', kind='asset', looks_at='later', question='Later?',
+   122	                      due_day='2027-01-31', year='2027', rungs=RUNGS, seq=1, input_id='gnews:u0', created_at='2026-10-02T00:00:00Z')
+   123	    dispatch.mark(writer, {'input_id': 'gnews:v1', 'publication_day': '2026-10-01'}, 2, 'handed_over')
+   124	    store.create_view(writer, view_id='v1', object_id='NVDA', object_kind='asset', kind='asset', looks_at=QUERY, question=QUERY,
+   125	                      due_day='2027-01-31', year='2027', rungs=RUNGS, seq=2, input_id='gnews:v1', created_at='2026-10-01T00:00:00Z')
+   126	    store.complete_day(writer, '2026-10-01', 2, '2026-10-01')
+   127	    writer.commit()
+   128	    ledger, index = service.open_ledger(str(path)), search.open_index(str(tmp_path / 'index.sqlite'))
+   129	    assert service.resolve_bound(ledger, None) == '2026-10-01' and not service.view_exists(ledger, {'created_seq': 1}, '2026-10-01')
+   130	    put_vector(index, ledger, 'u0', [1.0, 0.0, 0.0])
+   131	    put_vector(index, ledger, 'v1', [0.0, 1.0])
+   132	    assert search.fresh_vectors(ledger, index, view_ids=['v1']) == {'v1': [0.0, 1.0]}
+   133	    put_query(index, QUERY, [0.0, 1.0])
+   134	    got = search.search(ledger, index, QUERY, 10, embed=fake)
+   135	    assert (got['mode'], got['missing_vectors'], [r['view_id'] for r in got['results']]) == ('semantic', [], ['v1'])
+   136	
+   137	
+   138	def load_mcp(tmp_path, monkeypatch, *, lexical=False):
+   139	    argv = ['hivemind_mcp.py', '--views', str(tmp_path / 'views.sqlite'), '--index', str(tmp_path / 'index.sqlite'), '--items', str(tmp_path / 'none.sqlite')]
+   140	    monkeypatch.setattr(sys, 'argv', argv + (['--lexical'] if lexical else []))
+   141	    spec = importlib.util.spec_from_file_location(f'hivemind_mcp_search_{tmp_path.name}', os.path.join(ROOT, 'scripts', 'hivemind_mcp.py'))
+   142	    module = importlib.util.module_from_spec(spec)
+   143	    spec.loader.exec_module(module)
+   144	    return module
+   145	
+   146	
+   147	@pytest.mark.parametrize('cached', [True, False])
+   148	def test_mcp_serves_a_newly_visible_view_from_a_matching_cached_vector_or_lexically(tmp_path, monkeypatch, cached):
+   149	    writer = a_store(tmp_path / 'views.sqlite')
+   150	    ledger, index = service.open_ledger(str(tmp_path / 'views.sqlite')), search.open_index(str(tmp_path / 'index.sqlite'))
+   151	    for view_id in ('v1', 'v2', 'v3'):
+   152	        put_vector(index, ledger, view_id, fake([text_of(ledger, view_id)])[0][0])
+   153	    put_query(index, QUERY, fake([QUERY])[0][0])
+   154	    mcp = load_mcp(tmp_path, monkeypatch)                          # start-up finds every visible view embedded: nothing is sent
+   155	    add_view(writer, '2026-10-02', 4, 'v4', 'Will accelerator shipments double in 2027?')
+   156	    if cached:
+   157	        put_vector(index, service.open_ledger(str(tmp_path / 'views.sqlite')), 'v4', fake([text_of(service.open_ledger(str(tmp_path / 'views.sqlite')), 'v4')])[0][0])
+   158	    got = mcp.search(QUERY, 10)
+   159	    assert (got['mode'], got['missing_vectors']) == (('semantic', []) if cached else ('lexical', ['v4']))
+   160	    assert 'v4' in [r['view_id'] for r in got['results']]
+   161	
+   162	
+   163	@pytest.mark.parametrize('cached', [True, False])
+   164	def test_a_service_started_on_a_first_day_store_builds_nothing_and_is_semantic_only_when_every_view_is_cached(tmp_path, monkeypatch, cached):
+   165	    writer = a_store(tmp_path / 'views.sqlite', first_day=True)
+   166	    import hivemind_api
+   167	    monkeypatch.setitem(hivemind_api.PATHS, 'views', str(tmp_path / 'views.sqlite'))
+   168	    monkeypatch.setitem(hivemind_api.PATHS, 'index', str(tmp_path / 'index.sqlite'))
+   169	    monkeypatch.setitem(hivemind_api.PATHS, 'items', str(tmp_path / 'none.sqlite'))
+   170	    monkeypatch.setitem(hivemind_api.PATHS, 'archive', str(tmp_path / 'archive.sqlite'))
+   171	    assert hivemind_api.index_at_start(embed=lambda texts, model: pytest.fail('nothing may be sent')).startswith('index: not built')
+   172	    mcp = load_mcp(tmp_path, monkeypatch)
+   173	    assert mcp.OBJECTS.startswith('No day of this ledger has completed yet')
+   174	    add_view(writer, '2026-10-01', 2, 'v1', 'Will accelerator shipments reach 5 million units?')
+   175	    index = search.open_index(str(tmp_path / 'index.sqlite'))
+   176	    ledger = service.open_ledger(str(tmp_path / 'views.sqlite'))
+   177	    put_query(index, QUERY, fake([QUERY])[0][0])                   # a successful (fake) query embedding, as round 130 asks
+   178	    if cached:
+   179	        put_vector(index, ledger, 'v1', fake([text_of(ledger, 'v1')])[0][0])
+   180	    expected = ('semantic', []) if cached else ('lexical', ['v1'])
+   181	    got = mcp.search(QUERY, 10)
+   182	    assert (got['mode'], got['missing_vectors']) == expected
+   183	    with hivemind_api.Connections() as db:
+   184	        api_got = hivemind_api.route(db, ['search'], {'q': QUERY})
+   185	    assert (api_got['mode'], api_got['missing_vectors']) == expected
+   186	
+   187	
+   188	def test_two_concurrent_searches_for_one_new_query_each_answer_and_the_cache_keeps_one_vector(tmp_path, monkeypatch):
+   189	    a_store(tmp_path / 'views.sqlite')
+   190	    mcp = load_mcp(tmp_path, monkeypatch, lexical=True)
+   191	    answers, errors, start = [], [], threading.Barrier(2)
+   192	
+   193	    def call():
+   194	        try:
+   195	            with mcp.connections() as (_, _, index):
+   196	                start.wait(timeout=5)
+   197	                answers.append(search.query_vector(index, 'a query never asked', fake)[0])
+   198	        except Exception as error:                                   # noqa: BLE001 - any error is the finding
+   199	            errors.append(repr(error))
+   200	    threads = [threading.Thread(target=call) for _ in range(2)]
+   201	    for thread in threads:
+   202	        thread.start()
+   203	    for thread in threads:
+   204	        thread.join()
+   205	    assert errors == [] and len(answers) == 2 and all(search.usable(a) for a in answers)
+docs/research/2026-11-14-use-acceptance/carried-run/closing_replay.py:43:    runner = ladder_adapter.replay('c1', output, transport=from_the_archive, cap_usd=5.0, inputs=inputs, end_day=end_day)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:52:        runner = ladder_adapter.replay('u1', folder, transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:136:        ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=0.0001)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:161:    runner = ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:178:    ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:190:        ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:197:    runner = ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:221:    ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:234:    ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:266:    ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:283:    ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:301:        ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:307:        ladder_adapter.replay('u1', tmp_path / 'out', transport=None, cap_usd=0.66)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:329:    ladder_adapter.replay('u1', tmp_path / 'a', transport=fake_judge, limit=first)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:334:        ladder_adapter.replay('u1', tmp_path / 'b', transport=fake_judge, limit=later)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:401:    first = ladder_adapter.replay('u1', tmp_path / 'a', transport=fake_judge, limit=limit)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:402:    second = ladder_adapter.replay('u2', tmp_path / 'b', transport=fake_judge, limit=limit)
+    54	
+    55	def open_db(path):
+    56	    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    57	    conn = sqlite3.connect(path)
+    58	    conn.row_factory = sqlite3.Row
+    59	    for name, columns in TABLES.items():
+    60	        conn.execute(f'create table if not exists {name} ({columns})')
+    61	        conn.execute(f"create trigger if not exists {name}_no_update before update on {name} begin select raise(abort, 'append-only'); end")
+    62	        conn.execute(f"create trigger if not exists {name}_no_delete before delete on {name} begin select raise(abort, 'append-only'); end")
+    63	    for statement in INDEXES:
+    64	        conn.execute(statement)
+    65	    ensure_writable_columns(conn)
+    66	    conn.execute("create virtual table if not exists views_fts using fts5(view_id unindexed, text, tokenize='trigram')")
+    67	    conn.execute("create virtual table if not exists groups_fts using fts5(group_id unindexed, text, tokenize='trigram')")
+    68	    conn.execute('create index if not exists members_view on thesis_group_members(view_id)')
+    69	    conn.commit()
+    70	    return conn
+
+codex
+**Not yet.** The split can work for test-store development, but slice 4a needs a defined stop path through the real launcher before code is written.
+
+Today `replay` writes `adapter-counts.json` only after the whole loop and returns a runner; the launcher then records the attempt as complete. The proposal says a low-space or three-checkpoint stop is recorded in that file, but does not say how the partial result reaches the launcher without being recorded as success, whether it can trigger a retry, or how it preserves the last completed day. Specify and test those outcomes through `run_stage_b.send`, including a stop before the first day. [Replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:340), [launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:98).
+
+Two details belong in that design:
+
+- `store.open_db` currently creates tables and commits during opening. If WAL must be set **before writing**, the new writer cannot simply call it and then set the pragma; specify the initialization path and verify the mode-setting result. [Store opening](/Users/lchingen/hivemind/src/hivemind/views/store.py:55).
+- Slice 4a has no writer lock until 4b. Its proof may use isolated test stores, but it must not be presented as safe for a live run or for concurrent preflight. P1 remains unresolved. [Lock contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:180).
+
+The proposed crash and checkpoint proofs are appropriate once the stop path is defined. For slice 3, I inspected the search tests and decision record, including the corrected invisible-view control; I did not rerun the reported suites. [Search tests](/Users/lchingen/hivemind/tests/test_search_live.py:86).
+
+CONSENSUS: no, because the partial-stop outcome and WAL initialization path need to be specified before building 4a.
+tokens used
+3,509,605
+**Not yet.** The split can work for test-store development, but slice 4a needs a defined stop path through the real launcher before code is written.
+
+Today `replay` writes `adapter-counts.json` only after the whole loop and returns a runner; the launcher then records the attempt as complete. The proposal says a low-space or three-checkpoint stop is recorded in that file, but does not say how the partial result reaches the launcher without being recorded as success, whether it can trigger a retry, or how it preserves the last completed day. Specify and test those outcomes through `run_stage_b.send`, including a stop before the first day. [Replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:340), [launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:98).
+
+Two details belong in that design:
+
+- `store.open_db` currently creates tables and commits during opening. If WAL must be set **before writing**, the new writer cannot simply call it and then set the pragma; specify the initialization path and verify the mode-setting result. [Store opening](/Users/lchingen/hivemind/src/hivemind/views/store.py:55).
+- Slice 4a has no writer lock until 4b. Its proof may use isolated test stores, but it must not be presented as safe for a live run or for concurrent preflight. P1 remains unresolved. [Lock contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:180).
+
+The proposed crash and checkpoint proofs are appropriate once the stop path is defined. For slice 3, I inspected the search tests and decision record, including the corrected invisible-view control; I did not rerun the reported suites. [Search tests](/Users/lchingen/hivemind/tests/test_search_live.py:86).
+
+CONSENSUS: no, because the partial-stop outcome and WAL initialization path need to be specified before building 4a.

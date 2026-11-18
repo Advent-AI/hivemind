@@ -1,0 +1,11 @@
+**Not yet.** The new section answers the page fallback and streaming questions, but two direct-call cases still conflict with the stated behavior.
+
+1. **Resolving the date does not by itself hide a future-created view.** `view_bundle` fetches the view and its answer choices before filtering dated records. A direct call for a view created after the resolved day could therefore return the question and choices. Specify that it refuses a view not visible at that day, as `_bundles` already does, and test a direct call before creation. The same question applies to direct `not_judged` calls. [Direct bundle](/Users/lchingen/hivemind/src/hivemind/bundle.py:98), [bundle selection](/Users/lchingen/hivemind/src/hivemind/bundle.py:175).
+
+2. **An empty store’s resolved bound can be `None`, while the helpers are required to refuse `None`.** For example, `days()` currently returns an empty list on an empty store; passing the resolver’s `None` into a helper that refuses it would not preserve that behavior. Specify how the empty-store path ends before dated helpers are called, or how a resolved “no day” is represented. Test actual outputs and errors per function, rather than only calling each function. [Contract, empty store and helpers](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:263), [current `days`](/Users/lchingen/hivemind/src/hivemind/bundle.py:170).
+
+Also specify the exception used for an invalid range. The section names two exceptions for first-day and future-bound cases, but requires a third distinct 409 payload for a range; it does not say how that payload reaches `error_response`. The earlier row still says lower bounds are unaffected and should be updated to match the new range rule. [Contract, exceptions and responses](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:274), [earlier row 3](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:50).
+
+The streaming transaction and page fallback are now stated and have named tests. The change still requires no service restart as part of this build.
+
+CONSENSUS: no, because direct view visibility, the empty-store `None` path, and range-error ownership need to be specified before coding.

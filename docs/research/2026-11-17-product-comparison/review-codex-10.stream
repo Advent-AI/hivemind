@@ -1,0 +1,153 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 10 (read-only, $0): one point
+
+**Read** `D667-draft.md` in this folder against `RUN-PLAN-v9.md` §1.2.
+
+Is your round-9 point resolved? D667 should adopt v9's full census exclusions. Is D667 now a faithful record of what the plan takes?
+
+End with `READY` or `NOT READY: <the gap>`. Under about 150 words. Do not open anything under `/private/tmp` or `~/.codex/memories`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll compare D667’s exposure rule with the full list of exclusions in v9.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba RUN-PLAN-v9.md | sed -n '46,99p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba D667-draft.md' in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison
+ succeeded in 0ms:
+    46	### 1.2 Exposure census, exclusions, one input
+    47	
+    48	1. **The population.** The clean selection rule's articles from 07-20 to 09-20: 1,619 articles (by week: 185, 164, 62, 114, 109, 265, 218, 229,
+    49	   273). The warm-up from 07-01 to 07-19 has 357 articles.
+    50	2. **What counts as a read** (the closed set, frozen before any hit is read). The article's id or its text sha appears in any of:
+    51	   - a run's trace, archive or ledger (either system);
+    52	   - a probe;
+    53	   - a gold or reference;
+    54	   - a reader packet, answer or tally;
+    55	   - a design, result or log document;
+    56	   - a report;
+    57	   - a test fixture, mock or UI-check data file.
+    58	
+    59	   **Not reads:**
+    60	   - **documented corpus storage, by content:**
+    61	     - `corpus-builds.json`, frozen before any hit is read, lists the documented corpus builds: the current source, `items-window.sqlite`,
+    62	       `items-window-tags2-2026-10-24.sqlite`, the page store, and any other build the decision log or `data-manifest.md` records as a corpus.
+    63	       Each comes with its record and its set of input ids.
+    64	     - A table is exempt only when it is a **verified raw copy** of a listed build: the same rows, by `input_id` and `content_sha256`. That
+    65	       covers renamed copies.
+    66	     - Any other such table (a probe's or fixture's selection) is searched like everything else.
+    67	     - The exemption covers stored rows only. Whatever a probe, run or fixture actually used, even from a whole-corpus copy, is a read
+    68	       through its trace, packet or fixture text.
+    69	     - Every other table in the same file, and every other file, is searched;
+    70	   - the search index built over the whole corpus;
+    71	   - this comparison's own files.
+    72	
+    73	   Git-ignored files are searched.
+    74	3. **Where it is searched:**
+    75	   - the whole of this checkout, and of every worktree `git worktree list` shows, except `.git` (`tests/`, `poc/mock` and `poc/ui`
+    76	     included). The exempt rows are handled as above;
+    77	   - the archived runs in `docs/research/2026-10-25-english/data-manifest.md`.
+    78	
+    79	   Search goes inside binary files (`rg -a`, and SQL over every SQLite table for the ids). Its controls:
+    80	   - a known hit: one of D613's 10 Step 1 reads in the week of 09-07;
+    81	   - a known miss: one id written only into a scratch control file outside the searched roots.
+    82	4. **Any read excludes the article, with one exception by actual use,** classified per folder and frozen before any hit is read:
+    83	   - **The exception:** an old-system replay run folder and its byte copies, **only when** its decision record or run note shows it ran the
+    84	     then-production configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a
+    85	     case behind a change.
+    86	   - **Development replays are reads:** arms, probes, configuration trials and week tests.
+    87	   - **Why:** a replay of the product as it ran tunes neither system. D665's own council used the sealed run as the old system's output.
+    88	   - **Still a read:** any research artifact built from such a run (for example, the 2026-10-28 quality review).
+    89	   - **Recorded:** the per-folder classification (`replay-folders.json`, with each folder's record) and the council decision on it, both before
+    90	     the hits are read.
+    91	5. **One input.**
+    92	   - A filtered copy of the items database without the excluded articles is made once and hashed.
+    93	   - **Code change A:** `run_fresh.py --items` hands it to both children (clean `--source`; production `--testdb`).
+    94	   - **Code change B:** `fresh_week_inputs.py` takes the dates and the items path as arguments.
+    95	   - **Proof through the real entry points:** both launchers run dry with fake answers over the whole span on the copy. Each records the
+    96	     ordered ids it actually processes and their text sha. The two must be equal in order. Controls:
+    97	     - an excluded article appears in neither;
+    98	     - a kept article appears in both.
+    99	
+
+ succeeded in 0ms:
+     1	## D667 · 2026-11-17 · Under D666 and D439 (council, run-plan rounds 1–10): the release comparison's run plan and the rules it takes for this run
+     2	
+     3	- **Council:** `docs/research/2026-11-17-product-comparison/`: `RUN-PLAN-v1.md` … `RUN-PLAN-v9.md`, `review-codex-1..10.md` (thread
+     4	  01a1ebfe-4f67-7c72-af87-7830055e0f09, memories off), a fresh Claude reviewer each round (READY at v7), and `ROUND-LOG.md` (what each round
+     5	  taught).
+     6	- **Decided**, for this comparison only; D665's rule is unchanged:
+     7	  1. **The plan** is `RUN-PLAN.md` v9, frozen as `RUN-PLAN-v9.md`. Build-level checks run at the stage-0 freeze review
+     8	     (`freeze-review-notes.md`), which gates the first paid send.
+     9	  2. **Exposure.**
+    10	     - Plan §1.2 governs the whole census: the closed set of read kinds, the search roots and every exclusion. Any read excludes an article.
+    11	     - **Not reads,** and only these:
+    12	       - the search index built over the whole corpus;
+    13	       - this comparison's own files (its census, reader packets and outputs are not prior exposure);
+    14	       - **An old-system replay folder and its byte copies.** Only when its decision record or run note shows it ran the then-production
+    15	         configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a case
+    16	         behind a change. Development replays (arms, probes, configuration trials, week tests) are reads, and so is any research artifact
+    17	         built from an exempt run. Classified per folder in `replay-folders.json` before any hit is read.
+    18	       - **Stored rows that are verified raw copies of a corpus build** listed in `corpus-builds.json` (the same rows by `input_id` and
+    19	         `content_sha256`). Whatever a probe, run or fixture actually used is still a read through its trace, packet or fixture text.
+    20	     - D613's "unread" was a Step 1 census; this is the full census D665 asks for.
+    21	  3. **The company's own figures** (D505's list) count in N, as D665 says. Their subgroup is flagged blind at the census and printed beside
+    22	     the verdict. The new system does not open such questions by D505, and Alex sees how much of any gap that makes (D431 compares the
+    23	     products as configured).
+    24	  4. **One ledger per draw.**
+    25	     - Absolute guards: $65 per new-system draw and $25 per old-system draw, $270 in all. They are stops, not a budget (D664).
+    26	     - For this run, this replaces D449's whole-run stop across draws and D666's single $250 ledger. D449's one redo within a draw is
+    27	       unchanged.
+    28	  5. **D431's "same day," for a run longer than one day.** A new-system draw takes about 20 h, so one calendar day cannot hold it.
+    29	     - The six counted draws are launched within one hour of each other and run concurrently.
+    30	     - A redo within a draw counts as part of that draw.
+    31	     - Every counted send falls within 72 h of the first launch.
+    32	     - A breach makes the result a diagnostic.
+    33	     - This replaces, for this run only, the one-calendar-day reading in `WIRING-DESIGN.md`.
+    34	  6. **No replacement draw counts.** A draw that cannot finish gives no release verdict; what finished goes to Alex as a diagnostic. The
+    35	     reviewers read "same day" differently, so the council took the cheaper, reversible course (D439).
+    36	  7. **The credit and scoring rules** are plan §1.4:
+    37	     - one cutoff, the span's last day;
+    38	     - "covers" in A2's form, blind;
+    39	     - the earlier-opened question of a same-bet pair is the original;
+    40	     - distinct bets for the 30-question minimum;
+    41	     - D428's decided-only guardrail shares;
+    42	     - splits resolved per counting to a mark the readers gave;
+    43	     - an unexercised subgroup blocks only a lead;
+    44	     - the verdicts tested in order: invalid, too small, lead, loss, no winner.
+    45	  8. **Step 2's three lines** (D427) are hard checks, each decided on its point estimate over frozen samples: 100 records, 200 merges, 30
+    46	     groups. A line with too few cases is not measured and cannot clear release.
+    47	  9. **Two proposed floors** (wrong citations, answer-changing omissions) are printed as not measured. Measuring them needs source-first
+    48	     readings outside this comparison.
+    49	- **Out of scope during the run** (to `FINDINGS.md`): D662's holds, D658, and any fix, except a launcher-only repair after a failed slice,
+    50	  followed by a slice rerun (plan §2).
+    51	- **Back to Alex:**
+    52	  - the verdict, or a diagnostic;
+    53	  - N < 20 at the census;
+    54	  - a stop that is not a wiring fault;
+    55	  - a guard reached;
+    56	  - a failed hard check;
+    57	  - no verdict by 2026-12-01.
+
+codex
+Yes. D667 now makes v9 §1.2 govern the whole census and explicitly includes both missing exclusions: the whole-corpus search index and this comparison’s own files. The raw-copy and production-replay exclusions still match the plan. [D667 draft](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/D667-draft.md:9) · [Run plan §1.2](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:59)
+
+READY
+tokens used
+1,862,096
+Yes. D667 now makes v9 §1.2 govern the whole census and explicitly includes both missing exclusions: the whole-corpus search index and this comparison’s own files. The raw-copy and production-replay exclusions still match the plan. [D667 draft](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/D667-draft.md:9) · [Run plan §1.2](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:59)
+
+READY

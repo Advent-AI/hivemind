@@ -1,0 +1,19 @@
+**Do the $0 timing and source check before designing a paid measurement.** The eight counted lines are useful leads, but they do not yet establish what a correctly ordered D368 run would show the receiving judge.
+
+The main issue is timing. The script selects the supporting question’s last judgement with `seq <=` the receiving judgement’s sequence. In this draw, the selected supporting judgements for **all 14 built lines** have the same day-end sequence as the receiver but a **later judgement ID**. For example, total revenue `v1` was judged at ID 198; its data-center supporter `v2` at ID 202. Those are later stored conclusions, not conclusions available when the stored `v1` request was made. [Assessment script](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-channel/channel_assessment.py)
+
+D368 would reverse the order, so a supporting judgement could run first in the *changed* system. But its answer would then be produced under different inputs. The stored `v2` conclusion, for example, refers to the total-revenue conclusion; feeding that stored text back into total revenue would test a circular inheritance, not demonstrate the corrected sequence. The stop condition from round 24 therefore has **not yet been met as written**: the proposed direction is known, but the receiving line is a counterfactual assembled from later outputs.
+
+The eight are also **edges into only two receiving questions**, `v1` and `v2`, not eight supported questions. A test would assemble all applicable supporting lines for each receiver, not eight independent receiver requests. The string comparison is a lead: the 600-character cut itself produces fragments such as `$4`, and a new string may be an assumption or a differently formatted known figure. [Saved lines](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-channel/channel-d1.json)
+
+I would make the next step:
+
+1. For `v1` and `v2`, reconstruct the **stored chronology**: which supporting conclusions actually existed before each receiving call, which relied on the receiver’s earlier conclusion, and what the frozen reference and source passages say about the figures in those lines.
+2. On a scratch copy, exercise the **decided ordering and propagation** with labelled fake judgement outputs: supporters first, then the receiver; changed conclusions queue the right dependants; no same-round circular read; preserve the filing interpretation of the edges. Include an unseeded, article-opened question as an explicit unexercised limit or a separate synthetic check.
+3. Stop if the correct ordering cannot be exercised without changing a frozen piece, if a cycle or unintended filing change appears, or if no source-backed, decision-relevant case can be identified. Report assumptions and truncated figures separately.
+
+If that succeeds, design a same-day-controlled measurement for council review. It must test the **whole correctly ordered path**, including the changed supporting requests and their newly produced conclusions, rather than paste later stored conclusions into the two old requests. The frozen reference can score the eligible final answers, but this seeded diagnostic cannot establish behavior for today’s unseeded default or the as-yet-unbuilt dependency-selection step. Price the actual rebuilt requests before setting a ceiling; **48 calls and ten cents are not yet supported by the eight-edge count**.
+
+D368 still directs both the corrected reading and the separate dependency-selection work. Part (b) need not precede a bounded diagnostic of part (a), but neither is accepted by the other’s result.
+
+Council position: correct the assessment’s timing and eight-edge claim; run the bounded $0 chronology and ordering proof first, then return a properly scoped measurement design to council before any send.

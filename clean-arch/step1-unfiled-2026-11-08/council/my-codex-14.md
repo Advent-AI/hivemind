@@ -1,0 +1,25 @@
+**Do not send this probe yet. Its main success condition conflicts with the frozen request.**
+
+The request explicitly tells the reader to **propose an important question even when it is already open**, because the later matching step is expected to fold it into the existing question. The proposed rule calls the changed arm successful only when it proposes *no* second candidate. A model following its instructions could therefore fail the probe, while suppressing a candidate could be treated as success without showing that the product handled it correctly. [Frozen reading prompt](/Users/lchingen/hivemind/src/hivemind/prompts/role-v74i.txt:1)
+
+The test should distinguish:
+
+1. Whether seeing the earlier question causes the reading step to link the relevant statements to it.
+2. Whether a candidate is proposed—as the prompt permits—and, separately, what the matching step does with it.
+
+If matching is outside this probe, report candidate proposals as observations. Do not call them duplicate **openings** or make their absence the pass condition. A later reviewed test must exercise matching to establish whether a second question actually opens.
+
+There are other serious issues to fix:
+
+- **The retention rule is not yet executable or unambiguous.** “None of the passages that the control kept is lost” does not say how three control answers are compared with three changed answers. Half-overlap of the shorter quotation can also match two different claims in one passage. Fix the source-backed facts before the send and have readers judge whether each fact survived with its meaning and attribution; use quotation overlap only to locate candidates.
+- **The two separate controls need a control-arm precondition.** If the unchanged request itself fails to propose a target in most sends, suppression in the changed arm cannot be attributed to the added list. A non-reproducing control must be reported as unexercised, not as a regression.
+- **Invalid or missing answers need explicit outcomes.** The rule could otherwise call a case “does not support” when its changed sends failed rather than produced valid checked answers. Require the stated valid sends in each relevant arm, or mark the affected case inconclusive. State how reader disagreements affect the final result.
+- **The historical check overstates what it proved.** Its handover comparison checks evidence IDs and links, candidate IDs and dropped rows—not every handover field. More importantly, the synthetic Rubin check re-linked **zero statements**, so it did not prove that Rubin evidence survives under `v9`. The check also did not cover all five proposed probe cases. Exercise a positive synthetic link and a negative control for each relevant path before claiming the contract is covered. [Historical check](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/duplicates/historical-check.json)
+- **Freeze the cases and requests before the send.** The script currently writes `cases.json` and `requests.json` only after all calls finish. Produce and inspect them first, record their identities and the source passages, and verify those same inputs at send time. The current fixed passages are selected from the stored answer; verify them against the article and the standard before treating them as required facts. [Probe script](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/duplicates/visibility_probe.py)
+- **The $0.159 is an estimate, not a verified worst case.** It uses a characters-per-token estimate for input and the full output allowance. The script launches calls concurrently and records transport exceptions as zero cost, although a failed response could still have been billed. Establish a conservative reservation and account for uncertain failed attempts before claiming the $0.25 ceiling is enforced.
+
+I ran the dry preparation with its file write disabled: it rebuilt all five control identities and reproduced the $0.159 estimate; nothing was sent. The changed RTX request does show `v14`, but both its heading and the frozen system prompt describe the list as the day-start list. That mismatch is disclosed and makes this a **constructed visibility probe**, not a full D375 implementation.
+
+I would not close the path merely because Alex is away. D375 supplies a reason to investigate, and D439 permits the council to review a bounded next step. The revised design should first answer whether the added list improves **valid, source-faithful filing**; it can then propose a separate matching check if needed. Return that design for review before any send.
+
+Council position: Do not send the current probe; replace the candidate-suppression pass condition with checks consistent with the frozen prompt, close the historical and scoring gaps, freeze the inputs and cost accounting, and bring the revised design back to the council.

@@ -1,0 +1,21 @@
+**Keep Alex’s lines, keep work on the new system, and do the bounded $0 audit next.** The map shows a reason to investigate the written-answer count, but it does not yet show a repair or establish that the zero-fault lines are out of reach.
+
+For example, the July reading marks an event answer wrong when it leaves out an article’s expectation that an inquiry is “nearing a conclusion.” That is a repeated finding worth tracing. But three of the affected topics are the same inquiry in three runs, so they are not three independent product problems.
+
+The three report totals reconcile with the [map](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/FIRST-GATE-MAP.md), including both favourable and unfavourable treatment of open marks. I found one consequential misclassification in the proposed direction:
+
+- The **16 July reference marks include 14 event attempts and two figure attempts**. The federal-obligations case is a figure, not an event.
+- The event marks affect **five short topics on two matters**, not six on three. If every relevant event-reference mark disappeared and nothing else changed, July’s written-choice count could rise from 22 to **at most 27**, not 28, against the scaled diagnostic line of 26. The sixth potential recovery is a figure-reference case; one of its three attempts was refused twice by code. These are paper upper bounds, not predicted results.
+- The two other figure marks include a case with another agreed fault, so removing its reference mark alone would not recover that topic. The stored [map data](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/proofs/first-gate-map.json) preserves those overlaps even though the prose combines the classes.
+
+On the bound, I agree with the substance: **the record does not show a bounded set of changes that would make all four zero-fault lines hold together.** Each reading has agreed faults, and their kinds change. That is a serious delivery risk, especially alongside Stage B and integration still being unfinished. But “within a factor of five of zero” is not a meaningful ratio. State the counts instead, and keep the original 44, repeated July runs, and two small weeks separate.
+
+I would recommend to Alex that **the lines stay as written**, that no gate pass be claimed, and that later-gate work be labelled diagnostic where separately authorized. I would not recommend changing them to “no agreed fault twice in three attempts”: that is a different product tolerance, would need his explicit decision, and has not been justified by what the faults do to a reader. Nor would I commission an open-ended effort to chase zero faults. A stopped or frozen piece needs its own decision before a repair; the council should return with a concrete candidate and evidence, not spend merely to improve a score.
+
+The next step is **one audit of the reference and unlisted-part findings**, using the project’s [prompt-audit instructions](/Users/lchingen/hivemind/.claude/skills/prompt-audit/SKILL.md), with an independent read of the same material. Read each class against the complete stored request, source, answer, governing decision and reading form; include counterexamples where a reference should remain empty. Keep event expectations and figure baselines separate. For the unlisted parts, preserve D547’s earlier audit and trace the new cases rather than assuming the undefined term caused them.
+
+The audit’s outcome is a sentence-level verdict for each class and a decision on whether any **general, product-relevant** repair is worth designing. If the request states the rule plainly and the cause remains uncertain, stop: the prescribed model account, any candidate wording, and any paid test require a subsequent decision. The $0 claim covers project-provider calls; the cost of independent reader sessions should remain stated as unknown unless established.
+
+I agree that Alex’s return makes this an appropriate question to put to him. His “continue” authorized the interrupted run; it did not itself approve a weaker gate. My recommendation is the unchanged lines above.
+
+Position: Keep D400’s lines and the new-system direction; audit the two recorded classes at $0 before proposing a repair or a new spending bound.

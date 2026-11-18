@@ -1,0 +1,705 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 19: the source-backed review finds 11 material defects in astra's 51 questions (`reflection-6/astra-review/RESULT.md`)
+
+Read `astra-review/RESULT.md`, `compare.txt`, and the request lines 20 to 23 of `clean-arch/step4-2026-11-10/ladder/candidate-system.txt`.
+Read D210 in `docs/DECISIONS-log.md` and the reader brief's D row (`stage-a-reader-brief.md`, the line starting "| `D` |").
+
+**The result:** both reviewers confirm 11 material defects, none counted by gate 1's hard lines.
+- **7 trace to the frozen request:**
+  - **Line 23** dates a signed deal's *completion* at the next annual filing. D210 made that rule for the *amount* of an obligation
+    already taken on. Both gate families fail D there; D is not counted.
+  - **Line 22** dates an event at period end. **Line 20** requires the due day on or after the settling material's publication.
+- **4 are the model's own choice:** Rubin's "this quarter" widened (3) and an invented memory measure (1).
+- **Census:** on the fortnight Hugging Face topic, luna keeps the stated date 3 of 3; sol and astra take line 23 literally 6 of 6.
+  Vera Rubin gets period_end from every model.
+
+**My reading.** This is a production-relevant defect class:
+- a wrong due day makes the judge record the wrong outcome;
+- the gate cannot see it;
+- two of its mechanisms are contradictions inside the frozen request that act on every model.
+
+It is the answer-choice step, the module in hand. The repair has sources:
+- line 20 (the request's own general due-day rule);
+- D210's stated scope (amounts).
+
+**Proposed one next step ($0):** run the prompt audit (`.claude/skills/prompt-audit`) on lines 20 to 23 against D210, D185, D414, D417
+and D420 (the due-day decisions). Then a census of every stored answer on the 26 topics, all four models, by code. It counts:
+- (a) binding_obligation *event* topics whose due day is the next annual filing against a stated topic date;
+- (b) event due days before the topic's named settling material is published.
+
+**Moves:** a sourced rewrite of lines 22 to 23 that narrows line 23 to D210's amount scope and makes line 20 govern events. It would go
+to a new request version, its $0 replay against every stored answer, then a small probe.
+
+**Closes:** the decisions themselves fix these due days as written (then the class is the design's, for Alex's page), or the census
+shows the class is rare.
+
+**Asked:** agree? Anything that makes this unsound, for example D426 or the six lines?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the 11 findings against the stored review, the exact due-date instructions and decisions, then assess whether the proposed audit can identify a general repair without changing the gate.
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '18,25p' clean-arch/step4-2026-11-10/ladder/candidate-system.txt" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+
+ succeeded in 0ms:
+# 3 astra-d1|fortnight:c1/clean-11       first=sound/None/False  second=defect/choices_unusable/False  -> SPLIT
+      second why: Measure and period match the topic, but four of the five bands sit at or below +50% while the article shows memory-driven price rises of 50% on whole finished devices, so the likely contract-price rise falls in the single open top
+# 6 astra-d2|fortnight:c1/clean-2        first=sound/None/False  second=defect/choices_unusable/True  -> SPLIT
+      second why: The top band starts at $100 billion while Nvidia's last disclosed supply and capacity commitments were $279 billion, so every plausible FY2027 value lands in the one open band and the record shows neither the amount nor its change
+#15 astra-d3|week-10-06:c1/clean-2       first=sound/None/False  second=sound/None/False  -> agree sound
+#16 astra-d3|week-10-06:c1/clean-3       first=defect/measure_invented/True  second=defect/measure_invented/True  -> BOTH
+      second why: Neither the topic nor the article defines an equal-weighted basket of 'matched AI-server HBM and DRAM quotations', so the judge must assemble an invented series (HBM is not quoted alongside DRAM in a matched contract-price table) 
+#17 astra-d3|week-10-06:c1/clean-5       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question ends the window four months before the stated closing window ends, so an on-schedule close between March and June 2027 records as not completed and reads as a delay.
+#20 astra-d1|fortnight:c1/clean-4        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The fiscal Q4 results and the FY2027 Form 10-K the topic checks are published after 31 January 2027, so first revenue recognised in fiscal Q4 (November 2026 to January 2027) cannot be confirmed by the due day and records as not ha
+#22 astra-d1|fortnight:c1/clean-6        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question replaces the topic's March 2028 check date with February 2027, so a closing in the remaining thirteen months records as not completed although the topic counts it.
+#23 astra-d1|fortnight:c1/clean-7        first=sound/None/False  second=sound/None/False  -> agree sound
+#25 astra-d1|fortnight:c1/clean-12       first=sound/None/False  second=sound/None/False  -> agree sound
+#27 astra-d1|week-10-06:c1/clean-7       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question turns 'this quarter' into 'by 31 January 2027', which counts a slip into fiscal Q4 or into January 2027 as happened, and its evidence cut-off at 31 January also drops the fiscal Q4 report the topic checks.
+#31 astra-d2|fortnight:c1/clean-4        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: Evidence is cut off at 31 January 2027, before the fiscal Q4 results and FY2027 Form 10-K the topic checks, so a first recognition in fiscal Q4 records as not happened although the topic counts it.
+#33 astra-d2|fortnight:c1/clean-6        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The window is shortened by thirteen months, so a completion between March 2027 and March 2028 records as not completed although the topic counts it.
+#34 astra-d2|fortnight:c1/clean-7        first=defect/condition_lost/True  second=defect/condition_lost/False  -> SPLIT
+      second why: Alibaba and ByteDance become mere examples, so an approval that excludes both still records as happened, and this relaxation is not stated in not_judged; the edge case is narrow, so the usual record is unchanged.
+#37 astra-d2|week-10-06:c1/clean-1       first=sound/None/False  second=sound/None/False  -> agree sound
+#38 astra-d2|week-10-06:c1/clean-7       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question replaces 'this quarter' with the end of fiscal Q4 (31 January 2027), so a ramp that slips a quarter or into January 2027 still records as happened and the analyst cannot learn whether the ramp slipped.
+#40 astra-d2|week-10-06:c1/clean-10      first=sound/None/False  second=sound/None/False  -> agree sound
+#42 astra-d3|fortnight:c1/clean-4        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question names the FY2027 Form 10-K as evidence but sets the due day at fiscal year-end, before that filing and the fiscal Q4 results exist, so a first recognition in fiscal Q4 cannot be recorded on the due day.
+#43 astra-d3|fortnight:c1/clean-5        first=sound/None/False  second=sound/None/False  -> agree sound
+#44 astra-d3|fortnight:c1/clean-6        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question cuts thirteen months off the topic's window, so a closing between March 2027 and March 2028 records as not completed although the topic counts it as completed.
+#45 astra-d3|fortnight:c1/clean-7        first=defect/condition_lost/True  second=sound/None/False  -> SPLIT
+      second why: It keeps the fiscal-year-end check and the formal-approval event with distinct happened and ruled-out rungs, and the conditions it relaxes (every named buyer, the topic's 'versus ... capping quantities') are stated in not_judged.
+#49 astra-d3|week-10-06:c1/clean-7       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+      second why: The question widens 'this quarter' (fiscal Q3, ending October 2026) to any time up to 31 January 2027, which itself is calendar 2027, so an on-time ramp, a slip into fiscal Q4 and a slip into January 2027 all record as happened an
+material defects both reviewers confirm: 11 [16, 17, 20, 22, 27, 31, 33, 38, 42, 44, 49]
+
+ succeeded in 0ms:
+# Astra's 51 written questions, reviewed against their sources at $0 (D635)
+
+**Method:**
+- **First reviewer:** a fresh read-only Codex reviewer read every question against its topic and article (`reviewer-codex.jsonl`).
+- **Second reviewer:** a Claude subagent read the 13 flagged questions and 8 sound ones, mixed and blind
+  (`reviewer-claude-second.jsonl`, `compare.txt`).
+
+**Confirmed by both reviewers: 11 material defects in 51 questions.** None is counted by gate 1's hard lines.
+
+| Class | Questions | Mechanism (request line, decision) | Gate readers' marks |
+|---|---|---|---|
+| **A signed deal's completion due at the next annual filing**, cutting the topic's window | Hugging Face × 4 (fortnight c1/clean-6 × 3, week c1/clean-5 × 1) | Request line 23: "for an obligation already taken on, its next annual filing". D210 wrote that rule for the *amount* an obligation reaches ("a financing_amount question on the amount … at the company's next annual filing"), not for a completion event. | Both families fail D on all 4; D is not a hard line |
+| **An event due at period end, before the material that settles it is published** | Vera Rubin × 3 (fortnight c1/clean-4) | Request line 22, "period_end when it is the last day of the period", against line 20, "on or after the day the material that settles the question is published". The topic says it is settled by the FY2027 10-K. | Both hold D: the brief allows period_end |
+| **"This quarter" widened to the fiscal year-end** | Rubin × 3 (week c1/clean-7) | The model's choice. The topic gives the Q3 and Q4 reports as check dates and asks whether the ramp happens in the quarter named. | Codex fails D on 2 |
+| **An invented measure** | Memory × 1 (week c1/clean-3) | The model's choice: "equal-weighted mean of … matched … quotations", defined by neither the topic nor the article. | Both hold |
+
+- **Split between the reviewers** (not counted): two "Alibaba and ByteDance as examples" conditions. The second reviewer called one sound
+  and the other immaterial.
+- **Found by the second reviewer alone** (not counted, one reader): purchase commitments (fortnight c1/clean-2 d2) with a top band
+  starting at $100 billion against the $279 billion last disclosed.
+- The first reviewer missed it, so its 38 "sound" verdicts are an upper bound.
+
+**Census of the same topics across every stored draw** ($0):
+- **Hugging Face, fortnight** (stated check date 24 March 2028): luna used the stated date 3 of 3 times. Sol and astra used 2027-02-28
+  6 of 6 each. The stronger models apply line 23 literally.
+- **Vera Rubin:** every model used 2027-01-31 (period_end) in 11 of 12 sends.
+- **Rubin:** mixed (Jan 31, Feb 28, Nov 30) across all models.
+
+**What it changes:**
+- "No agreed hard-line mark on 51 ladders" does not mean sound questions. About 1 in 5 of astra's written questions has a window or
+  measure that would make the judge record the wrong thing.
+- 7 of the 11 trace to two sentences of the frozen request:
+  - line 23 is wider than D210's scope;
+  - lines 20 and 22 contradict each other.
+  These sentences act on every model, and the frozen step uses them in production.
+- The gate's six lines do not count due days, so gate 1 cannot see this class.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D210|''^## D185|''^## D414|''^## D417|''^## D420'"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^'"\\| "'`D` '"\\|' clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D210|D185|D414|D417|D420|D426|D409' docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2472:## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
+2664:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+4606:## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+4638:## D420 · 2026-11-10 · A proceeding that formally ends without the conclusion the question asks for is ruled out; the question stays
+
+ succeeded in 0ms:
+98:| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+
+ succeeded in 0ms:
+153:- **Opening a question** (D184, D185, D210, D236, D248, D158): a candidate opens for one of four reasons (main driver, industry aggregate,
+383:| D38 | 2026-10-20 | The views database rebuilt: a view is a question with a five-rung ladder and a due date | in force (amended by D42, D45, D46, D51, D54, D57, D58, D185, D186, D198, D260) | §7 Thesis library |
+391:| D46 | 2026-10-20 | Alex decides Claude's views proposals one by one | in force (amended by D51, D54, D58, D63, D155, D169, D185, D191, D197, D198, D202, D204) | §7 Thesis library |
+403:| D58 | 2026-10-22 | A deep review before freezing everything but pull mode | in force (amended by D59, D60, D185) | §1 System |
+528:| D184 | 2026-10-26 | A candidate thesis opens for one of four reasons, stated in the answer | in force (amended by D185, D191, D210, D211, D236, D264) | §6 Extraction |
+529:| D185 | 2026-10-26 | A binding obligation is due within 18 months and is exempt from the next-year rule | in force (amended by D210, D236) | §6 Extraction |
+544:| D200 | 2026-10-27 | Extraction v18 (`poc-v34`) is the production default | superseded by D210 | Extraction |
+554:| D210 | 2026-10-28 | A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`) | in force (amended by D236, D238, D239) | §6 Extraction |
+743:| D399 | 2026-11-10 | The clean ladder request may teach how to build an event's five states (outcomes that exclude one another, one or two divided by a property that holds or does not), with a general example | superseded by D409 | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2 |
+753:| D409 | 2026-11-10 | On the clean ladder step an event is answered in at most three outcomes: it has happened by the due day, it is ruled out, or neither, the third written by code; finer differences are listed as not judged | in force; supersedes D399 | `clean-arch/step4-2026-11-10/DESIGN.md` §5 |
+758:| D414 | 2026-11-10 | Code sets the due day of a year's figure whose day would be an estimate: the fiscal year-end plus 60 days for the company, the calendar year-end plus 90 for a theme; a stated day is kept; a figure that is not a year's is dealt with first, apart | in force; built, measured in the third Stage A | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2.4 |
+759:| D415 | 2026-11-10 | The third Stage A of the clean ladder step is sent without asking again once each change (D413, D414, the scope of a ruling out, D411) is proved small and reviewed; a change that does not pass stops and goes to Alex; Stage B needs his word | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+761:| D417 | 2026-11-10 | A figure for a period that is not one year (a rolling twelve months) with no publication day in the texts is declined, with that reason | in force; proved small, in the working request | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2.5; mark N of the Stage A form |
+763:| D419 | 2026-11-10 | The fourth Stage A is sent without asking again once each change (D416, D417, D418) is proved small and reviewed; a change that does not pass stops and goes to Alex; Stage B needs his word | superseded by D421 for these changes | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+764:| D420 | 2026-11-10 | A proceeding an authority conducts: a published closing decision is the event happened; its formal abandonment or withdrawal without the asked-for conclusion is the event ruled out; its still going on is the wait; such an event always has a ruling out; the question stays the one the thesis names | in force; passed alone, in the working request | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2.5; mark R of the Stage A form |
+765:| D421 | 2026-11-10 | D417 into the working request; then D420's rule, D418's narrowed sentence and the typed ruling out are each tested alone and reviewed; all passing, the fourth Stage A is sent without asking again; one failing stops and goes to Alex | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+770:| D426 | 2026-11-10 | The ladder step is not tuned further on the 44 theses and no fifth Stage A is sent; Stage A has not passed (lines 1, 3, 4 missed by 1 to 3 answers of 131); by his word the preparation of Stage B opens on that step, its $0 baseline reading of the 159 stored judgements first; no paid Stage B send without his word again | in force (an exception to D401's stop at a missed line) | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+814:| D470 | 2026-11-13 | Ladder-refusal candidate stopped (readers split on the boundary); 41 Stage A splits recorded, eight read provisionally by D414; Stage A verdict unchanged; the written-ladder line question opened for the council (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/stage-a-splits/splits.json` |
+923:| D579 | 2026-11-16 | Under D439 (council round 67): the two refusal accounts apply line 6's decline rules to the outcome's words; the proposed outcome-only exemption refused (D397, D417); a bounded $0 audit of the decline rules and the outcome's extra parts, then a sourced rule or no candidate | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md` |
+928:| D584 | 2026-11-16 | Arm A3 built and sent by council consensus: A2 plus one closed-set sentence removing an event's restated outcomes (D409, D397); three arms, Reading A and a pre-registered diagnostic Reading B; a lead is provisional until a trace review | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md` |
+949:| D605 | 2026-11-16 | Under D439 (council rounds 146, 147): D604's line-5 route closes with no candidate (fresh misses are reference choices whose rule-following form gives the same answer choices, a stopped class, Alex's boundary, and a reader discrepancy on D414); the gate stays unmet; no paid send without a new reviewable candidate; resume on Alex's rulings or new evidence | in force | `unlisted-parts/fresh-a2/line5/RESULT.md` |
+951:| D607 | 2026-11-16 | Under D439 (council round 149): D606's postponement reading reversed provisionally (a formal decision that a dated event will not happen by its due day rules it out; authorities by D420; forecast-versus-decision guard kept); the postponement repair route closes (no missing general rule; Taiwan p3 isolated); next a $0 audit of the shared fiscal-year note's consumers and effects | in force | `unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md` |
+967:| D623 | 2026-11-16 | Reflection 6 (cold reviewer + challenge): gate 1's zero-fault lines are not a dependable target for the current step (outside-44 fault rates ≈3.8/3.3/1.4% a send); next, a blinded reference control outside the 44 at $0 API: independent writers' answer choices vs the frozen step's stored ones, same checks, both families, full gate form, every settled reference fault reviewed against source and rule; gate and D426 unchanged | in force | `reflection-6/` |
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/brief.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# A source-backed product review of 51 written questions (read-only)
+
+Each item in `packet.json` holds:
+- a research **topic**, written by an analyst system: its `description` (the question asked), `outcome` (what is tracked), `period`
+  and `settled_by`;
+- the **article** the topic came from (date, publisher, title, full text);
+- the **answer** a model wrote: one judged question with answer choices (`figure.ranges` for a quantity, or the event's rungs),
+  `not_judged` (the topic's parts the question leaves out), `reference` (a quoted expectation, if any), `due_day` and its basis;
+- the **passage** it quoted.
+
+A later judge uses the question and its answer choices to record what happened, and an analyst reads the result. Earlier reviewers
+already checked the system's formal lines. Your job is the product check they may have missed.
+
+**For each item, check against the topic and the article:**
+1. **Period:** does the question keep the topic's period or check date, or does it change the window (for example "this quarter"
+   becoming "by year-end")?
+2. **Quantity or event:** is the thing measured the one the topic tracks? If the question constructs a measure (an average, a basket,
+   a formula, a specific data source), does the topic or the article support it, or is it invented?
+3. **Conditions:** are the topic's conditions kept in the question or listed in `not_judged`, and is nothing added that the topic
+   does not have?
+4. **Answer choices:** can a judge apply them on the due day? Check that they do not overlap, leave no gap, and are in the right unit
+   and scale. For an event, check that the rungs are distinct, dated outcomes.
+5. **Usefulness:** would an analyst reading the question learn the answer to the topic's question?
+
+**Return one JSON line per item, in order:**
+- `item`;
+- `verdict`: `"sound"` or `"defect"`;
+- `class`: `null`, or one of `period_changed`, `measure_invented`, `measure_changed`, `condition_lost`, `condition_added`,
+  `choices_unusable`, `other`;
+- `material`: true only if the defect would change what the judge records or what an analyst concludes;
+- `evidence`: the exact words from the question or answer, and from the topic or article, that show it, quoted;
+- `why`: one sentence.
+
+Judge each item on its own text; similar items may differ. Return exactly 51 lines, nothing else.
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '2472,2510p;2664,2705p;4568,4590p;4606,4625p;4638,4655p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
+
+- Alex chose option B ("可以"): the current/next-year window keeps bounding quantities; a thesis on a binding obligation a universe company takes on (guarantee, financing, equity, purchase commitment) may set its own check day up to 18 months after the item (`extraction.BINDING_HORIZON_DAYS = 548`), because the signing can be checked long before the project it finances is built (Ohio: the guarantee in 2026, the campus in 2028). Due with no reliable material: "no data to verify", never a pass or a fail (AGENTS §8). Amends 06-views ladder rule 5 for this reason only.
+
+## D186 · 2026-10-26 · Asset-thesis rungs describe business outcomes; the favourable end is registered per thesis
+
+- Alex chose option C ("可以"): rungs of an asset thesis state the business outcome (above, near or below guidance), and each thesis registers which end is favourable for the company, as a theme thesis's dependants already state a direction. Reason: results and direction separate (NVDA beat four quarters and fell; capital spending can build capacity or hurt returns). Recorded; not implemented in this slice: it changes `check_ladder`, the writer, judging, the UI adapter and the Idea route (value × reader), so it is its own slice with its own measurement.
+
+## D187 · 2026-10-26 · A company's own quantity sits under that company's object, private companies included
+
+- Alex chose option C ("可以"): any company's own quantity is a thesis under that company (SpaceX's compute capacity under SpaceX, Alphabet's capital spending under GOOGL), consistent with 06-views rule 5 ("company figures use the fiscal year"); a macro theme opens only when a thesis depends on it. Recorded; not implemented in this slice: it needs a private-company object kind in the universe and the one switch (01-universe), its own slice. Until then the gold accepts the Codex reading (evidence to NVDA data-center revenue) for SpaceX.
+
+## D188 · 2026-10-26 · The extraction gold: twenty cases labelled by the assistant this round, human review later
+
+- Alex: "不是你要标吗？之后我们可以human in the loop, but this time in the beginning just use the research you just did"; "标20条". The gold `poc/eval/gold/extraction-admission-2026-10-26.json` holds 20 cases from the real items (the report §5's 15 plus five: CoreWeave managed-inference ARR, the four-company $745bn figure, the Bloomberg NAVER retelling, the Taiwan smuggling clause, the Goldman 2027 aggregate), each with the theses that must open (typed keys: object, measure, year, event type, scope pattern, with acceptable alternatives), the theses that must not open, the evidence links that must exist and the baseline's score. Scoring (`scripts/score_admission_gold.py`): fail when a must-open thesis or an evidence target is missing; partial when all are present but a must-not-open thesis was created; full otherwise; "not processed" when the run never saw the item. Labelled `assistant`; a human pass with two labellers and a reported agreement is the next protocol step, not this one.
+
+## D189 · 2026-10-26 · poc-v25 is the replay default; the trace review names the next mechanisms
+
+- Alex, after the measurement: "你可以取代，但是看所有的 trace 然后告诉我我们怎么持续做的更好接近 golden … We don't want to overfit … It needs to act exactly like a very senior hedge fund analyst". `scripts/replay.py` now defaults to `poc/config/poc-v25.json` (extraction v12, Jev matching); `poc-v23` stays as a configuration and replays unchanged.
+- The [trace review](research/2026-10-26-thesis-admission-v12/trace-review.md) reads every thesis, every gold failure and the duplicate aggregates to their raw requests, answers and matching decisions, and names the root causes by design layer: thesis identity is a quantity where the analyst's unit is a question (six 2026 aggregates, each judged "new" correctly under the current criterion); the contract under-produces on first contact with a company (AMD 2 theses, MSFT 0); the role states categories where the labeller applies tests; theme candidates name no dependant; the extractor never sees the current view. Six general mechanisms are proposed with the class and count each moves, in the order: matching's "another estimate or population of the same question" option and theme dependants (code and schema, no prompt growth), then role v13 (tests instead of lists, the first-contact rule, quarterly statements as evidence; net shorter), then showing the view in block 5 as an A/B, then the daily duplicate check as pull-mode design. Each is Alex's call; none is built here.
+
+## D190 · 2026-10-26 · The collision judge: Jev for identity, the generative model for the analyst's question when a question may be held twice
+
+- Alex: "查重是用的 Jev 吗？… 你可以先单独跑这个，重新 review 一次 Jev 的提示词，然后优化他，不仅达到你的目的，也更贴近 hedge fund analyst 的大脑，你有黄金集做标准". Jev answers every candidate-to-thesis relation and every evidence comparison since D169.
+- Review of Jev's relation criteria against the r3 ledger ([probe](../poc/reports/2026-10-26-admission-v12/jev-relation-probe/probe.md), 31 stored candidate calls whose list holds a thesis of the same object and measure, 18 labelled by the assistant): under the current options Jev calls a population variant of one aggregate `part_of` (0.4–0.9) and the code maps that to "new"; under an analyst's option set ("one question: the same outcome settles both; another estimate, population or proxy of one aggregate is the same question") it answers `distinct_question_same_matter` 0.5–0.9 on the same pairs. Both wordings: 8 of 18 right. Jev compares wording; it does not hold the decision. No change to Jev's criteria is made: the measured criteria stay (D167–D169).
+- The generative model asked the same analyst question on the same 18 ([records](../poc/reports/2026-10-26-admission-v12/jev-relation-probe/llm-records.json), 3 samples each, $0.02): 11 of 18 right by majority, and 5 of the 6 aggregate duplicates merged; the misses are the debatable pairs (a reporting segment beside the business segment, the same deal under two names).
+- Decided to build and run alone: `matching` keeps Jev; a configuration may add a `collision` setting (model, prompt `collision-v1`). When a candidate's list holds a thesis of its own object and measure, one generative call answers the analyst question for those theses and its verdict replaces Jev's on them (`jev_matching.collision_peers`, `ask_collision_judge`); every other relation stays Jev's. `poc-v26` = `poc-v25` plus the judge. Measured by one run over seed, week and August against the extraction gold and the census (ledger `english-v26-collision-r4-2026-10-26`); result appended here.
+- General, not a list: the routing rule is a structural fact of the library (two theses of one object and quantity), and the question is the one a desk asks. The cost is one call per collision (31 of 69 candidates on r3), about $0.002 each.
+- Result (run r4, `poc-v26`, seed + week + August, $1.33): 26 collision verdicts, 9 merges or successions, all on aggregate variants; 2026 aggregate theses 6 → 2 (v23: 11); theses 60 → 45; no merge removed a thesis the gold wants and A17 (the four-company figure as evidence to the five-company aggregate) turns full. The gold's overall score moved 9 → 4 full, and every lost case is an extraction difference between two fresh runs of the same v12 prompt (Rubin not opened from the call this time, the NAVER and META lines not extracted), not a matching decision. Recorded as the measurement rule for later arms: a matching change is judged on stored candidates and the duplicate census; an extraction change needs three fresh runs or pinned extraction answers; a one-run gold score carries about ±5 cases of sampler noise on this corpus. `poc-v25` stays the replay default until the judge is measured that way.
+- Confirmation with extraction pinned (same recorded extraction answers in both arms, ids translated, Jev live, judging synthetic; `pinned_matching_study.py`): control reproduces r3 (60 theses, gold 9 full); the judge arm 56 theses, 2026 aggregates 6 → 3, evidence equal (711 vs 707 rows), gold 8 full with the one difference a repeat the scorer cannot see; 31 verdicts, 6 merges, $0.011; no required thesis lost. Alex: "有效果我们可以做". `poc-v26` becomes the replay default; `poc-v25` stays as a configuration. Open: the judge leaves 2 of 5 aggregate duplicates apart on one sample; a majority of three samples on collisions would cost three cents a run.
+
+## D191 · 2026-10-26 · Theme theses reach every company; no named dependant is required to open one
+
+- On the theme-dependency design (`docs/research/2026-10-26-theme-dependencies/design.md`), Alex decided the four points:
+  1. A theme candidate does **not** have to name the company thesis it feeds. Alex: "我觉得这个非常难，有时候一个政策影响非常的广，你这种做法基本不可行，不可能所有的公司都 map 到，你可以默认这些宏观的东西和所有公司都有影响，我觉得这个 1 to all mapping 比较 make sense，至于这个 thesis 的 state 对每个不同公司的影响需要别的方法来判断". Decided: a theme thesis is context for every company thesis (one to all); how its state bears on each company is decided when that company's thesis is judged, not by an edge written at extraction. Explicit dependencies stay for the cases a document states (a company thesis on another thesis), and may be added to an existing thesis later (point 2).
+  2. A dependency may be added to an existing thesis by a later item ("可以").
+  3. From a macro-only item, a theme opens only when the theme is in the universe's list ("是"); an unlisted theme waits for a company item.
+  4. `industry_aggregate` is renamed `shared_quantity`: a quantity or price outside any one company that several move on ("好").
+- Consequences for the design, to be worked before any build: the judge of a company thesis reads the current state and reasons of the open theme theses of the themes its items were tagged with (block of the judging request), and states the sign it applies; a changed theme conclusion does not fan out to every company thesis in the same round (06-views: a repeated Fed statement must not trigger hundreds), it is read at each thesis's next judgement; proceedings that move no line are kept out by the admission test on themes (the model's judgement), not by a missing edge. The `feeds` field of the design is withdrawn for themes.
+## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+
+- Alex, after the arm ("go 但是你不要只是看什么acp好不？你需要解决的是抽取质量问题 … 有用的，你得一条一条看是不是真的值得抽才知道你这些改动的抽取效果").
+  Mechanism (two stored accounts, `docs/research/2026-10-28-extraction-quality/results/ask_admission.json`): D184/D185's sentence
+  "due when its signing can be checked, at most 18 months out" is written for a deal not yet signed; for a programme already announced
+  and signed (the AI Compute Partnership) the model proposes nothing or dates the question on the item day, which the code refuses.
+  Over the acceptance week the twelve ACP articles produced one proposal per run and none survived in `poc-v36`; 96 statements had no home.
+- Decided: role-v21 replaces that one sentence. Not yet signed: a yes/no question due after the item within 18 months (D185 unchanged).
+  Already taken on, one deal or a programme: a financing_amount question on the amount the obligation reaches at the company's next
+  annual filing, settled by its commitments note; the announcement is evidence to it. Entries and code checks as v20; `poc-v37` is the
+  replay default. Role 10,089 → 10,434 characters; the growth is the second form, which no other sentence covered.
+- Measured before the decision (`admission_arm.py`, production bytes as control, frozen reference, three draws): on the six ACP articles
+  whose text carries the obligation, control opened 0/18, the arm proposed 17/18 and the code kept 13/18 (two refused by the ladder-label
+  rule, D186); the four articles that report only the revenue share open nothing under both, rightly; the Reuters Ohio signing event
+  still opens (2/3, one refusal at the 548-day boundary). Acceptance: the same week replayed as `english-v37-nvda-1w-2026-10-28`, then
+  every dropped statement of the week read one by one against the analyst's standard (results.md).
+
+## D211 · 2026-10-28 · The extraction request shows no thesis and no group: one sample per item, filing at the turn (role-v22, `poc-v38`)
+
+- Alex chose option 1 after the D210 week ("1"): the admission judgement sat in the extraction call, whose request carried the open
+  theses and groups of the moment, so the same article was a different request on every day and after every commit of the parallel
+  day; a re-sent item (34 of 98 that week) was a fresh sample and the first sample's candidates vanished (9, the Kyber story's home
+  among them). Two samples of the same article agreed on 2 of 11 proposals.
+- Decided: from extraction v22 the request depends on the item alone (code, `extraction.LEDGER_BLIND_FROM`): no [Existing theses]
+  block, the research-groups block carries only the standing instruction to declare the matter, links name the answer's own
+  candidates or nothing, `folds_into` and `lost_if_folded` leave the schema. What the shown list did is owned elsewhere: the placement
+  call files statements under the open theses at the item's turn (`extraction.read` early, `extraction.file` at the turn, in both the
+  serial and the parallel path), matching folds a candidate into an open thesis (D190), a declared group with a stored group's names
+  is that group (D166). The parallel day never finds a v22 request stale. Role 10,434 → 9,456 characters (the sentences that assumed a
+  shown list are cut).
+- Measured before the decision's acceptance (`blind_arm.py`, three draws over 39 items): the Kyber question proposed in 6 of 21 sends
+  over seven articles, at least one per draw (v21: one in ten, erased by the re-send); the ACP amount question 3/3; about 10 of 25
+  distinct questions are re-proposals of open ones, to fold at matching; per-sample agreement unchanged (3 of 25 in all draws).
+  Acceptance (`english-v38-nvda-1w-2026-10-28`, $0.23, drops read one by one): 98 sends for 98 items, no re-send; every story of the week
+  has a page (ACP, Kyber, Rubin shipping, H200, the aggregates), the judge's reasons on them read as an analyst's; 17 pages of which 4 are
+  duplicates by wording (the collision judge's `distinct_question_same_matter` on `same_quantity_or_event`/`part_of` pairs) and 1 a
+  succession; the placer leaves ~60 statements out when near-identical pages compete. Next mechanism: D190's verdict set.
+
+## D212 · 2026-10-28 · Measure retained content from source through final writing before another quality change
+
+- Alex requested actual traces, useful retention and correct junk removal, with one overall acceptance basis rather than further piecemeal fixes. The [audit](research/2026-10-28-retention-audit/results.md) uses the same 98 stored items in v36b/v37/v38 at $0. It changes no product rule or default.
+- All 841 v38 extraction records were labelled M (material), C (context/marginal) or J (clear junk); 127 written M records were read beside their quotes and destinations. Earlier configurations have 1,522 records, of which 1,316 inherit the same article's exact/contained quote label and 206 were read separately. Labels are Codex-authored, not independent human gold. Actual written evidence is 106/54/144, versus the old intermediate handover counts 108/55/146.
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+## D415 · 2026-11-10 · The third Stage A is sent without asking again once each change is proved small and reviewed; a failure stops and goes to Alex
+
+- **Asked:** "上面两项按你的选择做好、并各自小额验证通过之后，第三次正式测试（同样 44 道题各发三次，约 0.15 美元，在你批的 3 美元上限内；目前累计花了约 0.48 美元）怎么发？"
+  - Options: send once the checks pass (recommended): "每项改动先单独小额验证并过评审；任何一项没通过就停下来找你，不发正式测试。发完照旧：我自己读完全部答案，两类读者再读，六条线按宽、严两种读法一起报。"; ask again before the send.
+  - Alex: "验证通过就直接发 (Recommended)".
+- **Decided:** the changes of D413 and D414, with the two already in hand (the scope of a ruling out; D411's reference), are
+  each proved on stored cases with a small send and reviewed in the council; when all pass, the third Stage A (the same 44
+  theses, three sends each, within D401's $3) is sent without asking again. A change that does not pass stops the line and
+  goes to him, and no Stage A is sent. The result is read as before: every answer by Claude, then the two reader families,
+  the six lines under both readings. Stage B still needs his word.
+## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+
+- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  - Alex: "确认：这类题不出题 (Recommended)".
+- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+- **Scope:** the clean path's ladder step; mark N of the readers' form.
+
+## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+
+- **Asked:** "“中国政府是否放行英伟达 H200 芯片在华销售”这类题，系统大多归在“英伟达”名下，有时归在行业主题“芯片出口管制”名下，同一道题三次归属还会不一致。第三次测试里归在公司名下的 5 份，两类读者都判为归错了，认为应归行业主题。区别是：归行业主题的题会给每家相关公司的判断都看到，归公司的只给这一家看。归哪边？"
+  - Options: the theme "chip-export-controls" (recommended): "两类读者意见一致。我需要在提示词里加一条归属规则（政府对某类产品的放行或禁令归行业主题），并先小额验证不带坏别的题，比如法国对英伟达本身的反垄断调查仍归公司。"; the company (the readers' form would then be changed to that reading).
+  - Alex: "归行业主题“芯片出口管制” (Recommended)".
+- **Decided:** a question about a government's or regulator's permission, restriction or ban on a class of products or trade
+  belongs to the theme that covers it, also when the product is the company's own. A proceeding against the company itself (an
+  investigation of its conduct, a fine) stays the company's. A rule in the request, proved small before any measurement, with
+  the French investigation as the case that must not move.
+- **Scope:** the clean path's ladder step; mark O of the readers' form.
+## D420 · 2026-11-10 · A proceeding that formally ends without the conclusion the question asks for is ruled out; the question stays
+
+- **Asked:** "题目问的是“法国竞争管理局会不会在 2027 年 1 月 31 日前公布对英伟达反垄断调查的结论”。到期前可能有三种情况：① 公布结案决定（哪怕不处罚），算“发生了”；③ 调查还在继续，算“还在等”。这两点没有争议。有争议的是 ②：当局正式宣布放弃或撤回调查，但没有公布题目问的那种结论。模型每次写法不一样，读者也各执一词。② 算什么？"
+  - Options: it is ruled out (recommended): "题目保持原样，问的仍是“有没有公布结论”。这类题固定有三种结果：公布了／当局正式放弃且没有结论／还在查。这也是目前多数已存答案的写法，且符合现有规则“判题目点名追踪的那件事”。不写“明确落空”的答案将算错。"; ask instead whether the investigation is over (two outcomes; it tracks another event than the conclusion the thesis names).
+  - Alex: "② 算“明确落空” (Recommended)".
+- **Decided:** for a proceeding an authority conducts and whose asked-for event is its published decision or conclusion: a
+  published closing decision, with or without a penalty, is the event happened; the authority formally abandoning or
+  withdrawing the proceeding without that decision or conclusion is the event ruled out; the proceeding still going on the due
+  day is the wait. Such an event always has a ruling out, and an answer that names none, or that writes the authority's
+  decision to go on as the ruling out, is at fault. The judged question stays the one the thesis's outcome names.
+- **Scope:** the clean path's ladder step; mark R of the readers' form.
+
+## D421 · 2026-11-10 · Each further change is tested alone; all passing, the fourth Stage A is sent without asking again
+
+- **Asked:** "接下来怎么走？我建议每项改动单独测，不再捆在一起：(a) 把你上一题的定义写进提示词，在三道法国调查题上单独测；(b) 把归属规则收窄成“题目追踪的是政府决定本身才归行业主题，追踪公司自己销售的仍归公司”，单独测；(c) 在 (a) 之后把“分两格填”再单独测一次，停止条件不变。调查题不出题那条直接并入。三项合计约 10 美分；第四次正式测试约 11 美分；目前累计 0.90 美元，上限 3 美元。"
+  - Options: test the three apart and send the fourth Stage A when all pass (recommended): "(a)(b)(c) 各自小额验证并过评审。全部通过就直接发第四次正式测试；任何一项没通过就停下来找你。"; drop the typed shape and do (a) and (b) only; test the three and ask before the fourth Stage A; stop here.
+  - Alex: "三项分别测，全过就直接发第四次 (Recommended)".
+- **Decided:** D417 goes into the working request. Then, each beside the working request and on its own: (a) D420's rule in the
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'due_day|period_end|expected_publication|binding_obligation|next annual|settle' clean-arch/step4-2026-11-10/ladder/ladder_step.py clean-arch/step4-2026-11-10/ladder/candidate-schema.json clean-arch/step4-2026-11-10/DESIGN.md | head -70" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:19:   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:36:      "due_day",
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:37:      "due_day_basis"
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:43:       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:265:      "due_day": {
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:269:      "due_day_basis": {
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:273:        "period_end",
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:274:        "expected_publication"
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:276:       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:25:FIGURE_BASES = ('stated', 'expected_publication')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:26:EVENT_BASES = ('stated', 'period_end')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:214:    if ISO_DAY.fullmatch(ladder['due_day']):
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:216:            written_day = datetime.date.fromisoformat(ladder['due_day'])
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:219:    due_day = written_day
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:221:        reasons.append(f'due_day is not a real date: {ladder["due_day"]!r}')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:222:    elif shape == 'figure' and ladder['due_day_basis'] == 'expected_publication':                 # D414: code sets the day of a year's figure
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:229:                               f'the publication day the topic or the item gives, with due_day_basis stated; when neither gives one, nothing in the '
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:231:            due_day = datetime.date.fromisoformat(due_day_of(ladder, object_kind, object_id, research_list))
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:232:    if due_day is not None:
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:233:        if due_day <= article_day:
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:234:            reasons.append(f'the due day {due_day} is not after the item\'s day {article_day}')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:235:        if thesis['opens_as'] == 'binding_obligation' and due_day > article_day + datetime.timedelta(days=binding_horizon_days):
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:236:            reasons.append(f'a binding obligation is due at most {binding_horizon_days} days after the item; {due_day} is later')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:241:            if thesis['opens_as'] != 'binding_obligation' and beyond_next_year(year, article['publication_date'], object_id, research_list):
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:247:    if ladder['due_day_basis'] not in allowed_bases:
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:248:        reasons.append(f'due_day_basis {ladder["due_day_basis"]!r} does not fit {"a figure" if shape == "figure" else "an event"}: use one of {", ".join(allowed_bases)}')
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:289:def due_day_of(ladder, object_kind, object_id, research_list):
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:290:    """The day the question is due, as an ISO string (D414). A figure whose day the model would estimate (due_day_basis
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:291:    expected_publication) is due a fixed number of days after the end of the year it covers; every other day is the answer's."""
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:293:    if figure is not None and ladder['due_day_basis'] == 'expected_publication':
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:297:    return ladder['due_day']
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:300:def event_rungs(event, due_day, article_day):
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:312:        return [happened, {'label': 'No', 'condition': f'Rung 1 does not hold on {due_day}.'}]
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:318:                          f'stands on {due_day}, and only when rung 1 does not.'},
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:319:            {'label': 'Still open', 'condition': f'Neither rung 1 nor rung 2 holds on {due_day}.'}]
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:330:        rungs = event_rungs(ladder['event'], ladder['due_day'], article_day)
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:331:        year = ladder['due_day'][:4]
+clean-arch/step4-2026-11-10/ladder/ladder_step.py:355:            'looks_at': thesis['outcome'], 'question': ladder['question'], 'due_day': due_day_of(ladder, object_kind, object_id, research_list),
+clean-arch/step4-2026-11-10/DESIGN.md:83:(`census/reader-brief.md`); `census/tally.py` counts. Counted by code on all 34: opening reason binding_obligation 7, product_node 6,
+clean-arch/step4-2026-11-10/DESIGN.md:143:- A thesis's library state holds `description`, `entity`, `id`, `outcome`, `period`. `opens_as` and `settled_by` are only in the Step 1
+clean-arch/step4-2026-11-10/DESIGN.md:237:| `thesis.description`, `outcome`, `period`, `opens_as`, `settled_by` | the opening article's Step 1 answer (`trace.result.new_theses`), joined to the state by description (the join `census/build_packet.py` makes: exactly one match, or the run refuses) |
+clean-arch/step4-2026-11-10/DESIGN.md:251:  "…", "outcome": "…", "period": "…", "opens_as": "…", "settled_by": "…"}, "item": {"publication_date": "2026-07-02", "publisher":
+clean-arch/step4-2026-11-10/DESIGN.md:274:| a figure's question names the period it covers or the day it is measured at, and what settles it | D38: a view looks at one number, "which year, whether a period amount or a point-in-time value, and the source it is answered from" |
+clean-arch/step4-2026-11-10/DESIGN.md:275:| judge the one the topic's `outcome` names; list every other part of the wording, a second figure or event, a condition or a comparison | D397; D38 "a view looks at one thing". `settled_by` is passed as context and decides nothing: when it and `outcome` point to different things, `outcome` decides |
+clean-arch/step4-2026-11-10/DESIGN.md:277:| `no_ladder`: a company's figure for a quarter or a half-year; a figure for a year beyond next year, unless the topic's `opens_as` is binding_obligation | v74i lines 16–17; D46; `extraction.sift` lines 625–632, which make the same two exceptions |
+clean-arch/step4-2026-11-10/DESIGN.md:291:| a topic whose `opens_as` is binding_obligation is due within 548 days (18 months): an obligation taken on at its next annual filing, one not yet signed on its check date | v74i line 13; D185; `check_admission`, which tests the same field. The request and the check share that one scope: the `opens_as` Step 1 wrote, which the call is shown |
+clean-arch/step4-2026-11-10/DESIGN.md:310:| D38's "which year, a period amount or a point-in-time value, and the source" was not carried | the question names the period or the day measured at, and what settles it |
+clean-arch/step4-2026-11-10/DESIGN.md:401:expectation (XR), a yes/no wording over five states (Q, R), `stated` against `period_end` for a day that is both.
+clean-arch/step4-2026-11-10/DESIGN.md:436:**What two rounds of the council's read settled before any send (`council/iw-codex.md`, `iy-codex.md`).**
+clean-arch/step4-2026-11-10/DESIGN.md:461:  settle. The frozen judge forecasts the rung from its evidence (judging-v7: "The rung is your forecast"; "Only fact can
+clean-arch/step4-2026-11-10/DESIGN.md:504:| check 5: an event's due day basis is stated or period_end (D403) | kept, unchanged |
+clean-arch/step4-2026-11-10/DESIGN.md:560:**What the council's read settled before any send (`council/je-codex.md`).**
+clean-arch/step4-2026-11-10/DESIGN.md:593:the texts alone, one of each family, find "lower" settled in none of seven such theses, where the working request answers
+clean-arch/step4-2026-11-10/DESIGN.md:600:**The due day** (`stage_a/due_day_rule_replay.py`; `stage_a/result-2/due-day-rule-60-90.txt`). 68 of 71 figures of the second
+clean-arch/step4-2026-11-10/DESIGN.md:612:guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because
+clean-arch/step4-2026-11-10/DESIGN.md:623:| the due day of a figure whose basis is `expected_publication` | the day the model expects | set by code: the end of the year the figure covers plus 60 days for a company's figure (its fiscal year-end, from the research list's fiscal calendar), plus 90 days for a theme's figure (31 December); `ladder_step.due_day_of`, the one owner; the view carries it |
+clean-arch/step4-2026-11-10/DESIGN.md:627:| line 6's count of the due day | the answer's `due_day` | the view's, the day the question is due (`stage_a/accounting.py`) |
+clean-arch/step4-2026-11-10/DESIGN.md:637:(the year's own check then refuses the answer). *Value × reader:* the view's `due_day` is read by the readers' packet, by
+clean-arch/step4-2026-11-10/DESIGN.md:638:line 6's count and, in Stage B, by the judge's page; each reads the view. The answer's `due_day` is read by check 5 alone.
+clean-arch/step4-2026-11-10/DESIGN.md:642:548 days). The request's own rule for an obligation already taken on is its next annual filing, so the answer is sent back
+clean-arch/step4-2026-11-10/DESIGN.md:649:**Proved at no cost** (`stage_a/due_day_by_code_replay.py`, `stage_a/result-2/due-day-by-code-run-2.txt`): on the second
+clean-arch/step4-2026-11-10/DESIGN.md:744:   (`adapter.py` line 305), so it is also the latest day processed, which is how D38 counts the year. `due_day` is a real date
+clean-arch/step4-2026-11-10/DESIGN.md:745:   after the article's day (`extraction.sift`). For `opens_as` binding_obligation, at most 548
+clean-arch/step4-2026-11-10/DESIGN.md:753:   half-year's revenue or sales. On this path the question must name the material that settles it
+clean-arch/step4-2026-11-10/DESIGN.md:754:   (D38), and that material is quarterly reports for 14 of the 34 stored theses (the pattern matches their `settled_by`, and
+clean-arch/step4-2026-11-10/DESIGN.md:761:   fails mark Y, which says so in the form (ninth reading, §8). `due_day_basis` fits the shape: stated or
+clean-arch/step4-2026-11-10/DESIGN.md:762:   expected_publication for a figure; stated or period_end for an event (the request's own rule; v74i lines 16 and 26).
+clean-arch/step4-2026-11-10/DESIGN.md:885:| a figure beyond next year, unless `opens_as` is binding_obligation | return `no_ladder` | the same | records it; a ladder written anyway is refused (check 5), unless `opens_as` is binding_obligation, when it is accepted; the tests take both |
+clean-arch/step4-2026-11-10/DESIGN.md:906:| `due_day`; `year` (a figure's from the answer, an event's the due day's year) | `views` | the judge prompt, which shows both and prints a theme's due day in other views' prompts (`judging.py` lines 123 and 154); the replay's due-day guard reads `due_day` (§7.1) | pull mode reads `due_day` (`pull.py` line 31) |
+clean-arch/step4-2026-11-10/DESIGN.md:916:| `not_judged`, the favourable end and why, the reference and `due_day_basis` (inside `checked_answer`); `reference_status`; `status` and a "no ladder" `reason`; the `outcome_record` | `clean_ladders` | the reader packet's builder and the report; shown to a user beside the answer. The thesis's own wording is not copied here: the packet's builder reads it from the Step 1 trace, its one owner | — |
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '200,258p' clean-arch/step4-2026-11-10/ladder/ladder_step.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+        favourable_end, favourable_why = figure['favourable_end'], figure['favourable_why']
+        if object_kind == 'company':
+            if favourable_end not in ('higher', 'lower') or not favourable_why.strip():
+                reasons.append("a company's figure names its favourable end, higher or lower, with one sentence why")
+            if not COMPANY_YEAR.fullmatch(figure['year']):
+                reasons.append(f"a company's figure carries its fiscal year as FY and four digits; got {figure['year']!r}")
+        else:
+            if favourable_end != 'n/a' or favourable_why.strip():
+                reasons.append("a theme's figure has favourable_end n/a and an empty favourable_why")
+            if not CALENDAR_YEAR.fullmatch(figure['year']):
+                reasons.append(f"a theme's figure carries a calendar year as four digits; got {figure['year']!r}")
+
+    article_day = datetime.date.fromisoformat(article['publication_date'])                        # check 5
+    written_day = None
+    if ISO_DAY.fullmatch(ladder['due_day']):
+        try:
+            written_day = datetime.date.fromisoformat(ladder['due_day'])
+        except ValueError:
+            written_day = None
+    due_day = written_day
+    if written_day is None:
+        reasons.append(f'due_day is not a real date: {ladder["due_day"]!r}')
+    elif shape == 'figure' and ladder['due_day_basis'] == 'expected_publication':                 # D414: code sets the day of a year's figure
+        year_end = year_end_of(ladder['figure']['year'], object_kind, object_id, research_list)
+        if year_end is not None:
+            if written_day < year_end:                   # the figure the model has in mind is not that year's figure
+                reasons.append(f"the figure is given the year {ladder['figure']['year']}, which ends on {year_end}, and you expect it published on "
+                               f'{written_day}, before that: a figure is published after the period it covers ends, so this is not a figure for that '
+                               f'year. A company\'s figure for a quarter or a half-year is returned as no_ladder. A figure for another period takes '
+                               f'the publication day the topic or the item gives, with due_day_basis stated; when neither gives one, nothing in the '
+                               f'topic can be checked on a date: return no_ladder')
+            due_day = datetime.date.fromisoformat(due_day_of(ladder, object_kind, object_id, research_list))
+    if due_day is not None:
+        if due_day <= article_day:
+            reasons.append(f'the due day {due_day} is not after the item\'s day {article_day}')
+        if thesis['opens_as'] == 'binding_obligation' and due_day > article_day + datetime.timedelta(days=binding_horizon_days):
+            reasons.append(f'a binding obligation is due at most {binding_horizon_days} days after the item; {due_day} is later')
+    if shape == 'figure':
+        year = ladder['figure']['year']
+        year_is_well_formed = (COMPANY_YEAR if object_kind == 'company' else CALENDAR_YEAR).fullmatch(year)
+        if year_is_well_formed:
+            if thesis['opens_as'] != 'binding_obligation' and beyond_next_year(year, article['publication_date'], object_id, research_list):
+                reasons.append(f'the figure is for {year}, a year beyond next year: return no_ladder')
+            period = research_list.fiscal_period(object_id, year, bare_is_calendar=True)
+            if period and datetime.date.fromisoformat(period[1]) < article_day:
+                reasons.append(f'the figure is for {year}, a year that had ended on the item\'s day: return no_ladder')
+    allowed_bases = FIGURE_BASES if shape == 'figure' else EVENT_BASES
+    if ladder['due_day_basis'] not in allowed_bases:
+        reasons.append(f'due_day_basis {ladder["due_day_basis"]!r} does not fit {"a figure" if shape == "figure" else "an event"}: use one of {", ".join(allowed_bases)}')
+
+    passage = None                                                                                # check 6
+    reference = ladder.get('reference')
+    if reference is not None:
+        passage = article_passage(reference['words'], article['text'], repair_quote, normalise, quote_tokens)
+        if passage is None:
+            reasons.append('the reference\'s words are not in the item: copy one unbroken passage from the item exactly, not reworded, not reordered, and not taken from the topic')
+        value, value_to = reference['value'], reference['value_to']
+        if reference['kind'] == 'last_reported' and shape != 'figure':
+            reasons.append('a reference of kind last_reported belongs to a figure: an event\'s reference is of kind expected, or null')
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1250,1370p' clean-arch/step4-2026-11-10/DESIGN.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  marks, copied from the form, which is their one owner (a difference between the two is a defect of this page):
+  - Q: the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names.
+    For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it.
+    And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is
+    expected and is not a conflict). `n/a` for a `no_ladder`
+  - O: the object is the question's own company or the right theme
+  - R: exactly one rung holds for every outcome; for a yes/no, the Yes condition is the event happening and the No condition
+    its complement. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold
+    that is not yet set
+  - D: the due day follows the rule for its kind. A figure: a day by which the figure can be expected to have been
+    published, after its period ends (the day the thesis or the article states, or, where neither states one, a plausible
+    reporting date). An event: the date the thesis or the article gives for assessing it, or the last day of the period it
+    names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day
+    contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date
+    none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the
+    article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end
+    for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be
+    published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual
+    filing, and one not yet signed on the day by which the signing can be checked; another day fails
+  - X: a figure: a number the `reference` carries lies in the middle rung, as the judge will read it; a reference with no
+    number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not
+    state. An event: the ladder presents as expected only what the article states
+  - F: for a five-rung ladder about the company only: the direction is defensible (which end is bullish, or the labels of
+    the states). For a figure, the reason given in `favourable_why` supports the favourable end. For five states, the
+    Neutral state's condition says what it is neutral against: the expected outcome when the article states one, otherwise a
+    baseline it names. `n/a` for a yes/no ladder and for a theme
+  - Y: for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a
+    percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails,
+    whatever the thesis asks
+  - G: for a figure, always one of the first three: where the article gives any figure for this quantity, `holds` when an
+    analyst would accept the ranges as a fair division of the outcomes around it and `fails` when not; `not_assessable` when
+    the article gives none. `n/a` only for an event's ladder and for a `no_ladder`
+  - L: every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a
+    comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else
+    holds with an empty list
+  - B: exactly one entry for each part listed in `not_judged`, in its order: `"bet"` when an analyst would hold a separate
+    view on it, `"not_a_bet"` when it is a detail of the judged question; `[]` when nothing is listed and for a `no_ladder`
+  - XR: the `reference` field quotes what the article states the market expects. It carries the number when the article
+    states one, and no number the article does not state. It is null only when the article states no expectation
+  - N: for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal
+    because the question belongs to another company or to a matter no listed theme covers names that company or matter.
+    Which year is this year and which next year is read from the `fiscal_year_note`
+  - W: any other fault that would mislead a reader of this judged question, in a short sentence; the empty string `""` when
+    there is none. The field is always present
+
+  **G decides no line** and enters no count of sound ladders (the lines are D400's). Its share is printed as the figures on
+  which it holds over the figures on which it was assessed, with the number not assessable beside it, or as "no figure
+  assessable". What the reference reading shows (`readings_summary.md`, generated): each reader read the 36 production ladders
+  twice, and gave the same value both times on ONE 36, O 34, R 36, X 35, F 36, Y 36 and G 30 for reader 1, and on O 36, X 35, G 33
+  and 36 on the rest for reader 2. Among the marks worded alike in the two forms, G moved most for both readers. D is not
+  comparable: the second form changed the due-day rule, and the values agree on 9 for reader 1 and 29 for reader 2. The
+  consequence stays: a figure whose ranges a reader finds unfair can still count as right, and each reader's G is printed beside
+  every count.
+
+  **A refusal by the model is marked on N alone;** a refusal for any reason outside the six cases fails it, so an answer that
+  disobeys the request cannot be counted right.
+
+- **Three outcomes of a send** (a send is one thesis in one of the three passes), all in the denominators (44 theses × 3 sends):
+  1. a ladder written: *sound and complete on the firm marks* when Q, O, R, D, X, L and XR hold and F and Y hold where they
+     apply; otherwise unsound, by mark. Every fault a reader names under W, by one reader or both, goes to the third reader
+     with the thesis and the article; a fault the third reader upholds makes the ladder unsound, and every W is printed in the
+     report with its ruling. The name says what it leaves out: a figure can be sound and complete on the firm marks and still have ranges a
+     reader finds unfair (mark G), so G's share is printed beside every count of this measure;
+  2. a refusal by the model: justified (N holds, and no other fault upheld under W) or not;
+  3. refused twice, by a check, by the schema or as not JSON, with the reason of each attempt.
+
+  A send is **right** when it is a ladder sound and complete on the firm marks, or a justified refusal: declining a topic that has no main question is
+  the behaviour D397 asks for, and it is not counted as a bad ladder. Outcome 3 is reported apart, by check; it is not right, and it is
+  not marked by readers. A refusal because the question belongs to another company or an unlisted matter is judged by N like any
+  other. Every refusal is printed in the report with its case, the reason the model gave and N's value; no share by kind of
+  refusal is computed, since the reason is free text. Those naming another company or an unlisted matter are the cost of holding
+  one company and a fixed list of themes.
+- **Lines (Alex's, D400).** All six are fixed. They are read on each mark's value after the third reader's rulings (the
+  accounting, below).
+  1. No ladder fails Q.
+  2. No ladder fails L.
+  3. No ladder fails R.
+  4. No refusal fails N.
+  5. A thesis is *right* when at least two of its three sends are right, and *right by a ladder* when at least two of its three
+     sends are ladders sound and complete on the firm marks. At least 35 of the 44 theses are right, and at least 28 of the 44
+     are right by a ladder, so that refusals alone cannot meet the line. (Two sound ladders and one unjustified refusal: right, and
+     right by a ladder. One sound ladder and two justified refusals: right, not by a ladder. One sound ladder, one unsound and one
+     justified refusal: right, not by a ladder.)
+  6. Two counts, each on its own population. **Direction:** among the theses whose three sends are all company figures, the
+     favourable end is the same in all three for every one; the count needs at least 3 such theses. **Due day:** among the theses
+     whose three sends are all written ladders, of any shape, the due day is the same in all three for at least nine in ten; the
+     count needs at least 20 such theses. A count below its minimum reads NOT MEASURED. A thesis whose three ladders differ in
+     shape is in the due-day count, is outside the direction count, and is reported as "shape differs across sends". This is
+     where the direction problem of the reference is measured.
+
+  A line missed stops and goes to Alex with the classes (D401).
+- **The accounting, in one table.**
+
+  | outcome of a send | who reads it | a valid row gives | where it counts |
+  |---|---|---|---|
+  | a ladder written | both readers | `holds` or `fails` for Q, O, R, D, X, L and XR; the same for F on a five-rung company ladder and for Y on a figure, `n/a` elsewhere; G `holds`, `fails` or `not_assessable` on a figure, `n/a` elsewhere; N `n/a`; `B` one of `bet` or `not_a_bet` for each part listed in `not_judged`; `W` a string, empty for no other fault; `why` not empty when a mark fails or `W` is not empty | lines 1 to 3; line 5; line 6, by code; the shares |
+  | a refusal by the model | both readers | N `holds` or `fails`; every other mark `n/a`; `B` empty; `W` and `why` as above | line 4; line 5 |
+  | refused twice (by a check, by the schema, or not JSON) | nobody: there is nothing to mark | no row | line 5, as not right; reported by reason |
+
+  - **A mark's value** is the two readers' value where they agree. Where they differ, on any of Q, O, R, D, X, F, Y, L, XR and N,
+    the third reader rules with the thesis and the article, and the ruling is the value. Every non-empty `W`, from one reader or
+    both, goes to the third reader, who upholds it or not; an upheld `W` makes the send not right. G and B are not ruled on: each
+    reader's value is printed.
+  - **Asking again.** A reader, the third included, is asked again, up to twice, for a row or a ruling that is missing or not
+    valid.
+  - **NOT MEASURED, never passed.** When, after that, a written ladder or a refusal lacks a valid row from either reader, or a
+    differing mark or a `W` lacks a valid ruling, lines 1 to 5 all read NOT MEASURED: a fault could sit in the answer nobody
+    marked. The same when the two readers differ too often, counted once over the whole reading and not answer by answer:
+    the pairs of an answer and a mark, among Q, O, R, D, X, F, Y, L, XR and N, on which the two valid rows differ, over all
+    such pairs that apply, on every written ladder and every refusal. More than a third reads NOT MEASURED; four differing
+    marks on one answer, among answers that otherwise agree, do not. When no answer has a reader's row at all, every send
+    having been refused twice, there is nothing to divide: the share is printed as "no reading", lines 1 to 3 and 6 read NOT
+    MEASURED, line 4 reads "no refusal occurred", and line 5 is read as it stands, none of the 44 being right.
+  - **A line is measured only on something.** Lines 1 to 3 read NOT MEASURED when no ladder was written. Line 4 reads "no refusal
+    occurred" when the model refused nothing, reported as that and not as a pass of judged refusals.
+  - **My own read** of every mark the third reader ruled on behind lines 1 to 4 decides nothing (AGENTS §7.1: meaning is judged
+    by a reader who did not write the change). Where I differ from a ruling, the difference is printed beside the line and goes
+    to Alex with the result.
+  - **The calculation is code, tested before the send on made-up rows:** a missing row for a bad answer; an `n/a` on an applicable
+    mark; a row with no `W`; a `B` of the wrong length; a figure with G `n/a`; a differing mark with no ruling; a `W` upheld on
+    an otherwise sound ladder; no ladder at all; no refusal at all; a twice-refused answer among sound ones; a thesis whose three
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D403|D407|D236|D238|D239|D402' docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+153:- **Opening a question** (D184, D185, D210, D236, D248, D158): a candidate opens for one of four reasons (main driver, industry aggregate,
+162:- **Quotes** (D236, D266 *(Claude: the thresholds)*): a quote a word or two off the source (function words, pronouns, the company's
+338:one draw (D238; §7.3); the extraction standard page is the step's PRD and AGENTS §6–§7 carry the principles (D242; §6, §7).
+528:| D184 | 2026-10-26 | A candidate thesis opens for one of four reasons, stated in the answer | in force (amended by D185, D191, D210, D211, D236, D264) | §6 Extraction |
+529:| D185 | 2026-10-26 | A binding obligation is due within 18 months and is exempt from the next-year rule | in force (amended by D210, D236) | §6 Extraction |
+554:| D210 | 2026-10-28 | A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`) | in force (amended by D236, D238, D239) | §6 Extraction |
+580:| D236 | 2026-10-29 | Three proposals approved; every change stays general (a hedge-fund brain, not an NVIDIA rule) | in force (amended by D246, D248, D266) | §6 Extraction |
+582:| D238 | 2026-10-29 | Extraction prompt work moves to a direct-read loop; role-v29 is the loop's current request | in force (amended by D239, D241, D244) | §15 Working rules |
+583:| D239 | 2026-10-29 | role-v29 (`poc-v45`) is the extraction request; the bench loop stops | superseded by D245 | Extraction |
+746:| D402 | 2026-11-10 | Before more review or the build, the clean ladder step's request is sent once on six stored theses for a few cents, and the answers read by hand and reported to Alex; what follows is his to choose; D401's conditions stand | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+747:| D403 | 2026-11-10 | On the clean ladder step an event's due day is a date the thesis or the article gives, or the last day of the thesis's period; the model picks no other day (narrower than v74i line 26, by Alex's decision) | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §4 |
+750:| D406 | 2026-11-10 | On the clean ladder step the decision to decline and the naming of a theme's states move from sentences into the answer's shape (first fields: what the topic's outcome names and which is the main one; separate shapes for a company's and a theme's states); then eight stored theses are sent three times each and read as counts; when steady, the build follows on D401's terms | in force; its first point (the fields naming the main thing) superseded by D407 | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2 |
+751:| D407 | 2026-11-10 | One last probe of the clean ladder request (the first request plus the exact-copy and stand-alone sentences and separate shapes for company and theme states; eight theses, three sends, beside the first request as control), then the build whichever way it comes out: met (no-main topics declined 8 of 9, the others answered 15 of 15) the build uses it; missed, the first request unchanged with the faults of writing refused by code | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2 |
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'due day|due_day|last judgement|due date|closing' src/hivemind/views/judging.py src/hivemind/views -g '*.py' | head -35" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+src/hivemind/views/judging.py:78:    changed conclusion was recorded after this thesis's last judgement. Empty for a theme thesis."""
+src/hivemind/views/judging.py:123:    lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
+src/hivemind/views/judging.py:154:            lines.append(f'- {theme["view_id"]} ({tv["object_id"]}, due {tv["due_day"]}) {tv["question"]}: now rung {state["rung"]} {theme["rung_label"]}; '
+src/hivemind/views/judging.py:78:    changed conclusion was recorded after this thesis's last judgement. Empty for a theme thesis."""
+src/hivemind/views/judging.py:123:    lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
+src/hivemind/views/judging.py:154:            lines.append(f'- {theme["view_id"]} ({tv["object_id"]}, due {tv["due_day"]}) {tv["question"]}: now rung {state["rung"]} {theme["rung_label"]}; '
+src/hivemind/views/writing.py:42:                      question=c['question'], due_day=c['due_day'], year=year, rungs=c['rungs'], seq=seq, input_id=item['input_id'],
+src/hivemind/views/store.py:14:    'views': 'view_id text primary key, object_id text, object_kind text, kind text, looks_at text, question text, due_day text, year text, created_seq integer, created_from_input text, created_at text',
+src/hivemind/views/store.py:81:def create_view(conn, *, view_id, object_id, object_kind, kind, looks_at, question, due_day, year, rungs, seq, input_id, created_at):
+src/hivemind/views/store.py:83:           question=question, due_day=due_day, year=year, created_seq=seq, created_from_input=input_id, created_at=created_at)
+src/hivemind/views/store.py:290:    so the list is the same for every item of the day whatever the day's items write. Question, looks_at, kind, object and due day only."""
+src/hivemind/views/store.py:293:    for v in conn.execute('select view_id, object_id, object_kind, kind, looks_at, question, due_day, year, created_seq from views where created_seq <= ? order by created_seq', (seq,)):
+src/hivemind/views/store.py:304:    depends on whom; question, looks_at and due day only. With themes, every open theme thesis follows the objects' own
+src/hivemind/views/jev_matching.py:60:    return (f'CANDIDATE ({c["kind"]}, object {c["object"]}, focus "{c["looks_at"]}", {c["year"]}, due {c["due_day"]}): {c["question"]}\n'
+src/hivemind/views/matching.py:170:        return f'{view_id} ({state}, {v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}\n    Ladder: {rungs}{tail}'
+src/hivemind/views/matching.py:174:    return f'{view_id}（{state}，{v["object_id"]}，{v["kind"]}，看的是「{v["looks_at"]}」，{v["year"] or ""}，到期 {v["due_day"]}）：{v["question"]}\n    梯子：{rungs}{tail}'
+src/hivemind/views/matching.py:191:            parts.append(f'- {c["id"]}（{c["kind"]}，对象 {c["object"]}，看的是「{c["looks_at"]}」，{c["year"]}，到期 {c["due_day"]}）：{c["question"]}\n    梯子：{rungs}\n    它的证据：' +
+src/hivemind/views/matching.py:219:            parts.append(f'- {c["id"]} ({c["kind"]}, object {c["object"]}, focus "{c["looks_at"]}", {c["year"]}, due {c["due_day"]}): {c["question"]}\n    Ladder: {rungs}\n    Its evidence: ' +
+src/hivemind/views/matching.py:290:            # a candidate cannot merge into another candidate of the same answer: only a stored thesis has a ladder and a due day to
+
+codex
+**Agree with the $0 audit and census, with one correction: do not assume the two date fixes are already settled.** A question can ask whether shipments happened by January while the report confirming them appears in February. Moving the answer date must not silently change the question to “did shipments happen by February?”
+
+The evidence warrants the investigation. The review found **11 material defects in 51 written questions**, confirmed by a second reader on the flagged sample; the seven date findings repeat across a few topics and sends. The dates could change what the judge records, but the review has not measured an actual changed final answer. [Review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md)
+
+The audit needs to resolve four points before a rewrite:
+
+- **D210 is specifically about an obligation’s amount** at the next annual filing. But the clean-step design and reader form also state the broader existing instruction for an obligation already taken on. Trace that later design and its decisions rather than assuming D210 alone decides the conflict. [D210](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2664), [clean-step design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:291)
+- **D403 is directly relevant:** Alex chose an event date stated by the topic or article, or the end of the topic’s period. A new estimated publication day cannot simply replace that decision. The schema and code currently allow an event only `stated` or `period_end` as its basis. [D403](/Users/lchingen/hivemind/docs/DECISIONS.md:747), [date check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:214)
+- **Separate the event deadline from when evidence becomes available.** Trace the affected question through its rungs, due-day closing and judge. Check whether another stated source can settle it earlier before declaring the report indispensable.
+- **Correct the gate claim:** date accuracy is not one of the four zero-fault lines, but mark D contributes to line 5’s count of right questions; line 6 separately checks date consistency. Keep that accounting and the reading form unchanged. [Stage A accounting](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1307)
+
+Census all applicable stored answers outside the 44, with repeated sends and distinct matters reported separately; classify uncertain publication dates rather than guessing. **D426 permits diagnosis outside the 44 but still bars tuning on them and a fifth Stage A.** A new version needs council review under D439.
+
+**Moves:** the audit establishes a general conflict and a candidate preserves both the intended event deadline and the applicable decisions, while passing stored counterexamples. **Closes the proposed rewrite:** those requirements cannot be reconciled as proposed. Rarity alone should not close a confirmed product defect; report its actual reach and impact.
+
+**CONSENSUS: Run the $0 due-date audit and census first; review any rewrite against D403, D210, the code and the unchanged gate before a separate probe decision.**
+tokens used
+963,425
+**Agree with the $0 audit and census, with one correction: do not assume the two date fixes are already settled.** A question can ask whether shipments happened by January while the report confirming them appears in February. Moving the answer date must not silently change the question to “did shipments happen by February?”
+
+The evidence warrants the investigation. The review found **11 material defects in 51 written questions**, confirmed by a second reader on the flagged sample; the seven date findings repeat across a few topics and sends. The dates could change what the judge records, but the review has not measured an actual changed final answer. [Review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md)
+
+The audit needs to resolve four points before a rewrite:
+
+- **D210 is specifically about an obligation’s amount** at the next annual filing. But the clean-step design and reader form also state the broader existing instruction for an obligation already taken on. Trace that later design and its decisions rather than assuming D210 alone decides the conflict. [D210](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2664), [clean-step design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:291)
+- **D403 is directly relevant:** Alex chose an event date stated by the topic or article, or the end of the topic’s period. A new estimated publication day cannot simply replace that decision. The schema and code currently allow an event only `stated` or `period_end` as its basis. [D403](/Users/lchingen/hivemind/docs/DECISIONS.md:747), [date check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:214)
+- **Separate the event deadline from when evidence becomes available.** Trace the affected question through its rungs, due-day closing and judge. Check whether another stated source can settle it earlier before declaring the report indispensable.
+- **Correct the gate claim:** date accuracy is not one of the four zero-fault lines, but mark D contributes to line 5’s count of right questions; line 6 separately checks date consistency. Keep that accounting and the reading form unchanged. [Stage A accounting](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1307)
+
+Census all applicable stored answers outside the 44, with repeated sends and distinct matters reported separately; classify uncertain publication dates rather than guessing. **D426 permits diagnosis outside the 44 but still bars tuning on them and a fifth Stage A.** A new version needs council review under D439.
+
+**Moves:** the audit establishes a general conflict and a candidate preserves both the intended event deadline and the applicable decisions, while passing stored counterexamples. **Closes the proposed rewrite:** those requirements cannot be reconciled as proposed. Rarity alone should not close a confirmed product defect; report its actual reach and impact.
+
+**CONSENSUS: Run the $0 due-date audit and census first; review any rewrite against D403, D210, the code and the unchanged gate before a separate probe decision.**

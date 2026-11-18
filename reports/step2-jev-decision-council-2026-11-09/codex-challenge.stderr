@@ -1,0 +1,369 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1c222-109a-7662-8ed5-8232a1ba6e72
+--------
+user
+Challenge your own conclusion and my independent reflection (`codex-reflection.md`) before we tell Alex “Jev is the way.” Specifically: (1) fresh c8 1/57 is a wrong-merge line, not overall precision and ignores misses and false revision edges; previous 3/104 failed under other Step1 inputs, do not compare as controlled versions; (2) H01 is Jev-stable failure, DeepSeek 3/3 correct; B05 DeepSeek worse than Jev single, but full Jev also erred 2/3, so the same-pair experiment does not establish Jev beats DeepSeek on product or overall. Does “best supported” mean lowest integration burden rather than proven quality? (3) the historic 2026-10-27 D201 results show Jev 7/18 vs a generative analysis call handling 20/21 and 3/3 under a different old contract, inputs and lots of context; should we disclose it as not equivalent rather than ignore contrary evidence? (4) R05 is disputed and P01 full produces a second unadjudicated edge; do not report improvements or controls as unambiguous. (5) score-threshold 363 count is not independent; ± no numerical superiority claim. What single recommendation answers whether keep Jev, which would change your mind, and what is the cheapest source-backed next action? Cite exact evidence. Read-only no writes or paid calls, out of scope everything except Step2.
+
+codex
+我会重新检验“继续用 Jev”的理由，重点查看你提到的旧比较和独立反思，区分已有实现的优势与真正的质量证据。
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Jev|reflection|D201|generative' /Users/lchingen/.codex/memories/MEMORY.md | head -45" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+14:- Claude Code, production readiness, clean-pipeline, K6b, DeepSeek Flash, golden-v5, Step 1, Step 2, Step 3, Jev, reader test, CURRENT_STATE
+45:- clean-arch, PRD.md, architecture.html, render.mjs, docs/check.py, Step 1 Luna, Step 2 Jev, draft prompts
+50:- Keep the Step 1 Luna and Step 2 Jev prompt sections directly visible and easy to navigate in the HTML; clearly label draft prompts and do not present them as production or tested requests. [Task 1] [ad-hoc note]
+69:- latest_library, all-open context, pre-item snapshot, IREN, MediaTek, Jev, part_of 0.49, collision judge, same_question_other_period, 152/470
+97:- Jev `part_of 0.49` fell below the 0.5 collision-review threshold; a one-off event deadline was inconsistently labeled `same_question_other_period`. Five pairs × three draws improved deadline 0/3→3/3 but worsened CPU same-period merging 2/3→1/3; further clarification did not improve it. No matching prompt was integrated; do not claim a reliable fix. [Task 1]
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '7/18|7 of 18|20/21|20 of 21|3/3|D201|generative|analysis call' docs/research/2026-10-27-stage34-gold docs/DECISIONS-log.md | head -100" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/DECISIONS-log.md:1683:- Model: gpt-6-luna stays: "那我觉得还是用 luna 吧，记录这个比较结果". The comparison with DeepSeek-V4.1-Flash-1017 (the `deepseek-flash` endpoint) is in `docs/poc/pipeline-plan.md`: the only way to get schema-valid JSON from it was a strict tool call with thinking off (3/3; json_object 2/3 and 1/3; thinking-mode forbids a forced tool_choice); about five times cheaper (≈$0.01 against ≈$0.05 per transcript), 18–22 s against 26–31 s, three times more evidence, the candidate set a little less stable; matching and re-judging were not tested on it.
+docs/DECISIONS-log.md:2102:- Result: all six streams completed; 36 requests, estimated $0.561000, no extra clustering calls. Fresh automatic shipment/deployment grouping succeeded in 1/3 new samples and 1/3 controls. New-arm risk evidence reached the original shipment thesis in 3/3 samples, but reached a shared group in only 1/3. Acceptance failed; no production adoption or further arm. Findings: `docs/research/2026-10-24-relation-handoff/findings.md`.
+docs/DECISIONS-log.md:2169:- Result: all six samples completed in 12 fresh requests, estimated $0.202629. Context samples preserved the OpenAI-to-Rubin link in 3/3, but one also placed the unrelated PC thesis in Rubin and another omitted delay evidence. Controls showed an omitted extraction, a rejected altered quote, and an OpenAI membership in the SK-specific group. Both controls that actually proposed OpenAI already referenced Rubin, so the original missed-membership mechanism is not proven repaired. The context variant is not adopted. All history/resend checks pass; the known semantic defects remain explicit. Findings and the proposed joint review with Claude's Idea work: `docs/research/2026-10-25-grouping-consistency/`.
+docs/DECISIONS-log.md:2292:- 实测失败：36 次调用、估算 $0.497585。新角色批评论据 3/3（对照 2/3），但首篇总成本只保留 1/3（对照 0/3），两臂各有一次把 Ohio 问题放进 Rubin 组。11 条成员及 66 次出处交接全部对应，说明错误已在原答，不是保存丢失。217 项测试通过。默认不变，抽取未封存；分两步读内容再建问题的建议尚未决定或实施。结果：`poc/reports/2026-10-25-extraction-evidence-01/results.md`。
+docs/DECISIONS-log.md:2349:- Decided: `poc-v23` (extraction v10, `matching.engine: "jev"`, model `jev-1.14.0`, with D168) is the default configuration of the replay (`scripts/replay.py`, which now also requires the ledger and archive it writes). The service's idea route keeps its adopted configuration `poc-v9` (D135/D145) on the sealed ledger and its search index; moving the service to the English library needs a new index and is a separate step. The generative matcher stays a configured alternative (`engine: "llm"`); old configurations and stored archives replay unchanged.
+docs/DECISIONS-log.md:2407:- Result: [six fresh samples](../poc/reports/2026-10-25-naver-admission/results.md) retained appropriate project coverage in 3/3 treatments versus 2/3 controls. The other control attached platform-use evidence to Rubin production instead; the two passing controls also proposed discarded annual-capacity questions. Treatment preserved plan attribution and the 200 MW / 2028 milestone without that extra question. Twelve physical requests used $0.009831 at Standard list prices and $0.031480 conservative accounting; all 124 protected databases were unchanged. This supports the candidate on this source only; the default remains v23, with no schema or horizon-policy change.
+docs/DECISIONS-log.md:2493:## D190 · 2026-10-26 · The collision judge: Jev for identity, the generative model for the analyst's question when a question may be held twice
+docs/DECISIONS-log.md:2497:- The generative model asked the same analyst question on the same 18 ([records](../poc/reports/2026-10-26-admission-v12/jev-relation-probe/llm-records.json), 3 samples each, $0.02): 11 of 18 right by majority, and 5 of the 6 aggregate duplicates merged; the misses are the debatable pairs (a reporting segment beside the business segment, the same deal under two names).
+docs/DECISIONS-log.md:2498:- Decided to build and run alone: `matching` keeps Jev; a configuration may add a `collision` setting (model, prompt `collision-v1`). When a candidate's list holds a thesis of its own object and measure, one generative call answers the analyst question for those theses and its verdict replaces Jev's on them (`jev_matching.collision_peers`, `ask_collision_judge`); every other relation stays Jev's. `poc-v26` = `poc-v25` plus the judge. Measured by one run over seed, week and August against the extraction gold and the census (ledger `english-v26-collision-r4-2026-10-26`); result appended here.
+docs/DECISIONS-log.md:2516:- Read: the tests moved two cases the right way (the Helios milestone 3/3 against 1/3; the Ohio guarantee 2/3 against 0/2) and others the wrong way (the press release and the proceeding); coverage did not rise. The consistent misses (a numeric China-revenue thesis 0/5, Microsoft's capex 1/5, AMD's data-center FY2026 line) are judgements the model makes the same way under both wordings, not a reading of a list. Not adopted; `poc-v27` stays a configuration.
+docs/DECISIONS-log.md:2585:## D201 · 2026-10-27 · Steps 3 and 4: Jev gives opinions only, the library keeps sources and research arguments, a new question needs an independent investment judgement; gold first, small scope, root cause before any change
+docs/DECISIONS-log.md:2592:- Measured ([results](research/2026-10-27-stage34-gold/results.md), 2026-10-27 23:05–23:30, $0.24): the 24-case gold was written, then re-read as a hedge-fund analyst's standard (eight rules in `gold.md`, Alex: "做一个 hedge fund analyst 的专业视角去看怎么做这一步的标准"). One send per case of the new path (step 2 reader → Jev opinions → one gpt-6-luna call with the complete context): step 4 places and merges right on 20 of 21 development and 3 of 3 held-out cases, never retires a different statement; two misses (G09 the denial not written into the argument, G11 a bank's echo taken as independent). Jev's piece opinions are right on 7 of 18; the product's replace class has its mechanism in the `supersedes` criterion ("an official confirms or denies that reported claim"): re-sending the 47 stored replacements, 16 do not reproduce and 7 flip to a `contradicts` class once the clause is split out. Two harness contradictions of the assistant's (a check refusing what the prompt asked; the record's own id) were fixed at $0, and nine gold rows were corrected from verified ledger ids (the gold had been written from a ranked excerpt, not the complete expansion). No production change yet: the writer still acts on Jev's label.
+docs/DECISIONS-log.md:2598:- The decision word stays `replace` in matching records, schemas and the generative matcher's prompt; its meaning in the writer is "revises". Renaming it across prompts, records and scripts is a separate wording slice (D36).
+docs/DECISIONS-log.md:2599:- Not decided here: the step 4 analysis call in production (D201's reader of both texts), which would decide `same_as` / `revises` / `opposes` itself; until it exists the matcher's label is recorded as an opinion and nothing is lost to it.
+docs/DECISIONS-log.md:2608:- D201 measured further ([results](research/2026-10-27-stage34-gold/results.md), 2026-10-28 00:00–01:20, $0.85): a fresh 16-case gold written from the complete expansions before any send (action 11/12 and 4/4 held out; nothing wrongly retired 16/16; same-claim 8/12 with one class: a second outlet's own reporting treated as independent, which the contract could not express); arm 2 split claim identity from source independence (the class is gone; two new judgement weaknesses appeared); three draws per disagreeing case under both prompts show the arm-to-arm differences are within one draw's noise, while in 144 draws no must-not-touch piece was ever marked same or revised. Decided: the contract keeps arm 2's split; prompt arms stop here; the variable fields are annotations under D202 and the next build is the argument record (steps 5 and 6), where a wrong relation in one draw is corrected by the next instead of being frozen into the ledger.
+docs/DECISIONS-log.md:2676:  whose text carries the obligation, control opened 0/18, the arm proposed 17/18 and the code kept 13/18 (two refused by the ladder-label
+docs/DECISIONS-log.md:2695:  over seven articles, at least one per draw (v21: one in ten, erased by the re-send); the ACP amount question 3/3; about 10 of 25
+docs/DECISIONS-log.md:2744:- The step numbers are those in the [steps 3–4 design](research/2026-10-27-stage34-gold/design.md): 1 read source into evidence and candidates; 2 read the historically correct question catalog and its full relevant evidence; 3 compare and record Jev's opinion; 4 decide where evidence belongs and how it changes the research argument. The current v38 pipeline has a distinct placement call and does not yet wire the D201 step-4 research-argument path; these are measured separately rather than counted as already built.
+docs/DECISIONS-log.md:2777:- Result: the restored-length comparison completed all 36 answers. Explicit existing NVIDIA credit-exposure assertions changed 3/3 to 0/3, but an unsupported table rejection and an exclusion of supplied Corning context appeared in one treatment answer each. The registered no-new-error criterion failed; retain the use-relative standard, do not adopt the prompt. Both arms preserved the five factual targets in 15/15 observations and respected the excluded case in 3/3. Proposed questions rose 3/18 to 8/18, not a quality gain. [Complete readings and limits](research/2026-10-29-evidence-use-6000/results.md).
+docs/DECISIONS-log.md:2781:Alex explicitly asked to deeply restructure the existing prompt after reading decisions, PRD and prior failures, then measure the effect. This authorizes a new isolated fourth-step prompt arm after D221 failed, not a production default, new storage layer, retrieval change, or full-pipeline run. The [registered design](research/2026-10-29-prompt-restructure/design.md) separates reading the whole current source, deciding the strength and limits of each claim, comparing history, and choosing a research action. D201's independent investment judgement remains the new-question threshold; D202–204's preservation and source-identity rules remain. D221's use-relative standard and D220's necessary-meaning standard are unchanged. Whole-prompt restructuring is one experimental configuration; sentence-level causal attribution is not claimed. Six known development sources plus two historical regression cases are sent three times per arm with the same schema constraints, payload, Haiku model and 6000-token ceiling; the treatment also orders evidence fields before action, within the existing $0.60 cap including two diagnostic continuations. All raw answers are read and recorded, including failures.
+docs/DECISIONS-log.md:2787:Alex explicitly rejected stopping at D222's failed result and asked to trace causes and improve. The [single-note experiment](research/2026-10-29-single-note/design.md) tests a bounded contract change in the fourth-step research harness: write the investment note once, separate unknowns by their actual role, and let routing reference it rather than regenerate it as independent judgement and action reason. Known empty history/catalog fields are omitted from generation and restored as empty lists; nonempty references use the actual ID domain. Original-source relation can explicitly be unknown per historical comparison. Existing-question arguments and D201/D184/D185/D210 admission requirements remain. This changes an experimental output shape, not product storage, production prompts, gold or deployment. Frozen D220/D221 semantics judge all output fields. Start with the two decisive sources, three fresh samples per arm, and expand to the fixed eight regressions only if that proof improves without a new definite error; the old failed data remain. No full-pipeline run is authorized or implied.
+docs/DECISIONS-log.md:2798:Alex clarifies that the primary task is Haiku versus Luna and their response to prompt changes, and challenges the scoring. Stop redesigning prompts. Independent reading of all57 D224 returns confirms that its pilot improperly labelled two conditional Haiku analyses as definite source-fact errors; retain the original reading and supersede that claim with uncertain inference boundary, per unchanged D218. The signed-positive must-open expectation is stronger than the complete D201/D210 rule and must not be scored as factual comprehension. D224 still has a clear Cloud completeness difference (Haiku3/3, Luna1/3), one Luna period error, relation errors in both models, and one Haiku truncation; no overall winner or adoption is established.
+docs/DECISIONS-log.md:2818:D227 completion and user clarification: The24 calls finished; [source readings](research/2026-10-29-claim-use/scope-repair/source-readings.json) preserve all answers. Customer-demand use on Cloud is0/3 fresh controls versus3/3 revised purposes, supporting the narrow scope diagnosis. This does not establish overall analyst ability or justify adoption. Two valuation answers marked reject still explicitly permit illustrative scenario use; labels alone do not establish loss. The root records remaining meaning defects separately. No further paid calls follow.
+docs/DECISIONS-log.md:2832:- Measured 2026-10-29 ([results](research/2026-10-29-analyst-standard/results.md)): neither model meets every §11 pass line. Week / holdout: core every draw correct gpt-6-luna 41/45, Haiku 43/45 / both 3/3; supporting two of three 66/69 and 65/69 / both 15/16; the excluded Singapore case kept in every draw by both (7 items); must-propose raised every draw 6/23 and 7/23; ruled-out questions 15 and 30; unrelated statements (per-article medians summed) 464 and 286. Cost for 354 answers each: $0.457 and $0.886. The reference and labels are one reader's (Claude) and count as model-authored gold. No model or prompt change follows from the measurement by itself.
+docs/DECISIONS-log.md:2849:- Five one-sentence arms of role-v22 on Haiku 5.5, each on the week pages that showed its failure beside a fresh control, three draws ($0.80): removing "valuation arithmetic" from the reject list keeps the conditional valuation (108: 0/3 to 3/3; 209: 2/3 to 3/3); an event's due date tied to the timing the item states cuts too-early Kyber due dates (8 to 2; discriminating questions 18/27 to 22/27); naming the measure from a neighbouring sentence keeps "revenue" at 209 (0/3 to 2/3); stating that every ticker-object ladder, an obligation amount included, uses the asset labels ends the sift's refusals of obligation questions (4 to 0; raised and kept 20/27 to 24/27). Requiring that a question's answer change a view of a listed subject did not reduce ruled-out questions (18 to 17). No prompt is adopted: the four working changes have not been measured together, on the whole week or on the holdout.
+docs/DECISIONS-log.md:2865:- Working on their pages: the conditional valuation once the reject list no longer names valuation arithmetic (108: 1/3 to 3/3; 209: 2/3 to 3/3); product and benchmark details rejected with or without a figure (records on the product-blog pages 195 to 111, reference cells kept 79/84 in both); main_driver naming the launch or ship date of the product generation that carries the value (Kyber question 10/27 to 20/27, every draw 1 to 5 of 9 pages; ruled-out launch questions 3 to 0). Small: naming the measure from a neighbouring sentence (209: one correct, one partial, one wrong); subject-tied kinds (2), (3), (4) cut partner-page records by 8–9%.
+docs/DECISIONS-log.md:3008:- The mechanism (`research/2026-11-01-e2e-loop/plan.md` §3.2′): one placement request, read as the model reads it, held two rulebooks. The system prompt (`placement-narrow-v2`, D207's wording) said a company-wide figure question "takes only the company's own reported figures, guidance, estimates of that figure and management's statements about it"; the code-written takes line of the same question said "figures, guidance, estimates and revisions for <scope> over <period>, and the direct drivers of that figure stated with a size". The model followed the system prompt: SemiAnalysis's estimate of data-center revenue 3/3 filed under none with the data-center question open, Morgan Stanley's rack price the same, a hyperscaler's own capex guidance 3/3 under none against the hyperscaler-capex question. The system prompt also called filing under none "a valid answer, not a failure", and the placer filed 74% of extracted statements nowhere, two fifths of them gold-kept.
+docs/DECISIONS-log.md:3046:- Proof (`proof-takes-wide.txt`; `harness/resend_takes_wide.py`: every stored placement request of arm 4 draw 1, 212 requests, re-sent once with the four clauses edited in the stored text, the edit checked byte for byte against the code on the run's 46 questions; one draw, one send, $0.18 at list price): gold supporting matters with a filed statement 40 → 98 of the extracted ones, core 69 → 75; statements filed 358 → 690 and links 390 → 717 over the draw; links on the total and Data Center revenue questions 22% → 32% of all links (Data Center 48 → 152, total revenue 39 → 79, the accelerator-share question 8 → 78, China share 17 → 38). By gold class over the 104 gold-article requests: supporting statements gaining a home 62, losing 0; core 11 and 2; gold not-kept 41 and 1; unlisted 23 and 1; optional 12 and 0. The two core losses were sampler noise: sent three times as stored and three times changed, the company's "nearly $20 billion in CPU sales" statement is filed 1/3 → 3/3 under the Vera CPU question and the "80% of core technologies domestic" statement 2/3 → 3/3 under the China share question (`proof-takes-wide-lost-core.txt`). The first wording also named "decisions behind it", a word D250 does not have: it filed hires, an R&D centre, game launches and an executive's pay under revenue and margin questions (`proof-takes-wide-a-with-decisions.txt`: not-kept gains 53, unlisted 35, total revenue 39 → 115, sink share 36%); the word was removed and the proof re-run (the numbers above), the supporting class unchanged (97 → 98).
+docs/DECISIONS-log.md:3080:- Proof before the run (cents; `harness/resend_extract_v72.py`, `proof-v72-links.txt`: the four rack-delay articles of 2026-07-05/06 rebuilt under v72 from arm 4 draw 1's day-start snapshots, three sends each; the stored outcome of the same run as the control). The statements that name nothing ("Our roadmap is intact", the scrapped backup plan, NVL72x2 back-to-back racks), which the placer dropped or filed under same-day duplicate questions in every arm since 10-31, are filed under the seed question v18 (Rubin Ultra / Kyber NVL144 shipping) in 3/3 sends of the SemiAnalysis article (both statements), 3/3 of the Tom's Hardware article (NVL72x2; the denial 2/3 with one send's quote refused), 3/3 of the Cramer article (to v18, v2 or v31 by send), while in the Asian-suppliers article the NVL72x2 statement went once to no home and twice to the revenue questions (v1/v2, v2/v20: a sink link; the Kyber question v33 the control's placer used was opened that same day and is outside the snapshot). Zero candidates in 27 sends over nine matched articles against the control's four, all four Kyber duplicates of v18 (the list shown does the deduplication the matching step did after the fact). Request size 22–38K characters (27–44 open questions) against the control's mean 19.8K.
+docs/DECISIONS-log.md:3082:- Measured (six draws finished 19:40; `e2e-funnel-r6-v72.txt`, `judgement-gold/score-r6-*`, `matter-states-r6-v72.txt`, `probe-v72-sink.txt`; three-draw means, v91 → v92). Regressions first: core matters reaching judgement 76.3 → 73.7 of 86 (predicted ≥ +2, the null is ±2), core dropped for no home 4.0 → 5.7, article-opened questions 11.7 → 3.0 (candidates 65 → 6.7: the list shown suppresses proposals even with the candidate rule unchanged; must_open 28/28 and may_open 40/42 in both arms because the seeds cover them, the Ohio guarantee being the one visible loss), supporting not extracted 25.3 → 46.0. Held: supporting reaching 94.0 → 90.0 (at the −4 line), noise reaching 89.2 → 56.9 (−36%), judgement agreement 17/19, 17/18, 17/19 → 15/18, 16/17, 17/18 against lookup 8–9/14–15, cost $1.15 → $0.88 a draw with model time −36% and wall clock 95 → 46 minutes for three draws, zero re-sent requests. Two mechanisms, both in sentences and neither in the architecture: (1) the sink is back: 60–62% of links on the three company-wide revenue questions against v91's 34–40%, 190–208 statements a draw under both total and Data Center revenue against 5–6; the model's own account in three of three cases cites the figure-line takes clause D259 added ("what makes that figure more or less likely: the demand, supply, competition and pricing behind it") and concedes the links field's "narrowest only" should have excluded the broader question or the link altogether; (2) role-v66's end-of-request check removes 21 supporting matters a draw that v53 keeps (20 matters extracted in v91 in at least two draws and in v92 in at most one: third parties' actions and views, named hires and partners, product milestones, standard §5.1 kinds 2–3), a loss the extraction bench's "supporting in at least two draws" count had hidden. Verdict: as built, v72 is neither better nor worse than v91 on the desk's counts and is cleaner, cheaper and faster; it does not become the default and no further arm is sent before the two mechanisms are fixed at their owners with $0 proofs: the root/driver pair collapsed to the narrower question by code (identity, D207's rule), the figure-line clause reworded and proved on re-sent stored v92 requests, and the base text (v53 against v66 under the architecture) put to Alex.
+docs/DECISIONS-log.md:3090:- The second fix, text, proved for cents (D264's second mechanism, the supporting matters v66's check removes): the model's own account on six of the twenty lost matters (`probe-v72-missing-supporting.txt`) cited in three cases a check row whose own boundary should have sent the statement back (an arrangement in place against a new step; common knowledge without a figure against a competitor's share with a figure; a product detail against a delay of the product that carries the value), and those three boundaries were the ones written without an example. `review-v73.txt` (role and categories identical to v72's; `poc/config/poc-v93.json`) gives each its kept-side example in another domain and drops the row-1 clause the header already states: 3,548 → 3,822 characters, the reason being AGENTS §6's rule that a classification is a closed set with examples. Proof (`harness/resend_review_v73.py`, `proof-review-v73.txt`: the 17 articles of the 20 matters, three sends each under poc-v93 from v92 draw 1's snapshots, against the three stored v92 draws): the 20 matters appear 10 → 28 times of 60, present in at least two sends 0 → 11, the three probed cases 0/3, 1/3, 0/3 → 2/3, 3/3, 3/3; the guard, gold not-kept statements written on the same 17 articles, 0.47 → 0.61 per article per send (about 2.4 more per 17 articles against 6 more supporting matters per send). Not a patch by that ratio, but under v72 what the extraction writes reaches the judge, so the whole bench decides: three draws of poc-v93 with the narrowest rule against the v92 baseline (about $2.7) at his word. Not decided: whether poc-v93 replaces poc-v92 as the default.
+docs/DECISIONS-log.md:3099:- Measured (three draws, finished 21:27; `e2e-funnel-r7-v94.txt`; draw 3 stopped once on 07-05 when the judge named the H200 theme as a dependency of the China-share question twice and the check refused it, a judge-and-check mismatch not seen in the nine earlier draws, resumed from 07-04). Regressions first, v92 → v94: core not extracted 6.7 → 8.0, supporting dropped for no home 12.0 → 14.3, both inside the draw noise; core reaching 73.7 → 74.3 and supporting reaching 90.0 → 89.7, flat against predictions of +2 and +10 (the v73 boundary examples recover about two supporting matters a draw on the whole bench, against six a send on the 17 proof articles). Held: noise reaching 56.9 → 45.0 (−21%), the three revenue questions' share of links 61% → 45% with no statement under both total and Data Center revenue, quote refusals 16/11/14 → 6/10/8, judgement agreement 15/18, 16/17, 17/18 → 16/18, 16/19, 16/18, judge requests 5.1K → 4.2K tokens on average, cost $0.88 → $0.80 a draw, must_open 28/28 and may_open 40/42 unchanged, zero re-sent requests. Verdict: cleaner and cheaper, not worse on the desk's counts; whether poc-v94 becomes the default is Alex's call. Open defect recorded: the judge may name a shown theme as a dependency of an asset question (D263's consistency clause) and the check refuses it; twice in one round fails the day (resumable).
+docs/DECISIONS-log.md:3110:- Proofs (cents; the articles' requests rebuilt under poc-v95 from the v94 draw-1 snapshots, three sends each, against the three stored v94 draws; `proof-v75-classes-1-2.txt`, `proof-v75-classes-3-5-6.txt`, `proof-v75-classes-1-2-4.txt`): classes 1+2, the 41 supporting matters v94 wrote in at most one draw, 29 articles: presences 12 → 31 of 123 (11 matters recover: 6 from 0/3 to 2/3, 4 from 1/3 to 3/3; 23 stay at 0/3, among them a memory maker's quarterly revenue, a customer's price rises, two memory suppliers' expansions, the company's own reported debt raise, a rack supplier's chairman, two partner integrations), the noise guard over the same articles 27 → 35 written statements over 87 sends. Class 3: the analyst's "market estimates materially lower" and the capex forecast 0/3 → 2/3 each, "Beijing refused" 0/3 → 2/3, the four-die design change 0/3 → 1/3. Class 4: five company-blog articles, noise written 33 → 12 over three sends, their supporting matters' presences 8 → 5 (the LangChain integration 3/3 → 1/3: the T6 wording cuts a named adoption whose size the model does not see). Class 5: "82% this year, 41% next" filed under FY2027 and FY2028 revenue in 6 of 6 sends over two articles (stored: dropped in 5 of 6 draw-articles), the $20 billion CPU target under the Vera CPU or total revenue question in 4 of 6 sends (stored 2 of 6), the $1 trillion Blackwell-and-Rubin figure under its question in 5 of 6; the memory-share estimate under the DRAM question 2 of 3. Class 6: the comparison sentence copied whole in 1 of 3 sends (stored 1 of 3): not moved.
+docs/DECISIONS-log.md:3172:`main` and `fix/extraction-quality-2026-10-28` both numbered from D181 after D170. At the merge the branch kept its numbers (D171–D274) and the 62 decisions `main` recorded were renumbered in order: D181→D275, D182→D276, D183→D277, D184→D278, D185→D279, D186→D280, D187→D281, D188→D282, D189→D283, D190→D284, D191→D285, D192→D286, D193→D287, D194→D288, D195→D289, D196→D290, D197→D291, D198→D292, D199→D293, D200→D294, D201→D295, D202→D296, D203→D297, D204→D298, D205→D299, D206→D300, D207→D301, D208→D302, D209→D303, D210→D304, D211→D305, D212→D306, D213→D307, D214→D308, D215→D309, D216→D310, D217→D311, D218→D312, D219→D313, D220→D314, D221→D315, D222→D316, D223→D317, D225→D318, D226→D319, D227→D320, D228→D321, D229→D322, D230→D323, D231→D324, D232→D325, D233→D326, D234→D327, D235→D328, D236→D329, D237→D330, D238→D331, D239→D332, D240→D333, D241→D334, D258→D335, D259→D336. References in `main`'s files were renumbered with them; commit messages keep the old numbers.
+docs/research/2026-10-27-stage34-gold/design.md:1:# Steps 3 and 4: compare, then place and merge (design before code, D201)
+docs/research/2026-10-27-stage34-gold/design.md:3:Alex's three answers (D201): Jev gives an opinion only; the library keeps the source records and, per question, a
+docs/research/2026-10-27-stage34-gold/design.md:107:data layer": superseded by D201's second answer for the argument record, recorded there), D167/D168 (the writer owns
+docs/research/2026-10-27-stage34-gold/results.md:3:The analysis call (step 4) places and merges correctly on 20 of 21 development cases and 3 of 3 held-out cases; the three
+docs/research/2026-10-27-stage34-gold/results.md:4:replacement errors of the product never happen. Jev's piece opinions (step 3) are right on 7 of 18 cases, and the reason the
+docs/research/2026-10-27-stage34-gold/results.md:6:reported claim". The analysis call ignores that hint and keeps both sides; the product's writer acts on it.
+docs/research/2026-10-27-stage34-gold/results.md:9:0.78 (the product replaced e53 with the denial). The analysis call: opposes e49, e51, e53, independent true, nothing replaced.
+docs/research/2026-10-27-stage34-gold/results.md:52:| step 3 Jev piece relation | 7 of 18 | 1 |
+docs/research/2026-10-27-stage34-gold/results.md:76:The analysis call read the texts and got these right in all but G11, with Jev's opinions in its payload as hints. Under D201 Jev's
+docs/research/2026-10-27-stage34-gold/results.md:98:the analysis call left all three untouched.
+docs/research/2026-10-27-stage34-gold/results.md:143:points from ids verified in the ledger after the model named them. Both were made with the answers in view, so the 20/21 is not a
+docs/research/2026-10-27-stage34-gold/results.md:144:measurement. What stands under either gold: nothing wrongly retired 21/21, revises 20/21, opposes 20/21, question ids 21/21.
+docs/research/2026-10-27-stage34-gold/results.md:224:stays unreliable on fresh cases (6/12, 0/2); the system result is the analysis call's, with Jev as a hint.
+docs/research/2026-10-27-stage34-gold/results.md:267:| action agrees 3/3 | 4 | 3 | 6 | 5 |
+docs/research/2026-10-27-stage34-gold/results.md:282:to list). Under D201/D202 none of them deletes or merges anything, so their cost is an annotation, not a loss; but they cannot be
+docs/research/2026-10-27-stage34-gold/run.py:1:"""Steps 3 and 4 on the 24 gold cases (D201): build every request from stored data ($0), send once per case under a cap, score
+docs/research/2026-10-27-stage34-gold/gold.md:1:# Steps 3 and 4: the gold, written before any send (D201)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files /Users/lchingen/hivemind /Users/lchingen/hivemind-step2-identity-2026-11-09 | rg 'codex-reflection\\.md"'$|2026-10-27-stage34-gold/results'"\\.md"'$'"'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+/Users/lchingen/hivemind/reports/step2-jev-decision-council-2026-11-09/codex-reflection.md
+/Users/lchingen/hivemind/docs/research/2026-10-27-stage34-gold/results.md
+/Users/lchingen/hivemind-step2-identity-2026-11-09/docs/research/2026-10-27-stage34-gold/results.md
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat reports/step2-jev-decision-council-2026-11-09/*handoff* 2>/dev/null | head -160' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat reports/step2-jev-decision-council-2026-11-09/codex-reflection.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,165p;180,240p' docs/research/2026-10-27-stage34-gold/results.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+Independent cold read-only council investigation for Alex: is continuing with Jev currently the best-supported way to perform clean Step 2, and how confident should we be? You must investigate rather than merely follow a preferred conclusion. Scope: clean Step 2 retrieval/candidate comparison/grouping/revision as it affects stored and read evidence, plus direct downstream representation. Exclude unrelated steps, changing product behavior, model API requests, and live databases. Read AGENTS §§1,2,7.1,7.2,7.3, current docs/CURRENT_STATE.md and decisions D168/D202/D204/D381, clean-arch/PRD.md §§5–6, clean-arch/step2/compare.py and step3/library.py; historic step2-validation log §§9–13 and previous reports step2-score, step2-wrong-merge, step2-merge-fix. Most recent experiment lives in /Users/lchingen/hivemind-step2-identity-2026-11-09/clean-arch/step2-identity-2026-11-09/ including RESULTS-DRAFT.md, COUNCIL-LOOP.md, raw completed probe events and bodies, blind source packets and reader judgments, results-codex.md, results-claude.md. Verify exact runs/three draws, not only summaries; read complete original articles and question text for H01 acquisition, B05 70% versus customer potential, B10 deliveries, R05 discontinued concern, P01 denial and its second edge; preserve disputes. Compare Jev full (actual product form), Jev single, DeepSeek pair and any no-change/prior alternative including score/floor/materiality tests. Quantify only valid denominators; distinguish search, misses, wrong merges, revision links, storage vs usable product semantics; assess confidence vs randomness, candidate/format confounds, how repeated calls and scores relate to D381's ranking, validity of Jev as a replacement decision. What is evidence for keeping it, what would falsify, what is unresolved, and what single next no-cost research test should Alex do? Cite original evidence and exact files; do not elevate AI readers to frozen gold. No edits, no API sends, no paid experiments.
+
+ succeeded in 0ms:
+# Independent position before council
+
+Objective: decide whether Jev remains the sensible working approach for clean Step 2 given its product contract, historical evidence and the new six-pair test, not whether it is perfect or should be replaced as a general truth.
+
+Provisional position: continue Jev as the current comparison baseline, without presenting it as validated or fixed. The comparator experiment is deliberately selected and reveals one clear B05 regression versus fresh Jev single and one clear H01 improvement; neither model nor an ensemble is proven overall better. Provider, format and candidate batch differ, and pair labels do not select a group. R05 is contested. A three-draw single 6-case comparison cannot establish overall precision/recall. Jev remains a three-way judge over search results; retrieval recall, the validity of revisions, single-to-batch sensitivity, false group splits and correct persistence all matter. Actual Jev output `supersedes` does not itself make text disappear; source records remain stored, though relationships could mislead downstream readers. Baseline numerical lines: D381 fresh search 141/145 full-system available reference pairs, 1 clear wrong merge /57 plus 2 overlaps, detail retention 22=22; one draw, narrow reference, clustered 55 pairs and almost no revisions. None is overall precision or recall.
+
+Challenge needed: whether the 56 supersedes conditional population is sufficiently source-verified to warrant a decision; whether a high score threshold or recheck layer could rescue Jev without false splits; whether missing fields or batching explain errors; whether implementing any fix is justified yet; and whether Jev-only is an endorsed production-ready architecture or simply the best available frozen reference. Compare against prior experiments and exact decisions, show false benefits and limits. No new paid run, production changes or reference revisions.
+
+ succeeded in 0ms:
+# Steps 3 and 4 on the 24 gold cases: one send each (arm1, 2026-10-27 23:05, $0.2368)
+
+The analysis call (step 4) places and merges correctly on 20 of 21 development cases and 3 of 3 held-out cases; the three
+replacement errors of the product never happen. Jev's piece opinions (step 3) are right on 7 of 18 cases, and the reason the
+product retires contrary reports is now named: the `supersedes` criterion it is given says "an official confirms or denies that
+reported claim". The analysis call ignores that hint and keeps both sides; the product's writer acts on it.
+
+Example: G09, NVIDIA's "our roadmap is intact" against SemiAnalysis's Kyber delay report. Jev: e49 supersedes 0.76, e53 supersedes
+0.78 (the product replaced e53 with the denial). The analysis call: opposes e49, e51, e53, independent true, nothing replaced.
+
+## What was sent
+
+24 cases, each: the step 2 reader's catalog and the complete evidence of the linked questions at the case's historical sequence
+(1 to 757 pieces; 193 Jev requests of up to 40 questions; one gpt-6-luna call with every piece in the payload, 2,944 to 160,609
+input tokens). 217 calls, $0.2368, 3.66M input / 0.36M output tokens, none failed, no retry, no vote. Requests, answers and
+measurements: `poc/reports/2026-10-27-stage34-gold/arm1/`.
+
+## First pass: 18 of 24 answers refused by my own checks, for two reasons of mine
+
+1. The prompt (rule F of the standard) says a pickup is `background_only`; the code check forbade `background_only` with `same_as`.
+   Eleven answers followed the prompt and were refused. The contract is the standard's: `same_as` / `revises` / `opposes` attach the
+   source; `action` says whether the argument changes. The check is corrected; the gold rows for pickups accept both actions.
+2. The model cited the incoming record by its own id (`e1`, `e6`…); the check allowed only `incoming`. Seven answers refused. The
+   check now accepts the record's own id.
+
+Both are AGENTS §6 violations on my side (a request never asks for what a check refuses). Fixed at $0; no answer was re-sent.
+
+## Gold corrections, each verified in the ledger before being allowed (`gold.json` `_corrections_after_arm1`)
+
+Reading the answers beside the gold found ids the gold had not listed, because the gold was written from the twelve closest
+pieces by word overlap, not the complete expansion. G10 is the clearest: the NY Post's "$105bn financing" is a pickup of NVIDIA's
+same-day filing (e1206, the $105bn cap; e1205, the executed guaranties), which the model found and the gold had not seen; the gold
+now says same_as e1206 and revises e1165/e690/e712/e750/e815 (the announcement supersedes "talks ongoing, could collapse"), as rule
+E states. Others: e282/e415 (NVIDIA's China exclusion, G03), e1194 (the same 08-17 release, G12), e175 (the Kyber delay report Huang's
+statement opposes, G13), e1356 (the same Bloomberg price report, G15), e1322 (the Poolside investor letter, G19), e22 (named in
+gold.md, missing from gold.json, G08); G18 (Rasgon is his own source, not a pickup); G21 (rule B: a different population is
+background with the mismatch named); candidate relations use Jev's candidate vocabulary. G09 and G11 were not changed: the model's
+answers there are misses. Lesson for the next gold: write it from the complete expansion, never from a ranked excerpt.
+
+## Score after the fixes (exact fields; text fields read, not matched)
+
+| field | development (21) | held out (3) |
+|---|---|---|
+| step 4 action | 20 | 3 |
+| step 4 question ids | 21 | 3 |
+| step 4 same_as | 20 | 3 |
+| step 4 revises | 21 | 3 |
+| step 4 opposes | 21 | 3 |
+| step 4 nothing wrongly retired (G07, G08, G09) | 21 | 3 |
+| step 4 independent (where scorable) | 11 of 13 | 1 of 1 |
+| step 3 Jev question relation | 12 of 20 | 2 |
+| step 3 Jev piece relation | 7 of 18 | 1 |
+
+Control (the product's stored decisions, gold.md): 14 right, 7 wrong, 3 half on the same 24.
+
+Step 4 misses, read:
+- G09: action `background_only` with opposes e49/e51/e53. The model kept both sides and marked the conflict, but did not write the
+  Data Center argument as contested ("the source gives no revenue figure"). Rule D says a contested roadmap is a risk the argument
+  carries. One case; the next arm's prompt names the conflict case in the action rule and is tested on G09 plus G13 (the same
+  shape, which the model did write as opposes e175).
+- G11: JPMorgan's "SpaceX will absorb a very significant percentage" treated as a distinct analyst expectation, independent of
+  Musk's remark (e956). The prompt's own example ("a bank's note repeating the customer's remark") did not hold. One case.
+
+Step 4 text, read on every case: the arguments carry the period caveats (Q1 is not FY2027, G02), the source-quality labels, the
+limitations and "what would change it"; G10's argument reads the filing as primary and the NY Post as its relay; G21 names the
+population mismatch. G20 rejects the yes/no form of the xAI candidate for the reason the standard gives.
+
+## Step 3: what Jev gets wrong, by mechanism
+
+| class | cases | mechanism |
+|---|---|---|
+| a denial or confirmation read as `supersedes` | G09 (e49 .76, e51 .59, e53 .78), G08 (e505 .68, e549 .48), G07 (e336 .52) | the criterion given to Jev defines supersedes as "…an official confirms or denies that reported claim…" (`jev_matching.PIECES`, from 06-views' evidence table). The product's writer retires the target on this label. This is the root cause of the control's three wrong replacements. |
+| a cross-outlet restatement read as `different` | G02 e28 (.59), G03 e200/e37, G05 e719 (.50), G15 e1369 (.71), H03 e401 (.78), H02 e606 | the same figure or claim in other words from another outlet or claimant; the criterion's "a retelling… in another document" does not carry it at the 0.5 threshold |
+| the five-class question relation | 8 misses, 6 of them at 0.39–0.55 | a new question set (direct/lead/background/unrelated/uncertain) without examples; Jev is unsure exactly where the gold is subtle (guidance vs background, a risk vs unrelated) |
+
+The analysis call read the texts and got these right in all but G11, with Jev's opinions in its payload as hints. Under D201 Jev's
+label is an opinion, so the system result is step 4's; the product today acts on Jev's label alone, which is why its control is 7
+wrong. The costliest class has one sentence as its mechanism.
+
+## The mechanism on the product's own data: the 47 replacements re-sent (`jev_contradicts.py`, 94 Jev calls, $0.0029)
+
+For each of the run's 47 `replace` decisions, the stored Jev question (the incoming piece against the piece it retired) was sent
+twice: as stored (a fresh control) and with `supersedes` stripped of "confirms or denies" plus a `contradicts` class.
+
+| | supersedes | different | same_statement | contradicts |
+|---|---|---|---|---|
+| stored decision | 47 | | | |
+| fresh control, same criteria | 31 | 13 | 3 | |
+| split criteria | 27 | 11 | 2 | 7 |
+
+Two findings. First, 16 of the 47 replacements do not reproduce on a fresh send of the same question with the same criteria
+(the stored label came from a batched request; e.g. seq 77, the G09 denial against e53: stored replace, fresh send `different` 1.00).
+The product retires a piece on one sample at a 0.5 threshold. Second, the denial class is real and the criterion is its cause:
+seven re-sends flip to `contradicts` (seq 178, NVIDIA's second Kyber denial: supersedes 0.98 → contradicts 0.99; seq 191, 522, 535 ×2,
+924, 938). G07 (e336, 0.55 → 0.50) and G08 (e505, 0.72 → 0.89) stay `supersedes`: Jev reads "a later statement on the same topic"
+as a revision despite the criterion's last clause; G10 (e1165, 0.91 → 0.90) is a true revision and stays. So the split removes the
+denial class (7 of 47 here, the costliest) and leaves the topic-revision class, which only a reader of both texts resolves: in arm1
+the analysis call left all three untouched.
+
+## D202: the writer retires nothing on a matching label (2026-10-27 23:10–23:20)
+
+Census before the change: all 47 retirements of the run read pair by pair (`replacements-47-labels.json`): 22 right (the owner's
+later value or status of the same claim), 20 wrong (10 a contradiction or qualification retired, 10 a different matter), 5
+restatements mislabelled. Crossed with Jev: 17 of the 22 right and 12 of the 20 wrong carry `supersedes`; the split criterion moves
+4 wrong to `contradicts` and 3 right with them. No label the matcher gives separates right from wrong well enough to delete on.
+
+Change (`store`, `writing`, `judging`): a `replace` decision stores the piece, links it where the target is linked, and records the
+pair in `revisions`; both stay in force; `replacement_refused` is `revision_refused` with the same conditions, deciding only whether
+the relation is recorded; `replacements` is history (read as before, never written); `evidence_in_force` carries `revises`; the
+judge's request prints "It revises eX (both in force)". Old ledgers without the table read as before (guarded).
+
+Tests: `test_replacement_rule.py` rewritten to the D202 spec after the decision was recorded (9 → 11 tests), including the G09 shape
+with its real texts: the denial arrives with a `replace` decision, both pieces stay in force, the judge sees both and the revision
+note. Mutant: a scratch copy that calls `store.replace` again fails both decisive tests (`is_replaced('e1')` is True); the unmutated
+code passes. Suite 208 pass; preflight exit 0 (B judged 4,035, C judged 618). Week regression replay through the whole path (`english-v34b-nvda-week-2026-10-27`, 2026-07-01..07, 98 items, 342 calls, none failed,
+$0.23): `replacements` 0 rows; evidence 129 / theses 12 / judgements 23 against the v18 week's 176 / 9 / 24. The count difference is
+extraction sampling (fresh model answers; the first divergent answer changes every later request), so the replay proves that the path
+runs with the new writer and retires nothing, not a row-level equality. The v18 week's four retirements, read: three right (NVIDIA's
+announcement over The Information's rumour ×2, the Palantir fact over its rumour) and one wrong (NVIDIA's "roadmap intact" retired
+SemiAnalysis's Kyber setbacks, the G09 class again). The regression week's single `replace` decision exposed a second silent loss in
+the same path: the incoming SemiAnalysis NVL576 delay note carried `original_day` "2026-07-05 to 2026-07-06", which the writer read as
+older than the 07-06 denial, logged in `late_statements` and linked nowhere. Census: one such drop per run (the three-month run lost
+the SharonAI $4.88bn backstop figure; the v18 week lost the Kyber delay report). Fixed in the slice: an older statement is stored and
+linked as one more piece with no revision; the log row stays. 34 of the run's 1,530 pieces carry a non-ISO `original_day`: an
+extraction-contract item, noted for the next pass, not changed here.
+
+## Rigour re-check (Alex, 2026-10-27 late: "你看下你的 learning 是不是又犯了一样的错误"), quantified at $0
+
+**1. The stick moved after the send; the score splits in two.** `gold-v1.json` is the gold as frozen before the send
+(reconstructed by reverting the post-send corrections); the same stored answers, the same harness fixes, scored under both:
+
+| field (development 21) | gold v1, pre-send | gold v2, corrected after reading the answers |
+|---|---|---|
+| action | 10 | 20 |
+| same_as | 13 | 20 |
+| revises | 20 | 21 |
+| opposes | 20 | 21 |
+| nothing wrongly retired | 21 | 21 |
+| question ids | 21 | 21 |
+| held-out action | 2 of 3 | 3 of 3 |
+
+Ten of the twenty `action` points come from one post-send contract change (a pickup may be `background_only`); seven `same_as`
+points from ids verified in the ledger after the model named them. Both were made with the answers in view, so the 20/21 is not a
+measurement. What stands under either gold: nothing wrongly retired 21/21, revises 20/21, opposes 20/21, question ids 21/21.
+The only clean number for the action field is a fresh case set, drawn the same way, written from the complete expansion, sent once
+and scored once.
+
+**2. The harness contradiction was avoidable before the send.** A synthetic answer written to the prompt's own rule (a pickup →
+`background_only` with `same_as`) fails the original `code_checks`; running that check before the send costs nothing and would have
+removed 11 of the 18 refusals. The other 7 (the record's own id) likewise.
+
+**3. The regression replay was the wrong instrument; the right one ran afterwards at $0.** `d202-writer-replay-47.json`: all 47
+stored `replace` decisions of the three-month run written through the new writer on fresh ledgers with the real pieces: 47 of 47
+keep both pieces in force, 0 rows in `replacements`. The relation recorded: 37 `revisions` rows (18 right, 4 restatements, 15 wrong
+by the pair reading), 9 refused by the D167 conditions (4 right ones refused, 4 wrong ones caught, 1 restatement), 1 older
+statement stored as new. So the judge's "It revises eX" note is wrong in 19 of 37 cases: it inherits the matcher's label noise.
+Nothing is lost any more, but the annotation is an opinion and must be labelled as one (or dropped) until step 4 decides it.
+
+**4. The reader side of D202, quantified, not judged.** Of the 52 retired (piece × question) rows, 30 were in the judge's basis
+when retired (cited in one of the ten previous judgements): 15 right revisions (under D202 the stale value stays visible for a
+while), 11 wrong retirements (the judge lost a piece it had been citing), 4 restatements. Median 13 judgements followed each
+retirement. Whether a visible stale value with a dated "revises" note moves a judgement is not measured; it needs the stored
+judging requests re-sent with and without the old piece (about 30 calls), not done.
+
+**5. Variance: one sample per case, none.** The design said three sends on disagreements; not run. Every per-case result above is a
+16 new cases (`cases-fresh.json`, seed 20261028; one redraw after an incoming record turned out to be shared with the used set),
+reference answers written from the complete expansion of every linked question before any send (`gold-fresh.json`, frozen), the
+harness checked with three prompt-conformant synthetic answers (a pickup, an unrelated record, a new question) through every code
+check, then the arm1 prompt sent once per case: 16 of 16 accepted, 89 calls, 1.34M input tokens. No gold row was edited after the
+send; the one encoding mistake found is reported, not fixed in the score.
+
+| field | development (12) | held out (4) |
+|---|---|---|
+| action | 11 | 4 |
+| question ids | 11 | 2 (one of the two is a gold-encoding error, K04: an empty list was meant to be allowed) |
+| same_as | 8 | 4 |
+| revises | 11 | 3 |
+| opposes | 12 | 4 |
+| nothing wrongly retired | 12 | 4 |
+| independent (where scorable) | 6 of 6 | 1 of 1 |
+| Jev question relation | 11 | 3 |
+| Jev piece relation | 6 | 0 of 2 |
+
+Every miss read against its answer:
+- **F02, F10 (same_as): a second newspaper's own reporting of the same talks is treated as a distinct, independent claim.** The
+  gold says same claim (one rumour of one deal); the model says "distinct original outlet, independent corroboration". Together
+  with G11 in arm1 (a bank note repeating a customer's remark) this is one class, and its root is in my contract, not only in the
+  model: `same_as` means "same claim from the same original source" and `independent` is defined against the `same_as` pieces, so
+  "the same claim, independently sourced" cannot be expressed at all. The analyst's standard needs both: claim identity (what the
+  argument counts once) and source independence (what raises confidence). Arm 2 splits them.
+- **F09 (action, questions):** NVIDIA's six-bank $500bn financing platforms, at a sequence where no financing question exists yet,
+  judged `background_only` with no question: "a first-party announcement that states no investment judgement". The gold wanted an
+  update to the revenue questions as a demand/financing driver, or a new question on backstop exposure. A real miss of rule F/G: a
+  large new fact that opens a judgement was waved through as context.
+- **F03 (same_as):** an author's valuation argument citing the Q1 figures; the model called it background (accepted) but did not
+  mark the 75%/85% figures as pickups of e204/e124. Minor: the argument is unchanged either way.
+- **F12 (same_as):** named e140 (Morgan Stanley's account of investor meetings) as the same claim as a rating reaffirmation. Wrong id.
+- **F05 (revises):** a late relay of the "<$120bn" rumour, judged background (right) but marked as revising e690 (the $250bn report).
+  Logically that revision happened, at the time; at this sequence the announced $105bn already stands, so the record revises nothing
+  now. Defensible reading, scored as a miss under the frozen gold.
+- **K01 (revises, held out):** Huang's scope statement attached to v40 with `same_as e1194` (right: the same release) but not marked as
+  revising the rumour's description of the backstop (e830/e749/e751) under v25. Half right.
+- **K02 (questions, held out):** an extraction link to the wrong question (a chip-smuggling seizure under the GPU-repurchase
+  guarantee) kept as "background for v1" though the answer's own reason says it adds nothing to v1. The contract does not say what
+  `question_ids` means under `background_only`; it must mean "context of these questions", so an unrelated record lists none.
+- **K04 (questions, held out):** my gold encoded "may be empty" as a non-empty requirement. Gold-encoding error, reported, not fixed.
+
+What the two sets say together: placing (action) and never retiring hold on fresh material (11/12 and 4/4; 12/12 and 4/4);
+the relation fields are where the stick and the contract still disagree with the model, in one named class. Jev's piece relation
+stays unreliable on fresh cases (6/12, 0/2); the system result is the analysis call's, with Jev as a hint.
+
+## Arm 2: claim identity split from source independence (2026-10-28 00:50, $0.24 + $0.09)
+
+One change against arm1: `same_as` ("the same claim from the same original source") became `same_claim_as` ("the same claim,
+whoever reports it") and `independent` became `independent_sources` (own access to the fact, not a relay), with the examples that
+had failed (two papers' own reporting of one talk; a bank note repeating a customer). System prompt 3,425 → 3,830 characters; the
+growth is the two definitions. Both sets sent once; the same frozen golds; a gold v3 (`gold-v3.json`) records five consistency
+fixes found while reading arm2's answers (two pickup rows that still demanded `update_existing`, three allowed-id sets that lacked
+a same-claim piece), applied to both arms equally.
+
+| set, field | arm1 | arm2 |
+|---|---|---|
+| dev (21) action, gold v3 | 20 | 20 |
+| dev same_claim_as, gold v3 | 20 | 20 |
+| dev questions / revises / opposes / untouched | 21 / 21 / 21 / 21 | 20 / 20 / 21 / 21 |
+| dev independent (scorable) | 11/13 | 12/13 |
+
+codex
+**我收回“Jev 是目前质量上最有依据的方案”这个说法。** 更准确的建议是：**暂时保留 Jev 作为已经实现的工作基线，同时继续研究替代方案；不要向 Alex 说“Jev is the way”。** 我对这个暂时选择的信心是中等，对 Jev 优于其他方案的信心很低。
+
+举个例子：Jev 三次都没认出 H01 的同一笔收购公告，DeepSeek 三次都认出来；但在 B05，DeepSeek 三次都把两种不同的增长说法连成修订，Jev 单独比较三次没有犯这个错误，完整请求却犯了两次。**这说明两边各有问题，不能得出谁整体更好。**
+
+### 我修正自己的结论
+
+你对 `codex-reflection.md` 的挑战成立。那份反思将 Jev 称为“当前比较基线”比我先前的“最有依据的方案”更准确，但它也不能把已有实现当作质量证明。[独立反思](/Users/lchingen/hivemind/reports/step2-jev-decision-council-2026-11-09/codex-reflection.md)。
+
+1. **1/57 只回答一个狭窄问题。** 它是一次 fresh c8 运行中，读者判定的明确错误合并数；另有两个有重叠的案例。它不计漏合并，也不评估错误修订链接，更不是整个 Step 2 的准确率。之前 **3/104** 使用了不同的 Step 1 输入和历史状态，不能拿来当作受控版本对比或质量趋势。[fresh 结果](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:1619)、[此前结果](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:285)。
+
+2. **“暂时保留”的主要理由是已有路径和较小的集成负担。** Jev 已经按当前规则比较完整候选，并在多个重复候选中选择一组。DeepSeek 的试验只判断单对，没有给出这个组选择，也没有完成同等产品路径。这个差距是实现和验证状态的差距，**不是 Jev 比 DeepSeek 更准确的证明**。[比较与组选择代码](/Users/lchingen/hivemind/clean-arch/step2/compare.py:109)、[54 次原始结果](/Users/lchingen/hivemind-step2-identity-2026-11-09/clean-arch/step2-identity-2026-11-09/probe-2026-11-09/events.jsonl)。
+
+3. **我遗漏了 D201 这项不利于 Jev 的历史证据。** 当时 Jev 的单条证据关系判断记为 **7/18**；另一个读取完整上下文、并把 Jev 判断作为提示的生成式分析步骤，最初报告开发集 **20/21**、留出集 **3/3**。这值得披露，但不能作为当前 Step 2 的同条件比较：两者做的任务、输入、上下文和输出不同。
+
+   更重要的是，原始结果后来自己纠正：**20/21 不能作为有效测量**，因为标准在看到答案后改过；按发送前的标准，开发集对应项是 **10/21**，留出集是 **2/3**。后续另有从完整材料预写参照的 16 个新案例，生成式步骤的动作判断为 **11/12 和 4/4**，但仍是每例一次，且旧任务并不等同于 clean Step 2。它是继续探索完整上下文分析的理由，不是立即替换 Jev 的证据。[初始结果与事后修正](/Users/lchingen/hivemind/docs/research/2026-10-27-stage34-gold/results.md:125)、[新案例](/Users/lchingen/hivemind/docs/research/2026-10-27-stage34-gold/results.md:180)。
+
+4. **R05 和 P01 必须保留争议。** R05 中，Nvidia 没有确认或否认停产，但同一媒体的后续措辞更加谨慎；这让“不同陈述”与“原出处修改判断”之间存在边界争议。P01 的目标否认关系有依据，但完整 Jev 还写了第二条针对备用方案的修订链接；那条仍未定，不能把目标答对当成整个结果通过。[R05 分歧](/Users/lchingen/hivemind-step2-identity-2026-11-09/clean-arch/step2-identity-2026-11-09/result-blind-claude.md)、[P01 第二条链接](/Users/lchingen/hivemind-step2-identity-2026-11-09/clean-arch/step2-identity-2026-11-09/results-codex-followup.md)。
+
+5. **门槛实验没有证明可救 Jev，也没有证明别的方案更好。** 保存的 363 次合并决定包含重复文章和同一来源对；在这些固定决定上，0.5 门槛会挡住 1 次被判错误的合并，也挡住 4 次被接受的合并和 1 次有重叠的合并。这只能说明有取舍，不能外推独立总体的收益或损失。[原始汇总](/Users/lchingen/hivemind/reports/step2-merge-fix-council-2026-11-09/CONCLUSIONS.md)。
+
+### 什么会改变我的判断
+
+如果一个完整替代方案在**相同候选和同一产品任务**上，经过原文核对和多次运行，能减少错误合并、漏合并和错误修订，同时保住真实重复、否认和更新，并能按现行规则处理多个候选，我会建议 Alex 比较并考虑替换 Jev。
+
+即使替代方案还没准备好，如果保存结果显示 Jev 的错误关系经常让读者误解证据，我也会撤回“可以继续依赖它”的判断。**保留已有基线和证明它够好，是两个不同的问题。**
+
+### 唯一建议的下一步
+
+**免费逐条审查 D392 第一次开发运行中 56 个被 Jev 判为修订的候选回答。** 对每条，把两篇原文、Jev 实际看到的文字、完整候选回答、最终写入的关系和读者看到的展示放在一起；标明有支持、无支持或有争议，并记录同一条新证据是否同时进入重复组。保留真实否认和真实更新，不把 AI 读者意见当成金标。
+
+这能检验 B05 和 P01 暴露的风险有多广，以及错误来自判断、写入还是展示。**它不能判断 DeepSeek 或生成式分析整体是否更好**；56 也不是独立案例数或最终错误数。它是目前最便宜、能先检验是否应继续依赖现有 Jev 路径的行动。[待查范围](/Users/lchingen/hivemind-step2-identity-2026-11-09/clean-arch/step2-identity-2026-11-09/results-claude.md:84)。
+
+本次只读，没有写文件、调用模型或打开运行中的数据库。
+tokens used
+163,536

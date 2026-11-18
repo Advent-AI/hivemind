@@ -1,0 +1,659 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 121: the bound resolver's product-facing response and compatibility design (A1 withdrawn; refusal kept)
+
+## The rule (row 3, unchanged in substance, now independent of whether partial rows exist)
+
+- **On every store with a `days_completed` table:** an explicit upper bound later than the last completed day is refused, finished
+  or not, partial rows or not. The same date gets the same treatment whenever it is asked.
+- An omitted bound gives the last completed day, and a store with steps but no completed day is refused as its first day.
+- A legacy ledger without the tables reads as today.
+- **Ranges** get an explicit outcome, never an empty array:
+  - `changes(since, to)`: a `since` on or after the resolved `to` is refused ("since is not before the last completed day"), as is
+    an explicit `to` in the future;
+  - `history(from, to)`: a `from` after the resolved `to` is refused the same way.
+
+## The response, per channel
+
+| Channel | First day not completed | Bound after the last completed day | Range start not before its end |
+|---|---|---|---|
+| API (`error_response`) | 503 `{"error": "the store's first day has not completed"}` | 409 `{"error": "day not completed", "requested": X, "last_completed_day": Y}` | 409, the same shape, naming both days |
+| MCP tools | a tool error with the same text | a tool error with the same text | the same |
+| The streamed Idea route | the status before any header | the same | — |
+
+- The owner is two exceptions raised by `service.resolve_bound` (`FirstDayNotCompleted`, `BoundNotCompleted`), mapped once in the
+  API's `error_response`. MCP raises them as tool errors, so no array response changes shape.
+
+## Callers, from the code
+
+- **The page sends only days from its own dataset:**
+  - the library's day, `library.getDay()`, passed to `/ideas`;
+  - the day the Idea answer returns, `card.idea.as_of`, passed to `/thesis-bundles`.
+  - Both are on or before the served snapshot's last completed day, so the page is unaffected.
+- **MCP clients and direct API users that pass a later date:**
+  - on the running product's store, today they get the half-processed 2026-08-29 (99 evidence records, 117 links);
+  - they would get an error naming 2026-08-28;
+  - on a finished store, they would get the same error instead of today's identical answer.
+  - This is the behaviour change. It is recorded for Alex's page.
+
+## Not deployed
+
+- The change is code with tests in the repository. No running service is restarted.
+- D439 does not authorize deploying it. Its effect on the running product begins only when someone restarts the service, and that
+  is on Alex's page.
+
+**Asked of you:** any response shape, range or caller this misses, and whether the code may now be written, starting with the
+resolver, its structural check and the tests for all four store states plus a copy of the served store's state.
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the proposed errors against the actual service, API, MCP and page call paths, including date ranges and empty stores.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/service.py | sed -n '18,40p;195,210p;265,278p'
+nl -ba scripts/hivemind_api.py | sed -n '20,52p;90,160p;160,205p'
+nl -ba scripts/hivemind_mcp.py | sed -n '50,150p'
+rg -n 'loadLibrary|setDataset|/ideas|thesis-bundles|getDay\\(|as_of' poc/ui/src | head -100
+rg -n 'read_snapshot|def view_bundle|def days|def library' src/hivemind/bundle.py
+rg -n 'D439|D592' docs/DECISIONS.md | tail -4
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    18	def open_ledger(path):
+    19	    """A read-only connection to a views database."""
+    20	    return store.open_read_only(path)
+    21	
+    22	
+    23	def default_as_of(conn):
+    24	    return store.last_completed_day(conn) or conn.execute('select max(publication_day) from judgements').fetchone()[0]
+    25	
+    26	
+    27	_SEQ_DAYS = {}      # id(connection) → (connection, (max sequence, rows), map); a sqlite3 connection cannot carry attributes
+    28	
+    29	
+    30	def seq_day_map(conn):
+    31	    """sequence number → the publication day of the item or daily round written under it. Cached per connection and
+    32	    rebuilt when processing_steps has grown (an open ledger gains steps while the pipeline runs); without the cache
+    33	    one view with 367 pieces of evidence cost 1,224 full scans (0.46 s, measured 2026-10-24)."""
+    34	    stamp = tuple(conn.execute('select max(sequence_no), count(*) from processing_steps').fetchone())
+    35	    entry = _SEQ_DAYS.get(id(conn))
+    36	    if entry is not None and entry[0] is conn and entry[1] == stamp:
+    37	        return entry[2]
+    38	    cache = {}
+    39	    for seq, day in conn.execute('select sequence_no, min(publication_day) from processing_steps where sequence_no > 0 group by sequence_no'):
+    40	        cache[seq] = day
+   195	
+   196	
+   197	# ---------- history
+   198	
+   199	def history(conn, view_id, from_day=None, to_day=None):
+   200	    to_day = to_day or default_as_of(conn)
+   201	    from_day = from_day or '0000-00-00'
+   202	    judgements = []
+   203	    previous = None
+   204	    for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+   205	        entry = {'day': row['publication_day'], 'seq': row['seq'], 'position': row['rung'], 'changed': bool(row['changed']), 'moved_from': previous if previous is not None and previous != row['rung'] else None,
+   206	                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _unique(_json(row['cited_evidence_json'])), 'pushes': _json(row['pushes_json']),
+   207	                 'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
+   208	        previous = row['rung']
+   209	        if from_day <= row['publication_day'] <= to_day:
+   210	            judgements.append(entry)
+   265	
+   266	
+   267	# ---------- changes since a day
+   268	
+   269	def changes(conn, since_day, to_day=None):
+   270	    """Judgements that said 'changed' after since_day (exclusive) up to to_day, with their cited evidence."""
+   271	    to_day = to_day or default_as_of(conn)
+   272	    out = []
+   273	    previous = {}
+   274	    for row in conn.execute('select * from judgements order by judgement_id'):
+   275	        before = previous.get(row['view_id'])
+   276	        previous[row['view_id']] = row['rung']
+   277	        if not row['changed'] or not (since_day < row['publication_day'] <= to_day):
+   278	            continue
+    20	
+    21	Every request opens its own connections (the server is threaded; an idea call takes seconds and must not block the
+    22	page's reads). Usage: python3 scripts/hivemind_api.py [--host 127.0.0.1] [--port 8788] [--views DB] [--items DB]
+    23	[--index DB] [--archive DB] [--config JSON] [--lexical]
+    24	"""
+    25	import argparse
+    26	import http.server
+    27	import json
+    28	import os
+    29	import sys
+    30	import urllib.parse
+    31	
+    32	ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    33	sys.path.insert(0, os.path.join(ROOT, 'src'))
+    34	from hivemind import bundle, config, idea, model, search, service  # noqa: E402
+    35	from hivemind.views import store  # noqa: E402
+    36	
+    37	PATHS = {}
+    38	ALIASES = {}
+    39	CFG = None
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    if isinstance(error, KeyError):
+    46	        return 404, f'not found: {error}'
+    47	    if isinstance(error, service.LedgerError):
+    48	        return 500, str(error)
+    49	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    50	        return 502, f'{type(error).__name__}: {str(error)[:200]}'
+    51	    return 400, str(error)
+    52	
+    90	
+    91	    def do_OPTIONS(self):          # a browser's preflight before a JSON POST
+    92	        self.send_response(204)
+    93	        self._cors()
+    94	        self.end_headers()
+    95	
+    96	    def _answer(self, work, read_only=False):
+    97	        try:
+    98	            with Connections(read_only) as db:
+    99	                self._send(200, work(db))
+   100	        except REQUEST_ERRORS as error:
+   101	            status, message = error_response(error)
+   102	            self._send(status, {'error': message})
+   103	
+   104	    def _stream_answer(self, work):
+   105	        self.send_response(200)
+   106	        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+   107	        self.send_header('Cache-Control', 'no-store')
+   108	        self._cors()
+   109	        self.end_headers()
+   110	
+   111	        def emit(event):
+   112	            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+   113	            self.wfile.flush()
+   114	
+   115	        try:
+   116	            with Connections() as db:
+   117	                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+   118	                emit({'type': 'result', 'data': card})
+   119	        except (BrokenPipeError, ConnectionResetError):
+   120	            return
+   121	        except REQUEST_ERRORS as error:
+   122	            status, message = error_response(error)
+   123	            try:
+   124	                emit({'type': 'error', 'status': status, 'message': message})
+   125	            except (BrokenPipeError, ConnectionResetError):
+   126	                pass
+   127	
+   128	    def do_GET(self):
+   129	        url = urllib.parse.urlsplit(self.path)
+   130	        q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
+   131	        parts = [p for p in url.path.split('/') if p]
+   132	        self._answer(lambda db: route(db, parts, q), read_only=parts in (['library'], ['thesis-bundles']))
+   133	
+   134	    def do_POST(self):
+   135	        parts = [p for p in urllib.parse.urlsplit(self.path).path.split('/') if p]
+   136	        length = int(self.headers.get('Content-Length') or 0)
+   137	        raw = self.rfile.read(length) if length else b''
+   138	
+   139	        def work(db, on_progress=None):
+   140	            if parts != ['ideas']:
+   141	                raise KeyError('/'.join(parts))
+   142	            try:
+   143	                body = json.loads(raw or b'{}')
+   144	            except json.JSONDecodeError as error:
+   145	                raise ValueError(f'the body is not JSON: {error}')
+   146	            if not isinstance(body, dict) or not str(body.get('text') or '').strip():
+   147	                raise ValueError('POST /ideas needs a JSON body with text')
+   148	            if CFG is None:
+   149	                raise config.ConfigError('the server was started without --config, so it cannot read ideas')
+   150	            return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
+   151	                                  int(body.get('k') or 10), aliases=ALIASES, semantic=SEMANTIC, bundles=body.get('bundles', True) is not False,
+   152	                                  on_progress=on_progress)
+   153	        accepted = [part.split(';', 1)[0].strip() for part in self.headers.get('Accept', '').split(',')]
+   154	        if parts == ['ideas'] and 'application/x-ndjson' in accepted:
+   155	            self._stream_answer(work)
+   156	        else:
+   157	            self._answer(work)
+   158	
+   159	
+   160	def flag(value):
+   160	def flag(value):
+   161	    return str(value).lower() in ('1', 'true', 'yes')
+   162	
+   163	
+   164	def route(db, parts, q):
+   165	    ledger, as_of = db.ledger, q.get('as_of') or None
+   166	    if parts == ['library']:
+   167	        return bundle.library(ledger, db.items, as_of)
+   168	    if parts == ['thesis-bundles']:
+   169	        return bundle.thesis_bundles(ledger, db.items, [id.strip() for id in q.get('ids', '').split(',') if id.strip()], as_of)
+   170	    if parts == ['search']:
+   171	        return search.search(ledger, db.index, q.get('q', ''), int(q.get('k', 10)), as_of, flag(q.get('include_closed', '')), aliases=ALIASES, semantic=SEMANTIC)
+   172	    if parts == ['views']:
+   173	        return service.views(ledger, q.get('object') or None, as_of, flag(q.get('include_closed', '')))
+   174	    if len(parts) == 2 and parts[0] == 'views':
+   175	        record = service.view(ledger, parts[1], as_of)
+   176	        if record is None:
+   177	            raise KeyError(parts[1])
+   178	        return record
+   179	    if len(parts) == 3 and parts[0] == 'views':
+   180	        view_id, what = parts[1], parts[2]
+   181	        if what == 'history':
+   182	            return service.history(ledger, view_id, q.get('from') or None, q.get('to') or None)
+   183	        if what == 'evidence':
+   184	            return service.evidence(ledger, view_id, as_of, q.get('tier') or None)
+   185	        if what == 'record':
+   186	            return service.record(ledger, view_id, as_of)
+   187	        raise KeyError(what)
+   188	    if parts == ['changes']:
+   189	        if not q.get('since'):
+   190	            raise ValueError('changes needs since=YYYY-MM-DD')
+   191	        return service.changes(ledger, q['since'], q.get('to') or None)
+   192	    if parts == ['evaluate']:
+   193	        if not all(k in q for k in ('view_id', 'comparator', 'value_usd')):
+   194	            raise ValueError('evaluate needs view_id, comparator and value_usd')
+   195	        answer = service.evaluate(ledger, q['view_id'], q['comparator'], float(q['value_usd']), as_of)
+   196	        if answer is None:
+   197	            raise KeyError(q['view_id'])
+   198	        return answer
+   199	    if parts == ['days']:
+   200	        row = ledger.execute('select min(day), max(day) from days_completed').fetchone()
+   201	        return {'first_day': row[0], 'last_day': row[1]}
+   202	    raise KeyError('/'.join(parts))
+   203	
+   204	
+   205	def main():
+    50	    'search matches each view\'s own text (question, what it looks at, ladder conditions; Chinese, English queries work): '
+    51	    'ask for one object and one quantity or event per query; views(object) lists everything under one object. '
+    52	    + OBJECTS))
+    53	
+    54	
+    55	@mcp.tool()
+    56	def thesis_library(as_of: str = '') -> dict:
+    57	    """All collected theses and their stored research groups, including ungrouped and closed theses.
+    58	    Membership is not a dependency or a parent-child relationship. No model call or ledger write."""
+    59	    return bundle.library(LEDGER, ITEMS, as_of or None)
+    60	
+    61	
+    62	@mcp.tool()
+    63	def thesis_bundles(view_ids: list[str], as_of: str = '') -> dict:
+    64	    """Complete UI inputs for selected thesis ids: dated states, assessments, sources, evidence and relationships.
+    65	    Pass this envelope to the frontend's fromBundles adapter. Read-only; does not call a model."""
+    66	    return bundle.thesis_bundles(LEDGER, ITEMS, view_ids, as_of or None)
+    67	
+    68	
+    69	@mcp.tool()
+    70	def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+    71	    """Top-k views for an idea or sentence: id, object, kind, what it looks at, the question, due day, dependencies
+    72	    (the views it is judged after) and dependants, with the score and its parts. Views, never evidence: evidence is
+    73	    anchored under its view."""
+    74	    return search_module.search(LEDGER, INDEX, query, k, as_of or None, include_closed, aliases=ALIASES, semantic=not ARGS.lexical)
+    75	
+    76	
+    77	@mcp.tool()
+    78	def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+    79	    """The views of one object (a ticker like NVDA or a theme id like ai-capex), or all views, as of a day."""
+    80	    return service.views(LEDGER, object or None, as_of or None, include_closed)
+    81	
+    82	
+    83	@mcp.tool()
+    84	def view(view_id: str, as_of: str = '') -> dict:
+    85	    """One view as of a day: the question, the ladder (positions 1..5, position 1 the most bullish outcome; or 2 for
+    86	    yes/no), the judged position with its label and condition and since when, whether open, dependencies and
+    87	    dependants, counts of rounds, evidence and facts."""
+    88	    record = service.view(LEDGER, view_id, as_of or None)
+    89	    if record is None:
+    90	        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+    91	    return record
+    92	
+    93	
+    94	@mcp.tool()
+    95	def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+    96	    """Every judgement round in the span (day, position, whether it changed, why, the cited evidence ids and the push
+    97	    each gave), evidence arrivals per day, position changes, replacements of guidance, open/close switches."""
+    98	    return service.history(LEDGER, view_id, from_day or None, to_day or None)
+    99	
+   100	
+   101	@mcp.tool()
+   102	def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+   103	    """Evidence in force under the view as of a day: one line, the source's own words, tier (发生的事 fact, 当事人说的
+   104	    party statement, 第三方看法 third-party view, 传闻 rumour), speaker, when it arrived, its sources."""
+   105	    return service.evidence(LEDGER, view_id, as_of or None, tier or None)
+   106	
+   107	
+   108	@mcp.tool()
+   109	def record(view_id: str, as_of: str = '') -> dict:
+   110	    """The last check of the view on or before the day: when, by which round, how many items were processed that
+   111	    day and how much evidence arrived under the view."""
+   112	    return service.record(LEDGER, view_id, as_of or None)
+   113	
+   114	
+   115	@mcp.tool()
+   116	def changes(since_day: str, to_day: str = '') -> list:
+   117	    """Judgements that said 'changed' after since_day, each with the view, from/to position and the evidence cited."""
+   118	    return service.changes(LEDGER, since_day, to_day or None)
+   119	
+   120	
+   121	@mcp.tool()
+   122	def evaluate(view_id: str, comparator: str, value_usd: float, as_of: str = '') -> dict:
+   123	    """A claim against a view's ladder: 'the quantity >= / < / = value_usd'. Returns the ladder position the
+   124	    threshold sits in, the judged position, and the verdict: holds (the judged band is wholly on the claim's side),
+   125	    not_yet (wholly on the other side) or borderline (the threshold cuts through the judged band)."""
+   126	    answer = service.evaluate(LEDGER, view_id, comparator, value_usd, as_of or None)
+   127	    if answer is None:
+   128	        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+   129	    return answer
+   130	
+   131	
+   132	if __name__ == '__main__':
+   133	    mcp.run(transport=ARGS.transport)
+poc/ui/src/model/thesis.schema.json:11:    "as_of": {
+poc/ui/src/model/thesis.schema.json:38:  "required": ["schema_version", "as_of", "days", "theses", "coverage", "groups"],
+poc/ui/src/model/contract.js:27:      if ((key === 'day' || key.endsWith('_day') || key === 'as_of') && typeof child === 'string')
+poc/ui/src/model/contract.js:52:      day <= data.as_of && (!i || day > data.days[i - 1]),
+poc/ui/src/model/contract.js:54:      'days must ascend and not exceed as_of',
+poc/ui/src/model/contract.js:62:      g.created_day <= data.as_of,
+poc/ui/src/model/contract.js:64:      'group is later than as_of',
+poc/ui/src/model/contract.js:72:          m.day <= data.as_of,
+poc/ui/src/model/contract.js:82:      thesis.created_day <= data.as_of,
+poc/ui/src/model/contract.js:84:      'thesis is later than as_of',
+poc/ui/src/model/contract.js:110:        e.arrival_day <= data.as_of,
+poc/ui/src/model/contract.js:112:        'evidence is later than as_of',
+poc/ui/src/model/contract.js:116:          e.replaced_by.day <= data.as_of,
+poc/ui/src/model/contract.js:118:          'replacement is later than as_of',
+poc/ui/src/model/contract.js:122:          s.arrival_day <= data.as_of,
+poc/ui/src/model/contract.js:124:          'source is later than as_of',
+poc/ui/src/model/contract.js:130:        j.day <= data.as_of && j.day >= thesis.created_day,
+poc/ui/src/model/contract.js:156:          entry.day <= data.as_of,
+poc/ui/src/model/contract.js:158:          'entry is later than as_of',
+poc/ui/src/model/contract.js:166:          r.day >= d.day && r.day <= data.as_of && (!previous || r.seq >= previous.seq),
+poc/ui/src/model/library.js:6:  { day = data.as_of, group = '', object = '', status = '', query = '' } = {},
+poc/ui/src/model/library.js:42:export function libraryCounts(data, day = data.as_of) {
+poc/ui/src/model/graph.js:23:        ?.dependencies.filter((edge) => edge.day <= dataset.as_of && known.has(edge.depends_on))
+poc/ui/src/idea/composite.js:79:      'as_of',
+poc/ui/src/idea/composite.js:88:    !isCalendarDay(plan.as_of) ||
+poc/ui/src/idea/composite.js:89:    plan.as_of !== card.idea.as_of ||
+poc/ui/src/idea/composite.js:90:    plan.as_of !== dataset.as_of ||
+poc/ui/src/idea/composite.js:184:  return { ...plan, excluded, drivers, ...history(drivers, dataset, plan.as_of, weighted) };
+poc/ui/src/idea/composite.js:190:    (trial) => trial.idea_text === card.idea.text && trial.as_of === card.idea.as_of,
+poc/ui/src/idea/composite.js:196:  shape(plan, ['version', 'idea_text', 'as_of', 'note', 'drivers'], 'composite trial');
+poc/ui/src/idea/composite.js:199:    !isCalendarDay(plan.as_of) ||
+poc/ui/src/idea/composite.js:200:    plan.as_of !== dataset.as_of ||
+poc/ui/src/idea/composite.js:235:    ...history(drivers, dataset, plan.as_of),
+poc/ui/src/idea/idea.js:1:/** The Idea card: the user's sentence read by the service (POST /ideas, docs/poc/idea-card.md, D112).
+poc/ui/src/idea/idea.js:4: * states. It never chooses theses itself and never reads the clock; the day is the answer's as_of. */
+poc/ui/src/idea/idea.js:28:    const response = await fetch(`${api}/ideas`, {
+poc/ui/src/idea/idea.js:31:      body: JSON.stringify({ text, bundles: false, ...(asOf ? { as_of: asOf } : {}) }),
+poc/ui/src/idea/idea.js:187:  const point = composite ? compositeAt(composite, day || composite.as_of) : null;
+poc/ui/src/idea/idea.js:193:    ? `<div class="idea-composite">${scoreHistoryChart(confidenceHistory(composite), { start: chartStart || composite.start, end: composite.as_of, day: day || composite.as_of, width: width - 34, scoreLabel: formatConfidence(confidenceFromScore(point?.value ?? null)), scale: 'confidence' })}</div>`
+poc/ui/src/idea/idea.js:227:      `${api}/thesis-bundles?ids=${encodeURIComponent(ids.join(','))}&as_of=${encodeURIComponent(asOf)}`,
+poc/ui/src/idea/analysis.js:10:  const value = trial ? confidenceFromScore(compositeAt(trial, day || trial.as_of).value) : null;
+poc/ui/src/idea/analysis.js:25:  const point = compositeAt(trial, day || trial.as_of);
+poc/ui/src/components/canvas.js:48:      ? data.days[0] || data.as_of
+poc/ui/src/components/canvas.js:49:      : [data.days[0] || data.as_of, addDays(data.as_of, -30)].sort().at(-1);
+poc/ui/src/components/canvas.js:204:    day = spec.day || data.as_of;
+poc/ui/src/components/canvas.js:240:        end: data.as_of,
+poc/ui/src/components/canvas.js:320:    scrub.max = String(dayDiff(start(), data.as_of));
+poc/ui/src/components/canvas.js:335:      const x = calendarX(fraction, start(), data.as_of, CH.left, CH.W - CH.right),
+poc/ui/src/components/canvas.js:339:        .setAttribute('width', fraction >= dayDiff(start(), data.as_of) ? CH.W : x);
+poc/ui/src/components/canvas.js:354:    onDayChange(day, { start: start(), end: data.as_of });
+poc/ui/src/components/canvas.js:371:        onDayChange(day, { start: start(), end: data.as_of });
+poc/ui/src/components/canvas.js:386:      const span = dayDiff(start(), data.as_of);
+poc/ui/src/components/thesis-detail.js:135:  function open(id, day = data.as_of) {
+poc/ui/src/components/thesis-detail.js:138:    if (day > data.as_of || day < (data.days[0] || data.as_of))
+poc/ui/src/components/thesis-detail.js:274:      anchorDay === null ? null : j?.day || anchorDay || data.days[0] || data.as_of;
+poc/ui/src/components/thesis-detail.js:320:        start: data.days[0] || data.as_of,
+poc/ui/src/components/thesis-detail.js:329:      start: data.days[0] || data.as_of,
+poc/ui/src/components/thesis-detail.js:339:    setDataset(next) {
+poc/ui/src/components/library.js:17:    day: data.as_of,
+poc/ui/src/components/library.js:173:    setDataset(input, { day } = {}) {
+poc/ui/src/components/library.js:177:      state.day = [data.days[0] || data.as_of, day ?? state.day, data.as_of].sort()[1];
+poc/ui/src/components/library.js:182:      details.setDataset(data);
+poc/ui/src/bootstrap.js:107:        app.showGraph({ day: library.getDay() });
+poc/ui/src/bootstrap.js:124:      if (dataset) app.setDataset(dataset);
+poc/ui/src/bootstrap.js:174:        day: library.getDay(),
+poc/ui/src/bootstrap.js:179:        day: library.getDay(),
+poc/ui/src/bootstrap.js:195:          asOf: library.getDay(),
+poc/ui/src/bootstrap.js:200:        const bundles = await readBundles(API, idsOf(card), card.idea.as_of, { signal });
+poc/ui/src/bootstrap.js:203:        const chartData = next || { as_of: card.idea.as_of, days: card.days, theses: [] };
+poc/ui/src/bootstrap.js:217:          day: card.idea.as_of,
+poc/ui/src/bootstrap.js:234:            day: card.idea.as_of,
+poc/ui/src/bootstrap.js:254:    async function loadLibrary() {
+poc/ui/src/bootstrap.js:262:        library.setDataset(next, { day: next.as_of }); // the supplied snapshot defines the displayed date (thesis-ui.md)
+poc/ui/src/bootstrap.js:286:    loadLibrary();
+poc/ui/src/index.js:60:      (!isCalendarDay(spec.day) || spec.day < (data.days[0] || data.as_of) || spec.day > data.as_of)
+poc/ui/src/index.js:74:    openThesis(id, day = data.as_of) {
+poc/ui/src/index.js:80:      if (!isCalendarDay(day) || day < (data.days[0] || data.as_of) || day > data.as_of)
+poc/ui/src/index.js:84:    setDataset(input) {
+poc/ui/src/index.js:87:      const firstDay = next.days[0] || next.as_of;
+poc/ui/src/index.js:91:          : graph.day > next.as_of
+poc/ui/src/index.js:92:            ? next.as_of
+poc/ui/src/index.js:94:        : next.as_of;
+poc/ui/src/index.js:96:      details.setDataset(next);
+poc/ui/src/adapters/bundle.js:86:/** Compatibility boundary for mock JSON and POST /ideas view_bundle records. */
+poc/ui/src/adapters/bundle.js:192:    as_of: options.asOf || input.as_of || input.idea?.as_of || input.days.at(-1),
+poc/ui/src/adapters/bundle.js:198:  return fromBundles(response, { asOf: response.idea.as_of });
+14:def read_snapshot(*connections):
+98:def view_bundle(views_db, item_of, view_id, as_of=None):
+170:def days(views_db, as_of=None):
+213:    with read_snapshot(views_db, items_db):
+217:def library(views_db, items_db, as_of=None):
+219:    with read_snapshot(views_db, items_db):
+923:| D579 | 2026-11-16 | Under D439 (council round 67): the two refusal accounts apply line 6's decline rules to the outcome's words; the proposed outcome-only exemption refused (D397, D417); a bounded $0 audit of the decline rules and the outcome's extra parts, then a sourced rule or no candidate | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md` |
+924:| D580 | 2026-11-16 | Under D439 (council rounds 68 and 69): no reviewed repair for the unlisted parts (the decisions give no general rule for the main part of a multi-part topic; an independent reader left 29 of 63 open); arm A stays stopped; next, a $0 check of the Idea planner on new-system answer shapes | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DECLINE-AUDIT.md` |
+925:| D581 | 2026-11-16 | Under D439 (council rounds 70 to 72): the Idea planner shows a three-choice event as Yes and Still open; the event-driver design parked as recorded input; no bounded gate-moving candidate on the record; paid work and new lines held until Alex returns or the council names one | in force | `docs/research/2026-11-14-use-acceptance/idea-planner/RESULT.md` |
+936:| D592 | 2026-11-16 | Stage B's control line: an unchanged re-send stays at 4 of 8, delivery of three facts reaches at most 7, the eighth needs an unproven two-step change; the 7-control course is not started for the line's sake; the live-service operating contract resumed as a $0 design (D575's rows, a falsifier), back to the council before any build | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba poc/ui/src/bootstrap.js | sed -n '180,205p;248,278p'
+nl -ba src/hivemind/bundle.py | sed -n '1,28p;92,105p'
+nl -ba src/hivemind/idea.py | sed -n '215,245p'
+nl -ba scripts/hivemind_api.py | sed -n '38,51p'
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '49,65p'
+rg -n 'REQUEST_ERRORS|error_response\\(' tests scripts/hivemind_api.py | head -20" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   180	        leadingCard,
+   181	        centerOn: 'tree',
+   182	        center: true,
+   183	      });
+   184	      try {
+   185	        const updateProgress = (stage) => {
+   186	          if (mine !== requestNumber || signal.aborted) return;
+   187	          const progress = advanceIdeaProgress(idea.progress, stage);
+   188	          if (progress === idea.progress) return;
+   189	          idea.progress = progress;
+   190	          if (root.hidden) leadingDirty = true;
+   191	          else app.updateLeading();
+   192	        };
+   193	        const card = await readIdea(API, text, {
+   194	          signal,
+   195	          asOf: library.getDay(),
+   196	          onProgress: updateProgress,
+   197	        });
+   198	        if (mine !== requestNumber) return;
+   199	        updateProgress('cards');
+   200	        const bundles = await readBundles(API, idsOf(card), card.idea.as_of, { signal });
+   201	        if (mine !== requestNumber) return;
+   202	        const next = bundles ? fromBundles(bundles) : null;
+   203	        const chartData = next || { as_of: card.idea.as_of, days: card.days, theses: [] };
+   204	        let composite = null,
+   205	          compositeNote = '';
+   248	        if (mine === requestNumber) {
+   249	          inFlight = null;
+   250	          updateSendState();
+   251	        }
+   252	      }
+   253	    }
+   254	    async function loadLibrary() {
+   255	      try {
+   256	        const response = await fetch(`${API}/library`, { signal: libraryRequest.signal });
+   257	        if (!response.ok) throw new Error(`Service returned ${response.status}`);
+   258	        const next = fromBundles(await response.json());
+   259	        if (next.coverage !== 'library')
+   260	          throw new Error('The service did not return a complete library');
+   261	        if (libraryRequest.signal.aborted) return;
+   262	        library.setDataset(next, { day: next.as_of }); // the supplied snapshot defines the displayed date (thesis-ui.md)
+   263	        data = next;
+   264	      } catch {
+   265	        // Keep the displayed snapshot when the optional live read is unavailable.
+   266	      }
+   267	    }
+   268	    form.addEventListener('submit', run);
+   269	    input.addEventListener('input', updateSendState);
+   270	    libraryButton.addEventListener('click', showLibrary);
+   271	    ideaButton.addEventListener('click', showIdea);
+   272	    window.addEventListener(
+   273	      'pagehide',
+   274	      () => {
+   275	        cancelIdea();
+   276	        libraryRequest.abort();
+   277	        library.destroy();
+   278	        app?.destroy();
+     1	"""One view in the shape the front end reads: the ladder, every judgement round with the model's reason and the
+     2	evidence it cited, the evidence in force with tiers, speakers and sources, dependencies, replacements and the freeze
+     3	switches. The same shaping writes the mock's data file (scripts/mock_data.py) and answers POST /ideas, so the front
+     4	end's adapter reads both. Read-only on every database. With `as_of`, rows written after that day are left out."""
+     5	import json
+     6	from contextlib import contextmanager
+     7	from datetime import date
+     8	
+     9	from . import service
+    10	from .views import store
+    11	
+    12	
+    13	@contextmanager
+    14	def read_snapshot(*connections):
+    15	    """Pin each read connection for a complete envelope; preserve a caller's transaction."""
+    16	    owned = []
+    17	    try:
+    18	        for conn in connections:
+    19	            if conn is not None and not conn.in_transaction:
+    20	                conn.execute('begin')
+    21	                owned.append(conn)
+    22	        yield
+    23	    finally:
+    24	        for conn in reversed(owned):
+    25	            conn.rollback()
+    26	
+    27	
+    28	def item_lookup(items_db):
+    92	    figure = ladder.get('figure')
+    93	    if isinstance(figure, dict) and figure.get('favourable_end') in ('higher', 'lower', 'n/a'):
+    94	        return 'figure', figure['favourable_end']
+    95	    raise ValueError(f'{view_id}: its ladder row is neither an event nor a figure with a favourable end')
+    96	
+    97	
+    98	def view_bundle(views_db, item_of, view_id, as_of=None):
+    99	    v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   100	    if v is None:
+   101	        raise KeyError(view_id)
+   102	    columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
+   103	    bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
+   104	    rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
+   105	    switches = [dict(r) for r in views_db.execute('select open, reason, after_seq from view_switches where view_id=? order by id', (view_id,))
+   215	def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliases=None, semantic=True, transport=None, bundles=True, embed=search.openai_embeddings, on_progress=None):
+   216	    """The idea card: idea, what the idea's own search found, the reading (typed parts, the candidates each got, the
+   217	    views each maps to, the summary, the claim), the related views from the dependency graph, the evaluation, every
+   218	    view's bundle, the days, the trace of searches, and all call costs. No recorded view → no model call."""
+   219	    text = (text or '').strip()
+   220	    if not text:
+   221	        raise ValueError('an idea needs text')
+   222	    as_of = as_of or service.default_as_of(ledger)
+   223	    report = on_progress or (lambda stage: None)
+   224	    report('search')
+   225	    found = search.search(ledger, index, text, k, as_of, aliases=aliases, semantic=semantic, embed=embed)
+   226	    card = {'idea': {'text': text, 'as_of': as_of}, 'search': {'mode': found['mode'], 'candidates': [r['view_id'] for r in found['results'] or []]},
+   227	            'reading': None, 'evaluation': None, 'related': [], 'views': [], 'days': bundle.days(ledger, as_of),
+   228	            'no_recorded_view': found['results'] is None, 'cost': dict(NO_COST)}
+   229	    if found['results'] is None:
+   230	        return card
+   231	    setting = cfg.idea
+   232	    if setting is None:
+   233	        raise config.ConfigError(f'config {cfg.version} has no idea setting')
+   234	    decompose_prompt, map_prompt = prompts(setting)
+   235	    started = time.time()
+   236	    cost = dict(NO_COST)
+   237	    cost['cached'] = True
+   238	
+   239	    def spend(answer):
+   240	        cost['usd'] += answer.cost_usd
+   241	        cost['input_tokens'] += answer.input_tokens
+   242	        cost['output_tokens'] += answer.output_tokens
+   243	        cost['turns'] += 1
+   244	        cost['cached'] = cost['cached'] and answer.cached
+   245	
+    38	ALIASES = {}
+    39	CFG = None
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    if isinstance(error, KeyError):
+    46	        return 404, f'not found: {error}'
+    47	    if isinstance(error, service.LedgerError):
+    48	        return 500, str(error)
+    49	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    50	        return 502, f'{type(error).__name__}: {str(error)[:200]}'
+    51	    return 400, str(error)
+    49	   - The service's start-up reads run the same way. MCP's object list is computed per call.
+    50	3. **Every date bound, resolved in one function.**
+    51	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    52	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    53	     explicit date bypasses any check placed in `default_as_of`.
+    54	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    55	     caller's read transaction.
+    56	     - An omitted bound gives the last completed day.
+    57	     - An explicit bound later than the last completed day is refused, naming that day.
+    58	     - An explicit bound on or before it passes.
+    59	   - Every one of the 13 sites calls it, and lower bounds (`from_day`, `since_day`) are unaffected.
+    60	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    61	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    62	4. **The first day** (open defect 10).
+    63	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    64	   - An empty store (no step) and a legacy ledger read as today.
+    65	4a. **Search: visibility before ranking and limits, and a published index day.**
+scripts/hivemind_api.py:41:REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+scripts/hivemind_api.py:44:def error_response(error):
+scripts/hivemind_api.py:100:        except REQUEST_ERRORS as error:
+scripts/hivemind_api.py:101:            status, message = error_response(error)
+scripts/hivemind_api.py:121:        except REQUEST_ERRORS as error:
+scripts/hivemind_api.py:122:            status, message = error_response(error)
+
+codex
+**Not yet.** Refusal avoids the response-shape problem, but the design still needs to account for direct readers and for the page when its live library read fails.
+
+1. **`view_bundle` is a direct path outside the 13 bound resolutions.** It accepts `as_of=None` and reads records directly; it is also used outside the two bundle entry points. Decide whether it resolves and validates its own bound or requires an already resolved one, then test direct calls as well as `/thesis-bundles`. A check for `default_as_of` calls alone will not catch an unchecked path. [Bundle](/Users/lchingen/hivemind/src/hivemind/bundle.py:98).
+
+2. **“The page is unaffected” is too strong.** A successful `/library` read supplies an eligible day. But if that read fails, the page silently keeps its embedded snapshot and later sends its day to `/ideas`. That day can be later than the service’s last completed day, producing the new refusal. Test both the successful live read and this fallback; document the latter behavior rather than claiming it cannot occur. [Page startup and Idea call](/Users/lchingen/hivemind/poc/ui/src/bootstrap.js:193).
+
+3. **The streamed route needs one transaction from validation through use.** Today it sends HTTP 200 headers before opening the connections or running the Idea work. Validating before headers is the right change, but the check and subsequent reads must use the same ledger snapshot; otherwise the stated response and the data can come from different states. Test the actual streaming entry point, including a first-day and future-date refusal before headers. [Streaming handler](/Users/lchingen/hivemind/scripts/hivemind_api.py:104).
+
+4. **Complete the response and empty-store contract.** The current API error mapper returns a status and a string, and `_answer` constructs only `{"error": message}`. The proposed structured 409 therefore needs an explicitly specified mapping and tests, including range-start errors with both bounds. Also state what happens when `days_completed` exists but there are **no steps and no completed day**: the proposal covers steps without a completed day, while the earlier contract preserves empty-store behavior. [Error mapper](/Users/lchingen/hivemind/scripts/hivemind_api.py:41), [existing empty-store provision](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:61).
+
+The range distinction itself is sound: `changes` excludes its start, while `history` includes it, so equality should be refused only for the former. [Changes](/Users/lchingen/hivemind/src/hivemind/service.py:269), [history](/Users/lchingen/hivemind/src/hivemind/service.py:199).
+
+CONSENSUS: no, because the direct bundle path, page fallback, streamed snapshot, and error and empty-store contracts need to be settled before writing the resolver.
+tokens used
+3,212,324
+**Not yet.** Refusal avoids the response-shape problem, but the design still needs to account for direct readers and for the page when its live library read fails.
+
+1. **`view_bundle` is a direct path outside the 13 bound resolutions.** It accepts `as_of=None` and reads records directly; it is also used outside the two bundle entry points. Decide whether it resolves and validates its own bound or requires an already resolved one, then test direct calls as well as `/thesis-bundles`. A check for `default_as_of` calls alone will not catch an unchecked path. [Bundle](/Users/lchingen/hivemind/src/hivemind/bundle.py:98).
+
+2. **“The page is unaffected” is too strong.** A successful `/library` read supplies an eligible day. But if that read fails, the page silently keeps its embedded snapshot and later sends its day to `/ideas`. That day can be later than the service’s last completed day, producing the new refusal. Test both the successful live read and this fallback; document the latter behavior rather than claiming it cannot occur. [Page startup and Idea call](/Users/lchingen/hivemind/poc/ui/src/bootstrap.js:193).
+
+3. **The streamed route needs one transaction from validation through use.** Today it sends HTTP 200 headers before opening the connections or running the Idea work. Validating before headers is the right change, but the check and subsequent reads must use the same ledger snapshot; otherwise the stated response and the data can come from different states. Test the actual streaming entry point, including a first-day and future-date refusal before headers. [Streaming handler](/Users/lchingen/hivemind/scripts/hivemind_api.py:104).
+
+4. **Complete the response and empty-store contract.** The current API error mapper returns a status and a string, and `_answer` constructs only `{"error": message}`. The proposed structured 409 therefore needs an explicitly specified mapping and tests, including range-start errors with both bounds. Also state what happens when `days_completed` exists but there are **no steps and no completed day**: the proposal covers steps without a completed day, while the earlier contract preserves empty-store behavior. [Error mapper](/Users/lchingen/hivemind/scripts/hivemind_api.py:41), [existing empty-store provision](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:61).
+
+The range distinction itself is sound: `changes` excludes its start, while `history` includes it, so equality should be refused only for the former. [Changes](/Users/lchingen/hivemind/src/hivemind/service.py:269), [history](/Users/lchingen/hivemind/src/hivemind/service.py:199).
+
+CONSENSUS: no, because the direct bundle path, page fallback, streamed snapshot, and error and empty-store contracts need to be settled before writing the resolver.

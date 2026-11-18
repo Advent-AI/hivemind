@@ -1,0 +1,21 @@
+**Version 2 is not ready to build:** its Step 1 budget design cannot run with the current code, and the shared stop and slice limit still need concrete implementations.
+
+For example, the design proposes a `LiveTransport` subclass, but Step 1 checks the transport’s **exact type**. It rejects the subclass before processing an article.
+
+The changes needed are:
+
+1. **Choose a workable Step 1 integration.** [runner.py](/Users/lchingen/hivemind/clean-arch/step1/runner.py:221) checks `type(transport) is LiveTransport` in several places, including the live archive and format-retry path. Specify the smallest permitted change that lets the budgeted transport take that same path, and prove its request, archive, retry and trace behavior against the existing transport. Merely changing the constructor in the launcher will not work.
+
+2. **Put the ladder reservation inside each actual attempt.** Stage A calls `send_labelled`, whose retry loop is internal; the design names `send`. Reserving once outside that loop would not implement the stated per-attempt accounting. Specify where the shared reservation and settlement sit relative to the existing local limit and stop flag, without double charging. [Stage A limit](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:50).
+
+3. **Define an enforceable shared stop and slice sub-limit.** The existing `SharedLedger.reserve()` records a refusal but does not persist a stop; another process can still reserve later. An aggregate reservation also cannot independently enforce the stated $1.50 slice limit within the $15 total. Specify the persistent, locked state and atomic checks for both limits, including in-flight calls and later processes. The $0 proof should show that a refusal in one component prevents a later affordable call in another. [Shared ledger](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_replay.py:62).
+
+4. **Make the Jev wrapper non-recursive and test actual interception.** `BudgetTransport._jev` calls `jev.transport`; replacing that same module attribute with the budget transport would call itself. Capture the original transport before patching, or specify another injection point. The `urlopen` trap also needs to associate a reservation with the particular attempt: merely finding *some* live reservation would allow an unreserved concurrent call through. [Budget transport](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_replay.py:143), [Jev call](/Users/lchingen/hivemind/src/hivemind/jev.py:87).
+
+5. **Correct the Stage B decision rules.** D428 separates the figure and yes/no limits: figures may be at most five percentage points above the corresponding baseline reading; yes/no has an absolute 5% limit. The last-judgment limit is at most three unsupported per 30, scaled to the number judged, with insufficient judgments reported separately. Alongside completed draws, judged coverage and eligible controls, these are **six conditions**, not five. Preserve the three treatments of unresolved verdicts used in the recorded result. [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4752), [Stage B result](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md:19).
+
+6. **Finish the run-state contract before implementation.** The table says a crashed Step 1 or production draw gets one fresh redo, but does not say whether a crash itself permits that redo, how the decision survives a launcher crash, or how it interacts with a global budget stop. Define the persisted attempt states, which failures permit a redo, and which stop the entire run. Also specify the value-by-reader and new-path-by-existing-checks tables required by the repository’s design rules.
+
+The rest is a meaningful improvement: the fresh inputs, stored-output comparisons, reading workload and slice are now explicit. The $15 total remains a proposed limit, and the recorded $7.11 spent leaves $32.89 under D439; neither authorizes a send at this review stage.
+
+Council position: revise version 2 to resolve these implementation and decision-rule gaps, then review before building.

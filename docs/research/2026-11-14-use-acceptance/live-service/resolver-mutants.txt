@@ -1,0 +1,12 @@
+control: 20 passed in 15.28s
+M1 future bound passes: CAUGHT | 1 failed in 23.51s
+M2 view_bundle omitted unfiltered as before: CAUGHT | 1 failed in 14.73s
+M3 a public function that skips the resolver: CAUGHT | 1 failed in 0.09s
+M4 a site resolved by or default_as_of: CAUGHT | 1 failed in 0.09s
+M5 first day not refused: CAUGHT | 1 failed in 15.61s
+M6 a start after the end passes: CAUGHT | 1 failed, 3 passed in 15.31s
+M7 direct pre-creation view_bundle not refused: MISSED | 11 passed in 0.84s
+M7 is an equivalent mutant: view_bundle ends by calling not_judged, which raises the same refusal, so removing view_bundle's early check
+changes no outcome (the early check saves building a record that would be refused). M8 and M9 below show the refusal is guarded:
+M8 not_judged direct check removed: CAUGHT | 1 failed, 10 passed (tests/test_not_judged_bundle.py)
+M9 both direct checks removed (not_judged back to returning None): CAUGHT | 1 failed, 10 passed (tests/test_not_judged_bundle.py)

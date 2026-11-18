@@ -1,0 +1,53 @@
+[
+  {
+    "case": "9",
+    "reviewed": 10,
+    "unresolved": 0,
+    "judgments": [
+      {"id": "C1", "relation": "different", "reason": "AI labs' expected share of Nvidia's business, not Vera Rubin deliveries.", "source evidence": null},
+      {"id": "C2", "relation": "different", "reason": "Quarterly revenue and data center sales, not deliveries.", "source evidence": null},
+      {"id": "C3", "relation": "different", "reason": "Fiscal 2028 revenue growth guidance and supply constraints.", "source evidence": null},
+      {"id": "C4", "relation": "different", "reason": "Revenue opportunity per gigawatt, not customer deliveries.", "source evidence": null},
+      {"id": "C5", "relation": "different", "reason": "Purchase orders are not a report that systems were delivered.", "source evidence": null},
+      {"id": "C6", "relation": "different", "reason": "Future spending and supply commitments.", "source evidence": null},
+      {"id": "C7", "relation": "different", "reason": "Production status and expected revenue share do not establish commercial delivery to customers.", "source evidence": null},
+      {"id": "C8", "relation": "different", "reason": "Gross margin outlook and memory costs.", "source evidence": null},
+      {"id": "C9", "relation": "different", "reason": "Visibility into capacity and infrastructure behind revenue guidance.", "source evidence": null},
+      {"id": "C10", "relation": "different", "reason": "Next fiscal year's revenue growth guidance.", "source evidence": null}
+    ]
+  },
+  {
+    "case": "10",
+    "reviewed": 10,
+    "unresolved": 0,
+    "judgments": [
+      {"id": "C1", "relation": "different", "reason": "Nvidia revenue growth guidance, not Hugging Face users.", "source evidence": null},
+      {"id": "C2", "relation": "different", "reason": "Hugging Face revenue and acquisition price multiple.", "source evidence": null},
+      {"id": "C3", "relation": "different", "reason": "Huang's commitment to keep Hugging Face open.", "source evidence": null},
+      {"id": "C4", "relation": "different", "reason": "Announcement and price of the acquisition.", "source evidence": null},
+      {"id": "C5", "relation": "different", "reason": "Acquisition price and payment terms.", "source evidence": null},
+      {"id": "C6", "relation": "different", "reason": "Financing platforms for AI infrastructure.", "source evidence": null},
+      {"id": "C7", "relation": "overlap", "reason": "Both describe a roughly 18 million-person Hugging Face community. The candidate also reports model, dataset and application counts; the incoming statement adds the CEO's 100 million-user goal.", "source evidence": {"incoming": "We have 18 million AI builders using the Hugging Face platform today, and our goal is to get to 100 million AI builders in the next few years", "candidate": "home to more than 18 million developers, researchers and creators"} },
+      {"id": "C8", "relation": "overlap", "reason": "Both describe roughly 18 million Hugging Face users. The candidate also reports the deal and platform statistics; the incoming statement adds the CEO's 100 million-user goal.", "source evidence": {"incoming": "We have 18 million AI builders using the Hugging Face platform today, and our goal is to get to 100 million AI builders in the next few years", "candidate": "it has more than 18 million developers and researchers using more than 3 million models"} },
+      {"id": "C9", "relation": "different", "reason": "Nvidia's quarterly revenue and income used to put the acquisition price in context.", "source evidence": null},
+      {"id": "C10", "relation": "different", "reason": "Nvidia's financial guarantees, including an OpenAI data center project.", "source evidence": null}
+    ]
+  },
+  {
+    "case": "11",
+    "reviewed": 10,
+    "unresolved": 0,
+    "judgments": [
+      {"id": "C1", "relation": "different", "reason": "An analyst's assessment of the forecast's increase and reliability, rather than the forecast itself.", "source evidence": null},
+      {"id": "C2", "relation": "different", "reason": "Fiscal Q3 2027 revenue guidance.", "source evidence": null},
+      {"id": "C3", "relation": "different", "reason": "A conditional fiscal 2029 net income and revenue projection.", "source evidence": null},
+      {"id": "C4", "relation": "overlap", "reason": "Both report Nvidia's 70% fiscal 2028 growth expectation. The candidate also states that supply limits the forecast; the incoming statement adds the comparison with analysts and implied revenue.", "source evidence": {"incoming": "projection of 70% revenue growth by fiscal 2028, far surpassing analyst estimates and pointing to nearly $700B in revenues", "candidate": "Nvidia expects revenue to grow about 70% in its fiscal 2028" } },
+      {"id": "C5", "relation": "different", "reason": "Reported fiscal 2026 revenue.", "source evidence": null},
+      {"id": "C6", "relation": "different", "reason": "Analysts' fiscal 2027 revenue consensus.", "source evidence": null},
+      {"id": "C7", "relation": "overlap", "reason": "Both describe guidance implying nearly $700 billion and exceeding analysts' expectations. The candidate supplies the earlier $570 billion estimate and 44% growth; the incoming statement specifies Nvidia's 70% projection.", "source evidence": {"incoming": "70% revenue growth by fiscal 2028, far surpassing analyst estimates and pointing to nearly $700B in revenues", "candidate": "Wall Street analysts had previous expected the company to deliver fiscal 2028 revenue of about $570 billion, translating to growth of roughly 44%. Nvidia's guidance, however, implies revenue of close to $700 billion."} },
+      {"id": "C8", "relation": "different", "reason": "Reported fiscal Q2 2027 revenue.", "source evidence": null},
+      {"id": "C9", "relation": "different", "reason": "The author's conditional trailing revenue and profit calculation, using 70% growth over a different period.", "source evidence": null},
+      {"id": "C10", "relation": "same", "reason": "Both report Nvidia's expected 70% revenue growth for the next fiscal year; the incoming article adds the analyst comparison and implied revenue.", "source evidence": {"incoming": "projection of 70% revenue growth by fiscal 2028", "candidate": "management expects 70% revenue growth in the next fiscal year"} }
+    ]
+  }
+]

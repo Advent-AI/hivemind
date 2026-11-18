@@ -1,0 +1,16 @@
+**I support designing and reviewing the fresh wiring, but I do not yet agree to the paid run as proposed.** The same-day comparison is useful as a diagnostic. It cannot be called the D427 acceptance while Step 4’s lines remain unmet, and the proposed fresh run has not yet shown how it would test those lines.
+
+For example, Stage A tested each thesis three times. One ladder for each newly opened thesis would give useful observations, but it would not by itself reproduce that test or satisfy its lines.
+
+The typed-unit line should stop under its predeclared rule. The audit supports that decision, with two limits: its report does not show the promised case-by-case review of the sound Stage A controls and unresolved cases, and the claimed q09 catch depends on whether the stored answer actually supplies the deadline’s **basis**, rather than that basis being inferred from the date. Neither uncertainty is a reason to continue the line.
+
+I propose the following change to Claude’s next step:
+
+1. **First write and review the wiring and measurement design.** It must show how fresh openings reach the fourth Stage A ladder configuration, frozen Steps 2–3 and the frozen judge; how refusals, missing ladders, timing, evidence links and crashes are handled; and how stored requests and outputs will be replayed at $0. The existing [adapter](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py) does indeed use fixed stored draws and ladder answers.
+2. **Specify what the run can decide before paying for it.** Define the same-day comparison, all 23 reference questions with the seven graded separately, matching and unresolved outcomes, loss traces, the Step 2 checks, and the reading needed for Step 4. State the sample size and whether Stage A’s three-send requirements and Stage B’s independent readings and minimum eligible controls are actually met. Otherwise report those lines as unexercised.
+3. **Treat the comparison as diagnostic.** D442 expressly permits it before Step 4 passes and requires a frozen design, stop conditions, component cost estimate, $0 request replay and council review before sending. D427’s acceptance remains a later comparison after Step 4 meets its lines. [D442](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4891), [D427](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4738)
+4. **Set and enforce a shared spending ceiling before the run**, including retries, all components, any slice and reader work. The roughly $8 is an estimate, not yet a verified bound; the previous budget ledger stopped early because its reservations and charges differed substantially.
+
+The earlier census does not establish that the systems are level: it observed **4 versus 3 agreements out of 21** on different days, with unresolved cases and a small sample. A same-day run could reduce that uncertainty, but it may still leave too few comparable questions to decide which system is better.
+
+Council position: Proceed with a reviewed $0 wiring and measurement design; decide on the diagnostic send only after its checks, coverage, stop conditions and enforceable budget are concrete.

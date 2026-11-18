@@ -1,0 +1,59 @@
+FIDELITY (full-week record; 20 rows of each stratum; not a rate for the whole record)
+  stratum R (20 rows): codex {'right': 15, 'wrong': 0, 'incomplete': 5}; claude {'right': 18, 'wrong': 0, 'incomplete': 2}
+    wrong by both []; families differ on [6, 21, 30]; after settling: wrong 0, incomplete 2 (line: at most 1 wrong): UNDECIDED (marks to settle)
+      entry 6 (row 105) codex: {'basis': 'missing'} | The article says revenue rose 106% from the same period last year.
+      entry 6 (row 105) claude: all right | Article says only 'recently reported'; no report date and no basis qualifier for the revenue figure.
+      entry 21 (row 338) codex: {'date': 'missing'} | The article dates the fiscal Q2 earnings report August 26, 2026.
+      entry 21 (row 338) claude: all right | Article does not say when management gave this expectation. Counted as revenue: a product's share of data center segment revenue.
+      entry 30 (row 207) codex: {'date': 'missing'} | The article places the related second-quarter earnings release in late August.
+      entry 30 (row 207) claude: all right | Matches 'the fiscal first quarter's 85% year-over-year growth'; no report date for that quarter in the article.
+    not the company's own figure: {'codex': [], 'claude': []}
+  stratum O (20 rows): codex {'right': 14, 'wrong': 4, 'incomplete': 2}; claude {'right': 17, 'wrong': 1, 'incomplete': 2}
+    wrong by both [22]; families differ on [7, 26, 32]; after settling: wrong 1, incomplete 2 (line: at most 2 wrong): UNDECIDED (marks to settle)
+      entry 7 (row 310) codex: {'basis': 'wrong', 'original_party': 'wrong'} | The 22% revision is reported as having occurred; the article does not identify it as a consensus estimate.
+      entry 7 (row 310) claude: all right | Matches 'next year's estimate up 22%'; dateline September 29, 2026. Earnings estimate revision, not revenue or margin.
+      entry 22 (row 134) codex: {'kind': 'wrong', 'original_party': 'wrong'} | The current earnings base is presented as a current figure, not a forecast; the article does not attribute it to Yahoo Finance.
+      entry 22 (row 134) claude: {'kind': 'wrong'} | Kind wrong: $159.6 billion is the earnings level 'today' (current base), not a forecast; the forecast is the 2029 figure.
+      entry 26 (row 314) codex: {'basis': 'wrong', 'original_party': 'wrong'} | The article reports the projection but does not identify it as a consensus estimate.
+      entry 26 (row 314) claude: all right | Matches 'earnings are projected to rise 94% and 66%, respectively' (next year); dateline September 29, 2026.
+      entry 32 (row 131) codex: {'original_party': 'wrong'} | The article attributes the projection to NVIDIA's investment narrative, not specifically to Yahoo Finance.
+      entry 32 (row 131) claude: all right | Matches the narrative's '$392.6 billion earnings by 2029'; publisher name in the party field is not visible in the article text.
+    not the company's own figure: {'codex': [], 'claude': []}
+    revenue or margin rows the view's filter leaves out: {'codex': [], 'claude': [40]}
+  marks by field, codex: measure {'right': 40}; basis {'right': 32, 'unknown_ok': 4, 'missing': 2, 'wrong': 2}; period {'right': 36, 'unknown_ok': 4}; kind {'right': 38, 'actual': 1, 'wrong': 1}; value {'right': 40}; original_party {'right': 35, 'wrong': 4, 'unknown_ok': 1}; date {'right': 11, 'missing': 6, 'unknown_ok': 23}
+  marks by field, claude: measure {'right': 40}; basis {'right': 34, 'unknown_ok': 6}; period {'right': 36, 'missing': 1, 'unknown_ok': 3}; kind {'right': 39, 'wrong': 1}; value {'right': 40}; original_party {'right': 39, 'unknown_ok': 1}; date {'right': 11, 'missing': 4, 'unknown_ok': 25}
+
+USABILITY (six questions; the record reader against the reference written from the same 40 articles)
+  Q1a codex: record supported, reference supported, agree True, articles hold True | 
+  Q1b codex: record supported, reference supported, agree True, articles hold True | 
+  Q1c codex: record none, reference none, agree False, articles hold None | The packet does not state what Q1(c) asks, so whether the articles hold the answer cannot be determined.
+  Q1a claude: record supported, reference supported, agree True, articles hold True | 70% for fiscal 2028 in arts 3, 18, 21, 39; art. 29 says next fiscal year; Kress and supply-constrained in art. 21.
+  Q1b claude: record supported, reference supported, agree True, articles hold True | The 45% is in art. 3 only; the analysts are not named.
+  Q1c claude: record none, reference none, agree False, articles hold False | Part's wording is not in the packet; judged on both readers' 'not held'. Nearest: art. 21 author's ~$700B fiscal 2028 arithmetic; art. 13 Huang 'double chip sales' next year.
+    -> Q1: {'codex': 'same', 'claude': 'same'}
+  Q2a codex: record supported, reference incomplete, agree False, articles hold True | P omits the roughly 90% or more current-year growth expectation in article 3.
+  Q2a claude: record supported, reference supported, agree True, articles hold True | Same two dollar estimates (arts 18, 21). Q adds the unnamed ~90% growth expectation (art. 3; art. 21 also says this fiscal year's expected 90%), which P omits.
+    -> Q2: {'codex': 'not the same', 'claude': 'same'}
+  Q3a codex: record supported, reference supported, agree True, articles hold True | 
+  Q3b codex: record supported, reference supported, agree True, articles hold True | 
+  Q3a claude: record supported, reference supported, agree True, articles hold True | Guide with the 2% range in arts 6 and 18; P's 12%, 12.2% and 89.5% are in arts 6, 21 and 18.
+  Q3b claude: record supported, reference supported, agree True, articles hold True | Art. 13: consensus $109.0B, up 91.2%, for the report due late November; the quarter is not named there, both read it as fiscal Q3 2027.
+    -> Q3: {'codex': 'same', 'claude': 'same'}
+  Q4a codex: record wrong, reference supported, agree True, articles hold True | The articles do not say CFO Colette Kress stated the 75% actual; article 21 attributes the later margin outlook to her.
+  Q4b codex: record supported, reference supported, agree True, articles hold True | 
+  Q4c codex: record supported, reference supported, agree True, articles hold True | 
+  Q4a claude: record wrong, reference supported, agree True, articles hold True | P's attribution: no article has CFO Kress stating the Q2 75% (art. 21: author's comparison; art. 6: Aug. 26 release). Figures and period match Q.
+  Q4b claude: record supported, reference supported, agree True, articles hold True | Art. 21: Kress, bottom 71%-72% in the fiscal fourth quarter; art. 3: Bloomberg-compiled estimates under 72% by 'the fourth quarter'. No article gives a fiscal Q3 margin.
+  Q4c claude: record supported, reference supported, agree True, articles hold True | Art. 21: Kress, 72% to 73% in fiscal 2028 as price hikes kick in; art. 3 gives a recovery after the fourth quarter without a figure.
+    -> Q4: {'codex': 'wrong', 'claude': 'wrong'}
+  Q5a codex: record supported, reference supported, agree True, articles hold True | 
+  Q5b codex: record supported, reference supported, agree True, articles hold True | 
+  Q5a claude: record supported, reference supported, agree True, articles hold True | $96.2B in arts 6, 7, 13, 21, 27 and $96.22B in art. 18: one figure, rounded; 106% in both.
+  Q5b claude: record supported, reference supported, agree True, articles hold True | $89B in arts 6, 7, 13, 20, 21 and $89.02B in art. 18: one figure, rounded; 117% in both.
+    -> Q5: {'codex': 'same', 'claude': 'same'}
+  Q6a codex: record supported, reference supported, agree True, articles hold True | 
+  Q6a claude: record supported, reference supported, agree True, articles hold True | Both name $406.05B (Zacks, art. 18) against about $412B (analysts' consensus, art. 21).
+    -> Q6: {'codex': 'same', 'claude': 'same'}
+  codex: exercised 6; not the same ['Q2', 'Q4']; wrong ['Q4']: NOT met
+  claude: exercised 6; not the same ['Q4']; wrong ['Q4']: NOT met
+  questions on which the comparers differ: ['Q2']

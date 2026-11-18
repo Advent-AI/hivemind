@@ -1,0 +1,39 @@
+**The diagnosis identifies real missed questions, but its explanation and proposed change need correction before they go to Alex.** In the three spending cases, the model’s later explanations are not all the same: one says it applied the existing year rule and chose 2027; it does not say a merge rule won.
+
+1. **The first review’s findings**
+
+   Several are answered: version 2 acknowledges that c8 already states the one-period rule; describes the spending cases as missing a separate year rather than necessarily combining two outcomes; drops the proposed structured field; preserves the rolling-period detail; separates the five proposed targets from other cases; and adds the remaining Stage A faults as rows. It also labels the Stage B differences as leads. [First review](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/council/lc-codex.md:1); [version 2](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:38).
+
+   These points remain open:
+
+   - The table still labels **all three** missed memory-price questions as “two years, or two outcomes, in one thesis.” The d3 description shows a capacity question and a price statement linked to supply commitments; it does not establish that mechanism. [Diagnosis](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:43); [mechanism table](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:67).
+   - Listing the ladder step’s reasons does not independently establish that each of the eight theses was wrongly opened. The remaining Stage A faults are now named, but their relationship to Step 1 is asserted in brief rather than traced source by source. [Diagnosis](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:47); [Stage A record](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md:44).
+   - The new test addresses unknown dates, evidence links and lost openings, but does not yet establish how the proposed wording preserves the existing duplicate and aggregate boundaries. The question about a two-year *change* is set aside, not resolved. [Diagnosis](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:93).
+
+2. **The six replies**
+
+   The stored answers support the basic descriptions in the follow-up questions: each spending draw opened one year, both Ohio draws linked the negotiation to the existing total, and the memory answer named both years. The replies then differ:
+
+   - **Spending d1:** names two merge sentences and says it weighed the one-period sentence. That supports the proposed explanation as the model’s later account. [Reply](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/model-account.json:3).
+   - **Spending d2:** names the same-question rule, but also distinguishes the reported 2026 plan from NVIDIA’s 2027 projection. It does not say it weighed the one-period sentence. [Reply](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/model-account.json:11).
+   - **Spending d3:** cites the shared-quantity and one-period rules, then explains why it chose 2027. It names **no merge rule**. This directly contradicts “five of five asked name the merge rules.” [Reply](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/model-account.json:19); [claim](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:69).
+   - **Ohio d2 and d3:** both cite the existing-question rule against the unsigned-obligation instruction. They support that explanation for those two choices. D2’s further claim that signing and the total cannot move apart is its own reasoning, not a reason to override the recorded boundary. [Replies](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/model-account.json:27).
+   - **Memory d1:** calls the two-year wording a slip and offers either a comparison or treating it as input-cost evidence. It does not explain the other two memory misses. [Reply](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/model-account.json:42).
+
+   The questions do not supply a merge-rule answer, but they name the omitted alternative and ask why it was not opened; the memory question offers two preferred alternatives. The continuation also asks the model to quote instructions and say what an experienced analyst would do. That makes the replies useful **leads**, not independent proof of what caused the original choices or that moving wording will fix them. The diagnosis acknowledges the leading risk but then overstates both the count and causation. [Questions and continuation](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/model_account_choices.py:18); [limits](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:104).
+
+3. **The proposed change and test**
+
+   The two ideas have sources and can be written generally across companies. But the proposal omits a relevant later decision: **D388 says the unsigned obligation must be material and merit its own investment judgment**, and explicitly keeps small unsigned obligations and signed deals under a total as evidence. D248 itself says its unsigned-deal exception had not then been put to Alex; D388 records his later answer. The proposal’s unqualified “a deal not yet signed” is therefore too broad as written. [D248](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2959); [D388](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4172).
+
+   D38 supports a separate year identity, subject to the existing opening standard; it does not make every annual figure worth opening. The proposal should preserve the requirement that the question matters to an analyst and has a settling source. [D38](/Users/lchingen/hivemind/docs/DECISIONS-log.md:755); [c8 opening test](/Users/lchingen/hivemind/clean-arch/PRD.md:658).
+
+   The four passages are **not simply four identical restatements**. One covers another population or wording of an aggregate, one covers another estimate or source, one asks for comparison with the closest open thesis, and the closing check also compares *new theses with each other*. Removing three could weaken those distinctions and allow repeats, including two newly proposed questions in the same answer. The proposed single replacement is not written out, so its preservation of those behaviors and its character/token size cannot be verified. [Main request](/Users/lchingen/hivemind/clean-arch/PRD.md:673); [closing check](/Users/lchingen/hivemind/clean-arch/PRD.md:765).
+
+   The predicted spending and Ohio outcomes are concrete, and the fresh-article checks for trivia, links and lost useful openings are improvements. They need explicit controls for repeated existing and newly proposed questions, another wording or estimate of the same aggregate, another population, and a small or already signed obligation. Readers also need a pre-set way to distinguish a genuine regression from ordinary variation across sends. The plan should report the actual before/after prompt size. [Proposed test](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:93).
+
+4. **Readiness**
+
+   Correct the five-of-five claim and the memory classification; distinguish reported explanations from established causes; incorporate D388; and write the exact consolidated passage with its preserved boundaries, size comparison and controls. Also examine the earlier c9 result recorded in D388 before presenting this as the next lever: that decision says a sentence-level rule flipped by send and called for a structural lever. This can remain **one proposed change** for Alex; it needs a concrete, reviewable definition first. [D388](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4180).
+
+**The diagnosis stands with corrections; ready to put to Alex: no.**

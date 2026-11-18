@@ -1,0 +1,472 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 21: the due-day candidate, prepared at $0 as round 20 asked (`reflection-6/due-day/`)
+
+Read `due-day/audit.md`, `candidate-system-v2.txt`, `dueday_probe.py`, `test_dueday_probe.py`, `mutants.txt` and `check-output.txt`.
+
+**The blind whole-request audit** (`audit.md`, a fresh Codex session):
+- **The changed clause:** "consistent with D210 and D185". The frozen clause "keeps wider than D210" and "conflicts with D403".
+- **No gap:** events take D403's stated date or period end, and an event with neither declines.
+- **Its "NOT CONSISTENT"** names two things outside the change:
+  1. **The unchanged reader brief's D row still holds the wide rule.** D is not a hard line and the reading form stays unchanged.
+     In both screens, both families already failed D on the next-annual-filing completion dates and preferred the stated date. The
+     gap is recorded for Alex's page, not fixed.
+  2. **A pre-existing D414 tension** (the request asks the model to estimate an annual figure's day that code then sets). It is not
+     touched here.
+
+**The probe:**
+- **Arms:** astra on the frozen request (a fresh control) against astra on v2, interleaved, 2 draws, 36 sends.
+- **Topics:**
+  - the signed completion, with a stated date and with a closing window (one matter, two forms);
+  - the guarantee with a stated date;
+  - three obligation amounts at the next annual filing;
+  - an unsigned acquisition;
+  - two period-end events.
+- **Cap and cost:** $3.20, against about $1.5 measured. About $5.3 remains of D439.
+- **Requests:** checked to be the stored frozen ones, with v2 differing only in the clause, byte for byte.
+
+**Verdict fixed before:**
+- **Inconclusive** if the frozen arm does not date the fortnight completion at the annual filing (no mechanism to fix).
+- **Moves**, when all of these hold:
+  - v2 dates it at 24 March 2028 in 2 of 2, and the closing-window form at 30 June 2027 in 2 of 2;
+  - every amount control stays at the next annual filing, and the guarantee at its stated date;
+  - the event controls stay within the outcomes every stored draw gave;
+  - v2 makes no more declines than the frozen arm.
+- **Closes:** otherwise.
+- **Then:** I read every question and its rungs in both arms for any other change before recording anything.
+- **What "moves" is:** one matter in two forms, a small diagnostic. It is no gate pass.
+
+**Proofs:** tests 7 of 7, and four mutants each caught by a failing assertion.
+
+**Asked:** send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the changed request, the frozen control and the stop rules, including whether the test would catch a changed question as well as a changed date.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/test_dueday_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/audit.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/mutants.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/candidate-system-v2.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The due-day probe at $0 (council round 20): the check, the four arm-draws through the real runner and limit with a fake transport,
+the v2 requests carrying the changed clause and nothing else, and the verdict fixed before."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parent / 'astra'), str(HERE.parent / 'model'), str(HERE.parent / 'effort')]
+import dueday_probe as probe  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 2000, 'completion_tokens': 400}      # about astra's measured $0.04 a send
+
+
+def transport():
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    systems = []
+
+    def send(provider, request):
+        systems.append(request['messages'][0]['content'])
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+    send.systems = systems
+    return send
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('dueday')
+    original, probe.RECORD = probe.RECORD, folder / 'check-passed.json'
+    try:
+        probe.check()
+        fake = transport()
+        probe.send(folder / 'run', transport=fake)
+        yield folder, fake
+    finally:
+        probe.RECORD = original
+
+
+def test_each_arm_sends_its_own_system_text_and_nothing_else_differs(run):
+    _, fake = run
+    frozen = [text for text in fake.systems if probe.FROZEN_CLAUSE in text]
+    changed = [text for text in fake.systems if probe.V2_CLAUSE in text]
+    assert len(frozen) >= 18 and len(changed) >= 18 and len(frozen) + len(changed) == len(fake.systems)
+    assert {text.replace(probe.V2_CLAUSE, probe.FROZEN_CLAUSE) for text in changed} == set(frozen)
+
+
+def test_the_check_refuses_a_v2_text_that_changes_more_than_the_clause(tmp_path, monkeypatch):
+    edited = tmp_path / 'v2.txt'
+    edited.write_text(probe.V2_SYSTEM.read_text().replace('Write in English.', 'Write in plain English.'))
+    monkeypatch.setattr(probe, 'V2_SYSTEM', edited)
+    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+    with pytest.raises(SystemExit, match='CHECK FAILED'):
+        probe.check()
+
+
+def rewrite(folder, changes):
+    """Copy the run and set the due day (or a decline) of the arm-draw and topic given."""
+    import shutil
+    copy = folder.parent / (folder.name + '-copy')
+    shutil.rmtree(copy, ignore_errors=True)
+    shutil.copytree(folder / 'run', copy)
+    for (arm_draw, topic), day in changes.items():
+        path = copy / arm_draw / 'outcomes.jsonl'
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        for row in rows:
+            if row['case'] == f'{arm_draw}|{topic}':
+                if day == 'decline':
+                    row.update(status='no ladder', answer=None, view=None, passage=None)
+                else:
+                    row['answer']['ladder']['due_day'] = day
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    return copy
+
+
+HF, HF_WEEK = 'fortnight:c1/clean-6', 'week-10-06:c1/clean-5'
+FIXED = {('frozen-d1', HF): '2027-02-28', ('v2-d1', HF): '2028-03-24', ('v2-d2', HF): '2028-03-24',
+         ('v2-d1', HF_WEEK): '2027-06-30', ('v2-d2', HF_WEEK): '2027-06-30'}
+
+
+def test_a_fixed_completion_with_every_control_kept_moves(run):
+    folder, _ = run
+    copy = rewrite(folder, FIXED)
+    verdict, _ = probe.tally(copy)
+    assert verdict == 'moves'
+
+
+def test_a_completion_still_at_the_annual_filing_closes(run):
+    folder, _ = run
+    copy = rewrite(folder, FIXED | {('v2-d2', HF): '2027-02-28'})
+    assert probe.tally(copy)[0] == 'closes'
+
+
+def test_an_amount_control_moved_off_the_annual_filing_closes(run):
+    folder, _ = run
+    copy = rewrite(folder, FIXED | {('v2-d1', 'fortnight:c1/clean-2'): '2027-07-31'})
+    assert probe.tally(copy)[0] == 'closes'
+
+
+def test_a_new_decline_in_the_changed_arm_closes(run):
+    folder, _ = run
+    copy = rewrite(folder, FIXED | {('v2-d1', 'fortnight:c1/clean-7'): 'decline'})
+    assert probe.tally(copy)[0] == 'closes'
+
+
+def test_no_annual_filing_date_in_the_frozen_arm_is_inconclusive(run):
+    folder, _ = run
+    copy = rewrite(folder, {key: day for key, day in FIXED.items() if key[0] != 'frozen-d1'} | {('frozen-d1', HF): '2028-03-24',
+                                                                                              ('frozen-d2', HF): '2028-03-24'})
+    assert probe.tally(copy)[0].startswith('inconclusive')
+
+ succeeded in 0ms:
+"""The due-day probe (council rounds 19 and 20): astra on the frozen request against astra on the request whose binding-obligation clause
+is narrowed to amounts (`candidate-system-v2.txt`), on nine topics covering the due-day cases, two interleaved draws each.
+
+  python3 dueday_probe.py check                  # $0: the requests differ only in the clause; spend; writes check-passed.json
+  python3 dueday_probe.py send <new run folder>  # frozen d1, v2 d1, frozen d2, v2 d2
+  python3 dueday_probe.py tally <run folder>     # each topic's due days and bases per arm, declines, and the verdict fixed before
+"""
+import collections
+import dataclasses
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE.parent / 'astra')]
+import astra_probe as base  # noqa: E402   (Stage A's runner, the limit, the breach guard, the population)
+from astra_probe import budget, model, probe_split, refcontrol, stage_a  # noqa: E402
+
+FROZEN_CLAUSE = 'for an obligation already taken on, its next annual filing;'
+V2_CLAUSE = 'for the amount of an obligation already taken on, its next annual filing;'
+V2_SYSTEM = HERE / 'candidate-system-v2.txt'
+ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+ARMS = ('frozen', 'v2')
+ORDER = [('frozen', 1), ('v2', 1), ('frozen', 2), ('v2', 2)]
+CAP_USD = 3.20                     # both arms, 36 sends at about $0.04 measured; about $5.3 remains of D439's $40
+WORKERS = 1
+RECORD = HERE / 'check-passed.json'
+TOPICS = {   # topic: the case it covers and the due day each arm must give (`stated`, `period_end`, `annual_filing` or `any`)
+    'fortnight:c1/clean-6': ('a signed deal completing, stated check date 24 March 2028', '2028-03-24'),
+    'week-10-06:c1/clean-5': ('the same deal, its closing window the first half of 2027', '2027-06-30'),
+    'fortnight:c1/clean-12': ('a guarantee becoming final, stated check date 3 April 2028', '2028-04-03'),
+    'fortnight:c1/clean-2': ('purchase commitments: an amount at the next annual filing', 'annual_filing'),
+    'week-10-06:c1/clean-1': ('a guarantee amount at the next annual filing', 'annual_filing'),
+    'week-10-06:c1/clean-8': ('a loss-coverage amount at the next annual filing', 'annual_filing'),
+    'week-10-06:c1/clean-11': ('an unsigned acquisition', 'any'),
+    'fortnight:c1/clean-4': ('an event at the fiscal year-end', 'any'),
+    'fortnight:c1/clean-7': ('an approval event by a stated day', 'any'),
+}
+ALLOWED = {   # the outcomes every stored draw gave on the event controls (D629 and both screens, census of 2026-11-16)
+    'week-10-06:c1/clean-11': {'decline', '2028-04-10'},
+    'fortnight:c1/clean-4': {'2027-01-31', '2027-02-28'},
+    'fortnight:c1/clean-7': {'2027-01-31'},
+}
+
+
+def texts_of(arm):
+    texts = stage_a.request_texts()
+    if arm == 'v2':
+        texts = dict(texts, system=V2_SYSTEM.read_text())
+    return texts
+
+
+def population():
+    entries = [entry for entry in refcontrol.population() if f'{entry[0]}:{entry[1]}' in TOPICS]
+    if len(entries) != len(TOPICS):
+        raise SystemExit('a probe topic is not in the population')
+    return entries
+
+
+def built(case, arm, rl):
+    texts = texts_of(arm)
+    user = base.ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(Path(__file__).read_bytes() + V2_SYSTEM.read_bytes()).hexdigest()
+
+
+def check():
+    frozen_text, v2_text = stage_a.request_texts()['system'], V2_SYSTEM.read_text()
+    if frozen_text.count(FROZEN_CLAUSE) != 1 or v2_text != frozen_text.replace(FROZEN_CLAUSE, V2_CLAUSE):
+        raise SystemExit('CHECK FAILED: the v2 system text is not the frozen one with the one clause changed')
+    rl = refcontrol.research_list()
+    failures, shas = [], {arm: {} for arm in ARMS}
+    for source, name, case, stored in population():
+        frozen = built(case, 'frozen', rl)
+        luna = model.build_request(stage_a.SETTING, frozen_text, frozen['messages'][1]['content'], stage_a.request_texts()['schema'],
+                                   'clean_ladder', 'openai')
+        if model.request_identity(luna)[1] != stored['requests'][0]['request_sha256']:
+            failures.append(f'{source}:{name}: the frozen request is not the stored one')
+        sent_frozen, sent_v2 = json.dumps(frozen, ensure_ascii=False), json.dumps(built(case, 'v2', rl), ensure_ascii=False)
+        if sent_v2 != sent_frozen.replace(FROZEN_CLAUSE, V2_CLAUSE):
+            failures.append(f'{source}:{name}: the v2 request differs in more than the clause')
+        for arm in ARMS:
+            shas[arm][f'{source}:{name}'] = model.request_identity(built(case, arm, rl))[1]
+    worst = max(budget.worst_cost(built(case, 'frozen', rl)) for *_, case, _ in population())
+    print(f'{len(TOPICS)} topics; the requests are the stored frozen ones and differ only in the clause: {not failures}; '
+          f'worst-case reserve of one attempt ${worst:.2f}; cap ${CAP_USD:.2f}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    entries = population()
+    for arm in ARMS:
+        if {f'{s}:{n}': model.request_identity(built(c, arm, rl))[1] for s, n, c, _ in entries} != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent = 0.0
+    original = stage_a.request_texts
+    try:
+        for arm, draw in ORDER:
+            stage_a.request_texts = lambda arm=arm: texts_of_frozen_or_v2(original, arm)
+            cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in entries]
+            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', CAP_USD - spent, ASTRA, rl, transport=guard, workers=WORKERS)
+            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            spent += known + in_full
+            over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            print(f'{arm} d{draw}: {len(written)} of {len(entries)} written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+            if over or guard.breaches or limit.stopped or len(written) != len(entries):
+                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    finally:
+        stage_a.request_texts = original
+    print(f'spent ${spent:.4f}')
+
+
+def texts_of_frozen_or_v2(original, arm):
+    texts = original()
+    return dict(texts, system=V2_SYSTEM.read_text()) if arm == 'v2' else texts
+
+
+def day_class(row, expected):
+    """What a written due day is against the topic's expected one: `expected`, `annual_filing` (a day in February or March of 2027),
+    `other`, or `decline`."""
+    if row['status'] != 'ladder':
+        return 'decline'
+    day = row['answer']['ladder']['due_day']
+    if day == expected:
+        return 'expected'
+    return 'annual_filing' if day[:7] in ('2027-02', '2027-03') else 'other'
+
+
+def tally(folder):
+    rows = {}
+    for arm, draw in ORDER:
+        for line in (Path(folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines():
+            row = json.loads(line)
+            rows[row['case']] = row
+    table, declines = {}, collections.Counter()
+    for topic, (_, expected) in TOPICS.items():
+        for arm in ARMS:
+            classes = []
+            for draw in (1, 2):
+                row = rows[f'{arm}-d{draw}|{topic}']
+                if expected == 'annual_filing':
+                    classes.append('decline' if row['status'] != 'ladder' else
+                                   ('expected' if row['answer']['ladder']['due_day'][:7] in ('2027-02', '2027-03') else 'other'))
+                elif expected == 'any':
+                    classes.append('decline' if row['status'] != 'ladder' else row['answer']['ladder']['due_day'])
+                else:
+                    classes.append(day_class(row, expected))
+                declines[arm] += row['status'] != 'ladder'
+            table[(topic, arm)] = classes
+    hf_fixed = table[('fortnight:c1/clean-6', 'v2')] == ['expected', 'expected'] and \
+        table[('week-10-06:c1/clean-5', 'v2')].count('expected') == 2
+    mechanism_seen = 'annual_filing' in table[('fortnight:c1/clean-6', 'frozen')]
+    controls_kept = all(table[(topic, 'v2')] == ['expected', 'expected'] for topic, (_, expected) in TOPICS.items()
+                        if expected in ('annual_filing', '2028-04-03'))
+    events_kept = all(set(table[(topic, 'v2')]) <= ALLOWED[topic] for topic in ALLOWED)
+    no_new_decline = declines['v2'] <= declines['frozen']
+    if not mechanism_seen:
+        verdict = 'inconclusive (the frozen arm did not date the signed completion at the annual filing: no mechanism to fix)'
+    elif hf_fixed and controls_kept and events_kept and no_new_decline:
+        verdict = 'moves'
+    else:
+        verdict = 'closes'
+    for (topic, arm), classes in table.items():
+        print(f'{topic:24} {arm:6} {classes}')
+    print(f'declines {dict(declines)}')
+    print(f'VERDICT: {verdict}')
+    return verdict, table
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'tally':
+        tally(sys.argv[2])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+The proposed change removes the instruction to use the annual filing date for a signed deal’s **completion**. The unchanged reader brief still applies that instruction, so it can mark the proposed answer as wrong.
+
+**Request audit**
+
+| Sentence or clause | Verdict against the cited standard |
+|---|---|
+| The question must be resolvable on its due date; the day must follow the item and be on or after the settling material’s publication. | **Consistent** with the [design table](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:285). |
+| For a figure, use the stated publication date or `expected_publication` when the model estimates it. | **Contradicts** D414 as a complete instruction for an annual figure: D414 assigns the unstated day to code, although the request tells the model to estimate it. The reader brief describes the code-set day. |
+| For an event, use a stated date or the named period’s last day, with fiscal year-end for an undated pending regulatory decision. | **Consistent** with D403. |
+| Proposed binding-obligation clause: within 548 days; an **amount** already taken on uses the next annual filing; an unsigned obligation uses its signing-check day. | **Consistent** with D210 and D185, provided the signing-check day also satisfies D403’s stated-date or period-end rule. |
+| Frozen clause: an **obligation** already taken on uses the next annual filing. | **Keeps wider** than D210: it also covers an event asking whether a signed deal completes. It conflicts with D403 when that event has a different stated date or period end. |
+| System and schema refusal when an event has neither a date nor a period, except for the pending-regulatory case. | **Consistent** with D403. The schema’s figure exclusions are also consistent with D414’s limit on the annual-figure rule. |
+| Schema `due_day_basis`: `stated` or `period_end` for events; `stated` or `expected_publication` for figures. | **Consistent** as labels, but it does not itself explain D414’s code-set day for annual figures. |
+| Closing check: the event’s outcomes must be checkable on the due day, and the due day must follow the rules above. | **Consistent**, but it repeats the request’s rules and does not resolve the annual-figure inconsistency. |
+
+The decisions are in [D185, D210, D403 and D414](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2472).
+
+**Cases**, assuming each date is after the item and within the 548-day limit:
+
+- Signed acquisition, stated check date: **proposed:** stated date; **frozen:** annual filing clause competes with that date.
+- Same acquisition, period only: **proposed:** period end; **frozen:** annual filing clause competes with period end.
+- Purchase-commitment amount at the next annual filing: **both:** next annual filing; an unstated annual-figure date is subject to D414’s code rule.
+- Unsigned deal’s signing: **both:** stated signing-check date or the named period’s end; neither permits an invented event date.
+- Guarantee becoming final, stated date: **proposed:** stated date; **frozen:** if the obligation is already taken on, its annual-filing clause competes with that date.
+
+No remaining proposed sentence directs signed-deal completion to the annual filing. The change leaves **no day-selection gap**: the general event rule supplies the stated date or period end, and an event with neither is declined. A date beyond 548 days creates a constraint conflict, not permission to invent another day.
+
+The [reader brief’s D row](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98) still says **any** obligation already taken on is due at the next annual filing. Thus it can fail the proposed stated-date or period-end answer for signed-deal completion—and for an already-taken-on guarantee becoming final—when that day differs from the filing date.
+
+NOT CONSISTENT: the unchanged reader brief applies the annual-filing rule more broadly than the proposed request, and the request’s annual-figure estimate instruction conflicts with D414.
+ succeeded in 0ms:
+D0 control (unmutated): 7 passed in 0.11s
+D1 amount controls not required: 1 failed, 6 passed in 0.13s | failed: ['test_an_amount_control_moved_off_the_annual_filing_closes'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D2 the frozen mechanism not required: 1 failed, 6 passed in 0.14s | failed: ['test_no_annual_filing_date_in_the_frozen_arm_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D3 both completion topics not required: 1 failed, 6 passed in 0.13s | failed: ['test_a_completion_still_at_the_annual_filing_closes'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D4 the v2 arm sends the frozen text: 1 failed, 6 passed in 0.13s | failed: ['test_each_arm_sends_its_own_system_text_and_nothing_else_differs'] | first: ['E       AssertionError: assert (36 >= 18 and 0 >= 18)']
+
+ succeeded in 0ms:
+You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+
+What the question asks
+- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+Whose question it is
+- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+
+The ladder
+- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+- Fill exactly one of event and figure; the other is null.
+- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for the amount of an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+
+ succeeded in 0ms:
+9 topics; the requests are the stored frozen ones and differ only in the clause: True; worst-case reserve of one attempt $1.13; cap $3.20
+check passed
+
+codex
+**Do not send yet.** The candidate addresses a sourced conflict, but the probe can report “moves” without checking the date the product actually stores—or whether the new question still asks the right thing.
+
+1. **Fix the amount controls.** The tally calls any raw model date in February or March 2027 an annual-filing date. For an annual figure with `expected_publication`, D414 makes code replace that raw date. The control must check the **rendered, code-set date and its basis**, against each topic’s applicable rule; a month match is not enough. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py), [date owner](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:289)
+
+2. **Make sound questions part of the registered decision.** A correct date alone can accompany a changed event, a widened deadline or a faulty rung. Predefine a blind source-backed reading of both arms, including the question, rungs and justified refusals, and make a material new fault prevent “moves.” The promised hand-read should inform the verdict rather than happen after the automatic result.
+
+3. **Protect refusals by topic.** “No more declines overall” can hide a newly unjustified decline offset by a recovered question elsewhere. Compare the matched topics and classify each refusal. Keep uncertain outcomes inconclusive.
+
+4. **Resolve the reading conflict without changing the frozen form.** The audit correctly identifies that the form’s D row still applies the broader filing rule. Report its marks as written and separately record the source-backed diagnostic reading; do not reinterpret the gate to make the candidate pass. [Audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/audit.md)
+
+The two completion cases are one matter in two forms, so even a successful revised probe remains a small lead. Recheck cost and preflight after the changes.
+
+**CONSENSUS: no, because the probe must check rendered dates, question meaning and matched refusals before its result can justify moving the candidate.**
+tokens used
+983,569
+**Do not send yet.** The candidate addresses a sourced conflict, but the probe can report “moves” without checking the date the product actually stores—or whether the new question still asks the right thing.
+
+1. **Fix the amount controls.** The tally calls any raw model date in February or March 2027 an annual-filing date. For an annual figure with `expected_publication`, D414 makes code replace that raw date. The control must check the **rendered, code-set date and its basis**, against each topic’s applicable rule; a month match is not enough. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py), [date owner](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:289)
+
+2. **Make sound questions part of the registered decision.** A correct date alone can accompany a changed event, a widened deadline or a faulty rung. Predefine a blind source-backed reading of both arms, including the question, rungs and justified refusals, and make a material new fault prevent “moves.” The promised hand-read should inform the verdict rather than happen after the automatic result.
+
+3. **Protect refusals by topic.** “No more declines overall” can hide a newly unjustified decline offset by a recovered question elsewhere. Compare the matched topics and classify each refusal. Keep uncertain outcomes inconclusive.
+
+4. **Resolve the reading conflict without changing the frozen form.** The audit correctly identifies that the form’s D row still applies the broader filing rule. Report its marks as written and separately record the source-backed diagnostic reading; do not reinterpret the gate to make the candidate pass. [Audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/audit.md)
+
+The two completion cases are one matter in two forms, so even a successful revised probe remains a small lead. Recheck cost and preflight after the changes.
+
+**CONSENSUS: no, because the probe must check rendered dates, question meaning and matched refusals before its result can justify moving the candidate.**

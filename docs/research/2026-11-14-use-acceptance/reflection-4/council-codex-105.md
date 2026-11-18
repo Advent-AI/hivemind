@@ -1,0 +1,11 @@
+**No-go for the four sessions yet.** The clarified brief and the listed files match their recorded hashes, and the FY2028 items have been removed from the controls. Two sample issues remain.
+
+- **The 22 candidates are not one per distinct topic across the sample.** Items 1 and 9, 2 and 10, and 7 and 11 share identical topic descriptions. The sampler deduplicates *within each group*, so a topic can appear once among split cases and again among agreed cases. That is useful for examining repeatability, but the 10-of-12 threshold then counts repeated topics. Either select distinct topics across groups or explicitly retain and report the repeats with a decision rule that does not treat them as independent. [Sampler](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_sample.py>), [candidates](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json>)
+
+- **The stated-day controls do not exercise the sentence’s stated-day boundary for an annual obligation figure.** Items 19–21 are unsigned obligations and item 22 is an event. Include at least one already-taken obligation whose annual-figure filing day is explicitly stated, and check that the clarified brief keeps that day. [Expected marks](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json>)
+
+The 128/5 breakdown is now reviewable, but the script’s label means the reason mentions an annual filing or report; it does not by itself establish that every reason derives from the note. Keep that causal claim qualified. [Reason selector](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py:71>)
+
+After revising the sample and freezing the controls, the four blind sessions remain a suitable test of the clarification. Keep the original brief and rulings unchanged beside the result.
+
+CONSENSUS: no, because the sample repeats topics across groups and lacks a stated-day control for the annual-obligation case the sentence changes.

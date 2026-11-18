@@ -1,0 +1,34 @@
+**Not ready.** One crash window still lets the launcher send a redo after it has already recorded a failure that should end the whole send.
+
+For example, if the due-day check stops the first draw, the launcher writes that failure to `run.json` **before** recording the stop in the spending ledger. If the process dies between those writes, a later launch sees the first folder and its recorded attempt, skips it, and starts the redo. The plan says that kind of failure ends the send. [Failure recorded before stop](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:92), [restart handling](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:81), [plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RUN.md:64).
+
+**1. Fourth review findings**
+
+- **Cap refusal stops other threads: closed.** The refusal writes the stop while holding the same lock that every request must acquire before reserving. Requests already in flight may finish; later reservations are refused. The stop is also available to a later launcher. [Budget](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:71), [reservation](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:82).
+- **An incomplete draw stops later draws: partly closed.** It does so when the launcher reaches `end()`. The crash window above can bypass that outcome on the next launch. [Stop](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:70), [exception path](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:92).
+- **A later launch respects a recorded cap stop: closed.** The limit reads the ledger and the launcher refuses to start. [Ledger read](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:59), [launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:62).
+- **A draw with no judgements counts as incomplete: closed in the normal return path.** It has the same narrow crash concern if the process dies before its stop is recorded. [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:103).
+- **Crash handling: partly closed.** An unfinished folder is not resumed, and an unfinished redo ends the send. The recorded non-retryable failure window remains. [Folder handling](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:81).
+- **Preflight record and spend labels: closed as disclosures.** The preflight explicitly reports unexercised extraction and matching checks; the separate replay reports 159 accepted stored judge answers. Spend labels distinguish token-based charges from reserves. [Preflight](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/preflight.output.txt:3), [judge replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/judge-answer-replay.output.txt:1), [spend label](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:297).
+- **Case identity and crash-test evidence: still limited.** The code checks the thesis fields and opening day but associates the stored answer by case name. The crash test constructs an outstanding reservation; it does not kill a live process. [Identity](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:212), [test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:230).
+- **Mutant evidence: partly closed as independent evidence.** The saved output reports a passing control and caught mutants, but I did not execute them or inspect their individual scratch outputs. The file lists **18 mutants plus the control**, whereas the plan calls them 19 mutants. [Output](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/mutants.output.txt:1), [plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RUN.md:46).
+
+**2. The $2 limit**
+
+I found no ordinary route past $2 through the specified launcher, including a redo, a later launch, or concurrent judge threads, **provided each reservation covers the provider’s eventual charge and the ledger remains readable**. The launcher excludes overlapping processes; threads reserve under one lock; a later process counts an unanswered attempt at its full reserve. The crash window above can cause an *unauthorized additional send*, but that send still uses the remaining shared allowance. [Launch lock](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:39), [reservations](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:82), [ledger total](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:129).
+
+The reservation is an estimate based on request bytes and the output limit; the code does not independently enforce that the eventual billed charge fits it. [Calculation](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:30).
+
+**3. Result and design**
+
+The main path follows the intended order: it writes each stored ladder before the opening article’s evidence, commits the day, and calls the unchanged judge. It checks due dates before judging. Stage A’s failure is plainly disclosed in the plan. [Replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:279), [plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RUN.md:3).
+
+There is one smaller field mismatch: for the eight Stage B cases that answered “no ladder,” `checked_answer` will be null, although the design calls for the answer there. The full answer and reason remain available in the outcome record, so this does not make the judge’s results unreadable or change what it judges. [Design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:938), [stored example](/Users/lchingen/hivemind/poc/data/clean-ladder-stage-a-2026-11-10/run-4/send-1/outcomes.jsonl:1), [writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:175).
+
+**4. What remains**
+
+The crash window is the serious issue. The missing `checked_answer`, mutant count, case-name identity and lack of a live-process kill test are narrower limitations; the first two should be corrected for an accurate record, but they do not themselves show the measurement would be misleading.
+
+This was a read-only review. I did not run tests, model calls, or Stage B.
+
+**Not ready — make the incomplete-draw stop durable before a crash can lead to a redo, and verify that restart path; then correct the no-ladder field and mutant count.**

@@ -43,7 +43,20 @@ function representative(rung) {
   const values = magnitude(rung.condition_zh || rung.condition);
   return values.length ? values.reduce((sum, n) => sum + n, 0) / values.length : NaN;
 }
-function legacyScores(view) {
+const EVENT_OUTCOMES = ['Yes|No', 'No|Yes', 'Yes|Ruled out|Still open'];
+function legacyScores(view, path) {
+  if (view.answer_shape === 'event') {
+    // a new-system event: its outcomes are its scores, never inferred by position (page-contract/DESIGN.md)
+    const labels = view.rungs.map((r) => (r.label || '').trim());
+    if (!EVENT_OUTCOMES.includes(labels.join('|')))
+      throw new ContractError(
+        `${path}/rungs`,
+        "an event's choices must be Yes/No or Yes/Ruled out/Still open",
+      );
+    return labels;
+  }
+  if (view.answer_shape === 'unrecorded' || view.favourable_end === 'n/a')
+    return view.rungs.map((r, i) => String(i + 1)); // a position, not a score: the ladder states no direction
   if (view.rungs.every((r) => r.score)) return view.rungs.map((r) => r.score);
   if (view.rungs.length === 2) {
     // a yes/no ladder may list No first: each rung shows its own outcome; other two-rung labels keep their order
@@ -86,7 +99,7 @@ export function fromBundles(input, options = {}) {
     if (!v || typeof v !== 'object') throw new ContractError(path, 'expected a thesis bundle');
     for (const key of ['rungs', 'judgements', 'evidence', 'dependencies', 'switches'])
       array(v[key], `${path}/${key}`);
-    const scores = legacyScores(v);
+    const scores = legacyScores(v, path);
     return {
       id: v.view_id,
       object: v.object,
@@ -167,6 +180,9 @@ export function fromBundles(input, options = {}) {
           };
         })
         .sort((a, b) => a.day.localeCompare(b.day) || a.seq - b.seq),
+      notJudged: v.not_judged === undefined ? null : v.not_judged,
+      answerShape: v.answer_shape ?? null,
+      favourableEnd: v.favourable_end ?? null,
     };
   });
   return parseDataset({

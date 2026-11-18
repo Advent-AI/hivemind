@@ -453,6 +453,29 @@ class Step1Test(unittest.TestCase):
             self.assertEqual(c.execute('select count(*) from model_calls').fetchone()[0], 2)
             self.assertGreater(c.execute('select sum(cost_usd) from model_calls').fetchone()[0], 0)
 
+    def test_network_and_format_retries_of_one_step_are_both_recorded(self):
+        """NETWORK-RETRY-DESIGN.md, council round 10: a network retry and a format resend in the same step are both kept in retry_reason."""
+        from live import LiveTransport
+        from hivemind import model
+        cut = {'choices': [{'finish_reason': 'length', 'message': {'content': '{"new_theses":'}}], 'usage': {'prompt_tokens': 10, 'completion_tokens': 5}}
+        def good(text):
+            answer = {'new_theses': [], 'evidence': [self.evidence(text, 'existing', 'clean-1')]}
+            return {'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 100, 'completion_tokens': 50}}
+        outcomes = [model.TransportError('IncompleteRead(1 bytes read)'), cut, good('The retailer raised its sales forecast.'),
+                    good('The retailer lowered its sales forecast.')]
+        def send(provider, request, timeout, max_attempts):
+            outcome = outcomes.pop(0)
+            if isinstance(outcome, BaseException):
+                raise outcome
+            return outcome
+        limits = {'max_usd': 1, 'max_seconds': 60, 'max_calls': 4, 'input_usd_per_million': .5, 'output_usd_per_million': 1}
+        initial = [{'id': 'clean-1', 'entity': 'RETAILER', 'description': 'Will sales grow?', 'outcome': 'Sales growth', 'period': None}]
+        traces = self.invoke(LiveTransport(limits, send=send, wait=lambda seconds: None), initial)
+        self.assertEqual([row['status'] for row in traces], ['complete', 'complete'])
+        self.assertIn('network retry, attempt 1: TransportError', traces[0]['retry_reason'])
+        self.assertIn('SchemaError', traces[0]['retry_reason'])
+        self.assertIsNone(traces[1]['retry_reason'])
+
     def deepseek_sends(self, answers):
         """A fake DeepSeek endpoint returning the given answers in order; records what was sent."""
         sent = []

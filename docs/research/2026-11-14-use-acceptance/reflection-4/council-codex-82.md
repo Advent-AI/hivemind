@@ -1,0 +1,10 @@
+**No-go on v3 yet.** The new wording addresses the grouped-choice problem, but the design’s required result conflicts with how the existing reading has treated the motivating example.
+
+The control requires termination to remain listed when “Ruled out” groups it with another case. In A2, however, the readers or third readers marked termination as `already_judged`, contributing to the H failures. A3 could therefore satisfy its new control and still be penalised for the same entry under the inherited reading and harm count. Resolve that disagreement **before** a send: specify how the unchanged brief applies to grouped choices, test the actual examples with the readers, and say how disagreement is counted. Do not silently change the frozen gate accounting. [A3 control](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:39>), [A2 result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-A2.md:19>), [H brief](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/h-brief.md:11>)
+
+Two smaller points also need correction:
+
+- The sentence says to remove a source-only entry, then to keep any part some choice leaves unsettled. State that the source-only exception takes precedence, so the two directions cannot conflict. [A3 sentence](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:14>)
+- A fault appearing in the control, in a field the sentence does not directly address, is **pre-existing**, not proven unaffected by the change. A prompt addition can alter other fields. Likewise, an entry matching the new instruction is consistent with the proposed mechanism, but is not by itself proof of causation. Keep those attributions qualified. [Attribution rule](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:51>)
+
+CONSENSUS: no, because the grouped-choice control and the existing H reading can reward and penalise the same output.

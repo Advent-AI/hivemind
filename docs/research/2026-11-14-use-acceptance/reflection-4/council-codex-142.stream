@@ -1,0 +1,486 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 142: proof 10 passed (D601, `live-service/PROOF10-RESULT.md`); proof 2f's design
+
+## Proof 10
+
+- **All 23 checks hold** (`proof10-output.txt`).
+- **The first day:** `/days` and `/library` are 503 with the first-day body, and MCP refuses.
+- **Six later pauses:** MCP's day and ids equal `/library`'s.
+- **All seven pauses:** the lock is held, preflight refuses naming the snapshot route, and the store is in WAL.
+- **Both snapshot states** are correct, out of WAL, integrity ok.
+- **The poller:** 169 answers in 5.7 s, spanning the writer's whole run. The replay completes about 190 days in about 5.4 s; days
+  without articles take almost nothing.
+  - 9 were first-day 503s, and 160 were 200s over 16 distinct days.
+  - The days never went backwards, and each answer equals its dated read.
+  - 8 were in flight during a completion, and 10 transitions were seen directly. The harness's own "162 completions with answers on
+    both sides" counts any earlier and any later answer, so it is loose and I do not use it as evidence.
+- **After the writer:** the lock is free, the store is out of WAL, and the API answers as of 2027-04-02.
+- **My error:** the first run stopped on my query of a nonexistent `view_switches.day` column. The January state is now asserted by
+  which questions are closed.
+
+## Proof 2f, proposed
+
+The contract's line: the page verifier (`poc/ui/verify-*.mjs`). With the live read successful, the Idea call succeeds. With the live
+read failed and a later embedded day, the Idea error shows and nothing else breaks.
+
+**What the page does today** (read):
+
+- `bootstrap.js` sends the Idea with `asOf: library.getDay()`.
+- `library.getDay()` is the served `as_of` after a successful live read (`setDataset(next, {day: next.as_of})`). After a failed read,
+  it stays the embedded snapshot's day.
+- `idea.readIdea` throws `IdeaError(status, body.error)` on any non-200 answer.
+- The API answers a later date with 409 `{'error': 'day not completed', 'requested', 'last_completed_day'}` before any header. This
+  is tested at the real API in `tests/test_live_reads.py`.
+
+**A new verifier, `poc/ui/verify-live-day.mjs`,** in the existing pattern: it stubs `fetch`, builds on `mock/index.html`, and runs in
+headless Chrome by an auto-click copy as before. Two cases:
+
+- **A, the live read succeeds:** `/library` answers a fixture library as of day L, earlier than the embedded day E. The stubbed
+  `/ideas` records the request's `as_of`.
+  - The Idea sent `as_of == L`.
+  - The stored card is shown.
+- **B, the live read fails** (`/library` answers 503): the page keeps E. The stubbed `/ideas` answers exactly what the real API
+  answers for E: 409, the JSON body above, `Content-Type: application/json`.
+  - The Idea sent `as_of == E`.
+  - The Idea error is shown with the service's message.
+  - The library's cards and day are unchanged.
+  - The Idea input accepts a second sentence, which sends again.
+  - No uncaught page error (`window.onerror` and `unhandledrejection` counted).
+
+**Then:**
+
+- `npm --prefix poc/ui run lint` and `format:check`;
+- one mutant: the page sends no `as_of`, so case A's check fails.
+
+**No product code change is planned.** If B shows the page breaking, that is a finding, brought back before any fix.
+
+**Asked of you:** is the 409 body in the stub faithful to the real API? Is "nothing else breaks" specified enough? Is there a
+day-related path of the page (the chart, `readBundles`) that should be in the check?
+
+End with `CONSENSUS: yes` (build and run 2f) or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the saved proof and trace the page’s Idea and bundle flows against the proposed stub, including the retry behavior.
+exec
+/opt/homebrew/bin/zsh -lc "cat docs/research/2026-11-14-use-acceptance/live-service/PROOF10-RESULT.md
+cat docs/research/2026-11-14-use-acceptance/live-service/proof10-output.txt | tail -45
+nl -ba poc/ui/src/idea/idea.js | sed -n '1,75p;210,250p'
+nl -ba poc/ui/src/bootstrap.js | sed -n '140,245p;250,270p'
+nl -ba scripts/hivemind_api.py | sed -n '40,60p;125,155p'
+rg -n 'D601|snapshot.sh|hivemind.*sqlite' docs/DECISIONS.md /Users/lchingen/.codex/memories/MEMORY.md | tail -4" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Proof 10: serving while the built writer runs (D601), 2026-11-16, $0
+
+`proof10_serving_while_writing.py` → `proof10-output.txt`. The extension draw's c1 was judged again through the accepted loop by the
+built writer (WAL, its lock, its checks, its end) into a new scratch store, to 2027-04-02. Every judge answer came from the stored
+archive: no model or embedding call. The API ran lexical on the store being written, and MCP's tool functions were called in-process.
+**All 23 checks hold** (exit 0).
+
+## At the seven pauses
+
+| Pause (state) | `/days`, `/library` | MCP's `thesis_library` | Lock, preflight, mode | Snapshot |
+|---|---|---|---|---|
+| 2026-09-22 before close (first day, nothing completed) | 503 and 503, "the store's first day has not completed" | refused; the instructions say no day has completed; `views` refused | held, refused naming the snapshot route, WAL | |
+| 2026-09-24 after close | 200, as of 09-24, 5 questions | as of 09-24, v1 to v5 | held, refused, WAL | |
+| 2026-09-25 before judging (articles committed, day not completed) | as of 09-24, equal to the previous pause | as of 09-24 | held, refused, WAL | last day 09-24, steps dated 09-25 present, out of WAL, integrity ok |
+| 2026-09-25 after close | as of 09-25, 6 questions | as of 09-25, v1 to v6 | held, refused, WAL | |
+| 2027-01-30 after close | as of 01-30, 7 questions | as of 01-30 | held, refused, WAL | |
+| 2027-01-31 before close (due-day closing not completed) | as of 01-30, equal to the previous pause | as of 01-30 | held, refused, WAL | last day 01-30, v3, v4 and v7 not yet closed, out of WAL, integrity ok |
+| 2027-01-31 after close | as of 01-31; v3, v4 and v7 closed on that day | as of 01-31 | held, refused, WAL | |
+
+Fresh pages at 09-25 before judging and 01-31 after close show exactly the questions and statuses served on the page's day, as in D573.
+The first-day case, a "known finding" in D573, now passes as a required check.
+
+## Concurrent reads
+
+- **169 answers in 5.7 s,** spanning the writer's whole run from the first completion to the last. The replay from stored answers
+  completes about 190 calendar days in about 5.4 s; days without articles take almost no time.
+  - 9 were 503 before the first day completed. 160 were 200, serving 16 distinct days.
+  - The days never went backwards.
+  - Every 200 answer decodes to the same JSON as `GET /library?as_of=<its day>` on the finished store.
+- **Stricter counts than the harness's own line:**
+  - 8 answers were in flight while a day was completing, and each served either the previous day or the completing day;
+  - 10 completions were seen directly: the last answer before them served an earlier day, and the first after them served exactly
+    that day.
+  - The harness line "162 completions with answers on both sides" counts any earlier and any later answer, so it is loose; the
+    numbers above are the evidence.
+- **What the timing shows** (council round 141): each answer's day is compatible with its completion brackets. The brackets alone do
+  not prove the exact commit time; the dated-read equality and the pause checks are the further evidence.
+
+## After the writer
+
+- The lock was free.
+- The store ended in rollback-journal mode.
+- The API answered as of the last completed day, 2027-04-02.
+
+## Limits
+
+- MCP was checked at module level, its tool functions, not through its transport.
+- One run.
+- The store and the readers ran on this machine's local disk.
+- The two runs (the first stopped on my error) created the contract's lock folder `~/.hivemind-locks`, with two empty lock files
+  named by the scratch stores' device and inode. Lock files are never deleted while a store may be written, under the contract's own
+  rule.
+
+## My error
+
+The first run stopped at the 2026-09-25 snapshot, on my query of a `day` column that `view_switches` does not have (a switch has only a
+sequence). I wrote it without reading the table. The January state is now asserted by which questions are closed.
+pause 2026-09-22 before close: /days 503 {'error': "the store's first day has not completed"} | /library 503 as_of None questions 0 | mcp first day refused | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2026-09-24 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2026-09-24'} | /library 200 as_of 2026-09-24 questions 5 | mcp {'as_of': '2026-09-24', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5']} | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2026-09-25 before judging: /days 200 {'first_day': '2026-09-22', 'last_day': '2026-09-24'} | /library 200 as_of 2026-09-24 questions 5 | mcp {'as_of': '2026-09-24', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5']} | lock held | preflight refused, naming the snapshot route | mode wal | snapshot {'last day': '2026-09-24', 'mode': 'delete', 'integrity': 'ok', 'steps by day': {'2026-09-22': 27, '2026-09-23': 43, '2026-09-24': 33, '2026-09-25': 36}, 'closed views': []}
+pause 2026-09-25 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2026-09-25'} | /library 200 as_of 2026-09-25 questions 6 | mcp {'as_of': '2026-09-25', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6']} | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2027-01-30 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2027-01-30'} | /library 200 as_of 2027-01-30 questions 7 | mcp {'as_of': '2027-01-30', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']} | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2027-01-31 before close: /days 200 {'first_day': '2026-09-22', 'last_day': '2027-01-30'} | /library 200 as_of 2027-01-30 questions 7 | mcp {'as_of': '2027-01-30', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']} | lock held | preflight refused, naming the snapshot route | mode wal | snapshot {'last day': '2027-01-30', 'mode': 'delete', 'integrity': 'ok', 'steps by day': {'2026-09-22': 27, '2026-09-23': 43, '2026-09-24': 33, '2026-09-25': 36, '2026-09-26': 21, '2026-09-27': 26, '2026-09-28': 49}, 'closed views': []}
+pause 2027-01-31 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2027-01-31'} | /library 200 as_of 2027-01-31 questions 7 | mcp {'as_of': '2027-01-31', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']} | lock held | preflight refused, naming the snapshot route | mode wal
+ok   before the first completed day the API serves no library (/library 503, /days {'error': "the store's first day has not completed"})
+ok   inside 2026-09-25, before its judging round, /library equals what it served right after 2026-09-24 completed
+ok   right after 2026-09-25 completed, /library is as of 2026-09-25
+ok   on 2027-01-31 before its closing, /library equals what it served after 2027-01-30
+ok   after 2027-01-31 completed, its three due questions are closed on that day
+ok   a fresh page at 2026-09-25 before judging shows exactly the questions served as of 2026-09-24 (5 cards)
+ok   ... and each card's status is the served one on 2026-09-24 (the page's day, not another)
+ok   a fresh page at 2027-01-31 after close shows exactly the questions served as of 2027-01-31 (7 cards)
+ok   ... and each card's status is the served one on 2027-01-31 (the page's day, not another)
+ok   the first day: /days and /library both answer 503 with the first-day body
+ok   the first day: MCP says no day has completed, and thesis_library and views refuse
+ok   at every later pause (6), MCP thesis_library has /library's day and view ids
+ok   at every pause (7), the lock is held, preflight refuses naming the snapshot route, and the store is in WAL mode
+ok   snapshot at 2026-09-25 before judging (a day's articles committed, the day not completed): last day 2026-09-24, steps dated 2026-09-25, out of WAL, integrity ok
+ok   snapshot at 2027-01-31 before close (a due-day closing not yet completed, no articles that day): last day 2027-01-30, the three questions due that day (v3, v4, v7) not yet closed, out of WAL, integrity ok
+ok   every poll (169) is 200, or 503 with the first-day body for a request sent before the first completion ended
+ok   every 200 poll (160) serves a day compatible with its completion brackets (started before the answer, no older than the last day done before the request)
+ok   the polled days never go backwards
+ok   every polled answer equals the dated read of its day on the finished store (16 days)
+ok   the polling is not vacuous: 169 answers (at least 20), 162 completions with answers on both sides (at least 1)
+ok   after the writer: the lock is free
+ok   after the writer: out of WAL mode, or WAL kept with the reason recorded (delete, {'store journal mode at the end': 'delete', 'stopped in order': None})
+ok   after the writer: the API answers as of the last completed day (2027-04-02)
+exit 0
+     1	/** The Idea card: the user's sentence read by the service (POST /ideas, docs/poc/idea-card.md, D112).
+     2	 * This module posts the idea, connects every chosen thesis to it, and renders the card: the sentence,
+     3	 * the service's reading, and the verdict on a number the idea
+     4	 * states. It never chooses theses itself and never reads the clock; the day is the answer's as_of. */
+     5	import { element, esc, SEP } from '../components/dom.js';
+     6	import { cardHeaderHtml } from '../components/primitives.js';
+     7	import { scoreHistoryChart } from '../components/thesis-chart.js';
+     8	import {
+     9	  compositeAt,
+    10	  confidenceFromScore,
+    11	  confidenceHistory,
+    12	  formatConfidence,
+    13	  byImpactWeight,
+    14	} from './composite.js';
+    15	import { ideaProgressHtml } from './progress.js';
+    16	import { CARD_WIDTH } from '../model/graph.js';
+    17	
+    18	export class IdeaError extends Error {
+    19	  constructor(status, message) {
+    20	    super(message);
+    21	    this.status = status;
+    22	  }
+    23	}
+    24	
+    25	/** POST the idea; resolves to the card the service returns, rejects with IdeaError on any non-200 answer. */
+    26	export async function readIdea(api, text, { signal, asOf, onProgress = () => {} } = {}) {
+    27	  try {
+    28	    const response = await fetch(`${api}/ideas`, {
+    29	      method: 'POST',
+    30	      headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
+    31	      body: JSON.stringify({ text, bundles: false, ...(asOf ? { as_of: asOf } : {}) }),
+    32	      signal,
+    33	    });
+    34	    if (response.ok && response.headers.get('Content-Type')?.includes('application/x-ndjson'))
+    35	      return await readIdeaEvents(response, onProgress);
+    36	    const body = await response.json().catch(() => ({}));
+    37	    if (!response.ok) throw new IdeaError(response.status, body.error || response.statusText);
+    38	    return body;
+    39	  } catch (error) {
+    40	    if (error.name === 'AbortError' || error instanceof IdeaError) throw error;
+    41	    throw new IdeaError(0, `Cannot reach the service at ${api}`);
+    42	  }
+    43	}
+    44	
+    45	/** Decode newline records across arbitrary network and UTF-8 chunk boundaries. */
+    46	export async function readIdeaEvents(response, onProgress) {
+    47	  if (!response.body) throw new IdeaError(502, 'The service returned no analysis stream');
+    48	  const reader = response.body.getReader();
+    49	  const decoder = new TextDecoder();
+    50	  let pending = '',
+    51	    result,
+    52	    completed = false;
+    53	  const consume = (line) => {
+    54	    if (!line.trim()) return;
+    55	    let event;
+    56	    try {
+    57	      event = JSON.parse(line);
+    58	    } catch {
+    59	      throw new IdeaError(502, 'The service returned an invalid analysis update');
+    60	    }
+    61	    if (event.type === 'progress') onProgress(event.stage);
+    62	    else if (event.type === 'result') {
+    63	      result = event.data;
+    64	      completed = true;
+    65	    } else if (event.type === 'error') throw new IdeaError(event.status, event.message);
+    66	    else throw new IdeaError(502, 'The service returned an unknown analysis update');
+    67	  };
+    68	  try {
+    69	    while (true) {
+    70	      const { value, done } = await reader.read();
+    71	      pending += decoder.decode(value, { stream: !done });
+    72	      const lines = pending.split('\n');
+    73	      pending = lines.pop();
+    74	      for (const line of lines) consume(line);
+    75	      if (done) break;
+   210	    node.addEventListener('click', open);
+   211	    node.addEventListener('keydown', (event) => {
+   212	      if (event.target === node && ['Enter', ' '].includes(event.key)) {
+   213	        event.preventDefault();
+   214	        open();
+   215	      }
+   216	    });
+   217	  }
+   218	  return node;
+   219	}
+   220	
+   221	/** The theses' full records for the cards the canvas will draw, fetched after the card so the idea shows first. */
+   222	export async function readBundles(api, ids, asOf, { signal } = {}) {
+   223	  if (!ids.length) return null;
+   224	  let response;
+   225	  try {
+   226	    response = await fetch(
+   227	      `${api}/thesis-bundles?ids=${encodeURIComponent(ids.join(','))}&as_of=${encodeURIComponent(asOf)}`,
+   228	      { signal },
+   229	    );
+   230	  } catch (error) {
+   231	    if (error.name === 'AbortError') throw error;
+   232	    throw new IdeaError(0, `Cannot reach the service at ${api}`);
+   233	  }
+   234	  const body = await response.json().catch(() => ({}));
+   235	  if (!response.ok) throw new IdeaError(response.status, body.error || response.statusText);
+   236	  return body;
+   237	}
+   238	
+   239	/** Every thesis id a card wants drawn: the mapped views, then the graph's related views. */
+   240	export function idsOf(card) {
+   241	  const chosen = (card.reading?.chosen || []).map((c) => c.view_id);
+   242	  const related = (card.related || []).map((r) => r.view_id);
+   243	  return [...chosen, ...related];
+   244	}
+   140	          return undirected(thesis)
+   141	            ? (thesis.rungs.find((r) => r.position === position)?.label ?? `position ${position}`)
+   142	            : score(thesis, position);
+   143	        },
+   144	      });
+   145	    async function run(event) {
+   146	      event.preventDefault();
+   147	      const text = input.value.trim();
+   148	      if (!text || inFlight) return;
+   149	      deferredPresentation = null;
+   150	      leadingDirty = false;
+   151	      trigger.condition = { ...DEFAULT_TRIGGER_CONDITION };
+   152	      action.settings = { ...DEFAULT_ACTION_SETTINGS };
+   153	      composer.close();
+   154	      input.value = '';
+   155	      ideaDetail.close();
+   156	      cancelIdea();
+   157	      const mine = ++requestNumber;
+   158	      inFlight = new AbortController();
+   159	      updateSendState();
+   160	      const signal = inFlight.signal;
+   161	      const submitted = new Date();
+   162	      const createdDay = [
+   163	        submitted.getFullYear(),
+   164	        String(submitted.getMonth() + 1).padStart(2, '0'),
+   165	        String(submitted.getDate()).padStart(2, '0'),
+   166	      ].join('-');
+   167	      Object.assign(idea, {
+   168	        text,
+   169	        createdDay,
+   170	        state: 'pending',
+   171	        card: null,
+   172	        error: null,
+   173	        composite: null,
+   174	        day: library.getDay(),
+   175	        chartStart: undefined,
+   176	        progress: ['search'],
+   177	      });
+   178	      app.showGraph({
+   179	        day: library.getDay(),
+   180	        leadingCard,
+   181	        centerOn: 'tree',
+   182	        center: true,
+   183	      });
+   184	      try {
+   185	        const updateProgress = (stage) => {
+   186	          if (mine !== requestNumber || signal.aborted) return;
+   187	          const progress = advanceIdeaProgress(idea.progress, stage);
+   188	          if (progress === idea.progress) return;
+   189	          idea.progress = progress;
+   190	          if (root.hidden) leadingDirty = true;
+   191	          else app.updateLeading();
+   192	        };
+   193	        const card = await readIdea(API, text, {
+   194	          signal,
+   195	          asOf: library.getDay(),
+   196	          onProgress: updateProgress,
+   197	        });
+   198	        if (mine !== requestNumber) return;
+   199	        updateProgress('cards');
+   200	        const bundles = await readBundles(API, idsOf(card), card.idea.as_of, { signal });
+   201	        if (mine !== requestNumber) return;
+   202	        const next = bundles ? fromBundles(bundles) : null;
+   203	        const chartData = next || { as_of: card.idea.as_of, days: card.days, theses: [] };
+   204	        let composite = null,
+   205	          compositeNote = '';
+   206	        try {
+   207	          composite =
+   208	            prepareIdeaComposite(card, chartData) ||
+   209	            (next ? prepareCompositeTrial(compositeTrials, card, next) : null);
+   210	        } catch (error) {
+   211	          if (!(error instanceof CompositeUnavailable)) throw error;
+   212	          compositeNote = error.message; // the Idea stays; only its composite is not computed
+   213	        }
+   214	        Object.assign(idea, {
+   215	          card,
+   216	          state: 'answered',
+   217	          day: card.idea.as_of,
+   218	          composite,
+   219	          compositeNote,
+   220	        });
+   221	        const weightPercents = ['idea-composite/3', 'idea-composite/4'].includes(
+   222	          idea.composite?.version,
+   223	        )
+   224	          ? Object.fromEntries(
+   225	              [...idea.composite.drivers, ...idea.composite.excluded].map((entry) => [
+   226	                entry.thesis_id,
+   227	                entry.weight_percent,
+   228	              ]),
+   229	            )
+   230	          : undefined;
+   231	        present(
+   232	          {
+   233	            ...graphOf(card),
+   234	            day: card.idea.as_of,
+   235	            leadingCard,
+   236	            weightPercents,
+   237	            centerOn: 'tree',
+   238	            center: true,
+   239	            reveal: true,
+   240	          },
+   241	          next,
+   242	        );
+   243	      } catch (error) {
+   244	        if (error.name === 'AbortError' || mine !== requestNumber) return;
+   245	        Object.assign(idea, { state: 'failed', error });
+   250	          updateSendState();
+   251	        }
+   252	      }
+   253	    }
+   254	    async function loadLibrary() {
+   255	      try {
+   256	        const response = await fetch(`${API}/library`, { signal: libraryRequest.signal });
+   257	        if (!response.ok) throw new Error(`Service returned ${response.status}`);
+   258	        const next = fromBundles(await response.json());
+   259	        if (next.coverage !== 'library')
+   260	          throw new Error('The service did not return a complete library');
+   261	        if (libraryRequest.signal.aborted) return;
+   262	        library.setDataset(next, { day: next.as_of }); // the supplied snapshot defines the displayed date (thesis-ui.md)
+   263	        data = next;
+   264	      } catch {
+   265	        // Keep the displayed snapshot when the optional live read is unavailable.
+   266	      }
+   267	    }
+   268	    form.addEventListener('submit', run);
+   269	    input.addEventListener('input', updateSendState);
+   270	    libraryButton.addEventListener('click', showLibrary);
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, live_lock.LockRefused, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    """(status, body) for a request's error. The store's date refusals carry their days (OPERATING-CONTRACT.md, row 3)."""
+    46	    if isinstance(error, service.FirstDayNotCompleted):
+    47	        return 503, {'error': str(error)}
+    48	    if isinstance(error, service.BoundNotCompleted):
+    49	        return 409, {'error': 'day not completed', 'requested': error.requested, 'last_completed_day': error.last_completed_day}
+    50	    if isinstance(error, service.RangeNotOrdered):
+    51	        return 409, {'error': 'range start after its end', 'start': error.start, 'end': error.end}
+    52	    if isinstance(error, KeyError):
+    53	        return 404, {'error': f'not found: {error}'}
+    54	    if isinstance(error, (service.LedgerError, live_lock.LockRefused)):     # the store cannot be served as configured (row 7)
+    55	        return 500, {'error': str(error)}
+    56	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    57	        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    58	    return 400, {'error': str(error)}
+    59	
+    60	
+   125	    def _stream_answer(self, work, prepare):
+   126	        """The streamed Idea answer, in one read transaction: `prepare` checks the request (its date resolved, the first day refused)
+   127	        before any header, so a refusal is a normal status and body; then the 200 headers and the work, in the same transaction."""
+   128	        headers_sent = False
+   129	
+   130	        def emit(event):
+   131	            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+   132	            self.wfile.flush()
+   133	
+   134	        try:
+   135	            with Connections() as db:
+   136	                prepare(db)
+   137	                self.send_response(200)
+   138	                self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+   139	                self.send_header('Cache-Control', 'no-store')
+   140	                self._cors()
+   141	                self.end_headers()
+   142	                headers_sent = True
+   143	                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+   144	                emit({'type': 'result', 'data': card})
+   145	        except (BrokenPipeError, ConnectionResetError):
+   146	            return
+   147	        except REQUEST_ERRORS as error:
+   148	            status, body = error_response(error)
+   149	            if not headers_sent:
+   150	                self._send(status, body)
+   151	                return
+   152	            try:
+   153	                emit({'type': 'error', 'status': status, 'message': body['error'], **{k: v for k, v in body.items() if k != 'error'}})
+   154	            except (BrokenPipeError, ConnectionResetError):
+   155	                pass
+docs/DECISIONS.md:945:| D601 | 2026-11-16 | Proof 10 passes at $0: the built writer re-judges c1 to 2027-04-02 while the API (first day 503), MCP's tools (module level), the lock, preflight and two snapshot states are checked at seven pauses, and 169 concurrent `/library` answers each serve a compatible completed day equal to its dated read; 23 of 23 checks | in force | `live-service/PROOF10-RESULT.md` |
+
+codex
+**Yes: build and run proof 2f**, with the successful case exercising the bundle path as well as the Idea submission.
+
+The proposed 409 stub matches the API’s status, JSON body and content type. The page requests a stream, but `readIdea` handles a non-200 JSON response before trying to decode stream events. [API mapping](/Users/lchingen/hivemind/scripts/hivemind_api.py:44), [page reader](/Users/lchingen/hivemind/poc/ui/src/idea/idea.js:25).
+
+For case A, use a card with at least one selected or related question and `card.idea.as_of == L`. Assert that `/thesis-bundles` receives `as_of=L`, returns a valid fixture at L, and that the resulting card and its dated chart or question are displayed. Otherwise an empty selection skips `readBundles`, leaving that path unexercised. [Idea flow](/Users/lchingen/hivemind/poc/ui/src/bootstrap.js:193), [bundle reader](/Users/lchingen/hivemind/poc/ui/src/idea/idea.js:221).
+
+For case B, the listed checks make “nothing else breaks” concrete for this test: the error is visible, the library remains usable, a second submission is sent, and no uncaught error occurs. Report that scope rather than claiming all page behavior was checked.
+
+I checked the saved proof-10 result and output; they support the reported pause and poll counts, with MCP limited to module-level calls. I did not rerun it. [Proof 10 result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/PROOF10-RESULT.md).
+
+CONSENSUS: yes
+tokens used
+3,612,585
+**Yes: build and run proof 2f**, with the successful case exercising the bundle path as well as the Idea submission.
+
+The proposed 409 stub matches the API’s status, JSON body and content type. The page requests a stream, but `readIdea` handles a non-200 JSON response before trying to decode stream events. [API mapping](/Users/lchingen/hivemind/scripts/hivemind_api.py:44), [page reader](/Users/lchingen/hivemind/poc/ui/src/idea/idea.js:25).
+
+For case A, use a card with at least one selected or related question and `card.idea.as_of == L`. Assert that `/thesis-bundles` receives `as_of=L`, returns a valid fixture at L, and that the resulting card and its dated chart or question are displayed. Otherwise an empty selection skips `readBundles`, leaving that path unexercised. [Idea flow](/Users/lchingen/hivemind/poc/ui/src/bootstrap.js:193), [bundle reader](/Users/lchingen/hivemind/poc/ui/src/idea/idea.js:221).
+
+For case B, the listed checks make “nothing else breaks” concrete for this test: the error is visible, the library remains usable, a second submission is sent, and no uncaught error occurs. Report that scope rather than claiming all page behavior was checked.
+
+I checked the saved proof-10 result and output; they support the reported pause and poll counts, with MCP limited to module-level calls. I did not rerun it. [Proof 10 result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/PROOF10-RESULT.md).
+
+CONSENSUS: yes

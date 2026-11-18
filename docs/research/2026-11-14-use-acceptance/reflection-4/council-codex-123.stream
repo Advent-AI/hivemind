@@ -1,0 +1,223 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 123: your three points in row 3's product-facing contract
+
+1. **Direct view visibility:** `bundle.view_bundle` and `bundle.not_judged`, called directly, refuse (404) a view not visible at the
+   resolved day, as `_bundles` already skips it. Proof 2c′ makes a direct call for a view created after that day.
+2. **The empty-store `None` path:**
+   - My rule that helpers refuse `None` is withdrawn. Helpers receive their caller's resolved bound, `None` on an empty store as
+     today, and behave as today.
+   - Proof 2c compares each public function's actual output or error with the expected one: today's recorded output where the rule
+     keeps it, the named refusal where it changes it. For example, `days()` on an empty store gives `[]`.
+3. **Range-error ownership:** `service.resolve_range(conn, start, end, start_included)` resolves the end through `resolve_bound`,
+   then raises `RangeNotOrdered(start, end)`. `error_response` maps all three exceptions. Row 3's earlier sentence now says a lower
+   bound is checked only against its resolved upper bound.
+
+End with `CONSENSUS: yes` (the code may be written, starting with the resolver and its check) or `CONSENSUS: no, because …`.
+
+codex
+I’ll re-read the amended contract and check the direct-view, empty-store and range behavior against the existing callers.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '47,66p;258,350p'
+nl -ba src/hivemind/bundle.py | sed -n '60,76p;98,105p;175,188p'
+rg -n 'not_judged\\(|view_bundle\\(' tests/test_not_judged_bundle.py scripts/mock_data.py | head -35
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    47	   - **MCP opens a connection per tool call,** as the API does per request, in place of today's one process-wide `LEDGER`.
+    48	     Overlapping calls under streamable HTTP each hold their own transaction and never share one.
+    49	   - The service's start-up reads run the same way. MCP's object list is computed per call.
+    50	3. **Every date bound, resolved in one function.**
+    51	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    52	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    53	     explicit date bypasses any check placed in `default_as_of`.
+    54	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    55	     caller's read transaction.
+    56	     - An omitted bound gives the last completed day.
+    57	     - An explicit bound later than the last completed day is refused, naming that day.
+    58	     - An explicit bound on or before it passes.
+    59	   - Every one of the 13 sites calls it. A lower bound (`from_day`, `since_day`) is checked only against its resolved upper bound,
+    60	     through `resolve_range` (see the section on row 3's product-facing contract).
+    61	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    62	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    63	4. **The first day** (open defect 10).
+    64	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    65	   - An empty store (no step) and a legacy ledger read as today.
+    66	4a. **Search: visibility before ranking and limits, and a published index day.**
+   258	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   259	
+   260	## Row 3's product-facing contract (council rounds 120 to 123; A1, clamping, withdrawn)
+   261	
+   262	**The rule.**
+   263	
+   264	- **On every store with a `days_completed` table**, finished or not, partial rows or not, an explicit upper bound later than the last
+   265	  completed day is refused. The same date gets the same answer whenever it is asked.
+   266	- An omitted bound gives the last completed day, as today.
+   267	- **Steps but no completed day:** refused as the first day.
+   268	- **`days_completed` present with no steps and no completed day** (an empty new store): read as today. An omitted bound gives what
+   269	  `default_as_of` gives today (none), and an explicit bound passes.
+   270	- **A legacy ledger without the tables:** read as today.
+   271	- **Ranges:**
+   272	  - `changes(since, to)` excludes its start, so a `since` on or after the resolved `to` is refused;
+   273	  - `history(from, to)` includes its start, so a `from` after the resolved `to` is refused and `from` equal to `to` passes.
+   274	
+   275	**The owner, and what the structural check enforces.**
+   276	
+   277	- **`service.resolve_bound(conn, bound)`** raises `FirstDayNotCompleted` or `BoundNotCompleted(requested, last_completed_day)`, and is
+   278	  idempotent: a bound it has already passed passes again. On an empty store (tables, no steps, no completed day) or a legacy ledger,
+   279	  an omitted bound resolves to what `default_as_of` gives today, which can be `None`.
+   280	- **`service.resolve_range(conn, start, end, start_included)`** resolves `end` through `resolve_bound`, then raises
+   281	  `RangeNotOrdered(start, end)` when the start is not before the end (`changes`, start excluded) or is after it (`history`, start
+   282	  included).
+   283	- `error_response` maps all three exceptions.
+   284	- **Every public function that takes a date resolves it at its entry through `resolve_bound`:**
+   285	  - `service`: `summaries`, `views`, `view`, `evidence`, `history`, `record`, `changes`, `evaluate`;
+   286	  - `bundle`: `not_judged`, `view_bundle`, `days`, `thesis_bundles`, `library`;
+   287	  - `idea.read_idea` and `search.search`.
+   288	- Nested calls pass a resolved bound, which resolves again unchanged. That covers `view_bundle` called directly with no date (as
+   289	  `scripts/mock_data.py` does), or from `_bundles` and `idea.read_idea`.
+   290	- **Internal helpers that take a date** (`dependencies`, `dependants`, `evidence_record`, `is_open_as_of`, `state_as_of`, `visible`,
+   291	  `_bundles`, …) receive their caller's resolved bound. That is `None` on an empty store, as today, and they behave as today with it.
+   292	  Each public function's output on an empty store is the same before and after the change; the test records today's outputs first.
+   293	- **A view not visible at the resolved day is refused** (`KeyError`, 404) by `bundle.view_bundle` and `bundle.not_judged` when called
+   294	  directly, as `_bundles` already skips it. So a question and its choices created after that day are never returned.
+   295	- **The structural check** reads every function of `service`, `bundle`, `search` and `idea` with a date parameter (`as_of`,
+   296	  `to_day`). Each must either call `resolve_bound` (or `resolve_range`) or be named in the check's list of internal helpers.
+   297	  - A function in neither, or a bound resolved by `or default_as_of(...)`, fails the suite.
+   298	  - The check's own mutant (a new public function without the call) must fail it.
+   299	
+   300	**The response, per channel.**
+   301	
+   302	| Channel | First day not completed | Bound after the last completed day | Range start not before its end |
+   303	|---|---|---|---|
+   304	| API | 503 `{"error": "the store's first day has not completed"}` | 409 `{"error": "day not completed", "requested": X, "last_completed_day": Y}` | 409 `{"error": "range start not before its end", "start": S, "end": T}` |
+   305	| MCP tools | a tool error whose message carries the same fields | the same | the same |
+   306	| Streamed Idea route | the status and body, before any header | the same | — |
+   307	
+   308	- `error_response` returns `(status, payload)`. The two new exceptions get the payloads above, and every other error keeps
+   309	  `{"error": message}`. `_answer` and `_stream_answer` send the payload as given.
+   310	- **The streamed route, in one transaction:**
+   311	  - it opens its connections, begins the read transaction and resolves the bound and first-day check;
+   312	  - **only then** does it send its 200 headers and run the Idea work in the same transaction, which it ends after;
+   313	  - a refusal is sent as a normal status and body before any header.
+   314	  - The Idea work includes model calls, so this transaction lasts the whole request, up to minutes. That is within row 5's
+   315	    one-request rule, and it holds back a checkpoint that long.
+   316	
+   317	**Callers.**
+   318	
+   319	- **The page, when its live library read succeeds:** it sends only days from the served dataset (`library.getDay()` to `/ideas`;
+   320	  the returned `card.idea.as_of` to `/thesis-bundles`). These are never after the last completed day.
+   321	- **The page, when its live library read fails:**
+   322	  - it keeps its embedded snapshot silently (as `thesis-ui.md` specifies), and that snapshot's day can be later than the service's
+   323	    last completed day;
+   324	  - `/ideas` is then refused with 409, and the page shows its existing Idea error naming no day;
+   325	  - this is documented here and tested; it is not claimed impossible.
+   326	- **MCP clients and direct API users with a later date:**
+   327	  - on the running product's store, they would get an error naming 2026-08-28 instead of today's half-processed 2026-08-29 (99
+   328	    evidence records, 117 links);
+   329	  - on a finished store, they would get an error instead of today's identical answer.
+   330	  - This is the behaviour change, recorded for Alex.
+   331	- **Not deployed:** no running service is restarted. D439 does not authorize a deploy, and the change reaches the running product
+   332	  only on a restart, which is on Alex's page.
+   333	
+   334	**Proofs added to the plan (2b to 2e):**
+   335	
+   336	- 2b. The structural check, and its mutant.
+   337	- 2c. Each public function called directly with a future bound, an omitted one and a past one, on the four store states (finished,
+   338	  partial, first day, empty with tables) and a copy of the served store's state. Each call's actual output or error is compared
+   339	  with the expected one: today's recorded output where the rule keeps it, the named refusal where the rule changes it.
+   340	- 2c′. `view_bundle` and `not_judged` called directly for a view created after the resolved day are refused (404). `days()` on an
+   341	  empty store returns `[]` as today.
+   342	- 2d. The ranges: `changes` with `since` equal to its end is refused; `history` with `from` equal to `to` passes.
+   343	- 2e. The streamed route on a first-day store and with a future date: a status before any header. With a writer committing during
+   344	  an Idea request, the request's data are the state at its start.
+   345	- 2f. The page verifier (`poc/ui/verify-*.mjs`): live read successful, then the Idea call succeeds; live read failed with a later
+   346	  embedded day, then the Idea error shows and nothing else breaks.
+   347	
+   348	## Not covered
+   349	
+   350	- Resuming a stopped live store.
+    60	    if not isinstance(ladder, dict):
+    61	        raise ValueError(f'{view_id}: its ladder row holds no readable ladder')
+    62	    return ladder
+    63	
+    64	
+    65	def not_judged(views_db, view_id, created_seq, as_of=None):
+    66	    """D397: the parts of a topic its one judged question leaves out, with their reasons, from the view's ladder row. None for a
+    67	    legacy ledger, for a view with no row, and before the view's creation at as_of; [] when the row lists none. A malformed row,
+    68	    or two rows for one view, is refused."""
+    69	    if as_of is not None and not _visible(views_db, created_seq, as_of):
+    70	        return None
+    71	    ladder = ladder_row(views_db, view_id)
+    72	    if ladder in ('no table', 'no row'):
+    73	        return None
+    74	    parts = ladder.get('not_judged')
+    75	    if not isinstance(parts, list) or not all(isinstance(p, dict) and isinstance(p.get('part'), str) and isinstance(p.get('why'), str) for p in parts):
+    76	        raise ValueError(f'{view_id}: its parts not judged are not a list of {{part, why}} texts')
+    98	def view_bundle(views_db, item_of, view_id, as_of=None):
+    99	    v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   100	    if v is None:
+   101	        raise KeyError(view_id)
+   102	    columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
+   103	    bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
+   104	    rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
+   105	    switches = [dict(r) for r in views_db.execute('select open, reason, after_seq from view_switches where view_id=? order by id', (view_id,))
+   175	def _bundles(views_db, items_db, view_ids, as_of=None, coverage='selection'):
+   176	    """Complete, dated UI inputs for caller-selected theses; no search, model call or ledger write."""
+   177	    as_of = as_of or service.default_as_of(views_db)
+   178	    date.fromisoformat(as_of)
+   179	    if not isinstance(view_ids, list) or not view_ids or any(not isinstance(id, str) or not id for id in view_ids):
+   180	        raise ValueError('thesis_bundles needs a non-empty list of view ids')
+   181	    lookup = item_lookup(items_db)
+   182	    records = []
+   183	    for view_id in dict.fromkeys(view_ids):
+   184	        row = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   185	        if row is None or not service.view_exists(views_db, row, as_of):
+   186	            raise KeyError(f'{view_id} is not available as of {as_of}')
+   187	        records.append(view_bundle(views_db, lookup, view_id, as_of))
+   188	    return {'as_of': as_of, 'days': days(views_db, as_of), 'views': records,
+tests/test_not_judged_bundle.py:55:    assert bundle.view_bundle(conn, item_of, 'v7')['not_judged'] == PARTS
+tests/test_not_judged_bundle.py:59:    assert bundle.view_bundle(a_store(tmp_path, rows=[answer([])]), item_of, 'v7')['not_judged'] == []
+tests/test_not_judged_bundle.py:65:    assert bundle.view_bundle(a_store(tmp_path / 'a', table=False), item_of, 'v7')['not_judged'] is None
+tests/test_not_judged_bundle.py:66:    assert bundle.view_bundle(a_store(tmp_path / 'b', rows=()), item_of, 'v7')['not_judged'] is None
+tests/test_not_judged_bundle.py:73:        bundle.view_bundle(a_store(tmp_path, rows=[bad]), item_of, 'v7')
+tests/test_not_judged_bundle.py:78:        bundle.view_bundle(a_store(tmp_path, rows=[answer(PARTS), answer([])]), item_of, 'v7')
+tests/test_not_judged_bundle.py:83:    assert bundle.view_bundle(conn, item_of, 'v7', as_of='2026-09-26')['not_judged'] is None      # as idea.py calls it
+tests/test_not_judged_bundle.py:84:    assert bundle.view_bundle(conn, item_of, 'v7', as_of='2026-09-27')['not_judged'] == PARTS
+tests/test_not_judged_bundle.py:87:    assert bundle.view_bundle(conn, item_of, 'v7', as_of='2026-09-27')['not_judged'] == PARTS       # a closed question keeps its parts
+tests/test_not_judged_bundle.py:109:        got = bundle.view_bundle(a_store(tmp_path / name, **kwargs), item_of, 'v7')
+tests/test_not_judged_bundle.py:113:        bundle.view_bundle(a_store(tmp_path / 'neither', rows=[json.dumps({'ladder': {'not_judged': [], 'event': None, 'figure': None}})]), item_of, 'v7')
+scripts/mock_data.py:31:    out = {'objects': args.objects, 'views': [bundle.view_bundle(views_db, item_of, view_id) for view_id in ids], 'days': bundle.days(views_db)}
+
+codex
+**Yes: the resolver and its checks can be built against this contract.** The three changes address the direct-view, empty-store and range-error gaps, and the proof plan now compares actual outputs and errors. [Product-facing contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:260).
+
+Two details should be explicit in the implementation and proof:
+
+- When an empty store resolves an omitted range end to `None`, `resolve_range` must preserve the existing empty-store outcome rather than compare a date string with `None`. Include `changes` and `history` in the recorded before-and-after checks.
+- The direct pre-creation 404 is an **intentional behavior change**: an existing test expects `view_bundle` to return a bundle with `not_judged` suppressed before creation. Update that test to the new contract and retain the before/on-creation coverage. [Existing test](/Users/lchingen/hivemind/tests/test_not_judged_bundle.py:83).
+
+The response section also still says “two new exceptions”; the owner section correctly names three. This is a wording correction, not a blocker. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:300).
+
+CONSENSUS: yes
+tokens used
+3,227,845
+**Yes: the resolver and its checks can be built against this contract.** The three changes address the direct-view, empty-store and range-error gaps, and the proof plan now compares actual outputs and errors. [Product-facing contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:260).
+
+Two details should be explicit in the implementation and proof:
+
+- When an empty store resolves an omitted range end to `None`, `resolve_range` must preserve the existing empty-store outcome rather than compare a date string with `None`. Include `changes` and `history` in the recorded before-and-after checks.
+- The direct pre-creation 404 is an **intentional behavior change**: an existing test expects `view_bundle` to return a bundle with `not_judged` suppressed before creation. Update that test to the new contract and retain the before/on-creation coverage. [Existing test](/Users/lchingen/hivemind/tests/test_not_judged_bundle.py:83).
+
+The response section also still says “two new exceptions”; the owner section correctly names three. This is a wording correction, not a blocker. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:300).
+
+CONSENSUS: yes

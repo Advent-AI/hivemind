@@ -1,0 +1,5 @@
+**Go for the four D-only reader sessions.** The frozen sample has 24 distinct topic descriptions, and the two constructed controls exercise the stated-day boundary in both directions. The expected marks, clarified brief and packet match their recorded hashes. [Candidates](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json>), [expectations](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json>)
+
+Report the constructed controls and the uncounted disputed item separately. Distinct topic wording does not make the underlying matters independent, and the diagnostic will not establish an overall reader error rate or prove what caused the earlier split. Return with both brief readings and the prewritten-rule result.
+
+CONSENSUS: yes

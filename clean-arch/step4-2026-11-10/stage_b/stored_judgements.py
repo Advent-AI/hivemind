@@ -55,9 +55,26 @@ def not_shown_of(library, view_id, judgement_seq, shown_ids):
     return out
 
 
-def views_of(draw):
-    """[{draw, view, question, shape, rungs, judgements: [...]}] of one draw, the judgements in the order they were made."""
-    library, archive = read_only(DRAWS[draw] / 'views.sqlite'), read_only(DRAWS[draw] / 'archive.sqlite')
+STAGE_B = ROOT / 'poc/data/clean-stage-b-2026-11-11'
+
+
+def stage_b_folders():
+    """{draw: folder} of Stage B's completed draws, from its run record: the folder of the attempt that completed."""
+    record = json.loads((STAGE_B / 'run.json').read_text())
+    folders = {}
+    for draw in ('u1', 'u2', 'u3'):
+        entry = record.get(draw, {})
+        if entry.get('state') != 'complete':
+            raise SystemExit(f'Stage B draw {draw} is not complete: {entry.get("state")}')
+        folders[draw] = STAGE_B / next(attempt['folder'] for attempt in entry['attempts'] if 'judgements' in attempt)
+    return folders
+
+
+def views_of(draw, folder=None):
+    """[{draw, view, question, shape, rungs, judgements: [...]}] of one draw, the judgements in the order they were made. `folder`
+    is a run folder holding views.sqlite and archive.sqlite; by default the baseline's unseeded replay of that draw."""
+    folder = Path(folder) if folder is not None else DRAWS[draw]
+    library, archive = read_only(folder / 'views.sqlite'), read_only(folder / 'archive.sqlite')
     out = []
     for view_row in library.execute('select distinct view_id from judgements order by cast(substr(view_id, 2) as integer)'):
         view_id = view_row['view_id']
@@ -92,3 +109,16 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def split_rows_present(conn):
+    """Whether a store holds the period split's yearly rows (splitting/DESIGN.md v4 §0c): the frozen Stage B accounting and research
+    readers refuse such a store by name. A historical store without the `period` column holds none."""
+    columns = {row[1] for row in conn.execute('pragma table_info(clean_ladders)')}
+    return 'period' in columns and conn.execute("select 1 from clean_ladders where period != '' limit 1").fetchone() is not None
+
+
+def refuse_split_store(conn, reader):
+    if split_rows_present(conn):
+        raise SystemExit(f'{reader}: this store holds period-split rows (splitting/DESIGN.md v4); the frozen Stage B accounting does not '
+                         'map them, so this reader refuses it')

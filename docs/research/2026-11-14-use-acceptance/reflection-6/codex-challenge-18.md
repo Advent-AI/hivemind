@@ -1,0 +1,12 @@
+**Close the proposed main-part rule, but do not stop at a claim that Astra removed the written-question faults.** The review shows why the rule fails: it would decline the Hugging Face question even though both gate readers and the source audit found that refusal unjustified. [Rule result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/main-part/RESULT.md)
+
+Record Astra as the **leading unaccepted candidate**, with the actual limits: **4 agreed failures in 78 sends**, and **no agreed hard-line marks on 51 written questions** across the two exposed screens. That does not mean the questions are fault-free. One Astra memory question invented an equal-weighted price measure, and a Rubin question was passed even though a similar Sol question was failed. The observed **about $0.04 per send** is a cost from these runs, including their cache conditions—not a production cost guarantee. [First screen](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT.md), [complement](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT-REST.md)
+
+**One in-authority next step:** a $0, source-backed review of Astra’s 51 written questions, including what each would show the judge. Check whether each preserves the topic’s period, quantity and conditions, whether any constructed measure is supported, and whether its answer choices can be applied. Keep the existing gate marks unchanged; have a second reader check the material findings and counterexamples.
+
+- **Moves the decision:** a recurring, consequential defect appears despite the passed hard-line marks, giving the council a concrete candidate to diagnose; or the review finds none, strengthening Astra as a limited candidate for a future acceptance decision.
+- **Closes this review:** the alleged defects are unsupported, already resolved, or too scattered to support a general change. Report those limits without another paid run.
+
+The six boundary cases should remain visible to Alex, but D439 does not make his return the only possible source of forward work. D426 still forbids tuning on the 44 or a fifth Stage A; this review neither changes that stop nor passes a gate.
+
+**CONSENSUS: no, because the 51 accepted Astra questions still need a source-backed product review before the council can state what the candidate has achieved.**

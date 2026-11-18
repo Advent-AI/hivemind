@@ -1,0 +1,11 @@
+**Disagree with sending this design as written.** The main risks are treating separate questions as one and comparing two edited draws with only one frozen draw.
+
+1. **Edit:** D436 supports keeping a second side as context, but “a part, a condition, a comparison or a consequence” is too broad as a definition: each can itself be a separately tracked question. Keep the shorter round-40 wording and do not add a rule for choosing the main part. The frozen closing still has the known over-listing ambiguity; the other decline cases and the known due-day conflicts remain. This is a preliminary read, not the required independent whole-request audit. [D436](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4847>), [prior audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-3.md>)
+
+2. **Cases:** drop **[36]** as a recovery target: its rolling 12 months are not one year and no publication day is given. Treat **[13], [14] and [22]** as boundary cases, not presumed one-bet targets: each names distinct purchases, measures or an unsigned agreement. Keep **[7] and [17]** as potential targets, subject to source reading; keep the five proposed decline controls. Freeze classifications with two source readers *before* seeing new answers. [Selected cases](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-7/fresh-selection.json>)
+
+3. **Rule:** use equal fresh draws per arm, or explicitly compare rates with matching denominators. Require the frozen arm to exercise at least three **source-confirmed** targets; otherwise inconclusive. Count losses and disputed marks, require accepted replacements in both countings, and check material harm and justified declines by topic. A stopped draw or missed control is **not measured**, not fail. Three exercised topics are still a small diagnostic.
+
+The estimated $1.60 diagnostic plus the prior gate’s $4.74 already exceeds the approximately $6 combined budget before retries. Reprice and size the test before sending; preserve a separate gate decision and budget.
+
+DISAGREE: narrow the wording and target set, balance the comparison, and fix the budget before the diagnostic.

@@ -5,10 +5,22 @@ export const rungLabel = (thesis, position) => {
   const state = thesis.rungs.find((r) => r.position === position);
   return state && state.label !== state.score ? state.label : '';
 };
-/** What a state shows: a yes/no ladder names its own outcome once; a five-rung ladder shows its score and label. */
+/** A new-system question whose ladder states no direction for the company: an event, an unrecorded shape or a theme's range. */
+export const undirected = (thesis) =>
+  ['event', 'unrecorded'].includes(thesis?.answerShape) || thesis?.favourableEnd === 'n/a';
+/** The chart's title: an investment score only where the ladder states a direction (page-contract/DESIGN.md). */
+export const scoreTitle = (thesis) =>
+  thesis.answerShape === 'event'
+    ? 'Current outcome'
+    : thesis.answerShape === 'unrecorded'
+      ? 'Current answer'
+      : thesis.favourableEnd === 'n/a'
+        ? 'Current range'
+        : 'AI score';
+/** What a state shows: a yes/no ladder or an undirected one names its own outcome or range once; a five-rung ladder shows its score and label. */
 export function stateWords(thesis, position) {
   const state = thesis.rungs.find((r) => r.position === position);
-  return thesis.rungs.length === 2 && state
+  return (thesis.rungs.length === 2 || undirected(thesis)) && state
     ? { main: state.label, label: '' }
     : { main: score(thesis, position), label: rungLabel(thesis, position) };
 }
@@ -16,14 +28,21 @@ export const stateText = (thesis, position) => {
   const { main, label } = stateWords(thesis, position);
   return `${main} ${label}`.trim();
 };
-export const stateTone = (value) =>
-  ['+2', '+1', 'Yes'].includes(value)
-    ? 'state--positive'
-    : ['−1', '−2', 'No'].includes(value)
-      ? 'state--negative'
-      : 'state--neutral';
+export const stateTone = (value, thesis = null) =>
+  undirected(thesis)
+    ? 'state--neutral'
+    : ['+2', '+1', 'Yes'].includes(value)
+      ? 'state--positive'
+      : ['−1', '−2', 'No'].includes(value)
+        ? 'state--negative'
+        : 'state--neutral';
+/** What the chart's axis marks: the score where the ladder states a direction, else the choice's position. */
+export const axisMark = (thesis, position) =>
+  undirected(thesis) ? String(position) : score(thesis, position);
 export const laneOf = (thesis, position) =>
-  (thesis.rungs.length === 2 ? ['Yes', 'No'] : SCORES).indexOf(score(thesis, position));
+  undirected(thesis)
+    ? thesis.rungs.findIndex((r) => r.position === position)
+    : (thesis.rungs.length === 2 ? ['Yes', 'No'] : SCORES).indexOf(score(thesis, position));
 export const lastOf = (array) => array.at(-1);
 export const judgementsUpTo = (thesis, day) => thesis.judgements.filter((j) => j.day <= day);
 export function assessmentAt(thesis, day) {
@@ -55,6 +74,7 @@ export function snapshotThesis(thesis, day) {
     dependencies: dependenciesAt(thesis, day),
     successions: thesis.successions.filter((s) => s.day <= day),
     switches: thesis.switches.filter((s) => s.day <= day),
+    notJudged: day < thesis.created_day ? null : (thesis.notJudged ?? null),
   };
 }
 export function dependenciesAt(thesis, day) {

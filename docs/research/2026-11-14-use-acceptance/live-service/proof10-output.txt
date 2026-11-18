@@ -1,0 +1,31 @@
+pause 2026-09-22 before close: /days 503 {'error': "the store's first day has not completed"} | /library 503 as_of None questions 0 | mcp first day refused | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2026-09-24 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2026-09-24'} | /library 200 as_of 2026-09-24 questions 5 | mcp {'as_of': '2026-09-24', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5']} | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2026-09-25 before judging: /days 200 {'first_day': '2026-09-22', 'last_day': '2026-09-24'} | /library 200 as_of 2026-09-24 questions 5 | mcp {'as_of': '2026-09-24', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5']} | lock held | preflight refused, naming the snapshot route | mode wal | snapshot {'last day': '2026-09-24', 'mode': 'delete', 'integrity': 'ok', 'steps by day': {'2026-09-22': 27, '2026-09-23': 43, '2026-09-24': 33, '2026-09-25': 36}, 'closed views': []}
+pause 2026-09-25 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2026-09-25'} | /library 200 as_of 2026-09-25 questions 6 | mcp {'as_of': '2026-09-25', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6']} | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2027-01-30 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2027-01-30'} | /library 200 as_of 2027-01-30 questions 7 | mcp {'as_of': '2027-01-30', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']} | lock held | preflight refused, naming the snapshot route | mode wal
+pause 2027-01-31 before close: /days 200 {'first_day': '2026-09-22', 'last_day': '2027-01-30'} | /library 200 as_of 2027-01-30 questions 7 | mcp {'as_of': '2027-01-30', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']} | lock held | preflight refused, naming the snapshot route | mode wal | snapshot {'last day': '2027-01-30', 'mode': 'delete', 'integrity': 'ok', 'steps by day': {'2026-09-22': 27, '2026-09-23': 43, '2026-09-24': 33, '2026-09-25': 36, '2026-09-26': 21, '2026-09-27': 26, '2026-09-28': 49}, 'closed views': []}
+pause 2027-01-31 after close: /days 200 {'first_day': '2026-09-22', 'last_day': '2027-01-31'} | /library 200 as_of 2027-01-31 questions 7 | mcp {'as_of': '2027-01-31', 'ids': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7']} | lock held | preflight refused, naming the snapshot route | mode wal
+ok   before the first completed day the API serves no library (/library 503, /days {'error': "the store's first day has not completed"})
+ok   inside 2026-09-25, before its judging round, /library equals what it served right after 2026-09-24 completed
+ok   right after 2026-09-25 completed, /library is as of 2026-09-25
+ok   on 2027-01-31 before its closing, /library equals what it served after 2027-01-30
+ok   after 2027-01-31 completed, its three due questions are closed on that day
+ok   a fresh page at 2026-09-25 before judging shows exactly the questions served as of 2026-09-24 (5 cards)
+ok   ... and each card's status is the served one on 2026-09-24 (the page's day, not another)
+ok   a fresh page at 2027-01-31 after close shows exactly the questions served as of 2027-01-31 (7 cards)
+ok   ... and each card's status is the served one on 2027-01-31 (the page's day, not another)
+ok   the first day: /days and /library both answer 503 with the first-day body
+ok   the first day: MCP says no day has completed, and thesis_library and views refuse
+ok   at every later pause (6), MCP thesis_library has /library's day and view ids
+ok   at every pause (7), the lock is held, preflight refuses naming the snapshot route, and the store is in WAL mode
+ok   snapshot at 2026-09-25 before judging (a day's articles committed, the day not completed): last day 2026-09-24, steps dated 2026-09-25, out of WAL, integrity ok
+ok   snapshot at 2027-01-31 before close (a due-day closing not yet completed, no articles that day): last day 2027-01-30, the three questions due that day (v3, v4, v7) not yet closed, out of WAL, integrity ok
+ok   every poll (169) is 200, or 503 with the first-day body for a request sent before the first completion ended
+ok   every 200 poll (160) serves a day compatible with its completion brackets (started before the answer, no older than the last day done before the request)
+ok   the polled days never go backwards
+ok   every polled answer equals the dated read of its day on the finished store (16 days)
+ok   the polling is not vacuous: 169 answers (at least 20), 162 completions with answers on both sides (at least 1)
+ok   after the writer: the lock is free
+ok   after the writer: out of WAL mode, or WAL kept with the reason recorded (delete, {'store journal mode at the end': 'delete', 'stopped in order': None})
+ok   after the writer: the API answers as of the last completed day (2027-04-02)
+exit 0

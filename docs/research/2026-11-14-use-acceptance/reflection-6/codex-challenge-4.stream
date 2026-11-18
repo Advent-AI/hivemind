@@ -1,0 +1,650 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 4: your four round-3 corrections are applied (`effort/effort_probe.py`, `effort/DESIGN.md` "Round 3 changes")
+
+1. **Every send is accounted for.**
+   - Each arm must hold all 78 sends, or nothing is scored.
+   - "Failed sends" are agreed hard-line faults plus sends refused twice by code, counted per arm and per topic. A lost answer cannot
+     improve an arm.
+   - Model refusals and unreadable answers are reported separately and bounded in the rule.
+   - Test: the high arm loses 4 answers to code refusals where medium has 4 agreed faults. The result is 4 against 4, so it closes, not
+     an improvement, and each lost topic counts in the per-topic failures.
+2. **Too little signal is inconclusive:** under 3 medium failed sends, the result is never a close. Tests: 0 against 0 is
+   inconclusive; 3 against 3 closes.
+3. **Sound controls:** both families failing a hard line on a sound control voids the reading as too harsh (tested).
+4. **Request bytes:** the check compares the requests as built and sent (`json.dumps` of the production builder's dict, nested order
+   included). The high bytes must equal the medium bytes with `"reasoning_effort": "medium"` replaced once, and the medium request must
+   equal its stored first request (sha256). It passes on 26 of 26. A test where the high request also changes its output cap is
+   refused.
+
+**Tests:** 8 of 8. **Mutants:** 5 of 5 (`effort/mutants.txt`), two only after a test was added (per-topic lost answers; effort not the
+only byte difference).
+
+**Asked:** send now: six interleaved arm-draws on 26 topics outside the 44, caps $0.25 + $0.75, a stopped arm-draw NOT MEASURED, about
+$9.7 left of D439's $40. Or name what must change first.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the revised scoring and request checks, especially whether lost answers and a weak control can still produce a misleading verdict.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/mutants.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+26 topics: each medium request equals its stored first request and each high request differs only in reasoning_effort: True; controls 6; most attempts an arm 468; the sum of worst-case reserves if every attempt were at its worst {medium: $4.90, high: $4.90}; caps {'medium': 0.25, 'high': 0.75}
+check passed
+
+ succeeded in 0ms:
+"""The matched reasoning-effort comparison (DESIGN.md, D624).
+
+  python3 effort_probe.py check                          # $0: requests, controls, spend; writes check-passed.json
+  python3 effort_probe.py send <new run folder>          # medium d1, high d1, medium d2, high d2, medium d3, high d3
+  python3 effort_probe.py reading <run folder> <key folder>
+  python3 effort_probe.py score <run folder> <key folder>
+"""
+import collections
+import concurrent.futures
+import copy
+import dataclasses
+import hashlib
+import json
+import os
+import random
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+sys.path[:0] = [str(HERE.parent / 'reference-control'), str(HERE.parents[1] / 'splitting')]
+import refcontrol  # noqa: E402   (puts Stage A, the ladder step and src on the path)
+import probe_split  # noqa: E402
+import accounting  # noqa: E402
+import budget  # noqa: E402
+import build_reader_packets  # noqa: E402
+import collect_readings as collector  # noqa: E402
+import ladder_step  # noqa: E402
+import model_calls  # noqa: E402
+import stage_a  # noqa: E402
+from hivemind import model  # noqa: E402
+
+SETTINGS = {'medium': stage_a.SETTING, 'high': dataclasses.replace(stage_a.SETTING, reasoning_effort='high')}
+ORDER = [('medium', 1), ('high', 1), ('medium', 2), ('high', 2), ('medium', 3), ('high', 3)]
+CAPS = {'medium': 0.25, 'high': 0.75}
+RECORD = HERE / 'check-passed.json'
+CODE_FILES = [Path(__file__), Path(refcontrol.__file__), refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+NEW_CONTROLS = {'control|unlisted-part': ('c2/clean-1', 'L'), 'control|unjustified-refusal': ('c2/clean-4', 'N')}
+HARD = refcontrol.HARD
+SHUFFLE_SEED = 20261120
+
+
+def built(case, setting, rl):
+    texts = stage_a.request_texts()
+    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(setting, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+
+
+def controls():
+    """The reference control's four, and two new planted-wrong ones (an unlisted part, an unjustified refusal)."""
+    out = refcontrol.controls()
+    stored = {row['case']: row for row in map(json.loads, refcontrol.JULY_STORED.read_text().splitlines()) if row['pass'] == 1}
+    for control, (name, mark) in NEW_CONTROLS.items():
+        row, case = copy.deepcopy(stored[name]), refcontrol.july_case(name)
+        if mark == 'L':
+            parts = row['answer']['ladder']['not_judged']
+            if not parts or 'material' not in parts[0]['part']:
+                raise SystemExit(f'{control}: the stored first listed part of {name} is not the materiality part')
+            row['answer']['ladder']['not_judged'] = parts[1:]
+        else:
+            reason = 'the topic has no main figure or event: it names several with none of them the main one'
+            row = dict(row, status='no ladder', reason=reason, answer={'no_ladder': reason, 'ladder': None}, passage=None, view=None)
+        out.append((dict(row, case=control, **{'pass': 1}), case, {mark: 'fails'}))
+    return out
+
+
+def check():
+    rl = refcontrol.research_list()
+    failures, shas = [], {'medium': {}, 'high': {}}
+    for source, name, case, stored in refcontrol.population():
+        medium, high = built(case, SETTINGS['medium'], rl), built(case, SETTINGS['high'], rl)
+        same_as_stored = model.request_identity(medium)[1] == stored['requests'][0]['request_sha256']
+        sent_medium, sent_high = json.dumps(medium, ensure_ascii=False), json.dumps(high, ensure_ascii=False)   # the bytes as built and sent
+        only_effort = sent_medium.count('"reasoning_effort": "medium"') == 1 and \
+            sent_high == sent_medium.replace('"reasoning_effort": "medium"', '"reasoning_effort": "high"')
+        if not (same_as_stored and only_effort):
+            failures.append(f'{source}:{name} stored {same_as_stored} only-effort {only_effort}')
+        shas['medium'][f'{source}:{name}'] = model.request_identity(medium)[1]
+        shas['high'][f'{source}:{name}'] = model.request_identity(high)[1]
+    built_controls = controls()
+    worst = {arm: 3 * 2 * budget.ATTEMPTS * sum(budget.worst_cost(built(case, SETTINGS[arm], rl)) for *_, case, _ in refcontrol.population())
+             for arm in SETTINGS}
+    print(f'26 topics: each medium request equals its stored first request and each high request differs only in reasoning_effort: '
+          f'{not failures}; controls {len(built_controls)}; most attempts an arm {26 * 3 * 2 * budget.ATTEMPTS}; the sum of worst-case '
+          f'reserves if every attempt were at its worst {{{", ".join(f"{a}: ${w:.2f}" for a, w in worst.items())}}}; caps {CAPS}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def run_arm(cases, folder, cap_usd, setting, rl, transport=None, workers=8):
+    """One arm-draw: Stage A's runner with the setting given (its model, effort and cap)."""
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=False)
+    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+    texts = stage_a.request_texts()
+    checksum = hashlib.sha256(json.dumps([setting.model, setting.reasoning_effort, setting.max_output_tokens]).encode()).hexdigest()[:16]
+    call_config = SimpleNamespace(provider='openai', version=f'clean-ladder-effort-{setting.reasoning_effort}', checksum=checksum)
+    archive = model.Archive(str(folder / 'archive.sqlite'))
+    write_lock, written = threading.Lock(), []
+
+    def work(case):
+        labelled = SimpleNamespace(request_number=0)
+        labelled.send = lambda provider, request: limit.send_labelled(f"{case['case']}|{labelled.request_number}", provider, request)
+        call_model = model_calls.model_caller(model, archive, call_config, setting, labelled)
+
+        def counted(system_text, user_text, schema):
+            labelled.request_number += 1
+            return call_model(system_text, user_text, schema)
+        try:
+            outcome = ladder_step.ladder_for_thesis(stage_a.payload_for(case, rl), system_text=texts['system'], closing_text=texts['closing'],
+                                                    schema=texts['schema'], call_model=counted, check=refcontrol.check_of(case, rl))
+            view = None
+            if outcome['status'] == 'ladder':
+                view = ladder_step.write_view(outcome['answer']['ladder'], outcome['passage'], thesis=case['thesis'],
+                                              article_day=case['item']['publication_date'], company=stage_a.COMPANY, research_list=rl)
+            row = {'case': case['case'], 'pass': 1, 'status': outcome['status'], 'reason': outcome['reason'], 'requests': outcome['requests'],
+                   'answer': outcome['answer'], 'passage': outcome['passage'], 'view': view}
+            with write_lock:
+                with (folder / 'outcomes.jsonl').open('a') as handle:
+                    handle.write(ladder_step.as_json(row) + '\n')
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                written.append(case['case'])
+        except (stage_a.Stopped, budget.OverBudget):
+            return
+        except Exception as error:
+            limit.stop(f"{case['case']}: {type(error).__name__}: {error}")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(work, cases))
+    return written, limit
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    population = refcontrol.population()
+    for arm in SETTINGS:
+        now = {f'{source}:{name}': model.request_identity(built(case, SETTINGS[arm], rl))[1] for source, name, case, _ in population}
+        if now != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent = collections.Counter()
+    for arm, draw in ORDER:
+        cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in population]
+        cap = CAPS[arm] - spent[arm]
+        written, limit = run_arm(cases, folder / f'{arm}-d{draw}', cap, SETTINGS[arm], rl, transport=guard)
+        known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        spent[arm] += known + in_full
+        over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        print(f'{arm} d{draw}: {len(written)} of 26 written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+        if over or guard.breaches or limit.stopped or len(written) != 26:
+            raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    print(f'spent {dict(spent)}')
+
+
+def reading(run_folder, key_folder):
+    run_folder, key_folder = Path(run_folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    rl = refcontrol.research_list()
+    population = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    rows, cases = [], {}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (run_folder / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+            if row['status'] not in ('ladder', 'no ladder'):
+                continue
+            rows.append(row)
+            cases[row['case']] = dict(population[row['case'].split('|', 1)[1]], case=row['case'])
+    expected = {}
+    for row, case, marks in controls():
+        rows.append(row)
+        cases[row['case']] = dict(case, case=row['case'])
+        expected[row['case']] = marks
+    reading_folder = run_folder / 'reading'
+    (reading_folder / 'send-1').mkdir(parents=True)
+    (reading_folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+    order = sorted(rows, key=lambda row: row['case'])
+    random.Random(SHUFFLE_SEED).shuffle(order)
+    (reading_folder / 'readers').mkdir()
+    key, packets = {}, []
+    for number, row in enumerate(order, start=1):
+        key[str(number)] = [row['case'], 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+    for packet_number, packet in enumerate(packets, start=1):
+        (reading_folder / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    print(f'{len(rows)} items in {len(packets)} packets')
+
+
+def score(run_folder, key_folder):
+    reading_folder = Path(run_folder) / 'reading'
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading_folder, Path(key_folder) / 'key.json')
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+        for mark, value in marks.items():
+            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+            if mark == 'all' and all(any(readers[reader][(control, 1)].get(hard) == 'fails' for hard in HARD) for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: both families fail a hard line on the sound {control}: the reading is too harsh')
+    sends = {arm: {} for arm in SETTINGS}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (Path(run_folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+            sends[arm][row['case']] = row
+    report = {}
+    for unresolved_as in ('holds', 'fails'):
+        faulted = {arm: collections.Counter() for arm in SETTINGS}
+        items = {arm: 0 for arm in SETTINGS}
+        for send, outcome in outcomes.items():
+            arm = send[0].split('-d')[0]
+            if arm not in SETTINGS:
+                continue
+            rows = [readers[reader][send] for reader in collector.FAMILIES]
+            found = {mark for mark in accounting.marks_that_apply(accounting.kind_of(outcome)) if mark in HARD
+                     and refcontrol.settled(rows, mark, unresolved_as) == 'fails'}
+            if found:
+                items[arm] += 1
+                faulted[arm][send[0].split('|', 1)[1]] += 1
+        statuses = {arm: collections.Counter(row['status'] for row in sends[arm].values()) for arm in SETTINGS}
+        if any(sum(counter.values()) != 78 for counter in statuses.values()):
+            raise SystemExit(f'NOT SCORED: an arm does not hold 78 sends: {statuses}')
+        unreadable = {arm: sum(any('could not be read' in str(request.get('error') or '') for request in row['requests'])
+                               for row in sends[arm].values()) for arm in SETTINGS}
+        lost = {arm: statuses[arm]['no ladder: refused'] for arm in SETTINGS}         # refused twice by code: not read, counted as failed
+        for arm in SETTINGS:
+            for case, row in sends[arm].items():
+                if row['status'] == 'no ladder: refused':
+                    faulted[arm][case.split('|', 1)[1]] += 1
+        failed = {arm: items[arm] + lost[arm] for arm in SETTINGS}
+        new_harm = [topic for topic, count in faulted['high'].items() if count >= 2 and faulted['medium'][topic] == 0]
+        report[unresolved_as] = {'failed sends (agreed hard-line faults plus sends refused twice by code)': failed,
+                                 'faulted items read': items, 'sends refused twice by code': lost,
+                                 'model refusals': {arm: statuses[arm]['no ladder'] for arm in SETTINGS}, 'unreadable answers': unreadable,
+                                 'new harm topics': new_harm, 'failed per topic': {arm: dict(counter) for arm, counter in faulted.items()}}
+    key_name = 'failed sends (agreed hard-line faults plus sends refused twice by code)'
+    agreed, strict = report['holds'], report['fails']
+    medium, high = agreed[key_name]['medium'], agreed[key_name]['high']
+    improvement = high * 2 <= medium and medium - high >= 3
+    no_harm = not agreed['new harm topics'] and agreed['model refusals']['high'] - agreed['model refusals']['medium'] <= 2 and \
+        agreed['unreadable answers']['high'] - agreed['unreadable answers']['medium'] <= 2
+    same_direction = strict[key_name]['high'] < strict[key_name]['medium']
+    if medium < 3:
+        verdict = 'inconclusive (the medium arm fails fewer than 3 sends: too little to test against)'
+    elif improvement and no_harm and same_direction:
+        verdict = 'moves the candidate'
+    elif high >= medium - 1:
+        verdict = 'closes it'
+    else:
+        verdict = 'inconclusive'
+    print(json.dumps(report, indent=1))
+    print(f'VERDICT: {verdict}')
+    return verdict, report
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'reading':
+        reading(*sys.argv[2:4])
+    elif command == 'score':
+        score(*sys.argv[2:4])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+control: 7 passed in 0.32s
+E1 lost answers not counted: MISSED | 7 passed in 0.32s
+E1b lost answers left out of failed sends: CAUGHT | 1 failed, 6 passed in 0.36s
+E2 a zero tie closes: CAUGHT | 1 failed, 6 passed in 0.35s
+E3 sound controls unchecked: CAUGHT | 1 failed, 6 passed in 0.36s
+E4 effort not the only byte difference: MISSED | 7 passed in 0.31s
+total 0
+0 lrwxr-xr-x  1 lchingen wheel  34 Nov 16 17:10 AGENTS.md -> /Users/lchingen/hivemind/AGENTS.md
+0 lrwxr-xr-x  1 lchingen wheel  30 Nov 16 17:10 build -> /Users/lchingen/hivemind/build
+0 lrwxr-xr-x  1 lchingen wheel  34 Nov 16 17:10 CLAUDE.md -> /Users/lchingen/hivemind/CLAUDE.md
+0 lrwxr-xr-x  1 lchingen wheel  35 Nov 16 17:10 clean-arch -> /Users/lchingen/hivemind/clean-arch
+0 lrwxr-xr-x  1 lchingen wheel  43 Nov 16 17:10 docker-compose.yml -> /Users/lchingen/hivemind/docker-compose.yml
+0 lrwxr-xr-x  1 lchingen wheel  35 Nov 16 17:10 Dockerfile -> /Users/lchingen/hivemind/Dockerfile
+0 lrwxr-xr-x  1 lchingen wheel  39 Nov 16 17:10 Dockerfile.mcp -> /Users/lchingen/hivemind/Dockerfile.mcp
+0 drwxr-xr-x 25 lchingen wheel 800 Nov 16 17:10 docs
+0 lrwxr-xr-x  1 lchingen wheel  28 Nov 16 17:10 poc -> /Users/lchingen/hivemind/poc
+0 lrwxr-xr-x  1 lchingen wheel  35 Nov 16 17:10 pytest.ini -> /Users/lchingen/hivemind/pytest.ini
+0 lrwxr-xr-x  1 lchingen wheel  34 Nov 16 17:10 README.md -> /Users/lchingen/hivemind/README.md
+0 lrwxr-xr-x  1 lchingen wheel  32 Nov 16 17:10 reports -> /Users/lchingen/hivemind/reports
+0 lrwxr-xr-x  1 lchingen wheel  39 Nov 16 17:10 research_notes -> /Users/lchingen/hivemind/research_notes
+0 lrwxr-xr-x  1 lchingen wheel  32 Nov 16 17:10 scripts -> /Users/lchingen/hivemind/scripts
+0 lrwxr-xr-x  1 lchingen wheel  28 Nov 16 17:10 src -> /Users/lchingen/hivemind/src
+0 lrwxr-xr-x  1 lchingen wheel  30 Nov 16 17:10 tests -> /Users/lchingen/hivemind/tests
+0 lrwxr-xr-x  1 lchingen wheel  28 Nov 16 17:10 web -> /Users/lchingen/hivemind/web
+E1 after the new test: 1 failed, 7 passed in 0.38s
+total 0
+0 lrwxr-xr-x  1 lchingen wheel  34 Nov 16 17:11 AGENTS.md -> /Users/lchingen/hivemind/AGENTS.md
+0 lrwxr-xr-x  1 lchingen wheel  30 Nov 16 17:11 build -> /Users/lchingen/hivemind/build
+0 lrwxr-xr-x  1 lchingen wheel  34 Nov 16 17:11 CLAUDE.md -> /Users/lchingen/hivemind/CLAUDE.md
+0 lrwxr-xr-x  1 lchingen wheel  35 Nov 16 17:11 clean-arch -> /Users/lchingen/hivemind/clean-arch
+0 lrwxr-xr-x  1 lchingen wheel  43 Nov 16 17:11 docker-compose.yml -> /Users/lchingen/hivemind/docker-compose.yml
+0 lrwxr-xr-x  1 lchingen wheel  35 Nov 16 17:11 Dockerfile -> /Users/lchingen/hivemind/Dockerfile
+0 lrwxr-xr-x  1 lchingen wheel  39 Nov 16 17:11 Dockerfile.mcp -> /Users/lchingen/hivemind/Dockerfile.mcp
+0 drwxr-xr-x 25 lchingen wheel 800 Nov 16 17:11 docs
+0 lrwxr-xr-x  1 lchingen wheel  28 Nov 16 17:11 poc -> /Users/lchingen/hivemind/poc
+0 lrwxr-xr-x  1 lchingen wheel  35 Nov 16 17:11 pytest.ini -> /Users/lchingen/hivemind/pytest.ini
+0 lrwxr-xr-x  1 lchingen wheel  34 Nov 16 17:11 README.md -> /Users/lchingen/hivemind/README.md
+0 lrwxr-xr-x  1 lchingen wheel  32 Nov 16 17:11 reports -> /Users/lchingen/hivemind/reports
+0 lrwxr-xr-x  1 lchingen wheel  39 Nov 16 17:11 research_notes -> /Users/lchingen/hivemind/research_notes
+0 lrwxr-xr-x  1 lchingen wheel  32 Nov 16 17:11 scripts -> /Users/lchingen/hivemind/scripts
+0 lrwxr-xr-x  1 lchingen wheel  28 Nov 16 17:11 src -> /Users/lchingen/hivemind/src
+0 lrwxr-xr-x  1 lchingen wheel  30 Nov 16 17:11 tests -> /Users/lchingen/hivemind/tests
+0 lrwxr-xr-x  1 lchingen wheel  28 Nov 16 17:11 web -> /Users/lchingen/hivemind/web
+E4 after the new test: 1 failed, 7 passed in 0.38s
+
+ succeeded in 0ms:
+# Matched reasoning-effort comparison of the answer-choice step (D624), fixed before any send
+
+**Hypothesis.** The frozen step (`gpt-6-luna`, medium reasoning effort) leaves parts of a topic's outcome unlisted (L) and asks
+another question (Q) more often than a careful writer does (`../reference-control/RESULT.md`). The same model at high effort makes
+fewer of these errors. This is a hypothesis, not an established cause.
+
+## Arms and population
+
+- **The arms:** `medium` (the frozen step as it is) and `high` (identical except `reasoning_effort='high'`). Three fresh draws each, on
+  the 26 topics outside the 44 used by the reference control (the fortnight's and the week of 10-06's, all 13 of each).
+- **Interleaving:** medium d1, high d1, medium d2, high d2, medium d3, high d3, each a separate run with its own archive.
+- **Request equality:** every request is the frozen request byte for byte (system, user, schema, output cap, transport, retries),
+  except `reasoning_effort`. This is checked at $0.
+
+## Reading
+
+- **What is read:** all six arm-draws' written ladders and refusals (156 items), mixed blind and shuffled, plus six controls:
+  - the reference control's four: two sound, a rung gap (R) and another question (Q);
+  - two new ones:
+    - an unlisted part (L): a stored ladder with one listed part its outcome names removed from not_judged;
+    - an unjustified refusal (N): a "no main figure" refusal put on a topic with a stated main figure.
+- **Who reads:** both families with `stage-a-reader-brief.md` (the full gate form).
+- **Disputes:** counted both ways.
+- **Validity:** a missed planted-wrong control voids the reading.
+- **Review:** every agreed hard-line fault in the high arm, and every one that differs between the arms on a topic, is reviewed
+  against its source.
+
+## What is counted
+
+- Per arm, over 78 sends: items with an agreed fault on Q, L, R or N; refusals (the model's, and code's refused-twice); answers that
+  could not be read (a truncation signal).
+- Per topic: faulted sends in each arm.
+
+## Outcomes, fixed now
+
+- **Moves the candidate:** both of these, on agreed marks:
+  - **a material paired improvement:** the high arm has at most half the medium arm's faulted items, and at least 3 fewer;
+  - **no new harm:** no topic faulted in 2 or more high draws while faulted in no medium draw; high refusals and unreadable answers no
+    more than 2 above medium.
+
+  The direction must not reverse when unresolved points count against.
+- **Closes it:** the high arm's failed sends at least the medium arm's minus 1.
+- **Otherwise inconclusive.**
+
+**Round 3 changes:**
+- **Failed sends** are agreed hard-line faults plus sends refused twice by code. A lost answer cannot improve an arm. Each arm must
+  hold all 78 sends.
+- **Too little signal:** the result is inconclusive, never a close, when the medium arm fails fewer than 3 sends.
+- **Sound controls:** both families failing a hard line on a sound control voids the reading as too harsh.
+- **Request check:** the check compares the request bytes as built and sent. Effort is the only difference.
+
+## Spend
+
+- Caps: medium $0.25, high $0.75, reserved per attempt at the worst cost.
+- Expected: about $0.08 (medium) and an unmeasured $0.15 to $0.30 (high).
+- A separate council decision is needed before the send.
+
+**Limits:**
+- 26 topics, chosen as all of two stored weeks;
+- one model;
+- the same readers as before.
+
+ succeeded in 0ms:
+"""The effort comparison end to end at $0 (DESIGN.md): the check, the six interleaved arm-draws through the real runner and limit with a
+fake transport answering each topic's stored answer, the blind reading, made-up reader rows, and the verdict rule fixed before."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import effort_probe  # noqa: E402
+import accounting  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 5000, 'completion_tokens': 1500}
+
+
+def transport():
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    seen = []
+
+    def send(provider, request):
+        seen.append(request.get('reasoning_effort'))
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+    send.seen = seen
+    return send
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('effort')
+    original, effort_probe.RECORD = effort_probe.RECORD, folder / 'check-passed.json'
+    try:
+        effort_probe.check()
+        fake = transport()
+        effort_probe.send(folder / 'run', transport=fake)
+        effort_probe.reading(folder / 'run', folder / 'keys')
+    finally:
+        effort_probe.RECORD = original
+    return folder, fake
+
+
+def test_each_arm_draw_sends_every_topic_at_its_own_effort(run):
+    folder, fake = run
+    for arm, draw in effort_probe.ORDER:
+        rows = (folder / 'run' / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()
+        assert len(rows) == 26 and all(json.loads(row)['case'].startswith(f'{arm}-d{draw}|') for row in rows)
+    assert fake.seen.count('medium') >= 78 and fake.seen.count('high') >= 78 and set(fake.seen) == {'medium', 'high'}
+
+
+def write_rows(folder, fail):
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    expected = json.loads((folder / 'keys' / 'controls-expected.json').read_text())
+    outcomes = {row['case']: row for row in map(json.loads, (folder / 'run' / 'reading' / 'send-1' / 'outcomes.jsonl').read_text().splitlines())}
+    answers = folder / 'run' / 'reading' / 'readers-answers'
+    answers.mkdir(exist_ok=True)
+    for family in ('codex', 'claude'):
+        lines = []
+        for item, (case, _) in key.items():
+            outcome = outcomes[case]
+            kind = accounting.kind_of(outcome)
+            applicable = accounting.marks_that_apply(kind)
+            row = {'item': int(item), 'W': '', 'why': ''}
+            for mark in accounting.ALL_MARKS:
+                row[mark] = ('not_assessable' if kind in ('company figure', 'theme figure') else 'n/a') if mark == 'G' \
+                    else 'holds' if mark in applicable else 'n/a'
+            row['B'] = [] if kind == 'refusal' else ['not_a_bet'] * len(outcome['answer']['ladder']['not_judged'])
+            for mark, value in expected.get(case, {}).items():
+                if mark != 'all':
+                    row[mark], row['why'] = value, 'planted'
+            if fail(case) and 'L' in applicable:
+                row['L'], row['why'] = 'fails', 'a part unlisted'
+            lines.append(json.dumps(row))
+        (answers / f'reader-{family}-packet-1.jsonl').write_text('\n'.join(lines) + '\n')
+
+
+KEY = 'failed sends (agreed hard-line faults plus sends refused twice by code)'
+
+
+def test_zero_against_zero_is_inconclusive_not_a_close(run):
+    folder, _ = run
+    write_rows(folder, lambda case: False)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert verdict.startswith('inconclusive') and report['holds'][KEY] == {'medium': 0, 'high': 0}
+
+
+def test_equal_failures_close_the_candidate(run):
+    folder, _ = run
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1']
+    write_rows(folder, lambda case: case.split('|', 1)[1] in topics and case.split('|')[0] in ('medium-d1', 'high-d1'))
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'medium': 3, 'high': 3} and verdict == 'closes it'
+
+
+def test_answers_the_high_arm_loses_to_code_refusals_count_as_failures_not_as_an_improvement(run, tmp_path):
+    import shutil
+    folder, _ = run
+    copy = tmp_path / 'copy'
+    shutil.copytree(folder, copy)
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2']
+    path = copy / 'run' / 'high-d1' / 'outcomes.jsonl'
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    for row in rows:
+        if row['case'].split('|', 1)[1] in topics:
+            row.update(status='no ladder: refused', answer=None, view=None, passage=None)
+    path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    write_rows(copy, lambda case: case.startswith('medium-d1|') and case.split('|', 1)[1] in topics)
+    verdict, report = effort_probe.score(copy / 'run', copy / 'keys')
+    assert report['holds'][KEY] == {'medium': 4, 'high': 4} and verdict == 'closes it'
+    assert all(report['holds']['failed per topic']['high'][topic] == 1 for topic in topics)
+
+
+def test_a_medium_arm_faulted_on_four_topics_where_high_is_clean_moves_the_candidate(run):
+    folder, _ = run
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2']
+    write_rows(folder, lambda case: case.startswith('medium-d1|') and case.split('|', 1)[1] in topics)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'medium': 4, 'high': 0} and verdict == 'moves the candidate'
+
+
+def test_a_missed_planted_control_voids_the_reading(run):
+    folder, _ = run
+    write_rows(folder, lambda case: False)
+    path = folder / 'run' / 'reading' / 'readers-answers' / 'reader-claude-packet-1.jsonl'
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    item = next(int(item) for item, (case, _) in key.items() if case == 'control|unlisted-part')
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    for row in rows:
+        if row['item'] == item:
+            row['L'], row['why'] = 'holds', ''
+    path.write_text('\n'.join(json.dumps(row) for row in rows) + '\n')
+    with pytest.raises(SystemExit, match='VOID: a family missed the planted control\\|unlisted-part'):
+        effort_probe.score(folder / 'run', folder / 'keys')
+
+
+def test_both_families_failing_a_sound_control_voids_the_reading_as_too_harsh(run):
+    folder, _ = run
+    write_rows(folder, lambda case: case == 'control|sound-clean-5')
+    with pytest.raises(SystemExit, match='VOID: both families fail a hard line on the sound control\\|sound-clean-5'):
+        effort_probe.score(folder / 'run', folder / 'keys')
+
+
+def test_the_check_refuses_a_high_request_that_differs_in_more_than_its_effort(tmp_path, monkeypatch):
+    real = effort_probe.built
+
+    def built(case, setting, rl):
+        request = real(case, setting, rl)
+        if setting.reasoning_effort == 'high':
+            request['max_completion_tokens'] = request['max_completion_tokens'] + 1
+        return request
+    monkeypatch.setattr(effort_probe, 'built', built)
+    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+    with pytest.raises(SystemExit, match='CHECK FAILED'):
+        effort_probe.check()
+    assert not (tmp_path / 'check-passed.json').exists()
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'preflight|order|byte|ledger' docs/research/2026-11-14-use-acceptance/reflection-6/effort docs/DECISIONS.md | tail -25" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/DECISIONS.md:879:| D535 | 2026-11-15 | Under D439 (reflection council round 26): the one-chain ordering proof of D368's direction accepted as a bounded wiring result; before any measurement design, a source-backed decision-relevant case among the supporting lines and a verified rebuild of the state of 2026-07-14 before its judging round, both at $0 | in force | `docs/research/2026-11-14-use-acceptance/dependency-channel/CHANNEL-ASSESSMENT.md` |
+docs/DECISIONS.md:894:| D550 | 2026-11-15 | Under D439 (council consensus): the one-week diagnostic of the answer choices is sent as its third design (the new week judged apart; a bounded exposure claim with two counts; outcomes as evidence; a reading sized to the population); pipeline ledger ceiling $3.95 in place of D549's $3.50 | in force | `docs/research/2026-11-14-use-acceptance/second-week/DESIGN.md` |
+docs/DECISIONS.md:895:| D551 | 2026-11-15 | Under D439 (council consensus), with Alex's pause: the week's run stalled on a call cut by the machine sleeping and is frozen; at his return it is continued as a second part after $0 proofs, inside the unchanged $3.95 (the continuation's ledger about $2.70); the first step's unbounded call timeout is a defect, its fix decided apart | in force | `docs/research/2026-11-14-use-acceptance/second-week/RUN-STALL-2026-11-15.md` |
+docs/DECISIONS.md:896:| D552 | 2026-11-15 | Under D439 (council consensus), on Alex's "continue": each call of the new system's first step waits at most 600 seconds on a silent connection (tests and a mutant); the week's run is continued as a second part on a ledger of $2.699577 after the $0 split and entry proofs; an unfinished second part stops before the matching step | in force | `clean-arch/step1/live.py`; `docs/research/2026-11-14-use-acceptance/second-week/split_proof.py` |
+docs/DECISIONS.md:902:| D558 | 2026-11-15 | Under D439 (council consensus): the audit of the event-reference and unlisted-part classes finds no bounded, product-relevant repair ready; D400's lines unchanged, the first gate recorded as not met; put to Alex: that record and one request, to finish the unfinished week as a diagnostic (matching and judge, pipeline ledger at most $0.80) after a $0 proof of the continuation; nothing sent without his word | in force; its proposed next task superseded by D559 | `docs/research/2026-11-14-use-acceptance/second-week/PROMPT-AUDIT-TWO-CLASSES.md` |
+docs/DECISIONS.md:905:| D561 | 2026-11-16 | Alex: "go": D559's small comparison is sent as designed (11 opening articles of the week of 10-06, each read from the week of 09-22's library and from empty, 22 reads, ledger ceiling $1.00); read as fixed in its design; his Deck 1 marks still wait; D559's wider confirmation asked again with the result | in force | `docs/research/2026-11-14-use-acceptance/carried-library/DESIGN.md` |
+docs/DECISIONS.md:907:| D563 | 2026-11-16 | Alex: "think carefully, read the traces, council, then execute" (council consensus): the next step is the new system run unchanged over two weeks with the library kept (the stored week of 09-22, then 241 never-sent articles of 09-29..10-05), later steps regenerated over the fortnight; $0 proofs of a new extension, the downstream under the trap, order and handoff first; a one-day slice first; ledger fixed at $6; reading frozen before any answer; a diagnostic | in force | `docs/research/2026-11-14-use-acceptance/reflection-4/council-codex-7.md` |
+docs/DECISIONS.md:932:| D588 | 2026-11-16 | The fresh A2 comparison's first step is sent on the week of 10-13 (383 articles) from the 10-06 library, frozen Step 1 under a $6.50 shared ledger, proven at $0 on the exact launcher; an incomplete run gives no verdict | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md` |
+docs/DECISIONS.md:941:| D597 | 2026-11-16 | Slice 4a built and proven at $0 on isolated test stores: the writer's store in WAL mode (set before its schema) with a 64 MB size limit on its connection; a stop before a day on low space or three failed checkpoints, recorded with its reason and last completed day and never resent; a partial-day exception inside the writer's process (not a killed process; that proof is 4b's) leaving answers equal to a backup at the last completed day; an orderly end; 327 + 172 tests, 7 of 7 mutants; no writer lock yet | in force | `clean-arch/step4-2026-11-10/stage_b/test_writer_store.py` |
+docs/DECISIONS.md:942:| D598 | 2026-11-16 | Slice 4b built and proven at $0: an operating-system lock per store (device and inode) taken by the writer before its first write and by preflight before its one locked copy; path checks before each day; the connection closed (after leaving WAL mode when no reader holds it) before the lock is released on every exit; a killed writer's lock released by the system; `scripts/snapshot_store.py` never replaces; filesystem-full proof run separately (A crash keeps nine days; B stops first); 339 + 186 tests, 17 of 17 mutants; P1 still only proposed | in force | `src/hivemind/live_lock.py`; `live-service/OPERATING-CONTRACT.md` |
+docs/DECISIONS.md:945:| D601 | 2026-11-16 | Proof 10 passes at $0: the built writer re-judges c1 to 2027-04-02 while the API (first day 503), MCP's tools (module level), the lock, preflight and two snapshot states are checked at seven pauses, and 169 concurrent `/library` answers each serve a compatible completed day equal to its dated read; 23 of 23 checks | in force | `live-service/PROOF10-RESULT.md` |
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py:47:    for arm, draw in effort_probe.ORDER:
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md:12:- **Request equality:** every request is the frozen request byte for byte (system, user, schema, output cap, transport, retries),
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md:50:- **Request check:** the check compares the request bytes as built and sent. Effort is the only difference.
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/mutants.txt:6:E4 effort not the only byte difference: MISSED | 7 passed in 0.31s
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:36:ORDER = [('medium', 1), ('high', 1), ('medium', 2), ('high', 2), ('medium', 3), ('high', 3)]
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:53:    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:80:        sent_medium, sent_high = json.dumps(medium, ensure_ascii=False), json.dumps(high, ensure_ascii=False)   # the bytes as built and sent
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:154:    for arm, draw in ORDER:
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:158:        known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:174:    for arm, draw in ORDER:
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:188:    order = sorted(rows, key=lambda row: row['case'])
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:189:    random.Random(SHUFFLE_SEED).shuffle(order)
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:192:    for number, row in enumerate(order, start=1):
+docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py:217:    for arm, draw in ORDER:
+
+codex
+**The comparison is ready to send after the required $0 preflight.** The revised scoring counts code-refused answers as failures, treats an uninformative tie as inconclusive, and checks the sound controls. The recorded tests cover those cases. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md), [probe tests](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py)
+
+One qualification: the byte check establishes that the **new medium and high requests** differ only in effort. The comparison with the historical medium request is still a canonical hash comparison, so it does not prove historical nested key order. That does not prevent the fresh matched comparison from answering its question. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py)
+
+Run the repository’s required preflight before the paid send, inspect any skipped cases and refusals, and keep the $1 combined cap. A stopped draw is not measured. Afterward, read the answers blind and review the differences against their sources before deciding what the result means. I have not run or edited anything.
+
+**CONSENSUS: Send the six matched draws after a clean preflight, under the stated caps and stop rules.**
+tokens used
+450,885
+**The comparison is ready to send after the required $0 preflight.** The revised scoring counts code-refused answers as failures, treats an uninformative tie as inconclusive, and checks the sound controls. The recorded tests cover those cases. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md), [probe tests](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py)
+
+One qualification: the byte check establishes that the **new medium and high requests** differ only in effort. The comparison with the historical medium request is still a canonical hash comparison, so it does not prove historical nested key order. That does not prevent the fresh matched comparison from answering its question. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py)
+
+Run the repository’s required preflight before the paid send, inspect any skipped cases and refusals, and keep the $1 combined cap. A stopped draw is not measured. Afterward, read the answers blind and review the differences against their sources before deciding what the result means. I have not run or edited anything.
+
+**CONSENSUS: Send the six matched draws after a clean preflight, under the stated caps and stop rules.**

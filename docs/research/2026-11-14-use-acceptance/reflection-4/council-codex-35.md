@@ -1,0 +1,5 @@
+**The proposed before-creation rule addresses my concern, but I cannot approve the build from the file as it stands.** The [design I read](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/not-judged-display/DESIGN.md:1) is still headed version 2 and says `view_bundle`’s callers decide visibility. It does not contain the proposed `view_bundle` or `snapshotThesis` suppression rules, or their direct-path tests.
+
+Please put the version-3 contract and tests in the design before code starts. The two intended entry points are appropriate: the drawer does use `snapshotThesis`, and `view_bundle` has the view’s creation sequence available. [thesis-detail.js](/Users/lchingen/hivemind/poc/ui/src/components/thesis-detail.js:127), [bundle.py](/Users/lchingen/hivemind/src/hivemind/bundle.py:45)
+
+CONSENSUS: no, because the reviewed design file does not yet contain the version-3 rule.

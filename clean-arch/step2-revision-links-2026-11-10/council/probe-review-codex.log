@@ -1,0 +1,1779 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1c8ce-f103-7bd2-abef-d6adb5aebc87
+--------
+user
+You are an independent, read-only reviewer, new to this work. Do not edit any file and do not send any network request.
+
+Scope: a second small paid probe (6 requests to the frozen judge, about 2 cents) in /Users/lchingen/hivemind, branch clean-arch.
+Its sender, clean-arch/step2-edge-effect-2026-11-10/judge_probe.py, was reviewed in four rounds earlier today
+(clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md, "Reviews before the send"; the reviews are in that folder's council/) and sent
+once. Since then two things changed, and only these are under review:
+1. judge_probe.py: the judgement it sends is now set by `--case DRAW QUESTION DAY SEQ EVIDENCE` (`use_case`), and the output may
+   lie under a second data folder (`OUTPUT_ROOTS`).
+2. clean-arch/step2-edge-effect-2026-11-10/edge_replay.py: `use_draw`, `clean_thesis_judged`, the `uncarried` argument of
+   `run_replay` (hooks on `store.revise` and `store.views_linked_to`), `--draw` and `--uncarry` on the command line, and the control
+   report now naming its saved run.
+The protocol of this send: clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md. Its inputs on disk:
+poc/data/clean-step2-revision-links-2026-11-10/control-d3/ and uncarry-d3-70e4-v22/.
+
+You may run, they send nothing:
+  python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check /Users/lchingen/hivemind/poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22 --case 3 v22 2026-07-06 76 e176
+  git diff --no-index is not available for these untracked files; read them.
+
+Mark every finding "serious" (it could make the send differ from the protocol, send the wrong judgement, lose an answer, spend past
+the cap, damage saved data, or let a verdict be printed that the protocol's rule does not give) or "not serious", with file and line:
+A. Does `--case` reach every place the old constants were used (the saved judgement looked up, the block removed, the ledger the
+   frozen check reads, the registration), so that the v22 case is sent and read as the protocol says? Could a stale constant of the
+   first case (v20, e185, draw 1) survive anywhere?
+B. Is the counterfactual request in uncarry-d3-70e4-v22/ what the unchanged adapter builds with only that one link not written? Can
+   the hooks in `run_replay` change anything else (another record's links, the order of links, a relation row)?
+C. Any sentence of PROBE-v22.md that claims more than the files show?
+End with one line: READY TO SEND, or NOT READY with the serious findings numbered.
+
+codex
+我会只读检查协议、发送器和保存的请求，重点核对 v22 的完整路径以及重放是否只改变一条链接。不会发出网络请求或修改文件。
+exec
+/opt/homebrew/bin/zsh -lc 'cat clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/edge_replay.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'judge_probe|edge_replay|revision.links|v22|70e4' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/judge_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# One carried link both reader families would keep: does the judgement need it? Protocol
+
+2026-11-10. Written before the send. A probe of a few cents inside the council round of [LOG.md](LOG.md); it changes nothing in Jev, a
+prompt, a rule, the frozen judge or a saved run.
+
+## The case
+
+Saved D392 clean draw 3 (`stage2-clean-d3`, judged in `judged-2`). Step 1 filed four SemiAnalysis reports (Kyber delayed to 2028, the
+backup plan scrapped, NVL576 affected, the four-die design cancelled) under the FY2028 total revenue question (v22), and filed
+NVIDIA's answer "Our roadmap is intact" (record `70:e4`, evidence `e176`) only under the Kyber and Rubin shipping questions. A "later
+version" relation carried the answer into v22. Both blind reader families would file it there as evidence; the saved judgements of
+v22 cite it on 9 of 9 days it was shown.
+
+## At no cost, done
+
+- The untouched replay of draw 3 passes: 251 of 251 judge requests equal a saved one and took its answer; ledger, recorded requests
+  and counts equal the saved run's (`poc/data/clean-step2-revision-links-2026-11-10/control-d3/`).
+- With only the link `70:e4` to v22 not written (the relation kept), the days 2026-07-01 to 07-05 are identical and the first changed
+  request is v22's on 2026-07-06: the `e176` block (4 lines: the statement, its quotation, and its two "Opinion, not verified" lines)
+  is gone and the item count reads 8 for 9. The replay stops there (`uncarry-d3-70e4-v22/`).
+- `judge_probe.py check … --case 3 v22 2026-07-06 76 e176` passes: the control is the saved request and what the code builds today;
+  the two requests differ only by that block and the count; the frozen check accepts the saved answer on the control and refuses it
+  on the other.
+
+## The send
+
+v22's request of 2026-07-06 as saved and without the carried record, three times each, interleaved, through the production
+transport and the spending limit, with the sender reviewed on 2026-11-10 (`step2-edge-effect-2026-11-10/PROTOCOL.md`, "Reviews before
+the send"); the only change since is that the question, day and record are arguments. Cost: $0.0585 if every send answers at once
+at its reserve, $0.1755 with three attempts a send, cap $0.25; expected about $0.02.
+
+## Reading rule, fixed now (the rule of 2026-11-10, unchanged)
+
+Not decided unless all three answers of each arm pass the frozen check. The conclusion differs in these samples only if the three
+answers without the record are on one rung and the three with it on another. No difference only if the six are on one rung.
+Anything else: not decided. Read and reported beside it: the implied figure of each answer, the stated reasons, and in the arm
+without the record whether the four reports are weighed with nothing set against them.
+
+## What it can and cannot say (agreed with Codex, `council/b-codex.md`)
+
+- It is sensitivity evidence for this one question on this one day. The previous conclusion sits at about $554 billion against a
+  boundary of $550 billion, so three answers an arm may well come out mixed.
+- Six answers on one rung do not show the record is not needed: both reader families would keep it, and the figure or the balance
+  of the reasons may still move.
+- Two rungs do not show that carrying every link is best: the direction and the reasons are read, and the 19 links the readers call
+  context weigh on the other side.
+- The block removed holds the record's two "Opinion, not verified" lines as well as the statement, so a difference is of the block.
+- It says nothing of the four question-days that were judged only because of a carried link, nor of the days after 2026-07-06.
+
+ exited 1 in 0ms:
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Does one unsupported Step 2 revision relation change what the frozen judge reads? An offline replay of the saved D392 clean draw 1.
+     3	
+     4	No request leaves this process: every judge request is answered from the saved judging archive of the draw
+     5	(`poc/data/clean-e2e-2026-11-09/stage2-clean-d1/judged/archive.sqlite`) by `control_v108.ReferenceArchiveTransport`, which answers
+     6	only a byte-identical canonical request and raises on any other. The credential reader and the production transport are replaced by a
+     7	refusal while a replay runs.
+     8	
+     9	  edge_replay.py control <new folder>
+    10	      The untouched draw through the current adapter and the frozen judge. Passes only when every request finds its saved answer,
+    11	      every saved row is used, and the ledger, the judge requests and the answers equal the saved run's.
+    12	  edge_replay.py counterfactual <new folder> <control folder> --uncarry 70:e4:v22 [--draw 3]
+    13	      The same replay over the saved library, with the one link a relation carried (record:question) not written; the relation itself
+    14	      stays. `--draw` selects the saved draw for every mode (default 1); a control of the same draw must have passed.
+    15	  edge_replay.py counterfactual <new folder> <control folder> --by 70:e4 --revised-group 69:e5 [--keep-links]
+    16	      The same replay over a copy of the library with exactly that one revision relation removed (the copy carries its own stamp; the
+    17	      saved library is not touched). It stops at the first judging round whose requests differ from the control's (a request with other
+    18	      text, a request the control did not send, or a control request not sent) and writes the requests of that round, both versions.
+    19	      Nothing after that round is replayed: later state would rest on answers to requests the archive does not hold.
+    20	      --keep-links removes the relation but writes the links the new record inherited through it, to separate the inherited link from
+    21	      the relation itself.
+    22	
+    23	What a replay shows: whether, and in which round, the judge's input changes. What it cannot show: any answer to a changed request."""
+    24	import argparse, collections, contextlib, difflib, hashlib, json, re, shutil, sqlite3, sys
+    25	from pathlib import Path
+    26	
+    27	HERE = Path(__file__).resolve().parent
+    28	ROOT = HERE.parents[1]
+    29	E2E = ROOT / 'clean-arch/e2e-2026-11-09'
+    30	sys.dont_write_bytecode = True
+    31	sys.path[:0] = [str(E2E), str(ROOT / 'src')]
+    32	import adapter as e2e_adapter  # noqa: E402
+    33	import control_v108  # noqa: E402
+    34	from hivemind import model  # noqa: E402
+    35	from hivemind.views import store  # noqa: E402
+    36	
+    37	DRAW = ROOT / 'poc/data/clean-e2e-2026-11-09'
+    38	TRACE = f"{DRAW / 'stage2-clean-d1/trace.sqlite'}+{DRAW / 'stage2-clean-d1-segment-2/trace.sqlite'}"
+    39	STEP2 = DRAW / 'stage2-clean-d1-segment-2/step2'
+    40	SAVED = DRAW / 'stage2-clean-d1/judged'
+    41	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+    42	# Columns the replay cannot reproduce by construction: an archive row number is given in the order answers return from 32 threads.
+    43	ARCHIVE_ROW_COLUMNS = {'judgements': {'call_id'}}
+    44	LEDGER_TABLES = ('views', 'rungs', 'view_keys', 'view_switches', 'judgements', 'evidence', 'evidence_sources', 'evidence_links',
+    45	                 'replacements', 'revisions', 'same_claims', 'dependencies', 'dependency_resolutions', 'successions', 'handovers',
+    46	                 'match_records', 'processing_steps', 'review_pool_entries', 'late_statements', 'days_completed', 'thesis_groups',
+    47	                 'thesis_group_members', 'thesis_group_aliases')
+    48	
+    49	
+    50	class Divergence(Exception):
+    51	    """The first judging round whose requests differ from the control's."""
+    52	
+    53	
+    54	class LiveCallRefused(BaseException):
+    55	    """A credential or the production transport was reached during an offline replay."""
+    56	
+    57	
+    58	def refuse_live_calls():
+    59	    def refusal(*arguments, **keywords):
+    60	        raise LiveCallRefused('an offline replay reached the credential reader or the production transport')
+    61	    model._key = refusal
+    62	    model.openai_transport = refusal
+    63	
+    64	
+    65	class RecordingTransport:
+    66	    """Passes each request to the reference archive transport and records it with the judging round it belongs to."""
+    67	
+    68	    def __init__(self, reference):
+    69	        self.reference = reference
+    70	        self.round = None                 # (day, seq) of the judging round in progress
+    71	        self.requests = []                # one entry per request, answered or not
+    72	
+    73	    def __call__(self, provider, request):
+    74	        canonical = control_v108.canonical_text(request)
+    75	        text = request['messages'][-1]['content']
+    76	        named = e2e_adapter.JUDGED_VIEW.search(text)
+    77	        entry = {'day': self.round[0], 'seq': self.round[1], 'view': named.group(1) if named else None,
+    78	                 'sha256': control_v108.text_sha256(canonical), 'answered': False, 'request': request}
+    79	        self.requests.append(entry)       # list.append is atomic; the round's requests are sent from a thread pool
+    80	        response = self.reference(provider, request)
+    81	        entry['answered'] = True
+    82	        return response
+    83	
+    84	    def of_round(self, day):
+    85	        return [entry for entry in self.requests if entry['day'] == day]
+    86	
+    87	
+    88	def round_signature(entries):
+    89	    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+    90	    return sorted((entry['view'], entry['sha256']) for entry in entries)
+    91	
+    92	
+    93	def use_draw(draw):
+    94	    """Point the replays at one of the three saved draws (draw 1 is the default). Draw 3's completed judging is `judged-2`."""
+    95	    global TRACE, STEP2, SAVED
+    96	    TRACE = f"{DRAW / f'stage2-clean-d{draw}/trace.sqlite'}+{DRAW / f'stage2-clean-d{draw}-segment-2/trace.sqlite'}"
+    97	    STEP2 = DRAW / f'stage2-clean-d{draw}-segment-2/step2'
+    98	    SAVED = sorted((DRAW / f'stage2-clean-d{draw}').glob('judged*'))[-1]
+    99	
+   100	
+   101	def clean_thesis_judged():
+   102	    """The clean-opened thesis the saved run judged as the ruler's Ohio question (adapter `--q23`), or None: the one view that is not a seed."""
+   103	    with contextlib.closing(sqlite3.connect(f"file:{SAVED / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+   104	        extra = [view_id for (view_id,) in conn.execute('select view_id from views') if view_id not in e2e_adapter.SEED_IDS]
+   105	    if len(extra) > 1:
+   106	        raise SystemExit(f'{SAVED} holds more than one view that is not a seed: {extra}')
+   107	    return extra[0] if extra else None
+   108	
+   109	
+   110	def run_replay(output, step2_folder, *, on_round=None, keep_links=None, uncarried=None):
+   111	    """Replay the draw into `output` with every request answered from the saved archive. `on_round(day, entries, error)` is called after
+   112	    each judging round (error is the ReferenceMissError that ended it, or None). `uncarried` is {record id: [question ids]}: links the
+   113	    record would take from a record it revises and is not given here (the relation itself is still written)."""
+   114	    refuse_live_calls()
+   115	    reference = control_v108.ReferenceArchiveTransport(SAVED / 'archive.sqlite')
+   116	    recorder = RecordingTransport(reference)
+   117	    production_judge = e2e_adapter.Adapter.judge
+   118	    production_article = e2e_adapter.Adapter.article
+   119	    production_revise, production_linked = store.revise, store.views_linked_to
+   120	    writing = {}                      # the adapter and the record whose relation is being written
+   121	
+   122	    def revise(conn, old_id, new_id, said_day, seq):
+   123	        writing['new'] = new_id
+   124	        return production_revise(conn, old_id, new_id, said_day, seq)
+   125	
+   126	    def views_linked_to(conn, evidence_id):
+   127	        """The adapter's one call that reads the older record's links, made right after `revise` names the pair."""
+   128	        linked = production_linked(conn, evidence_id)
+   129	        record_id = next((r for r, e in writing['adapter'].evidence_of.items() if e == writing.get('new')), None)
+   130	        return [view_id for view_id in linked if view_id not in (uncarried or {}).get(record_id, ())]
+   131	
+   132	    def judge(self, day, seq, changed):
+   133	        recorder.round = (day, seq)
+   134	        error = None
+   135	        try:
+   136	            return production_judge(self, day, seq, changed)
+   137	        except control_v108.ReferenceMissError as miss:
+   138	            error = miss
+   139	            raise
+   140	        finally:
+   141	            if on_round:
+   142	                on_round(day, recorder.of_round(day), error)
+   143	
+   144	    def article(self, k, records, library, revisions_by_record, later_entries, changed):
+   145	        writing['adapter'] = self
+   146	        production_article(self, k, records, library, revisions_by_record, later_entries, changed)
+   147	        for record_id, view_ids in (keep_links or {}).items():
+   148	            if any(record['id'] == record_id for record in records):
+   149	                for view_id in view_ids:
+   150	                    self._link(self.evidence_of.get(record_id), view_id, k, changed)
+   151	                    self.counts['links kept without their relation'] += 1
+   152	
+   153	    e2e_adapter.Adapter.judge, e2e_adapter.Adapter.article = judge, article
+   154	    store.revise, store.views_linked_to = revise, views_linked_to
+   155	    try:
+   156	        finished = e2e_adapter.replay(TRACE, step2_folder, output, transport=recorder, cap_usd=3.0, q23=clean_thesis_judged())
+   157	    finally:
+   158	        e2e_adapter.Adapter.judge, e2e_adapter.Adapter.article = production_judge, production_article
+   159	        store.revise, store.views_linked_to = production_revise, production_linked
+   160	    return finished, recorder, reference
+   161	
+   162	
+   163	def ledger_rows(path, table):
+   164	    with contextlib.closing(sqlite3.connect(f'file:{path}?mode=ro', uri=True)) as conn:
+   165	        columns = [row[1] for row in conn.execute(f'pragma table_info({table})')]
+   166	        kept = [column for column in columns if column not in ARCHIVE_ROW_COLUMNS.get(table, ())]
+   167	        return kept, conn.execute(f"select {', '.join(kept)} from {table} order by rowid").fetchall()
+   168	
+   169	
+   170	def archive_answers(path):
+   171	    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+   172	    with contextlib.closing(sqlite3.connect(f'file:{path}?mode=ro', uri=True)) as conn:
+   173	        rows = conn.execute('select request_sha256, answer_json from model_calls').fetchall()
+   174	    return collections.Counter((REFUSED.sub('', sha), bool(REFUSED.search(sha)), answer) for sha, answer in rows)
+   175	
+   176	
+   177	def control(output):
+   178	    output = Path(output).resolve()
+   179	    adapter, recorder, reference = run_replay(output, STEP2)
+   180	    adapter.conn.close()
+   181	    failures = []
+   182	    if reference.misses:
+   183	        failures.append(f'{len(reference.misses)} requests had no saved answer')
+   184	    if reference.unused_rows():
+   185	        failures.append(f'saved archive rows never asked for: {reference.unused_rows()}')
+   186	    compared = {}
+   187	    for table in LEDGER_TABLES:
+   188	        saved_columns, saved_rows = ledger_rows(SAVED / 'views.sqlite', table)
+   189	        replay_columns, replay_rows = ledger_rows(output / 'views.sqlite', table)
+   190	        compared[table] = len(saved_rows)
+   191	        if saved_columns != replay_columns or saved_rows != replay_rows:
+   192	            differing = next((n for n, pair in enumerate(zip(saved_rows, replay_rows)) if pair[0] != pair[1]), min(len(saved_rows), len(replay_rows)))
+   193	            failures.append(f'ledger table {table}: {len(saved_rows)} saved rows, {len(replay_rows)} replayed, first difference at row {differing}')
+   194	    saved_sent = json.loads((SAVED / 'judge-requests.json').read_text())
+   195	    key = lambda entry: (entry['day'], entry['seq'], entry['view'], tuple(entry['shown']))
+   196	    if collections.Counter(map(key, saved_sent)) != collections.Counter(map(key, adapter.sent)):
+   197	        failures.append('the judge requests (day, seq, view, evidence shown) differ from the saved judge-requests.json')
+   198	    if archive_answers(SAVED / 'archive.sqlite') != archive_answers(output / 'archive.sqlite'):
+   199	        failures.append('the replayed archive does not hold the saved requests and answers')
+   200	    saved_counts = json.loads((SAVED / 'adapter-counts.json').read_text())
+   201	    replay_counts = json.loads((output / 'adapter-counts.json').read_text())
+   202	    if saved_counts != replay_counts:
+   203	        failures.append(f'adapter counts differ: saved {saved_counts}, replayed {replay_counts}')
+   204	    rounds = collections.OrderedDict()
+   205	    for entry in recorder.requests:
+   206	        rounds.setdefault(entry['day'], []).append({name: entry[name] for name in ('day', 'seq', 'view', 'sha256')})
+   207	    (output / 'control-rounds.json').write_text(json.dumps(rounds, indent=1))
+   208	    requests_by_sha = {entry['sha256']: entry['request'] for entry in recorder.requests}
+   209	    (output / 'control-requests.json').write_text(json.dumps(requests_by_sha, ensure_ascii=False))
+   210	    report = {'passed': not failures, 'saved run': str(SAVED), 'failures': failures, 'requests answered from the saved archive': sum(reference.matched.values()),
+   211	              'saved archive rows': reference.reference_rows, 'ledger rows compared, by table': compared,
+   212	              'ledger columns not compared': {table: sorted(columns) for table, columns in ARCHIVE_ROW_COLUMNS.items()},
+   213	              'judging rounds': len(rounds), 'adapter counts': replay_counts}
+   214	    (output / 'control-report.json').write_text(json.dumps(report, indent=1))
+   215	    print(json.dumps(report, indent=1))
+   216	    if failures:
+   217	        raise SystemExit(1)
+   218	
+   219	
+   220	def library_without_relation(folder, by, revised_group):
+   221	    """A copy of the draw's library with exactly one revision relation removed, stamped as its own (a labelled departure from the draw)."""
+   222	    library = json.loads((STEP2 / 'library.json').read_text())
+   223	    found = [(group_id, n) for group_id, group in library['groups'].items() for n, revision in enumerate(group['revises'])
+   224	             if revision['by'] == by and revision['group'] == revised_group]
+   225	    if len(found) != 1:
+   226	        raise SystemExit(f'{len(found)} relations from {by} to group {revised_group}; exactly one is removed')
+   227	    group_id, position = found[0]
+   228	    removed = library['groups'][group_id]['revises'].pop(position)
+   229	    folder.mkdir(parents=True)
+   230	    (folder / 'library.json').write_text(json.dumps(library, ensure_ascii=False))
+   231	    digests = [hashlib.sha256(Path(part).read_bytes()).hexdigest() + '  ' + part for part in TRACE.split('+')]
+   232	    digests.append(hashlib.sha256((folder / 'library.json').read_bytes()).hexdigest() + '  ' + str(folder / 'library.json'))
+   233	    (folder / 'inputs.sha256').write_text('\n'.join(digests) + '\n')
+   234	    return {'held by group': group_id, 'removed': removed, 'revised original': library['groups'][revised_group]['original']['id'],
+   235	            'revised original thesis ids': library['groups'][revised_group]['original']['thesis_ids']}
+   236	
+   237	
+   238	def user_text(request):
+   239	    return request['messages'][-1]['content']
+   240	
+   241	
+   242	def counterfactual(output, control_folder, by, revised_group, keep_links, uncarried=None):
+   243	    output, control_folder = Path(output).resolve(), Path(control_folder).resolve()
+   244	    control_report = json.loads((control_folder / 'control-report.json').read_text())
+   245	    if not control_report['passed']:
+   246	        raise SystemExit('the control did not pass; no counterfactual is replayed against it')
+   247	    if control_report.get('saved run') != str(SAVED):
+   248	        raise SystemExit(f"the control is of {control_report.get('saved run')}, not of {SAVED}")
+   249	    control_rounds = json.loads((control_folder / 'control-rounds.json').read_text(), object_pairs_hook=collections.OrderedDict)
+   250	    control_requests = json.loads((control_folder / 'control-requests.json').read_text())
+   251	    if uncarried:
+   252	        step2_folder, removed, kept = STEP2, {'links not carried': uncarried}, None
+   253	    else:
+   254	        scratch = output.parent / (output.name + '-inputs')
+   255	        removed = library_without_relation(scratch / 'step2', by, revised_group)
+   256	        step2_folder, kept = scratch / 'step2', ({by: removed['revised original thesis ids']} if keep_links else None)
+   257	    rounds_seen = []
+   258	    found = {}
+   259	
+   260	    def on_round(day, entries, error):
+   261	        earlier_missing = [control_day for control_day in control_rounds if control_day < day and control_day not in rounds_seen]
+   262	        rounds_seen.append(day)
+   263	        expected = sorted((entry['view'], entry['sha256']) for entry in control_rounds.get(day, []))
+   264	        if earlier_missing or error or round_signature(entries) != expected:
+   265	            found.update(day=day, entries=entries, rounds_without_judging=earlier_missing, error=str(error) if error else None)
+   266	            if not error:
+   267	                raise Divergence(day)
+   268	
+   269	    diverged = True
+   270	    try:
+   271	        adapter, recorder, reference = run_replay(output, step2_folder, on_round=on_round, keep_links=kept, uncarried=uncarried)
+   272	        adapter.conn.close()
+   273	        never_judged = [day for day in control_rounds if day not in rounds_seen]
+   274	        if never_judged:
+   275	            found.update(day=None, entries=[], rounds_without_judging=never_judged, error=None)
+   276	        else:
+   277	            diverged = False
+   278	    except (Divergence, control_v108.ReferenceMissError):
+   279	        pass
+   280	    report = {'relation removed': removed, 'links kept without the relation': kept, 'diverged': diverged,
+   281	              'rounds identical to the control before the first difference': [day for day in rounds_seen if day != found.get('day')]}
+   282	    if diverged:
+   283	        day = found['day']
+   284	        control_by_view = collections.defaultdict(list)
+   285	        for entry in control_rounds.get(day, []):
+   286	            control_by_view[entry['view']].append(entry['sha256'])
+   287	        replay_by_view = collections.defaultdict(list)
+   288	        for entry in found['entries']:
+   289	            replay_by_view[entry['view']].append(entry)
+   290	        changed = []
+   291	        for view_id in sorted(set(control_by_view) | set(replay_by_view)):
+   292	            control_shas = control_by_view.get(view_id, [])
+   293	            replay_entries = replay_by_view.get(view_id, [])
+   294	            if sorted(control_shas) == sorted(entry['sha256'] for entry in replay_entries):
+   295	                continue
+   296	            first_control = control_requests[control_shas[0]] if control_shas else None
+   297	            first_replay = next((entry['request'] for entry in replay_entries if entry['sha256'] not in control_shas), None)
+   298	            detail = {'view': view_id, 'control requests': len(control_shas), 'counterfactual requests': len(replay_entries)}
+   299	            if first_control and first_replay:
+   300	                control_shown = e2e_adapter.SHOWN_EVIDENCE.findall(user_text(first_control))
+   301	                replay_shown = e2e_adapter.SHOWN_EVIDENCE.findall(user_text(first_replay))
+   302	                detail['evidence only in the control request'] = [e for e in control_shown if e not in replay_shown]
+   303	                detail['evidence only in the counterfactual request'] = [e for e in replay_shown if e not in control_shown]
+   304	                detail['system text identical'] = first_control['messages'][0] == first_replay['messages'][0]
+   305	                detail['diff of the user text'] = list(difflib.unified_diff(user_text(first_control).splitlines(), user_text(first_replay).splitlines(),
+   306	                                                                            'control', 'counterfactual', lineterm='', n=0))
+   307	                (output / f'request-{view_id}-control.json').write_text(json.dumps(first_control, ensure_ascii=False, indent=1))
+   308	                (output / f'request-{view_id}-counterfactual.json').write_text(json.dumps(first_replay, ensure_ascii=False, indent=1))
+   309	            changed.append(detail)
+   310	        report.update({'first differing round': day, 'control days with no judging round in the counterfactual': found['rounds_without_judging'],
+   311	                       'reference miss': found['error'], 'views whose requests differ in that round': changed,
+   312	                       'views with identical requests in that round': sorted(v for v in control_by_view if sorted(control_by_view[v]) ==
+   313	                                                                              sorted(e['sha256'] for e in replay_by_view.get(v, [])))})
+   314	    output.mkdir(parents=True, exist_ok=True)
+   315	    (output / 'counterfactual-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=1))
+   316	    print(json.dumps({name: value for name, value in report.items() if name != 'views whose requests differ in that round'}, ensure_ascii=False, indent=1))
+   317	    for detail in report.get('views whose requests differ in that round', []):
+   318	        print(json.dumps({name: value for name, value in detail.items() if name != 'diff of the user text'}, ensure_ascii=False))
+   319	        print('\n'.join(detail.get('diff of the user text', [])))
+   320	
+   321	
+   322	if __name__ == '__main__':
+   323	    parser = argparse.ArgumentParser()
+   324	    parser.add_argument('mode', choices=['control', 'counterfactual'])
+   325	    parser.add_argument('output')
+   326	    parser.add_argument('control_folder', nargs='?')
+   327	    parser.add_argument('--by'); parser.add_argument('--revised-group'); parser.add_argument('--keep-links', action='store_true')
+   328	    parser.add_argument('--draw', type=int, choices=(1, 2, 3), default=1)
+   329	    parser.add_argument('--uncarry', action='append', default=[], help='record:question, a carried link not to write; repeatable')
+   330	    args = parser.parse_args()
+   331	    use_draw(args.draw)
+   332	    if args.mode == 'control':
+   333	        control(args.output)
+   334	    else:
+   335	        uncarried = collections.defaultdict(list)
+   336	        for entry in args.uncarry:
+   337	            record_id, question = entry.rsplit(':', 1)
+   338	            uncarried[record_id].append(question)
+   339	        if not args.control_folder or not (uncarried or (args.by and args.revised_group)):
+   340	            parser.error('counterfactual needs the control folder and either --uncarry or --by with --revised-group')
+   341	        counterfactual(args.output, args.control_folder, args.by, args.revised_group, args.keep_links, dict(uncarried) or None)
+
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""One judgement, with and without the record an unsupported revision relation carried into it: thesis v20 on 2026-07-06 of the saved
+     3	D392 clean draw 1. Protocol: PROTOCOL.md beside this file, written before the send.
+     4	
+     5	The two requests are the ones `edge_replay.py counterfactual` wrote: the request the frozen judge was sent on that day, and the request
+     6	the same code builds when the one relation is removed from the library. Each is sent as the production transport sends it
+     7	(`model.openai_transport`: json.dumps of the request in the order `model.build_request` built it), through the measurement spending
+     8	limit (`e2e-2026-11-09/budget.py`), with no archive in between, so every draw is a fresh answer.
+     9	
+    10	  judge_probe.py check <replay folder>                 no send: the identities and the checks below, and the worst cost
+    11	  judge_probe.py send <replay folder> <new folder>     the sends (draws per arm and cap from PROTOCOL.md's numbers below)
+    12	  judge_probe.py read <replay folder> <send folder>    the answers through the frozen judge's own check, one row per answer"""
+    13	import argparse, concurrent.futures, contextlib, hashlib, json, re, sqlite3, sys, threading, time
+    14	from pathlib import Path
+    15	
+    16	HERE = Path(__file__).resolve().parent
+    17	sys.dont_write_bytecode = True
+    18	sys.path[:0] = [str(HERE)]
+    19	import edge_replay  # noqa: E402
+    20	import budget  # noqa: E402  (edge_replay put e2e-2026-11-09 and src on the path)
+    21	from hivemind import config, model  # noqa: E402
+    22	from hivemind.views import judging, store  # noqa: E402
+    23	
+    24	OUTPUT_ROOTS = (edge_replay.ROOT / 'poc/data/clean-step2-edge-effect-2026-11-10', edge_replay.ROOT / 'poc/data/clean-step2-revision-links-2026-11-10')
+    25	VIEW, DAY, SEQ = 'v20', '2026-07-06', 76      # the case of 2026-11-10's first probe; `--case` names another
+    26	CARRIED = 'e185'                      # the record the relation carried into the question
+    27	
+    28	
+    29	def use_case(draw, view, day, seq, carried):
+    30	    """The judgement this probe sends both ways: a saved draw, a question, the day and sequence number of its judging round, and the
+    31	    evidence id of the record a relation carried into it."""
+    32	    global VIEW, DAY, SEQ, CARRIED
+    33	    edge_replay.use_draw(draw)
+    34	    VIEW, DAY, SEQ, CARRIED = view, day, seq, carried
+    35	ARMS = ('control', 'counterfactual')
+    36	DRAWS = 3
+    37	CAP_USD = 0.25
+    38	FIGURE = re.compile(r'\$\s?(\d{2,4}(?:\.\d+)?)(?:\s?[–-]\s?\$?(\d{2,4}(?:\.\d+)?))?\s?billion')
+    39	
+    40	
+    41	def load_requests(replay_folder):
+    42	    return {arm: json.loads((Path(replay_folder) / f'request-{VIEW}-{arm}.json').read_text()) for arm in ARMS}
+    43	
+    44	
+    45	def sha256(text):
+    46	    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    47	
+    48	
+    49	def user_text(request):
+    50	    return request['messages'][-1]['content']
+    51	
+    52	
+    53	def read_only_ledger(replay_folder):
+    54	    """The replay's ledger as it stood when this judgement was asked for, opened read-only with the row shape the store's readers expect."""
+    55	    conn = sqlite3.connect(f"file:{Path(replay_folder).resolve() / 'views.sqlite'}?mode=ro", uri=True)
+    56	    conn.row_factory = sqlite3.Row
+    57	    return conn
+    58	
+    59	
+    60	def verdict(accepted):
+    61	    """PROTOCOL.md's reading rule over the accepted rungs of each arm."""
+    62	    if any(len(accepted[arm]) != DRAWS for arm in ARMS):
+    63	        return 'not decided: fewer than three accepted answers in an arm'
+    64	    if len(set(accepted['control'] + accepted['counterfactual'])) == 1:
+    65	        return 'no difference in the conclusion in these samples'
+    66	    if len(set(accepted['control'])) == 1 and len(set(accepted['counterfactual'])) == 1:
+    67	        return 'the conclusion differs in these samples'
+    68	    return 'not decided by this probe: the answers are mixed'
+    69	
+    70	
+    71	def saved_judgement():
+    72	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+    73	        request_sha, publication_day = conn.execute('select request_sha256, publication_day from judgements where view_id=? and seq=?', (VIEW, SEQ)).fetchone()
+    74	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'archive.sqlite'}?mode=ro", uri=True)) as conn:
+    75	        answer_json, request_json = conn.execute('select answer_json, request_json from model_calls where request_sha256=?', (request_sha,)).fetchone()
+    76	    return request_sha, publication_day, json.loads(answer_json), request_json
+    77	
+    78	
+    79	def checks(replay_folder):
+    80	    """Every identity the send rests on; raises on the first that fails. Returns the facts printed by `check`."""
+    81	    requests = load_requests(replay_folder)
+    82	    saved_sha, saved_day, saved_answer, saved_request_json = saved_judgement()
+    83	    if saved_day != DAY:
+    84	        raise SystemExit(f'the saved judgement of {VIEW} at seq {SEQ} is of {saved_day}, not {DAY}')
+    85	    canonical = {arm: json.dumps(request, sort_keys=True, ensure_ascii=False) for arm, request in requests.items()}
+    86	    if sha256(canonical['control']) != saved_sha or canonical['control'] != saved_request_json:
+    87	        raise SystemExit('the control request is not the request the saved judgement answered')
+    88	    cfg = config.load(edge_replay.e2e_adapter.CONFIG)
+    89	    rebuilt = model.build_request(cfg.rejudging, requests['control']['messages'][0]['content'], user_text(requests['control']),
+    90	                                  judging.schema_for(cfg.rejudging.prompt_version), 'judgement', cfg.provider)
+    91	    if json.dumps(rebuilt) != json.dumps(requests['control']):
+    92	        raise SystemExit('the control request file is not, byte for byte, what model.build_request builds today from its system and user text')
+    93	    with_other_user_text = json.loads(json.dumps(requests['control']))
+    94	    with_other_user_text['messages'][-1]['content'] = user_text(requests['counterfactual'])
+    95	    if json.dumps(with_other_user_text) != json.dumps(requests['counterfactual']):
+    96	        raise SystemExit('the two requests differ outside the user text (a key, its order, the system text or the schema)')
+    97	    control_lines, counterfactual_lines = user_text(requests['control']).splitlines(), user_text(requests['counterfactual']).splitlines()
+    98	    start = next(n for n, line in enumerate(control_lines) if line.startswith(f'- {CARRIED} ['))
+    99	    end = next(n for n in range(start + 1, len(control_lines)) if not control_lines[n].startswith('    '))
+   100	    without_block = control_lines[:start] + control_lines[end:]
+   101	    count_line = next(n for n, line in enumerate(without_block) if line.startswith('[Evidence in view under this thesis, '))
+   102	    shown = judging.evidence_shown_in(user_text(requests['counterfactual']))
+   103	    without_block[count_line] = f'[Evidence in view under this thesis, {len(shown)} items]'
+   104	    if without_block != counterfactual_lines:
+   105	        raise SystemExit(f'the counterfactual request is not the control request less the {CARRIED} block and the item count')
+   106	    if CARRIED in shown or CARRIED not in judging.evidence_shown_in(user_text(requests['control'])):
+   107	        raise SystemExit(f'{CARRIED} is not shown in the control request only')
+   108	    # the frozen judge's own check, on the ledger as it stood when this judgement was asked for (the replay stopped in this round)
+   109	    ledger = read_only_ledger(replay_folder)
+   110	    try:
+   111	        last = store.current_state(ledger, VIEW)
+   112	        if ledger.execute('select 1 from judgements where view_id=? and seq=?', (VIEW, SEQ)).fetchone():
+   113	            raise SystemExit(f'the replay ledger already holds the {DAY} judgement of {VIEW}')
+   114	        accepted = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['control']))
+   115	        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+   116	    finally:
+   117	        ledger.close()
+   118	    if accepted:
+   119	        raise SystemExit(f'the saved answer does not pass the check on the control request: {accepted}')
+   120	    if not any(CARRIED in error for error in refused):
+   121	        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+   122	    worst = {arm: budget.worst_cost(request) for arm, request in requests.items()}
+   123	    return requests, {
+   124	        'saved judgement': {'request sha256': saved_sha, 'rung': saved_answer['rung'], 'previous rung': last['rung'] if last else None},
+   125	        'as sent, sha256 of json.dumps(request)': {arm: sha256(json.dumps(request)) for arm, request in requests.items()},
+   126	        'user text characters': {arm: len(user_text(request)) for arm, request in requests.items()},
+   127	        'lines removed with the block': end - start, 'evidence shown': {'control': len(shown) + 1, 'counterfactual': len(shown)},
+   128	        'answer key order of the saved answer': list(saved_answer),
+   129	        'worst cost per send (usd)': {arm: round(cost, 4) for arm, cost in worst.items()},
+   130	        'cost if every send answers at its first attempt, at the reserve (usd)': round(DRAWS * sum(worst.values()), 4),
+   131	        'worst cost of the probe, every send tried three times (usd)': round(budget.ATTEMPTS * DRAWS * sum(worst.values()), 4),
+   132	        'cap (usd)': CAP_USD, 'sends': DRAWS * len(ARMS)}
+   133	
+   134	
+   135	def send(replay_folder, output):
+   136	    requests, facts = checks(replay_folder)
+   137	    if facts['worst cost of the probe, every send tried three times (usd)'] > CAP_USD:
+   138	        raise SystemExit('the worst cost of the probe passes the cap')
+   139	    output = Path(output).resolve()
+   140	    if not any(root.resolve() in output.parents for root in OUTPUT_ROOTS):
+   141	        raise SystemExit(f'the probe writes only under {OUTPUT_ROOTS}')
+   142	    output.mkdir(parents=True, exist_ok=False)
+   143	    (output / 'registration.json').write_text(json.dumps({'case': {'saved run': str(edge_replay.SAVED), 'question': VIEW, 'day': DAY, 'seq': SEQ, 'carried record': CARRIED},
+   144	                                                          **facts, 'registered at': time.strftime('%Y-%m-%dT%H:%M:%S%z')}, indent=1))
+   145	    (output / 'raw').mkdir()
+   146	    current = threading.local()          # the job whose attempt is in flight in this thread (Budget.send calls the attempt in its caller's thread)
+   147	
+   148	    def attempt(provider, request):
+   149	        """One attempt through the production transport. The body that came back is on disk before anything else reads it, so an
+   150	        answer cannot be lost to a failure in the accounting or in this script."""
+   151	        current.attempts += 1
+   152	        response = model.openai_transport(provider, request, max_attempts=1)
+   153	        (output / 'raw' / f'{current.arm}-{current.draw}-attempt-{current.attempts}.json').write_text(json.dumps(response, ensure_ascii=False))
+   154	        current.returned = response
+   155	        return response
+   156	
+   157	    limit = budget.Budget(CAP_USD, attempt=attempt)
+   158	    provider = config.load(edge_replay.e2e_adapter.CONFIG).provider
+   159	
+   160	    def one(job):
+   161	        current.arm, current.draw = job
+   162	        current.attempts, current.returned = 0, None
+   163	        arm, draw = job
+   164	        started = time.time()
+   165	        outcome = {'arm': arm, 'draw': draw}
+   166	        try:
+   167	            outcome['response'] = limit.send(provider, requests[arm])
+   168	        except Exception as error:   # a failed send is an outcome of the probe, recorded and never re-sent by this script
+   169	            outcome['error'] = f'{type(error).__name__}: {error}'
+   170	            if getattr(error, 'response_body', None) is not None:
+   171	                outcome['response body of the failed attempt'] = error.response_body
+   172	            if current.returned is not None:   # the answer came back and the failure is after it: the answer stands, the failure is noted
+   173	                outcome['response'] = current.returned
+   174	                outcome['failure after the answer returned'] = outcome.pop('error')
+   175	        outcome.update(seconds=round(time.time() - started, 1), attempts=current.attempts)
+   176	        (output / f'{arm}-{draw}.json').write_text(json.dumps(outcome, ensure_ascii=False, indent=1))
+   177	        return outcome
+   178	
+   179	    jobs = [(arm, draw) for draw in range(1, DRAWS + 1) for arm in ARMS]          # the arms interleaved, all sent at once
+   180	    with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+   181	        outcomes = list(pool.map(one, jobs))
+   182	    (output / 'spent.json').write_text(json.dumps({'spent usd (from tokens; a lost answer at its reserve)': round(limit.spent_usd, 4),
+   183	                                                   'answered': sum('response' in o for o in outcomes), 'failed': sum('error' in o for o in outcomes)}, indent=1))
+   184	    print((output / 'spent.json').read_text())
+   185	
+   186	
+   187	def read_outcome(outcome, arm, ledger, requests, schema, saved_answer):
+   188	    """One row for one saved outcome. Only an answer that passes the schema and the frozen judge's check is 'accepted'."""
+   189	    if 'error' in outcome:
+   190	        return {'status': 'not answered', 'detail': str(outcome['error'])}
+   191	    try:
+   192	        answer = json.loads(outcome['response']['choices'][0]['message']['content'])
+   193	    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+   194	        return {'status': 'malformed', 'detail': str(error)}
+   195	    schema_errors = model.check_schema(answer, schema)
+   196	    if schema_errors:            # not the answer's shape: nothing further is read from it
+   197	        return {'status': 'refused by the schema', 'detail': '; '.join(schema_errors[:3])}
+   198	    errors = judging.check_answer(ledger, VIEW, answer, user_text(requests[arm]))
+   199	    pushes = {push['evidence_id']: push['push'] for push in answer['pushes']}
+   200	    usage = outcome['response'].get('usage')
+   201	    usage = usage if isinstance(usage, dict) else {}
+   202	    return {'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+   203	            'rung': answer['rung'], 'changed': answer['changed'], 'cites': len(answer['cites']),
+   204	            f'cites {CARRIED}': CARRIED in answer['cites'], f'push on {CARRIED}': pushes.get(CARRIED),
+   205	            'figures in implied_outcome': [match.group(0) for match in FIGURE.finditer(answer['implied_outcome'])],
+   206	            'key order as production': list(answer) == list(saved_answer),
+   207	            'tokens': [usage.get('prompt_tokens'), usage.get('completion_tokens')],
+   208	            'implied_outcome': answer['implied_outcome'], 'reference': answer['reference'],
+   209	            'reasons': answer['reasons'], 'why_changed': answer['why_changed']}
+   210	
+   211	
+   212	def read(replay_folder, send_folder):
+   213	    """Every outcome becomes a row. An outcome this reader cannot read, for whatever reason, is the row 'unreadable' and is not counted,
+   214	    so an unexpected shape can only lead to 'not decided', never to a verdict and never to no reading."""
+   215	    requests, facts = checks(replay_folder)
+   216	    schema = requests['control']['response_format']['json_schema']['schema']
+   217	    _, _, saved_answer, _ = saved_judgement()
+   218	    ledger = read_only_ledger(replay_folder)
+   219	    rows = []
+   220	    try:
+   221	        for arm in ARMS:
+   222	            for draw in range(1, DRAWS + 1):
+   223	                try:
+   224	                    outcome = json.loads((Path(send_folder) / f'{arm}-{draw}.json').read_text())
+   225	                    row = read_outcome(outcome, arm, ledger, requests, schema, saved_answer)
+   226	                except Exception as error:
+   227	                    row = {'status': 'unreadable', 'detail': f'{type(error).__name__}: {error}'}
+   228	                rows.append({'arm': arm, 'draw': draw, **row})
+   229	    finally:
+   230	        ledger.close()
+   231	    accepted = {arm: sorted(row['rung'] for row in rows if row['arm'] == arm and row['status'] == 'accepted') for arm in ARMS}
+   232	    result = {'verdict by the protocol': verdict(accepted), 'accepted rungs by arm': accepted, 'saved answer rung': saved_answer['rung']}
+   233	    (Path(send_folder) / 'reading.json').write_text(json.dumps({**result, 'rows': rows}, ensure_ascii=False, indent=1))
+   234	    for row in rows:
+   235	        print(json.dumps({name: value for name, value in row.items() if name not in ('implied_outcome', 'reference', 'reasons', 'why_changed')}, ensure_ascii=False))
+   236	    print(json.dumps(result))
+   237	
+   238	
+   239	if __name__ == '__main__':
+   240	    parser = argparse.ArgumentParser()
+   241	    parser.add_argument('mode', choices=['check', 'send', 'read'])
+   242	    parser.add_argument('replay_folder')
+   243	    parser.add_argument('folder', nargs='?')
+   244	    parser.add_argument('--case', nargs=5, metavar=('DRAW', 'QUESTION', 'DAY', 'SEQ', 'EVIDENCE'),
+   245	                        help='another judgement than the first probe\'s, for example: 3 v22 2026-07-06 76 e176')
+   246	    args = parser.parse_args()
+   247	    if args.case:
+   248	        use_case(int(args.case[0]), args.case[1], args.case[2], int(args.case[3]), args.case[4])
+   249	    if args.mode == 'check':
+   250	        print(json.dumps(checks(args.replay_folder)[1], indent=1))
+   251	    elif not args.folder:
+   252	        parser.error(f'{args.mode} needs the send folder')
+   253	    elif args.mode == 'send':
+   254	        send(args.replay_folder, args.folder)
+   255	    else:
+   256	        read(args.replay_folder, args.folder)
+
+exec
+/opt/homebrew/bin/zsh -lc 'git status --short --branch' in /Users/lchingen/hivemind
+ succeeded in 1146ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-2HjZwQuR' (errno=Operation not permitted)
+2026-11-10 23:12:52.496 xcodebuild[85095:44771904]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-10 23:12:52.607 xcodebuild[85095:44771903] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-1LJLeQfh' (errno=Operation not permitted)
+2026-11-10 23:12:52.922 xcodebuild[85097:44771913]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-10 23:12:53.033 xcodebuild[85097:44771912] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+## clean-arch
+ M AGENTS.md
+ M clean-arch/PRD.md
+ M clean-arch/architecture.html
+ M clean-arch/step1-unfiled-2026-11-08/LOG.md
+ M clean-arch/step2-validation-2026-11-07/LOG.md
+ M clean-arch/step4-2026-11-10/DESIGN.md
+ M docs/CURRENT_STATE.md
+ M docs/DECISIONS-log.md
+ M docs/DECISIONS.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gh-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gi-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gi-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gj-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gk-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gl-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gm-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gm-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gn-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gn-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/go-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/go-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gp-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gp-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gq-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gq-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gr-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gr-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gs-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gs-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gt-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gt-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gu-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gu-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gv-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gw-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gw-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gx-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gx-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gy-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gy-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gz-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ha-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ha-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hb-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hb-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hc-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hc-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hd-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hd-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/he-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/he-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hf-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hf-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hg-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hg-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hh-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hh-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hi-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hi-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hj-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hk-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hl-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hm-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hm-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hn-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hn-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ho-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ho-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hp-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hp-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hq-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hq-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hr-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hr-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hs-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hs-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ht-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ht-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hu-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hu-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hv-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hw-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hw-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hx-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hx-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hy-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hy-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hz-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ia-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ia-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ib-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ib-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ic-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ic-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/id-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/id-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ie-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ie-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/if-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/if-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ig-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ig-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ih-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ih-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ii-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ii-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ij-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ij-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ik-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ik-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/il-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/il-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/im-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/im-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/in-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/in-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/io-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/io-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ip-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ip-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iq-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iq-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ir-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ir-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/is-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/is-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/it-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/it-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iu-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iu-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iu-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iv-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iw-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iw-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ix-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iy-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iy-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iz-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ja-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ja-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ja-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jb-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jb-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jc-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jc-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jd-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jd-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/je-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/je-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jf-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jf-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jg-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jg-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jh-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jh-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ji-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ji-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jj-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jk-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jl-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jm-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jm-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jn-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jn-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jo-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jo-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jp-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jp-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jq-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jq-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jr-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jr-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/js-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/js-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jt-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jt-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ju-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ju-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jv-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jw-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jw-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jx-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jx-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jy-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jy-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jz-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ka-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ka-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kb-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kb-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kc-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kc-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kd-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kd-codex.md
+?? clean-arch/step2-edge-effect-2026-11-10/
+?? clean-arch/step2-revision-links-2026-11-10/
+?? clean-arch/step4-2026-11-10/census/
+?? clean-arch/step4-2026-11-10/dryrun/
+?? clean-arch/step4-2026-11-10/dryrun10/
+?? clean-arch/step4-2026-11-10/dryrun11/
+?? clean-arch/step4-2026-11-10/dryrun12/
+?? clean-arch/step4-2026-11-10/dryrun13/
+?? clean-arch/step4-2026-11-10/dryrun14/
+?? clean-arch/step4-2026-11-10/dryrun2/
+?? clean-arch/step4-2026-11-10/dryrun3/
+?? clean-arch/step4-2026-11-10/dryrun4/
+?? clean-arch/step4-2026-11-10/dryrun5/
+?? clean-arch/step4-2026-11-10/dryrun6/
+?? clean-arch/step4-2026-11-10/dryrun7/
+?? clean-arch/step4-2026-11-10/dryrun8/
+?? clean-arch/step4-2026-11-10/dryrun9/
+?? clean-arch/step4-2026-11-10/ladder/
+?? clean-arch/step4-2026-11-10/probe-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d413-d414-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d416-d418-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d420-d421-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d421c-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-direction-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/
+?? clean-arch/step4-2026-11-10/readings_summary.md
+?? clean-arch/step4-2026-11-10/readings_summary.py
+?? clean-arch/step4-2026-11-10/reference/
+?? clean-arch/step4-2026-11-10/stage_a/
+?? reports/step2-after-failed-probe-council-2026-11-09/
+?? reports/step2-jev-decision-council-2026-11-09/
+?? reports/step2-jev-strengthening-council-2026-11-09/
+?? reports/step2-loop-retrospective-2026-11-09/
+?? reports/step2-merge-fix-council-2026-11-09/
+?? reports/step2-next-action-2026-11-09/
+?? reports/step2-revision-census-2026-11-09/
+?? reports/step2-score-council-2026-11-08/
+?? reports/step2-wrong-merge-council-2026-11-09/
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat poc/data/clean-step2-revision-links-2026-11-10/{control-d3/control-report.json,uncarry-d3-70e4-v22/counterfactual-report.json}' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step2-edge-effect-2026-11-10/judge_probe.py | sed -n '97,300p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{
+ "passed": true,
+ "saved run": "/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d3/judged-2",
+ "failures": [],
+ "requests answered from the saved archive": 251,
+ "saved archive rows": 251,
+ "ledger rows compared, by table": {
+  "views": 22,
+  "rungs": 98,
+  "view_keys": 22,
+  "view_switches": 22,
+  "judgements": 233,
+  "evidence": 579,
+  "evidence_sources": 579,
+  "evidence_links": 730,
+  "replacements": 0,
+  "revisions": 27,
+  "same_claims": 229,
+  "dependencies": 17,
+  "dependency_resolutions": 0,
+  "successions": 0,
+  "handovers": 0,
+  "match_records": 0,
+  "processing_steps": 0,
+  "review_pool_entries": 0,
+  "late_statements": 0,
+  "days_completed": 0,
+  "thesis_groups": 0,
+  "thesis_group_members": 0,
+  "thesis_group_aliases": 0
+ },
+ "ledger columns not compared": {
+  "judgements": [
+   "call_id"
+  ]
+ },
+ "judging rounds": 14,
+ "adapter counts": {
+  "articles not completed by Step 1": 0,
+  "quotes cut by the judge at 400 characters": 123,
+  "evidence written": 579,
+  "links written": 730,
+  "same_claims written": 229,
+  "judgements": 233,
+  "records dropped: no verified passage": 2,
+  "same_claims lost with a dropped record": 2,
+  "revisions written": 27,
+  "links to other clean-opened theses dropped": 23,
+  "links lost with a dropped record": 2,
+  "judging usd (from tokens)": 0.5136
+ }
+}{
+ "relation removed": {
+  "links not carried": {
+   "70:e4": [
+    "v22"
+   ]
+  }
+ },
+ "links kept without the relation": null,
+ "diverged": true,
+ "rounds identical to the control before the first difference": [
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05"
+ ],
+ "first differing round": "2026-07-06",
+ "control days with no judging round in the counterfactual": [],
+ "reference miss": "judgement (openai, gpt-6-luna) request bfae9aa4a90965b8f469398af77914e0a2c218fb4b000036cb2920244d62c8fb has no unused byte-identical row in the reference archive",
+ "views whose requests differ in that round": [
+  {
+   "view": "v1",
+   "control requests": 2,
+   "counterfactual requests": 1
+  },
+  {
+   "view": "v13",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v15",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v16",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v17",
+   "control requests": 2,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v18",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v19",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v2",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v20",
+   "control requests": 2,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v22",
+   "control requests": 1,
+   "counterfactual requests": 1,
+   "evidence only in the control request": [
+    "e176"
+   ],
+   "evidence only in the counterfactual request": [],
+   "system text identical": true,
+   "diff of the user text": [
+    "--- control",
+    "+++ counterfactual",
+    "@@ -4 +4 @@",
+    "-[Evidence in view under this thesis, 9 items]",
+    "+[Evidence in view under this thesis, 8 items]",
+    "@@ -28,4 +27,0 @@",
+    "-- e176 [party_statement; Nvidia spokesperson (reported by Investing.com via uk.finance.yahoo.com); original source NVIDIA Corporation 2026-07-06; from gnews:d5c48abb470f394f86549b6b 2026-07-06] An Nvidia spokesperson refuted SemiAnalysis's delay claims in a statement emailed to Investing.com, saying \"Our roadmap is intact.\"",
+    "-    Quote: An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: \"Our roadmap is intact.\"",
+    "-    Opinion, not verified: the matcher read this as the same claim as e93; the argument counts one claim, one more outlet.",
+    "-    Opinion, not verified: the matcher read it as a later version of e146 (); both are in force: The article reports that NVIDIA shares are under pressure on reports of delays across its upcoming lineup of Vera Rubin server systems."
+   ]
+  },
+  {
+   "view": "v3",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v4",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v5",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v6",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v7",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v8",
+   "control requests": 1,
+   "counterfactual requests": 0
+  },
+  {
+   "view": "v9",
+   "control requests": 1,
+   "counterfactual requests": 0
+  }
+ ],
+ "views with identical requests in that round": [
+  "v10",
+  "v11"
+ ]
+}
+ succeeded in 0ms:
+    97	    control_lines, counterfactual_lines = user_text(requests['control']).splitlines(), user_text(requests['counterfactual']).splitlines()
+    98	    start = next(n for n, line in enumerate(control_lines) if line.startswith(f'- {CARRIED} ['))
+    99	    end = next(n for n in range(start + 1, len(control_lines)) if not control_lines[n].startswith('    '))
+   100	    without_block = control_lines[:start] + control_lines[end:]
+   101	    count_line = next(n for n, line in enumerate(without_block) if line.startswith('[Evidence in view under this thesis, '))
+   102	    shown = judging.evidence_shown_in(user_text(requests['counterfactual']))
+   103	    without_block[count_line] = f'[Evidence in view under this thesis, {len(shown)} items]'
+   104	    if without_block != counterfactual_lines:
+   105	        raise SystemExit(f'the counterfactual request is not the control request less the {CARRIED} block and the item count')
+   106	    if CARRIED in shown or CARRIED not in judging.evidence_shown_in(user_text(requests['control'])):
+   107	        raise SystemExit(f'{CARRIED} is not shown in the control request only')
+   108	    # the frozen judge's own check, on the ledger as it stood when this judgement was asked for (the replay stopped in this round)
+   109	    ledger = read_only_ledger(replay_folder)
+   110	    try:
+   111	        last = store.current_state(ledger, VIEW)
+   112	        if ledger.execute('select 1 from judgements where view_id=? and seq=?', (VIEW, SEQ)).fetchone():
+   113	            raise SystemExit(f'the replay ledger already holds the {DAY} judgement of {VIEW}')
+   114	        accepted = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['control']))
+   115	        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+   116	    finally:
+   117	        ledger.close()
+   118	    if accepted:
+   119	        raise SystemExit(f'the saved answer does not pass the check on the control request: {accepted}')
+   120	    if not any(CARRIED in error for error in refused):
+   121	        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+   122	    worst = {arm: budget.worst_cost(request) for arm, request in requests.items()}
+   123	    return requests, {
+   124	        'saved judgement': {'request sha256': saved_sha, 'rung': saved_answer['rung'], 'previous rung': last['rung'] if last else None},
+   125	        'as sent, sha256 of json.dumps(request)': {arm: sha256(json.dumps(request)) for arm, request in requests.items()},
+   126	        'user text characters': {arm: len(user_text(request)) for arm, request in requests.items()},
+   127	        'lines removed with the block': end - start, 'evidence shown': {'control': len(shown) + 1, 'counterfactual': len(shown)},
+   128	        'answer key order of the saved answer': list(saved_answer),
+   129	        'worst cost per send (usd)': {arm: round(cost, 4) for arm, cost in worst.items()},
+   130	        'cost if every send answers at its first attempt, at the reserve (usd)': round(DRAWS * sum(worst.values()), 4),
+   131	        'worst cost of the probe, every send tried three times (usd)': round(budget.ATTEMPTS * DRAWS * sum(worst.values()), 4),
+   132	        'cap (usd)': CAP_USD, 'sends': DRAWS * len(ARMS)}
+   133	
+   134	
+   135	def send(replay_folder, output):
+   136	    requests, facts = checks(replay_folder)
+   137	    if facts['worst cost of the probe, every send tried three times (usd)'] > CAP_USD:
+   138	        raise SystemExit('the worst cost of the probe passes the cap')
+   139	    output = Path(output).resolve()
+   140	    if not any(root.resolve() in output.parents for root in OUTPUT_ROOTS):
+   141	        raise SystemExit(f'the probe writes only under {OUTPUT_ROOTS}')
+   142	    output.mkdir(parents=True, exist_ok=False)
+   143	    (output / 'registration.json').write_text(json.dumps({'case': {'saved run': str(edge_replay.SAVED), 'question': VIEW, 'day': DAY, 'seq': SEQ, 'carried record': CARRIED},
+   144	                                                          **facts, 'registered at': time.strftime('%Y-%m-%dT%H:%M:%S%z')}, indent=1))
+   145	    (output / 'raw').mkdir()
+   146	    current = threading.local()          # the job whose attempt is in flight in this thread (Budget.send calls the attempt in its caller's thread)
+   147	
+   148	    def attempt(provider, request):
+   149	        """One attempt through the production transport. The body that came back is on disk before anything else reads it, so an
+   150	        answer cannot be lost to a failure in the accounting or in this script."""
+   151	        current.attempts += 1
+   152	        response = model.openai_transport(provider, request, max_attempts=1)
+   153	        (output / 'raw' / f'{current.arm}-{current.draw}-attempt-{current.attempts}.json').write_text(json.dumps(response, ensure_ascii=False))
+   154	        current.returned = response
+   155	        return response
+   156	
+   157	    limit = budget.Budget(CAP_USD, attempt=attempt)
+   158	    provider = config.load(edge_replay.e2e_adapter.CONFIG).provider
+   159	
+   160	    def one(job):
+   161	        current.arm, current.draw = job
+   162	        current.attempts, current.returned = 0, None
+   163	        arm, draw = job
+   164	        started = time.time()
+   165	        outcome = {'arm': arm, 'draw': draw}
+   166	        try:
+   167	            outcome['response'] = limit.send(provider, requests[arm])
+   168	        except Exception as error:   # a failed send is an outcome of the probe, recorded and never re-sent by this script
+   169	            outcome['error'] = f'{type(error).__name__}: {error}'
+   170	            if getattr(error, 'response_body', None) is not None:
+   171	                outcome['response body of the failed attempt'] = error.response_body
+   172	            if current.returned is not None:   # the answer came back and the failure is after it: the answer stands, the failure is noted
+   173	                outcome['response'] = current.returned
+   174	                outcome['failure after the answer returned'] = outcome.pop('error')
+   175	        outcome.update(seconds=round(time.time() - started, 1), attempts=current.attempts)
+   176	        (output / f'{arm}-{draw}.json').write_text(json.dumps(outcome, ensure_ascii=False, indent=1))
+   177	        return outcome
+   178	
+   179	    jobs = [(arm, draw) for draw in range(1, DRAWS + 1) for arm in ARMS]          # the arms interleaved, all sent at once
+   180	    with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+   181	        outcomes = list(pool.map(one, jobs))
+   182	    (output / 'spent.json').write_text(json.dumps({'spent usd (from tokens; a lost answer at its reserve)': round(limit.spent_usd, 4),
+   183	                                                   'answered': sum('response' in o for o in outcomes), 'failed': sum('error' in o for o in outcomes)}, indent=1))
+   184	    print((output / 'spent.json').read_text())
+   185	
+   186	
+   187	def read_outcome(outcome, arm, ledger, requests, schema, saved_answer):
+   188	    """One row for one saved outcome. Only an answer that passes the schema and the frozen judge's check is 'accepted'."""
+   189	    if 'error' in outcome:
+   190	        return {'status': 'not answered', 'detail': str(outcome['error'])}
+   191	    try:
+   192	        answer = json.loads(outcome['response']['choices'][0]['message']['content'])
+   193	    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+   194	        return {'status': 'malformed', 'detail': str(error)}
+   195	    schema_errors = model.check_schema(answer, schema)
+   196	    if schema_errors:            # not the answer's shape: nothing further is read from it
+   197	        return {'status': 'refused by the schema', 'detail': '; '.join(schema_errors[:3])}
+   198	    errors = judging.check_answer(ledger, VIEW, answer, user_text(requests[arm]))
+   199	    pushes = {push['evidence_id']: push['push'] for push in answer['pushes']}
+   200	    usage = outcome['response'].get('usage')
+   201	    usage = usage if isinstance(usage, dict) else {}
+   202	    return {'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+   203	            'rung': answer['rung'], 'changed': answer['changed'], 'cites': len(answer['cites']),
+   204	            f'cites {CARRIED}': CARRIED in answer['cites'], f'push on {CARRIED}': pushes.get(CARRIED),
+   205	            'figures in implied_outcome': [match.group(0) for match in FIGURE.finditer(answer['implied_outcome'])],
+   206	            'key order as production': list(answer) == list(saved_answer),
+   207	            'tokens': [usage.get('prompt_tokens'), usage.get('completion_tokens')],
+   208	            'implied_outcome': answer['implied_outcome'], 'reference': answer['reference'],
+   209	            'reasons': answer['reasons'], 'why_changed': answer['why_changed']}
+   210	
+   211	
+   212	def read(replay_folder, send_folder):
+   213	    """Every outcome becomes a row. An outcome this reader cannot read, for whatever reason, is the row 'unreadable' and is not counted,
+   214	    so an unexpected shape can only lead to 'not decided', never to a verdict and never to no reading."""
+   215	    requests, facts = checks(replay_folder)
+   216	    schema = requests['control']['response_format']['json_schema']['schema']
+   217	    _, _, saved_answer, _ = saved_judgement()
+   218	    ledger = read_only_ledger(replay_folder)
+   219	    rows = []
+   220	    try:
+   221	        for arm in ARMS:
+   222	            for draw in range(1, DRAWS + 1):
+   223	                try:
+   224	                    outcome = json.loads((Path(send_folder) / f'{arm}-{draw}.json').read_text())
+   225	                    row = read_outcome(outcome, arm, ledger, requests, schema, saved_answer)
+   226	                except Exception as error:
+   227	                    row = {'status': 'unreadable', 'detail': f'{type(error).__name__}: {error}'}
+   228	                rows.append({'arm': arm, 'draw': draw, **row})
+   229	    finally:
+   230	        ledger.close()
+   231	    accepted = {arm: sorted(row['rung'] for row in rows if row['arm'] == arm and row['status'] == 'accepted') for arm in ARMS}
+   232	    result = {'verdict by the protocol': verdict(accepted), 'accepted rungs by arm': accepted, 'saved answer rung': saved_answer['rung']}
+   233	    (Path(send_folder) / 'reading.json').write_text(json.dumps({**result, 'rows': rows}, ensure_ascii=False, indent=1))
+   234	    for row in rows:
+   235	        print(json.dumps({name: value for name, value in row.items() if name not in ('implied_outcome', 'reference', 'reasons', 'why_changed')}, ensure_ascii=False))
+   236	    print(json.dumps(result))
+   237	
+   238	
+   239	if __name__ == '__main__':
+   240	    parser = argparse.ArgumentParser()
+   241	    parser.add_argument('mode', choices=['check', 'send', 'read'])
+   242	    parser.add_argument('replay_folder')
+   243	    parser.add_argument('folder', nargs='?')
+   244	    parser.add_argument('--case', nargs=5, metavar=('DRAW', 'QUESTION', 'DAY', 'SEQ', 'EVIDENCE'),
+   245	                        help='another judgement than the first probe\'s, for example: 3 v22 2026-07-06 76 e176')
+   246	    args = parser.parse_args()
+   247	    if args.case:
+   248	        use_case(int(args.case[0]), args.case[1], args.case[2], int(args.case[3]), args.case[4])
+   249	    if args.mode == 'check':
+   250	        print(json.dumps(checks(args.replay_folder)[1], indent=1))
+   251	    elif not args.folder:
+   252	        parser.error(f'{args.mode} needs the send folder')
+   253	    elif args.mode == 'send':
+   254	        send(args.replay_folder, args.folder)
+   255	    else:
+   256	        read(args.replay_folder, args.folder)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'views_linked_to|store.revise|def article|def _link' clean-arch/e2e-2026-11-09 poc src clean-arch/step2-edge-effect-2026-11-10/edge_replay.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:119:    production_revise, production_linked = store.revise, store.views_linked_to
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:126:    def views_linked_to(conn, evidence_id):
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:144:    def article(self, k, records, library, revisions_by_record, later_entries, changed):
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:154:    store.revise, store.views_linked_to = revise, views_linked_to
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:159:        store.revise, store.views_linked_to = production_revise, production_linked
+src/hivemind/views/writing.py:258:                store.revise(conn, target_id, stored_id, new_day, seq)          # D202: both pieces stay in force
+src/hivemind/views/writing.py:259:                for linked in store.views_linked_to(conn, target_id):
+src/hivemind/views/store.py:430:def views_linked_to(conn, evidence_id):
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/writing.py:149:                for linked in store.views_linked_to(conn, target_id):
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/store.py:297:def views_linked_to(conn, evidence_id):
+clean-arch/e2e-2026-11-09/adapter.py:193:    def _link(self, evidence_id, thesis_id, k, changed):
+clean-arch/e2e-2026-11-09/adapter.py:209:    def article(self, k, records, library, revisions_by_record, later_entries, changed):
+clean-arch/e2e-2026-11-09/adapter.py:227:                store.revise(self.conn, old, evidence_id, record.get('statement_date') or record['publication_date'], k)
+clean-arch/e2e-2026-11-09/adapter.py:229:                for view_id in store.views_linked_to(self.conn, old):
+poc/corpus/scripts/common.py:133:def article_paragraphs(markup):
+
+exec
+/opt/homebrew/bin/zsh -lc 'python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check /Users/lchingen/hivemind/poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22 --case 3 v22 2026-07-06 76 e176' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{
+ "saved judgement": {
+  "request sha256": "62b1ac493f87559f9f5cdd60637d3a27da3df13f95761620b499c004892f59ea",
+  "rung": 2,
+  "previous rung": 2
+ },
+ "as sent, sha256 of json.dumps(request)": {
+  "control": "432fe1f7ae9b574fd07961e2ba1effb2910a3023a2214ec68d41a0158020d985",
+  "counterfactual": "910b88819db9e6cd20e33862545e64dbdc1e1ce054e29bb75de1365f65ea5893"
+ },
+ "user text characters": {
+  "control": 11528,
+  "counterfactual": 10703
+ },
+ "lines removed with the block": 4,
+ "evidence shown": {
+  "control": 9,
+  "counterfactual": 8
+ },
+ "answer key order of the saved answer": [
+  "rung",
+  "reasons",
+  "cites",
+  "cites_views",
+  "pushes",
+  "changed",
+  "why_changed",
+  "theme_pushes",
+  "reference",
+  "implied_outcome"
+ ],
+ "worst cost per send (usd)": {
+  "control": 0.0098,
+  "counterfactual": 0.0097
+ },
+ "cost if every send answers at its first attempt, at the reserve (usd)": 0.0585,
+ "worst cost of the probe, every send tried three times (usd)": 0.1755,
+ "cap (usd)": 0.25,
+ "sends": 6
+}
+
+codex
+无成本检查通过：保存的 v22 请求与当前构造的请求一致，去掉的内容是 e176 的四行和数量变化。我正在核对答案读取时是否绑定了这次登记的案例，以及重放过程中其他链接和关系是否保持原样。
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# One carried link both reader families would keep: does the judgement need it? Protocol
+     2	
+     3	2026-11-10. Written before the send. A probe of a few cents inside the council round of [LOG.md](LOG.md); it changes nothing in Jev, a
+     4	prompt, a rule, the frozen judge or a saved run.
+     5	
+     6	## The case
+     7	
+     8	Saved D392 clean draw 3 (`stage2-clean-d3`, judged in `judged-2`). Step 1 filed four SemiAnalysis reports (Kyber delayed to 2028, the
+     9	backup plan scrapped, NVL576 affected, the four-die design cancelled) under the FY2028 total revenue question (v22), and filed
+    10	NVIDIA's answer "Our roadmap is intact" (record `70:e4`, evidence `e176`) only under the Kyber and Rubin shipping questions. A "later
+    11	version" relation carried the answer into v22. Both blind reader families would file it there as evidence; the saved judgements of
+    12	v22 cite it on 9 of 9 days it was shown.
+    13	
+    14	## At no cost, done
+    15	
+    16	- The untouched replay of draw 3 passes: 251 of 251 judge requests equal a saved one and took its answer; ledger, recorded requests
+    17	  and counts equal the saved run's (`poc/data/clean-step2-revision-links-2026-11-10/control-d3/`).
+    18	- With only the link `70:e4` to v22 not written (the relation kept), the days 2026-07-01 to 07-05 are identical and the first changed
+    19	  request is v22's on 2026-07-06: the `e176` block (4 lines: the statement, its quotation, and its two "Opinion, not verified" lines)
+    20	  is gone and the item count reads 8 for 9. The replay stops there (`uncarry-d3-70e4-v22/`).
+    21	- `judge_probe.py check … --case 3 v22 2026-07-06 76 e176` passes: the control is the saved request and what the code builds today;
+    22	  the two requests differ only by that block and the count; the frozen check accepts the saved answer on the control and refuses it
+    23	  on the other.
+    24	
+    25	## The send
+    26	
+    27	v22's request of 2026-07-06 as saved and without the carried record, three times each, interleaved, through the production
+    28	transport and the spending limit, with the sender reviewed on 2026-11-10 (`step2-edge-effect-2026-11-10/PROTOCOL.md`, "Reviews before
+    29	the send"); the only change since is that the question, day and record are arguments. Cost: $0.0585 if every send answers at once
+    30	at its reserve, $0.1755 with three attempts a send, cap $0.25; expected about $0.02.
+    31	
+    32	## Reading rule, fixed now (the rule of 2026-11-10, unchanged)
+    33	
+    34	Not decided unless all three answers of each arm pass the frozen check. The conclusion differs in these samples only if the three
+    35	answers without the record are on one rung and the three with it on another. No difference only if the six are on one rung.
+    36	Anything else: not decided. Read and reported beside it: the implied figure of each answer, the stated reasons, and in the arm
+    37	without the record whether the four reports are weighed with nothing set against them.
+    38	
+    39	## What it can and cannot say (agreed with Codex, `council/b-codex.md`)
+    40	
+    41	- It is sensitivity evidence for this one question on this one day. The previous conclusion sits at about $554 billion against a
+    42	  boundary of $550 billion, so three answers an arm may well come out mixed.
+    43	- Six answers on one rung do not show the record is not needed: both reader families would keep it, and the figure or the balance
+    44	  of the reasons may still move.
+    45	- Two rungs do not show that carrying every link is best: the direction and the reasons are read, and the 19 links the readers call
+    46	  context weigh on the other side.
+    47	- The block removed holds the record's two "Opinion, not verified" lines as well as the statement, so a difference is of the block.
+    48	- It says nothing of the four question-days that were judged only because of a carried link, nor of the days after 2026-07-06.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step2-edge-effect-2026-11-10/edge_replay.py | sed -n '1,66p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Does one unsupported Step 2 revision relation change what the frozen judge reads? An offline replay of the saved D392 clean draw 1.
+     3	
+     4	No request leaves this process: every judge request is answered from the saved judging archive of the draw
+     5	(`poc/data/clean-e2e-2026-11-09/stage2-clean-d1/judged/archive.sqlite`) by `control_v108.ReferenceArchiveTransport`, which answers
+     6	only a byte-identical canonical request and raises on any other. The credential reader and the production transport are replaced by a
+     7	refusal while a replay runs.
+     8	
+     9	  edge_replay.py control <new folder>
+    10	      The untouched draw through the current adapter and the frozen judge. Passes only when every request finds its saved answer,
+    11	      every saved row is used, and the ledger, the judge requests and the answers equal the saved run's.
+    12	  edge_replay.py counterfactual <new folder> <control folder> --uncarry 70:e4:v22 [--draw 3]
+    13	      The same replay over the saved library, with the one link a relation carried (record:question) not written; the relation itself
+    14	      stays. `--draw` selects the saved draw for every mode (default 1); a control of the same draw must have passed.
+    15	  edge_replay.py counterfactual <new folder> <control folder> --by 70:e4 --revised-group 69:e5 [--keep-links]
+    16	      The same replay over a copy of the library with exactly that one revision relation removed (the copy carries its own stamp; the
+    17	      saved library is not touched). It stops at the first judging round whose requests differ from the control's (a request with other
+    18	      text, a request the control did not send, or a control request not sent) and writes the requests of that round, both versions.
+    19	      Nothing after that round is replayed: later state would rest on answers to requests the archive does not hold.
+    20	      --keep-links removes the relation but writes the links the new record inherited through it, to separate the inherited link from
+    21	      the relation itself.
+    22	
+    23	What a replay shows: whether, and in which round, the judge's input changes. What it cannot show: any answer to a changed request."""
+    24	import argparse, collections, contextlib, difflib, hashlib, json, re, shutil, sqlite3, sys
+    25	from pathlib import Path
+    26	
+    27	HERE = Path(__file__).resolve().parent
+    28	ROOT = HERE.parents[1]
+    29	E2E = ROOT / 'clean-arch/e2e-2026-11-09'
+    30	sys.dont_write_bytecode = True
+    31	sys.path[:0] = [str(E2E), str(ROOT / 'src')]
+    32	import adapter as e2e_adapter  # noqa: E402
+    33	import control_v108  # noqa: E402
+    34	from hivemind import model  # noqa: E402
+    35	from hivemind.views import store  # noqa: E402
+    36	
+    37	DRAW = ROOT / 'poc/data/clean-e2e-2026-11-09'
+    38	TRACE = f"{DRAW / 'stage2-clean-d1/trace.sqlite'}+{DRAW / 'stage2-clean-d1-segment-2/trace.sqlite'}"
+    39	STEP2 = DRAW / 'stage2-clean-d1-segment-2/step2'
+    40	SAVED = DRAW / 'stage2-clean-d1/judged'
+    41	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+    42	# Columns the replay cannot reproduce by construction: an archive row number is given in the order answers return from 32 threads.
+    43	ARCHIVE_ROW_COLUMNS = {'judgements': {'call_id'}}
+    44	LEDGER_TABLES = ('views', 'rungs', 'view_keys', 'view_switches', 'judgements', 'evidence', 'evidence_sources', 'evidence_links',
+    45	                 'replacements', 'revisions', 'same_claims', 'dependencies', 'dependency_resolutions', 'successions', 'handovers',
+    46	                 'match_records', 'processing_steps', 'review_pool_entries', 'late_statements', 'days_completed', 'thesis_groups',
+    47	                 'thesis_group_members', 'thesis_group_aliases')
+    48	
+    49	
+    50	class Divergence(Exception):
+    51	    """The first judging round whose requests differ from the control's."""
+    52	
+    53	
+    54	class LiveCallRefused(BaseException):
+    55	    """A credential or the production transport was reached during an offline replay."""
+    56	
+    57	
+    58	def refuse_live_calls():
+    59	    def refusal(*arguments, **keywords):
+    60	        raise LiveCallRefused('an offline replay reached the credential reader or the production transport')
+    61	    model._key = refusal
+    62	    model.openai_transport = refusal
+    63	
+    64	
+    65	class RecordingTransport:
+    66	    """Passes each request to the reference archive transport and records it with the judging round it belongs to."""
+
+exec
+/opt/homebrew/bin/zsh -lc 'find poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22 -maxdepth 1 -type f -print' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22/counterfactual-report.json
+poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22/archive.sqlite
+poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22/request-v22-control.json
+poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22/views.sqlite
+poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22/request-v22-counterfactual.json
+
+exec
+/opt/homebrew/bin/zsh -lc 'find poc/data/clean-step2-edge-effect-2026-11-10 -name registration.json -print' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/registration.json
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/e2e-2026-11-09/adapter.py | sed -n '185,250p'; nl -ba src/hivemind/views/store.py | sed -n '410,445p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   185	                           speaker=record.get('reporting_speaker') or record.get('original_party') or '',
+   186	                           original_who=record.get('original_party') or '', original_day=record.get('statement_date') or '',
+   187	                           tier=record['tier'], event_time=None, seq=k, input_id=record['input_id'])
+   188	        store.add_source(self.conn, evidence_id, record['input_id'], 'news', record['publication_date'], None, k)
+   189	        self.evidence_of[record['id']] = evidence_id
+   190	        self.counts['evidence written'] += 1
+   191	        return evidence_id
+   192	
+   193	    def _link(self, evidence_id, thesis_id, k, changed):
+   194	        if evidence_id is None:
+   195	            self.counts['links lost with a dropped record'] += 1
+   196	            return
+   197	        if thesis_id in self.mapping:
+   198	            for view_id in self.mapping[thesis_id]:
+   199	                self.counts['links through a matched clean thesis'] += 1
+   200	                self._link(evidence_id, view_id, k, changed)
+   201	            return
+   202	        if thesis_id not in self.views:
+   203	            self.counts['links to other clean-opened theses dropped'] += 1
+   204	            return
+   205	        if store.link(self.conn, evidence_id, thesis_id, k):
+   206	            changed.add(thesis_id)
+   207	            self.counts['links written'] += 1
+   208	
+   209	    def article(self, k, records, library, revisions_by_record, later_entries, changed):
+   210	        for record in records:
+   211	            evidence_id = self._new_evidence(record, k)
+   212	            for thesis_id in record['thesis_ids']:
+   213	                self._link(evidence_id, thesis_id, k, changed)
+   214	            group = library['groups'][library['placement'][record['id']]]
+   215	            if group['original']['id'] != record['id']:
+   216	                original = self.evidence_of.get(group['original']['id'])
+   217	                if evidence_id and original:
+   218	                    store.relate_same(self.conn, original, evidence_id, k)
+   219	                    self.counts['same_claims written'] += 1
+   220	                else:
+   221	                    self.counts['same_claims lost with a dropped record'] += 1
+   222	            for revised_group in revisions_by_record.get(record['id'], []):
+   223	                old = self.evidence_of.get(library['groups'][revised_group]['original']['id'])
+   224	                if not (evidence_id and old):
+   225	                    self.counts['revisions lost with a dropped record'] += 1
+   226	                    continue
+   227	                store.revise(self.conn, old, evidence_id, record.get('statement_date') or record['publication_date'], k)
+   228	                self.counts['revisions written'] += 1
+   229	                for view_id in store.views_linked_to(self.conn, old):
+   230	                    self._link(evidence_id, view_id, k, changed)
+   231	        for entry in later_entries:
+   232	            for record_id in entry['linked']:
+   233	                self._link(self.evidence_of.get(record_id), entry['thesis'], k, changed)
+   234	
+   235	    def leakage_check(self, day, seq):
+   236	        for table, column in (('views', 'created_seq'), ('evidence', 'created_seq'), ('evidence_sources', 'seq'), ('evidence_links', 'seq'),
+   237	                              ('same_claims', 'seq'), ('revisions', 'seq')):
+   238	            top = self.conn.execute(f'select max({column}) from {table}').fetchone()[0]
+   239	            if top is not None and top > seq:
+   240	                raise Leak(f'{table}.{column} {top} is after day {day} (seq {seq})')
+   241	        late = self.conn.execute('select count(*) from evidence_sources where publication_day > ?', (day,)).fetchone()[0]
+   242	        if late:
+   243	            raise Leak(f'{late} sources published after {day}')
+   244	
+   245	    def judge(self, day, seq, changed):
+   246	        """Judge the day's changed views with the frozen judge. The selection is recorded in this thread when each prompt is built; the
+   247	        comparison with the request is made in the sending thread without touching the database."""
+   248	        self.leakage_check(day, seq)
+   249	        selected_by_view = {}
+   250	        production_selection = judging.evidence_in_view
+   410	
+   411	
+   412	def evidence_in_force(conn, view_id):
+   413	    """Evidence linked to the view and not replaced (history), each with its replaced predecessor when there is one and, since D202,
+   414	    the piece it revises (both in force)."""
+   415	    out = []
+   416	    for row in conn.execute('select evidence_id from evidence_links where view_id=? order by id', (view_id,)):
+   417	        evidence_id = row['evidence_id']
+   418	        if is_replaced(conn, evidence_id):
+   419	            continue
+   420	        record = evidence(conn, evidence_id)
+   421	        previous = predecessor_of(conn, evidence_id)
+   422	        record['replaced'] = evidence(conn, previous) if previous else None
+   423	        revised = revision_of(conn, evidence_id)
+   424	        record['revises'] = evidence(conn, revised) if revised else None
+   425	        record['same_as'] = [x for x in same_claim_group(conn, evidence_id) if not is_replaced(conn, x)]
+   426	        out.append(record)
+   427	    return out
+   428	
+   429	
+   430	def views_linked_to(conn, evidence_id):
+   431	    return [r['view_id'] for r in conn.execute('select view_id from evidence_links where evidence_id=? order by id', (evidence_id,))]
+   432	
+   433	
+   434	def evidence_ids_under(conn, view_id):
+   435	    return [r['evidence_id'] for r in conn.execute('select evidence_id from evidence_links where view_id=?', (view_id,))]
+   436	
+   437	
+   438	# ---------- processing record and pool ----------
+   439	
+   440	def mark_step(conn, input_id, sequence_no, step, result, reason, publication_day, at):
+   441	    insert(conn, 'processing_steps', input_id=input_id, sequence_no=sequence_no, step=step, result=result, reason=reason, publication_day=publication_day, at=at)
+   442	
+   443	
+   444	def last_step(conn, input_id):
+   445	    row = conn.execute('select step, result, sequence_no from processing_steps where input_id=? order by id desc limit 1', (input_id,)).fetchone()
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/registration.json' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{
+ "saved judgement": {
+  "request sha256": "90bdb23435cfe0263870b7db6694e0ca40c6ee1bfeed00aaf167e39e841fce56",
+  "rung": 2,
+  "previous rung": 3
+ },
+ "as sent, sha256 of json.dumps(request)": {
+  "control": "ad584fcd9eb70930c2310d1a48e59be86ad288a9650a32255cd9d1c3bd500fa7",
+  "counterfactual": "d98c6386f89e9ff7f06d08d8759f2e7b8685316fbb5bfa98c3f22e55716e13d6"
+ },
+ "user text characters": {
+  "control": 24774,
+  "counterfactual": 23797
+ },
+ "lines removed with the block": 4,
+ "evidence shown": {
+  "control": 29,
+  "counterfactual": 28
+ },
+ "answer key order of the saved answer": [
+  "rung",
+  "reasons",
+  "cites",
+  "cites_views",
+  "pushes",
+  "changed",
+  "why_changed",
+  "theme_pushes",
+  "reference",
+  "implied_outcome"
+ ],
+ "worst cost per send (usd)": {
+  "control": 0.0111,
+  "counterfactual": 0.011
+ },
+ "cost if every send answers at its first attempt, at the reserve (usd)": 0.0665,
+ "worst cost of the probe, every send tried three times (usd)": 0.1994,
+ "cap (usd)": 0.25,
+ "sends": 6,
+ "registered at": "2026-11-10T22:40:32-0500"
+}
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '9 of 9|554|70:e4|e176|19 links|blind' clean-arch/step2-revision-links-2026-11-10/{LOG.md,council}" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step2-revision-links-2026-11-10/council/b-challenge.md:8:| Where Step 1 itself filed the 24 records | 19 links: the record has a judged question of its own (all NVIDIA's answer to the Kyber report). 3 links: Step 1 filed the record under a thesis the clean system opened itself, which the seeded test does not judge (`67:e3` under clean-2, AI infrastructure capex 2026; `238:e1` under clean-3, H200 export licences). 2 links: Step 1 filed the record nowhere (`74:e1`, `176:e2` of draw 2) | `census.py`, `poc/data/.../census.json` |
+clean-arch/step2-revision-links-2026-11-10/council/b-challenge.md:10:| The 3 both-evidence links | draw 2 `239:e5`→v20 (the record also says Blackwell Ultra is ramping and Rubin is on track; shown once, cited 0); draw 3 `238:e1`→v17 (the same ZTE news is already under v17 through `235:e1`; shown 1, cited 1); **draw 3 `70:e4`→v22, FY2028 total revenue: shown 9, cited 9, pushed "toward the top" 9** | `census.json` |
+clean-arch/step2-revision-links-2026-11-10/council/b-challenge.md:12:| The draw 3 case traced at no cost | The untouched replay of draw 3 passes (251 of 251 requests). With only the link `70:e4`→v22 not written (relation kept), the first changed request is v22's on 2026-07-06: 8 items for 9. The request then shows four SemiAnalysis reports that Step 1 filed under v22 (Kyber delayed to 2028; the backup plan scrapped; NVL576 affected; the four-die design cancelled) and **no answer from NVIDIA**. The saved reasons that day: "Nvidia's statement that its roadmap is intact counters, but does not resolve, those reports." The previous conclusion sits at about $554 billion against a rung boundary of $550 billion | `poc/data/.../uncarry-d3-70e4-v22/` (both requests), `control-d3/` |
+clean-arch/step2-revision-links-2026-11-10/council/a-codex.md:3:例如，`70:e4` 是英伟达回应 Kyber 延迟报道；它原本放在 Kyber 交付问题 `v18` 下。比较步骤还把它当作另一条关于现有机架销售的记录 `69:e5` 的更新，于是写入程序把它带进了 FY2027 收入问题 `v20`。两位读过原文的读者认为这两条说法不同；他们的判断是调查证据，不是新的金标准。
+clean-arch/step2-revision-links-2026-11-10/council/a-codex.md:13:| 第 1 次 | 5 / 700 | `67:e3→v2、v4`：无；`70:e4→v20、v7`：无；`132:e8→v7`：`70:e4、75:e6` |
+clean-arch/step2-revision-links-2026-11-10/council/a-codex.md:15:| 第 3 次 | 8 / 730 | `70:e4→v20、v22`、`108:e6→v7、v20`、`132:e6→v7`、`191:e1→v7`、`238:e1→v17`：均无；`84:e2→v7`：`70:e4` |
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:20:| Where Step 1 itself filed the 24 records | 19 links: the record has a judged question of its own (all NVIDIA's answer to the Kyber report). 3 links: Step 1 filed the record under a thesis the clean system opened itself, which the seeded test does not judge (`67:e3` under clean-2, AI infrastructure capex 2026; `238:e1` under clean-3, H200 export licences). 2 links: Step 1 filed the record nowhere (`74:e1`, `176:e2` of draw 2) | `census.py`, `poc/data/.../census.json` |
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:22:| The 3 both-evidence links | draw 2 `239:e5`→v20 (the record also says Blackwell Ultra is ramping and Rubin is on track; shown once, cited 0); draw 3 `238:e1`→v17 (the same ZTE news is already under v17 through `235:e1`; shown 1, cited 1); **draw 3 `70:e4`→v22, FY2028 total revenue: shown 9, cited 9, pushed "toward the top" 9** | `census.json` |
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:24:| The draw 3 case traced at no cost | The untouched replay of draw 3 passes (251 of 251 requests). With only the link `70:e4`→v22 not written (relation kept), the first changed request is v22's on 2026-07-06: 8 items for 9. The request then shows four SemiAnalysis reports that Step 1 filed under v22 (Kyber delayed to 2028; the backup plan scrapped; NVL576 affected; the four-die design cancelled) and **no answer from NVIDIA**. The saved reasons that day: "Nvidia's statement that its roadmap is intact counters, but does not resolve, those reports." The previous conclusion sits at about $554 billion against a rung boundary of $550 billion | `poc/data/.../uncarry-d3-70e4-v22/` (both requests), `control-d3/` |
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:117:    "e176->v20",
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:118:    "e176->v22",
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:128:    "e176->v20",
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:129:    "e176->v22",
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:210:- A blind reader given the article and the revenue question, and not told of the relation, placed the statement as context that
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:242:  `PROTOCOL.md`, `preflight.log`, `council/` (four sender reviews, the blind relevance reading, the challenge of this result).
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:470:   "content": "Thesis v22 (NVDA, asset, focus \"Nvidia FY2028 total revenue\", FY2028, due 2028-02-28): What will Nvidia's total revenue be in FY2028?\nLadder: rung 1 Strongly bullish: FY2028 total revenue is at least $650 billion. / rung 2 Bullish: FY2028 total revenue is at least $550 billion and below $650 billion. / rung 3 Neutral: FY2028 total revenue is at least $480 billion and below $550 billion. / rung 4 Bearish: FY2028 total revenue is at least $420 billion and below $480 billion. / rung 5 Strongly bearish: FY2028 total revenue is below $420 billion.\n\n[Evidence in view under this thesis, 9 items]\n- e24 [fact; qz.com; original source Nvidia 2026-07-01; from gnews:dde08c03c8dd6f66031632d5 2026-07-02] Nvidia announced on Wednesday a revenue-sharing program that gives AI startups, model builders and enterprises access to its computing infrastructure without financing hardware buildouts themselves; under the arrangement revenue from both product sales and cloud operations flows back to Nvidia as AI cloud companies provide Nvidia-powered services to end customers. Nvidia's Kress, writing in a blog post, called the resulting income a \"recurring, usage-linked earnings stream\" for Nvidia and said the model removes the need for customers to navigate site selection, power procurement, construction and hardware bring-up before accessing large-scale compute. Token credits are also part of the offering.\n    Quote: Nvidia $NVDA announced a revenue-sharing program on Wednesday designed to give AI startups, model builders, and enterprises access to its computing infrastructure without requiring them to finance hardware buildouts themselves. … Revenue from both product sales and cloud operations flows back to Nvidia under the arrangement, as AI cloud companies provide Nvidia -powered services to their end custo\n    Opinion, not verified: the matcher read this as the same claim as e1; the argument counts one claim, one more outlet.\n- e41 [third_party_view; Justin Pope, The Motley Fool; original source Wall Street analysts (consensus) ; from gnews:af6e4910e877d5682a773d4b 2026-07-02] The Motley Fool reported that Wall Street analysts estimate Nvidia's revenue could roughly double over the next couple of years, from trailing-12-month revenue of $253 billion to $392 billion this fiscal year and $554 billion the following year.\n    Quote: Wall Street analysts estimate that Nvidia's business could double over the next couple of years, from trailing-12-month revenue of $253 billion to $392 billion this fiscal year, and $554 billion the following year.\n- e85 [third_party_view; fool.com; original source Wall Street analysts (consensus, unnamed) ; from gnews:92c7e54d38dc2916aa185568 2026-07-04] Wall Street analysts project 82% revenue growth for Nvidia in 2026 (\"this year\") and 41% revenue growth next year, as cited by the fool.com article without naming the individual analysts.\n    Quote: Wall Street analysts project 82% revenue growth for this year and 41% next year\n    Opinion, not verified: the matcher read this as the same claim as e130; the argument counts one claim, one more outlet.\n- e124 [rumour; Charlotte Trueman, datacenterdynamics.com; original source SemiAnalysis ; from gnews:98a4e8ff0c0260d8dc9e531d 2026-07-06] SemiAnalysis reported that Nvidia has delayed production of its Kyber rack-scale architecture by more than 12 months, pushing its release to 2028 from an originally slated 2027, with the research firm attributing the setback to manufacturability issues in the printed circuit board (PCB) midplane that connects the modules. Kyber is designed to house 144 Rubin Ultra GPUs connected via Nvidia's NVLink 7 Switch.\n    Quote: Nvidia has delayed production of its Kyber rack-scale architecture by more than 12 months, pushing its release date to 2028, SemiAnalysis has reported. … The Kyber server cabinets, which have been designed to house 144 Rubin Ultra GPUs connected via the company’s NVLink 7 Switch, had originally been slated for release in 2027. … However, the research firm claimed that issues in manufacturing the p\n    Opinion, not verified: the matcher read this as the same claim as e92; the argument counts one claim, one more outlet.\n- e125 [rumour; Charlotte Trueman, datacenterdynamics.com; original source SemiAnalysis ; from gnews:98a4e8ff0c0260d8dc9e531d 2026-07-06] SemiAnalysis reported that Nvidia's alternative plan, which involved placing two Oberon racks back-to-back to achieve similar power output, has been scrapped after cloud companies and hyperscalers pushed back against its 'odd design and heavy operational burden', leaving Nvidia with 'no proven solution to expand the scale-up world size for Rubin Ultra.'\n    Quote: “Kyber NVL144 rack architecture has been delayed to 2028 as the PCB midplane remains challenging from a manufacturability standpoint,” SemiAnalysis said, adding that Nvidia’s alternative plan, which involved placing two Oberon racks back-to-back in order to achieve a similar power output, has also been scrapped after cloud companies and hyperscalers pushed back against its “odd design and heavy op\n    Opinion, not verified: the matcher read this as the same claim as e94; the argument counts one claim, one more outlet.\n- e126 [rumour; Charlotte Trueman, datacenterdynamics.com; original source SemiAnalysis ; from gnews:98a4e8ff0c0260d8dc9e531d 2026-07-06] SemiAnalysis noted that the manufacturing issues will also affect Nvidia's planned NVL576 system, which connects 8x Oberon racks over CPO between the NVSwitches, meaning the system will likely be delayed or limited to small volumes.\n    Quote: The manufacturing issues will also impact the planned NVL576 system, which connects 8x Oberon racks over CPO between the NVSwitches, meaning that the system will also likely be delayed or limited to small volumes, the firm noted.\n    Opinion, not verified: the matcher read this as the same claim as e180, e190; the argument counts one claim, one more outlet.\n- e127 [rumour; Charlotte Trueman, datacenterdynamics.com; original source SemiAnalysis ; from gnews:98a4e8ff0c0260d8dc9e531d 2026-07-06] SemiAnalysis separately reported, about a week before this item, that Nvidia had canceled the four-die Rubin Ultra design in favor of a two-chiplet design, also citing 'manufacturing execution concerns', with the two-die offering to deliver around half the performance of the four-die Rubin Ultra.\n    Quote: The news comes a week after SemiAnalysis separately reported that Nvidia had canceled the four-die Rubin Ultra design in favor of the two-chiplet design, also due to “manufacturing execution concerns.” … The two-die offering will deliver around half the performance of the four-die Rubin Ultra.\n    Opinion, not verified: the matcher read this as the same claim as e171, e175, e189; the argument counts one claim, one more outlet.\n- e130 [third_party_view; Keithen Drury, fool.com; original source Wall Street analysts (consensus) ; from gnews:71df54965281684cc500960f 2026-07-06] Wall Street analysts expect NVIDIA's revenue to grow 82% over the rest of calendar 2026 and 41% in calendar 2027, according to Keithen Drury in fool.com.\n    Quote: For the rest of this year, they expect 82% growth. For 2027, that figure rises to 41%.\n    Opinion, not verified: the matcher read this as the same claim as e85; the argument counts one claim, one more outlet.\n- e176 [party_statement; Nvidia spokesperson (reported by Investing.com via uk.finance.yahoo.com); original source NVIDIA Corporation 2026-07-06; from gnews:d5c48abb470f394f86549b6b 2026-07-06] An Nvidia spokesperson refuted SemiAnalysis's delay claims in a statement emailed to Investing.com, saying \"Our roadmap is intact.\"\n    Quote: An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: \"Our roadmap is intact.\"\n    Opinion, not verified: the matcher read this as the same claim as e93; the argument counts one claim, one more outlet.\n    Opinion, not verified: the matcher read it as a later version of e146 (); both are in force: The article reports that NVIDIA shares are under pressure on reports of delays across its upcoming lineup of Vera Rubin server systems.\n\n[Themes in force, 5]\n- v13 (ai-capex, due 2028-12-31) How much will the largest AI hyperscalers spend on data-center capital expenditures in calendar 2027?: now rung 5 $1000 billion or more; judged 2026-07-05; reasons: The reference is NVIDIA's projection that 2027 spending could reach $1 trillion, which sits at rung 5. The implied outcome is about $1 trillion: the projection is a 2027 figure, compared with about $650 billion in 2026, and therefore points to the rung-5 boundary. Although phrased as 'could reach,' \n- v15 (semiconductor-cycle, due 2027-03-31) By how much will worldwide semiconductor industry revenue grow in calendar 2026 over 2025?: now rung 2 10% to below 20%; judged 2026-07-05; reasons: The supplied materials contain no market consensus, industry guidance, or stated worldwide 2026 growth plan, so there is no reference rung to locate. The South Korean investment headline is directionally supportive but gives no timeframe or revenue impact; Nvidia's bullish FY2027 conclusion is not a\n- v4 (ai-capex, due 2027-12-31) How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026?: now rung 3 $600 billion to below $700 billion; judged 2026-07-05; reasons: The reference is the four hyperscalers’ stated plan of around $650 billion for 2026, which sits in rung 3. The reported delays or cancellations of at least 75 projects push the forecast below that plan, but the article gives neither project-level spending nor evidence that those projects belong to t\n- v5 (semiconductor-cycle, due 2028-01-31) How will server DRAM and HBM contract prices in calendar 2027 compare with calendar 2026?: now rung 3 Flat; judged 2026-07-05; updated since this thesis was last judged; reasons: The reference is no change from 2026, which sits at rung 3; no market consensus, company guidance, or price target is supplied. The new evidence strengthens the case for continuing upward pressure in 2027, but it does not quantify server DRAM or HBM contract prices or establish that the 2027 average\n- v8 (chip-export-controls, due 2027-01-31) Will Chinese authorities issue any authorization for Chinese companies to import Nvidia H200 chips by January 31, 2027?: now rung 2 No; judged 2026-07-05; reasons: The reference is not independently locatable: no market consensus, Chinese authorization plan, or stated deadline expectation is supplied. The most likely outcome remains no public Chinese authorization by January 31, 2027. China was still described as having locked Nvidia out as of July 2, 2026; U.\n\n[Previous conclusion, for comparison only] rung 2; reasons: The market reference is Wall Street analysts' roughly $554 billion estimate for the following fiscal year, which sits in rung 2. The 41% growth estimate applied to $392 billion implies about $553 billion, also rung 2. The revenue-sharing program is a possible upside source but has no disclosed scale, and the updated AI-capex and semiconductor themes do not quantify Nvidia's share of spending or support a specific uplift across a rung boundary.\n\nAnswer per the JSON schema. cites may name only the evidence ids listed above; cites_views must be empty: this thesis depends on no other thesis; theme_pushes only the theme ids listed above; a theme id goes only in theme_pushes, never in cites or cites_views."
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:583:   "70:e4": [
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:651:    "e176"
+clean-arch/step2-revision-links-2026-11-10/council/b-codex.log:662:    "-- e176 [party_statement; Nvidia spokesperson (reported by Investing.com via uk.finance.yahoo.com); original source NVIDIA Corporation 2026-07-06; from gnews:d5c48abb470f394f86549b6b 2026-07-06] An Nvidia spokesperson refuted SemiAnalysis's delay claims in a statement emailed to Investing.com, saying \"Our roadmap is intact.\"",
+clean-arch/step2-revision-links-2026-11-10/council/a-claude.md:3:2026-11-10. Written after building the census of the three draws (`census.py`) and before the blind readers returned and before
+clean-arch/step2-revision-links-2026-11-10/council/a-claude.md:32:1. **The record has a question of its own from Step 1: 19 links.** All 19 are NVIDIA's answer to the Kyber delay report, carried
+clean-arch/step2-revision-links-2026-11-10/council/a-claude.md:51:| F2. Carry only for a record with no question of its own | 19 links go, 5 stay | Still files on Jev's one-draw label, for a record that would otherwise be nowhere; a second way of giving an unlinked record a home, beside Step 3's later linking | A product choice: is a wrong home better than no home? |
+clean-arch/step2-revision-links-2026-11-10/council/a-claude.md:64:2. **Readers, no API cost.** Every removed link, blind and mixed with controls, by two reader families: would an analyst file it
+clean-arch/step2-revision-links-2026-11-10/council/a-handoff.md:49:   how they are kept blind; what, if anything, is worth a paid send, with the number of calls and what it can still decide given
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-handoff.md:16:  python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check /Users/lchingen/hivemind/poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22 --case 3 v22 2026-07-06 76 e176
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:28:  python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check /Users/lchingen/hivemind/poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22 --case 3 v22 2026-07-06 76 e176
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:61:NVIDIA's answer "Our roadmap is intact" (record `70:e4`, evidence `e176`) only under the Kyber and Rubin shipping questions. A "later
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:62:version" relation carried the answer into v22. Both blind reader families would file it there as evidence; the saved judgements of
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:63:v22 cite it on 9 of 9 days it was shown.
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:69:- With only the link `70:e4` to v22 not written (the relation kept), the days 2026-07-01 to 07-05 are identical and the first changed
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:70:  request is v22's on 2026-07-06: the `e176` block (4 lines: the statement, its quotation, and its two "Opinion, not verified" lines)
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:72:- `judge_probe.py check … --case 3 v22 2026-07-06 76 e176` passes: the control is the saved request and what the code builds today;
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:92:- It is sensitivity evidence for this one question on this one day. The previous conclusion sits at about $554 billion against a
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:96:- Two rungs do not show that carrying every link is best: the direction and the reasons are read, and the 19 links the readers call
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:114:    12	  edge_replay.py counterfactual <new folder> <control folder> --uncarry 70:e4:v22 [--draw 3]
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:117:    15	  edge_replay.py counterfactual <new folder> <control folder> --by 70:e4 --revised-group 69:e5 [--keep-links]
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:690:   245	                        help='another judgement than the first probe\'s, for example: 3 v22 2026-07-06 76 e176')
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1024:   "70:e4": [
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1092:    "e176"
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1103:    "-- e176 [party_statement; Nvidia spokesperson (reported by Investing.com via uk.finance.yahoo.com); original source NVIDIA Corporation 2026-07-06; from gnews:d5c48abb470f394f86549b6b 2026-07-06] An Nvidia spokesperson refuted SemiAnalysis's delay claims in a statement emailed to Investing.com, saying \"Our roadmap is intact.\"",
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1299:   245	                        help='another judgement than the first probe\'s, for example: 3 v22 2026-07-06 76 e176')
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1332:/opt/homebrew/bin/zsh -lc 'python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check /Users/lchingen/hivemind/poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22 --case 3 v22 2026-07-06 76 e176' in /Users/lchingen/hivemind
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1376:无成本检查通过：保存的 v22 请求与当前构造的请求一致，去掉的内容是 e176 的四行和数量变化。我正在核对答案读取时是否绑定了这次登记的案例，以及重放过程中其他链接和关系是否保持原样。
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1389:    10	NVIDIA's answer "Our roadmap is intact" (record `70:e4`, evidence `e176`) only under the Kyber and Rubin shipping questions. A "later
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1390:    11	version" relation carried the answer into v22. Both blind reader families would file it there as evidence; the saved judgements of
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1391:    12	v22 cite it on 9 of 9 days it was shown.
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1397:    18	- With only the link `70:e4` to v22 not written (the relation kept), the days 2026-07-01 to 07-05 are identical and the first changed
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1398:    19	  request is v22's on 2026-07-06: the `e176` block (4 lines: the statement, its quotation, and its two "Opinion, not verified" lines)
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1400:    21	- `judge_probe.py check … --case 3 v22 2026-07-06 76 e176` passes: the control is the saved request and what the code builds today;
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1420:    41	- It is sensitivity evidence for this one question on this one day. The previous conclusion sits at about $554 billion against a
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1424:    45	- Two rungs do not show that carrying every link is best: the direction and the reasons are read, and the 19 links the readers call
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1443:    12	  edge_replay.py counterfactual <new folder> <control folder> --uncarry 70:e4:v22 [--draw 3]
+clean-arch/step2-revision-links-2026-11-10/council/probe-review-codex.log:1446:    15	  edge_replay.py counterfactual <new folder> <control folder> --by 70:e4 --revised-group 69:e5 [--keep-links]
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '554|implied_outcome' poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json clean-arch/step2-revision-links-2026-11-10/council/b-challenge.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step2-revision-links-2026-11-10/council/b-challenge.md:12:| The draw 3 case traced at no cost | The untouched replay of draw 3 passes (251 of 251 requests). With only the link `70:e4`→v22 not written (relation kept), the first changed request is v22's on 2026-07-06: 8 items for 9. The request then shows four SemiAnalysis reports that Step 1 filed under v22 (Kyber delayed to 2028; the backup plan scrapped; NVL576 affected; the four-die design cancelled) and **no answer from NVIDIA**. The saved reasons that day: "Nvidia's statement that its roadmap is intact counters, but does not resolve, those reports." The previous conclusion sits at about $554 billion against a rung boundary of $550 billion | `poc/data/.../uncarry-d3-70e4-v22/` (both requests), `control-d3/` |
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:27:   "figures in implied_outcome": [
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:36:   "implied_outcome": "About $335 billion. Starting from dependency v2's roughly $390 billion FY2027 Data Center estimate, I infer that Blackwell and Rubin comprise most, but not all, of the segment—approximately 86%, with the balance attributable to other Data Center revenue.",
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:51:   "figures in implied_outcome": [
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:60:   "implied_outcome": "About $330 billion for FY2027, inferred as roughly 85% of dependency v2’s approximately $390 billion Data Center forecast. This is a reasoned product-mix estimate, not an annualization of the latest quarter; the $1 trillion cumulative Blackwell/Rubin figure is not assigned wholesale to FY2027.",
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:75:   "figures in implied_outcome": [
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:84:   "implied_outcome": "About $340 billion of FY2027 Blackwell and Rubin revenue, estimated as roughly 87% of the dependency's approximately $390 billion FY2027 Data Center forecast. This is below the Data Center total and reflects the strong Blackwell/Rubin product ramp while leaving room for networking and other Data Center revenue.",
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:99:   "figures in implied_outcome": [
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:108:   "implied_outcome": "About $340 billion: v2’s approximately $386–396 billion FY2027 Data Center estimate is the whole-segment ceiling, and the Blackwell ramp plus Rubin’s planned FY2027 shipments support assigning most, but not all, of it to these product generations.",
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:123:   "figures in implied_outcome": [
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:132:   "implied_outcome": "About $350–370 billion: start from v2's roughly $390 billion FY2027 Data Center outlook, discount for Data Center revenue outside Blackwell and Rubin, and weigh the strong Blackwell ramp and Rubin's scheduled fall shipments and volume ramp. The $1 trillion cumulative sales outlook spans March 2026 through the end of calendar 2027 and is not assigned wholly to FY2027.",
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:147:   "figures in implied_outcome": [
+poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1/reading.json:156:   "implied_outcome": "About $335 billion: applying an estimated 86% Blackwell-and-Rubin share to v2's approximately $390 billion FY2027 Data Center estimate, leaving the rest for networking, older products, and other Data Center revenue.",
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import sqlite3,collections; p=\"poc/data/clean-step2-revision-links-2026-11-10/\"; a=sqlite3.connect(\"file:\"+p+\"control-d3/views.sqlite?mode=ro\",uri=True); b=sqlite3.connect(\"file:\"+p+\"uncarry-d3-70e4-v22/views.sqlite?mode=ro\",uri=True); exec(\"for t in [\\\"evidence_links\\\",\\\"revisions\\\",\\\"same_claims\\\",\\\"evidence\\\",\\\"evidence_sources\\\"]:\\n cols=[x[1] for x in a.execute(\\\"pragma table_info(\\\"+t+\\\")\\\")]; seq=\\\"seq\\\" if \\\"seq\\\" in cols else \\\"created_seq\\\"; keep=[x for x in cols if x"'!='"\\\"id\\\"]; q=\\\"select \\\"+\\\",\\\".join(keep)+\\\" from \\\"+t+\\\" where \\\"+seq+\\\"<=76\\\"; aa=collections.Counter(a.execute(q).fetchall()); bb=collections.Counter(b.execute(q).fetchall()); print(t, sum(aa.values()),sum(bb.values()), \\\"control-only\\\",aa-bb,\\\"counter-only\\\",bb-aa)\")'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+evidence_links 253 252 control-only Counter({('e176', 'v22', 70): 1}) counter-only Counter()
+revisions 6 6 control-only Counter() counter-only Counter()
+same_claims 71 71 control-only Counter() counter-only Counter()
+evidence 201 201 control-only Counter() counter-only Counter()
+evidence_sources 201 201 control-only Counter() counter-only Counter()
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import sys,json,pathlib; sys.path.insert(0,\"clean-arch/step2-edge-effect-2026-11-10\"); import judge_probe as j; j.use_case(3,\"v22\",\"2026-07-06\",76,\"e176\"); p=\"poc/data/clean-step2-revision-links-2026-11-10/uncarry-d3-70e4-v22\"; req,_=j.checks(p); ledger=j.read_only_ledger(p); saved=j.saved_judgement()[2]; schema=req[\"control\"][\"response_format\"][\"json_schema\"][\"schema\"]; root=pathlib.Path(\"poc/data/clean-step2-edge-effect-2026-11-10/judge-probe-1\"); print([(arm,n,j.read_outcome(json.loads((root/f\"{arm}-{n}.json\").read_text()),arm,ledger,req,schema,saved)[\"status\"]) for arm in j.ARMS for n in range(1,4)]); ledger.close()'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+[('control', 1, 'refused by the check'), ('control', 2, 'refused by the check'), ('control', 3, 'refused by the check'), ('counterfactual', 1, 'refused by the check'), ('counterfactual', 2, 'refused by the check'), ('counterfactual', 3, 'refused by the check')]
+
+codex
+**NOT READY:** the reader can overwrite the first probe’s saved reading and does not verify that the answers belong to the selected case.
+
+1. **Serious — answer folder is not bound to the case.** [judge_probe.py:212](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:212) reads any supplied send folder without checking its registration against `--case` or the request hashes, then overwrites that folder’s `reading.json` at [line 233](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:233). For example, pointing the v22 reader at the existing first probe’s folder would replace its saved reading. The six actual first-probe answers all fail the v22 check, so that particular mix-up yields “not decided”; the code does not establish that answers from another mismatched folder could never pass and produce a verdict. The reader should verify the registered case and request hashes before reading or writing.
+
+2. **Not serious — the protocol understates the sender changes.** [PROBE-v22.md:29](/Users/lchingen/hivemind/clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md:29) says the only change is that the question, day and record are arguments. The draw and sequence are arguments too, and the permitted output roots changed. The control comparison also excludes the judgement `call_id` column, as its report explicitly states, so “ledger … equal” at [line 16](/Users/lchingen/hivemind/clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md:16) needs that qualification.
+
+For **A**, the specified `--case` reaches the saved-run selection, request filenames, saved judgement lookup, removed block, frozen check and registration. The permitted no-send check passed for draw 3, v22, sequence 76 and e176. The old v20/e185/draw 1 values remain as defaults and in the introductory description, but do not survive in those paths when this `--case` is supplied.
+
+For **B**, the adapter writes the revision before reading the old record’s links; the hook filters the selected link while preserving the order of the others. Comparing the saved control and counterfactual ledgers through sequence 76 found exactly one link difference: e176 → v22. The revision, same-claim, evidence and source rows matched. The saved requests differ only by the four-line e176 block and the item count. The replay stopped at the first changed request, so this evidence does not establish what happens afterward.
+
+No network request was sent and no file was edited.
+
+NOT READY — serious finding 1.
+tokens used
+46,300
+**NOT READY:** the reader can overwrite the first probe’s saved reading and does not verify that the answers belong to the selected case.
+
+1. **Serious — answer folder is not bound to the case.** [judge_probe.py:212](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:212) reads any supplied send folder without checking its registration against `--case` or the request hashes, then overwrites that folder’s `reading.json` at [line 233](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:233). For example, pointing the v22 reader at the existing first probe’s folder would replace its saved reading. The six actual first-probe answers all fail the v22 check, so that particular mix-up yields “not decided”; the code does not establish that answers from another mismatched folder could never pass and produce a verdict. The reader should verify the registered case and request hashes before reading or writing.
+
+2. **Not serious — the protocol understates the sender changes.** [PROBE-v22.md:29](/Users/lchingen/hivemind/clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md:29) says the only change is that the question, day and record are arguments. The draw and sequence are arguments too, and the permitted output roots changed. The control comparison also excludes the judgement `call_id` column, as its report explicitly states, so “ledger … equal” at [line 16](/Users/lchingen/hivemind/clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md:16) needs that qualification.
+
+For **A**, the specified `--case` reaches the saved-run selection, request filenames, saved judgement lookup, removed block, frozen check and registration. The permitted no-send check passed for draw 3, v22, sequence 76 and e176. The old v20/e185/draw 1 values remain as defaults and in the introductory description, but do not survive in those paths when this `--case` is supplied.
+
+For **B**, the adapter writes the revision before reading the old record’s links; the hook filters the selected link while preserving the order of the others. Comparing the saved control and counterfactual ledgers through sequence 76 found exactly one link difference: e176 → v22. The revision, same-claim, evidence and source rows matched. The saved requests differ only by the four-line e176 block and the item count. The replay stopped at the first changed request, so this evidence does not establish what happens afterward.
+
+No network request was sent and no file was edited.
+
+NOT READY — serious finding 1.

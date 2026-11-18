@@ -1,0 +1,17 @@
+**Do not send this design yet.** I made a mistake in the pooled rule I proposed: it cannot be met even if every answer in the new week is perfect.
+
+The first week already has two agreed failures of the zero-fault line: the answer choices omitted the distinction about capped quantities. Those failures remain even under the more favorable sensitivity reading. Pooling that week with a new one therefore guarantees a miss whenever the pool reaches 14 topics; below 14, the design calls it inconclusive. Neither outcome can support the proposed “rule met” decision. [Recount](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/fresh-ladders/PROMPT-AUDIT-LINE-2.md>), [proposed rule](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/DESIGN.md>)
+
+I accept the practical reason to run the whole week and exclude topics opened from the 22 identified articles from the primary count. That changes my earlier wholly-unseen condition. But the result must be described as **topics opened on articles not found in the exposure search, within a week containing previously exposed articles**: those earlier articles can still affect the library and which later topics open.
+
+Before a send, I would make three corrections:
+
+1. **Write a rule the new week can actually affect.** Judge the new eligible topics separately against the diagnostic lines. Show the first week beside it, and pool counts only as descriptive context, retaining its known failures. Predeclare what a clean new-week result, a failure and too few topics would each change in the decision. None passes Stage A or triggers reversal by itself.
+
+2. **Bound the exposure claim.** I reproduced the 22 by excluding the five named source-work folders from the raw census. The raw census itself finds all 272 IDs in searched files, largely because those folders include source copies. Some source-work folders also contain actual diagnostic calls, so the exclusion needs a check of their sent inputs before “not previously sent” is asserted for the remaining 250. Exact ID search also does not establish that a repeated article under a different ID was unseen. [Census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/exposure_census.py>), [source diagnostic](</Users/lchingen/hivemind/clean-arch/STEP1-FULL-PAGE-RESULTS.md>)
+
+3. **Price the whole decision, including the readings.** The $3.50 ledger limits the pipeline calls; it does not limit reader sessions simply because they draw nothing from that ledger. Estimate or bound those sessions separately and include them in D544’s $5 checkpoint. The $2.92 projection is an article-count estimate, not a guarantee that the run and readings fit.
+
+I agree the unchanged runner, including the judge, is preferable to building an unproved stop-after-choices path for a $0.07 historical saving. I also accept that a week with too few eligible topics could be inconclusive. The question before spending is whether the **revised** rule can yield a result that changes what we do; the current pooled rule cannot.
+
+Position: Do not send yet; correct the predetermined rule, verify the exposure exclusions, and bound the full cost, then return the revised design for the send decision.

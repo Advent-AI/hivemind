@@ -1,0 +1,7 @@
+**Accept both page slices.** The saved drawer check covers the two outstanding cases: with no assessment, the “Not judged” section remains visible, and the injected markup appears as text with no markup elements created inside the section. It was a headless browser check, not a person’s review. [drawer-check.txt](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/not-judged-display/drawer-check.txt), [result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/page-contract/RESULT.md:41)
+
+The next step toward production is a **$0 check of the actual serving path** using the replayed new-system store: verify that the page’s library and selected-question requests return the right dated questions and answer shapes, including a question before and after closing, with no model call. The falsifier is a missing or wrongly dated question, a mismatch between the served bundle and the store, or a page that cannot render the served response. The server accepts a `--views` path, but that option alone does not prove the complete path works. [hivemind_api.py](/Users/lchingen/hivemind/scripts/hivemind_api.py:165)
+
+This accepts the two display changes, not gate 5 as a whole. The Idea planner on a new-system ledger remains separate and unproved.
+
+CONSENSUS: yes

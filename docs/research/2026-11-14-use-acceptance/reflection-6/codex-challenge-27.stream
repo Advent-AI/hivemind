@@ -1,0 +1,642 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 27: the record is written; is any in-authority step left that moves production?
+
+**Read:** `docs/CURRENT_STATE.md` ("The one next task (D637)"), `DECISION-PAGE-2026-11-16.md` (item 2) and D633 to D637.
+
+**State:**
+- **D439:** about $36.4 of $40.
+- **Gate 1:** the frozen step about 1 in 6; astra on the unchanged request 4 of 78, all main-part declines. Six main-part cases on
+  Alex's page; two rule candidates closed.
+- **v2's clause:** kept beside the frozen request, unadopted.
+- **The 11 written-question defects:**
+  - 4 belong to v2's class;
+  - 3 to D403's design (on Alex's page);
+  - 3 are "this quarter" widened;
+  - 1 is an invented measure.
+- **Gates 2 and 3:** no mover (D576, D628).
+
+**One lead not yet examined: "this quarter" widened** (Rubin, 3 of 3 astra sends; sol and luna mixed).
+- The topic gives its check dates as the Q3 and Q4 reports, and asks whether the ramp lands in "the quarter Nvidia describes".
+- Under D403, the event's day is a date the topic gives or the end of the period it names. The step chose January 31.
+- **A $0 trace** of the request sentences against that topic could show whether line 22 ("the company's current fiscal year-end for a
+  pending regulatory decision that has no date") is misapplied to a non-regulatory event, a second request-level cause, or whether it
+  is the model's own choice.
+- **It moves** if one sentence is the cause and a sourced correction exists.
+- **It closes** if the topic's two check dates leave the period ambiguous: then it is the opening step's wording, not this step's.
+
+**Asked:** trace it, or stop here with the record as written?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the recorded next task, the relevant decision entries and the stored Rubin wording before judging whether this trace can reveal a new cause.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 13 '"'^## D63[3-7]'"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '\\| D63[3-7] \\|' docs/DECISIONS.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 140 '"'^### 2'"\\.' docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 50 -B 5 'one next task \\(D637\\)|D637' docs/CURRENT_STATE.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Astra's 51 written questions, reviewed against their sources at $0 (D635)
+
+**Method:**
+- **First reviewer:** a fresh read-only Codex reviewer read every question against its topic and article (`reviewer-codex.jsonl`).
+- **Second reviewer:** a Claude subagent read the 13 flagged questions and 8 sound ones, mixed and blind
+  (`reviewer-claude-second.jsonl`, `compare.txt`).
+
+**Confirmed by both reviewers: 11 material defects in 51 questions.** None is counted by gate 1's hard lines.
+
+| Class | Questions | Mechanism (request line, decision) | Gate readers' marks |
+|---|---|---|---|
+| **A signed deal's completion due at the next annual filing**, cutting the topic's window | Hugging Face × 4 (fortnight c1/clean-6 × 3, week c1/clean-5 × 1) | Request line 23: "for an obligation already taken on, its next annual filing". D210 wrote that rule for the *amount* an obligation reaches ("a financing_amount question on the amount … at the company's next annual filing"), not for a completion event. | Both families fail D on all 4; D is not a hard line |
+| **An event due at period end, before the material that settles it is published** | Vera Rubin × 3 (fortnight c1/clean-4) | Request line 22, "period_end when it is the last day of the period", against line 20, "on or after the day the material that settles the question is published". The topic says it is settled by the FY2027 10-K. | Both hold D: the brief allows period_end |
+| **"This quarter" widened to the fiscal year-end** | Rubin × 3 (week c1/clean-7) | The model's choice. The topic gives the Q3 and Q4 reports as check dates and asks whether the ramp happens in the quarter named. | Codex fails D on 2 |
+| **An invented measure** | Memory × 1 (week c1/clean-3) | The model's choice: "equal-weighted mean of … matched … quotations", defined by neither the topic nor the article. | Both hold |
+
+- **Split between the reviewers** (not counted): two "Alibaba and ByteDance as examples" conditions. The second reviewer called one sound
+  and the other immaterial.
+- **Found by the second reviewer alone** (not counted, one reader): purchase commitments (fortnight c1/clean-2 d2) with a top band
+  starting at $100 billion against the $279 billion last disclosed.
+- The first reviewer missed it, so its 38 "sound" verdicts are an upper bound.
+
+**Census of the same topics across every stored draw** ($0):
+- **Hugging Face, fortnight** (stated check date 24 March 2028): luna used the stated date 3 of 3 times. Sol and astra used 2027-02-28
+  6 of 6 each. The stronger models apply line 23 literally.
+- **Vera Rubin:** every model used 2027-01-31 (period_end) in 11 of 12 sends.
+- **Rubin:** mixed (Jan 31, Feb 28, Nov 30) across all models.
+
+**What it changes:**
+- "No agreed hard-line mark on 51 ladders" does not mean sound questions. About 1 in 5 of astra's written questions has a window or
+  measure that would make the judge record the wrong thing.
+- 7 of the 11 trace to two sentences of the frozen request:
+  - line 23 is wider than D210's scope;
+  - lines 20 and 22 contradict each other.
+  These sentences act on every model, and the frozen step uses them in production.
+- The gate's six lines do not count due days, so gate 1 cannot see this class.
+
+ succeeded in 0ms:
+8571:## D633 · 2026-11-16 · The Astra screen is promising on its 12 topics; the complementary 14 are screened the same way
+8572-
+8573-**The first screen** (`reflection-6/astra/RESULT.md`, $1.55):
+8574-- **Failed sends of 36:** sol 4, astra 1 (strict 11 and 9). Every failure is a refusal; no ladder in either arm drew a hard-line mark.
+8575-- **Verdict:** "promising (a screen; a separate decision follows)".
+8576-- **Astra's gain:**
+8577-  - it writes the Hugging Face question (3 of 3), where sol declined 2 of 3 and the audit calls that decline unjustified;
+8578-  - it makes one fewer decline on the memory topic, which the audit calls silent.
+8579-- **Where it matches sol:** it declines Reflection AI and the equity commitments exactly as sol does.
+8580-- **A disclosed concern, not counted:** one astra ladder invents an equal-weighted HBM/DRAM aggregation that the source does not
+8581-  define.
+8582-- **The gap:** the seeded 12 held none of the topics where ladder faults occurred.
+8583-
+8584-**Council round 15** ("Prepare the complementary 14-topic screen with fresh matched controls and fixed outcomes; make a separate send
+--
+8595:## D634 · 2026-11-16 · The complementary screen closes astra by its rule; a narrower main-part rule is reviewed at $0
+8596-
+8597-**The complementary screen** (`reflection-6/astra/RESULT-REST.md`, $2.17; D439 about $34.7 of $40):
+8598-- **Failed sends of 42:** sol 5, astra 3 (strict 10 and 11). Verdict: "closes this candidate under this test".
+8599-- **Both halves side by side:** astra 4 of 78, sol 9 of 78.
+8600-- **Every astra failure is a decline on a main-part topic:** memory once, H20 three times. Astra's 51 ladders drew no agreed
+8601-  hard-line fault; sol's 53 drew 2 Q faults.
+8602-- **H20's export licence** (week c1/clean-6) is a sixth main-part case. Both families read its description as asking about the
+8603-  licence decision.
+8604-- **A reader inconsistency is disclosed:** astra's near-identical Rubin question passed where sol's failed Q.
+8605-
+8606-**Council round 17** (`reflection-6/codex-challenge-17.md`): "CONSENSUS: Review a narrower provisional rule at $0 under D439; do not
+8607-adopt the proposed sentence or close the entire model route on this screen."
+8608-- The narrower rule names the main thing as the one the description asks about, only when it asks about exactly one; it applies to
+--
+8618:## D635 · 2026-11-16 · The narrower main-part rule closes; astra's 51 written questions get a source-backed review at $0
+8619-
+8620-**The rule review** (`reflection-6/main-part/RESULT.md`): two independent readers agree in 24 of 26 topics. But the rule:
+8621-- turns Hugging Face's sourced unjustified decline into "none" (its description asks completion "and at what final cost and regulatory
+8622-  conditions");
+8623-- recovers only H20 and memory, both marked as overriding the outcome;
+8624-- would add declines on Vera Rubin and Groq.
+8625-
+8626-It closes. The readers' agreed main-part verdicts follow judgement about which part is the bet, not a text rule. With the sources
+8627-silent (D631), it stays Alex's ruling.
+8628-
+8629-Council round 18 (`reflection-6/codex-challenge-18.md`): "CONSENSUS: no, because the 51 accepted Astra questions still need a
+8630-source-backed product review before the council can state what the candidate has achieved."
+8631-- Astra is the leading unaccepted candidate: 4 failures of 78, and no agreed hard-line mark on 51 questions. That is not a claim
+--
+8641:## D636 · 2026-11-16 · Astra's written questions carry a due-day class; the binding-obligation clause is narrowed to amounts and probed
+8642-
+8643-**The source-backed review** (`reflection-6/astra-review/RESULT.md`): two reviewers confirm 11 material defects in astra's 51 written
+8644-questions, none counted by gate 1's hard lines.
+8645-- **Signed-deal completions dated at the next annual filing (4).** Request line 23 is wider than D210 ("a financing_amount question on
+8646-  the amount") and contradicts D403 ("the model chooses no other day").
+8647-- **Events at period end before their settling report (3).** This is D403's design: Alex's page, and the judging step.
+8648-- **"This quarter" widened (3)** and **an invented measure (1):** the model's choices.
+8649-
+8650-**The census** (`due-day/census.txt`): on the fortnight Hugging Face topic, luna keeps the stated date 4 of 4; sol and astra take the
+8651-next annual filing 9 of 9, labelled `stated`.
+8652-
+8653-**The candidate** (`due-day/candidate-system-v2.txt`): one clause becomes "for the **amount** of an obligation already taken on, its
+8654-next annual filing".
+--
+8669:## D637 · 2026-11-16 · The due-day probe is inconclusive; v2 stays a proposed correction beside the frozen request; two leads close
+8670-
+8671-**The probe** (`reflection-6/due-day/RESULT.md`, $1.71; D439 about $36.4 of $40):
+8672-- **Dates:** v2 stores the Hugging Face completion at the topic's date in 4 of 4, against 0 of 4 for the frozen request. All 14
+8673-  date-control sends are unchanged; there is no new decline and no lost answer.
+8674-- **The blind review** (controls 4 of 4): agreed counting moves; either counting closes on one MIIT listing item. Verdict by the rule
+8675-  fixed before: **inconclusive**.
+8676-
+8677-Council rounds 25 and 26 (`codex-challenge-25.md`, `-26.md`):
+8678-- **v2** is "a proposed, decision-supported correction" (D210's scope, D403). It is kept beside the frozen request, unadopted, and goes
+8679-  to Alex's page with the measurements kept separate.
+8680-- **The MIIT lead closes** (`due-day/MIIT-TRACE.md`). The judge records the same outcome under both requests, and the disputed listing
+8681-  shape occurs under the frozen request too (2 of 3 instances).
+8682-- **The purchase-commitments lead closes** (`due-day/COMMITMENTS-TRACE.md`). The $279 billion was not in the opening item; the class is
+
+ succeeded in 0ms:
+977:| D633 | 2026-11-16 | Astra screen promising on 12 topics (failed sends sol 4, astra 1 of 36; all refusals; Hugging Face recovered; boundary declines shared); complementary 14 topics screened the same way (caps $1.20 + $5.00), halves reported separately | in force | `reflection-6/astra/RESULT.md`, `astra/DESIGN-REST.md`, `reflection-6/codex-challenge-15.md`, `-16.md` |
+978:| D634 | 2026-11-16 | Complementary screen closes astra by its rule (sol 5, astra 3 of 42; halves 9 vs 4 of 78); every astra failure a main-part decline, 0 agreed faults on its 51 ladders; H20 is a sixth main-part case on Alex's page; next a $0 two-reader review of a narrower provisional main-part rule | in force | `reflection-6/astra/RESULT-REST.md`, `reflection-6/codex-challenge-17.md` |
+979:| D635 | 2026-11-16 | Narrower main-part rule closes (reverses Hugging Face's sourced wrong decline into 'none', overrides outcomes where it recovers); main-part stays Alex's ruling; next a $0 source-backed review of astra's 51 written questions with a second reader | in force | `reflection-6/main-part/RESULT.md`, `reflection-6/codex-challenge-18.md` |
+980:| D636 | 2026-11-16 | Astra review: 11 material defects in 51 written questions, none counted by gate 1 (completion dated at next annual filing ×4 from request line 23 wider than D210 and against D403; period-end events ×3 by D403's design, to Alex's page; model choices ×4); candidate narrows line 23 to amounts; matched due-day probe sent (astra frozen vs v2, 9 topics × 2, cap $3.20, two-reviewer blind reading with controls) | in force | `reflection-6/astra-review/RESULT.md`, `reflection-6/due-day/`, `reflection-6/codex-challenge-19.md`–`24.md` |
+981:| D637 | 2026-11-16 | Due-day probe inconclusive by its rule (dates fixed 4/4 vs 0/4, controls unchanged; one MIIT listing split); v2 kept beside the frozen request as a proposed decision-supported correction, unadopted; MIIT and purchase-commitment leads closed ($0 traces); no paid send justified on present evidence | in force | `reflection-6/due-day/RESULT.md`, `MIIT-TRACE.md`, `COMMITMENTS-TRACE.md`, `codex-challenge-25.md`, `-26.md` |
+
+ succeeded in 0ms:
+42:### 2. What role should your six lines play for the answer-choice step?
+43-
+44-**Your six lines (D400):**
+45-
+46-1. No set of answer choices asks a different question from its topic.
+47-2. None leaves a part of its topic unlisted.
+48-3. None has an outcome with no matching answer, or with two.
+49-4. No refusal without a justified reason.
+50-5. At least 35 of the 44 topics right in at least two of three attempts, at least 28 of them with written answer choices.
+51-6. The same favourable direction in all three attempts for every company figure, and the same due day for at least nine in ten topics.
+52-
+53-(The later readings had fewer topics than 44; the council scaled line 5 to them as a diagnostic, not as your line.)
+54-
+55-**The record:** the gate has been missed in all nine readings. Not every line failed each time: in the latest reading line 4 was met,
+56-and line 6 could not be measured there (too few topics of the kinds it covers).
+57-
+58-**New (D568, D569):** we read the same 39 answer choices again with fresh readers of the same two model families.
+59-
+60-- Every line came out the same as before.
+61-- The same seven attempts failed line 2.
+62-
+63-That is repeatability under one method. It is not proof that each mark is right.
+64-
+65-**Also new:**
+66-
+67-- **Line 2's field had no reader.** The parts a question leaves unjudged were shown nowhere until today; they now appear beside each
+68-  answer.
+69-- **One reading mark checks a field still unread.** It is not one of your six lines but a mark the readers give (an event's stated plan,
+70-  part of the reference); that field is read nowhere in the product.
+71-- **A paper recount:** with both of those marks set aside (the unjudged-parts mark and the event-reference mark), 9 or 7 of 13 topics
+72-  come out right, against 11 needed. The recount was not done with only the reference mark set aside.
+73-
+74-**Options:**
+75-
+76-- Keep all six lines, read with every mark, as the gate.
+77-- Decide separately what role each disputed mark should play (the unjudged-parts mark, now shown on the page; the event-reference
+78-  mark, read nowhere).
+79-- Set new lines after your Deck 1 reading.
+80-
+81-**Tried since (D577 to D580):** the step was told plainly that the topic's wording means both the description and the outcome.
+82-
+83-- In a small test it listed more of the omitted parts.
+84-- It also declined twice where both readers said it should not.
+85-
+86-We have no reviewed repair. The records do not give a general rule for which part is judged when a topic's outcome names several
+87-things (for example, whether a product's volume shipments or its first revenue is the thing tracked). Some of the strict counts
+88-also got worse (`unlisted-parts/RESULT.md`).
+89-
+90-**Since then (D582 to D588; you were away, so the council decided):**
+91-- **Your rule added:** a second side of the same bet stays in the question as context (D436). With it (arm A2), the step left no
+92-  part unlisted on the test topics, and it stopped declining wrongly.
+93-- **What went wrong instead:** it now also lists things the answer already decides. For example, it lists "the deal is terminated"
+94-  beside a question whose answer choices include exactly that.
+95-- **One more fix tried (A3):** it removed some of those entries. It added a neighbouring kind. The model readers disagree among
+96-  themselves on every one of these kinds, and none of them is one of your six lines. So we stopped adjusting this edge.
+97-- **The test on unread news (D589, D590), the week of 10-13:** the system opened only 5 new questions, too few independent ones
+98-  for a verdict, so the comparison closed without one. On those 5 questions:
+99-  - the current step still leaves a part unlisted on one question (your line 2);
+100-  - on another, it lets "Ruled out" catch a mere postponement (your line 3);
+101-  - its refusals were all justified (your line 4).
+102-  - A2 did no worse anywhere, and A2 is still not accepted.
+103-- **The two model reader families disagree on the due day of company figures in annual reports.** Your rule (D414) sets that day
+104-  in code. Read alone, both families now apply your rule, so the reader instructions were left unchanged.
+105-- **A new question for you (D591): when a company announces that something will happen later than a question's date, is the
+106-  question "ruled out" or "still open"?**
+107-  - **The example:** "Will Vera Rubin start shipping by 31 December 2026?" Nvidia announces that first shipments move to 2027.
+108-  - **The current step writes this as "ruled out"** on 37 stored answers, and the model readers mostly accept it.
+109-  - **For a deal's closing or a government's rules moved past the date, the readers lean to "still open".** No rule of yours
+110-    covers the difference.
+111-  - **Option 1, "ruled out" (recommended, not your existing rule):** a deadline bet counts as lost when the one who decides
+112-    announces a slip past the date. Cost: on the card, a delay and a cancellation look the same.
+113-  - **Option 2, "still open":** the card shows no decision, and the question closes without the event having happened. Cost: about
+114-    37 stored answers become failures of your line 3, and the step needs a repair.
+115-  - **Until you choose:** nothing changes, and the 38 affected answers are listed beside every gate count
+116-    (`unlisted-parts/fresh-a2/postponement/BOUNDARY-CASES.md`).
+117-- **The final-answer test (D592):** it can compare only 4 questions with your reference where 8 are needed. No single repair the
+118-  council can make reaches 8: delivering three missed facts reaches 7, and the eighth needs changes to two steps at once. A new
+119-  reference set would be your choice.
+120-- **Running the new system live (D593; your choice 6):** the rules a live database must follow were written and agreed after nine
+121-  rounds of review: how readers see one consistent day, what happens on a crash or a full disk, and who may copy it. Next they are
+122-  proven at no cost on test databases. Nothing runs live, and the one exception to the working rule "never open a live run's
+123-  databases" is only proposed, for you.
+124-
+125-**Later the same day (D623 to D632; the council decided):**
+126-- **The readers are not too harsh** (D625). A careful writer wrote answers for 26 topics outside your 44, and the readers found no
+127-  fault in any of them.
+128-- **On those topics, the current step breaks one of your lines 1 to 4 in about 1 attempt in 6.**
+129-- **More thinking time did not help** (D626).
+130-- **A stronger model from the same provider** ("sol"; its published price is 20 times the current model's, and per answer it cost about 9 times more) broke a line in 5 attempts of 78, against
+131-  the current step's 13 (D630).
+132-  - It declines more often: 24 times against 15.
+133-  - Most of its extra declines are on topics whose outcome names several things.
+134-  - The readers disagree on those declines.
+135-- **A new question for you (D631): when a topic's outcome names several things, which one is the question about?**
+136-  - An independent check found that no rule of yours decides it. Five stored topics show it, each with two readings:
+137-    - **Optical-switch shipments:** the full year 2027 is the question, or the whole span from late 2026 through 2027 is.
+138-    - **Chip sales into China:** U.S. approval is the question and China's acceptance a condition, or the two governments' decisions
+139-      are two separate things.
+140-    - **An acquisition:** signing is the question and closing follows, or signing and closing are two separate things.
+141-    - **Investment commitments:** the remaining balance is the question and the cash paid is context, or each is its own figure.
+142-    - **Memory prices:** the contract-price change is the question and the makers' margins are context, or these compete. Separately:
+143-      is "HBM/DRAM" one usable price, or must one series be chosen?
+144-    - **A chip export licence (added later):** lifting the U.S. licence requirement is the question and resumed China revenue its
+145-      consequence, or the two are separate things.
+146-  - **Until you choose:** nothing changes, and the stronger model stays a candidate, not adopted
+147-    (`reflection-6/model/rule-audit.md`).
+148-- **The strongest model tried (D632 to D634):** "astra", whose published price is 100 times the current model's. It ran against
+149-  "sol" on all 26 topics in two halves, three attempts each, $3.72 in all. These are measurements of today's unchanged instructions.
+150-  - **Against your lines 1 to 4:** astra failed 4 attempts of 78 and sol failed 9. Every one of astra's 4 is a decline on a topic whose
+151-    outcome names several things.
+152-  - **Checked against the articles by two reviewers (D636):** 11 of astra's 51 written questions would make the judge record the wrong
+153-    thing, and your six lines do not count them:
+154-    - 4 date a signed deal's completion at the next annual report instead of the topic's date;
+155-    - 3 date an event at its period end while the report that proves it comes later;
+156-    - 3 widen "this quarter" to the year-end;
+157-    - 1 invents a way of averaging two prices.
+158-- **A one-sentence fix for the first of those (D636, D637):**
+159-  - **The cause:** our instructions told the step that an obligation "already taken on" is checked at the next annual report. Your
+160-    D210 meant that for amounts, such as how much is owed. The stronger models applied it to "will the deal close", against your D403
+161-    rule for events: the topic's date or its period end.
+162-  - **The fix:** narrowing the sentence to amounts. In a small test on one deal written two ways, the date followed the topic 4 times
+163-    out of 4, against 0 of 4 before, and nothing else moved.
+164-  - **The verdict was "no conclusion",** because the two reviewers split on one unrelated question.
+165-  - **Its status:** kept beside the frozen instructions as a proposed fix, not adopted. You can undo it with a word.
+166-- **For you, with both readings:**
+167-  - **An event dated at its period end whose proof arrives later** (for example, "first Vera Rubin revenue in fiscal 2027", proven by
+168-    the 10-K in March). Should the judge decide on the day, or wait for the report? Your D403 sets the day. When to read the proof
+169-    is the judging step's choice.
+170-  - **The readers' instructions** still state the wide "annual report" rule for every obligation. In practice both reader families
+171-    already preferred the topic's date.
+172-
+173-**Until you choose:** the gate stays as written and stays unmet.
+174-
+175-### 3. What should the next product test start from? (D559)
+176-
+177-**The choice:**
+178-
+179-- **Option A:** confirm that the next product-oriented test starts from a real library of questions already held, built by an earlier
+180-  run. Tests that start from empty can stay as diagnostics.
+181-- **Option B:** choose another starting condition.
+182-
+
+ succeeded in 0ms:
+428-  predicted to move an answer by a blind second reader);
+429-- a same-news comparison from established libraries (D611: underpowered, and no unread week left).
+430-
+431-The council's reversible decisions on Alex's page are recorded in D606 and D607.
+432-
+433:**The one next task (D637): none paid. The answer-choice step waits on Alex's rulings.** D439 is at about $36.4 of $40, and no
+434-paid send is justified on the present evidence (council round 26).
+435-
+436:**The state, measured today** (`reflection-6/`, D623 to D637):
+437-- **The readers are valid** (D625).
+438-- **Higher effort and a required field are closed** (D626), and so is a paired gate-3 comparison (D628).
+439-- **Sol** fails 9 of 78 sends on the 26 topics outside the 44. **Astra**, on the unchanged request, fails 4 of 78, all main-part
+440-  declines (D633, D634).
+441-- **The main-part choice is unsourced** (D631). Two rule candidates closed (D631, D635). Six cases are on Alex's page.
+442-- **A source-backed review of astra's 51 written questions** finds 11 material defects that gate 1 does not count (D636).
+443-- **A one-clause correction** (`due-day/candidate-system-v2.txt`, the binding-obligation day narrowed to amounts per D210 and D403)
+444-  fixes the signed-deal completion date in its probe, 4 of 4 against 0 of 4, with no control moved.
+445:  - Its verdict is inconclusive on one unrelated listing split (D637).
+446-  - It is kept beside the frozen request, unadopted.
+447-- **Two leads closed at $0:** the MIIT listing (request-independent) and the purchase-commitment ranges (the recorded fixed-range
+448-  limitation).
+449-
+450-**On Alex's page** (`DECISION-PAGE-2026-11-16.md`, item 2):
+451-- the six main-part cases;
+452-- the measurements, kept separate;
+453-- the v2 correction;
+454-- D403's consequence for events proven after their day;
+455-- the reader brief's D row.
+456-
+457-The gate-1 measurement on his 44 topics, and any adoption, are his (D426).
+458-
+459-D612's four reopening conditions govern paid work again.
+460-
+461-Alex's page (`DECISION-PAGE-2026-11-16.md`) is kept current.
+462-
+463-The paragraphs below are the record of where the clean path's Step 4 stood on 2026-11-12.
+464-
+465-**Clean Step 4 (D396–D430):** the ladder step was measured four times and has not passed Alex's lines; it is frozen as it ran
+466-in the fourth measurement (D426). The frozen judge's baseline on the ruler's ladders is read (3% unsupported, all in figure
+467-questions). **Stage B (the judge on the ladder step's own questions) ran and does not pass** (2026-11-12,
+468-[result](../clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md)): the control line is unexercised (4 controls comparable with
+469-reader B's material shown, 8 needed; all 4 agree); the judgement lines are met except the last-judgement line on its strictest
+470-reading (3 of 24). Next: the diagnosis of how Step 1 cuts a matter into theses (D432), including council B's $0 trace of the 8
+471-controls excluded on the question and the 3 with missing material; the end-to-end gate is against production as it now runs,
+472-with no preset questions (D431). Where the whole clean path stands, read by the council:
+473-[progress](../clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md), [consensus](../clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md).
+474-
+475-- **What Step 4 is:** the first thing built and tested is the **ladder step alone**: the call that turns a thesis Step 1 opened
+476-  into one judged question with its answer ladder and due day, or declines. The frozen judge follows only when the ladder step
+477-  meets its lines (Stage B, run 2026-11-12: does not pass).
+478-- **Alex's decisions in force (2026-11-10):** one judged question a thesis, the other parts shown as not judged (D397); the step
+479-  carries D186 in full (D398); the request may teach how to build an event's five states (D399); Stage A is read against his six
+480-  fixed lines with no paid control arm (D400); build and send Stage A capped at $3, a missed line stops and goes to him (D401);
+481-  an event's due day is a stated date or the period's last day (D403); a theme's state is never named with a company label
+482-  (D404); a reference's words are the article's own, else the answer is sent back once (D405); the build uses the request as
+483-  first sent, and code refuses and sends back the faults of writing (D407).
+484-- **How the build was reached:** twenty single reviews and five rounds by angle did not reach zero findings (15, 9, 15, 11, 11);
+485-  four small sends ($0.105) then showed that sentence changes to the request corrected the writing and lowered the declining of
+486-  topics with no main thing (`clean-arch/step4-2026-11-10/probe-2026-11-10/READING-claude.md`).
+487-- **The build** (`clean-arch/step4-2026-11-10/ladder/`, `stage_a/`): the step, its model caller, the Stage A runner with one
+488-  spending limit and an on-disk ledger, the accounting, the readers' packets and the collection of readings; 109 tests, with a
+489-  mutant for each check (40, 11 and 16, all caught).
+490-- **Stage A, sent 2026-11-10** (44 stored theses, three sends each; $0.17 of the $3): 111 ladders, 17 declined, 4 refused twice
+491-  by code. Two reader families and a third reader on the 73 marks where they differ:
+492-
+493-  | line | as ruled | whoever reads |
+494-  |---|---|---|
+495-  | 1. no ladder asks another question | missed, 11 of 111 | 0 failed by both families |
+
+context compacted
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i -C 3 'Rubin|this quarter|regulatory decision|period.end' docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md clean-arch/step4-2026-11-10/ladder/candidate-system.txt docs/research/2026-11-14-use-acceptance/reflection-6/due-day/MIIT-TRACE.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-3-What the question asks
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-4-- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-5-- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt:6:- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-7-
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-8-Whose question it is
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-9-- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+--
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-19-The due day
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-20-- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-21-- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt:22:- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt-23-- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-10-| Class | Questions | Mechanism (request line, decision) | Gate readers' marks |
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-11-|---|---|---|---|
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-12-| **A signed deal's completion due at the next annual filing**, cutting the topic's window | Hugging Face × 4 (fortnight c1/clean-6 × 3, week c1/clean-5 × 1) | Request line 23: "for an obligation already taken on, its next annual filing". D210 wrote that rule for the *amount* an obligation reaches ("a financing_amount question on the amount … at the company's next annual filing"), not for a completion event. | Both families fail D on all 4; D is not a hard line |
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md:13:| **An event due at period end, before the material that settles it is published** | Vera Rubin × 3 (fortnight c1/clean-4) | Request line 22, "period_end when it is the last day of the period", against line 20, "on or after the day the material that settles the question is published". The topic says it is settled by the FY2027 10-K. | Both hold D: the brief allows period_end |
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md:14:| **"This quarter" widened to the fiscal year-end** | Rubin × 3 (week c1/clean-7) | The model's choice. The topic gives the Q3 and Q4 reports as check dates and asks whether the ramp happens in the quarter named. | Codex fails D on 2 |
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-15-| **An invented measure** | Memory × 1 (week c1/clean-3) | The model's choice: "equal-weighted mean of … matched … quotations", defined by neither the topic nor the article. | Both hold |
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-16-
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-17-- **Split between the reviewers** (not counted): two "Alibaba and ByteDance as examples" conditions. The second reviewer called one sound
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-23-**Census of the same topics across every stored draw** ($0):
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-24-- **Hugging Face, fortnight** (stated check date 24 March 2028): luna used the stated date 3 of 3 times. Sol and astra used 2027-02-28
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-25-  6 of 6 each. The stronger models apply line 23 literally.
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md:26:- **Vera Rubin:** every model used 2027-01-31 (period_end) in 11 of 12 sends.
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md:27:- **Rubin:** mixed (Jan 31, Feb 28, Nov 30) across all models.
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-28-
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-29-**What it changes:**
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/RESULT.md-30-- "No agreed hard-line mark on 51 ladders" does not mean sound questions. About 1 in 5 of astra's written questions has a window or
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i -C 2 'this quarter|rubin|D403|D637' docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 3 'D637|D636|D635|D634|D633' docs/DECISIONS.md docs/CURRENT_STATE.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-15-#25 astra-d1|fortnight:c1/clean-12       first=sound/None/False  second=sound/None/False  -> agree sound
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-16-#27 astra-d1|week-10-06:c1/clean-7       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt:17:      second why: The question turns 'this quarter' into 'by 31 January 2027', which counts a slip into fiscal Q4 or into January 2027 as happened, and its evidence cut-off at 31 January also drops the fiscal Q4 report the topic checks.
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-18-#31 astra-d2|fortnight:c1/clean-4        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-19-      second why: Evidence is cut off at 31 January 2027, before the fiscal Q4 results and FY2027 Form 10-K the topic checks, so a first recognition in fiscal Q4 records as not happened although the topic counts it.
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-24-#37 astra-d2|week-10-06:c1/clean-1       first=sound/None/False  second=sound/None/False  -> agree sound
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-25-#38 astra-d2|week-10-06:c1/clean-7       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt:26:      second why: The question replaces 'this quarter' with the end of fiscal Q4 (31 January 2027), so a ramp that slips a quarter or into January 2027 still records as happened and the analyst cannot learn whether the ramp slipped.
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-27-#40 astra-d2|week-10-06:c1/clean-10      first=sound/None/False  second=sound/None/False  -> agree sound
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-28-#42 astra-d3|fortnight:c1/clean-4        first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-34-      second why: It keeps the fiscal-year-end check and the formal-approval event with distinct happened and ruled-out rungs, and the conditions it relaxes (every named buyer, the topic's 'versus ... capping quantities') are stated in not_judged.
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-35-#49 astra-d3|week-10-06:c1/clean-7       first=defect/period_changed/True  second=defect/period_changed/True  -> BOTH
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt:36:      second why: The question widens 'this quarter' (fiscal Q3, ending October 2026) to any time up to 31 January 2027, which itself is calendar 2027, so an on-time ramp, a slip into fiscal Q4 and a slip into January 2027 all record as happened an
+docs/research/2026-11-14-use-acceptance/reflection-6/astra-review/compare.txt-37-material defects both reviewers confirm: 11 [16, 17, 20, 22, 27, 31, 33, 38, 42, 44, 49]
+--
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-105-- **A new question for you (D591): when a company announces that something will happen later than a question's date, is the
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-106-  question "ruled out" or "still open"?**
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:107:  - **The example:** "Will Vera Rubin start shipping by 31 December 2026?" Nvidia announces that first shipments move to 2027.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-108-  - **The current step writes this as "ruled out"** on 37 stored answers, and the model readers mostly accept it.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-109-  - **For a deal's closing or a government's rules moved past the date, the readers lean to "still open".** No rule of yours
+--
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-154-    - 4 date a signed deal's completion at the next annual report instead of the topic's date;
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-155-    - 3 date an event at its period end while the report that proves it comes later;
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:156:    - 3 widen "this quarter" to the year-end;
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-157-    - 1 invents a way of averaging two prices.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:158:- **A one-sentence fix for the first of those (D636, D637):**
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-159-  - **The cause:** our instructions told the step that an obligation "already taken on" is checked at the next annual report. Your
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:160:    D210 meant that for amounts, such as how much is owed. The stronger models applied it to "will the deal close", against your D403
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-161-    rule for events: the topic's date or its period end.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-162-  - **The fix:** narrowing the sentence to amounts. In a small test on one deal written two ways, the date followed the topic 4 times
+--
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-165-  - **Its status:** kept beside the frozen instructions as a proposed fix, not adopted. You can undo it with a word.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-166-- **For you, with both readings:**
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:167:  - **An event dated at its period end whose proof arrives later** (for example, "first Vera Rubin revenue in fiscal 2027", proven by
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:168:    the 10-K in March). Should the judge decide on the day, or wait for the report? Your D403 sets the day. When to read the proof
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-169-    is the judging step's choice.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-170-  - **The readers' instructions** still state the wide "annual report" rule for every obligation. In practice both reader families
+--
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-262-- **Your six lines** stay the gate, with their accounting unchanged.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-263-- **A company's formal decision that a dated event will not happen by its date** rules the event out. Example: "NVIDIA will not ship
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md:264:  Vera Rubin in 2026" answers "will it ship by 2026-12-31?" as ruled out. An authority's proceeding that goes on is still waiting.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-265-  This is the readers' majority view and my earlier lean; your ruling replaces it.
+docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md-266-- **The two product directions (D520, D571)** stay as the running product has them.
+
+ succeeded in 0ms:
+docs/CURRENT_STATE.md-430-
+docs/CURRENT_STATE.md-431-The council's reversible decisions on Alex's page are recorded in D606 and D607.
+docs/CURRENT_STATE.md-432-
+docs/CURRENT_STATE.md:433:**The one next task (D637): none paid. The answer-choice step waits on Alex's rulings.** D439 is at about $36.4 of $40, and no
+docs/CURRENT_STATE.md-434-paid send is justified on the present evidence (council round 26).
+docs/CURRENT_STATE.md-435-
+docs/CURRENT_STATE.md:436:**The state, measured today** (`reflection-6/`, D623 to D637):
+docs/CURRENT_STATE.md-437-- **The readers are valid** (D625).
+docs/CURRENT_STATE.md-438-- **Higher effort and a required field are closed** (D626), and so is a paired gate-3 comparison (D628).
+docs/CURRENT_STATE.md-439-- **Sol** fails 9 of 78 sends on the 26 topics outside the 44. **Astra**, on the unchanged request, fails 4 of 78, all main-part
+docs/CURRENT_STATE.md:440:  declines (D633, D634).
+docs/CURRENT_STATE.md:441:- **The main-part choice is unsourced** (D631). Two rule candidates closed (D631, D635). Six cases are on Alex's page.
+docs/CURRENT_STATE.md:442:- **A source-backed review of astra's 51 written questions** finds 11 material defects that gate 1 does not count (D636).
+docs/CURRENT_STATE.md-443-- **A one-clause correction** (`due-day/candidate-system-v2.txt`, the binding-obligation day narrowed to amounts per D210 and D403)
+docs/CURRENT_STATE.md-444-  fixes the signed-deal completion date in its probe, 4 of 4 against 0 of 4, with no control moved.
+docs/CURRENT_STATE.md:445:  - Its verdict is inconclusive on one unrelated listing split (D637).
+docs/CURRENT_STATE.md-446-  - It is kept beside the frozen request, unadopted.
+docs/CURRENT_STATE.md-447-- **Two leads closed at $0:** the MIIT listing (request-independent) and the purchase-commitment ranges (the recorded fixed-range
+docs/CURRENT_STATE.md-448-  limitation).
+--
+docs/DECISIONS.md-974-| D630 | 2026-11-16 | Model comparison inconclusive by its rule: failed sends of 78 luna 13, sol 5 (strict 29/20), no new harm, but sol refusals 24 vs 15 (bound luna+2); clean ladders 41 vs 50; next: trace the 24 sol refusals with luna's matched answers at $0 before any repair or Astra send | in force | `reflection-6/model/RESULT.md`, `reflection-6/codex-challenge-10.md` |
+docs/DECISIONS.md-975-| D631 | 2026-11-16 | Sol refusal trace: 4 agreed-unjustified, 12 disputed, 8 justified; pattern "several, none the main one" (reasons differ); the description-priority sentence refused as an unconfirmed rule (D397: the judged part is the outcome's); next an independent $0 audit of the request and the rule against D397, D436 and stored cases | in force | `reflection-6/model/REFUSAL-TRACE.md`, `reflection-6/codex-challenge-11.md` |
+docs/DECISIONS.md-976-| D632 | 2026-11-16 | Rule audit: sources silent on the main part when an outcome names several (five boundary topics go on Alex's page, unresolved); the Astra screen sent: astra vs fresh sol, 12 seeded topics × 3 draws, caps $1.20 + $5.50, verdict fixed before (closes at ≥3 astra failures; promising only at ≤1 below sol with strict and refusal conditions); a screen, never a gate-1 claim | in force | `reflection-6/model/rule-audit.md`, `reflection-6/astra/DESIGN.md`, `reflection-6/codex-challenge-12.md`–`14.md` |
+docs/DECISIONS.md:977:| D633 | 2026-11-16 | Astra screen promising on 12 topics (failed sends sol 4, astra 1 of 36; all refusals; Hugging Face recovered; boundary declines shared); complementary 14 topics screened the same way (caps $1.20 + $5.00), halves reported separately | in force | `reflection-6/astra/RESULT.md`, `astra/DESIGN-REST.md`, `reflection-6/codex-challenge-15.md`, `-16.md` |
+docs/DECISIONS.md:978:| D634 | 2026-11-16 | Complementary screen closes astra by its rule (sol 5, astra 3 of 42; halves 9 vs 4 of 78); every astra failure a main-part decline, 0 agreed faults on its 51 ladders; H20 is a sixth main-part case on Alex's page; next a $0 two-reader review of a narrower provisional main-part rule | in force | `reflection-6/astra/RESULT-REST.md`, `reflection-6/codex-challenge-17.md` |
+docs/DECISIONS.md:979:| D635 | 2026-11-16 | Narrower main-part rule closes (reverses Hugging Face's sourced wrong decline into 'none', overrides outcomes where it recovers); main-part stays Alex's ruling; next a $0 source-backed review of astra's 51 written questions with a second reader | in force | `reflection-6/main-part/RESULT.md`, `reflection-6/codex-challenge-18.md` |
+docs/DECISIONS.md:980:| D636 | 2026-11-16 | Astra review: 11 material defects in 51 written questions, none counted by gate 1 (completion dated at next annual filing ×4 from request line 23 wider than D210 and against D403; period-end events ×3 by D403's design, to Alex's page; model choices ×4); candidate narrows line 23 to amounts; matched due-day probe sent (astra frozen vs v2, 9 topics × 2, cap $3.20, two-reviewer blind reading with controls) | in force | `reflection-6/astra-review/RESULT.md`, `reflection-6/due-day/`, `reflection-6/codex-challenge-19.md`–`24.md` |
+docs/DECISIONS.md:981:| D637 | 2026-11-16 | Due-day probe inconclusive by its rule (dates fixed 4/4 vs 0/4, controls unchanged; one MIIT listing split); v2 kept beside the frozen request as a proposed decision-supported correction, unadopted; MIIT and purchase-commitment leads closed ($0 traces); no paid send justified on present evidence | in force | `reflection-6/due-day/RESULT.md`, `MIIT-TRACE.md`, `COMMITMENTS-TRACE.md`, `codex-challenge-25.md`, `-26.md` |
+docs/DECISIONS.md-982-
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -l 'the quarter Nvidia describes' poc/data/clean-second-week-2026-11-15 poc/data/clean-astra-rest-2026-11-16 | head -15" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-astra-rest-2026-11-16/sol-d2/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/sol-d3/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/astra-d1/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/astra-d2/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/astra-d3/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/sol-d1/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/reading/handoffs/first-codex-packet-1.attempt-1.stream
+poc/data/clean-astra-rest-2026-11-16/reading/handoffs/first-codex-packet-2.attempt-1.stream
+poc/data/clean-astra-rest-2026-11-16/reading/send-1/outcomes.jsonl
+poc/data/clean-astra-rest-2026-11-16/reading/readers/packet-4.json
+poc/data/clean-astra-rest-2026-11-16/reading/readers-answers/reader-claude-packet-2.jsonl
+poc/data/clean-astra-rest-2026-11-16/reading/readers/packet-2.json
+poc/data/clean-second-week-2026-11-15/week-continued/step1-second-part/initial.json
+poc/data/clean-second-week-2026-11-15/week-continued/c1/cases/cases.json
+poc/data/clean-astra-rest-2026-11-16/reading/handoffs/first-codex-packet-4.attempt-1.stream
+
+codex
+I’ll check the recorded Rubin example and the request before deciding whether another no-cost trace could change the production decision.
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"poc/data/clean-astra-rest-2026-11-16/astra-d1/outcomes.jsonl\"; rows=[json.loads(s) for s in open(p)]; r=next(x for x in rows if \"the quarter Nvidia describes\" in json.dumps(x)); print(json.dumps(r,indent=2)[:18000])' " in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{
+  "case": "astra-d1|week-10-06:c1/clean-7",
+  "pass": 1,
+  "status": "ladder",
+  "reason": null,
+  "requests": [
+    {
+      "request_sha256": "6f488eca893a07d2063eaae3601ca2db3f0bb0c0ce9ceddd518ac1e382d1762e",
+      "answer_text": "{\n  \"no_ladder\": null,\n  \"ladder\": {\n    \"question\": \"Will Nvidia's Rubin data center GPU reach commercial volume shipments by January 31, 2027, as confirmed by Nvidia's public disclosures or confirmed server OEM/ODM shipment disclosures available by that date?\",\n    \"object\": \"NVDA\",\n    \"not_judged\": [\n      {\n        \"part\": \"Rubin accounting for about 20% of data center revenue this quarter.\",\n        \"why\": \"The tracked outcome is the shipment ramp, not a quarterly revenue-mix figure.\"\n      },\n      {\n        \"part\": \"Reaching volume ramp in the particular quarter management describes.\",\n        \"why\": \"The question uses the topic's explicit late-January checkpoint rather than separately judging whether shipments began in management's originally described quarter.\"\n      },\n      {\n        \"part\": \"The ramp slipping into calendar 2027.\",\n        \"why\": \"This is not a separate outcome because January 2027 falls within the topic's stated fiscal-quarter deadline.\"\n      },\n      {\n        \"part\": \"Memory shortages causing a delay.\",\n        \"why\": \"The question judges whether volume shipments occur, not the cause of any delay.\"\n      },\n      {\n        \"part\": \"Reported sales timing slipping.\",\n        \"why\": \"Revenue recognition timing is a separate outcome from the commencement of commercial volume shipments.\"\n      }\n    ],\n    \"event\": {\n      \"happened\": \"By January 31, 2027, Nvidia publicly confirms that Rubin has entered commercial volume shipments, or server OEM/ODM disclosures confirm volume shipments of Rubin systems to customers; announcements of future availability, sampling, or qualification shipments alone do not qualify.\",\n      \"ruled_out\": {\n        \"by_whom\": \"Nvidia\",\n        \"decision\": \"After October 7, 2026, Nvidia formally cancels Rubin's commercial launch or decides to defer all commercial volume shipments until after January 31, 2027.\"\n      }\n    },\n    \"figure\": null,\n    \"reference\": {\n      \"words\": \"Its newest chip, Rubin, should make up only about 20% of data center revenue this quarter, and industry reports say the ramp could slip into 2027 because of memory shortages.\",\n      \"kind\": \"expected\",\n      \"value\": null,\n      \"value_to\": null\n    },\n    \"due_day\": \"2027-01-31\",\n    \"due_day_basis\": \"period_end\"\n  }\n}",
+      "input_tokens": 4924,
+      "output_tokens": 861,
+      "result": "ladder"
+    }
+  ],
+  "answer": {
+    "no_ladder": null,
+    "ladder": {
+      "question": "Will Nvidia's Rubin data center GPU reach commercial volume shipments by January 31, 2027, as confirmed by Nvidia's public disclosures or confirmed server OEM/ODM shipment disclosures available by that date?",
+      "object": "NVDA",
+      "not_judged": [
+        {
+          "part": "Rubin accounting for about 20% of data center revenue this quarter.",
+          "why": "The tracked outcome is the shipment ramp, not a quarterly revenue-mix figure."
+        },
+        {
+          "part": "Reaching volume ramp in the particular quarter management describes.",
+          "why": "The question uses the topic's explicit late-January checkpoint rather than separately judging whether shipments began in management's originally described quarter."
+        },
+        {
+          "part": "The ramp slipping into calendar 2027.",
+          "why": "This is not a separate outcome because January 2027 falls within the topic's stated fiscal-quarter deadline."
+        },
+        {
+          "part": "Memory shortages causing a delay.",
+          "why": "The question judges whether volume shipments occur, not the cause of any delay."
+        },
+        {
+          "part": "Reported sales timing slipping.",
+          "why": "Revenue recognition timing is a separate outcome from the commencement of commercial volume shipments."
+        }
+      ],
+      "event": {
+        "happened": "By January 31, 2027, Nvidia publicly confirms that Rubin has entered commercial volume shipments, or server OEM/ODM disclosures confirm volume shipments of Rubin systems to customers; announcements of future availability, sampling, or qualification shipments alone do not qualify.",
+        "ruled_out": {
+          "by_whom": "Nvidia",
+          "decision": "After October 7, 2026, Nvidia formally cancels Rubin's commercial launch or decides to defer all commercial volume shipments until after January 31, 2027."
+        }
+      },
+      "figure": null,
+      "reference": {
+        "words": "Its newest chip, Rubin, should make up only about 20% of data center revenue this quarter, and industry reports say the ramp could slip into 2027 because of memory shortages.",
+        "kind": "expected",
+        "value": null,
+        "value_to": null
+      },
+      "due_day": "2027-01-31",
+      "due_day_basis": "period_end"
+    }
+  },
+  "passage": "Its newest chip, Rubin, should make up only about 20% of data center revenue this quarter, and industry reports say the ramp could slip into 2027 because of memory shortages.",
+  "view": {
+    "object_id": "NVDA",
+    "object_kind": "company",
+    "kind": "asset",
+    "looks_at": "Whether Rubin's volume ramp and shipments occur in the quarter Nvidia describes (about 20% of data center revenue) or are pushed into calendar 2027, and whether reported sales timing slips.",
+    "question": "Will Nvidia's Rubin data center GPU reach commercial volume shipments by January 31, 2027, as confirmed by Nvidia's public disclosures or confirmed server OEM/ODM shipment disclosures available by that date?",
+    "due_day": "2027-01-31",
+    "year": "2027",
+    "rungs": [
+      {
+        "label": "Yes",
+        "condition": "By January 31, 2027, Nvidia publicly confirms that Rubin has entered commercial volume shipments, or server OEM/ODM disclosures confirm volume shipments of Rubin systems to customers; announcements of future availability, sampling, or qualification shipments alone do not qualify."
+      },
+      {
+        "label": "Ruled out",
+        "condition": "After October 7, 2026, Nvidia formally cancels Rubin's commercial launch or decides to defer all commercial volume shipments until after January 31, 2027. This rung holds when that, or any other decision against the event of rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after 2026-10-07 and stands on 2027-01-31, and only when rung 1 does not."
+      },
+      {
+        "label": "Still open",
+        "condition": "Neither rung 1 nor rung 2 holds on 2027-01-31."
+      }
+    ],
+    "reference_status": null
+  }
+}
+
+codex
+**Trace it at $0.** It is a production-relevant defect in the step already under review, and the stored answer gives a concrete lead.
+
+The [Astra answer](</Users/lchingen/hivemind/poc/data/clean-astra-rest-2026-11-16/astra-d1/outcomes.jsonl>) explicitly says it used the topic’s late-January checkpoint *instead of* judging the quarter management described. That is evidence of an input conflict; it does **not** establish that the regulatory-decision clause caused the mistake. The [request](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:22>) also allows a named period’s end for events generally.
+
+Read the topic, article, complete request, and all stored answers together. Separate **the period the question asks about** from **the date by which evidence is checked**; count the same failure across stored topics, not just the three draws of this one.
+
+- **Moves:** the trace identifies a general request-level cause, supported by the decisions, and a correction that can be checked against stored cases.
+- **Closes:** the evidence instead points to the topic’s conflicting wording or an unsupported model choice, with no sourced general correction. Ambiguity alone does not prove which step caused it.
+
+Keep the [D637 record](</Users/lchingen/hivemind/docs/CURRENT_STATE.md:433>) and v2’s inconclusive, unadopted status as written while tracing. This authorizes no paid send or change to the ruler.
+
+CONSENSUS: trace the Rubin period-widening defect at $0.
+tokens used
+1,083,832
+**Trace it at $0.** It is a production-relevant defect in the step already under review, and the stored answer gives a concrete lead.
+
+The [Astra answer](</Users/lchingen/hivemind/poc/data/clean-astra-rest-2026-11-16/astra-d1/outcomes.jsonl>) explicitly says it used the topic’s late-January checkpoint *instead of* judging the quarter management described. That is evidence of an input conflict; it does **not** establish that the regulatory-decision clause caused the mistake. The [request](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:22>) also allows a named period’s end for events generally.
+
+Read the topic, article, complete request, and all stored answers together. Separate **the period the question asks about** from **the date by which evidence is checked**; count the same failure across stored topics, not just the three draws of this one.
+
+- **Moves:** the trace identifies a general request-level cause, supported by the decisions, and a correction that can be checked against stored cases.
+- **Closes:** the evidence instead points to the topic’s conflicting wording or an unsupported model choice, with no sourced general correction. Ambiguity alone does not prove which step caused it.
+
+Keep the [D637 record](</Users/lchingen/hivemind/docs/CURRENT_STATE.md:433>) and v2’s inconclusive, unadopted status as written while tracing. This authorizes no paid send or change to the ruler.
+
+CONSENSUS: trace the Rubin period-widening defect at $0.

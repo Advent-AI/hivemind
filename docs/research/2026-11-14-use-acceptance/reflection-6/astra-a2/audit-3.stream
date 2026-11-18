@@ -1,0 +1,1286 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e7af-d80e-7d33-9282-d380d36e3137
+--------
+user
+You are an independent, read-only auditor of a model request. No conclusion is preferred. Do not edit files or start runs.
+
+**The request to audit, whole:** `docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/` (system.txt, closing.txt,
+schema.json, every field description included). It is the clean path's frozen answer-choice request
+(`clean-arch/step4-2026-11-10/ladder/candidate-*`) with three edits:
+- "the topic's wording" read as "the topic's description and outcome";
+- two sentences on a second side of the same bet (D436);
+- the closing check aligned to "that the question leaves out".
+
+**The sources:** the design table that maps each clause of the frozen request to its source is in
+`clean-arch/step4-2026-11-10/DESIGN.md` (the table of rows with a clause and its source, around lines 270 to 300). The decisions are
+in `docs/DECISIONS-log.md`: read every decision that table cites, plus D397, D403, D414, D417, D436, D185 and D210. Known and recorded
+already:
+- the D210/D403 conflict in the binding-obligation due-day clause (`reflection-6/due-day/audit.md`);
+- the D414 tension on a year's figure day;
+- the shared ambiguity of "the question leaves out" with event alternatives (`reflection-6/astra-a2/audit-2.md`).
+
+**Audit every sentence and every schema description:** what is asked, the ladder (figure ranges, event outcomes), the reference, the
+due day, the declines, not_judged, the closing check. For each, give a verdict against its source: consistent, contradicts, keeps
+wider, keeps narrower, or no source. Then:
+1. Is any finding new, beyond the three known ones above?
+2. Is any finding introduced by the three edits rather than inherited from the frozen request?
+
+Be concise: a table, then the two answers. End with one line: NO NEW FINDING FROM THE EDITS, or NEW FINDING: <what>.
+
+codex
+I’ll compare the full request, including every schema description, with the cited decisions and distinguish new issues from the three already recorded.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/audit.md docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/{system.txt,closing.txt,schema.json}' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '240,325p' clean-arch/step4-2026-11-10/DESIGN.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+The proposed change removes the instruction to use the annual filing date for a signed deal’s **completion**. The unchanged reader brief still applies that instruction, so it can mark the proposed answer as wrong.
+
+**Request audit**
+
+| Sentence or clause | Verdict against the cited standard |
+|---|---|
+| The question must be resolvable on its due date; the day must follow the item and be on or after the settling material’s publication. | **Consistent** with the [design table](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:285). |
+| For a figure, use the stated publication date or `expected_publication` when the model estimates it. | **Contradicts** D414 as a complete instruction for an annual figure: D414 assigns the unstated day to code, although the request tells the model to estimate it. The reader brief describes the code-set day. |
+| For an event, use a stated date or the named period’s last day, with fiscal year-end for an undated pending regulatory decision. | **Consistent** with D403. |
+| Proposed binding-obligation clause: within 548 days; an **amount** already taken on uses the next annual filing; an unsigned obligation uses its signing-check day. | **Consistent** with D210 and D185, provided the signing-check day also satisfies D403’s stated-date or period-end rule. |
+| Frozen clause: an **obligation** already taken on uses the next annual filing. | **Keeps wider** than D210: it also covers an event asking whether a signed deal completes. It conflicts with D403 when that event has a different stated date or period end. |
+| System and schema refusal when an event has neither a date nor a period, except for the pending-regulatory case. | **Consistent** with D403. The schema’s figure exclusions are also consistent with D414’s limit on the annual-figure rule. |
+| Schema `due_day_basis`: `stated` or `period_end` for events; `stated` or `expected_publication` for figures. | **Consistent** as labels, but it does not itself explain D414’s code-set day for annual figures. |
+| Closing check: the event’s outcomes must be checkable on the due day, and the due day must follow the rules above. | **Consistent**, but it repeats the request’s rules and does not resolve the annual-figure inconsistency. |
+
+The decisions are in [D185, D210, D403 and D414](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2472).
+
+**Cases**, assuming each date is after the item and within the 548-day limit:
+
+- Signed acquisition, stated check date: **proposed:** stated date; **frozen:** annual filing clause competes with that date.
+- Same acquisition, period only: **proposed:** period end; **frozen:** annual filing clause competes with period end.
+- Purchase-commitment amount at the next annual filing: **both:** next annual filing; an unstated annual-figure date is subject to D414’s code rule.
+- Unsigned deal’s signing: **both:** stated signing-check date or the named period’s end; neither permits an invented event date.
+- Guarantee becoming final, stated date: **proposed:** stated date; **frozen:** if the obligation is already taken on, its annual-filing clause competes with that date.
+
+No remaining proposed sentence directs signed-deal completion to the annual filing. The change leaves **no day-selection gap**: the general event rule supplies the stated date or period end, and an event with neither is declined. A date beyond 548 days creates a constraint conflict, not permission to invent another day.
+
+The [reader brief’s D row](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98) still says **any** obligation already taken on is due at the next annual filing. Thus it can fail the proposed stated-date or period-end answer for signed-deal completion—and for an already-taken-on guarantee becoming final—when that day differs from the filing date.
+
+NOT CONSISTENT: the unchanged reader brief applies the annual-filing rule more broadly than the proposed request, and the request’s annual-figure estimate instruction conflicts with D414.**The revised closing matches the system text and schema, but all three can still ask for an answer choice to be listed as “not judged.”** For example, “Will the acquisition close?” leaves withdrawal out of the question’s wording, even though the answer choices can already decide whether the parties withdrew.
+
+| Instruction | Verdict against the cited decisions |
+|---|---|
+| Ask one figure for a named period or one event; judge what the topic’s outcome names as tracked. | **Consistent** with D397. It adds no rule giving the description priority. |
+| Read the description and outcome together; list every other part **the question leaves out**. The schema repeats this. | **Keeps wider** than D397’s purpose when “leaves out” is read literally: an answer choice can decide something that the question itself does not name. |
+| Keep a second side of the same bet as context and list it as not judged. | **Consistent** with D436. Its examples do not establish which side is main in every case. |
+| A second side alone is no reason to decline; decline if no part is main or the main part meets a decline case. | **Consistent** with D436 and D397. It does not introduce the refused description-priority rule. |
+| Do not combine two things into one set of answer choices; list the omitted part in the examples. | **Consistent** with D397, provided the omitted part is not already decided by the answer choices. |
+| Decline when nothing can be checked on a date, including an undated event with no named period, subject to the regulatory exception. | **Consistent** with D403. |
+| Decline when there is no main part; decline another company’s figure or a matter no listed theme covers. | **Consistent** with D397 on no main part. **No source** for the company and theme boundaries in the three cited decisions; they are retained from the frozen request. |
+| The other period and year decline cases, and the rule against rewriting a distant-year figure as an event. | **No source** in the three cited decisions; retained from the frozen request. |
+| List a difference within an event outcome, such as approval with versus without conditions. | **Consistent** with D397 when the answer choices do not decide that difference. |
+| Revised closing: check every other part **the question leaves out**. | **Consistent with the system text and schema; it adds nothing beyond them.** It also repeats their ambiguity about parts the answer choices already decide. |
+
+Two equally presented years with no main one still meet the explicit decline instruction. Another company’s figure and a matter without a listed theme also still have explicit decline instructions. A model could misapply “second side” to any of these, but the text does not expressly override those boundaries. As the earlier audit found, the sources do not settle how to choose a main part when several candidates are named.
+
+NOT SOUND: “The question leaves out” can include event alternatives already decided by the answer choices.
+ succeeded in 0ms:
+| `themes` | `universe.theme_list()`, as `[{id, name}]` |
+
+Nothing later than the opening article is read: no evidence linked afterwards, no other thesis, no judgement.
+
+### 5.2 The request
+
+- **System text:** `ladder/candidate-system.txt`, the request as first sent (D407; 7,123 characters, the closing check 662). Its
+  examples are a drug approval, an air carrier and capital spending; none names the covered company, its products or a test article.
+- **User text:** one JSON object, serialized with `json.dumps(payload, ensure_ascii=False)` as the Step 1 runner does
+  (`runner.py` line 264), with exactly these keys in this order:
+  `{"company": "NVDA", "fiscal_year_note": "…", "themes": [{"id": "…", "name": "…"}, …], "thesis": {"id": "clean-3", "description":
+  "…", "outcome": "…", "period": "…", "opens_as": "…", "settled_by": "…"}, "item": {"publication_date": "2026-07-02", "publisher":
+  "…", "title": "…", "text": "…"}}`,
+  then a blank line, then the closing check, `ladder/candidate-closing.txt`. The check reads the answer back and stands at the
+  very end of the request, after the payload (AGENTS §6), where production puts its own closing sentences (`extraction.py`
+  line 403).
+- **Schema (strict):** `ladder/candidate-schema.json` (draft). Either `no_ladder` is a reason and `ladder` is null, or `ladder` is
+  complete and `no_ladder` is null. Inside `ladder` exactly one of two answer shapes is filled: `event` (the condition under which the event has happened and,
+  or null, the condition under which it is ruled out; §5.2.1, D409; before version 32, `yes_no` and five `states`); `figure` (a
+  unit, exactly five ranges, the favourable end). The schema cannot express "exactly one"; check 1 does.
+  The schema uses only keywords production's requests already send to this provider (`type`, `anyOf`, `required`,
+  `additionalProperties`, `items`, `enum`, `pattern`) and `description`. It carries no list length: no stored request has sent
+  `maxItems` to this provider, and production's validator (`model.check_schema`) enforces a list's minimum and not its maximum,
+  so a six-range and a six-state answer both passed it on the fixtures. Check 1 counts the five.
+- **Model:** gpt-6-luna at medium effort with an output cap of 16,000 tokens, the judge's setting (`cfg.rejudging`), with the
+  strict schema; one configuration. Priced from tokens at
+  `hivemind.model.PRICES` before the send.
+
+Each rule sentence of the request, with its source (the whole-request audit, with a blind second reader, comes before any send):
+
+| sentence of the request | source |
+|---|---|
+| one figure for a named period or one event; a question, not an assertion; a figure or event must determine the outcome on the due date | v74i lines 20–21 |
+| the question stands on its own for a later judge, who has only the question, the ladder and new evidence (D38: the view is written once and judged later, from evidence; the probe, D404) | D38; D404 |
+| a figure's question names the period it covers or the day it is measured at, and what settles it | D38: a view looks at one number, "which year, whether a period amount or a point-in-time value, and the source it is answered from" |
+| judge the one the topic's `outcome` names; list every other part of the wording, a second figure or event, a condition or a comparison | D397; D38 "a view looks at one thing". `settled_by` is passed as context and decides nothing: when it and `outcome` point to different things, `outcome` decides |
+| `no_ladder`: no main figure or event (none, or several with none the main one); nothing checkable on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, due at the fiscal year-end) | D397; D38 (a view has a ladder and a due date); D403; v74i line 16 |
+| `no_ladder`: a company's figure for a quarter or a half-year; a figure for a year beyond next year, unless the topic's `opens_as` is binding_obligation | v74i lines 16–17; D46; `extraction.sift` lines 625–632, which make the same two exceptions |
+| `no_ladder`: a figure for a year that has already ended on the item's day | D38: "a year whose period has ended gets no new view". D38 counts the year from the latest day processed and v74i line 26 from the item's day; on this path they are one day, since the replay refuses a trace that is not in day order (`adapter.py` line 305) |
+| a figure beyond next year is not rewritten as an event; a numeric completion target may define an event's state | v74i line 16 |
+| the company or a listed theme; a question of another company or of an unlisted matter is returned as `no_ladder` with its name | v74i line 22; production's [Subjects] sentence asks for the matter's name and its matching then does not open it (`matching.py` lines 332–338); here the model is told the result, so the request asks for nothing a check refuses |
+| concrete conditions now; no future target; no overlap or gap; exactly one holds | v74i lines 24–25; D38 |
+| a yes/no event has two rungs, anything else five; a company's states carry the five labels strongly bullish to strongly bearish, and the Neutral state's condition says what it is neutral against, the expected outcome when the item states one and otherwise the baseline the model compares with; a theme's are named by outcome | v74i line 25 ("State the neutral comparison in its condition"), carried as it stands; D38 |
+| how to build five states: outcomes that exclude one another, one or two of them divided by a property that holds or does not; the merger example | D399. It is the construction for D38's "rungs do not overlap, cover every outcome", added because the second audit found no worked event ladder and three hand-written ones had failed. It also gives an event with three natural outcomes its five states |
+| a figure: its unit from production's list (`extraction.UNITS`), with "other" where production writes "n/a"; one year, written `FY2027` or `2026`; five ranges; inclusive `lo`, exclusive `hi`, amounts in full, open ends | v74i lines 26, 34 and 35; production's closing sentence on `year` |
+| the reference is a consensus, guidance, or the stated plan or deadline, for a figure or an event; its words are copied from the item exactly, as one unbroken passage (D398: "the reference the opening article gives"; D405) | D260; judging-v7. Only a figure's reference value is checked against ranges (D398); an event's is recorded and read by readers. The value is a number the item states and never one it does not; an expectation in words alone is kept as words, with no value (D398: code "checks that a stated reference value lies in the middle range") |
+| when the reference has a value, a figure's middle range holds it, the ranges on either side the outcomes above and below it; the favourable end with a reason | D186, D398 |
+| no stated expectation, or one stated in words alone: the ranges are the model's estimate | D398; production's behaviour |
+| the due day falls after the item's day, on or after the day the settling material is published | `extraction.sift`; D356 |
+| a figure's due day is its publication date, after the end of the period it covers; fiscal and calendar years | v74i line 26; D38; D356 |
+| an event's due day is the date its outcome is assessed: stated, or a period end, which is the last day of the period the topic names or, for a pending regulatory decision with no date, the company's current fiscal year-end | v74i lines 16 and 26. Narrower than line 26 on purpose: Step 1 writes a thesis's period (c8 §3), and this step turns that period into a day and does not choose another (one owner, AGENTS §3). Decided by Alex (D403). A topic and item that give no date and no period fall under "nothing can be checked on a date" |
+| a topic whose `opens_as` is binding_obligation is due within 548 days (18 months): an obligation taken on at its next annual filing, one not yet signed on its check date | v74i line 13; D185; `check_admission`, which tests the same field. The request and the check share that one scope: the `opens_as` Step 1 wrote, which the call is shown |
+| the answer is written in English | v74i line 23; D163 |
+| the closing check: one thing and every other part listed; a figure's ranges meet end to end; an event's states taken two at a time, then an outcome that fits none; the reference's value; the bounds; the due day | AGENTS §6; each clause repeats a rule stated in the system text; it is the last text of the request, after the payload |
+
+An event's `year` is not asked of the model: code writes the year of the due day, as the seeds do (v8: due 2027-01-31, year 2027)
+and as the adapter already does for the Ohio question.
+
+`ladder/examples.json` is not part of the request and is never sent to the model. It holds **check fixtures**: answers that pass
+the schema and checks 1 to 8, with a projection of what the step writes for them (the view's fields and each rung's label,
+condition and bounds; the complete rows are §5.4's), on stored theses on purpose. They test the code, which
+needs valid shapes and not sound content; none is offered as a sound ladder, and where one has a note it records what readers found in it. The request's own examples are the three in the system text.
+
+**The blind whole-request audit** (AGENTS §6) was run on version 13's request by a second reader who had not seen the source
+table (`council/gw-audit-handoff.md` → `gw-audit-codex.md`). What it found and what changed:
+
+| finding | change |
+|---|---|
+| `not_judged` asked for other figures or events; D397 says every other part of the wording | the request and the schema now say every other part: a second figure or event, a condition, a comparison |
+| "no main part" was written as one special case | now "the topic has no main figure or event" |
+| D38's "which year, a period amount or a point-in-time value, and the source" was not carried | the question names the period or the day measured at, and what settles it |
+| the closing check asked that a reference value fall in the middle range; the text above said only "near" | the text above now says the middle range holds the reference's value |
+| theme state names were not required to differ, while check 3 refuses equal names | the request says each name is different |
+| the yes/no examples in `examples.json` said "confirmed"; an event not confirmed is not an event that did not happen (judging-v7) | the examples state the event and its complement |
+| the two five-state examples had gaps or overlaps | they are now marked as showing the shape only; see §9 |
+| an event with three or four natural outcomes has no rule or example | unchanged, as in production; a known gap (§9), measured in Stage A |
+| the request does not tell the model that another company or an unlisted theme gets no view | deliberate (check 2) |
+| six examples name the covered company | they are not sent to the model |
+
+**The second blind audit** (`council/gy-audit-handoff.md` → `gy-audit-codex.md`), on the request and schema as changed, without the
+worked examples: every sentence and every schema description consistent with its source except these, each now answered:
+
+| finding | change |
+|---|---|
+| v74i line 16's rule against rewriting a distant annual figure as an event was not carried | carried |
+| v74i line 25's neutral comparison was not asked for a company's event states | the Neutral state's condition says what it is neutral against (v74i's sentence, carried as it stands) |
+
+ succeeded in 0ms:
+You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+
+What the question asks
+- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+- A topic's description and outcome together may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's description and outcome that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part itself meets a case below. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+Whose question it is
+- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+
+The ladder
+- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's description or outcome names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+- Fill exactly one of event and figure; the other is null.
+- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's description and outcome that the question leaves out listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's description and outcome that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of either out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'astra-a2|D436|answer.choice|D397|D403|D414|D417' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^#{1,5} .*D(38|46|185|186|210|260|356|397|398|399|403|404|405|407|409|414|417|436)'"\\b|"'^'"\\*\\*D(38|46|185|186|210|260|356|397|398|399|403|404|405|407|409|414|417|436)\\b' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D(38|46|185|186|210|260|356|397|398|399|403|404|405|407|409|414|417|436)\\b' docs/DECISIONS-log.md | head -80" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+753:## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
+1064:## D46 · 2026-10-20 · Alex decides Claude's views proposals one by one
+2472:## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
+2476:## D186 · 2026-10-26 · Asset-thesis rungs describe business outcomes; the favourable end is registered per thesis
+2664:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+3049:## D260 · 2026-11-02 · A judgement is a forecast against a reference: the rung the evidence in force makes most likely, judged against what the market expects; the answer states the reference and the implied outcome (judging-v6)
+3731:## D356 · 2026-11-04 · Step 5: closing at the due day is pull mode's; no separate final verdict, no day-end re-judging, due days after publication, the frozen rung recorded and shown
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4345:## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+4365:## D399 · 2026-11-10 · The ladder request may teach how to build an event's five states
+4414:## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+4428:## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+4441:## D405 · 2026-11-10 · A reference's words must be the article's own, in one unbroken passage; otherwise the answer is sent back once
+4469:## D407 · 2026-11-10 · One last probe of the ladder request, then the build, whichever way it comes out
+4502:## D409 · 2026-11-10 · An event is answered in three outcomes: it happened, it is ruled out, or neither by the due day
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+4606:## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+4817:## D433 · 2026-11-12 · Open Step 1 version c14: D38's year boundary in the two merge sentences, tested small first
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+5297:## D470 · 2026-11-13 · The ladder-refusal candidate stops; the 41 Stage A splits are recorded, eight with a provisional reading from D414; Stage A's verdict is unchanged (council consensus under D439)
+6698:## D547 · 2026-11-15 · Under D439: the audit of line 2 finds an undefined term; the description-only reading is refused; the recount against D397, D436 and the July rulings opens no prompt change (council consensus)
+7272:## D569 · 2026-11-16 · Under D439: gate 1's verdict reproduced by its method on the fortnight; D397's display of the parts not judged is missing from the product, the next work (council consensus on the course, round 32)
+7289:## D570 · 2026-11-16 · Under D439: D397's display built and unit-proved, its browser proof pending; the product page refuses the new system's three-choice events; next, the page contract for the new system's answer shapes (council consensus, rounds 33 to 37)
+7309:## D571 · 2026-11-16 · Under D439: the product page reads the new system's questions without inventing a direction, and shows D397's parts not judged (council consensus on the designs, rounds 38 to 40)
+7508:## D582 · 2026-11-16 · Alex's standing instruction lifts D581's hold; arm A2 (arm A plus D436's rule for a second side of the same bet) is probed (council consensus, rounds 73 to 77)
+8213:## D614 · 2026-11-16 · Under D439 (council round 153): the refusal census maps to the closed main-part class; D612 stands; next, a $0 design review of splitting against D397, D436 and D38
+8231:## D615 · 2026-11-16 · Under D439 (council round 154): the period split is developed at $0 as a lead on D397's open defect; no gate movement claimed, no probe authorized
+8249:## D616 · 2026-11-16 · Under D439 (council rounds 155 to 158): the period split's design v4 is accepted for a $0 scratch build; the narrow D397 departure is recorded as a reversible proposal; nothing is sent
+
+ succeeded in 0ms:
+177:- Changed by D38: a company reaches a theme through a dependency on a theme view (premises are not used).
+530:- Changed by D38: the structure is rebuilt (a view is a question, a five-rung ladder and a due date; drivers,
+594:- Changed by D41: the final verdict is an old draft to be redone on the rebuilt views database (D38).
+613:- Changed by D38: tiers and counting by original source stay; add-only conditions, the conflict trigger and the
+636:- Changed by D38 and D39: dependencies replace premises (pinned years, chains); a late item is re-judged when it
+638:- Changed back by D45: the change of the late-item rule by D38 and D39 is a proposal Alex has not decided; this
+641:- Changed by D46: the late-item rule is replaced by D46 item 13 (the timeline only grows forward); the rule for a
+753:## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
+902:- Why: D38–D40 change what extraction hands over, which model settings Config holds, how the universe describes macro
+966:  - Re-judging (changes D38). A re-judgement reads the view's evidence that has not been replaced, each piece with the
+969:  - Ladders (changes D38). A yes-or-no question has two rungs: bullish and bearish for an object view, named by outcome
+971:  - Dependencies (changes D38). B depends on A only when B's answer uses A's answer; the other side's reaction to what
+997:  with D38–D42 decided, the final verdict and pull mode stay old drafts to redo. Like v1, the sealed copy is never
+1033:  D38–D44 wrote as decided proposals he had answered in part or not at all, details from Codex reviews, and log lines
+1051:- Changes: D31 (its late-item rule stands again), D38, D39, D40, D41, D42, D44 (notes under each).
+1062:- Changed by D46: Alex settled the proposals one by one; the ones he decided are in D46, the three about due dates,
+1064:## D46 · 2026-10-20 · Alex decides Claude's views proposals one by one
+1179:  size beside the model settings; D31 notes that D46 replaced its late-item rule; 转述 in every example; 消息 becomes
+1234:- Left as Alex decided: no notice when a dependency closes or moves to its next period (dropped in D46 item 9); no
+1236:- Notes: `MERGE_KINDS` and `LABEL_RULES`, named by D39 and D40, were removed by D45 and D46; older "Enforced" lines name
+1275:     in D46 item 9, back as a case of this rule, as Claude told Alex before his "ok").
+1283:     evidence changes (D46 item 1). The glossary row, the views notes and extraction's "用来算共识" go. Third-party views
+1297:- Changes: D30, D38, D41, D46 item 9, D49; the frozen views database (D48) and the frozen Config, extraction and
+1417:  1. A view has one state (D46 item 1) and no answer apart from it. At the due date the state is frozen where it
+1419:     the official action) comes in as evidence and moves the state like any other (D46 item 3). A view that depends
+1435:- Changes: D14, D29, D46, D51 item 4 (who sets an answer at the due date is settled); the frozen views database (D48)
+1463:     (already retired in the pull mode PRD) and sending a view on a disagreement within a tier (replaced by D38).
+1492:     (conditions, replaced by D38) and D31 (premises, replaced by dependencies), the system overview's D29. D55 item 3
+1539:- How: Claude read every PRD, the page data, the renderer's visible text and D38–D57, traced items through the stream
+1589:- Changes: D42, D44, D46, D51, D57 (notes under each); the frozen universe, extraction and views database through this
+1610:- Changes: D42 and D46 item 16 (a candidate carries evidence, except one read from Alex's own memo); the frozen
+2470:- Result ([results](../poc/reports/2026-10-26-admission-v12/results.md)): two false starts diagnosed on stored data ($0.08 together: a check that demanded a reason not to fold when there was nothing to fold into; reason 1 named as guidance, which excluded NVIDIA's data-center revenue), then one run over seed, week and August ($1.31 against the baseline's $1.01, the three fields and re-prepared requests). Theses 90 → 60, financial-line theses 29 → 3, evidence 534 → 710; gold full 3 → 9, partial 7 → 0, fail 10 → 11, every v12 failure a miss and none an extra. Remaining, counted: six theses for one 2026 aggregate, about seven small binding obligations, three proceedings opened as policy stages; eight candidates named a thesis in `folds_into` and opened anyway, six of them duplicates. A read-only code review's two wording findings on the role (a milestone on the main product under `main_driver`; the D185 exception beside the year limit) go to a v13 arm with the rule-2 wording for obligations and policy stages, Alex's call. Branch `feat/thesis-admission-v12`, not merged.
+2472:## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
+2476:## D186 · 2026-10-26 · Asset-thesis rungs describe business outcomes; the favourable end is registered per thesis
+2517:- A narrower v14 (role-v12 plus only the milestone clause the Helios gain came from, the D191 rename and the D185 exception, minus the peripherals sentence) is probed the same way; result appended here. Result: worse than v12 in the other direction: must-open keys proposed 14/45 (4.7 per sample against 9 and 8), candidates 17 per sample against 30; the February 25 call opened neither data-center revenue nor gross margin in any of three samples (two candidates each), while Helios rose to 2/3 and Ohio to 1/3. Twenty-five characters of wording moved coverage by half. Not adopted; `poc-v28` stays a configuration.
+2664:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+2667:  Mechanism (two stored accounts, `docs/research/2026-10-28-extraction-quality/results/ask_admission.json`): D184/D185's sentence
+2671:- Decided: role-v21 replaces that one sentence. Not yet signed: a yes/no question due after the item within 18 months (D185 unchanged).
+2677:  rule, D186); the four articles that report only the revenue share open nothing under both, rightly; the Reuters Ohio signing event
+2683:- Alex chose option 1 after the D210 week ("1"): the admission judgement sat in the extraction call, whose request carried the open
+2787:Alex explicitly rejected stopping at D222's failed result and asked to trace causes and improve. The [single-note experiment](research/2026-10-29-single-note/design.md) tests a bounded contract change in the fourth-step research harness: write the investment note once, separate unknowns by their actual role, and let routing reference it rather than regenerate it as independent judgement and action reason. Known empty history/catalog fields are omitted from generation and restored as empty lists; nonempty references use the actual ID domain. Original-source relation can explicitly be unknown per historical comparison. Existing-question arguments and D201/D184/D185/D210 admission requirements remain. This changes an experimental output shape, not product storage, production prompts, gold or deployment. Frozen D220/D221 semantics judge all output fields. Start with the two decisive sources, three fresh samples per arm, and expand to the fixed eight regressions only if that proof improves without a new definite error; the old failed data remain. No full-pipeline run is authorized or implied.
+2798:Alex clarifies that the primary task is Haiku versus Luna and their response to prompt changes, and challenges the scoring. Stop redesigning prompts. Independent reading of all57 D224 returns confirms that its pilot improperly labelled two conditional Haiku analyses as definite source-fact errors; retain the original reading and supersede that claim with uncertain inference boundary, per unchanged D218. The signed-positive must-open expectation is stronger than the complete D201/D210 rule and must not be scored as factual comprehension. D224 still has a clear Cloud completeness difference (Haiku3/3, Luna1/3), one Luna period error, relation errors in both models, and one Haiku truncation; no overall winner or adoption is established.
+2802:D225 final measurement: [the paired experiment](research/2026-10-29-paired-prompt-model/results.md) completed all60 responses. Final source readings, including independent blind review and the root’s adjudication, give complete core meaning 12/12→11/12 for Haiku and 10/12→9/12 for Luna; all12 explicit exclusion observations comply. Haiku mean latency10.02s versus Luna14.25s. Do not infer whole-system accuracy or general model superiority from five known development sources. The counterexample paragraph is not adopted: no stable semantic gain was shown. Six Haiku NVIDIA role-boundary concerns remain uncertain, not established fabrication. All six emitted signed-obligation proposals miss D210’s required obligation-amount measure; six nulls are not comprehension failures. The rewritten experimental prompt omitted D210’s amount/commitments-note language, retaining only next-annual-filing timing; this mismatch is identified, not causally isolated in this experiment. Preserve the initial and intermediate readings; final-readings.json/final-measurements.json are authoritative. No production change, default switch, further paid arm or full-pipeline run.
+2960:  1. **One plan, several wordings** (H1, "A"): wordings of one plan whose final check is the same number are one question; two numbers that move on their own and are watched separately stay apart; a single deal under a plan already opened by amount merges into it. Not put to Alex: a not-yet-signed deal's yes/no signing question (D210; PRD 06 keeps number and event questions apart) stays as it is and does not merge into a plan's amount question (the Ohio lease guarantee and the cloud-customer total in v38 both stay). Narrows the standard §4 "another quantity in the same deal (a guarantee beside a financing)" sentence taken from D190; consistent with D210.
+3049:## D260 · 2026-11-02 · A judgement is a forecast against a reference: the rung the evidence in force makes most likely, judged against what the market expects; the answer states the reference and the implied outcome (judging-v6)
+3067:- First measurement on the frozen gold (`score-r4-identity.txt`, arm 4, three draws, judging-v5): judged questions agreeing 13/19, 15/18, 12/17; the lookup baseline (the rung containing the gold's reference figure) 9/15, 8/14, 8/14; always-neutral 5/11, 5/10, 5/10. Disagreeing in every draw: FY2027 total revenue (gold $400–435 billion, judge neutral by consensus lookup) and Vera CPU revenue (gold $8–18 billion, judge the top rung on management's $20 billion at face value); in two of three: the financing-commitments total (gold $25–60 billion, judge $10–20 billion). Never judged in any draw: NVIDIA's own capex (q12); the operating margin in two draws (q10): evidence never reached them, counted apart as "no judgement". The new judge (`judging-v6`, D260) has no run to score yet; a run on `poc-v90` is Alex's call.
+3172:`main` and `fix/extraction-quality-2026-10-28` both numbered from D181 after D170. At the merge the branch kept its numbers (D171–D274) and the 62 decisions `main` recorded were renumbered in order: D181→D275, D182→D276, D183→D277, D184→D278, D185→D279, D186→D280, D187→D281, D188→D282, D189→D283, D190→D284, D191→D285, D192→D286, D193→D287, D194→D288, D195→D289, D196→D290, D197→D291, D198→D292, D199→D293, D200→D294, D201→D295, D202→D296, D203→D297, D204→D298, D205→D299, D206→D300, D207→D301, D208→D302, D209→D303, D210→D304, D211→D305, D212→D306, D213→D307, D214→D308, D215→D309, D216→D310, D217→D311, D218→D312, D219→D313, D220→D314, D221→D315, D222→D316, D223→D317, D225→D318, D226→D319, D227→D320, D228→D321, D229→D322, D230→D323, D231→D324, D232→D325, D233→D326, D234→D327, D235→D328, D236→D329, D237→D330, D238→D331, D239→D332, D240→D333, D241→D334, D258→D335, D259→D336. References in `main`'s files were renumbered with them; commit messages keep the old numbers.
+3731:## D356 · 2026-11-04 · Step 5: closing at the due day is pull mode's; no separate final verdict, no day-end re-judging, due days after publication, the frozen rung recorded and shown
+3765:- Alex, with D356: "然后你也需要清理repo不要让旧的东西影响我们整个sanity".
+3772:- Stale text removed from the current documents: the final-verdict draft (D356), the README's pre-merge extraction status (role-v51 and a
+3773:  placement call), and the pull-mode open items D356 settled.
+3965:  1. The asset-thesis rungs stated against guidance, each thesis naming its favourable end (D186), and the rename of `industry_aggregate`
+3971:  3. At the due day pull mode closes the due questions and does nothing else (D356); D248 boundary 2's step that opens the next-deadline
+3984:     argument record set aside on 2026-11-04) and "只有事实能确定落在哪一档" (§5 and §7; changed by D260 and D263).
+4068:  - E3, ladder code checks with D186;
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4333:      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+4334:    - split into two questions, each judged, as D38 says;
+4341:  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+4343:- **Scope:** the clean path's ladder step only. D38 stands for production.
+4345:## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+4354:    - not here: write ladders as production does, and leave D186 to a later version.
+4357:  - The clean ladder step builds D186 in full. The model states the reference the opening article gives and, for a company's figure,
+4360:  - The reference is what D260 lists: a consensus, the company's guidance, the stated plan or deadline. This is wider than D186's
+4365:## D399 · 2026-11-10 · The ladder request may teach how to build an event's five states
+4373:  divided by a property that holds or does not) with a general example. D38's five states for an event stand. Stage A reports the
+4414:## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+4428:## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+4441:## D405 · 2026-11-10 · A reference's words must be the article's own, in one unbroken passage; otherwise the answer is sent back once
+4465:  cents, and read as counts; (4) when the counts are steady the ladder step is built on D401's terms, as D404 says.
+4469:## D407 · 2026-11-10 · One last probe of the ladder request, then the build, whichever way it comes out
+4494:  - The work stays at the ladder step. One class is changed: how an event is answered (D409). The new answer is first checked
+4502:## D409 · 2026-11-10 · An event is answered in three outcomes: it happened, it is ruled out, or neither by the due day
+4510:  (D397). The wording of the request, the schema and the checks are designed, checked at no cost and reviewed before any send
+4512:- **Supersedes:** D399 (the request teaches how to build an event's five states) and, with it, the five states of an event in
+4513:  the clean ladder step; D404's rule on naming a theme's five states has nothing left to apply to.
+4566:- **Scope:** the clean path's ladder step. D186 stands.
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+4586:- **Decided:** the changes of D413 and D414, with the two already in hand (the scope of a ruling out; D411's reference), are
+4604:- **Scope:** the clean path's ladder step. It amends the shape D409 gave an event's answer, if it passes.
+
+exec
+/opt/homebrew/bin/zsh -lc 'diff -u clean-arch/step4-2026-11-10/ladder/candidate-system.txt docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/system.txt; diff -u clean-arch/step4-2026-11-10/ladder/candidate-closing.txt docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/closing.txt; diff -u clean-arch/step4-2026-11-10/ladder/candidate-schema.json docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/schema.json' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+--- clean-arch/step4-2026-11-10/ladder/candidate-system.txt	2026-11-10 10:31:37
++++ docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/system.txt	2026-11-16 20:07:03
+@@ -2,7 +2,7 @@
+ 
+ What the question asks
+ - A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+-- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
++- A topic's description and outcome together may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's description and outcome that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part itself meets a case below. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+ - Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+ 
+ Whose question it is
+@@ -10,7 +10,7 @@
+ 
+ The ladder
+ - Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+-- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
++- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's description or outcome names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+ - A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+ - Fill exactly one of event and figure; the other is null.
+ - reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+--- clean-arch/step4-2026-11-10/ladder/candidate-closing.txt	2026-11-10 10:31:37
++++ docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/closing.txt	2026-11-16 20:07:03
+@@ -1 +1 @@
+-Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
++Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's description and outcome that the question leaves out listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+\ No newline at end of file
+--- clean-arch/step4-2026-11-10/ladder/candidate-schema.json	2026-11-10 10:31:37
++++ docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/schema.json	2026-11-16 20:07:03
+@@ -49,7 +49,7 @@
+       },
+       "not_judged": {
+        "type": "array",
+-       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
++       "description": "Every other part of the topic's description and outcome that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of either out.",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+@@ -280,4 +280,4 @@
+    ]
+   }
+  }
+-}
++}
+\ No newline at end of file
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '753,823p;1064,1102p;2472,2486p;2664,2674p;3049,3062p;3731,3753p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '4326,4381p;4414,4452p;4469,4478p;4502,4625p;4847,4870p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
+
+- By: Alex, over the rebuild discussion logged in `docs/views-rebuild-log.md` (steps 1–13). On the unit: "这个 hypo 更像是一个
+  thesis with a state"; on rungs: "我们用 5 个 state 吧 very bullish, bullish, neutral, bearish, very bearish"; on kinds: "有些事情不一定对所有人都是
+  bull / bear，有可能完全相反！……这个需要明确分开来看"; on one layer: "一条观点一定是有一个明确的 ladder 和到期日，这样才构成一个观点呀";
+  on periods: "这个肯定要写清楚日期", then yes to one view per year (this year and next); on chains: "是不是用 linked list 来存储 lineage 就好";
+  on the reading rule and the remaining fixes: "looks right".
+- Decides:
+  - A view is one question, a ladder of five fixed rungs and a due date, never rewritten. It looks at one number (which
+    year, whether a period amount or a point-in-time value, and the source it is answered from) or the state of one
+    thing (scope and stage). An object view's identity is its object plus what it looks at; a theme view's identity is
+    only what it looks at (the theme is where it is filed), so theme views are compared across all themes. A view looks
+    at one thing: a question that needs a number and an event is two views joined by a dependency; a question whose
+    parts can move in opposite directions is two views, joined only if one really depends on the other.
+  - Object views (companies, crypto, commodities) have the rungs strongly bullish to strongly bearish, meaning good or
+    bad for the business, fixed at creation. Theme views have five outcomes on one axis, named by outcome, with no
+    bull or bear; each dependent object view's arrow says which end is bullish for it. The stance on the price is our
+    state against the consensus, which is not designed yet.
+  - Each rung is an observable yes-or-no condition; rungs do not overlap, cover every outcome, and exactly one holds at
+    the due date; there is no "partial". A number ladder is ranges of one number in its stated year, judged by code;
+    an event ladder is the states one thing can be in on the due date, judged by the model from "happened" evidence
+    only, citing it. The model sets the rungs when the view is created; they do not change before the due date.
+  - The due date is when the debate is settled, usually 6–12 months out; a number's due date is the day it is
+    published; quarterly reports in between are evidence. Number views carry their year (fiscal year for companies,
+    calendar year otherwise) and at most this year's and next year's are open at once. The year counts from the latest
+    publication day among the items processed so far, which only moves forward (never the wall clock); a year whose
+    period has ended gets no new view. An event view is one open view per thing. (Claude's reading of "this year", to be
+    confirmed by Alex.)
+  - Two positions on a ladder: where it is now (a fact; only "happened" evidence moves it; a point-in-time number takes
+    the latest published value, a period amount has none before it is published) and the state (where we think it
+    lands; re-judged by the model each time from all of the view's evidence and its dependencies' current state, never
+    stepped from the last state; citations checked by code; temperature set in Config). A replay reads the stored
+    judgements; it does not call the model again.
+  - Evidence is a sentence or number, stored once, with its source and tier (happened, said by a party, third-party
+    view, rumour); independent sources are counted by original source; the direction it pushes is written on the link
+    between evidence and view by each re-judgement.
+  - A dependency B → A carries one direction (which end of A is bullish for B; between themes, same or opposite). A
+    relation that looks good-then-bad means a middle view is missing. Notices pass, evidence never does; code marks
+    B's evidence that is also linked to A. A number dependency is pinned to its year (a closed A is read by its answer;
+    an A not yet created is waited for and connected when created; an unanswerable A is a missing input, never
+    neutral); an event dependency follows A's chain. A new view may depend on theme views (found by search) or on
+    another object's views (supply chain). B is told when A changes rung, when what B reads changes, or when A cannot
+    be answered. No cycles, checked on the graph each
+    round reads. A new theme view that succeeds nothing is checked against every open view for missing arrows.
+  - Succession: the next view on the same thing succeeds the last one, forming a chain that holds the lineage; no
+    forks; the successor keeps the rung orientation; a wrong succession is revoked by an appended record; a successor
+    proposes its predecessor's dependencies one year on.
+  - A view ends answered (the first published value from its stated source; the score compares it with the last state
+    committed before the item carrying the answer was processed), unanswerable (with its reason, not scored; a
+    processing failure is retried, not unanswerable) or merged. A view whose object leaves the universe is closed as
+    unanswerable for now; whether it is scored is open.
+    A number view past its period and waiting for its answer does not count against the two open years.
+- Replaces: D26's structure (object → driver → view with a claim, direction, horizon class, confirm and falsify
+  conditions and a premise); D30's add-only conditions, conflict trigger and consensus-by-code (open again); D31's
+  premise links with a seen version.
+- Enforced: `VIEW_TREE`, `VIEW_KINDS`, `KIND_NOTE`, `LADDER_EXAMPLES`, `LADDER_RULES`, `POSITIONS`, `TIERS`, `TIER_RULES`,
+  `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `CHAIN_RULES`, `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `EVIDENCE_FIELDS`
+  of `docs/system-design/new-facts.js`; the views node of `docs/system-design/new-design.js`; `docs/prd/06-views.md`.
+- Changed by D42: a yes-or-no question has two rungs; a re-judgement reads the view's evidence that has not been
+  replaced, and a round that brought only repeats and no dependency change does not re-judge; "replaced" also covers a
+  later statement by the same speaker and an official confirmation or denial of a rumour; a dependency links only an
+  input (B's answer uses A's answer), and a cycle is rewritten.
+- Changed by D45: what stands is what points to Alex's words or an earlier decision: a view as a question, a
+  ladder of five rungs (two for yes or no) and a due date where the debate resolves; object and theme views; the
+  state judged by the model from all evidence not replaced and from the dependencies; evidence stored once with its
+  push on the link; tiers (D30); dependencies with arrows read by kind; succession as a chain; this year's and next
+  year's number. Where it is now, how rungs are written and judged, answer sources, how the years are counted, the
+  details of log step 13, unanswered and waiting views, and how answers are scored are proposals (D45).
+- Changed by D51: B is re-judged when what it reads changed (its evidence, or a dependency's conclusion marked
+  changed), not only when A changes rung.
+## D39 · 2026-10-20 · Writing into the views database: match by where a candidate belongs, then one round of re-judging
+## D46 · 2026-10-20 · Alex decides Claude's views proposals one by one
+
+- By: Alex, asked item by item. (1) "A thesis has a state. That's it … There's only one state." (2) "ok". (3) "Just
+  use the … model and right now we're only talking about data streaming in … the next financials come in, it will
+  basically have evidence that will validate or invalidate that thesis … We're talking about like push mode, streaming
+  data, not the pull mode that we have that has not been designed yet." (4) "when they say by this year, it just means
+  by this … year, December 31st. If it's next year, just next year, December 31st." (5) "It's going to trigger a search
+  engine that is overlaid on top of this database. It's going to return maybe like top n, n being 5 or 10 … semantic
+  search … Elasticsearch. And then you basically let the model check which one is the matching thesis or relevant
+  evidence"; "Yes, and the recall criteria or the search criteria needs to be designed … this is the final decision."
+- Decides:
+  1. A view has one state: where it sits on its ladder, our view, pushed toward bullish or bearish by evidence and
+     judged by the model on facts. There is no second position.
+  2. How a ladder is written: each rung a result that can be checked, rungs neither overlapping nor leaving gaps, so
+     exactly one holds at the due date; no vague "partial" rung, a partial outcome is spelled out as its own rung;
+     neutral says what it is compared with; one ladder holds one kind of thing, and a question needing a number and
+     an event is two views linked by a dependency.
+  3. The model reads the information that brings an answer like any other evidence; there is no answer source and no
+     code judging a rung. Due dates and answers belong to pull mode, not designed yet; the proposals on unanswered
+     and waiting views, the daily duplicate check and how answers are scored wait for it.
+  4. A number view names its year: this year is the year the item comes in, to December 31, and next year the one
+     after; a company's numbers follow its fiscal year (the one the item falls in is this year). At most this year's
+     and next year's are open; a candidate beyond that is not opened. No code filter.
+  5. Matching: a search engine over the views database (like Elasticsearch; semantic, keyword or both is to be
+     designed) searches the
+     whole database, open and closed views, for a candidate view and returns the top N (N in Config, 10 to start); the
+     model decides the same view (evidence attached, ladder and due date kept), its next period (succession), or a new
+     view (no match, or only a weak one). A piece of evidence searches only the evidence of the view it is attached to,
+     top N, and the model decides repeat, replacement or new evidence. How the search ranks is to be designed.
+  6. A candidate that is a part of an open view goes into that view ("H20 in China" into "China revenue"). Alex: "行
+     但是这个观点的颗粒度我们需要之后明确，例如 nv 中国区收入就很关键肯定不能 bundle 到总收入；而且如果太粗那你会
+     发现所有观点都基本是财务指标这是不行的". How big a view is stays open, with a research task: what a thesis looks
+     like from a hedge fund's side, what to combine and what to carve out.
+  7. A candidate that bundles several things that may move in opposite directions is not opened; its evidence counts
+     only where it is also attached to a specific view. Alex: "Yes, I think it's okay … make note that the granularity
+     of these theses matters … we need to run a full research on what a thesis actually looks like from a hedge fund
+     perspective."
+  8. Dependencies: the model decides, like an analyst, which views' conclusions a new view needs and in which
+     direction; what has already happened is evidence, not a dependency. Code keeps the graph free of loops: an arrow
+## D185 · 2026-10-26 · A binding obligation is due within 18 months and is exempt from the next-year rule
+
+- Alex chose option B ("可以"): the current/next-year window keeps bounding quantities; a thesis on a binding obligation a universe company takes on (guarantee, financing, equity, purchase commitment) may set its own check day up to 18 months after the item (`extraction.BINDING_HORIZON_DAYS = 548`), because the signing can be checked long before the project it finances is built (Ohio: the guarantee in 2026, the campus in 2028). Due with no reliable material: "no data to verify", never a pass or a fail (AGENTS §8). Amends 06-views ladder rule 5 for this reason only.
+
+## D186 · 2026-10-26 · Asset-thesis rungs describe business outcomes; the favourable end is registered per thesis
+
+- Alex chose option C ("可以"): rungs of an asset thesis state the business outcome (above, near or below guidance), and each thesis registers which end is favourable for the company, as a theme thesis's dependants already state a direction. Reason: results and direction separate (NVDA beat four quarters and fell; capital spending can build capacity or hurt returns). Recorded; not implemented in this slice: it changes `check_ladder`, the writer, judging, the UI adapter and the Idea route (value × reader), so it is its own slice with its own measurement.
+
+## D187 · 2026-10-26 · A company's own quantity sits under that company's object, private companies included
+
+- Alex chose option C ("可以"): any company's own quantity is a thesis under that company (SpaceX's compute capacity under SpaceX, Alphabet's capital spending under GOOGL), consistent with 06-views rule 5 ("company figures use the fiscal year"); a macro theme opens only when a thesis depends on it. Recorded; not implemented in this slice: it needs a private-company object kind in the universe and the one switch (01-universe), its own slice. Until then the gold accepts the Codex reading (evidence to NVDA data-center revenue) for SpaceX.
+
+## D188 · 2026-10-26 · The extraction gold: twenty cases labelled by the assistant this round, human review later
+
+- Alex: "不是你要标吗？之后我们可以human in the loop, but this time in the beginning just use the research you just did"; "标20条". The gold `poc/eval/gold/extraction-admission-2026-10-26.json` holds 20 cases from the real items (the report §5's 15 plus five: CoreWeave managed-inference ARR, the four-company $745bn figure, the Bloomberg NAVER retelling, the Taiwan smuggling clause, the Goldman 2027 aggregate), each with the theses that must open (typed keys: object, measure, year, event type, scope pattern, with acceptable alternatives), the theses that must not open, the evidence links that must exist and the baseline's score. Scoring (`scripts/score_admission_gold.py`): fail when a must-open thesis or an evidence target is missing; partial when all are present but a must-not-open thesis was created; full otherwise; "not processed" when the run never saw the item. Labelled `assistant`; a human pass with two labellers and a reported agreement is the next protocol step, not this one.
+## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+
+- Alex, after the arm ("go 但是你不要只是看什么acp好不？你需要解决的是抽取质量问题 … 有用的，你得一条一条看是不是真的值得抽才知道你这些改动的抽取效果").
+  Mechanism (two stored accounts, `docs/research/2026-10-28-extraction-quality/results/ask_admission.json`): D184/D185's sentence
+  "due when its signing can be checked, at most 18 months out" is written for a deal not yet signed; for a programme already announced
+  and signed (the AI Compute Partnership) the model proposes nothing or dates the question on the item day, which the code refuses.
+  Over the acceptance week the twelve ACP articles produced one proposal per run and none survived in `poc-v36`; 96 statements had no home.
+- Decided: role-v21 replaces that one sentence. Not yet signed: a yes/no question due after the item within 18 months (D185 unchanged).
+  Already taken on, one deal or a programme: a financing_amount question on the amount the obligation reaches at the company's next
+  annual filing, settled by its commitments note; the announcement is evidence to it. Entries and code checks as v20; `poc-v37` is the
+  replay default. Role 10,089 → 10,434 characters; the growth is the second form, which no other sentence covered.
+## D260 · 2026-11-02 · A judgement is a forecast against a reference: the rung the evidence in force makes most likely, judged against what the market expects; the answer states the reference and the implied outcome (judging-v6)
+
+- Alex, 2026-11-02, asked whether the judge's stance should stay an absolute-band lookup (the current reading) or be judged relative to expectations: "门槛没有标准，按照你作为 hedge fund analyst 的认识来定". Decided by Claude under that delegation: the definition below is Claude's analyst judgement, recorded as such, not Alex's words.
+- Mechanism (arm 4 draw 1, all 356 judgements read, `research/2026-11-01-e2e-loop/review-2026-11-02.md` §7 and `proof-judging-v6.txt`): 8 of 314 later judgements moved a rung and 320 of 356 reasons say "remains"; the FY2027 total revenue question was judged 12 times at neutral while its upward pushes grew from 1 to 35, every reason "the $392 billion estimate is inside the band … does not establish $400 billion"; the gross-margin judgement wrote "leans toward rung 2 but does not warrant moving"; the 2027 hyperscaler-capex theme stayed below the band management's own forecast names because the forecast "is not fact". The judging-v5 prompt asked the judge to "be precise about what is established" and said only fact can establish a rung: the model read "established" as the bar for leaving a rung and the consensus figure as the anchor. A second cause stays open: the ladder's neutral band is written at opening without naming what it compares against (PRD 06 ladder rule 2 asks for it); that is the extraction's rule and is not changed here.
+- Decided, the analyst's rule: (1) the rung is a forecast, the outcome the evidence in force makes most likely at the due date, not the one it has proved; "not established" is a statement of confidence, never a reason to stay. (2) The reference is what the market expects: consensus, the company's guidance, the stated plan or deadline; a consensus or guidance figure alone keeps the judgement at the reference's rung and, once other evidence has arrived, is never the reason to stay. (3) The judge derives the outcome the evidence implies (reported figures and guidance give a run-rate; a quantified revision, a customer's demand number, a supplier's constraint, a confirmed delay or cancellation shift it), checks it against the dependencies' conclusions (a part cannot exceed its whole; a figure spanning several periods or products gives the question only its share), compares it with the rung boundaries and moves when it crosses one. (4) Weight follows tier and novelty: fact fixes what is known; party statements are the strongest forecast input; third-party views and rumours move the forecast in proportion to their specificity; a repeat, another outlet or an opinion with no new fact or calculation moves nothing. (5) The answer states `reference` and `implied_outcome` as required fields from `judging-v6` (`judging.schema_for`; code refuses an empty one; stored beside the rung in `judgements.reference` / `implied_outcome`; a ledger written before v6 gains the columns at its first write), so the D3 stance gold can read the reasoning, not only the rung. Written where the judgement is specified: PRD 06 State rules (`docs/system-design/new-facts.js` STATE_RULES, the generated block) and this record.
+- Proof (`proof-judging-v6.txt`, `proof-judging-v6b.txt`: the last stored judgement request of 14 theses of arm 4 draw 1 re-sent once each under v6 and read beside the stored v5 answers, about a cent): every answer names the reference and derives the implied outcome. Six rungs moved against the stored ones: non-GAAP gross margin 3 → 2 (Q1 reported 75% and Q2 guided 75% sit on the rung-2 boundary), 2027 hyperscaler capex 4 → 5 (management's own "more than $1 trillion"), China accelerator share 4 → 5 (share "fallen to zero"), China H200 authorization No → Yes (a reported plan to permit named firms and reported progress in reviews, six months before the deadline), Data Center revenue 2 → 3 ($355–360 billion derived from Q1 and the total-revenue proxy, below the $360 billion boundary), Blackwell+Rubin revenue 2 → 1 in the first send by annualising a two-year "$1 trillion visibility" figure to $545 billion, a part above its whole: clause (3)'s consistency check was added for it and the re-send gives rung 2 ($320–360 billion, a share of the Data Center segment). Total revenue stays at 3 with the arithmetic shown (H1 $172.6 billion from Q1 and the Q2 guide; $400 billion needs more than $227 billion in H2). Prompt 2,453 → 3,782 characters: the request defined neither what a rung means nor a reference and its "established" wording forced the defect; the two sentences that carried it were cut. Configuration `poc-v90` (poc-v89 with judging-v6); the default stays `poc-v69`. Tests: `tests/test_stance_fields.py`. Measured by re-sent stored requests, not by an arm (Alex: "不要再跑这些有的没的臂了").
+
+## D261 · 2026-11-02 · A ruler or gold that is built and reviewed is never changed again
+
+- Alex, 2026-11-02, while the judgement ruler (D3) was being built: "你的尺子做出来和金标真的不能再动了，已经造成了3天的各种漂移，非常的严重，我需要你记录到我们的决策和原则里面，我们做完的review过的尺子金标不能再动了".
+- The drift he names, counted: the extraction ruler went from the first standard (D229, 2026-10-29) to the signed page version 3 (D243, the same day) to version 5 (D250, 2026-10-31), the gold was re-derived from version 3 to version 5 with 62 recorded changes, and every score between D248 and 2026-10-31 had been read against the version-3 gold (the "假的测量" of 2026-10-31); the judgement step had no ruler at all until today. Three days of numbers that cannot be compared with each other.
+- Decided (his words; written at the decision it governs, AGENTS §7.1): once a ruler and its gold have been reviewed (readers who did not write them read them against the decisions; Alex signed), neither the definition nor the gold changes again. A defect found later is a dated correction record beside the gold (`corrections-*.json`), printed with every score and never merged in. A new definition is a new version that only his decision opens, with its own gold derived from scratch; old scores stay as they were and are never compared with the new. A ruler under construction is edited only until that review, and nothing is scored against it before.
+- What is locked by this record: the extraction standard page (`docs/prd/05-extraction-standard.html`, version 3 signed D243, with D250's four boundaries and counting unit) and `golden-v5/` (sha256 in `golden-v5.sha256`): no version 6; the loop's desk ruler (`research/2026-11-01-e2e-loop/README.md`, D1–D3). What is still under construction and locks at his review: the judgement ruler `research/2026-11-01-e2e-loop/judgement-gold/ruler-v1.md`, its reader brief, question list and gold `gold-v1.json` (the sign-off is a separate record).
+
+## D356 · 2026-11-04 · Step 5: closing at the due day is pull mode's; no separate final verdict, no day-end re-judging, due days after publication, the frozen rung recorded and shown
+
+- Alex: "按照你的4个建议收尾一次，清晰的write the design, 文档，确保我们的一致性，然后你也需要清理repo不要让旧的东西影响我们整个sanity". The four leans he
+  accepts are Claude's of the same day, on D54's open questions:
+  1. **No separate final review before closing.** Each day's judgement already reads the evidence in force (D198's window), so a review at
+     the due day repeats it. The final verdict is no longer a step; D29's earlier draft (verification conditions, confirmed/falsified/expired,
+     premises, triggers) is retired. Config's `final_verdict` setting stays in the frozen configurations (D274) and is read by no step.
+  2. **No day-end re-judging without new evidence.** Pull mode closes the questions that are due and does nothing else at day end; it is
+     revisited when a case is named.
+  3. **A due day falls on or after the day the result is published,** set when the question is opened (the opening rule "set the due date
+     when the question can be resolved", 06-views). A question whose result is still unknown on its due day closes at its state like any other;
+     nothing waits (D54).
+  4. **The frozen rung is recorded and shown, never a gate** (AGENTS §8). The closing record names the rung the question froze at; a question
+     never judged closes with "no data to verify". Its judgement history, already stored and served, shows how the state moved up to the close.
+     Telling a closing rung that reflects the published result from one that is still a forecast is not built until the first real due day
+     (2026-12-31) gives a case.
+- Built: `src/hivemind/pull.py` writes the closing record (rung and label, or "no data to verify"); `tests/test_pull.py` proves it (mutants:
+  the first judgement instead of the last, the no-data branch removed). A $0 check on a copy of the frozen first draw with the day set to
+  2027-03-01 closed the thirteen questions due by then at their last rung, and a dependent question's judging request shows the closed question
+  with its last conclusion; two questions never judged closed with no state, which this change marks.
+- Pages: PRD 07 becomes the closing contract (the D29 draft is removed from it; Git keeps it), PRD 08 states what pull mode does, the design
+  page's two nodes and the closing drill-down say the same, and `docs/check.py` now reads both PRDs and both nodes in the wording check.
+- Not built, not decided: fetching settlement figures (prices, filings) from a source; Claude's earlier daily duplicate check.
+
+ succeeded in 0ms:
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+
+- **Asked**, with the census of production's own ladders (one request, the same in three draws, gave three different ladders, one
+  with its direction reversed): "你 10 月 26 日定过、11 月 5 日说“我们要做”的那条规矩还没实现：答案分段要对着市场预期或公司指引写成“高于／接近／低于”，并且每道题登记“数字越高对公司是好还是坏”。新做的“定档”这一步要不要直接带上它？"
+  - Options:
+    - both halves here (recommended). The option stated its costs: 7 to 9 of 18 number questions have no reference figure in their
+      opening article, so their ranges are the model's estimate and are marked "no reference"; a direction can still be registered
+      wrong, which the first test measures;
+    - the direction half only;
+    - not here: write ladders as production does, and leave D186 to a later version.
+  - Alex: "两半都带上 (Recommended)".
+- **Decided:**
+  - The clean ladder step builds D186 in full. The model states the reference the opening article gives and, for a company's figure,
+    which end is good for the business, with one sentence why. Code orders and labels the rungs from that end, writes each range's
+    text from its bounds, and checks that a stated reference value lies in the middle range.
+  - The reference is what D260 lists: a consensus, the company's guidance, the stated plan or deadline. This is wider than D186's
+    word "guidance"; the question put to him said "市场预期或公司指引".
+  - A number question whose opening article states no reference still gets a ladder, marked "no reference".
+- **Scope:** the clean path's ladder step. D368 item 1 still holds for the next production extraction version.
+
+## D399 · 2026-11-10 · The ladder request may teach how to build an event's five states
+
+- **Asked**, after three hand-written five-state ladders had each shown a gap or an overlap and three built by a construction had
+  passed two readers (round log §69): "事件题如果不止“是/否”两种结果（例如监管调查的结局），你定的老规矩是分五种状态。我手写三次都有遗漏或重叠；后来在给模型的请求里加了一个通用做法（先分出互斥的几种结果，如“通过／未决／否决”，再把其中一两种按“是或否”的性质一分为二，并附一个并购审查的例子），按它写的 3 个才通过两位读者。但这个做法没有你定过的任何规矩做依据，按规定要你批准才能写进提示词。怎么办？"
+  - Options: put the construction in the prompt (recommended); judge events as yes/no only in this version; keep the bare "five
+    states" with no construction.
+  - Alex: "把这个做法写进提示词 (Recommended)".
+- **Decided:** the clean ladder step's request carries the construction (outcomes that exclude one another, one or two of them
+  divided by a property that holds or does not) with a general example. D38's five states for an event stand. Stage A reports the
+  one-rung-holds mark on this shape apart; if the model does not apply it, whether events become yes/no only returns to him.
+
+## D400 · 2026-11-10 · Stage A is read against absolute lines, with no paid control arm
+
+- **Asked:** "第一段测试只测新做的“定档”这一步：44 道题各发 3 次，约 2–3 美元。我建议不再花钱重跑“老系统写法”当对照组（连续三轮评审都卡在两种写法没法公平地比），参照改用老系统存档里已写出的 36 个分档。代价：这一段只能说明新做法达没达到你定的线，不能证明它比老系统好；项目规则原本要求验收要有当场重跑的对照，所以这个例外要你点头。通过线我提议：四条硬线一个都不能有（问错题、漏列未判部分、分档有重叠或遗漏、无正当理由拒判）；44 道里至少 35 道在 3 次中至少 2 次做对，其中至少 28 道是真写出了分档；同一道题 3 次的“好坏方向”必须一致、到期日至少九成一致。你的意见？"
+  - Options: agree, no control, the lines as proposed (recommended); no control with a stricter line (40 of 44); a paid control arm.
+  - Alex: "同意：不设对照，线按提议 (Recommended)".
+- **Decided:**
+## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+
+- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+    three sends of one thesis may set three days.
+  - Alex: "保持更严 (Recommended)".
+- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+  a date". This is narrower than v74i line 26 by his decision.
+- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+
+## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+
+- **Asked:** "试发读完了：提示词主干管用，但有三类问题（1. 引用文章原话时会改词或抄错来源；2. 问题里写“本文提到的……”，离开文章就看不懂；3. 世界大事类的题被贴了看涨看跌标签，程序检查拦不住）。下一步怎么走？"
+  - Options: change and send once more (recommended): "我针对这三类问题改提示词（各一句）和一条程序检查，先花 2 美分问模型“你当时是依据哪句话这么做的”来定位原因，然后把同样 6 道题再发一次（约 1 美分）看是否改好。改好了就按原授权动手写程序。"; build at once, with the three classes changed in the request and the check, and see in Stage A whether they are fixed; stop and let him read the answers.
+  - Alex: "改完再试发一次 (Recommended)".
+- **Decided:** (1) the model is asked, on the stored conversations of the probe, which instruction led it to each fault (about two
+  cents); (2) the request gets one change for each of the three classes, and the check on a theme's state names refuses the
+  company's labels; (3) the same six theses are sent once more (about one cent) and read as the first six were; (4) when the three
+  classes are gone from those answers, the ladder step is built and Stage A sent on D401's terms (capped at $3; a missed line
+  stops and goes to him; Stage B needs his word), with no further round of design review before the build. If they are not gone,
+  the result goes to him before anything else (D355).
+- **Scope:** the clean path's ladder step. The reviews' open corner cases become tests of the build.
+
+## D405 · 2026-11-10 · A reference's words must be the article's own, in one unbroken passage; otherwise the answer is sent back once
+
+- **Asked:** "模型引用文章时挪了词（意思没变，但不是一字不差），程序该怎么处理？这决定系统的行为，所以问你。"
+  - Options: strict (recommended): the quote must be an unbroken passage of the article; otherwise the model is told what is
+    wrong and writes again once; wrong twice, no question is written; no quote with a word left out is ever taken for the
+    article's; the cost is more second requests. Or lenient: production's repair rule finds the article's sentence for a quote
+    with moved or dropped small words and writes that, with no second request; fewer second requests, and now and then a
+    dropped key word such as "not" is put back while the ladder was built on the reading without it.
+  - Alex: "严格：打回重写 (Recommended)".
+- **Decided:** check 6 of the clean ladder step stays as designed: the reference's words are accepted when they occur in the
+  article exactly, or when production's repair returns a passage in which they occur whole once spacing, letter case and the
+  forms of quote marks and dashes are set aside; anything else is refused and the request sent once more with the reason; a
+## D407 · 2026-11-10 · One last probe of the ladder request, then the build, whichever way it comes out
+
+- **Asked:** "对照试发显示：“没有主线就拒绝出题”这件事，最初那版提示词 10 次里 10 次做对，我改完的第四版只有 9 次里 5 次。我的改动修好了写法（引用、标签），却弄坏了判断。写法上的毛病程序能查出来并打回重写，判断只能靠提示词。下一步怎么走？"
+  - Options: one last send and then build (recommended): "新组合：最初那版 + 已验证不伤拒绝的两句（引用照抄、问题能独立看懂）+ 两种格子，不要“先列主线”那一栏。8 题各 3 次并带对照，约 3 美分。达线就用它写程序；不达线就退回最初那版、写法毛病全交给程序打回。无论结果都不再试发，直接写程序。"; go back to the first request now and let the checks send answers back; split the step into two calls; stop and read the answers himself.
+  - Alex: "最后试一次，然后动手 (Recommended)".
+- **Decided:** one more send: the request as first sent, plus the exact-copy sentence and the stand-alone sentence, plus separate
+  answer shapes for a company's and a theme's states; without the fields `named` and `main` of D406 and without the additions to
+  the closing check. Eight stored theses, three sends each, beside the first request as control. The line, as put to him: the
+  three theses with no main thing declined in at least 8 of 9 sends, and the five others answered with a ladder in 15 of 15.
+  Met: the build uses this request. Missed: the build uses the first request unchanged, and the three faults of writing (a
+## D409 · 2026-11-10 · An event is answered in three outcomes: it happened, it is ruled out, or neither by the due day
+
+- **Asked:** "事件类的题（比如“监管会不会批准”“调查会不会罚款”），答案要分几种结局？现在让模型自己写五种状态，这是最容易出漏洞的地方：两家读者都认定的 7 个漏洞里，6 个出在第四、第五种状态的细分上。"
+  - Options: three outcomes (recommended): "发生了 / 明确落空（被否决、被放弃）/ 到期还没结果。第三种由程序写成“前两种都不是”，所以不会有遗漏。保住了“否决”和“还在等”的区别；更细的区别（如“附条件批准”）列为“不判”。这是我的建议，写法还要先免费验证。"; yes or no only (the simplest; "rejected" and "still waiting" become one No, which the council held loses a difference an analyst cares about); several outcomes where they are needed, the number not fixed (the council's recommendation; a new structure, one more round of design).
+  - Alex: "分三种 (Recommended)".
+- **Decided:** on the clean ladder step an event's answer has at most three outcomes: the event has happened by the due day; the
+  event is ruled out (decided against, abandoned); neither. The third is written by code as "neither of the two holds", so no
+  outcome is without a rung. A finer difference (an approval with conditions against one without) is listed as not judged
+  (D397). The wording of the request, the schema and the checks are designed, checked at no cost and reviewed before any send
+  (D408).
+- **Supersedes:** D399 (the request teaches how to build an event's five states) and, with it, the five states of an event in
+  the clean ladder step; D404's rule on naming a theme's five states has nothing left to apply to.
+- **Evidence put to him:** five states for the company are faulted by both reader families in 10 of 17 ladders, yes/no in 2 of
+  24; of the seven gaps both found, six sit in the division beyond three outcomes and one in a Yes that needs a confirmation
+  its No does not. The council's dissent (several outcomes where needed) was put to him as the third option.
+- **Scope:** the clean path's ladder step.
+
+## D410 · 2026-11-10 · A group named in a judged question and not listed member by member is not a fault of the question
+
+- **Asked:** "题目里写“四大云厂商”（the big four hyperscalers）但没有列出是哪四家，算不算“问题没说清楚”？严的读者判不合格，松的读者和我认为这是通用叫法。按裁决“问错题”的 11 份里有 8 份是这一类，所以需要你定一个读法，下次两家读者才能按同一把尺子评。"
+  - Options: not a fault (recommended): "行业里通用的叫法可以直接用，不要求列出成员。按这个读法，这 8 份不再算“问错题”。"; a fault, the members must be listed.
+  - Alex: "不算问题 (Recommended)".
+- **Decided:** in reading a judged question (mark Q of the Stage A form), a group named as the trade names it ("the big four AI
+  hyperscalers", "the top five hyperscalers") is a name the question gives; a question is not failed for not listing the
+  group's members. The form says so before the next reading.
+- **Not decided by this:** the other boundary cases the two reader families read differently (round log §69, council `iv`).
+- **Scope:** the Stage A reading form of the clean ladder step.
+
+## D411 · 2026-11-10 · An amount already reported may be the baseline of a ladder, labelled as that and never as the market's expectation
+
+- **Asked:** "文章只给了“已经公布的数字”（例如英伟达现有采购承诺 1190 亿美元），没有说市场预期明年是多少。这个已公布的数字能不能用来当分档的比较基准？现在模型把它填进了“市场预期”一栏，两家读者都判这是错的。"
+  - Options: usable when labelled (recommended): "可以拿来当基准，但明确标成“最近一次已公布的数字”，不再叫“市场预期”；文章给的是区间（如 50%–60%）时也允许填区间。这需要改答案格式，我会放在事件题之后单独做、单独验证。"; not usable (a reference only when the article states an expectation).
+  - Alex: "能用，但要标明 (Recommended)".
+- **Decided:** the reference of a figure may be the amount last reported, when the article states no expectation; it is then
+  named as the last reported amount, to the judge and to readers, and never as what the market expects. A reference the
+  article states as a range is carried as a range. This changes the answer's shape; it is built and measured after the event
+  answers (D408), on its own.
+- **Scope:** the clean path's ladder step.
+
+## D412 · 2026-11-10 · Every round is reflected on in the council to a recorded consensus, then the next test goes straight ahead; every trace is read by Claude itself
+
+- **Alex's words** (set as the session's goal while the second Stage A of the clean ladder step was being sent): "你应该跑council loop 来reflect 你每一轮的思路还有决策，需要你打成共识，记录决策，向前直行测试。不要drift,我们有PRD和量化目标，你自己作为llm 下去看所有trace。现在重新的总结我们的目标，做到哪里了，我们再改么，离生产还有多远".
+- **Decided:** after each round of work (a probe, a measurement, a change of design), Claude writes its own reflection, has the
+  council read the record cold and challenge it, and reaches a consensus or writes down what remains disputed; the consensus is
+  recorded; the next test then goes ahead, held to the PRD and its quantified goals, with no further rounds of review for their
+  own sake. Claude reads every trace itself and does not rest on readers' marks alone. When asked where the work stands, the
+  answer gives the goal, what is done, whether things are still being changed, and the distance to production.
+- **Done on the day:** written into AGENTS §7.3 at the council rule, in his words; a reflection council on the whole Step 4
+  record (`clean-arch/step1-unfiled-2026-11-08/council/ja-*`, `jb-*`) reached a consensus recorded in the round log §69; all
+  132 answers of the second Stage A read by Claude before any reader's row.
+- **Scope:** how the work is run, every module.
+
+## D413 · 2026-11-10 · Where the texts do not settle it, an amount the company owes or guarantees is registered with the lower end favourable
+
+- **Asked:** "同一道题“英伟达对供应商的采购承诺（最近公布 2790 亿美元）到年报时是多少”，系统有时把“4000 亿以上”标成最看多，有时把“2000 亿以下”标成最看多。原因是文章两头都说得通（多＝锁住紧缺内存；多＝付款义务更重），提示词没给取舍规则。这类“公司欠的或担保的金额”题，好坏方向怎么定？"
+  - Options: a tie rule (recommended): "只在题目和文章都没说哪头好时生效；题目自己说了“多是好事”的照题目。和模型现在 21 次里 19 次的答法一致，预计三次不再打架，先花约 3 美分验证。代价：像提前锁定紧缺供应这种“多可能是好事”的情况，标签会偏保守；评审对这一点有保留。"; as now (the test still fails under line 6 and the work stays at this step); no bullish or bearish label for such figures (six readers of production hold "position 1 is Strongly bullish" for a company ladder, so it is outside this phase).
+  - Alex: "没表态时记越低越好 (Recommended)".
+- **Decided:** for a company's figure that is an amount the company owes, guarantees or has committed to pay, the favourable end
+  is "lower" when neither the topic nor the item settles which end is good for the business. A topic whose own words say that
+  more of it is good keeps "higher". The rule is a tie rule in the request: the decision stays the model's, and every other
+  company figure is asked as before. The cost he was shown: where more may be good (scarce supply locked in early) the label
+  leans cautious; the council holds a reservation on this point (round log §69, "Consensus of this round").
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/probe-direction-2026-11-10/RESULT.md`;
+  `clean-arch/step4-2026-11-10/stage_a/result-2/direction-by-thesis.txt`, `direction-accounts.json`.
+- **Scope:** the clean path's ladder step. D186 stands.
+
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+## D415 · 2026-11-10 · The third Stage A is sent without asking again once each change is proved small and reviewed; a failure stops and goes to Alex
+
+- **Asked:** "上面两项按你的选择做好、并各自小额验证通过之后，第三次正式测试（同样 44 道题各发三次，约 0.15 美元，在你批的 3 美元上限内；目前累计花了约 0.48 美元）怎么发？"
+  - Options: send once the checks pass (recommended): "每项改动先单独小额验证并过评审；任何一项没通过就停下来找你，不发正式测试。发完照旧：我自己读完全部答案，两类读者再读，六条线按宽、严两种读法一起报。"; ask again before the send.
+  - Alex: "验证通过就直接发 (Recommended)".
+- **Decided:** the changes of D413 and D414, with the two already in hand (the scope of a ruling out; D411's reference), are
+  each proved on stored cases with a small send and reviewed in the council; when all pass, the third Stage A (the same 44
+  theses, three sends each, within D401's $3) is sent without asking again. A change that does not pass stops the line and
+  goes to him, and no Stage A is sent. The result is read as before: every answer by Claude, then the two reader families,
+  the six lines under both readings. Stage B still needs his word.
+- **Scope:** the clean path's ladder step.
+
+## D416 · 2026-11-10 · The lines stay; the ruling out of an event as a typed answer is proved small before anything else
+
+- **Asked:** "第三次正式测试里，两类读者都判错的最大一类是：把“到期还没发生”写成“明确落空”（例如“2026年12月31日已过，Vera Rubin 还没出货”被当成明确落空）。140 份已存事件题答案里共 7 份。我的建议是把“明确落空”从一句自由写的话改成两格必填：“谁作出决定”和“决定是什么”。在已存答案上对照，7 份错的里 6 份没地方填，但第 7 份（“当局决定继续调查”）挡不住；模型会不会老实填，只有真发才知道。这一步怎么走？"
+  - Options: prove the change small first (recommended): "线保持不变。在 6 道“产品能否按期出货”的题上，新旧两种格式同时各发三遍（约 4 美分），不通过的条件事先写死，我自己逐份读。这只是候选改法，不是已证明的修法；通过了再谈第四次正式测试。"; stop here and change nothing.
+  - Alex: "先小额验证这个改法 (Recommended)".
+- **Decided:** Alex's six lines stay as they are. The ruling out of an event is tried as a typed answer (who decides; what they
+  decide) in place of one free sentence: the six product-deadline theses, the present shape and the typed one sent in the same
+  minutes, three sends each, what does not pass written before the send, every answer read by Claude. It is a candidate, said
+  so to him: it has no place for six of the seven stored faults, does not exclude the seventh, and only a send shows whether
+  the model fills it rightly.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-3/RESULT.md`, `wait-as-ruling-out-hand-read.md`, `wait-accounts.json`.
+- **Scope:** the clean path's ladder step. It amends the shape D409 gave an event's answer, if it passes.
+
+## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+
+- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  - Alex: "确认：这类题不出题 (Recommended)".
+- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+- **Scope:** the clean path's ladder step; mark N of the readers' form.
+
+## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+
+- **Asked:** "“中国政府是否放行英伟达 H200 芯片在华销售”这类题，系统大多归在“英伟达”名下，有时归在行业主题“芯片出口管制”名下，同一道题三次归属还会不一致。第三次测试里归在公司名下的 5 份，两类读者都判为归错了，认为应归行业主题。区别是：归行业主题的题会给每家相关公司的判断都看到，归公司的只给这一家看。归哪边？"
+  - Options: the theme "chip-export-controls" (recommended): "两类读者意见一致。我需要在提示词里加一条归属规则（政府对某类产品的放行或禁令归行业主题），并先小额验证不带坏别的题，比如法国对英伟达本身的反垄断调查仍归公司。"; the company (the readers' form would then be changed to that reading).
+  - Alex: "归行业主题“芯片出口管制” (Recommended)".
+- **Decided:** a question about a government's or regulator's permission, restriction or ban on a class of products or trade
+  belongs to the theme that covers it, also when the product is the company's own. A proceeding against the company itself (an
+  investigation of its conduct, a fine) stays the company's. A rule in the request, proved small before any measurement, with
+  the French investigation as the case that must not move.
+- **Scope:** the clean path's ladder step; mark O of the readers' form.
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+
+- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+  - Options: carry both changes to gate 2 (recommended by Claude): "分年虽然没达线，但从 0 次升到大约四分之三，而且'两年塞一题'完全消失，没发现带坏别的东西。第二关在存档上查它会不会弄坏周边情况（重复文章、同一量的另一种口径、延期的事等，约 1.5 美元，线先给你看）。代价：等于在看到结果后放宽了我自己定的线。"; stop the year change and carry only the customer sentence (the reviewer, `council/lx-codex.md`, recommended stopping the year change and keeping c8); stop both and keep c8.
+  - Alex: "带着两处改动进第二关 (Recommended)".
+- **Decided:** the candidate for gate 2 is c15yc (c8 with the year boundary and the scoped capacity counterexample). The year line's failure stays recorded as a failure (5 of 9 against 8 of 9); it is not presented as a pass. Gate 2's lines are written, reviewed and shown to Alex before any send. c8 stays in force.
+- **Scope:** clean Step 1.
+
+## D438 · 2026-11-13 · Send gate 2
+
+- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` (version 11, reviewed clean in `council/mi-codex.md`): "第二关审完了，要发吗？…新版做错的次数比旧版多 3 次以上（9 次里），就停下报给你。共 126 次发送，约 1.8 美元，上限 2.2 美元。" Options: send (recommended): "先跑完 126 次。我和一位盲读者各自逐条读，有分歧的一律算新版错。任何一条停止线被触发就停下报给你；全过的话再设计第三关（在新文章上新旧版对比），也先给你看。"; do not send.
+- Alex: "发 (Recommended)".
+- **Decided:** gate 2 is sent as written; a fired stop or an unexercised control goes to Alex; a pass leads to gate 3's design, shown to him before any send. c8 stays in force.
+
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D(410|411|412|413|415|416|418|419)'"\\b' docs/DECISIONS-log.md; rg -n 'description' docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/schema.json" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4519:## D410 · 2026-11-10 · A group named in a judged question and not listed member by member is not a fault of the question
+4530:## D411 · 2026-11-10 · An amount already reported may be the baseline of a ladder, labelled as that and never as the market's expectation
+4541:## D412 · 2026-11-10 · Every round is reflected on in the council to a recorded consensus, then the next test goes straight ahead; every trace is read by Claude itself
+4554:## D413 · 2026-11-10 · Where the texts do not settle it, an amount the company owes or guarantees is registered with the lower end favourable
+4581:## D415 · 2026-11-10 · The third Stage A is sent without asking again once each change is proved small and reviewed; a failure stops and goes to Alex
+4593:## D416 · 2026-11-10 · The lines stay; the ruling out of an event as a typed answer is proved small before anything else
+4616:## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+4627:## D419 · 2026-11-10 · The fourth Stage A is sent without asking again once each change is proved small and reviewed
+19:   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+43:       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+48:       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+52:       "description": "Every other part of the topic's description and outcome that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of either out.",
+73:       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+89:           "description": "The condition under which the event the question asks about has happened by the due day."
+92:           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+108:               "description": "The company, authority, court or party whose decision it would be."
+113:               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+124:       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+152:           "description": "other when the unit is none of the listed; the question then names it."
+157:           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+178:              "description": "Inclusive lower bound, a number; null for the lowest range only."
+189:              "description": "Exclusive upper bound, a number; null for the highest range only."
+201:           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+205:           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+229:           "description": "The item's own words for what the figure or event is measured against."
+237:           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+248:           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+259:           "description": "The upper end of a stated range; else null."
+276:       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '4554,4580p;4593,4627p;4847,4869p' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D413 · 2026-11-10 · Where the texts do not settle it, an amount the company owes or guarantees is registered with the lower end favourable
+
+- **Asked:** "同一道题“英伟达对供应商的采购承诺（最近公布 2790 亿美元）到年报时是多少”，系统有时把“4000 亿以上”标成最看多，有时把“2000 亿以下”标成最看多。原因是文章两头都说得通（多＝锁住紧缺内存；多＝付款义务更重），提示词没给取舍规则。这类“公司欠的或担保的金额”题，好坏方向怎么定？"
+  - Options: a tie rule (recommended): "只在题目和文章都没说哪头好时生效；题目自己说了“多是好事”的照题目。和模型现在 21 次里 19 次的答法一致，预计三次不再打架，先花约 3 美分验证。代价：像提前锁定紧缺供应这种“多可能是好事”的情况，标签会偏保守；评审对这一点有保留。"; as now (the test still fails under line 6 and the work stays at this step); no bullish or bearish label for such figures (six readers of production hold "position 1 is Strongly bullish" for a company ladder, so it is outside this phase).
+  - Alex: "没表态时记越低越好 (Recommended)".
+- **Decided:** for a company's figure that is an amount the company owes, guarantees or has committed to pay, the favourable end
+  is "lower" when neither the topic nor the item settles which end is good for the business. A topic whose own words say that
+  more of it is good keeps "higher". The rule is a tie rule in the request: the decision stays the model's, and every other
+  company figure is asked as before. The cost he was shown: where more may be good (scarce supply locked in early) the label
+  leans cautious; the council holds a reservation on this point (round log §69, "Consensus of this round").
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/probe-direction-2026-11-10/RESULT.md`;
+  `clean-arch/step4-2026-11-10/stage_a/result-2/direction-by-thesis.txt`, `direction-accounts.json`.
+- **Scope:** the clean path's ladder step. D186 stands.
+
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+## D416 · 2026-11-10 · The lines stay; the ruling out of an event as a typed answer is proved small before anything else
+
+- **Asked:** "第三次正式测试里，两类读者都判错的最大一类是：把“到期还没发生”写成“明确落空”（例如“2026年12月31日已过，Vera Rubin 还没出货”被当成明确落空）。140 份已存事件题答案里共 7 份。我的建议是把“明确落空”从一句自由写的话改成两格必填：“谁作出决定”和“决定是什么”。在已存答案上对照，7 份错的里 6 份没地方填，但第 7 份（“当局决定继续调查”）挡不住；模型会不会老实填，只有真发才知道。这一步怎么走？"
+  - Options: prove the change small first (recommended): "线保持不变。在 6 道“产品能否按期出货”的题上，新旧两种格式同时各发三遍（约 4 美分），不通过的条件事先写死，我自己逐份读。这只是候选改法，不是已证明的修法；通过了再谈第四次正式测试。"; stop here and change nothing.
+  - Alex: "先小额验证这个改法 (Recommended)".
+- **Decided:** Alex's six lines stay as they are. The ruling out of an event is tried as a typed answer (who decides; what they
+  decide) in place of one free sentence: the six product-deadline theses, the present shape and the typed one sent in the same
+  minutes, three sends each, what does not pass written before the send, every answer read by Claude. It is a candidate, said
+  so to him: it has no place for six of the seven stored faults, does not exclude the seventh, and only a send shows whether
+  the model fills it rightly.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-3/RESULT.md`, `wait-as-ruling-out-hand-read.md`, `wait-accounts.json`.
+- **Scope:** the clean path's ladder step. It amends the shape D409 gave an event's answer, if it passes.
+
+## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+
+- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  - Alex: "确认：这类题不出题 (Recommended)".
+- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+- **Scope:** the clean path's ladder step; mark N of the readers' form.
+
+## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+
+- **Asked:** "“中国政府是否放行英伟达 H200 芯片在华销售”这类题，系统大多归在“英伟达”名下，有时归在行业主题“芯片出口管制”名下，同一道题三次归属还会不一致。第三次测试里归在公司名下的 5 份，两类读者都判为归错了，认为应归行业主题。区别是：归行业主题的题会给每家相关公司的判断都看到，归公司的只给这一家看。归哪边？"
+  - Options: the theme "chip-export-controls" (recommended): "两类读者意见一致。我需要在提示词里加一条归属规则（政府对某类产品的放行或禁令归行业主题），并先小额验证不带坏别的题，比如法国对英伟达本身的反垄断调查仍归公司。"; the company (the readers' form would then be changed to that reading).
+  - Alex: "归行业主题“芯片出口管制” (Recommended)".
+- **Decided:** a question about a government's or regulator's permission, restriction or ban on a class of products or trade
+  belongs to the theme that covers it, also when the product is the company's own. A proceeding against the company itself (an
+  investigation of its conduct, a fine) stays the company's. A rule in the request, proved small before any measurement, with
+  the French investigation as the case that must not move.
+- **Scope:** the clean path's ladder step; mark O of the readers' form.
+
+## D419 · 2026-11-10 · The fourth Stage A is sent without asking again once each change is proved small and reviewed
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+
+- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+  - Options: carry both changes to gate 2 (recommended by Claude): "分年虽然没达线，但从 0 次升到大约四分之三，而且'两年塞一题'完全消失，没发现带坏别的东西。第二关在存档上查它会不会弄坏周边情况（重复文章、同一量的另一种口径、延期的事等，约 1.5 美元，线先给你看）。代价：等于在看到结果后放宽了我自己定的线。"; stop the year change and carry only the customer sentence (the reviewer, `council/lx-codex.md`, recommended stopping the year change and keeping c8); stop both and keep c8.
+  - Alex: "带着两处改动进第二关 (Recommended)".
+- **Decided:** the candidate for gate 2 is c15yc (c8 with the year boundary and the scoped capacity counterexample). The year line's failure stays recorded as a failure (5 of 9 against 8 of 9); it is not presented as a pass. Gate 2's lines are written, reviewed and shown to Alex before any send. c8 stays in force.
+- **Scope:** clean Step 1.
+
+## D438 · 2026-11-13 · Send gate 2
+
+- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` (version 11, reviewed clean in `council/mi-codex.md`): "第二关审完了，要发吗？…新版做错的次数比旧版多 3 次以上（9 次里），就停下报给你。共 126 次发送，约 1.8 美元，上限 2.2 美元。" Options: send (recommended): "先跑完 126 次。我和一位盲读者各自逐条读，有分歧的一律算新版错。任何一条停止线被触发就停下报给你；全过的话再设计第三关（在新文章上新旧版对比），也先给你看。"; do not send.
+- Alex: "发 (Recommended)".
+- **Decided:** gate 2 is sent as written; a fired stop or an unexercised control goes to Alex; a pass leads to gate 3's design, shown to him before any send. c8 stays in force.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D405|unbroken|exact|passage|quote|quoted' clean-arch/step4-2026-11-10/ladder/candidate-{system.txt,closing.txt,schema.json}" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/ladder/candidate-closing.txt:1:Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+clean-arch/step4-2026-11-10/ladder/candidate-schema.json:124:       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt:12:- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt:14:- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt:15:- Fill exactly one of event and figure; the other is null.
+clean-arch/step4-2026-11-10/ladder/candidate-system.txt:16:- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+
+codex
+The request has one additional finding: it does not tell the model that a reference must be one unbroken passage. That omission is inherited from the frozen request.
+
+| Request and schema description | Verdict against source |
+|---|---|
+| Analyst role, English, one question from the opening item, written once | **Consistent** — D38, D407 and the design table. |
+| One figure or event; question rather than assertion; figure period or measurement day and settling material | **Consistent** — D38 and the design table. |
+| Choose the part named by the topic’s outcome | **Consistent** — D397. |
+| List other parts the question “leaves out,” including the schema and closing check | **Keeps wider** under a literal reading: an event alternative can be decided by an answer choice even if absent from the question. This is the **known ambiguity** against D397. |
+| Second side of the same bet stays as context and is listed; it alone is no reason to decline | **Consistent** — D436 and D397. |
+| Separate unrelated things rather than combine them into one set of choices; the two examples | **Consistent** — D397. |
+| Decline when there is no main part or no checkable date, including the regulatory exception | **Consistent** — D397 and D403. The `no_ladder` description repeats these rules. |
+| Decline quarterly or half-year company figures, ended years, distant years, and nonannual periods without a publication day; do not recast a distant figure as an event | **Consistent** — D38, D185, D417 and the production prompt cited in the design table. The `no_ladder` description matches. |
+| Company versus theme; regulator decisions; another company or an uncovered matter | **Consistent** — D418 and the production subject rules cited in the design table. The `object` and `no_ladder` descriptions match. |
+| Concrete, nonoverlapping and complete answer choices; no unspecified future target | **Consistent** — D38 and the production prompt. |
+| Event happened, ruled out, or neither; overlap resolves to happened; named decision-maker and decision; merger and investigation examples | **Consistent** — D409 and D416. The `event`, `happened`, `ruled_out`, `by_whom` and `decision` descriptions carry the same shape. |
+| Finer differences within an event outcome are listed as not judged | **Consistent** — D409, subject to the known ambiguity above. |
+| Figure unit, year, five ranges, inclusive lower and exclusive upper bounds, open ends, and numeric formatting | **Consistent** — D38 and the production prompt cited in the design table. The `figure`, `unit`, `year`, `ranges`, `lo` and `hi` descriptions match. |
+| Exactly one of event and figure | **Consistent** — the design table’s answer shape; both descriptions state it. |
+| Reference kinds, same-quantity last-reported amount, numeric value and range, and null where absent | **Consistent** — D398, D411 and D260. The `kind`, `value` and `value_to` descriptions match. |
+| Reference “quoted in the item’s own words”; `words` description | **Keeps wider** — D405 requires an **unbroken passage**; the request does not say the passage must be unbroken. A selection of the item’s own words could omit intervening words. This wording is inherited. |
+| Middle range contains the reference value or stated reference range; estimates when no numeric reference is available | **Consistent** — D398 and D411. |
+| Favourable end and explanation, including the obligations tie rule; theme uses `n/a` | **Consistent** — D186, D398 and D413. The `favourable_end` and `favourable_why` descriptions match. |
+| Due day after the item and on or after publication; figure and event basis labels | **Consistent** — D356 and D403. The `due_day_basis` description matches the labels. |
+| Model estimates an unstated annual figure publication day | **Contradicts** D414’s allocation of that day to code. This is the **known tension**; the schema labels alone do not resolve it. |
+| Already-taken-on binding obligation uses the next annual filing | **Keeps wider** than D210’s amount question and can conflict with D403 for an event with a different stated date or period end. This is the **known conflict**. |
+| Remaining closing checks: adjoining ranges, event outcomes, reference, bounds, due day and favourable end | **Consistent** with the corresponding request rules, while repeating the known due-day issues. |
+
+1. **Yes.** The unbroken-passage omission is an additional finding beyond the three identified in the question. D405’s acceptance check may still refuse a broken quotation; this finding concerns what the model is told.
+2. **No.** The additional finding is present in the frozen request. The event-alternative ambiguity is also present there; the revised closing repeats it.
+
+NO NEW FINDING FROM THE EDITS
+tokens used
+57,074
+The request has one additional finding: it does not tell the model that a reference must be one unbroken passage. That omission is inherited from the frozen request.
+
+| Request and schema description | Verdict against source |
+|---|---|
+| Analyst role, English, one question from the opening item, written once | **Consistent** — D38, D407 and the design table. |
+| One figure or event; question rather than assertion; figure period or measurement day and settling material | **Consistent** — D38 and the design table. |
+| Choose the part named by the topic’s outcome | **Consistent** — D397. |
+| List other parts the question “leaves out,” including the schema and closing check | **Keeps wider** under a literal reading: an event alternative can be decided by an answer choice even if absent from the question. This is the **known ambiguity** against D397. |
+| Second side of the same bet stays as context and is listed; it alone is no reason to decline | **Consistent** — D436 and D397. |
+| Separate unrelated things rather than combine them into one set of choices; the two examples | **Consistent** — D397. |
+| Decline when there is no main part or no checkable date, including the regulatory exception | **Consistent** — D397 and D403. The `no_ladder` description repeats these rules. |
+| Decline quarterly or half-year company figures, ended years, distant years, and nonannual periods without a publication day; do not recast a distant figure as an event | **Consistent** — D38, D185, D417 and the production prompt cited in the design table. The `no_ladder` description matches. |
+| Company versus theme; regulator decisions; another company or an uncovered matter | **Consistent** — D418 and the production subject rules cited in the design table. The `object` and `no_ladder` descriptions match. |
+| Concrete, nonoverlapping and complete answer choices; no unspecified future target | **Consistent** — D38 and the production prompt. |
+| Event happened, ruled out, or neither; overlap resolves to happened; named decision-maker and decision; merger and investigation examples | **Consistent** — D409 and D416. The `event`, `happened`, `ruled_out`, `by_whom` and `decision` descriptions carry the same shape. |
+| Finer differences within an event outcome are listed as not judged | **Consistent** — D409, subject to the known ambiguity above. |
+| Figure unit, year, five ranges, inclusive lower and exclusive upper bounds, open ends, and numeric formatting | **Consistent** — D38 and the production prompt cited in the design table. The `figure`, `unit`, `year`, `ranges`, `lo` and `hi` descriptions match. |
+| Exactly one of event and figure | **Consistent** — the design table’s answer shape; both descriptions state it. |
+| Reference kinds, same-quantity last-reported amount, numeric value and range, and null where absent | **Consistent** — D398, D411 and D260. The `kind`, `value` and `value_to` descriptions match. |
+| Reference “quoted in the item’s own words”; `words` description | **Keeps wider** — D405 requires an **unbroken passage**; the request does not say the passage must be unbroken. A selection of the item’s own words could omit intervening words. This wording is inherited. |
+| Middle range contains the reference value or stated reference range; estimates when no numeric reference is available | **Consistent** — D398 and D411. |
+| Favourable end and explanation, including the obligations tie rule; theme uses `n/a` | **Consistent** — D186, D398 and D413. The `favourable_end` and `favourable_why` descriptions match. |
+| Due day after the item and on or after publication; figure and event basis labels | **Consistent** — D356 and D403. The `due_day_basis` description matches the labels. |
+| Model estimates an unstated annual figure publication day | **Contradicts** D414’s allocation of that day to code. This is the **known tension**; the schema labels alone do not resolve it. |
+| Already-taken-on binding obligation uses the next annual filing | **Keeps wider** than D210’s amount question and can conflict with D403 for an event with a different stated date or period end. This is the **known conflict**. |
+| Remaining closing checks: adjoining ranges, event outcomes, reference, bounds, due day and favourable end | **Consistent** with the corresponding request rules, while repeating the known due-day issues. |
+
+1. **Yes.** The unbroken-passage omission is an additional finding beyond the three identified in the question. D405’s acceptance check may still refuse a broken quotation; this finding concerns what the model is told.
+2. **No.** The additional finding is present in the frozen request. The event-alternative ambiguity is also present there; the revised closing repeats it.
+
+NO NEW FINDING FROM THE EDITS

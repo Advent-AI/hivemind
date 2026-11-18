@@ -1,0 +1,23 @@
+**READY to implement the isolated harness. Not yet ready to send the 60 calls.**
+
+For example, the harness can reconstruct the original candidate list for X22 and check that every displayed score belongs to the right search query and stored statement. Whether that reconstruction passes is a **before-send check**, not something that must be proved before writing the harness.
+
+The revised design addresses the main problems in the earlier review: it removes the misleading shuffled arm, keeps the historical candidate set fixed, requires source-blind review of all ten candidate sets, and limits the result to a selected-case diagnostic. [Revised design]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:3).
+
+The following remain conditions for a valid run, and should be made explicit during implementation:
+
+1. **Write down and run the negative controls.** Your request names them, but the revised document itself lists replay, validation and refusal requirements without specifying the promised deliberate mutations. [Checks]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:32). A swapped query, candidate, score or retrieval origin must fail its respective check. Fake transport must demonstrate three independent draws, malformed-response refusal and safe resume. A check must also fail on missing input; an empty check is not a pass.
+
+2. **Make the reconstructed manifest auditable.** It needs the pre-article group order, each query’s identity and type, each top-ten list, every candidate’s retrieval origins, and every query-to-candidate score. The reconstructed union must equal the saved candidate sequence. Search uses one query per thesis and sometimes an additional record-only query, so a candidate can appear in more than one list. [Search implementation]( /Users/lchingen/hivemind/clean-arch/step2/compare.py:45). The document’s phrase “origin membership must equal saved candidate sequence” should mean **union order equals the saved sequence**; the saved sequence alone cannot independently prove every origin.
+
+3. **Freeze the exact score text before sending.** The example shows `query 1: 0.xxxx`, while the prose also requires a query-type label. Define the complete literal format and rounding, then verify that stripping only that addition restores the archived request. The score is between the search text and the stored group’s original search text; it can carry information from a thesis or period that Jev otherwise does not see. A better result would establish that the *added information* helped on these cases, not why it helped.
+
+4. **Define how blind judgments translate into the screening rule.** Readers should identify acceptable repeat and revision relationships for each full candidate set before seeing arm outcomes. Multiple acceptable groups, overlaps, missing source material and unresolved disagreements need explicit outcomes; unresolved cases cannot be counted as correct or wrong. The two-of-three rule is checkable once “decision” is mapped to the actual outcome, including target group and revision links. The current outcome function can return a repeat **and** revision links, so checking only the top-level label would miss changes. [Outcome code]( /Users/lchingen/hivemind/clean-arch/step2/compare.py:109).
+
+5. **Treat the stop rule as a screen, not proof.** Two correct T draws versus fewer than two correct C draws is a predeclared signal on a selected case; it is not evidence of a reliable population-level improvement. Likewise, incomplete calls or insufficient blind review must result in an incomplete or inconclusive finding, not a pass. Report all three draws and any regressions even when they do not meet the two-of-three threshold.
+
+6. **Resolve ambiguous interruptions before a live run.** A request may have reached Jev even if its response was lost before archiving. The design says to resume missing requests, but “missing” alone cannot distinguish unsent from sent-with-lost-response. Record that state and do not silently treat a replacement as the original draw. Separate archives are necessary because the existing Jev caller reuses an identical archived request. [Archive lookup]( /Users/lchingen/hivemind/src/hivemind/jev.py:87).
+
+The 60 calls are a planned maximum of successful request draws; transport retries may create additional attempts. The prior **141/143** search figure and **1/57** wrong-merge figure remain useful context, but neither establishes how much scores improve Jev’s decisions. The screening result must not be presented as production accuracy or acceptance.
+
+No files were edited and no paid calls were made.

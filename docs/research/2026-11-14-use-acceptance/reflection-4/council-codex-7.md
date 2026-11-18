@@ -1,0 +1,17 @@
+**I agree with the sequence, subject to the checks below.** I do not think Alex needs to repeat his authorization after the proofs: his instruction to execute the council’s next step, together with D439, supports the agreed bounded run while he is away. The decision should record that interpretation, the exact ceiling and the stop conditions before any send. [D439](/Users/lchingen/hivemind/docs/DECISIONS.md:783)
+
+The checks I would add to the agreed sequence are:
+
+1. **Prove the article order explicitly.** `fresh_week_inputs.py` compares the two selection rules as **sets**, while the clean runner accepts the order supplied in the manifest. It does not independently prove that both entries would choose the same within-day order. Compare the 241 IDs in order against the production entry after the three exclusions, and check the article text identities. [Input builder](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/fresh_week_inputs.py), [clean selection](/Users/lchingen/hivemind/clean-arch/step1/runner.py:54)
+
+2. **Make the replay trap refuse missing or different requests.** Match the actual request bytes and occurrence to the stored response; trap embeddings and Jev as well as model calls. If an archive lacks a response needed to reproduce the stored week, stop and report that the proof is unexercised. Do not substitute an answer or treat cached replay as evidence of what a new model draw would do. [Matching transport](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_step2.py)
+
+3. **Prove the handoff the live launcher will use.** The current launcher creates an empty starting library. The new entry must demonstrably start the second segment from the stored final state, then pass the combined trace to every later step. The existing adapter checks day order, but that alone does not prove the new handoff or absence of future evidence in every request. [Launcher](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:340), [judging adapter](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:263)
+
+4. **Keep the previously proposed $6 run ceiling fixed.** Price all stages and reservations first, including the required small slice, retries and any reader calls, and verify the total remains within D439’s $40 ceiling. If the estimate or reservations cannot fit, stop and return to the council; “a ceiling that covers the estimate” must not silently raise the agreed limit. Run the stored-data preflight and the small slice before the full send, as the working rules require. [Working rules](/Users/lchingen/hivemind/AGENTS.md:182)
+
+Freeze the reading plan before looking at new answers, preserve the separate denominators and unresolved marks you listed, and report the source-to-answer sample as a sample. The custom-chip group is a known **group-level** positive control; it does not establish that the reader can detect every consequential single missing fact.
+
+The two-week run would remain a **diagnostic**, not a gate pass or a comparison proving the new system is better. Deck 1 stays unchanged and goes to Alex; his wider D559 question and the role of the six lines remain his decisions.
+
+CONSENSUS: yes

@@ -1,6 +1,14 @@
 import { element, esc, SEP, ICON } from './dom.js';
 import { longDay } from '../model/dates.js';
-import { lastOf, score, rungLabel, statusAt, closingAt, snapshotThesis } from '../model/thesis.js';
+import {
+  lastOf,
+  score,
+  rungLabel,
+  statusAt,
+  closingAt,
+  snapshotThesis,
+  undirected,
+} from '../model/thesis.js';
 import { ladderChart, bindHistoryChart } from './thesis-chart.js';
 import { badgeHtml } from './primitives.js';
 import { assessmentHtml, assessmentText, evidenceHtml } from './evidence.js';
@@ -151,6 +159,16 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
     motion.open();
     find('sheetClose').focus({ preventScroll: true });
   }
+  function notJudgedHtml(v) {
+    // D397: the parts of the topic this question leaves out, shown beside the answer with their reasons.
+    if (!v.notJudged?.length) return '';
+    return `<div class="detail-section"><h3 class="detail-heading">Not judged</h3>${v.notJudged
+      .map(
+        (p) =>
+          `<p class="detail-copy">${esc(p.part)} <span class="detail-muted">| ${esc(p.why)}</span></p>`,
+      )
+      .join('')}</div>`;
+  }
   function renderPanel() {
     const v = detail.thesis,
       latest = lastOf(v.judgements),
@@ -181,6 +199,7 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
       <details class="detail-disclosure"><summary>Recent evidence</summary><div class="detail-disclosure-body">${keyEvidence.length ? keyEvidence.map((e) => evidenceHtml(e, detail.day)).join('') : '<p class="detail-muted">No evidence cited in this assessment.</p>'}</div></details>`
           : '<p class="detail-copy">There is no assessment for this thesis at the selected date.</p>'
       }
+      ${notJudgedHtml(v)}
       ${relationsHtml(v, data, detail.day)}
       <details class="detail-disclosure"><summary>About this thesis</summary><dl class="detail-definitions">${identityHtml(v)}<dt>First seen</dt><dd>${esc(longDay(v.created_day))}</dd><dt>Original source</dt><dd>${esc(v.created_from.title)}</dd><dt>Status</dt><dd><span class="chip chip--line">${statusAt(v, detail.day)}</span></dd>${closing ? `<dt>Closing record</dt><dd>${esc(closing)}</dd>` : ''}</dl></details>
     </section><section id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence" hidden></section><section id="panel-history" role="tabpanel" aria-labelledby="tab-history" hidden></section></div>`,
@@ -286,10 +305,12 @@ export function createThesisDetail({ root, dataset, onOpen = () => {} }) {
       return;
     }
     const hasStateLabels = v.rungs.some((r, i) => rungLabel(v, i + 1));
-    const definitions = `<div class="score-table"><table aria-label="Score definitions"><colgroup><col class="score-column">${hasStateLabels ? '<col class="state-column">' : ''}<col></colgroup><thead><tr><th scope="col">Score</th>${hasStateLabels ? '<th scope="col">State</th>' : ''}<th scope="col">Definition</th></tr></thead><tbody>${v.rungs.map((r, i) => `<tr><th scope="row">${esc(score(v, i + 1))}</th>${hasStateLabels ? `<td>${esc(rungLabel(v, i + 1))}</td>` : ''}<td>${esc(r.condition)}</td></tr>`).join('')}</tbody></table></div>`;
+    const definitions = undirected(v)
+      ? `<div class="score-table"><table aria-label="Answer definitions"><colgroup><col class="score-column"><col class="state-column"><col></colgroup><thead><tr><th scope="col">Mark</th><th scope="col">Answer</th><th scope="col">Definition</th></tr></thead><tbody>${v.rungs.map((r) => `<tr><th scope="row">${esc(String(r.position))}</th><td>${esc(r.label)}</td><td>${esc(r.condition)}</td></tr>`).join('')}</tbody></table></div>`
+      : `<div class="score-table"><table aria-label="Score definitions"><colgroup><col class="score-column">${hasStateLabels ? '<col class="state-column">' : ''}<col></colgroup><thead><tr><th scope="col">Score</th>${hasStateLabels ? '<th scope="col">State</th>' : ''}<th scope="col">Definition</th></tr></thead><tbody>${v.rungs.map((r, i) => `<tr><th scope="row">${esc(score(v, i + 1))}</th>${hasStateLabels ? `<td>${esc(rungLabel(v, i + 1))}</td>` : ''}<td>${esc(r.condition)}</td></tr>`).join('')}</tbody></table></div>`;
     setHTML(
       panel,
-      `<div class="history-chart" id="historyChart"></div><div id="historyAssessment"></div><details class="detail-disclosure"><summary>Score definitions</summary>${definitions}</details>`,
+      `<div class="history-chart" id="historyChart"></div><div id="historyAssessment"></div><details class="detail-disclosure"><summary>${undirected(v) ? 'Answer definitions' : 'Score definitions'}</summary>${definitions}</details>`,
     );
     const chart = find('historyChart');
     setHTML(

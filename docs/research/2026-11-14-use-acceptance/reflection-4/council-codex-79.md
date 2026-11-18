@@ -1,0 +1,13 @@
+**No-go on A3 as written.** The audit identifies a useful distinction, but the proposed example would teach the wrong answer for some events.
+
+- **A delay past the due day is not always “Still open.”** A formal decision to defer an event beyond that day can put it in “Ruled out”; completion can also take precedence if it happened. The existing request defines “Still open” as neither of the first two choices, and D409 gives the same three-way structure. The check should ask whether the *actual choices* decide the listed part, rather than assign every delay to one choice. [A2 request](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/arm-a2/candidate-system.txt:13>), [D409](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4502>)
+
+- **The “only a source” qualification is necessary**, and the disclosure-that-is-itself-asked example belongs in the controls. The H brief is a reading instruction, not an independent product decision; D397 supports distinguishing judged from unjudged parts, but does not itself define every source-only case. [Audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/OVERLIST-AUDIT.md>), [D397](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4326>)
+
+- **Keep the undecided portion of mixed entries.** The item-126 ruling supports that distinction on this example; it does not establish a general rewriting procedure. Also, “change of price” comes from a test case, so it should not become a prompt example under the rule against examples taken from test articles. [Working rules §6](</Users/lchingen/hivemind/AGENTS.md>)
+
+- **Three sends and the existing +1 rule may be proposed for a new diagnostic, but are not yet shown to be a sound test.** The rule can reject on ordinary control variation, as A2 illustrates. Reading every failure remains necessary but cannot retrospectively turn a negative into a pass. Before sending, show how the control performs against itself or otherwise justify what the bar can distinguish; retain both countings and the full per-send results. [A2 rule](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A2.md:47>), [working rules §7.3](</Users/lchingen/hivemind/AGENTS.md:326>)
+
+Revise the design at $0 around the actual-choice test, mixed entries and source-only distinction. Include the full-request audit, the required account of the model’s listing choices, and the prompt-length tradeoff before returning for review. A2 remains negative.
+
+CONSENSUS: no, because the proposed event example is inaccurate and the new test’s control-variation problem remains unresolved.

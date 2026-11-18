@@ -1,0 +1,732 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 13: the Astra probe, prepared at $0 as round 12 asked (`reflection-6/astra/DESIGN.md`)
+
+Read `astra/DESIGN.md`, `astra/astra_probe.py`, `astra/test_astra_probe.py`, `astra/check-output.txt` and `astra/mutants.txt`.
+
+**Two departures from your round 12 wording, both on cost:**
+1. **The control is D629's three stored sol draws**, sent today on bytes the check confirms equal, not a fresh sol arm. They are re-read
+   blind together with astra.
+   - The reason: about $9.0 remains of D439's $40. Astra's plausible cost reaches $6.4 (sol's tokens at astra's rates, no cache credit).
+   - A fresh sol arm plus reserves would not fit.
+2. **The whole 26-topic population, 3 draws, rather than a hand-picked subset.**
+   - A subset chosen where sol failed would compare a fresh astra against sol's selected-high failures.
+   - Fewer than 78 sends cannot tell near-zero from sol's 6% (P(0 of 26 | 6.4%) is about 0.18).
+
+**The verdict rule, fixed before** (it differs from D629's):
+- **Moves:** astra has at most 1 agreed failed send of 78, with no more agreed-unjustified refusals than sol, no new-harm topic, and
+  strict astra below strict sol.
+- **Closes:** astra has 3 or more failed sends, or at least sol's − 1.
+- **Otherwise:** inconclusive.
+- The absolute line is set from gate 1 (zero in 131), not from a relative halving.
+
+**Spend:** one $7.50 cap and one attempt in flight. The first request goes alone, and the rest is refused if its price × 78 passes the
+cap (about $0.08 lost).
+
+**Asked:**
+1. Is the stored control acceptable here, or does the fresh-control requirement override the budget argument? If so, what probe fits?
+2. Is the verdict rule right? In particular:
+   - does "moves at ≤1" claim more than 78 sends can show?
+   - should strict counting have its own bar?
+3. Anything in the code, the tests or the check that makes the result unsound?
+4. Send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the comparison and its spending safeguards against the actual code, then assess what 78 answers can support under the proposed rule.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/astra_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+26 topics: each frozen request equals its stored first request, and the sol and astra requests differ from it only in their model; the 78 stored sol sends were sent with the sol requests built now: True; controls 6; astra worst-case reserve of one attempt $1.04; cap $7.50 with 1 in flight
+check passed
+
+ succeeded in 0ms:
+"""The model comparison, gpt-6-astra against gpt-6.1-sol on the unchanged request (DESIGN.md, D632). The control is the three sol
+draws D629 sent on 2026-11-16 (`STORED_CONTROL`); only astra is sent, and both arms are read together, blind.
+
+  python3 astra_probe.py check                          # $0: requests (the stored sol draws included), controls, spend; writes check-passed.json
+  python3 astra_probe.py send <new run folder>          # astra d1 (its first request alone, then the cost projection), d2, d3
+  python3 astra_probe.py reading <run folder> <key folder>
+  python3 astra_probe.py score <run folder> <key folder>
+"""
+import collections
+import concurrent.futures
+import copy
+import dataclasses
+import hashlib
+import json
+import os
+import random
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+sys.path[:0] = [str(HERE.parent / 'reference-control'), str(HERE.parents[1] / 'splitting')]
+import refcontrol  # noqa: E402   (puts Stage A, the ladder step and src on the path)
+import probe_split  # noqa: E402
+import accounting  # noqa: E402
+import budget  # noqa: E402
+import build_reader_packets  # noqa: E402
+import collect_readings as collector  # noqa: E402
+import ladder_step  # noqa: E402
+import model_calls  # noqa: E402
+import stage_a  # noqa: E402
+from hivemind import model  # noqa: E402
+
+SETTINGS = {'sol': dataclasses.replace(stage_a.SETTING, model='gpt-6.1-sol'), 'astra': dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')}
+ORDER = [('sol', 1), ('astra', 1), ('sol', 2), ('astra', 2), ('sol', 3), ('astra', 3)]
+CONTROL, CANDIDATE = 'sol', 'astra'
+SENT = [(arm, draw) for arm, draw in ORDER if arm == CANDIDATE]
+STORED_CONTROL = ROOT / 'poc' / 'data' / 'clean-model-probe-2026-11-16'
+CAP_USD = 7.50                          # within what remains of D439's $40 (about $9.0)
+WORKERS = 1                             # one astra attempt in flight: its worst-case reserve is about $1 an attempt
+RECORD = HERE / 'check-passed.json'
+CODE_FILES = [Path(__file__), Path(refcontrol.__file__), refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+NEW_CONTROLS = {'control|unlisted-part': ('c2/clean-1', 'L'), 'control|unjustified-refusal': ('c2/clean-4', 'N')}
+HARD = refcontrol.HARD
+SHUFFLE_SEED = 20261122
+
+
+def arm_folder(run_folder, arm, draw):
+    """Where an arm-draw's outcomes are: the stored sol draws for the control, the run folder for astra."""
+    return (STORED_CONTROL if arm == CONTROL else Path(run_folder)) / f'{arm}-d{draw}'
+
+
+def built(case, setting, rl):
+    texts = stage_a.request_texts()
+    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(setting, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+
+
+def controls():
+    """The reference control's four, and two new planted-wrong ones (an unlisted part, an unjustified refusal)."""
+    out = refcontrol.controls()
+    stored = {row['case']: row for row in map(json.loads, refcontrol.JULY_STORED.read_text().splitlines()) if row['pass'] == 1}
+    for control, (name, mark) in NEW_CONTROLS.items():
+        row, case = copy.deepcopy(stored[name]), refcontrol.july_case(name)
+        if mark == 'L':
+            parts = row['answer']['ladder']['not_judged']
+            if not parts or 'material' not in parts[0]['part']:
+                raise SystemExit(f'{control}: the stored first listed part of {name} is not the materiality part')
+            row['answer']['ladder']['not_judged'] = parts[1:]
+        else:
+            reason = 'the topic has no main figure or event: it names several with none of them the main one'
+            row = dict(row, status='no ladder', reason=reason, answer={'no_ladder': reason, 'ladder': None}, passage=None, view=None)
+        out.append((dict(row, case=control, **{'pass': 1}), case, {mark: 'fails'}))
+    return out
+
+
+def check():
+    rl = refcontrol.research_list()
+    failures, shas = [], {CONTROL: {}, CANDIDATE: {}}
+    for source, name, case, stored in refcontrol.population():
+        frozen = built(case, stage_a.SETTING, rl)
+        control, candidate = built(case, SETTINGS[CONTROL], rl), built(case, SETTINGS[CANDIDATE], rl)
+        same_as_stored = model.request_identity(frozen)[1] == stored['requests'][0]['request_sha256']
+        sent_frozen = json.dumps(frozen, ensure_ascii=False)                      # the bytes as sent: only the model differs
+        only_model = sent_frozen.count('"model": "gpt-6-luna"') == 1 and \
+            json.dumps(control, ensure_ascii=False) == sent_frozen.replace('"model": "gpt-6-luna"', '"model": "gpt-6.1-sol"') and \
+            json.dumps(candidate, ensure_ascii=False) == sent_frozen.replace('"model": "gpt-6-luna"', '"model": "gpt-6-astra"')
+        if not (same_as_stored and only_model):
+            failures.append(f'{source}:{name} stored {same_as_stored} only-model {only_model}')
+        shas[CONTROL][f'{source}:{name}'] = model.request_identity(control)[1]
+        shas[CANDIDATE][f'{source}:{name}'] = model.request_identity(candidate)[1]
+    stored_sends = 0
+    for arm, draw in ORDER:
+        if arm != CONTROL:
+            continue
+        rows = [json.loads(line) for line in (arm_folder(None, arm, draw) / 'outcomes.jsonl').read_text().splitlines()]
+        topics = sorted(row['case'].split('|', 1)[1] for row in rows)
+        if topics != sorted(shas[CONTROL]):
+            failures.append(f'{arm} d{draw}: the stored draw does not hold the 26 topics once each')
+        for row in rows:
+            if row['requests'][0]['request_sha256'] != shas[CONTROL][row['case'].split('|', 1)[1]]:
+                failures.append(f"{row['case']}: the stored sol request differs from the one built now")
+            stored_sends += 1
+    built_controls = controls()
+    worst = budget.worst_cost(built(refcontrol.population()[0][2], SETTINGS[CANDIDATE], rl))
+    print(f'26 topics: each frozen request equals its stored first request, and the sol and astra requests differ from it only in their model; '
+          f'the {stored_sends} stored sol sends were sent with the sol requests built now: {not failures}; controls {len(built_controls)}; '
+          f'astra worst-case reserve of one attempt ${worst:.2f}; cap ${CAP_USD:.2f} with {WORKERS} in flight')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def run_arm(cases, folder, cap_usd, setting, rl, transport=None, workers=8, first_alone=False, after_first=None):
+    """One arm-draw: Stage A's runner with the setting given (its model, effort and cap)."""
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=False)
+    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+    texts = stage_a.request_texts()
+    checksum = hashlib.sha256(json.dumps([setting.model, setting.reasoning_effort, setting.max_output_tokens]).encode()).hexdigest()[:16]
+    call_config = SimpleNamespace(provider='openai', version=f'clean-ladder-model-{setting.model}', checksum=checksum)
+    archive = model.Archive(str(folder / 'archive.sqlite'))
+    write_lock, written = threading.Lock(), []
+
+    def work(case):
+        labelled = SimpleNamespace(request_number=0)
+        labelled.send = lambda provider, request: limit.send_labelled(f"{case['case']}|{labelled.request_number}", provider, request)
+        call_model = model_calls.model_caller(model, archive, call_config, setting, labelled)
+
+        def counted(system_text, user_text, schema):
+            labelled.request_number += 1
+            return call_model(system_text, user_text, schema)
+        try:
+            outcome = ladder_step.ladder_for_thesis(stage_a.payload_for(case, rl), system_text=texts['system'], closing_text=texts['closing'],
+                                                    schema=texts['schema'], call_model=counted, check=refcontrol.check_of(case, rl))
+            view = None
+            if outcome['status'] == 'ladder':
+                view = ladder_step.write_view(outcome['answer']['ladder'], outcome['passage'], thesis=case['thesis'],
+                                              article_day=case['item']['publication_date'], company=stage_a.COMPANY, research_list=rl)
+            row = {'case': case['case'], 'pass': 1, 'status': outcome['status'], 'reason': outcome['reason'], 'requests': outcome['requests'],
+                   'answer': outcome['answer'], 'passage': outcome['passage'], 'view': view}
+            with write_lock:
+                with (folder / 'outcomes.jsonl').open('a') as handle:
+                    handle.write(ladder_step.as_json(row) + '\n')
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                written.append(case['case'])
+        except (stage_a.Stopped, budget.OverBudget):
+            return
+        except Exception as error:
+            limit.stop(f"{case['case']}: {type(error).__name__}: {error}")
+    if first_alone:                       # a compatibility check: the first request alone, kept as part of the draw and not inspected
+        work(cases[0])
+        if not written:
+            limit.stop(limit.stop_reason or 'the first request alone wrote no outcome')
+            return written, limit
+        refused = after_first(folder / 'spend.jsonl') if after_first else None
+        if refused:
+            limit.stop(refused)
+            return written, limit
+        cases = cases[1:]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(work, cases))
+    return written, limit
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    population = refcontrol.population()
+    for arm in SETTINGS:
+        now = {f'{source}:{name}': model.request_identity(built(case, SETTINGS[arm], rl))[1] for source, name, case, _ in population}
+        if now != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent = collections.Counter()
+    worst = budget.worst_cost(built(population[0][2], SETTINGS[CANDIDATE], rl))
+
+    def projection(ledger):
+        """The first astra request, sent alone, priced for all 78 sends: refuse the rest when that and one attempt in flight pass the cap."""
+        known, in_full, _ = stage_a.ledger_total(ledger)
+        projected = (known + in_full) * 26 * len(SENT)
+        print(f'the first astra request cost ${known + in_full:.4f}: ${projected:.2f} projected for {26 * len(SENT)} sends', flush=True)
+        if projected + WORKERS * worst > CAP_USD:
+            return f'projected ${projected:.2f} plus ${WORKERS * worst:.2f} in flight passes the ${CAP_USD:.2f} cap: refused before the rest'
+        return None
+    for arm, draw in SENT:
+        cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in population]
+        cap = CAP_USD - spent[arm]
+        written, limit = run_arm(cases, folder / f'{arm}-d{draw}', cap, SETTINGS[arm], rl, transport=guard, workers=WORKERS,
+                                 first_alone=draw == 1, after_first=projection if draw == 1 else None)
+        known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        spent[arm] += known + in_full
+        over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+        print(f'{arm} d{draw}: {len(written)} of 26 written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+        if over or guard.breaches or limit.stopped or len(written) != 26:
+            raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    print(f'spent {dict(spent)}')
+
+
+def reading(run_folder, key_folder):
+    run_folder, key_folder = Path(run_folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    rl = refcontrol.research_list()
+    population = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    rows, cases = [], {}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (arm_folder(run_folder, arm, draw) / 'outcomes.jsonl').read_text().splitlines()):
+            if row['status'] not in ('ladder', 'no ladder'):
+                continue
+            rows.append(row)
+            cases[row['case']] = dict(population[row['case'].split('|', 1)[1]], case=row['case'])
+    expected = {}
+    for row, case, marks in controls():
+        rows.append(row)
+        cases[row['case']] = dict(case, case=row['case'])
+        expected[row['case']] = marks
+    reading_folder = run_folder / 'reading'
+    (reading_folder / 'send-1').mkdir(parents=True)
+    (reading_folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+    order = sorted(rows, key=lambda row: row['case'])
+    random.Random(SHUFFLE_SEED).shuffle(order)
+    (reading_folder / 'readers').mkdir()
+    key, packets = {}, []
+    for number, row in enumerate(order, start=1):
+        key[str(number)] = [row['case'], 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+    for packet_number, packet in enumerate(packets, start=1):
+        (reading_folder / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    print(f'{len(rows)} items in {len(packets)} packets')
+
+
+def score(run_folder, key_folder):
+    reading_folder = Path(run_folder) / 'reading'
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading_folder, Path(key_folder) / 'key.json')
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+        for mark, value in marks.items():
+            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+            if mark == 'all' and all(any(readers[reader][(control, 1)].get(hard) == 'fails' for hard in HARD) for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: both families fail a hard line on the sound {control}: the reading is too harsh')
+    sends = {arm: {} for arm in SETTINGS}
+    for arm, draw in ORDER:
+        for row in map(json.loads, (arm_folder(run_folder, arm, draw) / 'outcomes.jsonl').read_text().splitlines()):
+            sends[arm][row['case']] = row
+    report = {}
+    for unresolved_as in ('holds', 'fails'):
+        faulted = {arm: collections.Counter() for arm in SETTINGS}
+        items = {arm: 0 for arm in SETTINGS}
+        for send, outcome in outcomes.items():
+            arm = send[0].split('-d')[0]
+            if arm not in SETTINGS:
+                continue
+            rows = [readers[reader][send] for reader in collector.FAMILIES]
+            found = {mark for mark in accounting.marks_that_apply(accounting.kind_of(outcome)) if mark in HARD
+                     and refcontrol.settled(rows, mark, unresolved_as) == 'fails'}
+            if found:
+                items[arm] += 1
+                faulted[arm][send[0].split('|', 1)[1]] += 1
+        statuses = {arm: collections.Counter(row['status'] for row in sends[arm].values()) for arm in SETTINGS}
+        if any(sum(counter.values()) != 78 for counter in statuses.values()):
+            raise SystemExit(f'NOT SCORED: an arm does not hold 78 sends: {statuses}')
+        unreadable = {arm: sum(any('could not be read' in str(request.get('error') or '') for request in row['requests'])
+                               for row in sends[arm].values()) for arm in SETTINGS}
+        lost = {arm: statuses[arm]['no ladder: refused'] for arm in SETTINGS}         # refused twice by code: not read, counted as failed
+        for arm in SETTINGS:
+            for case, row in sends[arm].items():
+                if row['status'] == 'no ladder: refused':
+                    faulted[arm][case.split('|', 1)[1]] += 1
+        failed = {arm: items[arm] + lost[arm] for arm in SETTINGS}
+        unjustified = {arm: 0 for arm in SETTINGS}
+        for send, outcome in outcomes.items():
+            arm = send[0].split('-d')[0]
+            if arm in SETTINGS and accounting.kind_of(outcome) == 'refusal':
+                if refcontrol.settled([readers[reader][send] for reader in collector.FAMILIES], 'N', unresolved_as) == 'fails':
+                    unjustified[arm] += 1
+        new_harm = [topic for topic, count in faulted[CANDIDATE].items() if count >= 2 and faulted[CONTROL][topic] == 0]
+        report[unresolved_as] = {'failed sends (agreed hard-line faults plus sends refused twice by code)': failed,
+                                 'faulted items read': items, 'sends refused twice by code': lost,
+                                 'model refusals': {arm: statuses[arm]['no ladder'] for arm in SETTINGS}, 'unreadable answers': unreadable,
+                                 'unjustified refusals': unjustified,
+                                 'new harm topics': new_harm, 'failed per topic': {arm: dict(counter) for arm, counter in faulted.items()}}
+    key_name = 'failed sends (agreed hard-line faults plus sends refused twice by code)'
+    agreed, strict = report['holds'], report['fails']
+    control, candidate = agreed[key_name][CONTROL], agreed[key_name][CANDIDATE]
+    near_zero = candidate <= 1                       # gate 1 asks zero faults in 131 sends
+    no_harm = not agreed['new harm topics'] and agreed['unjustified refusals'][CANDIDATE] <= agreed['unjustified refusals'][CONTROL] and \
+        agreed['unreadable answers'][CANDIDATE] - agreed['unreadable answers'][CONTROL] <= 2
+    same_direction = strict[key_name][CANDIDATE] < strict[key_name][CONTROL]
+    if control < 3:
+        verdict = 'inconclusive (the sol arm fails fewer than 3 sends: too little to test against)'
+    elif near_zero and no_harm and same_direction:
+        verdict = 'moves the candidate'
+    elif candidate >= 3 or candidate >= control - 1:
+        verdict = 'closes it'
+    else:
+        verdict = 'inconclusive'
+    print(json.dumps(report, indent=1))
+    print(f'VERDICT: {verdict}')
+    return verdict, report
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'reading':
+        reading(*sys.argv[2:4])
+    elif command == 'score':
+        score(*sys.argv[2:4])
+    else:
+        sys.exit(__doc__)
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/test_astra_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/mutants.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The astra comparison end to end at $0 (DESIGN.md): the check (the stored sol draws included), the three astra draws through the real
+runner and limit with a fake transport answering each topic's stored answer, the cost projection, the blind reading of both arms, made-up
+reader rows, and the verdict rule fixed before. The stored sol control is built in a temporary folder through the same runner."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parent / 'model'), str(HERE.parent / 'effort')]
+import astra_probe as effort_probe  # noqa: E402
+import accounting  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 5166, 'completion_tokens': 558}      # sol's measured means on these 26 topics (D629)
+
+
+def transport(usage=USAGE):
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    seen = []
+
+    def send(provider, request):
+        seen.append(request.get('model'))
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': usage}
+    send.seen = seen
+    return send
+
+
+def stored_sol(folder):
+    """Three sol draws written by the probe's own runner, as D629's were."""
+    rl = refcontrol.research_list()
+    population = refcontrol.population()
+    for draw in (1, 2, 3):
+        cases = [dict(case, case=f'sol-d{draw}|{source}:{name}') for source, name, case, _ in population]
+        written, _ = effort_probe.run_arm(cases, folder / f'sol-d{draw}', 50.0, effort_probe.SETTINGS['sol'], rl, transport=transport(), workers=4)
+        assert len(written) == 26
+    return folder
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('astra')
+    originals = effort_probe.RECORD, effort_probe.STORED_CONTROL
+    effort_probe.RECORD, effort_probe.STORED_CONTROL = folder / 'check-passed.json', stored_sol(folder / 'stored')
+    try:
+        effort_probe.check()
+        fake = transport()
+        effort_probe.send(folder / 'run', transport=fake)
+        effort_probe.reading(folder / 'run', folder / 'keys')
+        yield folder, fake
+    finally:
+        effort_probe.RECORD, effort_probe.STORED_CONTROL = originals
+
+
+def test_only_astra_is_sent_and_the_reading_holds_both_arms(run):
+    folder, fake = run
+    assert not (folder / 'run' / 'sol-d1').exists() and fake.seen.count('gpt-6-astra') >= 78 and set(fake.seen) == {'gpt-6-astra'}
+    for arm, draw in effort_probe.ORDER:
+        rows = (effort_probe.arm_folder(folder / 'run', arm, draw) / 'outcomes.jsonl').read_text().splitlines()
+        assert len(rows) == 26 and all(json.loads(row)['case'].startswith(f'{arm}-d{draw}|') for row in rows)
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    arms = [case.split('-d')[0] for case, _ in key.values() if not case.startswith('control|')]
+    assert arms.count('sol') == 78 and arms.count('astra') == 78
+
+
+def write_rows(folder, fail, unjustified=lambda case: False):
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    expected = json.loads((folder / 'keys' / 'controls-expected.json').read_text())
+    outcomes = {row['case']: row for row in map(json.loads, (folder / 'run' / 'reading' / 'send-1' / 'outcomes.jsonl').read_text().splitlines())}
+    answers = folder / 'run' / 'reading' / 'readers-answers'
+    answers.mkdir(exist_ok=True)
+    for family in ('codex', 'claude'):
+        lines = []
+        for item, (case, _) in key.items():
+            outcome = outcomes[case]
+            kind = accounting.kind_of(outcome)
+            applicable = accounting.marks_that_apply(kind)
+            row = {'item': int(item), 'W': '', 'why': ''}
+            for mark in accounting.ALL_MARKS:
+                row[mark] = ('not_assessable' if kind in ('company figure', 'theme figure') else 'n/a') if mark == 'G' \
+                    else 'holds' if mark in applicable else 'n/a'
+            row['B'] = [] if kind == 'refusal' else ['not_a_bet'] * len(outcome['answer']['ladder']['not_judged'])
+            for mark, value in expected.get(case, {}).items():
+                if mark != 'all':
+                    row[mark], row['why'] = value, 'planted'
+            if fail(case) and 'L' in applicable:
+                row['L'], row['why'] = 'fails', 'a part unlisted'
+            if unjustified(case) and kind == 'refusal':
+                row['N'], row['why'] = 'fails', 'the stated case does not apply'
+            lines.append(json.dumps(row))
+        (answers / f'reader-{family}-packet-1.jsonl').write_text('\n'.join(lines) + '\n')
+
+
+KEY = 'failed sends (agreed hard-line faults plus sends refused twice by code)'
+
+
+def test_zero_against_zero_is_inconclusive_not_a_close(run):
+    folder, _ = run
+    write_rows(folder, lambda case: False)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert verdict.startswith('inconclusive') and report['holds'][KEY] == {'sol': 0, 'astra': 0}
+
+
+def test_equal_failures_close_the_candidate(run):
+    folder, _ = run
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1']
+    write_rows(folder, lambda case: case.split('|', 1)[1] in topics and case.split('|')[0] in ('sol-d1', 'astra-d1'))
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 3, 'astra': 3} and verdict == 'closes it'
+
+
+def test_answers_the_high_arm_loses_to_code_refusals_count_as_failures_not_as_an_improvement(run, tmp_path):
+    import shutil
+    folder, _ = run
+    copy = tmp_path / 'copy'
+    shutil.copytree(folder, copy)
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2']
+    path = copy / 'run' / 'astra-d1' / 'outcomes.jsonl'
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    for row in rows:
+        if row['case'].split('|', 1)[1] in topics:
+            row.update(status='no ladder: refused', answer=None, view=None, passage=None)
+    path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    write_rows(copy, lambda case: case.startswith('sol-d1|') and case.split('|', 1)[1] in topics)
+    verdict, report = effort_probe.score(copy / 'run', copy / 'keys')
+    assert report['holds'][KEY] == {'sol': 4, 'astra': 4} and verdict == 'closes it'
+    assert all(report['holds']['failed per topic']['astra'][topic] == 1 for topic in topics)
+
+
+def test_two_astra_failures_against_five_are_inconclusive_not_a_move(run):
+    folder, _ = run
+    sol = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2', 'week-10-06:c1/clean-6']
+    write_rows(folder, lambda case: (case.startswith('sol-d1|') and case.split('|', 1)[1] in sol)
+               or (case.startswith('astra-d2|') and case.split('|', 1)[1] in sol[:2]))
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 5, 'astra': 2} and verdict == 'inconclusive'
+
+
+def test_three_astra_failures_close_the_route_even_against_six(run):
+    folder, _ = run
+    sol = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2', 'week-10-06:c1/clean-6',
+           'week-10-06:c1/clean-8']
+    write_rows(folder, lambda case: (case.startswith('sol-d1|') and case.split('|', 1)[1] in sol)
+               or (case.startswith('astra-d3|') and case.split('|', 1)[1] in sol[:3]))
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 6, 'astra': 3} and verdict == 'closes it'
+
+
+def test_an_unjustified_astra_refusal_where_sol_has_none_blocks_a_move(run):
+    folder, _ = run
+    sol = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2']
+    refusal = next(json.loads(line)['case'] for line in (folder / 'run' / 'astra-d1' / 'outcomes.jsonl').read_text().splitlines()
+                   if json.loads(line)['status'] == 'no ladder')
+    write_rows(folder, lambda case: case.startswith('sol-d1|') and case.split('|', 1)[1] in sol, unjustified=lambda case: case == refusal)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 4, 'astra': 1} and report['holds']['unjustified refusals'] == {'sol': 0, 'astra': 1}
+    assert verdict == 'inconclusive'
+
+
+def test_a_medium_arm_faulted_on_four_topics_where_high_is_clean_moves_the_candidate(run):
+    folder, _ = run
+    topics = ['fortnight:c1/clean-1', 'fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-2']
+    write_rows(folder, lambda case: case.startswith('sol-d1|') and case.split('|', 1)[1] in topics)
+    verdict, report = effort_probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 4, 'astra': 0} and verdict == 'moves the candidate'
+
+
+def test_a_missed_planted_control_voids_the_reading(run):
+    folder, _ = run
+    write_rows(folder, lambda case: False)
+    path = folder / 'run' / 'reading' / 'readers-answers' / 'reader-claude-packet-1.jsonl'
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    item = next(int(item) for item, (case, _) in key.items() if case == 'control|unlisted-part')
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    for row in rows:
+        if row['item'] == item:
+            row['L'], row['why'] = 'holds', ''
+    path.write_text('\n'.join(json.dumps(row) for row in rows) + '\n')
+    with pytest.raises(SystemExit, match='VOID: a family missed the planted control\\|unlisted-part'):
+        effort_probe.score(folder / 'run', folder / 'keys')
+
+
+def test_both_families_failing_a_sound_control_voids_the_reading_as_too_harsh(run):
+    folder, _ = run
+    write_rows(folder, lambda case: case == 'control|sound-clean-5')
+    with pytest.raises(SystemExit, match='VOID: both families fail a hard line on the sound control\\|sound-clean-5'):
+        effort_probe.score(folder / 'run', folder / 'keys')
+
+
+def test_the_check_refuses_a_high_request_that_differs_in_more_than_its_effort(tmp_path, monkeypatch):
+    real = effort_probe.built
+
+    def built(case, setting, rl):
+        request = real(case, setting, rl)
+        if setting.model == 'gpt-6-astra':
+            request['max_completion_tokens'] = request['max_completion_tokens'] + 1
+        return request
+    monkeypatch.setattr(effort_probe, 'built', built)
+    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+    with pytest.raises(SystemExit, match='CHECK FAILED'):
+        effort_probe.check()
+    assert not (tmp_path / 'check-passed.json').exists()
+
+
+def test_the_check_refuses_a_stored_sol_draw_whose_request_differs(tmp_path, monkeypatch):
+    stored = stored_sol(tmp_path / 'stored')
+    path = stored / 'sol-d2' / 'outcomes.jsonl'
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    rows[5]['requests'][0]['request_sha256'] = '0' * 64
+    path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    monkeypatch.setattr(effort_probe, 'STORED_CONTROL', stored)
+    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+    with pytest.raises(SystemExit, match='CHECK FAILED.*the stored sol request differs'):
+        effort_probe.check()
+    assert not (tmp_path / 'check-passed.json').exists()
+
+
+def test_a_first_astra_request_projecting_past_the_cap_stops_before_the_rest(tmp_path, monkeypatch):
+    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+    effort_probe.check()
+    costly = transport({'prompt_tokens': 5166, 'completion_tokens': 2000})        # $0.15 a send: $11.7 for 78
+    with pytest.raises(SystemExit, match='astra d1 STOPPED: projected'):
+        effort_probe.send(tmp_path / 'run', transport=costly)
+    assert costly.seen == ['gpt-6-astra']
+
+
+def test_the_first_astra_request_runs_alone_and_a_refusal_there_stops_the_run(tmp_path, monkeypatch):
+    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+    effort_probe.check()
+    calls = []
+    good = transport()
+
+    def refusing(provider, request):
+        calls.append(request['model'])
+        if request['model'] == 'gpt-6-astra':
+            error = effort_probe.model.TransportError('400 Bad Request: unsupported parameter')
+            error.http_status = 400                 # the transport's not-retried status (budget.NOT_RETRIED)
+            raise error
+        return good(provider, request)
+    with pytest.raises(SystemExit, match='astra d1 STOPPED'):
+        effort_probe.send(tmp_path / 'run', transport=refusing)
+    assert calls == ['gpt-6-astra']
+
+ succeeded in 0ms:
+M0 control (unmutated): 14 passed in 0.60s
+M1 near zero widened to 2: 1 failed, 13 passed in 0.68s | failed: ['test_two_astra_failures_against_five_are_inconclusive_not_a_move']
+M2 unjustified-refusal condition dropped: 1 failed, 13 passed in 0.67s | failed: ['test_an_unjustified_astra_refusal_where_sol_has_none_blocks_a_move']
+M3 closes at 3 dropped: 1 failed, 13 passed in 0.67s | failed: ['test_three_astra_failures_close_the_route_even_against_six']
+M4 projection not consulted: 1 failed, 13 passed in 0.74s | failed: ['test_a_first_astra_request_projecting_past_the_cap_stops_before_the_rest']
+M5 stored request check dropped: 1 failed, 13 passed in 0.68s | failed: ['test_the_check_refuses_a_stored_sol_draw_whose_request_differs']
+M6 control read from the run folder: 4 passed, 10 errors in 0.78s
+(M6's ten errors read: FileNotFoundError opening <run folder>/sol-d1/outcomes.jsonl, the control looked for in the run folder: caught.)
+
+ succeeded in 0ms:
+# Astra against sol on the unchanged request (council round 12; D632 when sent)
+
+**Question.** Does the top tier on the same provider, `gpt-6-astra`, bring the answer-choice step's failed sends near zero without
+more unjustified refusals?
+- Gate 1 asks for zero faults in 131 sends.
+- Sol measured about 6% a send (5 of 78), luna about 17% (D630).
+- This tests a model. It does not test a reading of the five boundary cases the sources leave open (D631, `model/rule-audit.md`).
+
+**Requests.** Each request is the frozen request byte for byte, with only `"model"` changed (`check-output.txt`).
+- Price: `gpt-6-astra` at its published $10 / $50 per million tokens, added to `model.PRICES` with its source. No credential or
+  provider cap changes.
+
+**Control: the three sol draws D629 sent today** (`poc/data/clean-model-probe-2026-11-16/sol-d{1,2,3}`).
+- The check confirms that each stored sol send's request equals the sol request built now (78 of 78).
+- **Why no fresh sol arm:**
+  - What remains of D439's $40 is about $9.0 (D588's $30.0, then $0.08 split, $0.20 effort and $0.72 model).
+  - Astra's plausible cost reaches $6.4: sol's measured tokens (5,166 in and 558 out a call) at astra's rates with no cache credit.
+  - A fresh sol arm plus reserves would not fit beside that.
+  - It would also re-measure a configuration sent hours earlier on the same bytes (AGENTS §7.3).
+- **Both arms are read again together, blind:** 78 sol, 78 astra and the same six controls (four from the reference control, the
+  planted unlisted part and the planted unjustified refusal). The old sol marks are not reused.
+
+**The send** (`astra_probe.py send`):
+- **Order:** astra d1, d2, d3, one attempt in flight. The worst-case reserve is $1.04 an attempt, against one $7.50 cap.
+- **First request:** astra d1's first request goes alone. Its charge is then priced for all 78 sends. If that projection plus one
+  attempt in flight passes $7.50, the rest is refused, at a cost of about $0.08.
+- **Stops:** any charge above its reserve, a cap stop or a lost outcome stops the draw as NOT MEASURED.
+- **Estimate:** $3.2 (sol's cache share) to $6.4 (no cache credit).
+
+**Verdict, fixed before the send.** Agreed means both families mark a hard line fails, with unresolved points counted as holds. Strict
+counts unresolved points as fails.
+- **Inconclusive** if the re-read sol arm has fewer than 3 failed sends.
+- **Moves**, when all of these hold:
+  - astra has at most 1 failed send of 78;
+  - its agreed-unjustified refusals are no more than sol's;
+  - no topic fails in 2 or more astra draws and in no sol draw;
+  - its unreadable answers are within sol's + 2;
+  - strict astra is below strict sol.
+- **Closes:** astra has 3 or more failed sends, or at least sol's − 1. At 3 of 78 (3.8% a send), the chance of zero faults in 131 sends
+  is about 0.6%.
+- **Otherwise:** inconclusive.
+
+**What each verdict does:**
+- **Moves:** astra is recorded as the leading candidate for the answer-choice step, with its measured rate and price, on Alex's page.
+  The gate-1 measurement on his 44 topics is his launch (D426).
+- **Closes:** the model route on this provider closes. Every remaining mover is then a ruling of Alex's (the five boundary cases) or a
+  gate definition.
+- **Inconclusive:** recorded with its counts, and no further paid model send.
+
+**Proofs at $0:**
+- `test_astra_probe.py`: 14 of 14 pass.
+- `mutants.txt`: six mutants, each caught by its decisive test (the closing rule, the move rule's two conditions, the projection, the
+  stored-request check, the control's folder).
+
+codex
+**Do not send this design.** It spends up to $7.50 while dropping the fresh control, and even a clean Astra result would be too small to establish that gate 1 is reachable.
+
+1. **Use a fresh Sol control.** The stored draws are useful context, but AGENTS §7.3 requires samples beside a fresh control. Re-reading them blind does not control for changes between the two sends. A smaller paired probe fits better: choose **12 topics before looking at their results**, covering figures, events, refusals and multi-part topics; send three fresh draws per model under one fixed cap. Do not select only Sol’s failures. This would be a screening test, with a separate later decision if it shows promise.
+
+2. **The proposed verdict overclaims.** Even **zero faults in 78 independent sends** leaves an approximate one-sided 95% upper bound of **3.8% per send**; one fault leaves a higher bound. The actual sends share 26 topics, so independence is not established. At most one fault can identify a promising candidate, not demonstrate a reliable zero-fault pass on 131 sends.
+
+   Strict counting should be reported with its own prewritten outcome: if the apparent advantage depends on counting every disputed mark in Astra’s favour, the result is **inconclusive**. Also, three Astra faults should close **this candidate under this test**, not the entire same-provider model route or all work until Alex returns. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN.md)
+
+3. **The code has two evidence limits.** The stored-request check compares canonical hashes of the **first** request, not the exact transmitted bytes or any repair request. Also, mutant M6 produced file-not-found errors; the repository rule says an error is not a caught defect merely because it stops a test. The first-request projection is a useful stop, but one request’s cost is not a reliable estimate for all 78. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/astra_probe.py), [mutants](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/mutants.txt)
+
+**CONSENSUS: no, because the fresh control and a decision rule proportionate to the sample are needed; prepare a smaller paired Astra-versus-Sol screen with those limits before a separate send decision.**
+tokens used
+862,378
+**Do not send this design.** It spends up to $7.50 while dropping the fresh control, and even a clean Astra result would be too small to establish that gate 1 is reachable.
+
+1. **Use a fresh Sol control.** The stored draws are useful context, but AGENTS §7.3 requires samples beside a fresh control. Re-reading them blind does not control for changes between the two sends. A smaller paired probe fits better: choose **12 topics before looking at their results**, covering figures, events, refusals and multi-part topics; send three fresh draws per model under one fixed cap. Do not select only Sol’s failures. This would be a screening test, with a separate later decision if it shows promise.
+
+2. **The proposed verdict overclaims.** Even **zero faults in 78 independent sends** leaves an approximate one-sided 95% upper bound of **3.8% per send**; one fault leaves a higher bound. The actual sends share 26 topics, so independence is not established. At most one fault can identify a promising candidate, not demonstrate a reliable zero-fault pass on 131 sends.
+
+   Strict counting should be reported with its own prewritten outcome: if the apparent advantage depends on counting every disputed mark in Astra’s favour, the result is **inconclusive**. Also, three Astra faults should close **this candidate under this test**, not the entire same-provider model route or all work until Alex returns. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN.md)
+
+3. **The code has two evidence limits.** The stored-request check compares canonical hashes of the **first** request, not the exact transmitted bytes or any repair request. Also, mutant M6 produced file-not-found errors; the repository rule says an error is not a caught defect merely because it stops a test. The first-request projection is a useful stop, but one request’s cost is not a reliable estimate for all 78. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/astra_probe.py), [mutants](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/mutants.txt)
+
+**CONSENSUS: no, because the fresh control and a decision rule proportionate to the sample are needed; prepare a smaller paired Astra-versus-Sol screen with those limits before a separate send decision.**

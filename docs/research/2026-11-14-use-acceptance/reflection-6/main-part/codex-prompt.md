@@ -1,0 +1,1 @@
+You are an independent, read-only reader. Read `/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/main-part/brief.md` and `/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/main-part/topics.json` and follow the brief exactly. Open no other file.

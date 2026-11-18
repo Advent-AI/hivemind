@@ -1,0 +1,9 @@
+**The three round-75 fixes are present, but I found one remaining mismatch in the recovery rule.** I would not send until it is settled.
+
+The reading form has a **G** mark for whether a figure’s ranges are a fair division around the amount in the article. The scorer’s `failed_marks()` iterates over `accounting.marks_that_apply()`, which deliberately excludes G, and `correct_written()` sees only that resulting set. Consequently, a figure answer with **G = fails** and no other failed mark can count as a “correct recovery,” contrary to the design’s “no mark settled as failing.” [Reading form]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:102), [accounting]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/accounting.py:36), [scorer]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score.py:92)
+
+Decide before the send whether G belongs in the recovery criterion. If it does, define how its `not_assessable` and disputed values are treated and test a G-failing recovery. If it remains a separate diagnostic, say explicitly that “correct” means **no failed gate-accounted mark**, report G beside each recovery, and avoid claiming the answer choices are wholly sound.
+
+The requested fixes otherwise check out: a code refusal cannot retain a refusal control, failed L/W/H marks prevent a recovery from counting, and N and code refusals remain in the harm comparison. The saved tests and mutant log address those distinctions. The two-arm comparison and conditional spending limit are also stated. [Design]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A2.md:47), [mutant log]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/test-mutants.txt)
+
+CONSENSUS: no, because G is a reader mark the stated “correct recovery” rule does not account for or explicitly exclude.

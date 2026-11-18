@@ -1,0 +1,600 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 134: slice 4a built and proven (D597); slice 4b (who writes, and copies; row 7) proposed
+
+## Slice 4a (D597)
+
+- **Built:**
+  - WAL set and checked before `open_db`'s schema, with the size limit on the writer's own connection;
+  - checks before each day for free space and for three failed checkpoints;
+  - `WriterStopped`, recorded beside the store, with the exact reason carried by the launcher to the run record;
+  - an orderly end.
+- **Tests:** `stage_b/test_writer_store.py`, 8 tests through `replay` and `run_stage_b.send` on the stored draw u1 with a fake judge:
+  - the mode and limit read back;
+  - low space before the first and third day;
+  - three failed checkpoints;
+  - a real held reader stopping the writer;
+  - a kill after committed partial-day writes, with five answers equal to a backup at the last completed day and nothing partial
+    embedded;
+  - the end with and without a reader.
+- The suite passes (327), the new system's folders (172), and the frozen checks. Mutants: 7 of 7 caught.
+- Still no writer lock.
+
+## Slice 4b, as row 7 states it
+
+1. **A `live_lock` module** (in `src/hivemind`, one owner for both sides):
+   - `lock_folder()`: `~/.hivemind-locks`, 0700, fail closed;
+   - `acquire(store_path, wait=False)`: realpath; refuse `st_nlink` > 1; `stat` → `<device>-<inode>.writer.lock`; `flock`
+     non-blocking; recheck the lock file's identity;
+   - `verify(held, store_path)`: the path's device and inode against the held lock, called on both sides of an open and at each
+     check point.
+2. **The writer:**
+   - `open_wal_store` creates the file, takes the lock, opens, verifies and only then writes. It holds the lock for the replay's life
+     and releases it after the end.
+   - Before each day it re-verifies the store's and the lock file's identity, and stops if either changed.
+3. **Preflight** (`scripts/preflight.py`):
+   - takes the lock without waiting, and refuses a store being written, naming the snapshot route;
+   - verifies on both sides of the open;
+   - copies with the backup API from a `mode=ro` source, sets `journal_mode=delete` on the copy, verifies again after the copy, and
+     releases.
+4. **A snapshot helper** (`live_lock.snapshot(store_path, dest)`): the backup API without the lock (it may run beside the writer, as
+   AGENTS §9's route), then `journal_mode=delete` on the copy and an integrity check.
+5. **Proofs (8):**
+   - aliases: own path and symlink meet the lock, a hard link is refused everywhere;
+   - the start race both ways;
+   - the path replaced after `stat` and during a copy;
+   - the writer's path replaced between create and open;
+   - the lock folder unwritable;
+   - a hand-replaced lock file detected at the next check point;
+   - a crashed store accepted by preflight (lock released by the system);
+   - a snapshot taken while the writer commits passes an integrity check and is readable read-only;
+   - **the filesystem-full test:** the store on a small disk image (`hdiutil create`/`attach`, a few MB, detached after), the writer
+     exits as a crash, readers serve the last completed day, and whether its reason was recorded is reported.
+
+**Asked of you:** anything this plan misses or overreaches, and whether mounting a small disk image in a test is acceptable or should
+be a separately run proof, not part of the suite.
+
+End with `CONSENSUS: yes` (build 4b) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the 4a evidence and trace the proposed lock and snapshot ownership through the writer and preflight, including what the disk-image proof would do to the test environment.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '140,213p;238,278p;402,455p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '145,215p;350,450p'
+rg -n 'def test_|backup|killed|filesystem|checkpoint|space' clean-arch/step4-2026-11-10/stage_b/test_writer_store.py
+nl -ba scripts/preflight.py | sed -n '175,210p'
+rg -n 'D597|D439' docs/DECISIONS.md | tail -3
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   140	     - a write that still meets a full filesystem mid-day (extending the store, its `-wal` or a side file) fails, and the writer
+   141	       exits non-zero as in a crash (row 6);
+   142	     - its stop reason may then be lost too, if the run's log is on the full disk;
+   143	     - **the guarantee in that case is the readers' boundedness** (they keep the last completed day), not the record.
+   144	       The process's exit status, seen by its supervisor, is the signal.
+   145	6. **A crash.**
+   146	   - WAL drops the unfinished transaction. The day's **already committed writes stay** in the store.
+   147	   - Readers stay bounded to the last completed day. Every row written during the unfinished day is dated by that day's processing
+   148	     steps, after the last completed day, so it is outside every allowed bound.
+   149	   - **The writer does not resume** (today's loop). The store is served as of its last completed day until it is replaced.
+   150	   - Resuming a stopped live store is a separate design, not covered here.
+   151	7. **Who is writing: a signal outside the store, and copies.**
+   152	   - **The lock folder: one owner, fixed, fail closed.**
+   153	     - One function (`live_lock.lock_folder()`) gives the folder to both the writer and preflight: `~/.hivemind-locks/`,
+   154	       created on first use with owner-only permissions (0700).
+   155	     - If it cannot be created, opened or written, both refuse and name it. Neither falls back to running without a lock.
+   156	     - **Lock files are never deleted or replaced** by any part of the system; only a person removes them, by hand, when no process
+   157	       runs.
+   158	     - After taking a lock, and again at each later check point (the writer before each day; preflight after its copy), the holder
+   159	       checks that the lock file's path still names the inode it locked. If not (someone replaced the file by hand), it stops or
+   160	       discards and refuses.
+   161	     - A hand deletion while a lock is held is detected at the next check point, not prevented: the rule against deleting lock
+   162	       files is what prevents it.
+   163	   - **The lock, named by the store file, not its path:** `<device>-<inode>.writer.lock` in that folder. Both numbers are read with
+   164	     `stat`, which reads no content of the store.
+   165	   - **One name per store:**
+   166	     - SQLite finds a WAL store's `-wal` and `-shm` by the path it opens, so a store must be opened by its own path;
+   167	     - a symlink is resolved to that path (`realpath`) before anything else;
+   168	     - a store file with more than one hard link (`st_nlink` > 1) is refused, naming the reason. A hard link elsewhere would open the
+   169	       main file without its WAL and read a stale state.
+   170	   - **Operating precondition: a store's path is never replaced in place while it may be in use.** Replacing a store means a new
+   171	     path. This is the contract's own precondition, supported by AGENTS §9's working rule that "new stored data gets a new, dated
+   172	     name" (round 119), not that rule's wording.
+   173	   - **The checks detect a single replacement:**
+   174	     - the holder reads the store's device and inode, takes their lock, opens the store, and reads its path's device and inode
+   175	       again;
+   176	     - preflight checks once more after its copy;
+   177	     - any difference discards what was opened or copied, releases and refuses.
+   178	   - **What they cannot detect, stated:** a path swapped away and back (A, then B at the moment of the open, then A again) passes
+   179	     both checks. The contract does not claim to bind the opened file to the locked one in that case; the rule above excludes it.
+   180	   - **The writer locks before it writes:**
+   181	     - it creates its store file empty and exclusively (create-new, failing if the path exists);
+   182	     - it takes that file's lock without waiting;
+   183	     - it opens it as a database and verifies its identity as above, and only then writes;
+   184	     - if the lock is held (by preflight), it refuses to start, with that reason.
+   185	     - It holds the lock (`flock`) for its whole life; the operating system releases it on any exit, crash included.
+   186	   - **Preflight, before it touches a store, always takes that store's lock without waiting,** creating the lock file if it is
+   187	     absent. There is no "no lock file" branch:
+   188	     - **if the lock is held, a writer is running:** preflight refuses, naming the run's snapshot script (AGENTS §9's sanctioned way);
+   189	     - otherwise it keeps the lock through its verified copy (the backup API, from a `mode=ro` source) and releases it after;
+   190	     - historical stores and production's are copied the same way; taking a fresh lock on them is harmless.
+   191	     - AGENTS §9 remains the only protection for production's own writer, which takes no such lock; changing it is out of scope.
+   192	   - **Snapshots:** the snapshot script is the one toucher that copies a store while its writer runs, with the backup API.
+   193	     Preflight accepts its snapshots like any store with no writer.
+   194	   - **A copy leaves WAL mode** (found in slice 3's build):
+   195	     - a backup of a WAL store keeps WAL mode;
+   196	     - a read-only reader of that copy then fails with "unable to open database file", since it cannot create the shared-memory
+   197	       file;
+   198	     - so the snapshot script, and preflight's own copy, set `journal_mode=delete` on the copy before anyone reads it.
+   199	   - **Orderly stop:**
+   200	     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+   201	       timeout);
+   202	     - if service readers hold it, the store stays in WAL mode and the writer records "stopped in order, WAL kept" in its run's
+   203	       outcome;
+   204	     - either way it then releases its lock.
+   205	     - Journal mode is never used as the sign of a live store; the lock is.
+   206	8. **AGENTS §9 ("Never open a live run's databases") stays in force.**
+   207	   - **Proposed decision P1, to be resolved before any live-service operation and not assumed by any proof:** the product's API and
+   208	     MCP server may read a live WAL store under rows 1 to 7. Every other toucher above uses a backup-API snapshot.
+   209	   - The proofs run on test stores made for them, never on a live run.
+   210	
+   211	## State × event (the store's state at the request's transaction × the request)
+   212	
+   213	| State | Bounds omitted | Upper bound ≤ last completed day | Upper bound > last completed day | Start-up reads | Copy |
+   238	   - an error while opening connections leaves none open;
+   239	   - a call that fails mid-read leaves no open transaction and no open connection;
+   240	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   241	   - MCP's object list after a later day includes that day's objects;
+   242	   - no transaction is open between MCP calls.
+   243	5. **Checkpoint and disk:**
+   244	   - below the free-space minimum, the writer stops before the day with its reason, and readers serve the last completed day;
+   245	   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+   246	   - a filesystem-full error mid-day: the store on a small disk image (`hdiutil`, a few MB), filled while the `-wal` grows. The
+   247	     writer exits non-zero, and readers serve the last completed day. Whether its reason was recorded is reported, not required;
+   248	   - with a long read held, the writer commits;
+   249	   - after the read ends, a checkpoint completes, and a reset brings the `-wal` within the limit;
+   250	   - with a reader held across three completed days, the writer stops before the fourth with its reason recorded, and readers serve
+   251	     the last completed day.
+   252	6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+   253	   within the timeout.
+   254	7. **A crash:** the writer is killed after committed writes mid-day.
+   255	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+   256	   - The search index and the text sent to the embedding service (recorded by a fake transport) equal the backup's.
+   257	   - The partial day's rows are present in the file and invisible to every route and to the index.
+   258	8. **Copies:**
+   259	   - a backup taken while the writer commits passes an integrity check;
+   260	   - preflight refuses a store whose writer holds the lock, opened by its own path or by a symlink to it;
+   261	   - a store with a hard link elsewhere is refused by every entry point;
+   262	   - a crashed writer's store with committed data still in its WAL: a copy through a symlink equals a copy through the own path;
+   263	   - preflight arriving just before the writer: whichever takes the lock first wins. A writer finding preflight's lock refuses to
+   264	     start and writes nothing; preflight finding the writer's lock refuses to copy;
+   265	   - the store's path replaced after preflight's `stat` and before its open, and again during its copy: each is detected, the
+   266	     copy discarded and the request refused;
+   267	   - the writer's path replaced between its create and its open: the writer refuses;
+   268	   - the lock folder unwritable: both refuse and name it;
+   269	   - a held lock file deleted and recreated by hand: a second process can lock the new file, so exclusion is broken until the
+   270	     holder's next check. The writer rechecks its lock file's identity before each day and stops if it changed; preflight rechecks
+   271	     after its copy and discards it. The test shows detection at those points, not prevention;
+   272	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   273	     and every historical input it accepts today;
+   274	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   275	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   276	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   277	8b. **The index:**
+   278	   - a build failing after one batch leaves only correct vectors, and the next build embeds the rest;
+   402	  3. it closes;
+   403	  4. it opens the store through `store.open_db`, which writes its schema in WAL mode (the mode is kept in the file);
+   404	  5. **it sets `journal_size_limit` (64 MB) on that writer connection,** since the limit belongs to a connection, not to the file.
+   405	- A test reads both `journal_mode` and `journal_size_limit` back on the writer's own connection after `open_db`, and again after the
+   406	  first day.
+   407	
+   408	**Stops, through the real launcher (`run_stage_b.send`).**
+   409	
+   410	- **The stop:** `ladder_adapter.WriterStopped(reason, last_completed_day)`, an `Exception` that `run_stage_b.resendable` does not
+   411	  accept.
+   412	- **Where it is raised:** in `replay`, before a day when the free space is below 20 times the store's size (main file and `-wal`), or
+   413	  when the truncating checkpoint after a completed day has failed for 3 consecutive days. Before raising, `replay` writes
+   414	  `adapter-counts.json` with the stop's reason and the last completed day, so the partial result is on disk.
+   415	- **What the launcher does with it:** its existing handling of a stop no resend can change, with one small change so the stop's
+   416	  own reason reaches the run (round 132):
+   417	  - `limit.stop(reason)`, where the reason for a `WriterStopped` is `"<run> incomplete: <the stop's reason>"` and not only the
+   418	    exception's name;
+   419	  - the attempt recorded with its reason;
+   420	  - the draw's state `incomplete`;
+   421	  - no redo, and every later launch stopped.
+   422	  - It is never recorded as complete.
+   423	- **The store keeps every completed day,** because the stop comes before a day starts or after a day's checkpoint. Readers keep
+   424	  serving the last completed day.
+   425	- **A stop before the first day** leaves the store empty (its tables, no step), which readers read as an empty store, and is recorded
+   426	  `incomplete` with its reason.
+   427	- **Tests through `run_stage_b.send` with the fake judge:**
+   428	  - low space before the first day;
+   429	  - low space before the third day (the last completed day is the second);
+   430	  - three failed checkpoints;
+   431	  - in each case: the exact reason in the attempt **and** in the run-level record (`stopped`), the draw's state, no redo, the
+   432	    store's last completed day, and the counts file's reason.
+   433	
+   434	**Its end.** After the last day the writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store,
+   435	it stays in WAL mode and "stopped in order, WAL kept" is recorded in `adapter-counts.json`. Tested with and without a reader.
+   436	
+   437	**Limit of 4a, stated:** until slice 4b the writer takes no lock. 4a's proofs run on isolated test stores and do not make a live run,
+   438	or preflight beside one, safe. P1 stays unresolved.
+   439	
+   440	## Not covered
+   441	
+   442	- Resuming a stopped live store.
+   443	- The Idea planner on a new-system ledger.
+   444	- A long-running service's restart and monitoring.
+   445	- The page's note when its live read fails, which is Alex's presentation choice.
+   145	        if 'reserve' in entry:
+   146	            reserves[entry['attempt']] = entry['reserve']
+   147	        elif 'charge' in entry:
+   148	            charges[entry['attempt']] = entry['charge']
+   149	    return sum(charges.values()) + sum(reserve for attempt, reserve in reserves.items() if attempt not in charges)
+   150	
+   151	
+   152	def article_inputs(trace_path):
+   153	    """Per article, by manifest position (as `adapter.trace_articles` numbers them): its input id, from the first segment's manifest."""
+   154	    first = str(trace_path).split('+')[0]
+   155	    conn = sqlite3.connect(f'file:{first}?mode=ro', uri=True)
+   156	    try:
+   157	        return {n: iid for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+   158	    finally:
+   159	        conn.close()
+   160	
+   161	
+   162	STORE_SIZE_LIMIT = 64 * 1024 * 1024        # the -wal's size after a reset (live-service/OPERATING-CONTRACT.md, row 5)
+   163	FREE_SPACE_FACTOR = 20                     # free space needed before a day, as a multiple of the store's size (main file and -wal)
+   164	CHECKPOINT_FAILURES_TO_STOP = 3            # consecutive completed days whose truncating checkpoint failed
+   165	
+   166	
+   167	class WriterStopped(Exception):
+   168	    """The writer stopped before a day, its store holding every completed day (OPERATING-CONTRACT.md, "The writer's start, stops and
+   169	    end"); a stop no resend can change."""
+   170	
+   171	    def __init__(self, reason, last_completed_day):
+   172	        self.reason, self.last_completed_day = reason, last_completed_day
+   173	        super().__init__(reason)
+   174	
+   175	
+   176	def open_wal_store(path):
+   177	    """The new store, created empty and exclusively, put in WAL mode (checked) before `store.open_db` writes its schema, with the -wal
+   178	    size limit set on the writer's own connection."""
+   179	    path = Path(path)
+   180	    os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
+   181	    first = sqlite3.connect(str(path))
+   182	    try:
+   183	        mode = first.execute('pragma journal_mode=wal').fetchone()[0]
+   184	    finally:
+   185	        first.close()
+   186	    if mode != 'wal':
+   187	        raise SystemExit(f'{path}: the journal mode is {mode!r}, not wal: refused')
+   188	    conn = store.open_db(str(path))
+   189	    conn.execute(f'pragma journal_size_limit={STORE_SIZE_LIMIT}')
+   190	    return conn
+   191	
+   192	
+   193	def store_bytes(path):
+   194	    path = Path(path)
+   195	    return sum(p.stat().st_size for p in (path, path.with_name(path.name + '-wal')) if p.exists())
+   196	
+   197	
+   198	def free_bytes(folder):
+   199	    return shutil.disk_usage(folder).free
+   200	
+   201	
+   202	def truncate_checkpoint(conn):
+   203	    """A truncating checkpoint with a short wait; True when it completed (no reader held it back)."""
+   204	    conn.execute('pragma busy_timeout=1000')
+   205	    try:
+   206	        return conn.execute('pragma wal_checkpoint(TRUNCATE)').fetchone()[0] == 0
+   207	    except sqlite3.OperationalError:
+   208	        return False
+   209	
+   210	
+   211	def leave_wal(conn):
+   212	    """The writer's orderly end: rollback-journal mode when no reader holds the store; otherwise WAL is kept. Returns the mode."""
+   213	    conn.execute('pragma busy_timeout=1000')
+   214	    try:
+   215	        return conn.execute('pragma journal_mode=delete').fetchone()[0]
+   350	def ladder_configuration(archive_path=None):
+   351	    """The checksum of the ladder configuration that wrote the stored answers, as its model archive records it: exactly one."""
+   352	    import sqlite3
+   353	    conn = sqlite3.connect(f'file:{Path(archive_path or LADDER_ARCHIVE)}?mode=ro', uri=True)
+   354	    try:
+   355	        found = conn.execute('select distinct config_version, config_checksum from model_calls').fetchall()
+   356	    finally:
+   357	        conn.close()
+   358	    if len(found) != 1:
+   359	        raise SystemExit(f'the ladder archive names {len(found)} configurations, not one')
+   360	    return f'{found[0][0]} {found[0][1]}'
+   361	
+   362	
+   363	def calendar_days(first, last):
+   364	    day = datetime.date.fromisoformat(first)
+   365	    while day.isoformat() <= last:
+   366	        yield day.isoformat()
+   367	        day += datetime.timedelta(days=1)
+   368	
+   369	
+   370	def replay(run, output_folder, *, transport=None, cap_usd=0.66, sleep=None, limit=None, inputs=None, shared=None, end_day=None):
+   371	    """`inputs` (WIRING-DESIGN.md §A, D448) names a fresh draw's files: {'trace', 'step2', 'ladders', 'ladder_archive', 'cases',
+   372	    'output_root'}; any key left out takes Stage B's value for `run`. `shared` is the run's shared ledger. The loop walks every
+   373	    calendar day from the first article's day to `end_day` (the last article's day when left out) and closes due questions at each
+   374	    day's end as production does (D566, CLOSING-DESIGN.md)."""
+   375	    inputs = dict(inputs or {})
+   376	    output_root = Path(inputs.get('output_root', OUTPUT_ROOT))
+   377	    output = Path(output_folder).resolve()
+   378	    if transport is None and output_root.resolve() not in output.parents:
+   379	        raise SystemExit(f'a live replay writes only under {output_root}')
+   380	    output.mkdir(parents=True, exist_ok=False)
+   381	    trace_path, step2_folder = (inputs['trace'], Path(inputs['step2'])) if 'trace' in inputs else DRAWS[run]
+   382	    ladders_path = Path(inputs.get('ladders', LADDERS))
+   383	    by_article, library = adapter.load_draw(trace_path, step2_folder)
+   384	    days_of, opened, failed = adapter.trace_articles(trace_path)
+   385	    ladders = ladders_for(run, opened, days_of, inputs.get('cases'), ladders_path)
+   386	    source = ladder_configuration(inputs.get('ladder_archive'))
+   387	    revisions_by_record = collections.defaultdict(list)
+   388	    for group in library['groups'].values():
+   389	        for revision in group['revises']:
+   390	            revisions_by_record[revision['by']].append(revision['group'])
+   391	    later_by_article = collections.defaultdict(list)
+   392	    for entry in library['later_log']:
+   393	        later_by_article[entry['article']].append(entry)
+   394	    days = collections.OrderedDict()
+   395	    for k in sorted(days_of):
+   396	        days.setdefault(days_of[k], []).append(k)
+   397	    if list(days) != sorted(days):
+   398	        raise SystemExit('the Step 1 articles are not in day order')
+   399	    runner = LadderAdapter(output / 'views.sqlite', output / 'archive.sqlite', output / 'spend.jsonl', transport=transport, cap_usd=cap_usd, sleep=sleep,
+   400	                           limit=limit, shared=shared)
+   401	    spent_before = runner.budget.spent_usd
+   402	    runner.counts['articles not completed by Step 1'] = len(failed)
+   403	    runner.counts['ladder configuration'] = source
+   404	    runner.counts['ladder answers file sha256'] = hashlib.sha256(ladders_path.read_bytes()).hexdigest()
+   405	    inputs_of = article_inputs(trace_path)
+   406	    last_article_day = list(days)[-1]
+   407	    end_day = end_day or last_article_day
+   408	    if end_day < last_article_day:
+   409	        raise SystemExit(f'the end day {end_day} is before the last article day {last_article_day}: refused')
+   410	    sequences = {}                                   # the trace's article number k -> the store's sequence (CLOSING-DESIGN.md §1)
+   411	    views_path, failed_checkpoints = output / 'views.sqlite', 0
+   412	
+   413	    def stop(reason):
+   414	        """Record the stop and the store's last completed day beside the store, then stop before the day."""
+   415	        last = store.last_completed_day(runner.conn)
+   416	        runner.counts['stopped'] = reason
+   417	        runner.counts['last completed day'] = last
+   418	        (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   419	        raise WriterStopped(reason, last)
+   420	
+   421	    for day in calendar_days(list(days)[0], end_day):
+   422	        if failed_checkpoints >= CHECKPOINT_FAILURES_TO_STOP:
+   423	            stop(f'the truncating checkpoint failed after {failed_checkpoints} consecutive completed days (a reader held the store)')
+   424	        needed = FREE_SPACE_FACTOR * store_bytes(views_path)
+   425	        if free_bytes(output) < needed:
+   426	            stop(f'free space below {FREE_SPACE_FACTOR} times the store ({needed} bytes needed) before {day}')
+   427	        articles = days.get(day, [])
+   428	        runner.overdue_invariant(day)
+   429	        changed = set()
+   430	        for k in articles:
+   431	            seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+   432	            input_id = by_article[k][0]['input_id'] if k in by_article else f'article:{k}'
+   433	            opened_here = sorted(opened.get(k, {}), key=lambda name: int(name.split('-', 1)[1]))
+   434	            for thesis_id in opened_here:
+   435	                runner.open_thesis(thesis_id, ladders[thesis_id], k, seq, day, input_id, source)
+   436	            runner.article(seq, by_article.get(k, []), library, revisions_by_record, later_by_article.get(k, []), changed)
+   437	            runner.record_article(seq, inputs_of[k], day)       # after its records are written, as production marks a handover
+   438	            for thesis_id in opened_here:
+   439	                for view_id in runner.mapping.get(thesis_id, []):
+   440	                    if runner.conn.execute('select count(*) from evidence_links where view_id=?', (view_id,)).fetchone()[0] == 0:
+   441	                        runner.counts['views with no opening evidence'] += 1
+   442	        runner.conn.commit()
+   443	        if changed:
+   444	            runner.judge(day, sequences[max(articles)], changed)
+   445	        runner.close_and_complete(day)
+   446	        failed_checkpoints = 0 if truncate_checkpoint(runner.conn) else failed_checkpoints + 1
+   447	    mode = leave_wal(runner.conn)
+   448	    runner.counts['store journal mode at the end'] = mode
+   449	    if mode != 'delete':
+   450	        runner.counts['stopped in order'] = 'WAL kept: a reader held the store at the end'
+24:def test_the_store_is_in_wal_mode_with_its_size_limit_on_the_writers_connection_from_its_first_write(tmp_path, monkeypatch):
+42:def test_production_stores_keep_the_rollback_journal(tmp_path):
+47:def low_space_from(monkeypatch, nth_day):
+48:    """Free space reported below the need from the `nth_day`-th day the writer checks (1 = before the first day)."""
+58:def test_low_space_stops_the_writer_before_a_day_and_the_launcher_records_it_incomplete_without_a_redo(tmp_path, monkeypatch, nth_day, expected_last):
+59:    low_space_from(monkeypatch, nth_day)
+65:    assert attempt_reason.startswith('WriterStopped: free space below 20 times the store')
+75:def test_three_failed_checkpoints_stop_the_writer_before_the_next_day(tmp_path, monkeypatch):
+76:    monkeypatch.setattr(ladder_adapter, 'truncate_checkpoint', lambda conn: False)
+79:    assert record['stopped'] == 'u1 incomplete: the truncating checkpoint failed after 3 consecutive completed days (a reader held the store)'
+83:def test_a_reader_held_across_three_completed_days_stops_the_writer_and_readers_keep_the_last_completed_day(tmp_path, monkeypatch):
+84:    """The real checkpoint, held back by a real reader transaction opened after the first day."""
+100:    assert stopped.value.reason.startswith('the truncating checkpoint failed after 3')
+109:def test_a_writer_killed_after_committed_partial_day_writes_leaves_every_answer_equal_to_its_last_completed_day(tmp_path, monkeypatch):
+117:            raise KeyboardInterrupt('killed mid-day, after the day\'s articles were committed')
+121:            target = sqlite3.connect(str(tmp_path / 'backup.sqlite'))
+122:            self.conn.backup(target)
+129:    live, kept = service.open_ledger(str(out / 'views.sqlite')), service.open_ledger(str(tmp_path / 'backup.sqlite'))
+146:def test_the_writers_end_leaves_wal_mode_without_a_reader_and_keeps_it_with_one(tmp_path, monkeypatch):
+   175	        user = json.loads(request_row['request_json'])['messages'][1]['content']
+   176	        return [{'view_id': v} for v in dict.fromkeys(MATCH_SHOWN.findall(user))]
+   177	    reasons = [x.get('reason', '') for x in decisions.get('candidates', []) + decisions.get('evidence', [])]
+   178	    if reasons and all(r.startswith('jev:') for r in reasons):
+   179	        return [{'view_id': v} for v in dict.fromkeys(JEV_ASKED.findall(' '.join(x.get('reason', '') for x in decisions.get('candidates', []))))]
+   180	    return None
+   181	
+   182	
+   183	def part_c(archive_conn, views_paths, uni):
+   184	    reasons, examples = collections.Counter(), collections.defaultdict(list)
+   185	    judged = refused_records = 0
+   186	    per_ledger = []
+   187	    for path in views_paths:
+   188	        ledger_judged, skipped = 0, collections.Counter()
+   189	        # matching.check writes suggested themes to the review pool, so it runs on a scratch copy, never on the real file
+   190	        scratch = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
+   191	        shutil.copy(path, scratch)
+   192	        conn = sqlite3.connect(scratch)
+   193	        conn.row_factory = sqlite3.Row
+   194	        for rec in conn.execute('select input_id, call_no, shown_json, decisions_json, request_sha256 from match_records order by id'):
+   195	            handover_row = conn.execute('select handover_json from handovers where input_id=? order by id desc limit 1', (rec['input_id'],)).fetchone()
+   196	            if not handover_row or not rec['decisions_json']:
+   197	                skipped['no handover or no decision'] += 1
+   198	                continue
+   199	            shown_views = shown_for_record(archive_conn, rec, json.loads(rec['decisions_json']))
+   200	            if shown_views is None:
+   201	                skipped['request not in this archive'] += 1
+   202	                continue
+   203	            handover = json.loads(handover_row['handover_json'])
+   204	            shown = json.loads(rec['shown_json'])
+   205	            lists = matching.Lists(shown.get('candidates', {}), {tuple(k.split('|', 1)): v for k, v in shown.get('evidence', {}).items()})
+   206	            if rec['call_no'] <= 2:
+   207	                candidates, evidence = handover['candidates'], handover['evidence']
+   208	            else:                                   # the second call: candidate-linked evidence under its destination
+   209	                wanted = {k[0] for k in lists.evidence_lists}
+   210	                candidates, evidence = [], [dict(e, links=[k[1] for k in lists.evidence_lists if k[0] == e['id']]) for e in handover['evidence'] if e['id'] in wanted]
+924:| D580 | 2026-11-16 | Under D439 (council rounds 68 and 69): no reviewed repair for the unlisted parts (the decisions give no general rule for the main part of a multi-part topic; an independent reader left 29 of 63 open); arm A stays stopped; next, a $0 check of the Idea planner on new-system answer shapes | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DECLINE-AUDIT.md` |
+925:| D581 | 2026-11-16 | Under D439 (council rounds 70 to 72): the Idea planner shows a three-choice event as Yes and Still open; the event-driver design parked as recorded input; no bounded gate-moving candidate on the record; paid work and new lines held until Alex returns or the council names one | in force | `docs/research/2026-11-14-use-acceptance/idea-planner/RESULT.md` |
+941:| D597 | 2026-11-16 | Slice 4a built and proven at $0 on isolated test stores: the writer's store in WAL mode (set before its schema) with a 64 MB size limit on its connection; a stop before a day on low space or three failed checkpoints, recorded with its reason and last completed day and never resent; crash bounds equal to a backup at the last completed day; an orderly end; 327 + 172 tests, 7 of 7 mutants; no writer lock yet | in force | `clean-arch/step4-2026-11-10/stage_b/test_writer_store.py` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step4-2026-11-10/stage_b/test_writer_store.py | sed -n '102,150p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '170,195p;445,470p'
+rg -n 'open_db|open_read_only\\(' src/hivemind/service.py src/hivemind/views/store.py scripts/hivemind_api.py scripts/hivemind_mcp.py | head -20
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   102	    holder['conn'].rollback()
+   103	    days = completed_days(out / 'views.sqlite')
+   104	    assert len(days) == 3 and stopped.value.last_completed_day == days[-1]
+   105	    with service.open_ledger(str(out / 'views.sqlite')) as fresh:
+   106	        assert service.resolve_bound(fresh, None) == days[-1]
+   107	
+   108	
+   109	def test_a_writer_killed_after_committed_partial_day_writes_leaves_every_answer_equal_to_its_last_completed_day(tmp_path, monkeypatch):
+   110	    out = tmp_path / 'out'
+   111	    taken = {}
+   112	    real = ladder_adapter.LadderAdapter.close_and_complete
+   113	
+   114	    def complete_two_days_then_die_in_the_third(self, day):
+   115	        done = len(taken.get('days', []))
+   116	        if done == 2:
+   117	            raise KeyboardInterrupt('killed mid-day, after the day\'s articles were committed')
+   118	        closed = real(self, day)
+   119	        taken.setdefault('days', []).append(day)
+   120	        if len(taken['days']) == 2:
+   121	            target = sqlite3.connect(str(tmp_path / 'backup.sqlite'))
+   122	            self.conn.backup(target)
+   123	            target.execute('pragma journal_mode=delete')
+   124	            target.close()
+   125	        return closed
+   126	    monkeypatch.setattr(ladder_adapter.LadderAdapter, 'close_and_complete', complete_two_days_then_die_in_the_third)
+   127	    with pytest.raises(KeyboardInterrupt):
+   128	        ladder_adapter.replay('u1', out, transport=fake_judge, cap_usd=5.0)
+   129	    live, kept = service.open_ledger(str(out / 'views.sqlite')), service.open_ledger(str(tmp_path / 'backup.sqlite'))
+   130	    partial = live.execute('select count(*) from processing_steps where publication_day > ?', (taken['days'][-1],)).fetchone()[0]
+   131	    assert partial > 0                                                        # the third day's articles are in the file
+   132	    item_of = bundle.item_lookup(None)
+   133	    for name, call in (('views', lambda c: service.views(c, None, None, include_closed=True)),
+   134	                       ('library', lambda c: bundle.library(c, None)),
+   135	                       ('changes', lambda c: service.changes(c, '2000-01-01')),
+   136	                       ('search', lambda c: search.search(c, None, 'revenue data center', 10, semantic=False)),
+   137	                       ('days', lambda c: bundle.days(c))):
+   138	        assert call(live) == call(kept), name
+   139	    sent = []
+   140	    index = search.open_index(str(tmp_path / 'index.sqlite'))
+   141	    search.build_index(live, index, embed=lambda texts, model: (sent.extend(texts) or search.fake_embed(texts, model, dims=8)))
+   142	    visible = {r['view_id'] for r in service.summaries(kept, None, include_closed=True)}
+   143	    assert len(sent) == len(visible)                                          # nothing of the partial day is embedded
+   144	
+   145	
+   146	def test_the_writers_end_leaves_wal_mode_without_a_reader_and_keeps_it_with_one(tmp_path, monkeypatch):
+   147	    runner = ladder_adapter.replay('u1', tmp_path / 'alone', transport=fake_judge, cap_usd=5.0)
+   148	    assert runner.counts['store journal mode at the end'] == 'delete' and 'stopped in order' not in runner.counts
+   149	    held = {}
+   150	    real = ladder_adapter.leave_wal
+   170	
+   171	    def __init__(self, reason, last_completed_day):
+   172	        self.reason, self.last_completed_day = reason, last_completed_day
+   173	        super().__init__(reason)
+   174	
+   175	
+   176	def open_wal_store(path):
+   177	    """The new store, created empty and exclusively, put in WAL mode (checked) before `store.open_db` writes its schema, with the -wal
+   178	    size limit set on the writer's own connection."""
+   179	    path = Path(path)
+   180	    os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
+   181	    first = sqlite3.connect(str(path))
+   182	    try:
+   183	        mode = first.execute('pragma journal_mode=wal').fetchone()[0]
+   184	    finally:
+   185	        first.close()
+   186	    if mode != 'wal':
+   187	        raise SystemExit(f'{path}: the journal mode is {mode!r}, not wal: refused')
+   188	    conn = store.open_db(str(path))
+   189	    conn.execute(f'pragma journal_size_limit={STORE_SIZE_LIMIT}')
+   190	    return conn
+   191	
+   192	
+   193	def store_bytes(path):
+   194	    path = Path(path)
+   195	    return sum(p.stat().st_size for p in (path, path.with_name(path.name + '-wal')) if p.exists())
+   445	        runner.close_and_complete(day)
+   446	        failed_checkpoints = 0 if truncate_checkpoint(runner.conn) else failed_checkpoints + 1
+   447	    mode = leave_wal(runner.conn)
+   448	    runner.counts['store journal mode at the end'] = mode
+   449	    if mode != 'delete':
+   450	        runner.counts['stopped in order'] = 'WAL kept: a reader held the store at the end'
+   451	    (output / 'sequences.json').write_text(json.dumps({str(k): seq for k, seq in sequences.items()}, indent=1) + '\n')
+   452	    runner.counts['judging usd this draw (charged: from tokens, or the reserve when no usage came back)'] = round(runner.budget.spent_usd - spent_before, 4)
+   453	    runner.counts['judging usd of the whole limit so far (from its ledger)'] = round(ledger_total(runner.budget.ledger_path), 4)
+   454	    (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   455	    (output / 'judge-requests.json').write_text(json.dumps(runner.sent, indent=1))
+   456	    return runner
+   457	
+   458	
+   459	if __name__ == '__main__':
+   460	    raise SystemExit('Stage B is sent through run_stage_b.py, which runs the three draws under one spending limit')
+scripts/hivemind_mcp.py:49:        items = store.open_read_only(ARGS.items) if os.path.exists(ARGS.items) else None
+src/hivemind/service.py:20:    return store.open_read_only(path)
+src/hivemind/views/store.py:55:def open_db(path):
+src/hivemind/views/store.py:216:def open_read_only(path):
+scripts/hivemind_api.py:76:            self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+
+codex
+**Not yet.** Slice 4b needs a precise lock-release and snapshot contract before it is built. The disk-image test should be a separately invoked integration proof, not part of the ordinary suite.
+
+- **Hold the lock until the writer connection is closed**, including initialization failures, `WriterStopped`, judge errors and interrupts. Today `replay` returns a runner that still owns its connection; merely releasing the lock “after the end” could leave a writable connection open after preflight is allowed in. Specify ownership and test that every exit closes the connection before releasing the lock. [Replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:445).
+
+- **Apply the path rules to the snapshot helper and readers too.** The contract refuses hard-linked stores and resolves symlinks before opening; `snapshot()` bypasses `acquire`, so it needs those checks independently. Specify that its destination is a new, distinct path, how it handles a failed backup or failed conversion from WAL mode, and that an incomplete copy is not offered as a snapshot. Test the helper through its user-facing entry point. [Path contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:165).
+
+- **Keep the filesystem-full proof separate and bounded.** A small temporary disk image is appropriate for proving actual filesystem exhaustion. Give the proof its own explicit invocation, unique temporary image and mount point, and guaranteed detach and cleanup; report an unavailable mount as *unexercised*, not passed. It should never fill the workspace’s filesystem.
+
+There is one correction to D597’s evidence: the “killed” writer test raises `KeyboardInterrupt` in the same process; it does not kill a writer process. It establishes a partial-day exception case on five reads, not process-death recovery. Keep that result, and use a subprocess termination in 4b to prove OS lock release and the post-crash copy. [Writer test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_writer_store.py:109).
+
+I inspected the code and tests; I did not rerun the reported suites. P1 remains unresolved, so these proofs do not authorize a live service.
+
+CONSENSUS: no, because lock release and the unlocked snapshot path need explicit ownership and failure behavior before building 4b.
+tokens used
+3,536,325
+**Not yet.** Slice 4b needs a precise lock-release and snapshot contract before it is built. The disk-image test should be a separately invoked integration proof, not part of the ordinary suite.
+
+- **Hold the lock until the writer connection is closed**, including initialization failures, `WriterStopped`, judge errors and interrupts. Today `replay` returns a runner that still owns its connection; merely releasing the lock “after the end” could leave a writable connection open after preflight is allowed in. Specify ownership and test that every exit closes the connection before releasing the lock. [Replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:445).
+
+- **Apply the path rules to the snapshot helper and readers too.** The contract refuses hard-linked stores and resolves symlinks before opening; `snapshot()` bypasses `acquire`, so it needs those checks independently. Specify that its destination is a new, distinct path, how it handles a failed backup or failed conversion from WAL mode, and that an incomplete copy is not offered as a snapshot. Test the helper through its user-facing entry point. [Path contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:165).
+
+- **Keep the filesystem-full proof separate and bounded.** A small temporary disk image is appropriate for proving actual filesystem exhaustion. Give the proof its own explicit invocation, unique temporary image and mount point, and guaranteed detach and cleanup; report an unavailable mount as *unexercised*, not passed. It should never fill the workspace’s filesystem.
+
+There is one correction to D597’s evidence: the “killed” writer test raises `KeyboardInterrupt` in the same process; it does not kill a writer process. It establishes a partial-day exception case on five reads, not process-death recovery. Keep that result, and use a subprocess termination in 4b to prove OS lock release and the post-crash copy. [Writer test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_writer_store.py:109).
+
+I inspected the code and tests; I did not rerun the reported suites. P1 remains unresolved, so these proofs do not authorize a live service.
+
+CONSENSUS: no, because lock release and the unlocked snapshot path need explicit ownership and failure behavior before building 4b.

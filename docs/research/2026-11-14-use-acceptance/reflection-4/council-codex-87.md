@@ -1,0 +1,13 @@
+**No-go on v8 yet.** The narrower distinction is a reasonable interpretation of D397 and D409, but the test needs to count that distinction consistently before it can judge the sentence.
+
+- **Recount the exercise condition for v8.** The design still predicts five removable entries from the earlier, broader rule, while v8 now keeps named ways of ruling out. Class the stored entries using v8’s categories and report how many are pure restatements; do not carry the earlier prediction forward. The proposed threshold of three can then be assessed against the actual population. [A3 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md>)
+
+- **Define uncertainty and mixed entries in the new reading.** Give the blind reader a `cannot tell` option and say how it affects the exercise condition and the decision. For H, the existing scorer fails a **send** if any listed part is harmful. Removing a disputed named-way mark must not erase a separate harmful mark on the same send; test that case explicitly. [H scoring](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score.py:92>)
+
+- **The adjusted H count is a diagnostic interpretation, not the unchanged reading’s verdict.** Report both decisions, including whether each would lead or fail. Do not describe the adjusted result as the gate’s result. The H brief and the new classification do not themselves establish that every named way is a finer distinction in every context. [H brief](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/h-brief.md>)
+
+- **Qualify the delay example.** “Delayed past the due day” can mean a formal decision to defer, or simply that the event has not happened; the actual wording and choice determine whether it is a pure restatement or a named reason. The worked table currently treats it unconditionally as “still awaited.” [Worked cases](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md>)
+
+The grouped-choice diagnostic should remain labelled untested if it is not exercised. Once these counting and example issues are resolved, the design can return for the build decision.
+
+CONSENSUS: no, because the proposed measurement can mix finer details with restatements and has not yet specified how uncertainty and multiple marks on one send affect its decision.

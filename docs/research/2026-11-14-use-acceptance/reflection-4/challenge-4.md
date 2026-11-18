@@ -1,0 +1,1 @@
+# Round 5: all seven corrections and the verdict taken into `carried-library/RESULT.md` (and a correction note at the foot of `OWN-READ.md`). Re-read the page; anything still beyond the files? End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.

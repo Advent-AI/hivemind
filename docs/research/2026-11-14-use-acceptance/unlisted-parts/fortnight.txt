@@ -1,0 +1,111 @@
+sends read 39; sends with L failing in at least one first reader 10
+
+=== c1/clean-13 pass 1 (ladder)
+  description: Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts?
+  outcome:     Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.
+  period:      Calendar 2027, with the item's stated checkpoints at Q4 2026, early 2027 and mid-2027, checked against Nvidia's quarterly results and supplier disclosures. The item gives no confirmation date, so the forecast periods it states fix the check dates.
+  ladder question: Will Nvidia’s CPO switch shipments reach at least 100,000 units during calendar 2027?
+  this send lists: ["The 30,000-unit checkpoint by mid-2027."]
+  reader 1: L fails | The outcome asks for shipment volume, while the question asks only whether it reaches 100,000 units, and the omitted Q4 2026 and early 2027 shipment figures are not listed.
+  reader 2: L fails | Q fails because the outcome names a figure, CPO switch shipment volume, but the question only asks whether it reaches 100,000 units; L fails because the outcome's 15,000 (Q4 2026) and 16,000 (early 2027) checkpoints are left out of the question and not listed in not_judged; W because the unit count the Yes rung needs is not published and is not knowable on the due day.
+  pass 2 lists: ["The 30,000-unit checkpoint by mid-2027."]
+  pass 3 lists: ["GF Securities' forecast of 15,000 shipments in Q4 2026", "GF Securities' forecast of 16,000 shipments in early 2027", "GF Securities' forecast of 30,000 shipments by mid-2027"]
+
+=== c1/clean-13 pass 2 (ladder)
+  description: Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts?
+  outcome:     Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.
+  period:      Calendar 2027, with the item's stated checkpoints at Q4 2026, early 2027 and mid-2027, checked against Nvidia's quarterly results and supplier disclosures. The item gives no confirmation date, so the forecast periods it states fix the check dates.
+  ladder question: How many CPO switch units did Nvidia ship during calendar 2027, as established by Nvidia's quarterly results and supplier disclosures?
+  this send lists: ["The 30,000-unit checkpoint by mid-2027."]
+  reader 1: L fails | The question asks for calendar 2027 but the year is FY2028, and the omitted Q4 2026 and early 2027 shipment checkpoints are not listed.
+  reader 2: L fails | L fails because the outcome's Q4 2026 shipments (15,000 units) and early-2027 checkpoint (16,000 units) are left out of the calendar-2027 question but not listed in not_judged; Y fails because the year is FY2028 while the question asks for calendar 2027.
+  pass 1 lists: ["The 30,000-unit checkpoint by mid-2027."]
+  pass 3 lists: ["GF Securities' forecast of 15,000 shipments in Q4 2026", "GF Securities' forecast of 16,000 shipments in early 2027", "GF Securities' forecast of 30,000 shipments by mid-2027"]
+
+=== c1/clean-2 pass 1 (ladder)
+  description: How much will NVIDIA disclose in purchase and supply commitments (obligations to buy capacity, components or services) at its next annual report?
+  outcome:     The amount of purchase obligations/supply commitments NVIDIA reports in its contractual obligations and purchase commitment disclosures in the Form 10-K, versus the prior year, given the analyst report that NVIDIA is taking on larger supply commitments.
+  period:      Fiscal 2027 annual report (fiscal year ending late January 2027; Form 10-K expected around February 2027) — the next annual report after this 22 September 2026 item, per section 3 (an obligation already undertaken is tracked by its amount at the next annual report).
+  ladder question: How much will NVIDIA report in purchase obligations and supply commitments in its FY2027 Form 10-K disclosure?
+  this send lists: []
+  reader 1: L fails | The next annual report is expected around February 2027, not April 1, and the omitted comparison with the prior year is not listed.
+  reader 2: L fails | L fails because the outcome's comparison 'versus the prior year' is left out of the question and not_judged is empty.
+  pass 2 lists: ["Versus the prior year"]
+  pass 3 lists: ["Versus the prior year"]
+
+=== c1/clean-3 pass 2 (ladder)
+  description: Will Nvidia be permitted to sell its current Blackwell-generation AI chips into China — through U.S. export approval and Chinese acceptance of shipments — by the end of fiscal 2027?
+  outcome:     Whether U.S. authorities extend export approval beyond the older H200 to Nvidia's current Blackwell-generation chips for approved Chinese customers, and whether Chinese authorities stop restricting Nvidia chip shipments, so that China data-center revenue can resume; the item reports H200 shipments are already U.S.-permitted while Chinese authorities still restrict them.
+  period:      NVIDIA fiscal year ending late January 2027 — the current fiscal year-end, used as the check date for a pending regulatory decision per section 3 (item gives no date of its own).
+  ladder question: By January 31, 2027, will U.S. authorities have authorized exports of Nvidia’s current Blackwell-generation AI chips to approved customers in China, and will Chinese authorities no longer restrict Nvidia chip shipments, as shown by official U.S. export-control or licensing decisions and Chinese regulatory or customs actions?
+  this send lists: []
+  reader 1: L fails | The question combines US authorization and Chinese restrictions, belongs to the chip-export-controls theme, treats a prohibition of Blackwell shipments as ruling out the combined event, and omits the separate resumption of China data-center revenue from not_judged.
+  reader 2: L fails | O fails because the outcome it tracks is U.S. and Chinese government decisions to permit Blackwell-generation chip trade, which belongs to the chip-export-controls theme, not NVDA; L fails because the outcome's "so that China data-center revenue can resume" is left out of the question and not_judged is empty.
+  pass 1 lists: ["China data-center revenue resuming"]
+  pass 3 lists: ["China data-center revenue can resume"]
+
+=== c1/clean-5 pass 2 (ladder)
+  description: How much will the five largest AI hyperscalers spend in total on data centers in calendar 2026?
+  outcome:     The big five AI hyperscalers' combined calendar-2026 data center capital expenditure, compared with the nearly $800 billion the article says they will spend this year.
+  period:      Calendar year 2026 (the item's 'this year' in a 23 September 2026 article), checked at the hyperscalers' Q4/full-year 2026 earnings and capex disclosures in early 2027.
+  ladder question: What will the five largest AI hyperscalers' combined data-center capital expenditure be for calendar 2026, as reported in their Q4/full-year 2026 earnings and capex disclosures?
+  this send lists: []
+  reader 1: L fails | The comparison with the nearly $800 billion expectation is omitted from not_judged.
+  reader 2: L holds | 
+  pass 1 lists: []
+  pass 3 lists: []
+
+=== c1/clean-5 pass 3 (ladder)
+  description: How much will the five largest AI hyperscalers spend in total on data centers in calendar 2026?
+  outcome:     The big five AI hyperscalers' combined calendar-2026 data center capital expenditure, compared with the nearly $800 billion the article says they will spend this year.
+  period:      Calendar year 2026 (the item's 'this year' in a 23 September 2026 article), checked at the hyperscalers' Q4/full-year 2026 earnings and capex disclosures in early 2027.
+  ladder question: How much did the five largest AI hyperscalers spend in total on data centers during calendar 2026, according to their Q3 and Q4 2026 earnings releases and capital expenditure disclosures?
+  this send lists: []
+  reader 1: L fails | The comparison with the nearly $800 billion expectation is omitted from not_judged.
+  reader 2: L holds | G fails because the reference "nearly $800 billion" sits on the lower edge of the 800-900 billion USD middle rung, so spending at the expectation (just under $800 billion) lands in the 700-800 billion USD rung below it.
+  pass 1 lists: []
+  pass 2 lists: []
+
+=== c1/clean-6 pass 3 (ladder)
+  description: Will NVIDIA complete its approximately $12.9 billion acquisition of Hugging Face, agreed in 2026, by the check date?
+  outcome:     Whether the agreed ~$12.9 billion Hugging Face acquisition is signed and closed (completed) as disclosed in NVIDIA's filings, versus being repriced, delayed past the check date or terminated.
+  period:      Check date 24 March 2028 (18 months after the 25 September 2026 item) — set per section 3 for a sized acquisition not yet completed, because the item gives no signing or closing date; also observable in NVIDIA's quarterly filings before then.
+  ladder question: Will NVIDIA complete its acquisition of Hugging Face by March 24, 2028, as verifiable in NVIDIA’s completion announcement and related Form 10-Q or Form 10-K disclosures?
+  this send lists: []
+  reader 1: L fails | A statement that the acquisition will not close by March 24 is not necessarily a decision against it, the omitted acquisition price and repricing are not listed, and the article's agreed approximately $12.9 billion acquisition is missing from the reference.
+  reader 2: L fails | R fails because the Ruled out rung counts a formal statement that the deal 'will not close by March 24, 2028', which is a delay with the deal still pending rather than a decision against it; L fails because the outcome's repricing of the ~$12.9 billion price is left out and not listed in not_judged.
+  pass 1 lists: ["The acquisition's approximately $12.9 billion price, including whether it is repriced."]
+  pass 2 lists: ["Whether the acquisition is repriced, delayed past the check date, or terminated as separate outcomes."]
+
+=== c1/clean-7 pass 2 (ladder)
+  description: Will China's Ministry of Industry and Information Technology formally approve purchases of Nvidia's new RTX Pro 5500 high-end GPU by Alibaba, ByteDance and other Chinese firms by the end of Nvidia's fiscal 2027, allowing those sales to proceed?
+  outcome:     Whether MIIT moves from signaling intent and collecting purchase plans to actually approving Alibaba's, ByteDance's and other Chinese firms' purchases of the RTX Pro 5500 (versus blocking, delaying or capping quantities), so that Nvidia can ship the product into China and book related revenue.
+  period:      NVIDIA fiscal year ending late January 2027 — the current fiscal year-end used as the check date for a pending regulatory decision per section 3, because the item gives no date of its own.
+  ladder question: Will China’s Ministry of Industry and Information Technology formally approve Alibaba’s, ByteDance’s and other Chinese firms’ purchases of Nvidia’s RTX Pro 5500 by January 31, 2027, as settled by official MIIT approval decisions or Chinese government announcements?
+  this send lists: ["“allowing those sales to proceed”"]
+  reader 1: L fails | Approval for any one firm can satisfy the Yes condition although the question names Alibaba, ByteDance and other firms, withdrawal of some plans need not rule out the whole event, and the omitted possibility of capped quantities is not listed.
+  reader 2: L fails | L fails because the outcome's 'capping quantities' (an approval with a quantity cap against a full approval) is not listed in not_judged; W: the question's 'and' against the Yes rung's 'or' leaves a partial approval ambiguous.
+  pass 1 lists: ["Whether MIIT caps the quantities approved", "Whether Nvidia can ship the product into China and book related revenue"]
+  pass 3 lists: ["Allowing those sales to proceed"]
+
+=== c1/clean-7 pass 3 (ladder)
+  description: Will China's Ministry of Industry and Information Technology formally approve purchases of Nvidia's new RTX Pro 5500 high-end GPU by Alibaba, ByteDance and other Chinese firms by the end of Nvidia's fiscal 2027, allowing those sales to proceed?
+  outcome:     Whether MIIT moves from signaling intent and collecting purchase plans to actually approving Alibaba's, ByteDance's and other Chinese firms' purchases of the RTX Pro 5500 (versus blocking, delaying or capping quantities), so that Nvidia can ship the product into China and book related revenue.
+  period:      NVIDIA fiscal year ending late January 2027 — the current fiscal year-end used as the check date for a pending regulatory decision per section 3, because the item gives no date of its own.
+  ladder question: Will China's Ministry of Industry and Information Technology (MIIT) formally approve purchases of Nvidia's RTX Pro 5500 by Alibaba, ByteDance, and other Chinese firms by 2027-01-31?
+  this send lists: ["Allowing those sales to proceed"]
+  reader 1: L fails | Approval for any one firm can satisfy the Yes condition although the question names Alibaba, ByteDance and other firms, and the omitted possibility of capped quantities is not listed.
+  reader 2: L fails | L fails because the outcome's 'capping quantities' (an approval with a quantity cap against a full approval) is not listed in not_judged; W: the question's 'and' against the Yes rung's 'or' leaves a partial approval ambiguous.
+  pass 1 lists: ["Whether MIIT caps the quantities approved", "Whether Nvidia can ship the product into China and book related revenue"]
+  pass 2 lists: ["“allowing those sales to proceed”"]
+
+=== c1/clean-9 pass 2 (ladder)
+  description: How much will the five largest AI hyperscalers spend in total on data centers in calendar 2027?
+  outcome:     The big five AI hyperscalers' combined calendar-2027 data-center capital expenditure, versus the $1.3 trillion Nvidia projects for next year (as cited in the item) and the nearly $800 billion expected for calendar 2026.
+  period:      Calendar year 2027, checked at the hyperscalers' 2027 capex guidance from their October 2026 earnings and at their Q4/full-year 2027 earnings and capex disclosures in early 2028.
+  ladder question: What will the five largest AI hyperscalers' combined data-center capital expenditure be in calendar 2027, as reported in their Q4/full-year 2027 results and Form 10-Ks?
+  this send lists: ["The nearly $800 billion expected for calendar 2026."]
+  reader 1: L fails | The comparison with Nvidia's $1.3 trillion projection is omitted from not_judged.
+  reader 2: L holds | 
+  pass 1 lists: ["The comparison with the $1.3 trillion Nvidia projects for calendar 2027", "The comparison with the nearly $800 billion expected for calendar 2026"]
+  pass 3 lists: ["The comparison with the $1.3 trillion Nvidia projects for next year.", "The comparison with nearly $800 billion expected for calendar 2026."]

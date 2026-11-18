@@ -1,0 +1,93 @@
+# Two questions on one subject (packet rtx)
+
+Each question was answered by a judge that received only the request printed under it. Labels: question P and question Q.
+
+## Question P
+
+**Will China's Ministry of Industry and Information Technology permit Alibaba and ByteDance to buy Nvidia RTX PRO 5500 cards by January 31, 2027?**
+
+Opened at article 163 of the week; due 2027-01-31; 8 statements linked, 8 of them printed in this request. Possible answers:
+
+- 1 Yes: MIIT permits Alibaba and ByteDance to buy RTX PRO 5500 cards by January 31, 2027.
+- 2 No: MIIT has not permitted Alibaba and ByteDance to buy RTX PRO 5500 cards by January 31, 2027.
+
+### The request of question P's latest judgement (2026-09-28), as the judge received it
+
+```
+Thesis v14 (chip-export-controls, theme, focus "Chinese permission for Alibaba and ByteDance to purchase Nvidia RTX PRO 5500 cards", 2027, due 2027-01-31): Will China's Ministry of Industry and Information Technology permit Alibaba and ByteDance to buy Nvidia RTX PRO 5500 cards by January 31, 2027?
+Ladder: rung 1 Yes: MIIT permits Alibaba and ByteDance to buy RTX PRO 5500 cards by January 31, 2027. / rung 2 No: MIIT has not permitted Alibaba and ByteDance to buy RTX PRO 5500 cards by January 31, 2027.
+
+[Evidence in view under this thesis, 8 items]
+- e278 [rumour; finance.yahoo.com, relaying The Information; original source The Information's two unnamed sources 2026-09-27; from gnews:b4ef3fc37047e9a76439ecdb 2026-09-27] The Information reported on September 27, 2026, citing two people familiar with the matter, that China's MIIT asked Alibaba and ByteDance how many Nvidia RTX PRO 5500 cards they wanted and why; neither Beijing nor the companies confirmed the plan.
+    Quote: China's Ministry of Industry and Information Technology (MIIT), which oversees the tech sector, asked the two firms how many RTX PRO 5500 cards they want and why. That is according to The Information, citing two people familiar with the matter.
+    Opinion, not verified: the matcher read this as the same claim as e283, e328; the argument counts one claim, one more outlet.
+- e282 [rumour; CNBC, relaying a report by The Information; original source Two people familiar with the matter, as cited by The Information 2026-09-27; from gnews:c24441966fa661191bb1a601 2026-09-27] Unnamed sources told The Information that China may allow companies including ByteDance and Alibaba to buy NVIDIA RTX PRO 5500 chips; the report was published on September 27, 2026.
+    Quote: The Chinese government has signaled it could allow some domestic companies like ByteDance and Alibaba to buy Nvidia's chip built for high-end professional computers, The Information reported on Sunday, citing two people familiar with the matter.
+- e283 [rumour; CNBC, relaying a report by The Information; original source China's Ministry of Industry and Information Technology ; from gnews:c24441966fa661191bb1a601 2026-09-27] China's Ministry of Industry and Information Technology asked companies including ByteDance and Alibaba to report plans to purchase NVIDIA RTX PRO 5500 chips; the request was reported on September 27, 2026.
+    Quote: China's Ministry of Industry and Information Technology recently asked companies including ByteDance and Alibaba to report their plans to purchase Nvidia's RTX PRO 5500 chips, according to the report.
+    Opinion, not verified: the matcher read this as the same claim as e278, e366; the argument counts one claim, one more outlet.
+- e284 [rumour; CNBC, relaying a report by The Information; original source The Information, citing unnamed sources for the ministry's stated intention and unnamed industry executives for the export-controls expectation 2026-09-27; from gnews:c24441966fa661191bb1a601 2026-09-27] The Information reported that China's Ministry of Industry and Information Technology told some companies the government intends to approve purchases of NVIDIA RTX PRO 5500 chips; some industry executives expect the chip to avoid U.S. export restrictions.
+    Quote: The ministry told some Chinese companies the government intends to approve the purchases, The Information report said, adding that some industry executives expect the RTX PRO 5500 chip to avoid U.S. export restrictions.
+    Opinion, not verified: the matcher read this as the same claim as e329; the argument counts one claim, one more outlet.
+- e328 [rumour; finance.biggo.com; original source The Information ; from gnews:8a227e26dadd5fb06a8adb66 2026-09-27] China’s Ministry of Industry and Information Technology asked Alibaba and ByteDance to report their planned RTX Pro 5500 purchase volumes and uses; the report says approval may follow.
+    Quote: The Ministry of Industry and Information Technology has asked Alibaba Group Holding Limited (BABA) and ByteDance Limited to report how many RTX Pro 5500 units they want to buy and how the chips would be used, signaling that it may approve the transactions, according to The Information.
+    Opinion, not verified: the matcher read this as the same claim as e278; the argument counts one claim, one more outlet.
+- e329 [rumour; finance.biggo.com; original source Unnamed Chinese officials, as reported by finance.biggo.com ; from gnews:8a227e26dadd5fb06a8adb66 2026-09-27] Chinese officials reportedly told some companies that purchases of Nvidia’s RTX Pro 5500 could be approved, with timing, volume limits and conditions unclear.
+    Quote: Officials have told some companies that purchases could be greenlit, though the timing, volume limits and exact conditions remain unclear.
+    Opinion, not verified: the matcher read this as the same claim as e284; the argument counts one claim, one more outlet.
+- e331 [rumour; finance.biggo.com; original source Nvidia, as reported by finance.biggo.com ; from gnews:8a227e26dadd5fb06a8adb66 2026-09-27] Nvidia reportedly aims to begin RTX Pro 5500 shipments to China in late December 2026 and supply about 500,000 units per quarter.
+    Quote: Nvidia aims to begin shipments in late December and supply around 500,000 units per quarter to China, meaning a single ByteDance order could absorb approximately two quarters of planned output.
+- e366 [rumour; Insider Monkey; original source Chinese officials ; from gnews:9bac95dfd79af16029906c00 2026-09-28] Chinese officials asked ByteDance and Alibaba to report their plans to buy Nvidia RTX PRO 5500 processors; The Information reported the request, with no date given.
+    Quote: Officials there have asked ByteDance and Alibaba Group Holding Limited (NYSE: BABA ) to report their plans for buying its RTX PRO 5500 processors, according to The Information.
+    Opinion, not verified: the matcher read this as the same claim as e283; the argument counts one claim, one more outlet.
+
+[Previous conclusion, for comparison only] rung 1; reasons: The reference is rung 2: no MIIT permission is confirmed in the supplied evidence, and no separate market consensus is provided. The forecast is rung 1 because the specific report that MIIT sought Alibaba's and ByteDance's intended quantities and uses is paired with a report that the ministry intends to approve purchases; Nvidia's reported late-December China shipment plan makes approval before the January 31 deadline more likely. These are unverified reports, so they raise the forecast rather than establish that permission has already been granted. The repeated coverage of the same underlying reports is not counted as independent confirmation.
+
+Answer per the JSON schema. cites may name only the evidence ids listed above; cites_views must be empty: this thesis depends on no other thesis.
+```
+
+### The stored answer of question P (2026-09-28)
+
+- Answer: 1
+- Reference: Rung 2: no permission by January 31, 2027. No separate market consensus or confirmed approval is supplied; this is the reference status, not the forecast.
+- What it expects: Most likely, MIIT permits both companies to buy the cards by January 31, 2027. The reports give no exact approval date or purchase volume; the reported intention to approve and late-December shipment aim support approval within the deadline.
+- Reasons: The reference is rung 2 (no permission by the deadline): no market consensus or confirmed permission is supplied, so the reference is the no-permission status. The forecast is rung 1 because the report that MIIT intends to approve purchases, together with its request for Alibaba's and ByteDance's planned quantities and uses, makes permission by January 31 more likely than not. Nvidia's reported late-December shipment aim is consistent with that timing, though none of these reports establishes that permission has already been granted. Repeated coverage of the same underlying reports adds no independent confirmation.
+
+## Question Q
+
+**Will China's Ministry of Industry and Information Technology approve domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027?**
+
+Opened at article 175 of the week; due 2027-01-31; 3 statements linked, 3 of them printed in this request. Possible answers:
+
+- 1 Yes: China's Ministry of Industry and Information Technology approves domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027.
+- 2 No: China's Ministry of Industry and Information Technology has not approved domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027.
+
+### The request of question Q's latest judgement (2026-09-27), as the judge received it
+
+```
+Thesis v15 (chip-export-controls, theme, focus "Chinese approval of domestic firms' purchases of Nvidia RTX Pro 5500 GPUs", 2027, due 2027-01-31): Will China's Ministry of Industry and Information Technology approve domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027?
+Ladder: rung 1 Yes: China's Ministry of Industry and Information Technology approves domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027. / rung 2 No: China's Ministry of Industry and Information Technology has not approved domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027.
+
+[Evidence in view under this thesis, 3 items]
+- e303 [rumour; Investing.com; original source The Information ; from gnews:2e603d9182199771803bce9b 2026-09-27] China's Ministry of Industry and Information Technology reportedly asked domestic firms including Alibaba and ByteDance for planned purchase quantities and intended uses for Nvidia RTX Pro 5500 GPUs.
+    Quote: The Information reported that China's Ministry of Industry and Information Technology asked domestic firms, including Alibaba and ByteDance, to report how many Nvidia RTX Pro 5500 units they planned to purchase and what they would use them for.
+    Opinion, not verified: the matcher read this as the same claim as e296, e323; the argument counts one claim, one more outlet.
+- e304 [rumour; Investing.com; original source The Information ; from gnews:2e603d9182199771803bce9b 2026-09-27] The Information reported that China's questioning of domestic firms signaled an intent to eventually approve sales of Nvidia RTX Pro 5500 GPUs to those firms.
+    Quote: The questioning signaled an intent to eventually approve the sales, The Information reported.
+    Opinion, not verified: the matcher read this as the same claim as e296, e327; the argument counts one claim, one more outlet.
+- e327 [rumour; sg.finance.yahoo.com; original source The Information, citing unnamed people familiar with the matter ; from gnews:246875816e58773740fb09d8 2026-09-27] China's Ministry of Industry and Information Technology reportedly asked some companies, including potential buyers Alibaba and ByteDance, for RTX Pro 5500 purchase plans and told some firms it intends to approve purchases; the report cited people familiar with the matter and gave no approval date or quantity.
+    Quote: The Chinese government has signalled it may allow companies such as Alibaba Group Holding Ltd and ByteDance Ltd to buy Nvidia Corp's new RTX Pro 5500 chips, The Information reported, citing people familiar with the matter. The Ministry of Industry and Information Technology recently asked some companies to report on their plans to purchase the high-end graphics processor released this month, inclu
+    Opinion, not verified: the matcher read this as the same claim as e304; the argument counts one claim, one more outlet.
+
+[Previous conclusion] none: this is the first judgement, so changed must be true.
+
+Answer per the JSON schema. cites may name only the evidence ids listed above; cites_views must be empty: this thesis depends on no other thesis.
+```
+
+### The stored answer of question Q (2026-09-27)
+
+- Answer: 1
+- Reference: No market consensus or formal approval timetable is supplied. The baseline reference is rung 2: no approval by January 31, 2027.
+- What it expects: Approval by January 31, 2027 is the more likely outcome. This follows from the reported request for planned purchase quantities and intended uses, plus the report that officials intend to approve purchases; the report supplies no specific approval date.
+- Reasons: The reference is rung 2 because no market consensus or formal approval timetable is supplied, so the no-approval-by-deadline outcome is the baseline rather than a reported expectation. The evidence shifts the forecast to rung 1: the reported request for purchase plans and stated intent to approve make approval by January 31, 2027 more likely than not, although the report gives no approval date and is unverified. The reports are overlapping accounts of one claim, not independent confirmation.
+

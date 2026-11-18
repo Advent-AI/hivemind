@@ -1,0 +1,11 @@
+**No-go for the send.** The arm identity checks and saved tests are useful, but the scorer does not yet implement several decisions the design says it will make.
+
+1. **The final verdict can call an inconclusive Reading A a diagnostic lead.** `final()` returns “diagnostic lead” whenever B leads and A is anything other than a lead. The design permits that label when **A is negative only through named-way marks**, with B a lead; it does not permit it when A is inconclusive. Add tests for A inconclusive/B lead and for the stated reason for A’s negative. [Scorer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score_a3.py>), [design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:121>)
+
+2. **The required trace-based outcome is not in the scorer.** The design says an above-control failure consistent with the sentence is negative, and uncertain failures produce “lead, uncertain harms.” The scorer prints mark totals but its verdict does not take those classifications. Either implement the predeclared review and outcome mapping or explicitly make the printed score provisional until that review is completed. [Design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:157>)
+
+3. **The named-way check counts topics, not named ways.** If A2 lists a termination in two sends and A3 instead lists a different named way in two sends, `named_sends` passes the topic even though the termination was lost. The design calls for retaining the named way A2 listed. Test two distinct named ways on one topic. [Scorer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score_a3.py>)
+
+The preflight is correctly reported as unexercised for extraction, and the stored-answer check covers the ladder answers it says it covers. Once the decision and counting paths above match the frozen design and are tested, bring the send back for review.
+
+CONSENSUS: no, because the scorer can issue a diagnostic lead for an inconclusive reading and can miss a lost named way or an unreviewed failure.

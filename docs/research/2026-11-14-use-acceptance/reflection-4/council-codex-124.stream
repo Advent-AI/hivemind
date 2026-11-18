@@ -1,0 +1,308 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 124: one finding from the build of the bound resolver, a range rule to amend before I depart from it
+
+## Built so far, uncommitted, nothing restarted
+
+- `service.resolve_bound`, `resolve_range` and the three exceptions are in place, and every public date function routes through them:
+  - `service` ×8;
+  - `bundle`: `not_judged`, `view_bundle`, `days`, `thesis_bundles`, `library`;
+  - `idea`: `read_idea`, `object_list`, `brief`, `related_views`;
+  - `search.search`.
+- The API's `error_response` returns structured bodies.
+- **`tests/test_bound_resolver.py` passes.**
+  - 176 calls on four real store states are compared with today's outcomes, recorded before the change
+    (`tests/fixtures/bound-baseline-2026-11-16.json`).
+  - Every difference is a contract change:
+    - future bounds refused on the finished and partial stores;
+    - the first-day store refused;
+    - the partial store's bundle functions now read as of 2026-08-28 instead of its half-processed 2026-08-29;
+    - the direct pre-creation refusal, also met on the empty store for a view it does not hold.
+  - The structural check found 6 more Idea functions taking a date. `object_list`, `brief` and `related_views` now resolve, as they
+    have outside callers (MCP's start-up, tests). `judged` and the two payload builders are listed helpers.
+- `test_not_judged_bundle.py` was updated for the intended pre-creation change. Seven other touched suites pass.
+
+## The finding
+
+- `tests/test_service.py::test_record_and_changes_name_real_rounds` asserts `service.changes(ledger, '2026-08-15') == []` on the
+  finished store, where that day is the last completed one.
+- Under round 122's rule (an excluded start on or after the resolved end is refused) this is now an error. But that empty list is
+  true: nothing changed after the last completed day, up to it. And it is how a client polls: "what changed since the day I last
+  saw?" returns an empty list until a new day completes.
+- Refusing equality would turn every quiet poll into an error, with no safety gain. The misleading case you named is a start
+  **after** the end, a window reaching into days not yet completed. That case is still refused.
+
+## Proposed amendment
+
+- **A range is refused only when its start is after its resolved end,** for `changes` and `history` alike.
+- **Equality reads as today:** an empty window for `changes`, whose start is excluded, and that one day for `history`, whose start
+  is included.
+- The test of equality for `changes` then expects today's empty list, and a new case checks that a start after the end is refused.
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the changed resolver and the existing polling test, then assess the proposed equality and future-start boundaries.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'def resolve_bound|def resolve_range|class RangeNotOrdered|def changes\\(|def history\\(' src/hivemind/service.py
+nl -ba src/hivemind/service.py | sed -n '15,105p;245,265p;320,342p'
+rg -n -C 5 'test_record_and_changes_name_real_rounds|2026-08-15' tests/test_service.py | tail -50
+rg -n -C 3 'resolve_range|RangeNotOrdered|range.*equal|start_included|since' tests/test_bound_resolver.py | head -100
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+44:class RangeNotOrdered(ValueError):
+56:def resolve_bound(conn, bound, *, unfiltered=False):
+73:def resolve_range(conn, start, end, *, start_included):
+254:def history(conn, view_id, from_day=None, to_day=None):
+324:def changes(conn, since_day, to_day=None):
+    15	COMPARATORS = ('>=', '<', '=')
+    16	
+    17	
+    18	def open_ledger(path):
+    19	    """A read-only connection to a views database."""
+    20	    return store.open_read_only(path)
+    21	
+    22	
+    23	def default_as_of(conn):
+    24	    """Today's default day: the last completed day, or a legacy ledger's last judgement day. Read only through `resolve_bound`."""
+    25	    return store.last_completed_day(conn) or conn.execute('select max(publication_day) from judgements').fetchone()[0]
+    26	
+    27	
+    28	class FirstDayNotCompleted(ValueError):
+    29	    """The store holds processing steps and no completed day: its first day is still in progress, and nothing is served from it
+    30	    (live-service/OPERATING-CONTRACT.md, row 4; open defect 10)."""
+    31	
+    32	    def __init__(self):
+    33	        super().__init__("the store's first day has not completed")
+    34	
+    35	
+    36	class BoundNotCompleted(ValueError):
+    37	    """An explicit upper bound later than the store's last completed day: refused, naming that day (OPERATING-CONTRACT.md, row 3)."""
+    38	
+    39	    def __init__(self, requested, last_completed_day):
+    40	        self.requested, self.last_completed_day = requested, last_completed_day
+    41	        super().__init__(f'day not completed: {requested} is after the last completed day {last_completed_day}')
+    42	
+    43	
+    44	class RangeNotOrdered(ValueError):
+    45	    """A range whose start is not before its end (a start that is excluded) or after it (a start that is included)."""
+    46	
+    47	    def __init__(self, start, end):
+    48	        self.start, self.end = start, end
+    49	        super().__init__(f'range start not before its end: {start} to {end}')
+    50	
+    51	
+    52	def first_day_unfinished(conn):
+    53	    return store.last_completed_day(conn) is None and conn.execute('select 1 from processing_steps limit 1').fetchone() is not None
+    54	
+    55	
+    56	def resolve_bound(conn, bound, *, unfiltered=False):
+    57	    """The one owner of an upper date bound, explicit or omitted (OPERATING-CONTRACT.md, row 3).
+    58	
+    59	    A store whose first day is in progress is refused. An omitted bound is today's default day; with `unfiltered` (the bundle
+    60	    functions, whose omitted bound read every record), it is the last completed day, or None (no filter, as before) on a store with
+    61	    none. An explicit bound later than the last completed day is refused, whatever the store holds after it; one on or before it
+    62	    passes. Idempotent: a bound it passed passes again."""
+    63	    if first_day_unfinished(conn):
+    64	        raise FirstDayNotCompleted()
+    65	    last = store.last_completed_day(conn)
+    66	    if not bound:
+    67	        return last if unfiltered else default_as_of(conn)
+    68	    if last is not None and bound > last:
+    69	        raise BoundNotCompleted(bound, last)
+    70	    return bound
+    71	
+    72	
+    73	def resolve_range(conn, start, end, *, start_included):
+    74	    """A range's end resolved by `resolve_bound`; a start not before the end (excluded start) or after it (included start) is
+    75	    refused. An end that resolves to None (an empty store) is compared with nothing, as before."""
+    76	    end = resolve_bound(conn, end)
+    77	    if start and end is not None and (start > end if start_included else start >= end):
+    78	        raise RangeNotOrdered(start, end)
+    79	    return end
+    80	
+    81	
+    82	_SEQ_DAYS = {}      # id(connection) → (connection, (max sequence, rows), map); a sqlite3 connection cannot carry attributes
+    83	
+    84	
+    85	def seq_day_map(conn):
+    86	    """sequence number → the publication day of the item or daily round written under it. Cached per connection and
+    87	    rebuilt when processing_steps has grown (an open ledger gains steps while the pipeline runs); without the cache
+    88	    one view with 367 pieces of evidence cost 1,224 full scans (0.46 s, measured 2026-10-24)."""
+    89	    stamp = tuple(conn.execute('select max(sequence_no), count(*) from processing_steps').fetchone())
+    90	    entry = _SEQ_DAYS.get(id(conn))
+    91	    if entry is not None and entry[0] is conn and entry[1] == stamp:
+    92	        return entry[2]
+    93	    cache = {}
+    94	    for seq, day in conn.execute('select sequence_no, min(publication_day) from processing_steps where sequence_no > 0 group by sequence_no'):
+    95	        cache[seq] = day
+    96	    if cache:                 # sequence 0 is the seed questions written before the first item (D253): visible from the ledger's first day
+    97	        cache[0] = min(cache.values())
+    98	    if len(_SEQ_DAYS) >= 64:
+    99	        _SEQ_DAYS.clear()
+   100	    _SEQ_DAYS[id(conn)] = (conn, stamp, cache)
+   101	    return cache
+   102	
+   103	
+   104	def day_of_seq(conn, seq):
+   105	    return seq_day_map(conn).get(seq)
+   245	        piece = evidence_record(conn, link['evidence_id'], as_of, link['seq'])
+   246	        if tier and piece['tier'] != tier:
+   247	            continue
+   248	        out.append(piece)
+   249	    return out
+   250	
+   251	
+   252	# ---------- history
+   253	
+   254	def history(conn, view_id, from_day=None, to_day=None):
+   255	    to_day = resolve_range(conn, from_day, to_day, start_included=True)
+   256	    from_day = from_day or '0000-00-00'
+   257	    judgements = []
+   258	    previous = None
+   259	    for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+   260	        entry = {'day': row['publication_day'], 'seq': row['seq'], 'position': row['rung'], 'changed': bool(row['changed']), 'moved_from': previous if previous is not None and previous != row['rung'] else None,
+   261	                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _unique(_json(row['cited_evidence_json'])), 'pushes': _json(row['pushes_json']),
+   262	                 'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
+   263	        previous = row['rung']
+   264	        if from_day <= row['publication_day'] <= to_day:
+   265	            judgements.append(entry)
+   320	
+   321	
+   322	# ---------- changes since a day
+   323	
+   324	def changes(conn, since_day, to_day=None):
+   325	    """Judgements that said 'changed' after since_day (exclusive) up to to_day, with their cited evidence."""
+   326	    to_day = resolve_range(conn, since_day, to_day, start_included=False)
+   327	    out = []
+   328	    previous = {}
+   329	    for row in conn.execute('select * from judgements order by judgement_id'):
+   330	        before = previous.get(row['view_id'])
+   331	        previous[row['view_id']] = row['rung']
+   332	        if not row['changed'] or not (since_day < row['publication_day'] <= to_day):
+   333	            continue
+   334	        cited = [piece for piece in (evidence_record(conn, e, row['publication_day']) for e in _unique(_json(row['cited_evidence_json']))) if piece]
+   335	        out.append({'view_id': row['view_id'], 'day': row['publication_day'], 'from_position': before, 'to_position': row['rung'],
+   336	                    'position_moved': before is not None and before != row['rung'], 'why_changed': row['why_changed'], 'cited': cited})
+   337	    return out
+   338	
+   339	
+   340	# ---------- a claim against a ladder
+   341	#
+   342	# A rung's condition is a sentence like "不低于 1650 亿美元且不高于 1690 亿美元，处于公司指引区间". The band is read from
+31-def test_state_as_of_never_looks_ahead(ledger):
+32-    # v3 (data center revenue) moved from position 3 to 2 on 2026-05-20
+33-    before, after = service.view(ledger, 'v3', '2026-05-19'), service.view(ledger, 'v3', '2026-05-20')
+--
+45-
+46-
+47-def test_frozen_views_are_closed_only_from_their_freeze_day(ledger):
+48-    assert service.view(ledger, 'v24', '2026-08-01')['open'] is True
+49-    assert service.view(ledger, 'v24', '2026-08-02')['open'] is False
+50:    assert 'v24' not in {v['view_id'] for v in service.views(ledger, 'NVDA', '2026-08-15')}
+51:    assert 'v24' in {v['view_id'] for v in service.views(ledger, 'NVDA', '2026-08-15', include_closed=True)}
+52-
+53-
+54-def test_relationships_are_as_of_too(ledger):
+55:    # v94 (opened 2026-08-15) depends on v1; on 2026-02-25 v1 cannot yet have it as a dependant
+56:    assert 'v94' in service.view(ledger, 'v1', '2026-08-15')['dependants']
+57-    assert 'v94' not in service.view(ledger, 'v1', '2026-02-25')['dependants']
+58-    late = ledger.execute("""with m as (select sequence_no, min(publication_day) d from processing_steps where sequence_no>0 group by 1)
+59-        select count(*) from dependencies dep join views v on v.view_id=dep.depends_on join m md on md.sequence_no=dep.seq join m mv on mv.sequence_no=v.created_seq where md.d > mv.d""").fetchone()[0]
+60-    assert late == 28          # the relationships that would leak without the filter (Codex's census)
+61-    for dep in service.view(ledger, 'v3', '2026-05-20')['dependencies']:
+62-        assert dep['since_day'] <= '2026-05-20'
+63-
+64-
+65-def test_history_lists_the_change_with_its_cited_evidence(ledger):
+66:    h = service.history(ledger, 'v1', '2026-07-01', '2026-08-15')
+67-    moves = [(c['day'], c['moved_from'], c['position']) for c in h['changes']]
+68:    assert ('2026-07-26', 3, 4) in moves and ('2026-08-15', 4, 5) in moves
+69-    assert all(j['cited'] for j in h['changes'])
+70-    assert sum(b['evidence'] for b in h['arrivals'].values()) > 0
+71-
+72-
+73-def test_evidence_excludes_replaced_guidance_after_the_replacement_day(ledger):
+--
+138-    assert service.evaluate(ledger, 'v51', '>=', 1)['evaluable'] is False       # a percentage ladder is refused, not guessed
+139-    with pytest.raises(ValueError):
+140-        service.evaluate(ledger, 'v3', '>', 300e9)
+141-
+142-
+143:def test_record_and_changes_name_real_rounds(ledger):
+144:    rec = service.record(ledger, 'v3', '2026-08-15')['last_check']
+145:    assert rec['day'] == '2026-08-15' and rec['round'].startswith('day:') and rec['items_processed_that_day'] > 0
+146-    moved = [c for c in service.changes(ledger, '2026-07-25', '2026-07-26') if c['position_moved']]
+147-    assert any(c['view_id'] == 'v1' and c['from_position'] == 3 and c['to_position'] == 4 and c['cited'] for c in moved)
+148:    assert service.changes(ledger, '2026-08-15') == []
+149-
+150-
+151-def test_a_corrupt_judgement_record_is_refused_not_read_as_empty():
+152-    with pytest.raises(service.LedgerError):
+153-        service._json('[broken')
+26-BASELINE = json.load(open(os.path.join(HERE, 'fixtures', 'bound-baseline-2026-11-16.json')))
+27-LAST = {'finished': '2026-08-15', 'partial': '2026-08-28'}
+28-UNFILTERED = ('bundle.view_bundle', 'bundle.not_judged', 'bundle.days')       # their omitted bound read every record before
+29:HELPERS = {'service': {'default_as_of', 'resolve_bound', 'resolve_range', 'visible', 'view_exists', 'is_open_as_of', 'state_as_of',
+30-                       'dependencies', 'dependants', 'evidence_record'},
+31-           'bundle': {'_bundles', 'research_groups', '_visible'},
+32-           'search': set(), 'idea': {'judged', 'full_payload', 'lean_payload'}}
+--
+57-        return ['error', "FirstDayNotCompleted: the store's first day has not completed"]
+58-    if kind == 'future' and state in LAST:
+59-        return ['error', f"BoundNotCompleted: day not completed: {bound_cases.STATES[state]['future']} is after the last completed day {LAST[state]}"]
+60:    if kind == 'since equal to end':
+61-        past = bound_cases.STATES[state]['past']
+62:        return ['error', f'RangeNotOrdered: range start not before its end: {past} to {past}']
+63-    if state == 'partial' and kind == 'omitted' and name in UNFILTERED:
+64-        return explicit_last[name]
+65-    if state == 'empty' and name == 'bundle.not_judged' and kind in ('past', 'future'):
+--
+97-    with pytest.raises(service.BoundNotCompleted) as refused:
+98-        service.resolve_bound(conn, '2026-08-16')
+99-    assert (refused.value.requested, refused.value.last_completed_day) == ('2026-08-16', '2026-08-15')
+100:    assert service.resolve_range(conn, '2026-08-01', '2026-08-01', start_included=True) == '2026-08-01'
+101:    with pytest.raises(service.RangeNotOrdered):
+102:        service.resolve_range(conn, '2026-08-02', '2026-08-01', start_included=True)
+103-
+104-
+105-def _date_functions(module):
+--
+117-    breaches = []
+118-    for module in HELPERS:
+119-        for name, calls in _date_functions(module):
+120:            if name not in HELPERS[module] and not calls & {'resolve_bound', 'resolve_range'}:
+121-                breaches.append(f'{module}.{name}: takes a date and does not resolve it')
+122-        source = open(os.path.join(ROOT, 'src', 'hivemind', f'{module}.py')).read()
+123-        for node in ast.walk(ast.parse(source)):
+--
+137-    assert hivemind_api.error_response(service.FirstDayNotCompleted()) == (503, {'error': "the store's first day has not completed"})
+138-    assert hivemind_api.error_response(service.BoundNotCompleted('2026-09-30', '2026-08-28')) == (
+139-        409, {'error': 'day not completed', 'requested': '2026-09-30', 'last_completed_day': '2026-08-28'})
+140:    assert hivemind_api.error_response(service.RangeNotOrdered('2026-08-20', '2026-08-20')) == (
+141-        409, {'error': 'range start not before its end', 'start': '2026-08-20', 'end': '2026-08-20'})
+142-    assert hivemind_api.error_response(KeyError('v9')) == (404, {'error': "not found: 'v9'"})
+
+codex
+**Yes.** An equal start and end is a valid empty interval for `changes`, and preserving it supports the existing polling behavior. The stored test expects exactly that result at the last completed day. [Service test](/Users/lchingen/hivemind/tests/test_service.py:143).
+
+Amend the contract and tests so both functions refuse only `start > end`. Keep the distinction in results: equality returns `[]` for `changes` and includes that day for `history`. An explicit future end must still be refused by `resolve_bound` before the range is evaluated. Update the range-error wording and the existing equality assertions to match. [Current resolver](/Users/lchingen/hivemind/src/hivemind/service.py:73).
+
+CONSENSUS: yes
+tokens used
+3,233,895
+**Yes.** An equal start and end is a valid empty interval for `changes`, and preserving it supports the existing polling behavior. The stored test expects exactly that result at the last completed day. [Service test](/Users/lchingen/hivemind/tests/test_service.py:143).
+
+Amend the contract and tests so both functions refuse only `start > end`. Keep the distinction in results: equality returns `[]` for `changes` and includes that day for `history`. An explicit future end must still be refused by `resolve_bound` before the range is evaluated. Update the range-error wording and the existing equality assertions to match. [Current resolver](/Users/lchingen/hivemind/src/hivemind/service.py:73).
+
+CONSENSUS: yes

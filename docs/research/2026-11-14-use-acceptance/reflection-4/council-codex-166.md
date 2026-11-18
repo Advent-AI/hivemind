@@ -1,0 +1,9 @@
+The probe is **negative under its registered rule**, and the candidate should stop in its present form. Both first readers marked the same 2027 question wrong: it asks for AI spending as a share of U.S. GDP, while the topic asks for the spending total. [Codex and Claude marks](/Users/lchingen/hivemind/poc/data/clean-split-probe-2026-11-16/reading/readers-answers/reader-codex-packet-1.jsonl)
+
+No third-reader sessions are needed to decide this probe. The agreed Q failure is already a veto under both countings. The 15 disputed points should remain explicitly unruled; the final result is a negative verdict from the decisive agreed mark, not a completed adjudication of every mark.
+
+I would narrow the proposed lesson. The source gives a 2026 dollar estimate and 2027 as a GDP share; the topic asks for totals in both years. The split then produced a share question in one send. That demonstrates a **measure mismatch in this case**. It does not establish that a yearly question is sound *only if* the opening article states that year’s value in the same measure, or prove that the upstream topic alone caused the switch. The other two 2027 sends asked for totals, and their reader faults remain unsettled. [Source and result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/RESULT.md)
+
+Record the negative result and leave D397’s splitting defect open. The six clean questions on the hyperscalers topic are a useful lead, not acceptance of the split. I see no supported next paid test or general repair from this result; D612’s reopen conditions remain in force.
+
+CONSENSUS: record the negative result without third-reader calls; stop this candidate and record the measure mismatch as a case, not a new rule.

@@ -1,0 +1,17 @@
+**这次明确的错误合并是：把 Vera Rubin 已向客户商业交付，归成“已经生产、预计占数据中心收入 20%”的重复报道。** 我同意这应当分开保存；两者有关联，但说的是不同的事情。
+
+- **原文的区别。** 9 月 5 日的 Motley Fool 文章说系统“already in production”，并说管理层预计它在第三季度占数据中心收入约 20%。9 月 6 日的 Calcalist 文章则说，Nvidia 在业绩发布后的分析师电话会上表示，基于 Vera Rubin 的系统已在 2026 年 8 月商业交付给客户。生产状态、未来收入占比和实际客户交付是三个不同的信息点。原文保存在 [盲审材料的案例 9](/Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/blind-packets.json:1250)，[对应表](/Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/blind-key.json:108) 将 C7 对应到 `13:e4`、来文对应到 `22:ev-11`。
+
+- **归因有边界。** Calcalist 明确把交付说法归给 Nvidia 的分析师电话会；这里看到的是媒体转述，不是电话会逐字稿。Motley Fool 原文明确把 20% 预期归给管理层，但“已经生产”那句没有同样明确地写出是谁说的；保存的摘要将两者都写成 Nvidia 所说，比原文的明确归因更强。也不能仅凭这两篇文章证明它们引用了不同的公司发言，或证明交付说法本身真实。
+
+- **按现有规则，应判为新信息。** 交付可以让人推断生产已经发生，因此把它看作生产进展的更具体描述，是支持“重复”的最强理由。另一个后来的组内记录也同时提到八月开始出货和 20% 预期。但这两篇待比较的文字并没有重复同一项主要陈述：生产不等于交付，交付也不是对 20% 预测的重述。它也没有改正或替代先前生产状态或收入预测，因此不是“修订”。[PRD 第 5 节](/Users/lchingen/hivemind/clean-arch/PRD.md:129) 对重复、修订和新信息的定义支持将它作为新信息；这只说明相对于本次比较对象的判断，不证明库里其他地方没有它的重复。
+
+- **实际发生了什么。** 保存的 [Jev 请求与回答](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/jev.sqlite) 中，调用 76 把交付陈述交给 Jev，并在 `q0` 给出生产及 20% 的摘要和原文。Jev 选了“同一陈述”，给该选项 0.49、不同陈述 0.36、修订 0.15；存档还记录 confidence 为 0.24。代码按选中的类别合并，并未把这些数值当作拒绝合并的条件。[保存的决定](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/decisions.json:6705) 和 [比较代码](/Users/lchingen/hivemind/clean-arch/step2/compare.py:109) 显示了这条路径。找到候选项这一步在此例成功了。
+
+- **文字没有从保存结果中消失，但展示具有误导性。** [保存的组](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/library.json:2344) 保留了交付记录自己的摘要、原文、来源和字段。默认完整展示时，[渲染代码](/Users/lchingen/hivemind/clean-arch/step3/library.py:145) 会把它放在“同一陈述的后续报道”下面，因此标题错误地暗示交付只是生产和预测的重复。若调用者选择只展示来源的模式，交付文字在该视图中不会出现，但它仍留在保存的组里。
+
+**已观察到的伤害**是错误归组和默认展示中的错误标签；不能据此说交付事实已被删除，也不能说某个投资判断已经因此出错。潜在影响是读者或后续程序可能把交付当成重复、忽视它作为单独进展的意义；而 Step 2 后续搜索和比较只看组的原始记录，因而也可能看不到成员特有的交付内容。这些是由代码路径产生的风险，此案例没有展示实际造成的错误结论。[比较代码](/Users/lchingen/hivemind/clean-arch/step2/compare.py:100)
+
+**根因尚未确定。** 已知直接机制是 Jev 选了重复，代码照此执行；不知道 Jev 为什么这样选。请求允许措辞和细节不同，也把生产与 20% 预测放在同一条待比较记录中，这些可能影响判断，但现有记录不足以证明是哪一点造成错误。[第三位读者的结论](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/merge-third-answer.json:15) 同样将 X22 判为错误。这个结论不意味着其他被标为“有重叠”的案例都没有问题。
+
+

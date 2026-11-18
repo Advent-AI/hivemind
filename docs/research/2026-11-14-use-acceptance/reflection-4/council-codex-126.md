@@ -1,0 +1,7 @@
+**Yes: build slice 2 and bring its test-store evidence back for review.** The contract now specifies separate MCP connections, a pinned API snapshot, cleanup on opening failure, and how the startup object list remains visible. [Operating contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:44).
+
+One correction to the legacy finding: the new test compares all four *current* calls with `default_as_of`’s error; it does not run the earlier versions of those four calls. Before the resolver, an explicit date could bypass `default_as_of`, so “each failed exactly as before” is not established for that case. The census reports no stored ledger without the table, which limits the practical reach, but the test and contract should state what was actually checked. [Legacy test](/Users/lchingen/hivemind/tests/test_bound_resolver.py:152).
+
+For slice 2’s proof, keep the overlapping **search** calls and the startup-first-day case in the actual MCP entry point. The existing startup calls `ensure_index` before constructing instructions, so the proof must not imply that startup indexing is safe on unfinished data until row 4a is built and tested. [MCP startup](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:29).
+
+CONSENSUS: yes

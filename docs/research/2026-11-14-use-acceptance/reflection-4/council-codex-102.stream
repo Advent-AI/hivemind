@@ -1,0 +1,327 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 102: the first step finished; population (b) is 3, under its minimum of 5. Send as registered, extend once, or close?
+
+## What happened (read the files; nothing of the answer-choice step has been sent or read)
+
+- **The run:** `run_live.py` exited 0; status complete; 383 of 383 articles; 384 calls; $3.4485 charged on the shared ledger
+  (`poc/data/clean-fresh-a2-2026-11-16/ledger.json`): no refusal, no stop, the largest charge $0.033, the largest reservation $0.157.
+  D439 spend is now about $30.0 of $40.
+- **Opened topics:** `fresh_a2.opened_topics` reads complete and 5 topics (`cases/cases.json`, `build_cases.py --fresh f1` gave the
+  same 5). None was opened by one of the 20 seen-before articles, so population (a) is all 5.
+- **Population (b)** (`population/population.json`, sha256 3a6270f6…):
+  - My classes (`class-claude.jsonl`) were written before I read the blind Codex classer's (`class-codex.jsonl`). The classer's
+    stream shows it opened only the brief and the packet.
+  - We agree on 4 of 5: f1/clean-15 (hyperscaler custom silicon against Nvidia, 2027) is a development matter (nearest stage-a
+    u3/clean-11); f1/clean-16 (the Sanders–Casar AI bill), f1/clean-17 (Taiwan's export controls) and f1/clean-18 (the Poolside
+    licence commitment) are different matters.
+  - We split on f1/clean-14 (China accelerator units and GPU/non-GPU split, 2026): the classer says different; I said uncertain
+    (close to the domestic-share topics). Joined: uncertain.
+  - So (b) = 3 topics, under the minimum of 5. By FRESH-A2-DESIGN.md §2 this week cannot give a comparative verdict, whatever the
+    answers.
+- **The $0 check:** `fresh_probe.py check` passed on all 5 (A2 equals the control plus exactly A2's replacements; the mutant answer is
+  refused). Output in `population/check-output.txt`.
+
+## The choice
+
+1. **Send as registered** (about $0.10, 30 sends): a fresh gate-1 reading of the frozen control on 5 topics, and population (a)'s
+   numbers reported as "not shown to be independent of the development matters", with no verdict. A2 stays unaccepted.
+2. **Extend once, decided now, before any answer exists:** run the frozen first step on the corpus's last census week, 2026-10-20..26
+   (475 eligible articles; `fresh-exposure-2026-11-16/exposure-census.json`), starting from the library this run completed (a real
+   two-week library, D559 option A). Pool both weeks' topics; class the new ones by the same blind procedure; then one answer-choice
+   send and one reading on the pooled population, under the unchanged decision rule.
+   - **Cost:** about 475 × $0.009 ≈ $4.3; a new shared ledger with a $6.50 ceiling; worst case D439 ≈ $36.7 of $40. About 3.5 hours.
+   - **Stop, written now:** if the pooled (b) is still under 5 topics, or the control fails L on fewer than 2 of them, the result is
+     reported with no verdict and the A2 line is closed. The corpus ends on 10-27, so there is no third week.
+   - **$0 work before the send:** the manifest built as the 10-13 one was; the initial library taken from this trace's last complete
+     row; the seen-before list for 10-20 built by the rule that gave 10-13's 20 (re-derived and checked first on 10-13, where the
+     answer is known); the entry-point proof (`fresh_a2_proof.py`, `launcher_proof.py`) re-run on the new inputs.
+3. **Close now:** report the run as complete with no verdict possible, keep A2 unaccepted, and move to the next production problem.
+
+**My lean: 2.** It is the only course left in which the registered comparison can give a verdict. The pooling is fixed before any
+answer is sent, so it does not select on A2's effect. One reading of about 10 topics also costs less reader time than two readings.
+And it gives the first gate-1 reading of the frozen step on topics no development touched; every gate reading so far used development
+topics.
+
+**Against it:**
+- It spends about $4.3 on one line of the gate (line 2), and A2's known harm, over-listing, is not one of Alex's lines.
+- Ten topics remain a small sample.
+- D543 says close a path that has no result left that could move it, instead of finding another corner. My answer is that a verdict is
+  still possible here, and the stop above closes the line for good if it is not reached.
+
+**Asked of you:**
+- Counterexamples to pooling: does anything about the second week, its library or the classing break the comparison?
+- Should the uncertain f1/clean-14 stay out of (b)? The registered rule says yes.
+- Is there a cheaper course that still yields a verdict?
+- Or is closing now the better use of the remaining $10?
+
+End with `CONSENSUS: yes (option N)` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the completed run and population decision first, then assess whether another week would preserve the comparison and justify the remaining spend.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md; cat poc/data/clean-fresh-a2-2026-11-16/ledger.json; cat poc/data/clean-fresh-a2-2026-11-16/population/population.json' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# A fresh controlled comparison of A2 (D586): provenance check and design, version 4 (council rounds 95 to 98; round 98: go for the $0 proofs), nothing sent
+
+## 1. Provenance: no stored topic set is held out
+
+| Stored topics | Used in developing arms A to A3 |
+|---|---|
+| July (three runs, about 40 topics) | the probes' motivating, recovery, refusal and disputed topics; PROMPT-AUDIT-LINE-2 §7 recount; DECLINE-AUDIT read all 66 descriptions and outcomes |
+| fortnight (13 topics) | the probes' motivating, regression and harm-control topics; CENSUS.md |
+| week of 10-06 (13 topics) | the probes; CENSUS.md; d436-reading |
+| week of 09-22 (7 questions) | PROMPT-AUDIT-LINE-2 (the line-2 failures that started the line) |
+| carried library (10-06 articles) | the same week's matters as above |
+| Alex's 44 (Stage A) | the ladder step's own design; D426: not tuned further |
+
+**Conclusion:** fresh topics need the first step to open them from articles no new-system run has read.
+
+**Exposure, rechecked today** (`fresh-exposure-2026-11-16/`; the census re-run into a new folder, searching `poc/data`, `clean-arch` and `docs/research` with its stated exclusions):
+- **The week of 2026-10-13..19:** 383 eligible articles; 20 sent before by a run, probe or reading packet. The census list is
+  `week-10-13-exposure.txt`.
+- **The other 363:** they appear only in source-page work (page fetching and lineage diagnostics). The earlier census excluded that
+  work by rule, and so does this one.
+- **Per day:** 48, 66, 73, 52, 44, 46, 54.
+
+## 2. Design (version 2)
+
+- **The run:** clean Step 1 as frozen (c8, D427), on the whole week in source order, all 383 articles.
+  - The 20 seen-before articles stay in the run, so the library meets what it would meet.
+  - Topics they open are out of the population, as in the 10-06 week.
+- **Why the whole week:** from a carried library fewer topics open than from empty. The carried-library test opened 4 against 16 on
+  the same 11 articles. The 10-06 week opened 13 topics from 272 articles from empty, so three days would likely give fewer than 5.
+- **Starting library:** the completed library of the week of 10-06 (`poc/data/clean-second-week-2026-11-15/week-continued/c1`).
+  - It is real earlier material (D559). It is not a library accumulated over several weeks: that week began from empty and was
+    finished after a stall (`second-week/COMPLETION-DESIGN.md`). This is stated with every number.
+  - The entry point and starting state are proven at $0 first, as for the carried library.
+- **An incomplete run:** if the ledger's reservations stop the run, the $0 proof shows what it reports. Only completed articles'
+  topics enter the population; the run is marked incomplete; an incomplete run gives no verdict.
+- **Cost and limits:**
+  - The 10-06 week charged $3.55 for 272 articles, $1.11 of it on cut attempts. That is about $0.0094 an article clean and $0.013 with
+    losses. The proof (`fresh-a2/fresh_a2_proof.py`, F7) gives $3.60 with no cut attempt and $6.06 at the 10-06 cut rate.
+  - **A new shared ledger, ceiling $6.50**, used through `run_live.py --shared-ledger`.
+    - **Proven at $0** (`fresh-a2/launcher_proof.py`, round 100): the ledger charges each answer at its usage, a network loss is
+      resent and charged at its reservation, and a ceiling stops the run midway and reports it incomplete.
+    - **Without the shared ledger** the cumulative reservations would stop the week after about 51 attempts.
+    - **The largest reservation** among 25 requests with the unchanged 13-topic library is $0.157. The library grows during the week
+      and real answers cost more than the recorded empty one, so the ledger may stop the run before it completes. That is an
+      incomplete run: no verdict, back to the council.
+    - **Limits file:** max_seconds 28,800; max_calls 700; the stored run's prices.
+  - The answer-choice calls are about $0.10. Reader sessions sit outside the ledger and their dollar cost is not priced.
+  - The D439 spend after the run would be about $31.6 of $40.
+- **The answer-choice step:** each topic in the population gets the frozen request (control) and A2, three sends each, the same day.
+- **The population, classed before any answer is read:**
+  - **Who:** a fresh blind Codex reader and I, separately. Each gets every opened topic and the development matters (the 66 stored
+    topics' descriptions and outcomes, and Alex's 44).
+  - **What:** each topic is marked as on a development matter, on a different matter, or uncertain. Where the two of us disagree, the
+    topic is uncertain.
+  - **The decision runs on two populations and must agree on both:** (a) every topic outside the seen-before articles; (b) its
+    different-matter topics. When they disagree, the result is inconclusive.
+  - **Each population needs its own minimum:** at least 5 topics, and the control failing L on at least 2 of them.
+    - A population below either is reported in full, with no verdict.
+    - A verdict needs both populations exercised.
+    - When only (a) is exercised, its numbers are reported as "not shown to be independent of the development matters", with no
+      verdict.
+    - The risk is stated now: (b) may be small, so the run may end with a fresh gate reading and no comparative verdict.
+  - Whatever the comparison gives, the control arm is reported as a fresh gate-1 reading of the frozen step.
+- **The reading:** the unchanged gate-1 form (Alex's six lines; `clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md`), with H
+  added and reported, never a veto. Two families, third readers of both, and three planted controls.
+- **The expected effect on the reader (D391):** the product shows "Not judged" parts beside an answer (D570). A part left unlisted
+  means the card hides what the answer ignored. A2 should make the card honest about its scope. It is not expected to change the
+  judged answer.
+
+## 3. What is reported, and the decision written now
+
+**The unchanged gate report, for each arm:**
+- all six lines under their unchanged accounting, with every failing send listed;
+- unresolved points counted for the answer, then against it;
+- no claim that a zero-fault line passed unless it has no failing send;
+- line 5 as raw counts (topics right in 2 of 3 sends, and those by written answer choices) over n. Its 35 of 44 and 28 of 44 are
+  marked not applicable to this population. Nothing here is called Alex's gate verdict.
+
+**The comparison (a diagnostic, beside the gate report):**
+- **Lead** needs all of these, in both populations and both countings:
+  1. A2 fails L (a part left unlisted) on fewer topics than the control, and on at most 1.
+  2. A2's sends failing N (an unjustified refusal) are no more than the control's.
+  3. **No regression traced to the change.** For every other line and mark (H included), each send where A2 fails a mark the
+     control does not fail on the same topic is read and classed, before the verdict, in `trace-review.json`, as for A3:
+     - **consistent with the change:** the failing content is what A2's added definition asks the step to list or decline;
+     - **pre-existing:** the same fault appears in the control's sends of that topic;
+     - **uncertain.**
+     Any failure consistent with the change is negative, except on H. H is reported and is never a veto: an extra listed item is not
+     one of Alex's six lines. Any uncertain failure other than on H makes a lead "lead, uncertain harms". H's uncertain points are
+     reported apart and never change the verdict. The control-against-itself differences
+     (`control-vs-control.txt`) are printed beside the counts as context only, and no bar is computed from them.
+- **Inconclusive:** the control fails L on fewer than 2 topics, or the populations or countings disagree.
+- **Otherwise negative.**
+
+H is printed per topic. A lead is evidence on one fresh week. It is not a pass of Alex's gate.
+
+## 4. After the first step: the steps in order (each at $0 unless said)
+
+1. **Check the run:** `run_live.py` exit 0, and the trace reads complete (`fresh_a2.opened_topics`). An incomplete run gives no
+   verdict and goes back to the council.
+2. **Cases:**
+   `clean-arch/step4-2026-11-10/stage_a/build_cases.py --fresh f1 --draws poc/data/clean-fresh-a2-2026-11-16 --parts step1/trace.sqlite --output poc/data/clean-fresh-a2-2026-11-16/cases/cases.json`.
+   Its fresh path counts only topics new beyond the starting library. It was checked on the 10-06 continuation, where it gave 4
+   cases, equal to `fresh_a2.opened_topics`.
+3. **Population (a):** every case whose opening article is not in `fresh-a2/seen-before-10-13.json` (20 articles).
+4. **Population (b), classed before any answer is read:**
+   - `population.py packet` builds the packet. A fresh blind Codex reader (`population-brief.md`) and I class it separately, and
+     `population.py join` joins the two; a disagreement counts as uncertain.
+   - (b) is the topics both of us class `different matter`.
+   - `population.json` is written and its sha256 recorded.
+5. **The check:** `fresh_probe.py check`. Then the council, before the answer-choice send.
+6. **After the council's word:** `fresh_probe.py send`, then the reading as for the probes (`../reading_prep.py`, packets, two
+   families, third readers, H), then `fresh_score.py`, the trace review, the result, and the council.
+
+**Built and tested at $0:**
+- `fresh_probe.py`, checked on a stand-in of the 10-06 week's 13 cases;
+- `fresh_score.py`;
+- `test_fresh.py`: 4 tests through the whole stand-in pipeline;
+- `fresh-mutants.txt`: 4 mutants, each caught.
+{
+ "ceiling": 6.5,
+ "spent": 3.4485335999999993,
+ "reserved": 0.0,
+ "overrun": false,
+ "refused": 0,
+ "attempts": 384,
+ "stopped": false,
+ "stop_reason": null
+}{
+ "design": "FRESH-A2-DESIGN.md v4 \u00a72, \u00a74 steps 3-4",
+ "run_complete": true,
+ "articles": [
+  383,
+  383
+ ],
+ "opening_article": {
+  "f1/clean-14": "gnews:80b5ed61f0d5cda71b88d365",
+  "f1/clean-15": "gnews:7399cc8c05659fecf8411509",
+  "f1/clean-16": "gnews:c91930758944c1b0ee351c01",
+  "f1/clean-17": "gnews:5bb54f41676fdb9d380bff20",
+  "f1/clean-18": "gnews:32791da660ac6326069f650a"
+ },
+ "population_a": [
+  "f1/clean-14",
+  "f1/clean-15",
+  "f1/clean-16",
+  "f1/clean-17",
+  "f1/clean-18"
+ ],
+ "population_b": [
+  "f1/clean-16",
+  "f1/clean-17",
+  "f1/clean-18"
+ ],
+ "classes": {
+  "f1/clean-14": "uncertain",
+  "f1/clean-15": "development matter",
+  "f1/clean-16": "different matter",
+  "f1/clean-17": "different matter",
+  "f1/clean-18": "different matter"
+ },
+ "minimum": {
+  "topics": 5,
+  "control_failing_L": 2
+ },
+ "population_b_exercised": false,
+ "sources": {
+  "cases.json": "6d1c260d98f1af6c6b2c3606c2abe7348f795ad82a7f5d05789ebb87b29c78d4",
+  "packet.json": "63d999ac74209b76cda4b5c8119338dab33eb62d33fd9364066bd1a695641701",
+  "class-codex.jsonl": "96e5facb548a7f2cd085160e92c716d58229382a8c0d688ae454134988f155d2",
+  "class-claude.jsonl": "2fea1a6627cebd0584714995bfec4fb542ad71053a0df5b392ca7615724c5647"
+ }
+}
+
+exec
+/opt/homebrew/bin/zsh -lc "cat poc/data/clean-fresh-a2-2026-11-16/population/class-claude.jsonl; cat poc/data/clean-fresh-a2-2026-11-16/population/class-codex.jsonl; cat poc/data/clean-fresh-a2-2026-11-16/population/check-output.txt; rg -n '"'^## D(543|586|587|588|589)'"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "ls poc/data/clean-fresh-a2-2026-11-16; ls docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-exposure-2026-11-16; rg -n -C 3 '2026-10-20\\.\\.2026-10-26|eligible_articles|never_sent|sent_before' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-exposure-2026-11-16/exposure-census.json | tail -18" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{"id": "f1/clean-14", "class": "uncertain", "nearest": "stage-a u1/clean-9", "why": "China's total accelerator units and their GPU versus non-GPU split are not the domestic-supplier share of Chinese accelerator spending tracked in development, but the split overlaps that share closely enough that the texts do not settle whether it is the same quantity."}
+{"id": "f1/clean-15", "class": "development matter", "nearest": "stage-a u3/clean-11", "why": "The split of the largest hyperscalers' 2027 accelerator capacity and spending between in-house custom silicon and Nvidia GPUs is the quantity stage-a u3/clean-11 tracks (custom ASIC versus Nvidia share of 2027 hyperscaler accelerator spending and gigawatts)."}
+{"id": "f1/clean-16", "class": "different matter", "nearest": null, "why": "No development matter tracks federal legislation to ban superintelligent AI or pause AI development; the only legislation topic is the Chinese lidar phase-out, a different bill."}
+{"id": "f1/clean-17", "class": "different matter", "nearest": "stage-a u3/clean-12", "why": "Taiwan's own tightening of export controls is a separate government's decision; the development matters track U.S. export rules and China's import approvals, not Taiwan's controls."}
+{"id": "f1/clean-18", "class": "different matter", "nearest": "stored week-10-06 c1/clean-13", "why": "The Poolside Model Factory licence is a deal no development matter names; the development matters track Nvidia's total equity-investment and supply commitments, not this licence."}
+{"id":"f1/clean-14","class":"different matter","nearest":null,"why":"China's total accelerator shipments and GPU versus non-GPU unit split differ from the development matters on domestic spending share and Huawei production."}
+{"id":"f1/clean-15","class":"development matter","nearest":"stage-a u3/clean-11","why":"Both track the 2027 split of hyperscaler AI accelerator capacity and spending between custom silicon and Nvidia GPUs."}
+{"id":"f1/clean-16","class":"different matter","nearest":null,"why":"None of the development matters tracks the proposed federal ban and pause on advanced AI development."}
+{"id":"f1/clean-17","class":"different matter","nearest":null,"why":"Taiwan's prospective export controls are a different government decision from the U.S. and Chinese restrictions in the development matters."}
+{"id":"f1/clean-18","class":"different matter","nearest":null,"why":"None of the development matters tracks Nvidia's Poolside Model Factory licence commitment."}f1/clean-14      A2 equals the control plus exactly A2's replacements: True
+f1/clean-15      A2 equals the control plus exactly A2's replacements: True
+f1/clean-16      A2 equals the control plus exactly A2's replacements: True
+f1/clean-17      A2 equals the control plus exactly A2's replacements: True
+f1/clean-18      A2 equals the control plus exactly A2's replacements: True
+mutant answer (answer choices and a refusal at once): ['exactly one of no_ladder and ladder must be null']
+check passed: 5 cases, 30 sends; record check-passed-fresh.json
+6589:## D543 · 2026-11-15 · Under D439: the cold reflection on the lean path: D518 stands with its reasons, the choice of system is not made in Alex's place, and no investigation is opened (reflection council consensus)
+7585:## D586 · 2026-11-16 · Tuning of the not-judged list's edge stops on these topics; A2 stays an unaccepted candidate; next is a $0 provenance check and design for a fresh controlled comparison (council round 94)
+7595:## D587 · 2026-11-16 · A fresh controlled comparison of A2 on the week of 10-13 is designed; its $0 proofs come next, and the paid run is decided on their numbers (council rounds 95 to 98)
+7611:## D588 · 2026-11-16 · The first step of the fresh A2 comparison is sent on the week of 10-13 from the 10-06 library, under a $6.50 shared ledger (council rounds 99 to 101)
+
+ succeeded in 0ms:
+cases
+launched.txt
+ledger.attempts.jsonl
+ledger.json
+ledger.lock
+limits.json
+population
+step1
+step1.log
+step1.pid
+exposure-census.json
+week-10-13-exposure.txt
+11292-  "2026-10-13..2026-10-19": {
+11293:   "eligible_articles": 383,
+11294:   "never_sent": 0,
+11295:   "sent_before": 383,
+11296-   "sent_by": {
+11297-    "clean-step1-source-loss-census-2026-11-07": 884,
+11298-    "clean-step1-full-page-diagnostic-2026-11-07": 769,
+--
+14786-    ]
+14787-   }
+14788-  },
+14789:  "2026-10-20..2026-10-26": {
+14790:   "eligible_articles": 475,
+14791:   "never_sent": 6,
+14792:   "sent_before": 469,
+14793-   "sent_by": {
+14794-    "clean-step1-source-loss-census-2026-11-07": 1179,
+14795-    "clean-step1-full-page-diagnostic-2026-11-07": 939,
+
+codex
+**Choose option 1: read the five topics as registered, with no comparative verdict.** The completed run cost $3.4485 and the joined population has three different-matter topics, below the prewritten minimum of five. For example, the readers split on the China accelerator question, so it stays uncertain and outside population (b). [Ledger](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/ledger.json>), [population](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/population/population.json>), [registered design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md>)
+
+Pooling another week **before seeing answer-choice outputs** avoids selecting on A2’s measured performance, but it would still change the registered sample after seeing that the first week missed its minimum. The second week would also start from a larger library shaped by the first week, so its openings would be dependent on that history. Those conditions are not fatal to a newly designed longitudinal test, but they do not guarantee two more independent matters or two control L failures.
+
+I would not spend another estimated $4.3, with a $6.50 ceiling and unpriced reader work, to rescue this particular comparison. The cheaper registered send can show what the frozen step and A2 wrote on these five topics; it **cannot settle whether A2 generalizes**, pass Alex’s gate, or justify adopting A2. Report all five, the three agreed different matters and the uncertain one separately, under both countings. The existing request check passed on all five; the answer-choice send still needs its normal pre-send checks. [Check output](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/population/check-output.txt>)
+
+After that reading, close this comparison with its stated limit and re-rank the remaining production work from the evidence. Keep A2 unaccepted.
+
+CONSENSUS: yes (option 1)
+tokens used
+2,552,323
+**Choose option 1: read the five topics as registered, with no comparative verdict.** The completed run cost $3.4485 and the joined population has three different-matter topics, below the prewritten minimum of five. For example, the readers split on the China accelerator question, so it stays uncertain and outside population (b). [Ledger](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/ledger.json>), [population](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/population/population.json>), [registered design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md>)
+
+Pooling another week **before seeing answer-choice outputs** avoids selecting on A2’s measured performance, but it would still change the registered sample after seeing that the first week missed its minimum. The second week would also start from a larger library shaped by the first week, so its openings would be dependent on that history. Those conditions are not fatal to a newly designed longitudinal test, but they do not guarantee two more independent matters or two control L failures.
+
+I would not spend another estimated $4.3, with a $6.50 ceiling and unpriced reader work, to rescue this particular comparison. The cheaper registered send can show what the frozen step and A2 wrote on these five topics; it **cannot settle whether A2 generalizes**, pass Alex’s gate, or justify adopting A2. Report all five, the three agreed different matters and the uncertain one separately, under both countings. The existing request check passed on all five; the answer-choice send still needs its normal pre-send checks. [Check output](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/population/check-output.txt>)
+
+After that reading, close this comparison with its stated limit and re-rank the remaining production work from the evidence. Keep A2 unaccepted.
+
+CONSENSUS: yes (option 1)

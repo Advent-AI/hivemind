@@ -1,0 +1,9 @@
+**No-go for the send.** The three fixes are present, but two decision paths still fall short of the written rule.
+
+1. **“Other” can merge different named ways.** The scorer now compares `(topic, matter)`, which fixes the tested case. But the classer assigns every named way outside the fixed matter list to `other`. If A2 lists one such way and A3 lists a different one, both can count as the same matter and the loss can pass. Add a test with two distinct named ways both classified `other`, and make the check report that identity as unresolved or compare them by a reviewed identity. [Classer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/a3_reading.py>), [scorer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score_a3.py>)
+
+2. **“Motivating H” alone does not prove A was negative only through A3’s named-way marks.** Reading B can also change the control’s H count. A could therefore fail the H comparison and B pass because the *control* acquired failures, without B clearing the relevant A3 marks. The outcome mapping should establish which sends and entries account for the difference, or return inconclusive when it cannot. [Verdict mapping](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score_a3.py>)
+
+The trace-review requirement now prevents an unreviewed lead from being final. Keep the saved checks and return after the two distinctions above are tested.
+
+CONSENSUS: no, because distinct unlisted named ways can still be counted as one, and the diagnostic-lead mapping does not yet establish why Reading A failed.

@@ -37,3 +37,14 @@ def no_credentials(monkeypatch):
         pytest.fail('a test read a credential: a model or Jev call escaped its fake transport')
     monkeypatch.setattr(model, '_key', refuse)
     monkeypatch.setattr(jev, '_key', refuse)
+
+
+@pytest.fixture(autouse=True, scope='session')
+def locks_in_a_temporary_folder(tmp_path_factory):
+    """No test writes outside temporary folders (AGENTS §4): the writer lock's folder (live_lock, OPERATING-CONTRACT row 7) is moved
+    into one for the whole session."""
+    from hivemind import live_lock
+    saved = live_lock.LOCK_FOLDER
+    live_lock.LOCK_FOLDER = str(tmp_path_factory.mktemp('locks'))
+    yield
+    live_lock.LOCK_FOLDER = saved

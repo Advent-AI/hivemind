@@ -1,0 +1,37 @@
+Mutants of the probe's guards and the scorer, each run on a scratch copy (PYTHONDONTWRITEBYTECODE=1), 2026-11-16.
+probe.py, the record comparison in send removed      -> test_probe.py: test_a_case_changed_after_the_check_is_refused_before_any_send FAILED (1 failed, 2 passed)
+probe.py, the breach stop removed                    -> test_probe.py: test_an_attempt_charged_above_its_reserve_is_reported_as_a_breach FAILED (1 failed, 2 passed)
+probe_score.py, no harm veto                         -> test_harm_on_the_harm_controls_makes_it_negative FAILED (1 failed, 5 passed)
+probe_score.py, no plant check                       -> test_a_missed_planted_control_makes_it_negative FAILED (1 failed, 5 passed)
+probe_score.py, threshold < 2 instead of < 3          -> test_a_control_that_fails_l_on_two_topics_is_inconclusive FAILED (1 failed, 5 passed)
+probe_score.py, no H validity check                  -> test_a_row_without_h_is_not_scored FAILED (1 failed, 5 passed)
+probe_score.py, rule 1 always true                   -> test_the_changed_arm_failing_l_on_two_topics_is_negative FAILED (1 failed, 5 passed)
+Unmutated: test_probe.py 3 passed; test_probe_score.py 7 passed.
+Round 63's guards, 2026-11-16:
+probe_score.py, no population check                  -> test_a_reading_that_misses_a_send_is_not_scored FAILED
+probe_score.py, no plants-file check                 -> test_an_altered_plants_file_is_not_scored FAILED
+probe_score.py, no two-family check on differences    -> test_a_difference_ruled_by_one_third_reader_family_is_not_scored FAILED
+probe_score.py, no H value check                     -> test_an_h_ruling_outside_the_four_values_or_given_twice_is_not_scored[not one of] FAILED
+probe_score.py, no duplicate-ruling check            -> test_an_h_ruling_outside_the_four_values_or_given_twice_is_not_scored[ruled twice] FAILED
+probe.py, BreachGuard's immediate stop removed       -> first PASSED (the test's charge also passed the cap, so the cap stopped the sends);
+    the test was rewritten with a charge above the reserve and below the cap -> test_an_answer_costing_more_than_its_reserve_stops_every_later_attempt FAILED
+Unmutated: test_probe.py 3 passed; test_probe_score.py 12 passed.
+Round 64's guards, 2026-11-16:
+probe_score.py, the plant stop after the inconclusive verdict -> test_a_missed_planted_control_stops_the_reading[2] FAILED
+probe_score.py, third-reader H rulings ignored            -> test_h_disagreements_go_to_the_third_readers_and_their_rulings_decide FAILED
+h_disputes.py, every part sent, not only the disagreements -> test_h_disagreements_go_to_the_third_readers_and_their_rulings_decide FAILED
+Unmutated: test_probe.py 3 passed; test_probe_score.py 14 passed.
+A2's added rules (DESIGN-A2.md v2), 2026-11-16, each on a scratch copy (a first run failed at import for a missing module copy: an error, not a catch; rerun with the module):
+probe_score.py, retention check removed (kept = True)        -> test_losing_one_exercised_refusal_control_makes_it_negative FAILED
+probe_score.py, a gain of 2 accepted                          -> test_a_recovery_gain_of_two_is_negative FAILED
+probe_score.py, refusal controls exercised on 2 enough        -> test_refusal_controls_the_control_declines_on_only_two_topics_are_inconclusive FAILED
+probe_score.py, recovery room of 2 enough                     -> test_a_control_that_already_writes_ten_recoveries_is_inconclusive FAILED
+probe_score.py, rule 2 counts expected refusals as harm       -> test_expected_refusals_on_refusal_controls_are_not_harm_under_rule_two FAILED
+Unmutated: test_probe.py 3, test_probe_score.py 14, test_probe_score_a2.py 7, all passed.
+Round 75's corrections, 2026-11-16:
+probe_score.py, a code refusal counted as a kept refusal   -> test_a_code_refusal_on_a_refusal_control_is_not_a_kept_refusal FAILED
+    (its first version survived: another rule made the decision negative anyway; the test now asserts the lost-topic list)
+probe_score.py, a recovery counted on Q, O and R only       -> test_a_recovery_with_any_failing_mark_is_not_correct FAILED
+    (a first, too-broad mutant also counted refusals as correct and broke six tests; replaced by the precise one)
+probe_score.py, N and code refusals skipped on recoveries   -> test_unjustified_refusals_on_recovery_topics_still_count_under_rule_two FAILED
+Unmutated: test_probe.py 3, test_probe_score.py 14, test_probe_score_a2.py 10, all passed.

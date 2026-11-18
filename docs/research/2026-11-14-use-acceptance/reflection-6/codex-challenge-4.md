@@ -1,0 +1,7 @@
+**The comparison is ready to send after the required $0 preflight.** The revised scoring counts code-refused answers as failures, treats an uninformative tie as inconclusive, and checks the sound controls. The recorded tests cover those cases. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/DESIGN.md), [probe tests](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/test_effort_probe.py)
+
+One qualification: the byte check establishes that the **new medium and high requests** differ only in effort. The comparison with the historical medium request is still a canonical hash comparison, so it does not prove historical nested key order. That does not prevent the fresh matched comparison from answering its question. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/effort/effort_probe.py)
+
+Run the repository’s required preflight before the paid send, inspect any skipped cases and refusals, and keep the $1 combined cap. A stopped draw is not measured. Afterward, read the answers blind and review the differences against their sources before deciding what the result means. I have not run or edited anything.
+
+**CONSENSUS: Send the six matched draws after a clean preflight, under the stated caps and stop rules.**

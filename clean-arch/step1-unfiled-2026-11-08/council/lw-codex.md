@@ -1,0 +1,10 @@
+**No.** The missing-comparison rule is fixed, but the spending limit is still not guaranteed, and an unexpected response can leave the run waiting indefinitely.
+
+For example, if a response reports more cost than was reserved, the harness records that higher cost only after the request has already been sent. Other requests may already be in flight.
+
+- **Lost sends: closed.** The plan now says any lost send makes that state’s comparisons unexercised, and any lost capex send makes G1-a unexercised. It also says every bad outcome in the stop column is compared with c8. These decisions are fixed before the answers arrive. [Plan](</Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/COMBINED-PLAN.md:71>)
+- **Spending ceiling: not fully closed.** Missing usage now counts at the reservation, and the input estimate matches production’s more conservative calculation. But production itself says that calculation is **not a bill guarantee**. The probe also accepts reported usage above its reservation without preventing an overrun. So the original four-characters-per-token and zero-usage faults are addressed, but a guaranteed ceiling has not been established. [Probe](</Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/probe_c14.py:117>), [production reservation](</Users/lchingen/hivemind/clean-arch/step1/live.py:49>)
+- **New serious failure path:** if usage is malformed—for example, a string instead of an object—settlement raises before it wakes waiting sends. Those sends can wait indefinitely, and the run waits for them. [Settlement](</Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/probe_c14.py:127>)
+- **The fake-transport check is limited.** It prints outcomes rather than asserting them, and does not exercise malformed usage or a response costing more than its reservation. I read it without running it because this sandbox is read-only. [Check](</Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/gate1/check_probe_ceiling.py:17>)
+
+G1-a and G1-b fit to send: no

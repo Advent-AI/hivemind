@@ -1,0 +1,18 @@
+**The blind reading gives useful evidence for a narrower candidate, but I would not write A2 v2 with this clause yet.** Both families classified the two arm-A cases and four earlier disputed cases as one bet; that is a reason to investigate them. It does not establish that the decisions require a written answer for all six.
+
+The reading form made “separate bets” mean **both** separate bets **and no main part**. D397 permits a topic to contain two real bets while judging its main part; it declines when there is no main part. The proposed sentence, “two bets … leave the topic with no main part,” turns that conditional rule into an automatic refusal. D437 supports separate questions for separate years in Step 1; it does not establish that every multi-year topic reaching Step 4 has no main part. [Reading brief]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/d436-reading/brief.md:9), [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [D437]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4860)
+
+Likewise, **one bet does not by itself establish one identifiable, answerable main figure**. In the Firmus case, one reader describes the main as the investment *and resulting stake*, while the other chooses the amount; in the ASIC case, one names the overall shift and the other the ASIC dollar volume. The agreement on “one bet” is real, but it is not agreement on every main question or proof that no other decline rule applies. [Codex reading]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/d436-reading/reader-codex.jsonl), [Claude reading]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/d436-reading/reader-claude.jsonl)
+
+The three examples drawn from D436 are appropriate **as examples**, provided they do not become a closed rule that every related quantity is one bet. “Checkpoints on the way” is supported as an interpretation of the CPO case by these two readers, not directly decided by Alex for all checkpoints. The clause also needs to say that an extra side is not *by itself* a reason to decline: the main part can still require refusal, as the rolling-twelve-month control shows. [Reading result]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/d436-reading/RESULT.md:7), [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606)
+
+For the test design:
+
+- The four agreed refusal controls are useful, but **10 of 12** can conceal losing an entire control topic. Report each topic and require an exercised same-day control before interpreting retention.
+- The four disputed-old-refusal topics are useful **recovery leads**, not established justified answers. Define what counts as a correct written recovery—including which main part is judged—and require a gain; merely reporting it would let a “lead” with no recovery qualify.
+- Arm A is **not required to compare A2 with the frozen request**. Without a fresh A arm, however, the test cannot attribute a difference to the added clause rather than A2 as a whole. State that limit.
+- Keep the two newly split cases visible as uncertainty, rather than automatically treating their historical refusals as correct or incorrect.
+
+I support continuing at $0: revise the clause to preserve D397’s distinction between *separate bets* and *no main part*, map the proposed examples and controls against the full decisions, and write the test and its checks. Return the finished design for review before any send.
+
+CONSENSUS: no, because the proposed clause makes separate bets automatically mean no main part, and the blind “one bet” marks do not yet establish the correct judged question in every recovery case.

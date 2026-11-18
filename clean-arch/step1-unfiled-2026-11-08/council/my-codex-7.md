@@ -1,0 +1,24 @@
+**Do not send this comparison. Build the side-by-side as the next $0 step, but use it for a council decision—not merely as another page that waits for Alex.**
+
+The sizing supports stopping **this design under D516**: it does not establish a defensible ability to detect a decision-relevant difference, and the delivery reading is not calibrated for a single answer-changing fact. It does not establish that the systems are equal or that every affordable comparison is impossible.
+
+**The sizing needs corrections before it goes on the decision page.**
+
+- The script runs and reproduces the reported 31-point estimate and 82% simulation for its chosen assumptions. Those numbers assume independent answers, fixed weekly question counts and particular underlying success rates. Questions within a week and repeated draws can be correlated. The simulation checks the formula under those assumptions; it does not validate them on the stored runs.
+- “Only about 30 points or more” is too strong. The table itself gives **22–38 points** for some shapes. These are illustrative estimates, not a measured detection boundary.
+- “Nothing seen suggests a 30-point difference” is also too strong for one draw per system. A 26-point observed difference does not establish the underlying difference or rule out 30.
+- The probability depends on the starting rates as well as the gap. In the same simulation, a 20-point gap at 83% versus 63% was detected about 37% of the time; at 97% versus 77%, about 57%. The quoted 40% is one scenario.
+- The trial’s cited-statement checks used passages shown to the judge, **not the full articles**. The fresh-week B reading had the same limitation. The row labelled “wrong against their article” should not claim that either reading performed B2’s source check. [Reading brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/brief-B.md)
+- The three October weeks are labelled unread in the sizing script, but I did not find a documented exposure census or article-list cost in the sizing report. Treat availability and cost as estimates until checked. The $0.50 old-system figure is a rounded listed-rate estimate, not its separately charged ledger amount.
+
+The page should say, in plain words: **“At the proposed size, the comparison may miss differences that matter; we cannot yet calculate its reliability from our stored readings. We did not run it.”** Do not replace it with “about 30 points or nothing.” [Sizing](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md)
+
+**The side-by-side is worth doing if it has a decision attached.** It can show what the reader actually receives: the old system’s unsupported 25% assumption alongside the new system’s missing or unused material, rather than just totals. Build it from the stored week and review every question, answer, source and reviewer mark against its record. Preserve disagreements, show the full reasons or a direct link to them, and label any sentence shortened from the original. Do not promise a ten-minute read until that is checked.
+
+After the accuracy and tilt review, the council should use it to make a **bounded operational decision**: whether the evidence justifies moving work away from the current default, or whether the default and the two open paths should remain. If the latter, record what evidence would change that decision and select the next product-ranked investigation. The side-by-side cannot prove a winner, and producing it alone is not progress toward the choice.
+
+My earlier rank 2 needs correction. **There is no free-standing, ready-to-run set of answer-choice tests to resume.** The line stopped after failed attempts and D477–D482. The answer-choice failure remains a real readiness barrier, but restarting it requires a new justified direction and council decision, not simply running owed tests. The shared-topic option remains untested; its impact on final answers and both systems is not established. [Choices](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/CHOICES-FOR-ALEX-2026-11-13.md)
+
+I also would not call widening look-back a proven patch that reaches only one case: the census found three confirmed pairs and 23 unresolved candidates, and the share removed by a proposed change has not been measured. The supported decision is narrower: **do not build it now**, because its full reach and effect on final answers are not established.
+
+Council position: Do not send the comparison under D516; correct the sizing’s claims and build a source-traceable, balanced side-by-side from the stored week, then use its review to make a bounded council decision on what carries forward and what evidence is needed next.

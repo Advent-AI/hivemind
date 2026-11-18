@@ -1,5 +1,7 @@
 # Step 2 validation: retrieval and comparison (council loop, from 2026-11-07)
 
+**Status (2026-11-11): closed and frozen (D427, §19).** The open defects carried with it are in §17.
+
 Alex, 2026-11-07: "好开始；我觉得这几次的循环很有效的逼近问题我觉得应该把他写成一个skill 你思考下怎么construct 然后跑这个skill". Run
 with the `council-loop` skill (`.claude/skills/council-loop/SKILL.md`). This is a validation of Step 2, not an end-to-end claim:
 there is no Step 4.
@@ -334,3 +336,151 @@ Both are recorded in PRD §5.
 and the census goes to him.
 
 **Not done:** the unprompted wrong-group reading test, and a fix for line 2.
+
+## 13. Embedding score to Jev: interrupted exploratory probe (2026-11-09)
+
+Alex asked whether giving Jev the retrieval similarity score helps and authorized a small council test. The frozen candidate lists were
+replayed in an isolated probe, comparing the original Jev request with one adding the real cosine scores and query-type labels. This
+is not a production change or a new acceptance measurement. The [design, source-backed blind reviews and full result](../../reports/step2-score-council-2026-11-08/RESULTS.md)
+remain separate from the Step 1 work.
+
+- The planned sample was 11 selected cases, 3 same-day sends per arm. **36 of 66 calls completed:** 6 cases; the next request ended
+  in a connection reset after dispatch and its outcome is unknown. The remaining 29 calls were not sent. The predeclared stop held;
+  no automatic resend or resume occurred.
+- On the six completed cases, all 46 candidate choices, the selected groups and revision links were the same in both arms, in all
+  draws. Two blind readers agreed on all 46: 3 same, 42 different and 1 overlap. The overlap was grouped as a repeat in both arms;
+  it is not treated as an unambiguously correct or incorrect merge. The score changed some returned probabilities, not decisions.
+- The known wrong merge and the selected revision-bearing case were not reached. **No decision improvement was observed, but the
+  interrupted, selected sample cannot establish equivalence, precision, recall or revision quality.** The effect of scores remains
+  unresolved; neither the prompt nor the configuration was changed. Recorded successful call cost was $0.005742; billing for the
+  interrupted request is unknown.
+
+## 14. Jev revision-target procedure: failed isolated probe (2026-11-09)
+
+Alex asked the Codex–Claude council to select and execute the next small Step 2 test. The candidate asked Jev to identify the statement addressed before applying the existing revision definition, preserving the three existing choices. A full-request audit, blind second read and isolated-sender review preceded the send. Seven archived full-candidate requests were sent under the original and candidate criteria three times each: 42/42 completed. In the predeclared wrong-revision controls, the original and candidate both kept the C036 backup and interconnect links in all three draws; C057's target left revision once in the candidate, below the required two-draw advantage, and its new `same_statement` answer was not supported by the two source readers. The selected correct revision and repeat controls retained their labels in all draws. The predeclared improvement condition failed; **do not adopt this candidate or tune another variant on these cases**. The remaining source disputes, particularly C059, are not silently resolved. This selected small probe does not measure overall precision, recall or final investment judgment.
+
+Reported input: 200,067 tokens (original 99,918; candidate 100,149). The dated repository Jev rate gives an estimated $0.0084, not an invoice; conservative reservation was $0.0739053. V108 preflight included 2 historical schema refusals and 2 skipped matching rows and did not exercise clean Step 2; the clean Jev request bytes and archived answers were separately verified. No production prompt, frozen ruler or runtime dataset changed. The [protocol, raw results, independent source review and council exchange](../../reports/step2-next-action-2026-11-09/) are retained with the event journal.
+
+## 15. One unsupported revision relation traced to the judge (2026-11-10)
+
+Alex handed the Step 2 work over with the council's conclusion of 2026-11-09 (stop tuning Jev's wording; test whether one wrong
+relation changes a later judgement). The test was carried out as that council wrote it. [Result](../step2-edge-effect-2026-11-10/RESULT.md),
+[protocol](../step2-edge-effect-2026-11-10/PROTOCOL.md). No change to Jev, a prompt, a rule, the frozen judge or a saved run.
+
+**Frame.** Saved D392 clean draw 1, judged by the frozen judge through the experimental adapter. The case: an NVIDIA spokesperson's
+"Our roadmap is intact" (record `70:e4`), an answer to a report that the Kyber rack is delayed, read by Jev as a later version of
+"NVIDIA plans to sell more racks of the existing form" (`69:e5`). The adapter gives a record the question links of the record it
+revises, so the Kyber answer was shown under the FY2027 Blackwell and Rubin revenue question (v20).
+
+**At no cost** (`edge_replay.py`, every request answered from the saved archive):
+- The untouched run replays: 239 of 239 judge requests equal a saved one; ledger, recorded requests and counts equal the saved run's.
+- With that one relation removed, the first changed request is v20's on 2026-07-06: the Kyber answer is gone, nothing else.
+- With the relation removed and its link kept, all 14 days are identical: this relation reaches the judge only through the link.
+- The class (`inheritance_census.py`): links that exist only because a revision relation carried them are 5 of 700 in draw 1, 11
+  of 725 and 8 of 730 in draws 2 and 3 (relations of every kind). By the readers' labels of draw 1: 2 of the 5 come from relations
+  that join different statements, 1 from an unclear one, 2 from repeats. A relation also prints one "later version" line under
+  the new record: 6 records carry a line from a relation the readers call different, 4 of them shown to the judge (55 of 4,575
+  showings); the saved reasons use those statements for what they say and never as a later version of the piece named.
+- Step 1 never filed the roadmap statement under v20 (0 of 28 copies in three draws); a blind reader of the article placed it as
+  context that should not move the FY2027 estimate.
+
+**Paid, $0.0126:** v20's request of 2026-07-06 sent as saved and with the record removed, three times each, after four read-only
+sender reviews (none ended "ready"; each serious finding and what was done is in the protocol; sent on my reading). The reading
+rule was fixed before the send.
+
+| Arm | Rungs | Implied revenue | The Kyber answer |
+|---|---|---|---|
+| As saved | 2, 2, 2 | about $335, $330 and $340 billion | cited and marked as pushing up in all three; not used in the reasons |
+| Record removed | 2, 2, 2 | about $340, $350 to $370 and $335 billion | absent |
+
+By the rule: no difference in the conclusion in these samples. All six answers give the same cause for the move from rung 3 to
+rung 2 that day: the Data Center question it depends on had moved to about $390 billion.
+
+**Council on the result** (`council/result-challenge-codex.md`): agrees with leaving Jev unchanged; the defect stays open, and the
+size is given by the labelled counts, not by "about 1%".
+
+**Verdict.** The relation changed what the judge read on one question and not what it concluded there. It is one case and one day
+of one draw; it does not show the record had no influence, and it says nothing of the other relations or the later days.
+
+**Recommendation to Alex.** Stop work on Jev's revision relation now and keep the defect open with these counts; no change to
+Step 2 or the adapter. The clean PRD's §6 does not say a revision gives the new record the earlier record's thesis links (the rule
+is the adapter's, from production's writer); that is a product rule to put to him when Steps 3 and 4 are joined.
+
+| Arm | Hypothesis | Change | Result | Kept |
+|---|---|---|---|---|
+| Relation removed (one case) | An unsupported revision relation changes a later judgement | The one relation taken out of a copy of the library; v20's request of 2026-07-06 sent both ways, 3 times each | Input changed (one record under one question); rung 2 in 6 of 6; the cause given unchanged | no change made; Jev's revision relation stays an open defect |
+
+## 16. What a "later version" relation may file: a council round, and a withdrawn fix (2026-11-10)
+
+Alex, on §15's recommendation and its open point: "okay take your suggestion what is the fix and how to measure get your council
+skill ready to propose" (D423). The round is in [its own log](../step2-revision-links-2026-11-10/LOG.md). No code of the writer, no PRD
+rule and no test changed.
+
+- **Census, three saved draws:** the rule wrote 24 links (5 of 700, 11 of 725, 8 of 730). Nineteen are NVIDIA's answer to the Kyber
+  report carried to revenue questions (10) and the Rubin shipping question (9); three belong to records Step 1 filed under a thesis
+  the seeded test does not judge; two to records Step 1 filed nowhere.
+- **Exact:** the writer's own code with judging off reproduces the three saved ledgers row for row; "never carry" leaves out exactly
+  those 24 links and changes no other row.
+- **Two blind reader families, with controls of both kinds:** 19 context by both, 3 evidence by both, 2 split. Nothing a program
+  can read separates the two kinds.
+- **Two links judged both ways:** the context one (§15) made no difference in six answers; the evidence one (NVIDIA's answer beside
+  four delay reports under FY2028 revenue, draw 3) gave rung 2, 2, 2 with it and 2, 3, 2 without: not decided by the rule fixed
+  beforehand, $0.0109.
+- **Council (Codex independent, two challenge rounds):** the rule is not changed now; that it is the better rule is not shown.
+- **Verdict:** "never carry", which §15 recommended on draw 1 alone, is withdrawn by its author. Alex on the proposal: "好根据你的建议，
+  下一步": the rule stays (D424). Not decided: whether a company's answer to a report must sit under every question the report
+  is filed under.
+
+| Arm | Hypothesis | Change | Result | Kept |
+|---|---|---|---|---|
+| Never carry | A relation should not file a record under the older record's questions | Simulated on three draws; 24 links read blind; two judged both ways | 19 context, 3 evidence, 2 split; the evidence link: 2, 2, 2 against 2, 3, 2 | no: withdrawn |
+
+## 17. Step 2 stops here (2026-11-10)
+
+Alex asked for the next step after D424. Two independent views, written apart, and one challenge round
+(`../step2-revision-links-2026-11-10/council/d-claude.md`, `d-codex.md`, `e-challenge.md`, `e-codex.md`) reach one recommendation:
+**Step 2 stops here with its known problems recorded, and no new test now.** It is a recommendation on priority, not confirmed by
+Alex, and not a claim that Step 2 is free of risk.
+
+**Why.**
+- Its three lines (D381) were met at the acceptance of D386 on 50 fresh articles, one draw: search 141 of 143; clear wrong merges
+  1 of 57, plus 2 overlaps; later details kept. The first forward run's 3 of 104 (§12) is the older measurement. The fresh set barely
+  exercised "later version" relations.
+- In the seeded end-to-end test (D392) the clean system agreed with the ruler on 18, 18 and 17 questions against production's 17,
+  15 and 16. Its misses: capital spending in all three draws (a known Step 1 gap, D394); the Ohio guarantee question not covered
+  in two draws (Step 1's first open defect); the China share question in draw 3 and the FY2028 revenue question in draw 2, once
+  each. None has been traced to Step 2; the last two have not been traced to a cause. A lead, not a finding: in draw 2 the FY2028
+  question holds one report of the Kyber delay and no answer from NVIDIA, and it sits on a rung boundary in every draw.
+- Checked and set aside: of the items the judge was shown, a second or later copy of a statement already in the same request is
+  31% to 34% in the three clean draws and 26% to 31% in the three complete production control draws. The copies are a trait of
+  the frozen judge's input in production too (D204, D358), not something clean Step 2 added; a test of them is not this step's.
+
+**Recorded as open.**
+1. Jev's "later version" relation: 9 of 30 relations join different statements in draw 1 (two source readers); work stopped (D423).
+2. The links that relation carries: 19 of 24 are context by two reader families; the rule is kept (D424).
+3. Wrong groups: at the line on one draw of fresh articles; the unprompted wrong-group reading test was never run.
+4. The "Unverified quote" mark is not shown to Jev (3 of 188 fresh records).
+5. Not decided: whether a company's answer to a report must sit under every question the report is filed under.
+
+**What reopens it.** Step 4 yields judged views on the clean path and an end-to-end miss, or something a reader of a thesis sees,
+traces to one of the five; or the joining of Steps 3 and 4 has to settle point 5.
+
+## 18. The reopen condition checked (2026-11-11)
+
+The two untraced misses of the seeded end-to-end test were diagnosed ([round log](../e2e-misses-2026-11-11/LOG.md)). Neither traces to
+Step 2: one is the judge's own variation at a rung line, the other a difference in what Step 1 filed under the question. Step 2 stays
+closed.
+
+## 19. Closed and frozen (2026-11-11, D427)
+
+Asked whether Jev could be closed and put into production, I answered not yet and offered two ways: (A) freeze it and take it to
+production with the whole clean path once Step 4 meets its lines, through one end-to-end comparison against production on the frozen
+ruler, with Step 2's three lines checked on that run (recommended); (B) transplant it into the current production pipeline now, as a
+new version measured against it. Alex: "饿、好jev 收尾冻结": option A.
+
+- Frozen at the committed state (cc2fdf2), each file unchanged since: `step2/compare.py`, `step2/run_forward.py`, `step3/library.py`
+  and their tests (13 and 20 pass). `tests/test_frozen_clean_step2.py` holds their sha256 and fails the suite when one moves; a scratch
+  copy with `library.py` changed fails it, the unchanged copy passes.
+- Not frozen here: the writer between the library and the judge (`e2e-2026-11-09/adapter.py`), measurement code that Step 4's design
+  extends; its revision-link rule (D424) stays pinned by `test_adapter.py`.
+- Carried with the freeze: the five open defects of §17.

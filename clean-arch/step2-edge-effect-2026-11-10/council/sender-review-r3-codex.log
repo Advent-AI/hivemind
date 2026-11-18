@@ -1,0 +1,1947 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1c8af-0703-7ba0-b08c-abebd96e6d46
+--------
+user
+You are an independent, read-only reviewer, new to this work. Do not edit any file and do not send any network request.
+
+Scope: one small paid probe about to be sent, in /Users/lchingen/hivemind (branch clean-arch): 6 requests to the frozen judge, a
+diagnostic of a few cents on one stored case.
+- Protocol: clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md ; preflight output: clean-arch/step2-edge-effect-2026-11-10/preflight.log
+- Sender and reader: clean-arch/step2-edge-effect-2026-11-10/judge_probe.py (it imports edge_replay.py beside it)
+- Code they call: clean-arch/e2e-2026-11-09/budget.py, adapter.py; src/hivemind/model.py; src/hivemind/views/judging.py, store.py.
+- Outputs on disk: poc/data/clean-step2-edge-effect-2026-11-10/ ; the saved run: poc/data/clean-e2e-2026-11-09/stage2-clean-d1/judged/.
+- Rules: AGENTS.md sections 5, 7.3 and 9.
+
+Two earlier reviews are in clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.md and sender-review-r2-codex.md. The
+second said NOT READY for: (1) the reader could crash on an answer the schema refuses; (2) the stated worst cost left out the two
+further attempts the spending limit allows per send; (3) no preflight record. Since then: the reader stops reading an answer the
+schema refuses and reports it; the protocol and `check` state the cost with three attempts ($0.1995 against a $0.25 cap); the
+preflight was run and its output and limits are stated; the request comparison is now a whole-request equality with only the user
+text exchanged; "is the historical order" became "is consistent with".
+
+Out of scope: the frozen judge's quality, Jev's prompt, Step 1, Step 4, any redesign, any new mechanism, wording preferences.
+
+Check, citing file and line, and mark every finding "serious" (it could make the send differ from the protocol, lose or mis-read an
+answer, spend past the cap, damage saved data, or let a verdict be printed that the protocol's rule does not give) or "not serious":
+A. Are findings (1), (2) and (3) closed?
+B. Read judge_probe.py line by line as it stands. You may run `python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check
+   /Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation` (it sends nothing). Any serious defect?
+C. Any sentence of PROTOCOL.md that claims more than the evidence on disk shows?
+End with one line: READY TO SEND, or NOT READY with the serious findings numbered.
+
+codex
+I’ll review the protocol, sender, reader, and recorded evidence without changing files or making network requests. I’ll trace any potential finding to the code or record that supports it.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/judge_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## 5'"\\.|"'^### 7'"\\.3|"'^## 9'"\\.|"'^## 10'"\\.' AGENTS.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'edge.effect|judge_probe|step2.edge' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/preflight.log' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+158:## 5. Verification
+316:### 7.3 Iterating
+408:## 9. Workspace and operations
+438:## 10. Rebuilding from ../tn-hivemind
+
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""One judgement, with and without the record an unsupported revision relation carried into it: thesis v20 on 2026-07-06 of the saved
+     3	D392 clean draw 1. Protocol: PROTOCOL.md beside this file, written before the send.
+     4	
+     5	The two requests are the ones `edge_replay.py counterfactual` wrote: the request the frozen judge was sent on that day, and the request
+     6	the same code builds when the one relation is removed from the library. Each is sent as the production transport sends it
+     7	(`model.openai_transport`: json.dumps of the request in the order `model.build_request` built it), through the measurement spending
+     8	limit (`e2e-2026-11-09/budget.py`), with no archive in between, so every draw is a fresh answer.
+     9	
+    10	  judge_probe.py check <replay folder>                 no send: the identities and the checks below, and the worst cost
+    11	  judge_probe.py send <replay folder> <new folder>     the sends (draws per arm and cap from PROTOCOL.md's numbers below)
+    12	  judge_probe.py read <replay folder> <send folder>    the answers through the frozen judge's own check, one row per answer"""
+    13	import argparse, concurrent.futures, contextlib, hashlib, json, re, sqlite3, sys, time
+    14	from pathlib import Path
+    15	
+    16	HERE = Path(__file__).resolve().parent
+    17	sys.dont_write_bytecode = True
+    18	sys.path[:0] = [str(HERE)]
+    19	import edge_replay  # noqa: E402
+    20	import budget  # noqa: E402  (edge_replay put e2e-2026-11-09 and src on the path)
+    21	from hivemind import config, model  # noqa: E402
+    22	from hivemind.views import judging, store  # noqa: E402
+    23	
+    24	OUTPUT_ROOT = edge_replay.ROOT / 'poc/data/clean-step2-edge-effect-2026-11-10'
+    25	VIEW, DAY, SEQ = 'v20', '2026-07-06', 76
+    26	CARRIED = 'e185'                      # the record the relation carried into the question
+    27	ARMS = ('control', 'counterfactual')
+    28	DRAWS = 3
+    29	CAP_USD = 0.25
+    30	FIGURE = re.compile(r'\$\s?(\d{2,4}(?:\.\d+)?)(?:\s?[–-]\s?\$?(\d{2,4}(?:\.\d+)?))?\s?billion')
+    31	
+    32	
+    33	def load_requests(replay_folder):
+    34	    return {arm: json.loads((Path(replay_folder) / f'request-{VIEW}-{arm}.json').read_text()) for arm in ARMS}
+    35	
+    36	
+    37	def sha256(text):
+    38	    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    39	
+    40	
+    41	def user_text(request):
+    42	    return request['messages'][-1]['content']
+    43	
+    44	
+    45	def read_only_ledger(replay_folder):
+    46	    """The replay's ledger as it stood when this judgement was asked for, opened read-only with the row shape the store's readers expect."""
+    47	    conn = sqlite3.connect(f"file:{Path(replay_folder).resolve() / 'views.sqlite'}?mode=ro", uri=True)
+    48	    conn.row_factory = sqlite3.Row
+    49	    return conn
+    50	
+    51	
+    52	def verdict(accepted):
+    53	    """PROTOCOL.md's reading rule over the accepted rungs of each arm."""
+    54	    if any(len(accepted[arm]) != DRAWS for arm in ARMS):
+    55	        return 'not decided: fewer than three accepted answers in an arm'
+    56	    if len(set(accepted['control'] + accepted['counterfactual'])) == 1:
+    57	        return 'no difference in the conclusion in these samples'
+    58	    if len(set(accepted['control'])) == 1 and len(set(accepted['counterfactual'])) == 1:
+    59	        return 'the conclusion differs in these samples'
+    60	    return 'not decided by this probe: the answers are mixed'
+    61	
+    62	
+    63	def saved_judgement():
+    64	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+    65	        request_sha, publication_day = conn.execute('select request_sha256, publication_day from judgements where view_id=? and seq=?', (VIEW, SEQ)).fetchone()
+    66	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'archive.sqlite'}?mode=ro", uri=True)) as conn:
+    67	        answer_json, request_json = conn.execute('select answer_json, request_json from model_calls where request_sha256=?', (request_sha,)).fetchone()
+    68	    return request_sha, publication_day, json.loads(answer_json), request_json
+    69	
+    70	
+    71	def checks(replay_folder):
+    72	    """Every identity the send rests on; raises on the first that fails. Returns the facts printed by `check`."""
+    73	    requests = load_requests(replay_folder)
+    74	    saved_sha, saved_day, saved_answer, saved_request_json = saved_judgement()
+    75	    if saved_day != DAY:
+    76	        raise SystemExit(f'the saved judgement of {VIEW} at seq {SEQ} is of {saved_day}, not {DAY}')
+    77	    canonical = {arm: json.dumps(request, sort_keys=True, ensure_ascii=False) for arm, request in requests.items()}
+    78	    if sha256(canonical['control']) != saved_sha or canonical['control'] != saved_request_json:
+    79	        raise SystemExit('the control request is not the request the saved judgement answered')
+    80	    cfg = config.load(edge_replay.e2e_adapter.CONFIG)
+    81	    rebuilt = model.build_request(cfg.rejudging, requests['control']['messages'][0]['content'], user_text(requests['control']),
+    82	                                  judging.schema_for(cfg.rejudging.prompt_version), 'judgement', cfg.provider)
+    83	    if json.dumps(rebuilt) != json.dumps(requests['control']):
+    84	        raise SystemExit('the control request file is not, byte for byte, what model.build_request builds today from its system and user text')
+    85	    with_other_user_text = json.loads(json.dumps(requests['control']))
+    86	    with_other_user_text['messages'][-1]['content'] = user_text(requests['counterfactual'])
+    87	    if json.dumps(with_other_user_text) != json.dumps(requests['counterfactual']):
+    88	        raise SystemExit('the two requests differ outside the user text (a key, its order, the system text or the schema)')
+    89	    control_lines, counterfactual_lines = user_text(requests['control']).splitlines(), user_text(requests['counterfactual']).splitlines()
+    90	    start = next(n for n, line in enumerate(control_lines) if line.startswith(f'- {CARRIED} ['))
+    91	    end = next(n for n in range(start + 1, len(control_lines)) if not control_lines[n].startswith('    '))
+    92	    without_block = control_lines[:start] + control_lines[end:]
+    93	    count_line = next(n for n, line in enumerate(without_block) if line.startswith('[Evidence in view under this thesis, '))
+    94	    shown = judging.evidence_shown_in(user_text(requests['counterfactual']))
+    95	    without_block[count_line] = f'[Evidence in view under this thesis, {len(shown)} items]'
+    96	    if without_block != counterfactual_lines:
+    97	        raise SystemExit(f'the counterfactual request is not the control request less the {CARRIED} block and the item count')
+    98	    if CARRIED in shown or CARRIED not in judging.evidence_shown_in(user_text(requests['control'])):
+    99	        raise SystemExit(f'{CARRIED} is not shown in the control request only')
+   100	    # the frozen judge's own check, on the ledger as it stood when this judgement was asked for (the replay stopped in this round)
+   101	    ledger = read_only_ledger(replay_folder)
+   102	    try:
+   103	        last = store.current_state(ledger, VIEW)
+   104	        if ledger.execute('select 1 from judgements where view_id=? and seq=?', (VIEW, SEQ)).fetchone():
+   105	            raise SystemExit(f'the replay ledger already holds the {DAY} judgement of {VIEW}')
+   106	        accepted = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['control']))
+   107	        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+   108	    finally:
+   109	        ledger.close()
+   110	    if accepted:
+   111	        raise SystemExit(f'the saved answer does not pass the check on the control request: {accepted}')
+   112	    if not any(CARRIED in error for error in refused):
+   113	        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+   114	    worst = {arm: budget.worst_cost(request) for arm, request in requests.items()}
+   115	    return requests, {
+   116	        'saved judgement': {'request sha256': saved_sha, 'rung': saved_answer['rung'], 'previous rung': last['rung'] if last else None},
+   117	        'as sent, sha256 of json.dumps(request)': {arm: sha256(json.dumps(request)) for arm, request in requests.items()},
+   118	        'user text characters': {arm: len(user_text(request)) for arm, request in requests.items()},
+   119	        'lines removed with the block': end - start, 'evidence shown': {'control': len(shown) + 1, 'counterfactual': len(shown)},
+   120	        'answer key order of the saved answer': list(saved_answer),
+   121	        'worst cost per send (usd)': {arm: round(cost, 4) for arm, cost in worst.items()},
+   122	        'cost if every send answers at its first attempt, at the reserve (usd)': round(DRAWS * sum(worst.values()), 4),
+   123	        'worst cost of the probe, every send tried three times (usd)': round(budget.ATTEMPTS * DRAWS * sum(worst.values()), 4),
+   124	        'cap (usd)': CAP_USD, 'sends': DRAWS * len(ARMS)}
+   125	
+   126	
+   127	def send(replay_folder, output):
+   128	    requests, facts = checks(replay_folder)
+   129	    if facts['worst cost of the probe, every send tried three times (usd)'] > CAP_USD:
+   130	        raise SystemExit('the worst cost of the probe passes the cap')
+   131	    output = Path(output).resolve()
+   132	    if OUTPUT_ROOT.resolve() not in output.parents:
+   133	        raise SystemExit(f'the probe writes only under {OUTPUT_ROOT}')
+   134	    output.mkdir(parents=True, exist_ok=False)
+   135	    (output / 'registration.json').write_text(json.dumps({**facts, 'registered at': time.strftime('%Y-%m-%dT%H:%M:%S%z')}, indent=1))
+   136	    limit = budget.Budget(CAP_USD)
+   137	    provider = config.load(edge_replay.e2e_adapter.CONFIG).provider
+   138	
+   139	    def one(job):
+   140	        arm, draw = job
+   141	        started = time.time()
+   142	        try:
+   143	            response = limit.send(provider, requests[arm])
+   144	            outcome = {'arm': arm, 'draw': draw, 'seconds': round(time.time() - started, 1), 'response': response}
+   145	        except Exception as error:   # a failed send is an outcome of the probe, recorded and never re-sent by this script
+   146	            outcome = {'arm': arm, 'draw': draw, 'seconds': round(time.time() - started, 1), 'error': f'{type(error).__name__}: {error}'}
+   147	        (output / f'{arm}-{draw}.json').write_text(json.dumps(outcome, ensure_ascii=False, indent=1))
+   148	        return outcome
+   149	
+   150	    jobs = [(arm, draw) for draw in range(1, DRAWS + 1) for arm in ARMS]          # the arms interleaved, all sent at once
+   151	    with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+   152	        outcomes = list(pool.map(one, jobs))
+   153	    (output / 'spent.json').write_text(json.dumps({'spent usd (from tokens; a lost answer at its reserve)': round(limit.spent_usd, 4),
+   154	                                                   'answered': sum('response' in o for o in outcomes), 'failed': sum('error' in o for o in outcomes)}, indent=1))
+   155	    print((output / 'spent.json').read_text())
+   156	
+   157	
+   158	def read(replay_folder, send_folder):
+   159	    requests, facts = checks(replay_folder)
+   160	    schema = requests['control']['response_format']['json_schema']['schema']
+   161	    _, _, saved_answer, _ = saved_judgement()
+   162	    ledger = read_only_ledger(replay_folder)
+   163	    rows = []
+   164	    try:
+   165	        for arm in ARMS:
+   166	            for draw in range(1, DRAWS + 1):
+   167	                outcome = json.loads((Path(send_folder) / f'{arm}-{draw}.json').read_text())
+   168	                row = {'arm': arm, 'draw': draw}
+   169	                if 'error' in outcome:
+   170	                    rows.append({**row, 'status': 'not answered', 'detail': outcome['error']})
+   171	                    continue
+   172	                try:
+   173	                    answer = json.loads(outcome['response']['choices'][0]['message']['content'])
+   174	                except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+   175	                    rows.append({**row, 'status': 'malformed', 'detail': str(error)})
+   176	                    continue
+   177	                usage = outcome['response'].get('usage') or {}
+   178	                tokens = [usage.get('prompt_tokens'), usage.get('completion_tokens')]
+   179	                schema_errors = model.check_schema(answer, schema)
+   180	                if schema_errors:            # not the answer's shape: nothing further is read from it
+   181	                    rows.append({**row, 'status': 'refused by the schema', 'detail': '; '.join(schema_errors[:3]), 'tokens': tokens})
+   182	                    continue
+   183	                errors = judging.check_answer(ledger, VIEW, answer, user_text(requests[arm]))
+   184	                pushes = {push['evidence_id']: push['push'] for push in answer['pushes']}
+   185	                figures = [match.group(0) for match in FIGURE.finditer(answer['implied_outcome'])]
+   186	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+   187	                             'rung': answer.get('rung'), 'changed': answer.get('changed'), 'cites': len(answer.get('cites', [])),
+   188	                             f'cites {CARRIED}': CARRIED in answer.get('cites', []), f'push on {CARRIED}': pushes.get(CARRIED),
+   189	                             'figures in implied_outcome': figures, 'key order as production': list(answer) == list(saved_answer),
+   190	                             'tokens': tokens,
+   191	                             'implied_outcome': answer.get('implied_outcome'), 'reference': answer.get('reference'),
+   192	                             'reasons': answer.get('reasons'), 'why_changed': answer.get('why_changed')})
+   193	    finally:
+   194	        ledger.close()
+   195	    accepted = {arm: sorted(row['rung'] for row in rows if row['arm'] == arm and row['status'] == 'accepted') for arm in ARMS}
+   196	    result = {'verdict by the protocol': verdict(accepted), 'accepted rungs by arm': accepted, 'saved answer rung': saved_answer['rung']}
+   197	    (Path(send_folder) / 'reading.json').write_text(json.dumps({**result, 'rows': rows}, ensure_ascii=False, indent=1))
+   198	    for row in rows:
+   199	        print(json.dumps({name: value for name, value in row.items() if name not in ('implied_outcome', 'reference', 'reasons', 'why_changed')}, ensure_ascii=False))
+   200	    print(json.dumps(result))
+   201	
+   202	
+   203	if __name__ == '__main__':
+   204	    parser = argparse.ArgumentParser()
+   205	    parser.add_argument('mode', choices=['check', 'send', 'read'])
+   206	    parser.add_argument('replay_folder')
+   207	    parser.add_argument('folder', nargs='?')
+   208	    args = parser.parse_args()
+   209	    if args.mode == 'check':
+   210	        print(json.dumps(checks(args.replay_folder)[1], indent=1))
+   211	    elif not args.folder:
+   212	        parser.error(f'{args.mode} needs the send folder')
+   213	    elif args.mode == 'send':
+   214	        send(args.replay_folder, args.folder)
+   215	    else:
+   216	        read(args.replay_folder, args.folder)
+
+ succeeded in 0ms:
+     1	# Does one unsupported revision relation change a judgement? Protocol
+     2	
+     3	2026-11-10. Written before any send. This carries out the one bounded test the council of 2026-11-09 recommended
+     4	(`reports/step2-after-failed-probe-council-2026-11-09/CONCLUSIONS.md`); Alex handed the Step 2 work over with that conclusion on
+     5	2026-11-10. Nothing here changes Jev, a prompt, a rule, the frozen judge or any saved run.
+     6	
+     7	## The case
+     8	
+     9	Saved D392 clean draw 1 (`poc/data/clean-e2e-2026-11-09/stage2-clean-d1`, judged by the frozen judge through the experimental adapter
+    10	`clean-arch/e2e-2026-11-09/adapter.py`).
+    11	
+    12	- Record `70:e4` (evidence `e185`): an NVIDIA spokesperson answers a report that the Kyber rack is delayed: "Our roadmap is intact."
+    13	  Step 1 filed it under the Kyber shipping question (v18) only.
+    14	- Jev read it as a later version of `69:e5` (evidence `e181`), a different statement: NVIDIA plans to sell more racks of the existing
+    15	  form. Two source readers called the two statements different (case C036 and the census of 2026-11-09).
+    16	- The adapter gives a record every question link of the record it revises, so `e185` also entered v20, "How much revenue will NVIDIA
+    17	  report from Blackwell and Rubin products in FY2027?".
+    18	
+    19	## Stage 1, no cost: done
+    20	
+    21	`edge_replay.py`, every judge request answered from the saved archive, none sent.
+    22	
+    23	1. **Untouched control: passed.** 239 of 239 requests equal a saved request in the archive's form (sorted keys) and took its saved
+    24	   answer; every saved row was used. Equal to the saved run's: the 23 ledger tables the adapter and the judge write (less
+    25	   `judgements.call_id`, an archive row number given in the order answers return), the recorded judge requests (day, sequence
+    26	   number, question, evidence ids shown) and the adapter counts. Not compared: the two search-index tables and `sqlite_sequence`;
+    27	   the saved responses' metadata beyond the answer.
+    28	2. **One relation removed** (`70:e4` → group `69:e5`, in a stamped copy of the library): the rounds of 2026-07-01 to 07-05 are
+    29	   identical. In the round of 2026-07-06, v20's request differs: the `e185` block (4 lines) is gone and the item count reads 28 for
+    30	   29; the 14 other requests of that level are identical. The replay stops at that request, so the rest of the round (v16, v19 and
+    31	   the re-send of v17, which the control sent afterwards) is not built and nothing is known of it.
+    32	3. **The relation removed, its link kept:** all 14 rounds identical to the control. For this relation, the judge's input changes
+    33	   only through the link it carried, not through the "later version" line (which names another piece, `e131`, the relation written
+    34	   last). This is shown for this one relation, not as a general rule.
+    35	4. **The class, counted on the saved ledger** (`inheritance_census.py`): 5 of 700 links exist only because a revision relation carried
+    36	   them (3 records, 4 questions). By the readers' label of the carrying relation: 2 different statements (`e185` into v20, `e324`
+    37	   into v7), 1 uncertain (`e185` into v7), 2 repeats (`e173` into v2 and v4).
+    38	5. Step 1 itself never filed the "roadmap is intact" statement under v20: 0 of 28 copies in the three saved draws (v18 26, v7 12).
+    39	
+    40	## Stage 2, paid: one judgement, two inputs
+    41	
+    42	- **Requests:** v20 on 2026-07-06 as the saved run asked it (control), and as the same code builds it with the relation removed
+    43	  (counterfactual). `judge_probe.py check` proves, with no send: the control equals the saved request in the archive's form and is,
+    44	  byte for byte as serialized for sending, what `model.build_request` builds today; the two differ only by the `e185` block and the
+    45	  item count; the frozen check accepts the saved answer on the control and refuses it on the counterfactual (it cites `e185`).
+    46	- **Limit on "the same bytes".** The archive keeps a request only with sorted keys, so the bytes sent on 2026-11-09 cannot be read
+    47	  back. What stands in for them: the files that build and serialize the request (`src/hivemind/model.py`, `views/judging.py`,
+    48	  `views/store.py`, `config.py`, `poc/config/poc-v108.json`) were last written before that run (2026-11-08 13:43 at the latest; the
+    49	  run's calls are 2026-11-09 04:05 to 04:52) and have no uncommitted change, so the key order is consistent with the one that code
+    50	  produced then; a file changed and restored in between would not show.
+    51	  Headers and the credential are not saved and not compared. After the send, each answer's key order is compared with the saved
+    52	  answer's.
+    53	- **Sends:** 3 per arm, the arms interleaved and sent at once, through the production transport, no archive, no automatic re-send by
+    54	  the script beyond production's own retry of a failed connection. Model and settings: the frozen judge's (`poc-v108`).
+    55	- **Cost:** $0.0665 if every send answers at its first attempt, priced at its reserve (every character an input token, the whole
+    56	  output cap); $0.1995 if every send is tried three times, the most the spending limit's retry rule allows; cap $0.25 for the one
+    57	  invocation. Expected about $0.03.
+    58	- **Preflight** (`preflight.log`, no cost): over the saved judging archive and ledger, the schema's 43 enum values are all named in
+    59	  the prompt, and the 10 stored rows marked refused are the 10 answers the judge's check refused in the saved run. Its extraction
+    60	  and matching checks have no case here (the archive holds judgements only, and this probe sends neither), so it exits "unexercised"
+    61	  for those two. The judge's own check ran over all 239 stored answers in the control replay: 229 accepted and 10 refused, as saved.
+    62	- **Why the control arm:** the saved answer is one draw. It moved v20 from rung 3 to rung 2 on this very day, with an implied figure
+    63	  of about $330 billion against the $320 billion boundary, so the judge's own spread at this boundary must be seen beside the
+    64	  counterfactual.
+    65	
+    66	## Reading rule, fixed now
+    67	
+    68	Each answer goes through the frozen judge's own check; a refused or failed answer is reported and not counted, and not re-sent.
+    69	`judge_probe.py read` prints the verdict by this rule.
+    70	
+    71	- **Not decided** unless all three answers of each arm are accepted.
+    72	- **The conclusion differs in these samples** only if the three counterfactual answers are on one rung and the three control
+    73	  answers on another.
+    74	- **No difference in the conclusion in these samples** only if the six answers are on one rung.
+    75	- **Anything else: not decided by this probe.** Three answers an arm cannot say whether a mixed result is the judge's own spread or
+    76	  the removed record.
+    77	- Read and reported, not scored: the implied figure, the stated reasons and why_changed, and in the control arm whether `e185` is
+    78	  cited, how it is pushed and whether the reasons use it.
+    79	
+    80	## What each outcome means for the next step
+    81	
+    82	The size of the class comes from the count, not from this probe: links that exist only through a revision relation are 5 of 700
+    83	in draw 1, and 11 of 725 and 8 of 730 in draws 2 and 3 (relations of every kind, right or wrong; the readers labelled draw 1 only).
+    84	
+    85	- No difference: removing this one record did not move this conclusion on this day in these samples. It says nothing of the other
+    86	  relations. With the count, the recommendation to Alex is to keep Jev's revision relation as a recorded defect and not spend the
+    87	  next round on it.
+    88	- The conclusion differs: this judgement is sensitive to this one record in these samples; it does not prove the relation caused
+    89	  the saved draw's conclusion. The lever would be the rule that a revision carries question links, which is a product rule and
+    90	  Alex's to decide; it is not a reason to resume wording changes to Jev.
+    91	- Either way it is one case and one day of one draw: it shows sensitivity or its absence here, not how often it happens.
+    92	
+    93	## Not claimed
+    94	
+    95	That removing the relation is more accurate (the record could bear on v20 on its own; an independent reader is asked, blind to the
+    96	relation); anything about the days after 2026-07-06 (later rounds would rest on answers the archive does not hold); anything about
+    97	the clean Step 4, which is not built; overall Step 2 precision or recall.
+
+ exited 1 in 0ms:
+ succeeded in 0ms:
+     1	preflight over /Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d1/judged/archive.sqlite and 1 views databases: judged
+     2	
+     3	== A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side): judged 10, refused/dropped 10 (100%)
+     4	
+     5	   extraction archive rows 0: replayed 0, earlier refused 0, retired 0, unidentifiable 0
+     6	   extraction answers 0: evidence produced 0 kept 0; candidates produced 0 kept 0
+     7	
+     8	== B. current extraction checks before the handover, using the supplied universe: judged 0, refused/dropped 0 (n/a)
+     9	
+    10	== C. matching code checks over stored records (database state is the final one, not the state at the time): judged 0, refused/dropped 0 (n/a)
+    11	       ledger judged: judged 0, skipped 0 
+    12	
+    13	== D. schema enum values named in the prompts: judged 43, missing 0
+    14	
+    15	== E. keyed views in views.sqlite: open views 22, keyed 22, duplicate keys 0 groups, review pool 0 candidates outside the watch list
+    16	
+    17	UNEXERCISED: a check judged no case
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/e2e-2026-11-09/budget.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '158,184p;316,347p;408,437p' AGENTS.md | nl -ba" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""A hard spending limit for the D392 measurement harnesses, independent of production's own cap (replay.run checks its cap only after
+     2	an item or a day finishes, with calls already in flight).
+     3	
+     4	Every model attempt is sent alone (`model.openai_transport(..., max_attempts=1)`) and the limit applies production's retry rule around
+     5	it: up to three attempts, no retry after HTTP 400/401/403/404 or an undecodable answer, waits of 5 s and then 10 s. Before an attempt is
+     6	sent it reserves its worst case under a lock (every request character priced as an uncached input token at the request model's
+     7	published rate, plus the request's output cap) and is refused if spent plus in flight plus the reserve would pass the cap. Afterwards,
+     8	in the same locked step, the reserve is released and the attempt is charged: its cost from tokens when it answered with usable token
+     9	counts, its full reserve otherwise (a lost answer, or one without usage, may still be billed).
+    10	
+    11	A Jev call (one argument, as replay.run passes one transport to both) goes through `jev.transport`, which retries inside itself out of
+    12	sight, so it reserves and is always charged three attempts of its input at Jev's input rate (its output is free).
+    13	
+    14	Called as a transport: (provider, request) for a model call, (request,) for a Jev call."""
+    15	import json, sys, threading, time
+    16	from pathlib import Path
+    17	
+    18	sys.path[:0] = [str(Path(__file__).resolve().parents[2] / 'src')]
+    19	from hivemind import jev, model  # noqa: E402
+    20	
+    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+    22	NOT_RETRIED = (400, 401, 403, 404)          # model.openai_transport raises these at once
+    23	UNDECODABLE = ('invalid UTF-8 HTTP response', 'malformed HTTP response')   # raised at once by production too
+    24	
+    25	
+    26	class OverBudget(Exception):
+    27	    pass
+    28	
+    29	
+    30	def worst_cost(request):
+    31	    """The body as sent (json.dumps, non-ASCII escaped) is at least as long in bytes as the UTF-8 text it carries, and a byte-level
+    32	    tokenizer emits at most one token per byte; the JSON keys and syntax in the body more than cover the chat template's few tokens.
+    33	    Rates are model.PRICES, the published rates (AGENTS §7.2)."""
+    34	    input_rate, output_rate = model.PRICES[request['model']]
+    35	    output_cap = request.get('max_completion_tokens') or request.get('max_tokens')
+    36	    if not output_cap:
+    37	        raise OverBudget(f"a request to {request['model']} has no output cap, so its worst cost is unbounded")
+    38	    return (len(json.dumps(request).encode('utf-8')) * input_rate + output_cap * output_rate) / 1e6
+    39	
+    40	
+    41	def cost(request, response):
+    42	    """The answer's cost from its reported tokens; None when the answer reports no usable token counts."""
+    43	    usage = response.get('usage') if isinstance(response, dict) else None
+    44	    counts = [usage.get(name) for name in ('prompt_tokens', 'completion_tokens')] if isinstance(usage, dict) else [None, None]
+    45	    if not all(isinstance(count, int) and not isinstance(count, bool) and count >= 0 for count in counts):
+    46	        return None
+    47	    cached = (usage.get('prompt_tokens_details') or {}).get('cached_tokens') or usage.get('prompt_cache_hit_tokens') or 0
+    48	    input_rate, output_rate = model.PRICES[request['model']]
+    49	    fresh = counts[0] - min(cached, counts[0])
+    50	    return (fresh * input_rate + min(cached, counts[0]) * input_rate * model.CACHED_INPUT_SHARE + counts[1] * output_rate) / 1e6
+    51	
+    52	
+    53	class Budget:
+    54	    def __init__(self, cap_usd, attempt=None, sleep=time.sleep, jev_transport=None):
+    55	        """attempt(provider, request) sends one attempt; the default is the production transport with a single attempt.
+    56	        jev_transport(request) sends a Jev call; the default is production's."""
+    57	        self.cap_usd, self.spent_usd, self.reserved_usd = cap_usd, 0.0, 0.0
+    58	        self.attempt = attempt or (lambda provider, request: model.openai_transport(provider, request, max_attempts=1))
+    59	        self.jev_transport = jev_transport or jev.transport
+    60	        self.sleep = sleep
+    61	        self.lock = threading.Lock()
+    62	
+    63	    def send(self, provider, request):
+    64	        reserve = worst_cost(request)
+    65	        for attempt_number in range(ATTEMPTS):
+    66	            with self.lock:
+    67	                if self.spent_usd + self.reserved_usd + reserve > self.cap_usd:
+    68	                    raise OverBudget(f'spent ${self.spent_usd:.4f}, ${self.reserved_usd:.4f} in flight; '
+    69	                                     f'${reserve:.4f} more would pass the ${self.cap_usd:.2f} cap')
+    70	                self.reserved_usd += reserve
+    71	            response, failure = None, None
+    72	            try:
+    73	                response = self.attempt(provider, request)
+    74	            except model.TransportError as error:
+    75	                failure = error
+    76	            finally:
+    77	                with self.lock:   # one step: the reserve is released only as the attempt is charged
+    78	                    self.reserved_usd -= reserve
+    79	                    charged = cost(request, response) if response is not None else None
+    80	                    self.spent_usd += reserve if charged is None else charged   # no answer, or no usable usage: the full reserve
+    81	            if response is not None:
+    82	                return response
+    83	            retried = getattr(failure, 'http_status', None) not in NOT_RETRIED and str(failure) not in UNDECODABLE
+    84	            if not retried or attempt_number + 1 == ATTEMPTS:
+    85	                raise failure
+    86	            self.sleep(5 * (attempt_number + 1))
+    87	
+    88	    def send_jev(self, request):
+    89	        input_rate, _ = model.PRICES[request['model']]
+    90	        charge = ATTEMPTS * len(json.dumps(request, sort_keys=True, ensure_ascii=False).encode('utf-8')) * input_rate / 1e6   # jev.transport's body bytes
+    91	        with self.lock:
+    92	            if self.spent_usd + self.reserved_usd + charge > self.cap_usd:
+    93	                raise OverBudget(f'spent ${self.spent_usd:.4f}, ${self.reserved_usd:.4f} in flight; a Jev call of ${charge:.4f} would pass '
+    94	                                 f'the ${self.cap_usd:.2f} cap')
+    95	            self.spent_usd += charge
+    96	        return self.jev_transport(request)
+    97	
+    98	    def __call__(self, *arguments):
+    99	        return self.send(*arguments) if len(arguments) == 2 else self.send_jev(*arguments)
+
+ succeeded in 0ms:
+     1	**NOT READY:** the reader can stop on a malformed answer instead of reporting it, and the stated worst-case cost excludes retries. I also found no evidence in the supplied probe records that the required preflight was run.
+     2	
+     3	For example, if the judge returns valid JSON containing an invalid `pushes` entry, the reader detects the schema error but then tries to unpack that invalid entry. It can stop before producing the required “not decided” verdict.
+     4	
+     5	**A. Earlier findings**
+     6	
+     7	- **Historical bytes — not serious for this diagnostic, with a wording limit.** The archive stores sorted request JSON, so it cannot establish the original HTTP body. The current check confirms the saved canonical request and today’s serialized reconstruction; the listed files’ timestamps and clean tracked status support that reconstruction as a reasonable stand-in for a small diagnostic. The conclusion that the order **is** the historical order is stronger than those facts prove: files could have changed and later been restored, and the archive has no wire capture. Say it is *consistent with* the historical order. Answer-key order is a useful additional comparison, not proof of request bytes. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:46), [check](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:77), [transport](/Users/lchingen/hivemind/src/hivemind/model.py:126).
+     8	- **Unfinished round — not serious; closed.** The protocol now identifies the 14 other requests at that level and explicitly says the remainder was not built. That matches the saved report. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:28), [report](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation/counterfactual-report.json).
+     9	- **Reading rule and generalization — not serious; closed in the rule.** The protocol requires three accepted answers in each arm, treats mixed results as undecided, and limits the conclusion to this relation and sample. `verdict()` implements those combinations correctly. The separate malformed-answer defect below affects whether the reader reaches that verdict. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:59), [verdict](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:52).
+    10	
+    11	**B–C. Current findings**
+    12	
+    13	1. **Serious — a refused answer can crash the reader.** After `check_schema` returns errors, [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:176) still accesses the answer as if it had the required shape. A JSON array, a `pushes` entry missing `push`, or a non-string `implied_outcome` can raise before the row and verdict are printed. The protocol promises to report refused answers and exclude them. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61). For well-formed accepted answers, I found no path in `verdict()` that prints a conclusion outside the stated rule.
+    14	
+    15	2. **Serious — $0.0665 is not the worst-case cost of the stated send.** That figure covers one attempt for each of six requests, while the budget wrapper permits up to three attempts per request. On the wrapper’s own reserve estimate, three attempts for each would be approximately **$0.1995**, still below the $0.25 cap. The cap is enforced per invocation, but the protocol’s worst-case claim understates the authorized send’s possible cost. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:52), [cost calculation](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:115), [retry and reservation](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63).
+    16	
+    17	3. **Serious — required preflight has no demonstrated completion.** The rules require `scripts/preflight.py` before any paid run, including reporting skipped rows and refusals. I found no preflight result in the supplied protocol or probe output records. The successful `judge_probe.py check` is narrower and does not establish that requirement was met. This is an evidence gap, not a claim that nobody ran it elsewhere. [AGENTS.md](/Users/lchingen/hivemind/AGENTS.md:172).
+    18	
+    19	4. **Not serious — request comparison is narrower than its wording.** `check` compares the current saved files successfully, including the substantive user-text difference. Its comparison does not independently rule out an extra top-level key or changed user-message metadata in a modified counterfactual file. The actual files inspected support the protocol’s claim; the check alone is narrower. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:85).
+    20	
+    21	No files were edited and no network request was sent. The offline `check` passed for the specified replay folder.
+    22	
+    23	NOT READY — serious findings 1, 2, and 3.
+    24	
+
+ succeeded in 0ms:
+     1	## 5. Verification
+     2	
+     3	Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+     4	1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+     5	2. Only when what the model is asked changed: re-send just the affected calls.
+     6	3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+     7	4. The gate once, at merge (README, "Build and check"). The acceptance once, on the final configuration, scored on the frozen ruler
+     8	   (§7.1). Never a full rerun per fix.
+     9	
+    10	- A further check the change does not need is offered in one line, not run. After the checks that prove a change pass, report and close.
+    11	- To accept a code change, replay stored decisions through the code deterministically ($0); a sampler run proves nothing about code,
+    12	  and a cached replay proves nothing about the model.
+    13	- A re-sent request is the bytes production sends, not the archive's canonical JSON: `model.request_identity` sorts keys for the
+    14	  archive, `model.call` sends the dict as built. Check a harness by comparing an answer's key order with a production answer's.
+    15	- Before any paid run, `python3 scripts/preflight.py` replays the stored model answers and matching records of the archives and ledgers
+    16	  it is given through the current code checks and prompts ($0; it skips rows an earlier run refused, so read what it says it skipped)
+    17	  and prints, per check, the cases judged and the refusals with reasons (it does not yet replay the coverage-start reading's check:
+    18	  `CURRENT_STATE.md`, open defects). A changed share or a refusal on a case a person would accept is
+    19	  diagnosed before the run; a paid run is never the way a check or a prompt is first tried.
+    20	- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is recorded with its
+    21	  census, not answered with another round.
+    22	- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A gate passes only
+    23	  what it runs: name the check that runs a new path, or say that none does.
+    24	- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document as a measurement
+    25	  with a script behind it.
+    26	
+    27	## 6. Writing prompts
+    28	### 7.3 Iterating
+    29	
+    30	- **One class at a time** (Alex, 2026-10-29: "你一类一类改，快速迭代然后测regression"). Count the misses by mechanism; take the largest
+    31	  class; trace it to the sentence that causes it; change one thing aimed at that class; run the whole bench (a prompt change alters every
+    32	  request) against the previous version; read every regression to its raw answer. The pages that showed the failure locate its
+    33	  mechanism; only the whole bench (every set, every draw) accepts the change.
+    34	- **Name the effect on the judgement first.** Every proposed change states the effect it is expected to have on a reader or on the final
+    35	  judgement, and is tested there where possible; a step's own counts do not decide it alone. A fix that keeps moving its error to
+    36	  neighbouring cases stops being tuned on that set (Alex, 2026-11-09: "感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？";
+    37	  he approved this rule the same day, D391).
+    38	- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Totals and acceptance come from at least
+    39	  three samples beside a fresh control; a bar the control fails against itself judges nothing. A direct-read pass
+    40	  (one send per article, every answer read beside its source; D238) locates mechanisms; its counts are one draw and are labelled so.
+    41	- **A written log.** One row per arm: hypothesis, change, numbers against the control (regressions first), kept or not. Refuted arms and
+    42	  your own mistakes stay in it; the next session starts from its last row.
+    43	- **Own the loop, within what Alex agreed.** When the direction is agreed and no stop is in force (`CURRENT_STATE.md`), push your own
+    44	  hypotheses through $0 checks and probes of a few cents on stored cases without asking. A registered test, an end-to-end run, or
+    45	  anything that departs from the agreed plan starts on his word; a result that contradicts the hypothesis stops the line and goes to him
+    46	  (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估").
+    47	- **Council before every change is sent.** A prompt, schema, code or criterion change, including one found by reading a probe, is a new
+    48	  arm. It goes to an independent Codex read and a challenge round before its first send, and its result goes to a challenge round
+    49	  before the next change. Reading the traces and the model's own account locates a fix; it does not review it (Alex, 2026-11-08:
+    50	  "你这些改动有我你有好好的跑council 再下手").
+    51	  Every round's reasoning and decisions are reflected on in the council until there is a consensus; the decision is recorded, and
+    52	  the next test goes straight ahead, held to the PRD and its quantified goals, with every trace read by you yourself and not only
+    53	  by readers (Alex, 2026-11-10: "你应该跑council loop 来reflect 你每一轮的思路还有决策，需要你打成共识，记录决策，向前直行测试。不要drift,我们有PRD和量化目标，
+    54	  你自己作为llm 下去看所有trace").
+    55	- **Small first, then one run.** A hypothesis is first validated the simplest way, on a few stored cases and a few cents, and shown to
+    56	  work at a high level before any full analysis or stability test is built (Alex, 2026-11-04: "don't overspend resources on wasting time.
+    57	  We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the full
+    58	  analysis stability test. This is a principle you should remember"). A day or week slice before any whole-corpus run; preflight on
+    59	  stored data before any paid run (§5); no edit while a run is live (§9). A paid run measures a configuration; it never tries a fix.
+    60	## 9. Workspace and operations
+    61	
+    62	- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting stored data needs
+    63	  Alex's request, a backup, exactly identified items and a log entry.
+    64	- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+    65	- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel agents that edit
+    66	  shared modules.
+    67	- When Alex names a step, the test is that step alone through its own harness (extraction: stored requests re-sent, answers sifted,
+    68	  scored against the gold). A full-pipeline run, a registered test, or a paid send beyond the probes of a few cents an agreed direction
+    69	  allows (§7.3) starts only on his explicit word (Alex, 2026-10-27: "我不是要你看下step 1抽取到底行不行？").
+    70	- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network health; nothing heavy
+    71	  runs beside paid calls. A gate runs on a snapshot no one is editing.
+    72	- Never open a live run's databases: run `sh <run folder>/snapshot.sh` and query the snapshot.
+    73	- No edit to package code or prompt files while any run is live: the parallel day's manifest hashes every `.py` and prompt file and
+    74	  fails the day. Edit in another worktree or wait.
+    75	- Experiment harnesses send concurrently (a thread pool of 8; the archive is thread-safe); serial sends waste the wall clock Alex is
+    76	  waiting on.
+    77	- **Run settings** (`scripts/replay.py`): extraction requests prepared 16 at a time (`--workers`; the measurement launcher passes its
+    78	  `HIVEMIND_WORKERS` there), Jev matching 8 at a time (`--jev-workers`), judgements 32 at a time (`judging.JUDGE_WORKERS`); a model call
+    79	  times out after 180 s and is tried up to three times.
+    80	  The three draws of a measurement run at once, one launcher each (`docs/research/2026-11-01-e2e-loop/harness/run_arm.sh`). Measured
+    81	  timings: `docs/poc/pipeline-plan.md`, "Run settings and timing".
+    82	- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+    83	- Services for testing run on the host (README, "Run the service for testing"): on this Mac the VPN gives Docker containers no outbound
+    84	  internet, so a model or embedding call fails inside Docker. Start them with a log and pid file, check them with
+    85	  `curl -s http://127.0.0.1:8788/days`, and stop what you started before handing over. Changing Docker or VPN networking is Alex's call.
+    86	- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; they are kept in the owner-only file
+    87	  `~/.config/hivemind/credentials.json`, outside the repository. Never raise a spending cap, and never switch a provider or model
+    88	  silently.
+    89	
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'control replay|229|239|refus|700|725|730|28 copies|2026-11-08 13:43' clean-arch/step2-edge-effect-2026-11-10 poc/data/clean-step2-edge-effect-2026-11-10 -g '"'!*.json'"' -g '"'!*.sqlite'"' " in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/views/judging.py | rg -n -C 12 'def (check_answer|schema_for|evidence_shown_in)'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/model.py | rg -n -C 8 'def (check_schema|openai_transport|build_request)|retry|usage'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+42-    42	    """(the pieces a judgement of this thesis reads, how many pieces in force are not shown): the arrivals (linked after the
+43-    43	    READINGS-th most recent judgement, or all when there are fewer) and the basis (cited by one of the last BASIS judgements),
+44-    44	    both among the evidence in force."""
+45-    45	    in_force = store.evidence_in_force(conn, view_id)
+46-    46	    recent = store.recent_judgements(conn, view_id, BASIS)
+47-    47	    arrivals_after = recent[READINGS - 1]['seq'] if len(recent) >= READINGS else -1
+48-    48	    basis = {evidence_id for j in recent for evidence_id in j['cites']}
+49-    49	    linked_at = {r['evidence_id']: r['seq'] for r in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,))}
+50-    50	    shown = [p for p in in_force if linked_at.get(p['evidence_id'], -1) > arrivals_after or p['evidence_id'] in basis]
+51-    51	    return shown, len(in_force) - len(shown)
+52-    52	
+53-    53	
+54:    54	def schema_for(prompt_version):
+55-    55	    require_supported(prompt_version)
+56-    56	    pushes = PUSHES
+57-    57	    schema = {
+58-    58	        'type': 'object', 'additionalProperties': False,
+59-    59	        'required': ['rung', 'reasons', 'cites', 'cites_views', 'pushes', 'changed', 'why_changed'],
+60-    60	        'properties': {
+61-    61	            'rung': {'type': 'integer'}, 'reasons': {'type': 'string'},
+62-    62	            'cites': {'type': 'array', 'items': {'type': 'string'}}, 'cites_views': {'type': 'array', 'items': {'type': 'string'}},
+63-    63	            'pushes': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['evidence_id', 'push'],
+64-    64	                                                  'properties': {'evidence_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}},
+65-    65	            'changed': {'type': 'boolean'}, 'why_changed': {'type': 'string'},
+66-    66	        },
+--
+176-   176	
+177-   177	
+178-   178	def retry_note(errors):
+179-   179	    return '\n\nThe code returned the previous answer because: ' + '; '.join(errors) + '\nCorrect it and answer again, citing only the listed ids.'
+180-   180	
+181-   181	
+182-   182	def themes_shown_in(request_text):
+183-   183	    """The theme ids of the block a request carried: the ids the answer may name, whatever the ledger says now."""
+184-   184	    block = request_text.split('\n[Themes in force, ', 1)
+185-   185	    return set(re.findall(r'^- (v\d+) \(', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
+186-   186	
+187-   187	
+188:   188	def evidence_shown_in(request_text):
+189-   189	    """The evidence ids the request listed: the ids the answer may cite and push."""
+190-   190	    block = request_text.split('\n[Evidence in ', 1)
+191-   191	    return set(re.findall(r'^- (e\d+) \[', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
+192-   192	
+193-   193	
+194:   194	def check_answer(conn, view_id, data, request_text=None):
+195-   195	    """request_text: the user message that was sent, so theme and evidence ids are checked against what it carried (a theme may have
+196-   196	    closed or opened since); without it, against what the ledger would show now."""
+197-   197	    errors = []
+198-   198	    shown = themes_shown_in(request_text) if request_text is not None else {theme['view_id'] for theme in themes_in_force(conn, view_id)}
+199-   199	    named = []
+200-   200	    for entry in data.get('theme_pushes', []):
+201-   201	        if entry['view_id'] in named:
+202-   202	            errors.append(f'{entry["view_id"]} is named twice in theme_pushes')
+203-   203	        elif entry['view_id'] not in shown:
+204-   204	            errors.append(f'{entry["view_id"]} is not a theme in force shown to {view_id}')
+205-   205	        named.append(entry['view_id'])
+206-   206	    # the closed set is what the request showed (D198), read from the text that was sent, else computed from the ledger
+
+ succeeded in 0ms:
+103-   103	def _key(provider):
+104-   104	    name = ENDPOINTS[provider][1]
+105-   105	    if os.environ.get(name):
+106-   106	        return os.environ[name]
+107-   107	    with open(CREDENTIALS, encoding='utf-8') as handle:
+108-   108	        return json.load(handle)[name]
+109-   109	
+110-   110	
+111:   111	def build_request(setting, system, user, schema, schema_name, provider):
+112-   112	    request = {
+113-   113	        'model': setting.model,
+114-   114	        'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
+115-   115	        'response_format': {'type': 'json_schema', 'json_schema': {'name': schema_name, 'strict': True, 'schema': schema}},
+116-   116	    }
+117-   117	    if provider == 'openai':
+118-   118	        request['max_completion_tokens'] = setting.max_output_tokens
+119-   119	        if setting.reasoning_effort:
+120-   120	            request['reasoning_effort'] = setting.reasoning_effort
+121-   121	    else:
+122-   122	        request['max_tokens'] = setting.max_output_tokens
+123-   123	    return request
+124-   124	
+125-   125	
+126:   126	def openai_transport(provider, request, timeout=180, max_attempts=3):   # the default preserves the production retry behavior
+127-   127	    url, _ = ENDPOINTS[provider]
+128-   128	    body = json.dumps(request).encode('utf-8')
+129-   129	    headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
+130-   130	    last = None
+131-   131	    last_http = None
+132-   132	    if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or max_attempts < 1:
+133-   133	        raise ValueError('max_attempts must be a positive integer')
+134-   134	    for attempt in range(max_attempts):
+--
+171-   171	        if max_attempts == 3 or attempt + 1 < max_attempts:
+172-   172	            time.sleep(5 * (attempt + 1))
+173-   173	    failure = TransportError(last or 'no answer')
+174-   174	    if last_http:
+175-   175	        failure.http_status, failure.response_body, failure.response_body_base64 = last_http
+176-   176	    raise failure
+177-   177	
+178-   178	
+179:   179	def check_schema(value, schema, path='$', root=None):
+180-   180	    """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
+181-   181	    array/items/minItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
+182-   182	    root = root if root is not None else schema
+183-   183	    if '$ref' in schema:
+184-   184	        name = schema['$ref'].rsplit('/', 1)[1]
+185-   185	        schema = root['$defs'][name]
+186-   186	    kind = schema.get('type')
+187-   187	    if 'anyOf' in schema:
+--
+260-   260	        data = json.loads(content)
+261-   261	    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+262-   262	        archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+263-   263	                       request_sha256=sha + ':malformed:' + uuid.uuid4().hex[:8], request_json=request_json,
+264-   264	                       response_json=json.dumps(response)[:200000], answer_json=None, prompt_chars=prompt_chars,
+265-   265	                       input_tokens=0, output_tokens=0, cost_usd=0.0, seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+266-   266	        raise SchemaError(f'malformed answer: {error}')
+267-   267	    errors = check_schema(data, schema)
+268:   268	    usage = response.get('usage') or {}
+269:   269	    input_tokens = int(usage.get('prompt_tokens') or 0)
+270:   270	    output_tokens = int(usage.get('completion_tokens') or 0)
+271:   271	    cached_tokens = min(input_tokens, int((usage.get('prompt_tokens_details') or {}).get('cached_tokens') or 0))
+272-   272	    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+273-   273	    cost = round((input_tokens - cached_tokens) / 1e6 * price_in + cached_tokens / 1e6 * price_in * CACHED_INPUT_SHARE + output_tokens / 1e6 * price_out, 6)
+274-   274	    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+275-   275	                             request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+276-   276	                             response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),
+277-   277	                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+278-   278	                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+279-   279	    if errors:
+
+ succeeded in 0ms:
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:23:1. **Untouched control: passed.** 239 of 239 requests equal a saved request in the archive's form (sorted keys) and took its saved
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:35:4. **The class, counted on the saved ledger** (`inheritance_census.py`): 5 of 700 links exist only because a revision relation carried
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:38:5. Step 1 itself never filed the "roadmap is intact" statement under v20: 0 of 28 copies in the three saved draws (v18 26, v7 12).
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:45:  item count; the frozen check accepts the saved answer on the control and refuses it on the counterfactual (it cites `e185`).
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:48:  `views/store.py`, `config.py`, `poc/config/poc-v108.json`) were last written before that run (2026-11-08 13:43 at the latest; the
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:59:  the prompt, and the 10 stored rows marked refused are the 10 answers the judge's check refused in the saved run. Its extraction
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61:  for those two. The judge's own check ran over all 239 stored answers in the control replay: 229 accepted and 10 refused, as saved.
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:68:Each answer goes through the frozen judge's own check; a refused or failed answer is reported and not counted, and not re-sent.
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:82:The size of the class comes from the count, not from this probe: links that exist only through a revision relation are 5 of 700
+clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:83:in draw 1, and 11 of 725 and 8 of 730 in draws 2 and 3 (relations of every kind, right or wrong; the readers labelled draw 1 only).
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:7:refusal while a replay runs.
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:38:REFUSED = re.compile(r':refused:[0-9a-f]+$')
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:55:def refuse_live_calls():
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:56:    def refusal(*arguments, **keywords):
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:58:    model._key = refusal
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:59:    model.openai_transport = refusal
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:86:    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:93:    refuse_live_calls()
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:135:    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:36:3. Does the control replay's pass criterion actually prove the replay reproduces the saved run (name any table, column or request it
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:41:6. Is the census's count "5 of 700 links exist only because a revision relation carried them" computed correctly from the adapter's
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:74:    23	1. **Untouched control: passed.** 239 of 239 requests found their saved answer, every saved row was used, and the ledger (every table,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:81:    30	4. **The class, counted on the saved ledger** (`inheritance_census.py`): 5 of 700 links exist only because a revision relation carried
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:84:    33	5. Step 1 itself never filed the "roadmap is intact" statement under v20: 0 of 28 copies in the three saved draws (v18 26, v7 12).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:91:    40	  answer on the control and refuses it on the counterfactual (it cites `e185`).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:101:    50	Each answer goes through the frozen judge's own check; a refused or failed answer is reported and not counted, and not re-sent.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:112:    61	- No effect seen: with the count above (2 or 3 links of 700), revision relations that join different statements do not move this
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:212:    89	        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:217:    94	    if not any(CARRIED in error for error in refused):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:218:    95	        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:282:   159	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:320:     7	refusal while a replay runs.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:351:    38	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:368:    55	def refuse_live_calls():
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:369:    56	    def refusal(*arguments, **keywords):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:371:    58	    model._key = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:372:    59	    model.openai_transport = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:399:    86	    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:406:    93	    refuse_live_calls()
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:448:   135	    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:542:   229	        adapter, recorder, reference = run_replay(output, scratch / 'step2', on_round=on_round, keep_links=kept)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:552:   239	              'rounds identical to the control before the first difference': [day for day in rounds_seen if day != found.get('day')]}
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:784:    19	The untouched offline control is not implemented or verified yet. `adapter.replay` creates an empty output archive; a transport that simply refuses everything fails on its first original call. A practical existing starting point is `clean-arch/e2e-2026-11-09/control_v108.py`'s read-only reference transport: only exact canonical request matches may receive the corresponding stored full response; unknown requests must stop without network. The completed historical d1 judging archive contains 229 normal and 10 refused rows; all 239 stored responses were read-only checked as parseable and matching stored answers, but this does not establish that complete replay will match. The offline control must respect historical rejection/retry, request ordering, dispatch concurrency and exact input trace/library identities. The archive stores sorted canonical request JSON; that alone does not prove the historical outbound HTTP byte order. Compare normalized business state and requests without discarding factual dates or call ordering, and disclose what can actually be checked. Current judge stages can fan out, so a mismatch may be a first divergence **batch** rather than a unique first call.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:788:    23	Claude initially proposed recounting all 30 edges. On challenge, it agreed that the already verified propagation means this additional census is not necessary to choose the immediate test. Claude also initially proposed a transport that refuses every request; on challenge it retracted this because the replay creates an empty archive. The attempted correction is a design, not a claim that the offline replay currently works. No Jev, judge or other paid API was called in this council; no production code, frozen ruler, configuration, or historical database was changed.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:799:     7	refusal while a replay runs.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:830:    38	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:847:    55	def refuse_live_calls():
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:848:    56	    def refusal(*arguments, **keywords):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:850:    58	    model._key = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:851:    59	    model.openai_transport = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:878:    86	    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:885:    93	    refuse_live_calls()
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:927:   135	    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1021:   229	        adapter, recorder, reference = run_replay(output, scratch / 'step2', on_round=on_round, keep_links=kept)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1031:   239	              'rounds identical to the control before the first difference': [day for day in rounds_seen if day != found.get('day')]}
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1238:   229	                for view_id in store.views_linked_to(self.conn, old):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1248:   239	            if top is not None and top > seq:
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1423:     7	published rate, plus the request's output cap) and is refused if spent plus in flight plus the reserve would pass the cap. Afterwards,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1652:   159	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1774:   229	    if last is not None and last['rung'] != data['rung'] and not data['changed']:
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1784:   239	                                theme_pushes_json=json.dumps(data.get('theme_pushes', []), ensure_ascii=False),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1834:   323	                archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1927:  "links in the ledger": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1936:  "judge requests in the run": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2097:     7	published rate, plus the request's output cap) and is refused if spent plus in flight plus the reserve would pass the cap. Afterwards,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2442:   229	                for view_id in store.views_linked_to(self.conn, old):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2452:   239	            if top is not None and top > seq:
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2517:   159	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2554: "requests answered from the saved archive": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2555: "saved archive rows": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2561:  "judgements": 229,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2564:  "evidence_links": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2591:  "links written": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2593:  "judgements": 229,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2976:[(7, 'e57', 'e173', 67, 'v2', 65, 212), (7, 'e57', 'e173', 67, 'v4', 66, 213), (8, 'e181', 'e185', 70, 'v20', 223, 228), (9, 'e130', 'e185', 70, 'v18', 152, 227), (10, 'e180', 'e185', 70, 'v18', 222, 227), (11, 'e143', 'e185', 70, 'v7', 171, 229), (12, 'e131', 'e185', 70, 'v18', 153, 227), (20, 'e199', 'e324', 132, 'v7', 246, 379)]
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2983:   **Not serious:** The send bypasses the local model archive, so it asks for fresh responses; provider-side prompt caching is still possible, but that is not a cached answer. The budget wrapper uses the production transport once per attempt and permits up to three attempts. Its handling of malformed responses and the final delay differs in detail from production, and the probe intentionally omits the judge’s additional retry after a refused answer. Sources: [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:107), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63), [model.py](/Users/lchingen/hivemind/src/hivemind/model.py:126), [judging.py](/Users/lchingen/hivemind/src/hivemind/views/judging.py:317).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2989:3. **Control and separation — not serious with stated limits.** The control compares 239 canonical requests and saved answers, listed ledger tables and adapter counts. It excludes `judgements.call_id`, does not compare SQLite’s FTS tables or `sqlite_sequence`, and compares `judge-requests.json` only by day, sequence, view and shown IDs. The archive comparison uses request hashes and answers, not historical wire bytes or full response metadata. Thus “every table” and “judge requests equal” are broader than the check. Sources: [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:39), [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:134).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2999:6. **Census — not serious for the stated final count.** The saved ledger has 700 links; the five listed have neither a direct Step 1 link nor a later link in the census, and each has an eligible older linked record. I checked the saved revision and link rows for all three affected records: none of the five has an additional later revision relation that would also have carried that same link. The count of five therefore holds for these records. **Limitation:** the census’s `old link id < new link id` test would miss an alternative relation whose old link was written later than the new link, even if that relation was processed later and would have carried it. The method should not be assumed correct for arbitrary data. Sources: [inheritance_census.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/inheritance_census.py:57), [adapter.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/adapter.py:209), [saved census](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/inheritance-census.json).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:3010:   **Not serious:** The send bypasses the local model archive, so it asks for fresh responses; provider-side prompt caching is still possible, but that is not a cached answer. The budget wrapper uses the production transport once per attempt and permits up to three attempts. Its handling of malformed responses and the final delay differs in detail from production, and the probe intentionally omits the judge’s additional retry after a refused answer. Sources: [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:107), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63), [model.py](/Users/lchingen/hivemind/src/hivemind/model.py:126), [judging.py](/Users/lchingen/hivemind/src/hivemind/views/judging.py:317).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:3016:3. **Control and separation — not serious with stated limits.** The control compares 239 canonical requests and saved answers, listed ledger tables and adapter counts. It excludes `judgements.call_id`, does not compare SQLite’s FTS tables or `sqlite_sequence`, and compares `judge-requests.json` only by day, sequence, view and shown IDs. The archive comparison uses request hashes and answers, not historical wire bytes or full response metadata. Thus “every table” and “judge requests equal” are broader than the check. Sources: [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:39), [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:134).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:3026:6. **Census — not serious for the stated final count.** The saved ledger has 700 links; the five listed have neither a direct Step 1 link nor a later link in the census, and each has an eligible older linked record. I checked the saved revision and link rows for all three affected records: none of the five has an additional later revision relation that would also have carried that same link. The count of five therefore holds for these records. **Limitation:** the census’s `old link id < new link id` test would miss an alternative relation whose old link was written later than the new link, even if that relation was processed later and would have carried it. The method should not be assumed correct for arbitrary data. Sources: [inheritance_census.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/inheritance_census.py:57), [adapter.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/adapter.py:209), [saved census](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/inheritance-census.json).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-handoff.md:12:second said NOT READY for: (1) the reader could crash on an answer the schema refuses; (2) the stated worst cost left out the two
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-handoff.md:14:schema refuses and reports it; the protocol and `check` state the cost with three attempts ($0.1995 against a $0.25 cap); the
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.md:5:   **Not serious:** The send bypasses the local model archive, so it asks for fresh responses; provider-side prompt caching is still possible, but that is not a cached answer. The budget wrapper uses the production transport once per attempt and permits up to three attempts. Its handling of malformed responses and the final delay differs in detail from production, and the probe intentionally omits the judge’s additional retry after a refused answer. Sources: [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:107), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63), [model.py](/Users/lchingen/hivemind/src/hivemind/model.py:126), [judging.py](/Users/lchingen/hivemind/src/hivemind/views/judging.py:317).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.md:11:3. **Control and separation — not serious with stated limits.** The control compares 239 canonical requests and saved answers, listed ledger tables and adapter counts. It excludes `judgements.call_id`, does not compare SQLite’s FTS tables or `sqlite_sequence`, and compares `judge-requests.json` only by day, sequence, view and shown IDs. The archive comparison uses request hashes and answers, not historical wire bytes or full response metadata. Thus “every table” and “judge requests equal” are broader than the check. Sources: [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:39), [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:134).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.md:21:6. **Census — not serious for the stated final count.** The saved ledger has 700 links; the five listed have neither a direct Step 1 link nor a later link in the census, and each has an eligible older linked record. I checked the saved revision and link rows for all three affected records: none of the five has an additional later revision relation that would also have carried that same link. The count of five therefore holds for these records. **Limitation:** the census’s `old link id < new link id` test would miss an alternative relation whose old link was written later than the new link, even if that relation was processed later and would have carried it. The method should not be assumed correct for arbitrary data. Sources: [inheritance_census.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/inheritance_census.py:57), [adapter.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/adapter.py:209), [saved census](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/inheritance-census.json).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.md:13:1. **Serious — a refused answer can crash the reader.** After `check_schema` returns errors, [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:176) still accesses the answer as if it had the required shape. A JSON array, a `pushes` entry missing `push`, or a non-string `implied_outcome` can raise before the row and verdict are printed. The protocol promises to report refused answers and exclude them. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61). For well-formed accepted answers, I found no path in `verdict()` that prints a conclusion outside the stated rule.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.md:17:3. **Serious — required preflight has no demonstrated completion.** The rules require `scripts/preflight.py` before any paid run, including reporting skipped rows and refusals. I found no preflight result in the supplied protocol or probe output records. The successful `judge_probe.py check` is narrower and does not establish that requirement was met. This is an evidence gap, not a claim that nobody ran it elsewhere. [AGENTS.md](/Users/lchingen/hivemind/AGENTS.md:172).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:78:    23	1. **Untouched control: passed.** 239 of 239 requests equal a saved request in the archive's form (sorted keys) and took its saved
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:90:    35	4. **The class, counted on the saved ledger** (`inheritance_census.py`): 5 of 700 links exist only because a revision relation carried
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:93:    38	5. Step 1 itself never filed the "roadmap is intact" statement under v20: 0 of 28 copies in the three saved draws (v18 26, v7 12).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:100:    45	  item count; the frozen check accepts the saved answer on the control and refuses it on the counterfactual (it cites `e185`).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:103:    48	  `views/store.py`, `config.py`, `poc/config/poc-v108.json`) were last written before that run (2026-11-08 13:43 at the latest; the
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:116:    61	Each answer goes through the frozen judge's own check; a refused or failed answer is reported and not counted, and not re-sent.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:130:    75	The size of the class comes from the count, not from this probe: links that exist only through a revision relation are 5 of 700
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:131:    76	in draw 1, and 11 of 725 and 8 of 730 in draws 2 and 3 (relations of every kind, right or wrong; the readers labelled draw 1 only).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:253:   108	        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:258:   113	    if not any(CARRIED in error for error in refused):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:259:   114	        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:325:   180	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:364:     7	refusal while a replay runs.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:395:    38	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:412:    55	def refuse_live_calls():
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:413:    56	    def refusal(*arguments, **keywords):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:415:    58	    model._key = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:416:    59	    model.openai_transport = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:443:    86	    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:450:    93	    refuse_live_calls()
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:492:   135	    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:586:   229	        adapter, recorder, reference = run_replay(output, scratch / 'step2', on_round=on_round, keep_links=kept)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:596:   239	              'rounds identical to the control before the first difference': [day for day in rounds_seen if day != found.get('day')]}
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:654:     5	   **Not serious:** The send bypasses the local model archive, so it asks for fresh responses; provider-side prompt caching is still possible, but that is not a cached answer. The budget wrapper uses the production transport once per attempt and permits up to three attempts. Its handling of malformed responses and the final delay differs in detail from production, and the probe intentionally omits the judge’s additional retry after a refused answer. Sources: [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:107), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63), [model.py](/Users/lchingen/hivemind/src/hivemind/model.py:126), [judging.py](/Users/lchingen/hivemind/src/hivemind/views/judging.py:317).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:660:    11	3. **Control and separation — not serious with stated limits.** The control compares 239 canonical requests and saved answers, listed ledger tables and adapter counts. It excludes `judgements.call_id`, does not compare SQLite’s FTS tables or `sqlite_sequence`, and compares `judge-requests.json` only by day, sequence, view and shown IDs. The archive comparison uses request hashes and answers, not historical wire bytes or full response metadata. Thus “every table” and “judge requests equal” are broader than the check. Sources: [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:39), [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:134).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:670:    21	6. **Census — not serious for the stated final count.** The saved ledger has 700 links; the five listed have neither a direct Step 1 link nor a later link in the census, and each has an eligible older linked record. I checked the saved revision and link rows for all three affected records: none of the five has an additional later revision relation that would also have carried that same link. The count of five therefore holds for these records. **Limitation:** the census’s `old link id < new link id` test would miss an alternative relation whose old link was written later than the new link, even if that relation was processed later and would have carried it. The method should not be assumed correct for arbitrary data. Sources: [inheritance_census.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/inheritance_census.py:57), [adapter.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/adapter.py:209), [saved census](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/inheritance-census.json).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:718:2026-11-10 22:36:28.647 xcodebuild[76085:44670003]  DVTFilePathFSEvents: Failed to start fs event stream.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:719:2026-11-10 22:36:28.793 xcodebuild[76085:44670002] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:722:2026-11-10 22:36:29.159 xcodebuild[76087:44670013]  DVTFilePathFSEvents: Failed to start fs event stream.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:723:2026-11-10 22:36:29.272 xcodebuild[76087:44670012] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:981:053b981 2026-11-09 02:14:09 -0500 Handle Stage 2 stops: replace a refused control draw, continue clean draws cut by the network
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1008:    19	The untouched offline control is not implemented or verified yet. `adapter.replay` creates an empty output archive; a transport that simply refuses everything fails on its first original call. A practical existing starting point is `clean-arch/e2e-2026-11-09/control_v108.py`'s read-only reference transport: only exact canonical request matches may receive the corresponding stored full response; unknown requests must stop without network. The completed historical d1 judging archive contains 229 normal and 10 refused rows; all 239 stored responses were read-only checked as parseable and matching stored answers, but this does not establish that complete replay will match. The offline control must respect historical rejection/retry, request ordering, dispatch concurrency and exact input trace/library identities. The archive stores sorted canonical request JSON; that alone does not prove the historical outbound HTTP byte order. Compare normalized business state and requests without discarding factual dates or call ordering, and disclose what can actually be checked. Current judge stages can fan out, so a mismatch may be a first divergence **batch** rather than a unique first call.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1012:    23	Claude initially proposed recounting all 30 edges. On challenge, it agreed that the already verified propagation means this additional census is not necessary to choose the immediate test. Claude also initially proposed a transport that refuses every request; on challenge it retracted this because the replay creates an empty archive. The attempted correction is a design, not a claim that the offline replay currently works. No Jev, judge or other paid API was called in this council; no production code, frozen ruler, configuration, or historical database was changed.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1034:   173	  it is given through the current code checks and prompts ($0; it skips rows an earlier run refused, so read what it says it skipped)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1035:   174	  and prints, per check, the cases judged and the refusals with reasons (it does not yet replay the coverage-start reading's check:
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1036:   175	  `CURRENT_STATE.md`, open defects). A changed share or a refusal on a case a person would accept is
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1096:     7	refusal while a replay runs.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1127:    38	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1144:    55	def refuse_live_calls():
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1145:    56	    def refusal(*arguments, **keywords):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1147:    58	    model._key = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1148:    59	    model.openai_transport = refusal
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1175:    86	    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1182:    93	    refuse_live_calls()
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1224:   135	    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1318:   229	        adapter, recorder, reference = run_replay(output, scratch / 'step2', on_round=on_round, keep_links=kept)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1328:   239	              'rounds identical to the control before the first difference': [day for day in rounds_seen if day != found.get('day')]}
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1409:   180	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1444:     5	   **Not serious:** The send bypasses the local model archive, so it asks for fresh responses; provider-side prompt caching is still possible, but that is not a cached answer. The budget wrapper uses the production transport once per attempt and permits up to three attempts. Its handling of malformed responses and the final delay differs in detail from production, and the probe intentionally omits the judge’s additional retry after a refused answer. Sources: [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:107), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63), [model.py](/Users/lchingen/hivemind/src/hivemind/model.py:126), [judging.py](/Users/lchingen/hivemind/src/hivemind/views/judging.py:317).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1450:    11	3. **Control and separation — not serious with stated limits.** The control compares 239 canonical requests and saved answers, listed ledger tables and adapter counts. It excludes `judgements.call_id`, does not compare SQLite’s FTS tables or `sqlite_sequence`, and compares `judge-requests.json` only by day, sequence, view and shown IDs. The archive comparison uses request hashes and answers, not historical wire bytes or full response metadata. Thus “every table” and “judge requests equal” are broader than the check. Sources: [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:39), [edge_replay.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:134).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1460:    21	6. **Census — not serious for the stated final count.** The saved ledger has 700 links; the five listed have neither a direct Step 1 link nor a later link in the census, and each has an eligible older linked record. I checked the saved revision and link rows for all three affected records: none of the five has an additional later revision relation that would also have carried that same link. The count of five therefore holds for these records. **Limitation:** the census’s `old link id < new link id` test would miss an alternative relation whose old link was written later than the new link, even if that relation was processed later and would have carried it. The method should not be assumed correct for arbitrary data. Sources: [inheritance_census.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/inheritance_census.py:57), [adapter.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/adapter.py:209), [saved census](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/inheritance-census.json).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1476:     7	published rate, plus the request's output cap) and is refused if spent plus in flight plus the reserve would pass the cap. Afterwards,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1583: "requests answered from the saved archive": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1584: "saved archive rows": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1590:  "judgements": 229,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1593:  "evidence_links": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1620:  "links written": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1622:  "judgements": 229,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1745:  "links in the ledger": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1754:  "judge requests in the run": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1907:2026-11-08 13:43:28 -0500 src/hivemind/model.py
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1950:   173	  it is given through the current code checks and prompts ($0; it skips rows an earlier run refused, so read what it says it skipped)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1951:   174	  and prints, per check, the cases judged and the refusals with reasons (it does not yet replay the coverage-start reading's check:
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1952:   175	  `CURRENT_STATE.md`, open defects). A changed share or a refusal on a case a person would accept is
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2077: "requests answered from the saved archive": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2078: "saved archive rows": 239,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2084:  "judgements": 229,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2087:  "evidence_links": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2114:  "links written": 700,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2116:  "judgements": 229,
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2238:   229	    if kind == 'integer':
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2248:   239	
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2351:   229	    if last is not None and last['rung'] != data['rung'] and not data['changed']:
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2361:   239	                                theme_pushes_json=json.dumps(data.get('theme_pushes', []), ensure_ascii=False),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2396:   323	                archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2480:2026-11-08 13:43:28 -0500 src/hivemind/model.py
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2603:    45	  item count; the frozen check accepts the saved answer on the control and refuses it on the counterfactual (it cites `e185`).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2606:    48	  `views/store.py`, `config.py`, `poc/config/poc-v108.json`) were last written before that run (2026-11-08 13:43 at the latest; the
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2619:    61	Each answer goes through the frozen judge's own check; a refused or failed answer is reported and not counted, and not re-sent.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2633:    75	The size of the class comes from the count, not from this probe: links that exist only through a revision relation are 5 of 700
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2634:    76	in draw 1, and 11 of 725 and 8 of 730 in draws 2 and 3 (relations of every kind, right or wrong; the readers labelled draw 1 only).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2711:   180	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2728:/opt/homebrew/bin/zsh -lc "rg -n -i 'preflight|skipped|refusal' clean-arch/step2-edge-effect-2026-11-10 reports/step2-after-failed-probe-council-2026-11-09 poc/data/clean-step2-edge-effect-2026-11-10 -g '*.md' -g '*.json' | head -45" in /Users/lchingen/hivemind
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2743:1. **Serious — a refused answer can crash the reader.** After `check_schema` returns errors, [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:176) still accesses the answer as if it had the required shape. A JSON array, a `pushes` entry missing `push`, or a non-string `implied_outcome` can raise before the row and verdict are printed. The protocol promises to report refused answers and exclude them. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61). For well-formed accepted answers, I found no path in `verdict()` that prints a conclusion outside the stated rule.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2747:3. **Serious — required preflight has no demonstrated completion.** The rules require `scripts/preflight.py` before any paid run, including reporting skipped rows and refusals. I found no preflight result in the supplied protocol or probe output records. The successful `judge_probe.py check` is narrower and does not establish that requirement was met. This is an evidence gap, not a claim that nobody ran it elsewhere. [AGENTS.md](/Users/lchingen/hivemind/AGENTS.md:172).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2770:1. **Serious — a refused answer can crash the reader.** After `check_schema` returns errors, [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:176) still accesses the answer as if it had the required shape. A JSON array, a `pushes` entry missing `push`, or a non-string `implied_outcome` can raise before the row and verdict are printed. The protocol promises to report refused answers and exclude them. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61). For well-formed accepted answers, I found no path in `verdict()` that prints a conclusion outside the stated rule.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:2774:3. **Serious — required preflight has no demonstrated completion.** The rules require `scripts/preflight.py` before any paid run, including reporting skipped rows and refusals. I found no preflight result in the supplied protocol or probe output records. The successful `judge_probe.py check` is narrower and does not establish that requirement was met. This is an evidence gap, not a claim that nobody ran it elsewhere. [AGENTS.md](/Users/lchingen/hivemind/AGENTS.md:172).
+clean-arch/step2-edge-effect-2026-11-10/preflight.log:3:== A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side): judged 10, refused/dropped 10 (100%)
+clean-arch/step2-edge-effect-2026-11-10/preflight.log:5:   extraction archive rows 0: replayed 0, earlier refused 0, retired 0, unidentifiable 0
+clean-arch/step2-edge-effect-2026-11-10/preflight.log:8:== B. current extraction checks before the handover, using the supplied universe: judged 0, refused/dropped 0 (n/a)
+clean-arch/step2-edge-effect-2026-11-10/preflight.log:10:== C. matching code checks over stored records (database state is the final one, not the state at the time): judged 0, refused/dropped 0 (n/a)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-handoff.md:24:3. Does the control replay's pass criterion actually prove the replay reproduces the saved run (name any table, column or request it
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-handoff.md:29:6. Is the census's count "5 of 700 links exist only because a revision relation carried them" computed correctly from the adapter's
+clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:107:        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:112:    if not any(CARRIED in error for error in refused):
+clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:113:        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:181:                    rows.append({**row, 'status': 'refused by the schema', 'detail': '; '.join(schema_errors[:3]), 'tokens': tokens})
+clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:186:                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:24:second said NOT READY for: (1) the reader could crash on an answer the schema refuses; (2) the stated worst cost left out the two
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:26:schema refuses and reports it; the protocol and `check` state the cost with three attempts ($0.1995 against a $0.25 cap); the
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:165:   107	        refused = judging.check_answer(ledger, VIEW, saved_answer, user_text(requests['counterfactual']))
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:170:   112	    if not any(CARRIED in error for error in refused):
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:171:   113	        raise SystemExit(f'positive control failed: the saved answer cites {CARRIED} and the check did not refuse it against the counterfactual request')
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:239:   181	                    rows.append({**row, 'status': 'refused by the schema', 'detail': '; '.join(schema_errors[:3]), 'tokens': tokens})
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:244:   186	                rows.append({**row, 'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors[:3]),
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:299:    23	1. **Untouched control: passed.** 239 of 239 requests equal a saved request in the archive's form (sorted keys) and took its saved
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:311:    35	4. **The class, counted on the saved ledger** (`inheritance_census.py`): 5 of 700 links exist only because a revision relation carried
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:314:    38	5. Step 1 itself never filed the "roadmap is intact" statement under v20: 0 of 28 copies in the three saved draws (v18 26, v7 12).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:321:    45	  item count; the frozen check accepts the saved answer on the control and refuses it on the counterfactual (it cites `e185`).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:324:    48	  `views/store.py`, `config.py`, `poc/config/poc-v108.json`) were last written before that run (2026-11-08 13:43 at the latest; the
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:335:    59	  the prompt, and the 10 stored rows marked refused are the 10 answers the judge's check refused in the saved run. Its extraction
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:337:    61	  for those two. The judge's own check ran over all 239 stored answers in the control replay: 229 accepted and 10 refused, as saved.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:344:    68	Each answer goes through the frozen judge's own check; a refused or failed answer is reported and not counted, and not re-sent.
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:358:    82	The size of the class comes from the count, not from this probe: links that exist only through a revision relation are 5 of 700
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:359:    83	in draw 1, and 11 of 725 and 8 of 730 in draws 2 and 3 (relations of every kind, right or wrong; the readers labelled draw 1 only).
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:379:     3	== A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side): judged 10, refused/dropped 10 (100%)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:381:     5	   extraction archive rows 0: replayed 0, earlier refused 0, retired 0, unidentifiable 0
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:384:     8	== B. current extraction checks before the handover, using the supplied universe: judged 0, refused/dropped 0 (n/a)
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:386:    10	== C. matching code checks over stored records (database state is the final one, not the state at the time): judged 0, refused/dropped 0 (n/a)
+
+exec
+/opt/homebrew/bin/zsh -lc 'python3 clean-arch/step2-edge-effect-2026-11-10/judge_probe.py check /Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+{
+ "saved judgement": {
+  "request sha256": "90bdb23435cfe0263870b7db6694e0ca40c6ee1bfeed00aaf167e39e841fce56",
+  "rung": 2,
+  "previous rung": 3
+ },
+ "as sent, sha256 of json.dumps(request)": {
+  "control": "ad584fcd9eb70930c2310d1a48e59be86ad288a9650a32255cd9d1c3bd500fa7",
+  "counterfactual": "d98c6386f89e9ff7f06d08d8759f2e7b8685316fbb5bfa98c3f22e55716e13d6"
+ },
+ "user text characters": {
+  "control": 24774,
+  "counterfactual": 23797
+ },
+ "lines removed with the block": 4,
+ "evidence shown": {
+  "control": 29,
+  "counterfactual": 28
+ },
+ "answer key order of the saved answer": [
+  "rung",
+  "reasons",
+  "cites",
+  "cites_views",
+  "pushes",
+  "changed",
+  "why_changed",
+  "theme_pushes",
+  "reference",
+  "implied_outcome"
+ ],
+ "worst cost per send (usd)": {
+  "control": 0.0111,
+  "counterfactual": 0.011
+ },
+ "cost if every send answers at its first attempt, at the reserve (usd)": 0.0665,
+ "worst cost of the probe, every send tried three times (usd)": 0.1994,
+ "cap (usd)": 0.25,
+ "sends": 6
+}
+
+codex
+The no-send check passes, and the three earlier issues have concrete changes or records behind them. I’m checking whether the reader’s assumptions match every answer the frozen schema can accept, and whether the protocol’s numbers match the saved evidence.
+exec
+/opt/homebrew/bin/zsh -lc 'ls -l poc/data/clean-step2-edge-effect-2026-11-10' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.md | tail -45' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/model.py | sed -n '179,240p;126,176p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/views/judging.py | sed -n '54,105p;194,235p;300,333p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step2-edge-effect-2026-11-10/edge_replay.py | sed -n '1,220p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+total 16
+drwxr-xr-x@ 6 lchingen  staff   192 Nov 10 22:31 census-replay
+drwxr-xr-x@ 6 lchingen  staff   192 Nov 10 22:31 census-replay-2
+drwxr-xr-x@ 9 lchingen  staff   288 Nov 10 22:29 control
+-rw-r--r--@ 1 lchingen  staff  4359 Nov 10 22:31 inheritance-census.json
+drwxr-xr-x@ 7 lchingen  staff   224 Nov 10 22:29 remove-relation
+drwxr-xr-x@ 3 lchingen  staff    96 Nov 10 22:29 remove-relation-inputs
+drwxr-xr-x@ 7 lchingen  staff   224 Nov 10 22:30 remove-relation-keep-link
+drwxr-xr-x@ 3 lchingen  staff    96 Nov 10 22:30 remove-relation-keep-link-inputs
+
+ succeeded in 0ms:
+     1	**NOT READY:** the reader can stop on a malformed answer instead of reporting it, and the stated worst-case cost excludes retries. I also found no evidence in the supplied probe records that the required preflight was run.
+     2	
+     3	For example, if the judge returns valid JSON containing an invalid `pushes` entry, the reader detects the schema error but then tries to unpack that invalid entry. It can stop before producing the required “not decided” verdict.
+     4	
+     5	**A. Earlier findings**
+     6	
+     7	- **Historical bytes — not serious for this diagnostic, with a wording limit.** The archive stores sorted request JSON, so it cannot establish the original HTTP body. The current check confirms the saved canonical request and today’s serialized reconstruction; the listed files’ timestamps and clean tracked status support that reconstruction as a reasonable stand-in for a small diagnostic. The conclusion that the order **is** the historical order is stronger than those facts prove: files could have changed and later been restored, and the archive has no wire capture. Say it is *consistent with* the historical order. Answer-key order is a useful additional comparison, not proof of request bytes. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:46), [check](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:77), [transport](/Users/lchingen/hivemind/src/hivemind/model.py:126).
+     8	- **Unfinished round — not serious; closed.** The protocol now identifies the 14 other requests at that level and explicitly says the remainder was not built. That matches the saved report. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:28), [report](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation/counterfactual-report.json).
+     9	- **Reading rule and generalization — not serious; closed in the rule.** The protocol requires three accepted answers in each arm, treats mixed results as undecided, and limits the conclusion to this relation and sample. `verdict()` implements those combinations correctly. The separate malformed-answer defect below affects whether the reader reaches that verdict. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:59), [verdict](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:52).
+    10	
+    11	**B–C. Current findings**
+    12	
+    13	1. **Serious — a refused answer can crash the reader.** After `check_schema` returns errors, [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:176) still accesses the answer as if it had the required shape. A JSON array, a `pushes` entry missing `push`, or a non-string `implied_outcome` can raise before the row and verdict are printed. The protocol promises to report refused answers and exclude them. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:61). For well-formed accepted answers, I found no path in `verdict()` that prints a conclusion outside the stated rule.
+    14	
+    15	2. **Serious — $0.0665 is not the worst-case cost of the stated send.** That figure covers one attempt for each of six requests, while the budget wrapper permits up to three attempts per request. On the wrapper’s own reserve estimate, three attempts for each would be approximately **$0.1995**, still below the $0.25 cap. The cap is enforced per invocation, but the protocol’s worst-case claim understates the authorized send’s possible cost. [Protocol](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:52), [cost calculation](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:115), [retry and reservation](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63).
+    16	
+    17	3. **Serious — required preflight has no demonstrated completion.** The rules require `scripts/preflight.py` before any paid run, including reporting skipped rows and refusals. I found no preflight result in the supplied protocol or probe output records. The successful `judge_probe.py check` is narrower and does not establish that requirement was met. This is an evidence gap, not a claim that nobody ran it elsewhere. [AGENTS.md](/Users/lchingen/hivemind/AGENTS.md:172).
+    18	
+    19	4. **Not serious — request comparison is narrower than its wording.** `check` compares the current saved files successfully, including the substantive user-text difference. Its comparison does not independently rule out an extra top-level key or changed user-message metadata in a modified counterfactual file. The actual files inspected support the protocol’s claim; the check alone is narrower. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:85).
+    20	
+    21	No files were edited and no network request was sent. The offline `check` passed for the specified replay folder.
+    22	
+    23	NOT READY — serious findings 1, 2, and 3.
+    24	
+
+ succeeded in 0ms:
+   126	def openai_transport(provider, request, timeout=180, max_attempts=3):   # the default preserves the production retry behavior
+   127	    url, _ = ENDPOINTS[provider]
+   128	    body = json.dumps(request).encode('utf-8')
+   129	    headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
+   130	    last = None
+   131	    last_http = None
+   132	    if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or max_attempts < 1:
+   133	        raise ValueError('max_attempts must be a positive integer')
+   134	    for attempt in range(max_attempts):
+   135	        try:
+   136	            with urllib.request.urlopen(urllib.request.Request(url, data=body, headers=headers, method='POST'), timeout=timeout) as response:
+   137	                raw_bytes = response.read()
+   138	                try:
+   139	                    raw = raw_bytes.decode('utf-8')
+   140	                except UnicodeDecodeError:
+   141	                    if max_attempts != 1:
+   142	                        raise
+   143	                    failure = TransportError('invalid UTF-8 HTTP response')
+   144	                    failure.response_body = raw_bytes.decode('utf-8', 'replace')
+   145	                    failure.response_body_base64 = base64.b64encode(raw_bytes).decode('ascii')
+   146	                    failure.http_status = response.status
+   147	                    raise failure
+   148	                try:
+   149	                    return json.loads(raw)
+   150	                except json.JSONDecodeError:
+   151	                    if max_attempts != 1:
+   152	                        raise
+   153	                    failure = TransportError('malformed HTTP response')
+   154	                    failure.response_body = raw
+   155	                    failure.http_status = response.status
+   156	                    raise failure
+   157	        except urllib.error.HTTPError as error:
+   158	            body_bytes = error.read()
+   159	            body_text = body_bytes.decode('utf-8', 'replace' if max_attempts == 1 else 'ignore')
+   160	            last_http = (error.code, body_text, base64.b64encode(body_bytes).decode('ascii'))
+   161	            last = f'HTTP {error.code}: {body_text[:600]}'
+   162	            if error.code in (400, 401, 403, 404):
+   163	                failure = TransportError(last)
+   164	                failure.response_body = body_text
+   165	                failure.response_body_base64 = last_http[2]
+   166	                failure.http_status = error.code
+   167	                raise failure
+   168	        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException) as error:   # a dropped or truncated response is retried like a network error
+   169	            last = repr(error)[:200]
+   170	            last_http = None   # the final failure describes the last attempt only
+   171	        if max_attempts == 3 or attempt + 1 < max_attempts:
+   172	            time.sleep(5 * (attempt + 1))
+   173	    failure = TransportError(last or 'no answer')
+   174	    if last_http:
+   175	        failure.http_status, failure.response_body, failure.response_body_base64 = last_http
+   176	    raise failure
+   179	def check_schema(value, schema, path='$', root=None):
+   180	    """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
+   181	    array/items/minItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
+   182	    root = root if root is not None else schema
+   183	    if '$ref' in schema:
+   184	        name = schema['$ref'].rsplit('/', 1)[1]
+   185	        schema = root['$defs'][name]
+   186	    kind = schema.get('type')
+   187	    if 'anyOf' in schema:
+   188	        # a value matching no option reports the closest options' errors (fewest), not merely the last option's
+   189	        failures = []
+   190	        for option in schema['anyOf']:
+   191	            errors = check_schema(value, option, path, root)
+   192	            if not errors:
+   193	                return []
+   194	            failures.append(errors)
+   195	        fewest = min((len(errors) for errors in failures), default=0)
+   196	        closest = list(dict.fromkeys(error for errors in failures if len(errors) == fewest for error in errors))
+   197	        return closest or [f'{path}: matches no option']
+   198	    if kind == 'object':
+   199	        if not isinstance(value, dict):
+   200	            return [f'{path}: expected object']
+   201	        errors = []
+   202	        for name in schema.get('required', []):
+   203	            if name not in value:
+   204	                errors.append(f'{path}.{name}: required')
+   205	        properties = schema.get('properties', {})
+   206	        for name, item in value.items():
+   207	            if name in properties:
+   208	                errors.extend(check_schema(item, properties[name], f'{path}.{name}', root))
+   209	            elif schema.get('additionalProperties') is False:
+   210	                errors.append(f'{path}.{name}: not allowed')
+   211	        return errors
+   212	    if kind == 'array':
+   213	        if not isinstance(value, list):
+   214	            return [f'{path}: expected array']
+   215	        errors = []
+   216	        if len(value) < schema.get('minItems', 0):
+   217	            errors.append(f'{path}: fewer than {schema["minItems"]} items')
+   218	        for index, item in enumerate(value):
+   219	            errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]', root))
+   220	        return errors
+   221	    if kind == 'string':
+   222	        if not isinstance(value, str):
+   223	            return [f'{path}: expected string']
+   224	        if 'enum' in schema and value not in schema['enum']:
+   225	            return [f'{path}: {value!r} not in {schema["enum"]}']
+   226	        if 'pattern' in schema and not re.search(schema['pattern'], value):
+   227	            return [f'{path}: {value!r} does not match {schema["pattern"]}']
+   228	        return []
+   229	    if kind == 'integer':
+   230	        return [] if isinstance(value, int) and not isinstance(value, bool) else [f'{path}: expected integer']
+   231	    if kind == 'number':
+   232	        return [] if isinstance(value, (int, float)) and not isinstance(value, bool) else [f'{path}: expected number']
+   233	    if kind == 'boolean':
+   234	        return [] if isinstance(value, bool) else [f'{path}: expected boolean']
+   235	    if kind == 'null':
+   236	        return [] if value is None else [f'{path}: expected null']
+   237	    return []
+   238	
+   239	
+   240	def request_identity(request):
+
+ succeeded in 0ms:
+    54	def schema_for(prompt_version):
+    55	    require_supported(prompt_version)
+    56	    pushes = PUSHES
+    57	    schema = {
+    58	        'type': 'object', 'additionalProperties': False,
+    59	        'required': ['rung', 'reasons', 'cites', 'cites_views', 'pushes', 'changed', 'why_changed'],
+    60	        'properties': {
+    61	            'rung': {'type': 'integer'}, 'reasons': {'type': 'string'},
+    62	            'cites': {'type': 'array', 'items': {'type': 'string'}}, 'cites_views': {'type': 'array', 'items': {'type': 'string'}},
+    63	            'pushes': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['evidence_id', 'push'],
+    64	                                                  'properties': {'evidence_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}},
+    65	            'changed': {'type': 'boolean'}, 'why_changed': {'type': 'string'},
+    66	        },
+    67	    }
+    68	    schema['required'].append('theme_pushes')
+    69	    schema['properties']['theme_pushes'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['view_id', 'push'],
+    70	                                                                       'properties': {'view_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}}
+    71	    schema['required'][1:1] = STANCE_FIELDS           # after rung: the reference and the implied outcome are written before the reasons
+    72	    schema['properties'].update({field: {'type': 'string'} for field in STANCE_FIELDS})
+    73	    return schema
+    74	
+    75	
+    76	def themes_in_force(conn, view_id):
+    77	    """The theme block of an asset thesis: every open theme thesis with a current state, with its rung label and whether a
+    78	    changed conclusion was recorded after this thesis's last judgement. Empty for a theme thesis."""
+    79	    if store.view(conn, view_id)['object_kind'] == 'theme':
+    80	        return []
+    81	    last = store.current_state(conn, view_id)
+    82	    out = []
+    83	    for row in conn.execute("select view_id from views where object_kind='theme' order by view_id"):
+    84	        theme_id = row['view_id']
+    85	        state = store.current_state(conn, theme_id)
+    86	        if not state or not store.is_open(conn, theme_id):
+    87	            continue
+    88	        updated = bool(last) and bool(conn.execute('select 1 from judgements where view_id=? and changed=1 and judgement_id>? limit 1',
+    89	                                                   (theme_id, last['judgement_id'])).fetchone())
+    90	        rung = store.rungs_of(conn, theme_id)[state['rung'] - 1]
+    91	        out.append({'view_id': theme_id, 'view': store.view(conn, theme_id), 'state': state, 'rung_label': rung['label'], 'updated': updated})
+    92	    return out
+    93	
+    94	
+    95	STANCE_FIELDS = ['reference', 'implied_outcome']   # D260: what the market expects, and the figure or date the evidence implies
+    96	
+    97	
+    98	class JudgementRefused(Exception):
+    99	    pass
+   100	
+   101	
+   102	def topological(conn, view_ids):
+   103	    """Dependencies first: a view comes after every view it depends on that is also in the set."""
+   104	    remaining = list(dict.fromkeys(view_ids))
+   105	    ordered, placed = [], set()
+   194	def check_answer(conn, view_id, data, request_text=None):
+   195	    """request_text: the user message that was sent, so theme and evidence ids are checked against what it carried (a theme may have
+   196	    closed or opened since); without it, against what the ledger would show now."""
+   197	    errors = []
+   198	    shown = themes_shown_in(request_text) if request_text is not None else {theme['view_id'] for theme in themes_in_force(conn, view_id)}
+   199	    named = []
+   200	    for entry in data.get('theme_pushes', []):
+   201	        if entry['view_id'] in named:
+   202	            errors.append(f'{entry["view_id"]} is named twice in theme_pushes')
+   203	        elif entry['view_id'] not in shown:
+   204	            errors.append(f'{entry["view_id"]} is not a theme in force shown to {view_id}')
+   205	        named.append(entry['view_id'])
+   206	    # the closed set is what the request showed (D198), read from the text that was sent, else computed from the ledger
+   207	    allowed = evidence_shown_in(request_text) if request_text is not None else {p['evidence_id'] for p in evidence_in_view(conn, view_id)[0]}
+   208	    not_allowed = lambda e: f'{e} is not among the evidence shown to {view_id}'
+   209	    bad_push = lambda e: f'push on {e} which was not shown to {view_id}'
+   210	    deps = {d['resolved_to'] for d in store.dependencies_of(conn, view_id) if d['resolved_to']}
+   211	    rungs = store.rungs_of(conn, view_id)
+   212	    if not 1 <= data['rung'] <= len(rungs):
+   213	        errors.append(f'rung {data["rung"]} outside 1..{len(rungs)}')
+   214	    for cited in data['cites']:
+   215	        if cited not in allowed:
+   216	            errors.append(not_allowed(cited))
+   217	    for cited in data['cites_views']:
+   218	        if cited not in deps:
+   219	            errors.append(f'{cited} is not a dependency of {view_id}')
+   220	    for push in data['pushes']:
+   221	        if push['evidence_id'] not in allowed:
+   222	            errors.append(bad_push(push['evidence_id']))
+   223	    for field in STANCE_FIELDS:
+   224	        if not str(data.get(field) or '').strip():
+   225	            errors.append(f'{field} is empty: state what the market expects and the figure or date the evidence implies')
+   226	    last = store.current_state(conn, view_id)
+   227	    if last is None and not data['changed']:
+   228	        errors.append('first judgement must say changed')
+   229	    if last is not None and last['rung'] != data['rung'] and not data['changed']:
+   230	        errors.append(f'rung moved from {last["rung"]} to {data["rung"]} but changed is false')
+   231	    return errors
+   232	
+   233	
+   234	def _record(conn, cfg, view_id, seq, item, answer):
+   235	    data = vocabulary.judgement_answer(answer.data)
+   300	    def eligible(view_id):
+   301	        return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.evidence_in_force(conn, view_id))
+   302	
+   303	    def is_theme(view_id):
+   304	        return store.view(conn, view_id)['object_kind'] == 'theme'
+   305	
+   306	    pending = [v for v in topological(conn, list(changed_views) + queued_by_ledger(conn, seq)) if eligible(v)]
+   307	    done, results = set(), []
+   308	    while pending:
+   309	        ready = [v for v in pending if upstream(conn, v).isdisjoint(set(pending) - {v})] or pending[:1]
+   310	        level = [v for v in ready if is_theme(v)] or ready
+   311	        prompts = {v: build_prompt(conn, v, version) for v in level}
+   312	
+   313	        def ask(view_id, note=''):
+   314	            system, user = prompts[view_id]
+   315	            return model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
+   316	
+   317	        with concurrent.futures.ThreadPoolExecutor(max_workers=JUDGE_WORKERS) as pool_:
+   318	            answers = dict(zip(level, pool_.map(ask, level)))
+   319	        for view_id in level:
+   320	            answer = answers[view_id]
+   321	            errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+   322	            if errors:
+   323	                archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
+   324	                answer = ask(view_id, retry_note(errors))
+   325	                errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+   326	                if errors:
+   327	                    archive.retire(answer.call_id)
+   328	                    raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
+   329	            result = _record(conn, cfg, view_id, seq, item, answer)
+   330	            done.add(view_id)
+   331	            results.append(result)
+   332	            if result['changed']:
+   333	                for dependant in queued_by_change(conn, view_id):
+
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Does one unsupported Step 2 revision relation change what the frozen judge reads? An offline replay of the saved D392 clean draw 1.
+     3	
+     4	No request leaves this process: every judge request is answered from the saved judging archive of the draw
+     5	(`poc/data/clean-e2e-2026-11-09/stage2-clean-d1/judged/archive.sqlite`) by `control_v108.ReferenceArchiveTransport`, which answers
+     6	only a byte-identical canonical request and raises on any other. The credential reader and the production transport are replaced by a
+     7	refusal while a replay runs.
+     8	
+     9	  edge_replay.py control <new folder>
+    10	      The untouched draw through the current adapter and the frozen judge. Passes only when every request finds its saved answer,
+    11	      every saved row is used, and the ledger, the judge requests and the answers equal the saved run's.
+    12	  edge_replay.py counterfactual <new folder> <control folder> --by 70:e4 --revised-group 69:e5 [--keep-links]
+    13	      The same replay over a copy of the library with exactly that one revision relation removed (the copy carries its own stamp; the
+    14	      saved library is not touched). It stops at the first judging round whose requests differ from the control's (a request with other
+    15	      text, a request the control did not send, or a control request not sent) and writes the requests of that round, both versions.
+    16	      Nothing after that round is replayed: later state would rest on answers to requests the archive does not hold.
+    17	      --keep-links removes the relation but writes the links the new record inherited through it, to separate the inherited link from
+    18	      the relation itself.
+    19	
+    20	What a replay shows: whether, and in which round, the judge's input changes. What it cannot show: any answer to a changed request."""
+    21	import argparse, collections, contextlib, difflib, hashlib, json, re, shutil, sqlite3, sys
+    22	from pathlib import Path
+    23	
+    24	HERE = Path(__file__).resolve().parent
+    25	ROOT = HERE.parents[1]
+    26	E2E = ROOT / 'clean-arch/e2e-2026-11-09'
+    27	sys.dont_write_bytecode = True
+    28	sys.path[:0] = [str(E2E), str(ROOT / 'src')]
+    29	import adapter as e2e_adapter  # noqa: E402
+    30	import control_v108  # noqa: E402
+    31	from hivemind import model  # noqa: E402
+    32	from hivemind.views import store  # noqa: E402
+    33	
+    34	DRAW = ROOT / 'poc/data/clean-e2e-2026-11-09'
+    35	TRACE = f"{DRAW / 'stage2-clean-d1/trace.sqlite'}+{DRAW / 'stage2-clean-d1-segment-2/trace.sqlite'}"
+    36	STEP2 = DRAW / 'stage2-clean-d1-segment-2/step2'
+    37	SAVED = DRAW / 'stage2-clean-d1/judged'
+    38	REFUSED = re.compile(r':refused:[0-9a-f]+$')
+    39	# Columns the replay cannot reproduce by construction: an archive row number is given in the order answers return from 32 threads.
+    40	ARCHIVE_ROW_COLUMNS = {'judgements': {'call_id'}}
+    41	LEDGER_TABLES = ('views', 'rungs', 'view_keys', 'view_switches', 'judgements', 'evidence', 'evidence_sources', 'evidence_links',
+    42	                 'replacements', 'revisions', 'same_claims', 'dependencies', 'dependency_resolutions', 'successions', 'handovers',
+    43	                 'match_records', 'processing_steps', 'review_pool_entries', 'late_statements', 'days_completed', 'thesis_groups',
+    44	                 'thesis_group_members', 'thesis_group_aliases')
+    45	
+    46	
+    47	class Divergence(Exception):
+    48	    """The first judging round whose requests differ from the control's."""
+    49	
+    50	
+    51	class LiveCallRefused(BaseException):
+    52	    """A credential or the production transport was reached during an offline replay."""
+    53	
+    54	
+    55	def refuse_live_calls():
+    56	    def refusal(*arguments, **keywords):
+    57	        raise LiveCallRefused('an offline replay reached the credential reader or the production transport')
+    58	    model._key = refusal
+    59	    model.openai_transport = refusal
+    60	
+    61	
+    62	class RecordingTransport:
+    63	    """Passes each request to the reference archive transport and records it with the judging round it belongs to."""
+    64	
+    65	    def __init__(self, reference):
+    66	        self.reference = reference
+    67	        self.round = None                 # (day, seq) of the judging round in progress
+    68	        self.requests = []                # one entry per request, answered or not
+    69	
+    70	    def __call__(self, provider, request):
+    71	        canonical = control_v108.canonical_text(request)
+    72	        text = request['messages'][-1]['content']
+    73	        named = e2e_adapter.JUDGED_VIEW.search(text)
+    74	        entry = {'day': self.round[0], 'seq': self.round[1], 'view': named.group(1) if named else None,
+    75	                 'sha256': control_v108.text_sha256(canonical), 'answered': False, 'request': request}
+    76	        self.requests.append(entry)       # list.append is atomic; the round's requests are sent from a thread pool
+    77	        response = self.reference(provider, request)
+    78	        entry['answered'] = True
+    79	        return response
+    80	
+    81	    def of_round(self, day):
+    82	        return [entry for entry in self.requests if entry['day'] == day]
+    83	
+    84	
+    85	def round_signature(entries):
+    86	    """The requests of one round as a sorted list of (view, request sha256): the retry after a refused answer is its own request."""
+    87	    return sorted((entry['view'], entry['sha256']) for entry in entries)
+    88	
+    89	
+    90	def run_replay(output, step2_folder, *, on_round=None, keep_links=None):
+    91	    """Replay the draw into `output` with every request answered from the saved archive. `on_round(day, entries, error)` is called after
+    92	    each judging round (error is the ReferenceMissError that ended it, or None)."""
+    93	    refuse_live_calls()
+    94	    reference = control_v108.ReferenceArchiveTransport(SAVED / 'archive.sqlite')
+    95	    recorder = RecordingTransport(reference)
+    96	    production_judge = e2e_adapter.Adapter.judge
+    97	    production_article = e2e_adapter.Adapter.article
+    98	
+    99	    def judge(self, day, seq, changed):
+   100	        recorder.round = (day, seq)
+   101	        error = None
+   102	        try:
+   103	            return production_judge(self, day, seq, changed)
+   104	        except control_v108.ReferenceMissError as miss:
+   105	            error = miss
+   106	            raise
+   107	        finally:
+   108	            if on_round:
+   109	                on_round(day, recorder.of_round(day), error)
+   110	
+   111	    def article(self, k, records, library, revisions_by_record, later_entries, changed):
+   112	        production_article(self, k, records, library, revisions_by_record, later_entries, changed)
+   113	        for record_id, view_ids in (keep_links or {}).items():
+   114	            if any(record['id'] == record_id for record in records):
+   115	                for view_id in view_ids:
+   116	                    self._link(self.evidence_of.get(record_id), view_id, k, changed)
+   117	                    self.counts['links kept without their relation'] += 1
+   118	
+   119	    e2e_adapter.Adapter.judge, e2e_adapter.Adapter.article = judge, article
+   120	    try:
+   121	        finished = e2e_adapter.replay(TRACE, step2_folder, output, transport=recorder, cap_usd=3.0)
+   122	    finally:
+   123	        e2e_adapter.Adapter.judge, e2e_adapter.Adapter.article = production_judge, production_article
+   124	    return finished, recorder, reference
+   125	
+   126	
+   127	def ledger_rows(path, table):
+   128	    with contextlib.closing(sqlite3.connect(f'file:{path}?mode=ro', uri=True)) as conn:
+   129	        columns = [row[1] for row in conn.execute(f'pragma table_info({table})')]
+   130	        kept = [column for column in columns if column not in ARCHIVE_ROW_COLUMNS.get(table, ())]
+   131	        return kept, conn.execute(f"select {', '.join(kept)} from {table} order by rowid").fetchall()
+   132	
+   133	
+   134	def archive_answers(path):
+   135	    """Every archived call as (request sha256 without its refusal mark, refused or not, answer): the multiset a replay must reproduce."""
+   136	    with contextlib.closing(sqlite3.connect(f'file:{path}?mode=ro', uri=True)) as conn:
+   137	        rows = conn.execute('select request_sha256, answer_json from model_calls').fetchall()
+   138	    return collections.Counter((REFUSED.sub('', sha), bool(REFUSED.search(sha)), answer) for sha, answer in rows)
+   139	
+   140	
+   141	def control(output):
+   142	    output = Path(output).resolve()
+   143	    adapter, recorder, reference = run_replay(output, STEP2)
+   144	    adapter.conn.close()
+   145	    failures = []
+   146	    if reference.misses:
+   147	        failures.append(f'{len(reference.misses)} requests had no saved answer')
+   148	    if reference.unused_rows():
+   149	        failures.append(f'saved archive rows never asked for: {reference.unused_rows()}')
+   150	    compared = {}
+   151	    for table in LEDGER_TABLES:
+   152	        saved_columns, saved_rows = ledger_rows(SAVED / 'views.sqlite', table)
+   153	        replay_columns, replay_rows = ledger_rows(output / 'views.sqlite', table)
+   154	        compared[table] = len(saved_rows)
+   155	        if saved_columns != replay_columns or saved_rows != replay_rows:
+   156	            differing = next((n for n, pair in enumerate(zip(saved_rows, replay_rows)) if pair[0] != pair[1]), min(len(saved_rows), len(replay_rows)))
+   157	            failures.append(f'ledger table {table}: {len(saved_rows)} saved rows, {len(replay_rows)} replayed, first difference at row {differing}')
+   158	    saved_sent = json.loads((SAVED / 'judge-requests.json').read_text())
+   159	    key = lambda entry: (entry['day'], entry['seq'], entry['view'], tuple(entry['shown']))
+   160	    if collections.Counter(map(key, saved_sent)) != collections.Counter(map(key, adapter.sent)):
+   161	        failures.append('the judge requests (day, seq, view, evidence shown) differ from the saved judge-requests.json')
+   162	    if archive_answers(SAVED / 'archive.sqlite') != archive_answers(output / 'archive.sqlite'):
+   163	        failures.append('the replayed archive does not hold the saved requests and answers')
+   164	    saved_counts = json.loads((SAVED / 'adapter-counts.json').read_text())
+   165	    replay_counts = json.loads((output / 'adapter-counts.json').read_text())
+   166	    if saved_counts != replay_counts:
+   167	        failures.append(f'adapter counts differ: saved {saved_counts}, replayed {replay_counts}')
+   168	    rounds = collections.OrderedDict()
+   169	    for entry in recorder.requests:
+   170	        rounds.setdefault(entry['day'], []).append({name: entry[name] for name in ('day', 'seq', 'view', 'sha256')})
+   171	    (output / 'control-rounds.json').write_text(json.dumps(rounds, indent=1))
+   172	    requests_by_sha = {entry['sha256']: entry['request'] for entry in recorder.requests}
+   173	    (output / 'control-requests.json').write_text(json.dumps(requests_by_sha, ensure_ascii=False))
+   174	    report = {'passed': not failures, 'failures': failures, 'requests answered from the saved archive': sum(reference.matched.values()),
+   175	              'saved archive rows': reference.reference_rows, 'ledger rows compared, by table': compared,
+   176	              'ledger columns not compared': {table: sorted(columns) for table, columns in ARCHIVE_ROW_COLUMNS.items()},
+   177	              'judging rounds': len(rounds), 'adapter counts': replay_counts}
+   178	    (output / 'control-report.json').write_text(json.dumps(report, indent=1))
+   179	    print(json.dumps(report, indent=1))
+   180	    if failures:
+   181	        raise SystemExit(1)
+   182	
+   183	
+   184	def library_without_relation(folder, by, revised_group):
+   185	    """A copy of the draw's library with exactly one revision relation removed, stamped as its own (a labelled departure from the draw)."""
+   186	    library = json.loads((STEP2 / 'library.json').read_text())
+   187	    found = [(group_id, n) for group_id, group in library['groups'].items() for n, revision in enumerate(group['revises'])
+   188	             if revision['by'] == by and revision['group'] == revised_group]
+   189	    if len(found) != 1:
+   190	        raise SystemExit(f'{len(found)} relations from {by} to group {revised_group}; exactly one is removed')
+   191	    group_id, position = found[0]
+   192	    removed = library['groups'][group_id]['revises'].pop(position)
+   193	    folder.mkdir(parents=True)
+   194	    (folder / 'library.json').write_text(json.dumps(library, ensure_ascii=False))
+   195	    digests = [hashlib.sha256(Path(part).read_bytes()).hexdigest() + '  ' + part for part in TRACE.split('+')]
+   196	    digests.append(hashlib.sha256((folder / 'library.json').read_bytes()).hexdigest() + '  ' + str(folder / 'library.json'))
+   197	    (folder / 'inputs.sha256').write_text('\n'.join(digests) + '\n')
+   198	    return {'held by group': group_id, 'removed': removed, 'revised original': library['groups'][revised_group]['original']['id'],
+   199	            'revised original thesis ids': library['groups'][revised_group]['original']['thesis_ids']}
+   200	
+   201	
+   202	def user_text(request):
+   203	    return request['messages'][-1]['content']
+   204	
+   205	
+   206	def counterfactual(output, control_folder, by, revised_group, keep_links):
+   207	    output, control_folder = Path(output).resolve(), Path(control_folder).resolve()
+   208	    if not json.loads((control_folder / 'control-report.json').read_text())['passed']:
+   209	        raise SystemExit('the control did not pass; no counterfactual is replayed against it')
+   210	    control_rounds = json.loads((control_folder / 'control-rounds.json').read_text(), object_pairs_hook=collections.OrderedDict)
+   211	    control_requests = json.loads((control_folder / 'control-requests.json').read_text())
+   212	    scratch = output.parent / (output.name + '-inputs')
+   213	    removed = library_without_relation(scratch / 'step2', by, revised_group)
+   214	    kept = {by: removed['revised original thesis ids']} if keep_links else None
+   215	    rounds_seen = []
+   216	    found = {}
+   217	
+   218	    def on_round(day, entries, error):
+   219	        earlier_missing = [control_day for control_day in control_rounds if control_day < day and control_day not in rounds_seen]
+   220	        rounds_seen.append(day)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba AGENTS.md | sed -n '316,345p;408,438p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   316	### 7.3 Iterating
+   317	
+   318	- **One class at a time** (Alex, 2026-10-29: "你一类一类改，快速迭代然后测regression"). Count the misses by mechanism; take the largest
+   319	  class; trace it to the sentence that causes it; change one thing aimed at that class; run the whole bench (a prompt change alters every
+   320	  request) against the previous version; read every regression to its raw answer. The pages that showed the failure locate its
+   321	  mechanism; only the whole bench (every set, every draw) accepts the change.
+   322	- **Name the effect on the judgement first.** Every proposed change states the effect it is expected to have on a reader or on the final
+   323	  judgement, and is tested there where possible; a step's own counts do not decide it alone. A fix that keeps moving its error to
+   324	  neighbouring cases stops being tuned on that set (Alex, 2026-11-09: "感觉现在一直在修一些mknor的原地打转，你是不是要思考下现在具体还差什么high priority big impact 的需要做？";
+   325	  he approved this rule the same day, D391).
+   326	- **A model call is a sampler.** Re-send a stored request before calling its answer a defect. Totals and acceptance come from at least
+   327	  three samples beside a fresh control; a bar the control fails against itself judges nothing. A direct-read pass
+   328	  (one send per article, every answer read beside its source; D238) locates mechanisms; its counts are one draw and are labelled so.
+   329	- **A written log.** One row per arm: hypothesis, change, numbers against the control (regressions first), kept or not. Refuted arms and
+   330	  your own mistakes stay in it; the next session starts from its last row.
+   331	- **Own the loop, within what Alex agreed.** When the direction is agreed and no stop is in force (`CURRENT_STATE.md`), push your own
+   332	  hypotheses through $0 checks and probes of a few cents on stored cases without asking. A registered test, an end-to-end run, or
+   333	  anything that departs from the agreed plan starts on his word; a result that contradicts the hypothesis stops the line and goes to him
+   334	  (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估").
+   335	- **Council before every change is sent.** A prompt, schema, code or criterion change, including one found by reading a probe, is a new
+   336	  arm. It goes to an independent Codex read and a challenge round before its first send, and its result goes to a challenge round
+   337	  before the next change. Reading the traces and the model's own account locates a fix; it does not review it (Alex, 2026-11-08:
+   338	  "你这些改动有我你有好好的跑council 再下手").
+   339	  Every round's reasoning and decisions are reflected on in the council until there is a consensus; the decision is recorded, and
+   340	  the next test goes straight ahead, held to the PRD and its quantified goals, with every trace read by you yourself and not only
+   341	  by readers (Alex, 2026-11-10: "你应该跑council loop 来reflect 你每一轮的思路还有决策，需要你打成共识，记录决策，向前直行测试。不要drift,我们有PRD和量化目标，
+   342	  你自己作为llm 下去看所有trace").
+   343	- **Small first, then one run.** A hypothesis is first validated the simplest way, on a few stored cases and a few cents, and shown to
+   344	  work at a high level before any full analysis or stability test is built (Alex, 2026-11-04: "don't overspend resources on wasting time.
+   345	  We need to validate the hypothesis in a very simple way and to make sure that it works on a high level before we dive into do the full
+   408	## 9. Workspace and operations
+   409	
+   410	- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting stored data needs
+   411	  Alex's request, a backup, exactly identified items and a log entry.
+   412	- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+   413	- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel agents that edit
+   414	  shared modules.
+   415	- When Alex names a step, the test is that step alone through its own harness (extraction: stored requests re-sent, answers sifted,
+   416	  scored against the gold). A full-pipeline run, a registered test, or a paid send beyond the probes of a few cents an agreed direction
+   417	  allows (§7.3) starts only on his explicit word (Alex, 2026-10-27: "我不是要你看下step 1抽取到底行不行？").
+   418	- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network health; nothing heavy
+   419	  runs beside paid calls. A gate runs on a snapshot no one is editing.
+   420	- Never open a live run's databases: run `sh <run folder>/snapshot.sh` and query the snapshot.
+   421	- No edit to package code or prompt files while any run is live: the parallel day's manifest hashes every `.py` and prompt file and
+   422	  fails the day. Edit in another worktree or wait.
+   423	- Experiment harnesses send concurrently (a thread pool of 8; the archive is thread-safe); serial sends waste the wall clock Alex is
+   424	  waiting on.
+   425	- **Run settings** (`scripts/replay.py`): extraction requests prepared 16 at a time (`--workers`; the measurement launcher passes its
+   426	  `HIVEMIND_WORKERS` there), Jev matching 8 at a time (`--jev-workers`), judgements 32 at a time (`judging.JUDGE_WORKERS`); a model call
+   427	  times out after 180 s and is tried up to three times.
+   428	  The three draws of a measurement run at once, one launcher each (`docs/research/2026-11-01-e2e-loop/harness/run_arm.sh`). Measured
+   429	  timings: `docs/poc/pipeline-plan.md`, "Run settings and timing".
+   430	- Report results as they land; scope delegated work so a first useful result returns within 20–30 minutes.
+   431	- Services for testing run on the host (README, "Run the service for testing"): on this Mac the VPN gives Docker containers no outbound
+   432	  internet, so a model or embedding call fails inside Docker. Start them with a log and pid file, check them with
+   433	  `curl -s http://127.0.0.1:8788/days`, and stop what you started before handing over. Changing Docker or VPN networking is Alex's call.
+   434	- Credentials never appear in Git, documents, logs, prompts, stored data, URLs or command arguments; they are kept in the owner-only file
+   435	  `~/.config/hivemind/credentials.json`, outside the repository. Never raise a spending cap, and never switch a provider or model
+   436	  silently.
+   437	
+   438	## 10. Rebuilding from ../tn-hivemind
+
+exec
+/opt/homebrew/bin/zsh -lc 'git status --short -- src/hivemind/model.py src/hivemind/views/judging.py src/hivemind/views/store.py src/hivemind/config.py poc/config/poc-v108.json' in /Users/lchingen/hivemind
+ succeeded in 1153ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-42PfI0SY' (errno=Operation not permitted)
+2026-11-10 22:38:07.540 xcodebuild[76898:44676270]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-10 22:38:07.651 xcodebuild[76898:44676269] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-aswA6wwl' (errno=Operation not permitted)
+2026-11-10 22:38:07.967 xcodebuild[76900:44676444]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-10 22:38:08.076 xcodebuild[76900:44676443] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/preflight.log' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/data/clean-step2-edge-effect-2026-11-10/control/control-report.json | head -65' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba poc/data/clean-step2-edge-effect-2026-11-10/remove-relation/counterfactual-report.json | head -100' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step2-edge-effect-2026-11-10/inheritance_census.py | sed -n '25,100p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/e2e-2026-11-09/adapter.py | sed -n '195,235p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	preflight over /Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d1/judged/archive.sqlite and 1 views databases: judged
+     2	
+     3	== A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side): judged 10, refused/dropped 10 (100%)
+     4	
+     5	   extraction archive rows 0: replayed 0, earlier refused 0, retired 0, unidentifiable 0
+     6	   extraction answers 0: evidence produced 0 kept 0; candidates produced 0 kept 0
+     7	
+     8	== B. current extraction checks before the handover, using the supplied universe: judged 0, refused/dropped 0 (n/a)
+     9	
+    10	== C. matching code checks over stored records (database state is the final one, not the state at the time): judged 0, refused/dropped 0 (n/a)
+    11	       ledger judged: judged 0, skipped 0 
+    12	
+    13	== D. schema enum values named in the prompts: judged 43, missing 0
+    14	
+    15	== E. keyed views in views.sqlite: open views 22, keyed 22, duplicate keys 0 groups, review pool 0 candidates outside the watch list
+    16	
+    17	UNEXERCISED: a check judged no case
+
+ succeeded in 0ms:
+     1	{
+     2	 "passed": true,
+     3	 "failures": [],
+     4	 "requests answered from the saved archive": 239,
+     5	 "saved archive rows": 239,
+     6	 "ledger rows compared, by table": {
+     7	  "views": 22,
+     8	  "rungs": 98,
+     9	  "view_keys": 22,
+    10	  "view_switches": 22,
+    11	  "judgements": 229,
+    12	  "evidence": 575,
+    13	  "evidence_sources": 575,
+    14	  "evidence_links": 700,
+    15	  "replacements": 0,
+    16	  "revisions": 30,
+    17	  "same_claims": 228,
+    18	  "dependencies": 17,
+    19	  "dependency_resolutions": 0,
+    20	  "successions": 0,
+    21	  "handovers": 0,
+    22	  "match_records": 0,
+    23	  "processing_steps": 0,
+    24	  "review_pool_entries": 0,
+    25	  "late_statements": 0,
+    26	  "days_completed": 0,
+    27	  "thesis_groups": 0,
+    28	  "thesis_group_members": 0,
+    29	  "thesis_group_aliases": 0
+    30	 },
+    31	 "ledger columns not compared": {
+    32	  "judgements": [
+    33	   "call_id"
+    34	  ]
+    35	 },
+    36	 "judging rounds": 14,
+    37	 "adapter counts": {
+    38	  "articles not completed by Step 1": 0,
+    39	  "quotes cut by the judge at 400 characters": 138,
+    40	  "evidence written": 575,
+    41	  "links written": 700,
+    42	  "same_claims written": 228,
+    43	  "judgements": 229,
+    44	  "revisions written": 30,
+    45	  "links to other clean-opened theses dropped": 30,
+    46	  "records dropped: no verified passage": 1,
+    47	  "links lost with a dropped record": 2,
+    48	  "same_claims lost with a dropped record": 1,
+    49	  "judging usd (from tokens)": 0.4779
+    50	 }
+    51	}
+ succeeded in 0ms:
+     1	{
+     2	 "relation removed": {
+     3	  "held by group": "45:e2",
+     4	  "removed": {
+     5	   "group": "69:e5",
+     6	   "by": "70:e4"
+     7	  },
+     8	  "revised original": "69:e5",
+     9	  "revised original thesis ids": [
+    10	   "v20"
+    11	  ]
+    12	 },
+    13	 "links kept without the relation": null,
+    14	 "diverged": true,
+    15	 "rounds identical to the control before the first difference": [
+    16	  "2026-07-01",
+    17	  "2026-07-02",
+    18	  "2026-07-03",
+    19	  "2026-07-04",
+    20	  "2026-07-05"
+    21	 ],
+    22	 "first differing round": "2026-07-06",
+    23	 "control days with no judging round in the counterfactual": [],
+    24	 "reference miss": "judgement (openai, gpt-6-luna) request 021f2b48e38f1fc4f291c76076acc5824bcd07492c30976e1a0ef7fb6ad2d5d7 has no unused byte-identical row in the reference archive",
+    25	 "views whose requests differ in that round": [
+    26	  {
+    27	   "view": "v16",
+    28	   "control requests": 1,
+    29	   "counterfactual requests": 0
+    30	  },
+    31	  {
+    32	   "view": "v17",
+    33	   "control requests": 2,
+    34	   "counterfactual requests": 1
+    35	  },
+    36	  {
+    37	   "view": "v19",
+    38	   "control requests": 1,
+    39	   "counterfactual requests": 0
+    40	  },
+    41	  {
+    42	   "view": "v20",
+    43	   "control requests": 1,
+    44	   "counterfactual requests": 1,
+    45	   "evidence only in the control request": [
+    46	    "e185"
+    47	   ],
+    48	   "evidence only in the counterfactual request": [],
+    49	   "system text identical": true,
+    50	   "diff of the user text": [
+    51	    "--- control",
+    52	    "+++ counterfactual",
+    53	    "@@ -4 +4 @@",
+    54	    "-[Evidence in view under this thesis, 29 items]",
+    55	    "+[Evidence in view under this thesis, 28 items]",
+    56	    "@@ -76,4 +75,0 @@",
+    57	    "-- e185 [party_statement; NVIDIA spokesperson, via Investing.com; original source NVIDIA Corporation 2026-07-06; from gnews:d5c48abb470f394f86549b6b 2026-07-06] An Nvidia spokesperson, in a brief statement emailed to Investing.com, refuted the SemiAnalysis report on Kyber/Rubin Ultra delays, saying: \"Our roadmap is intact.\"",
+    58	    "-    Quote: An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: \"Our roadmap is intact.\"",
+    59	    "-    Opinion, not verified: the matcher read this as the same claim as e93; the argument counts one claim, one more outlet.",
+    60	    "-    Opinion, not verified: the matcher read it as a later version of e131 (); both are in force: SemiAnalysis separately reported, about a week earlier, that Nvidia had canceled the four-die Rubin Ultra design in favor of a two-chiplet design due to 'manufacturing execution concerns,' and that the two-die offering will deliver around half the performance of the four-die Rubin Ultra."
+    61	   ]
+    62	  }
+    63	 ],
+    64	 "views with identical requests in that round": [
+    65	  "v1",
+    66	  "v10",
+    67	  "v11",
+    68	  "v13",
+    69	  "v18",
+    70	  "v2",
+    71	  "v22",
+    72	  "v3",
+    73	  "v4",
+    74	  "v5",
+    75	  "v6",
+    76	  "v7",
+    77	  "v8",
+    78	  "v9"
+    79	 ]
+    80	}
+ succeeded in 0ms:
+    25	    evidence_of = dict(adapter.evidence_of)
+    26	    adapter.conn.close()
+    27	    record_of = {evidence_id: record_id for record_id, evidence_id in evidence_of.items()}
+    28	    by_article, library = edge_replay.e2e_adapter.load_draw(edge_replay.TRACE, edge_replay.STEP2)
+    29	    records = {record['id']: record for article in by_article.values() for record in article}
+    30	    later_views = collections.defaultdict(set)
+    31	    for entry in library['later_log']:
+    32	        for record_id in entry['linked']:
+    33	            later_views[record_id].add(entry['thesis'])
+    34	    relations = [(revision['by'], revision['group']) for group in library['groups'].values() for revision in group['revises']]
+    35	    label_of = {(edge['incoming'], edge['group']): edge['after_challenge'] for edge in json.loads(LABELS.read_text())['saved_edges']}
+    36	    unlabelled = [relation for relation in relations if relation not in label_of]
+    37	    if unlabelled:
+    38	        raise SystemExit(f'relations with no reader label: {unlabelled}')
+    39	
+    40	    saved = edge_replay.SAVED
+    41	    with contextlib.closing(sqlite3.connect(f"file:{saved / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+    42	        links = conn.execute('select id, evidence_id, view_id, seq from evidence_links order by id').fetchall()
+    43	        judgements = conn.execute('select view_id, publication_day, cited_evidence_json, pushes_json from judgements').fetchall()
+    44	    link_id = {(evidence_id, view_id): row_id for row_id, evidence_id, view_id, _ in links}
+    45	    shown_under = collections.Counter()
+    46	    requests = json.loads((saved / 'judge-requests.json').read_text())
+    47	    for request in requests:
+    48	        for evidence_id in request['shown']:
+    49	            shown_under[evidence_id, request['view']] += 1
+    50	    cited_under, pushed_under = collections.Counter(), collections.defaultdict(collections.Counter)
+    51	    for view_id, _, cited_json, pushes_json in judgements:
+    52	        for evidence_id in json.loads(cited_json or '[]'):
+    53	            cited_under[evidence_id, view_id] += 1
+    54	        for push in json.loads(pushes_json or '[]'):
+    55	            pushed_under[push['evidence_id'], view_id][push['push']] += 1
+    56	
+    57	    carried = []
+    58	    for row_id, evidence_id, view_id, seq in links:
+    59	        record_id = record_of[evidence_id]
+    60	        if view_id in records[record_id]['thesis_ids'] or view_id in later_views[record_id]:
+    61	            continue
+    62	        carriers = []
+    63	        for by, group in relations:
+    64	            old = evidence_of.get(library['groups'][group]['original']['id'])
+    65	            if by == record_id and old and link_id.get((old, view_id), row_id) < row_id:
+    66	                carriers.append({'revised group': group, 'old evidence': old, 'readers': label_of[by, group]})
+    67	        if not carriers:
+    68	            raise SystemExit(f'link {evidence_id} -> {view_id} has no Step 1 link, no later link and no carrying relation')
+    69	        carried.append({'record': record_id, 'evidence': evidence_id, 'question': view_id, 'seq': seq, 'carried by': carriers,
+    70	                        'summary': records[record_id]['summary'], 'requests that showed it': shown_under[evidence_id, view_id],
+    71	                        'judgements that cited it': cited_under[evidence_id, view_id], 'pushes given': dict(pushed_under[evidence_id, view_id])})
+    72	
+    73	    def kind(link):
+    74	        readers = {carrier['readers'] for carrier in link['carried by']}
+    75	        if readers == {'different'}:
+    76	            return 'only by relations the readers call different statements'
+    77	        if 'different' in readers:
+    78	            return 'by a relation called different and by another relation'
+    79	        return 'only by relations the readers call ' + ' or '.join(sorted(readers))
+    80	
+    81	    by_kind = collections.defaultdict(lambda: collections.Counter())
+    82	    for link in carried:
+    83	        counts = by_kind[kind(link)]
+    84	        counts['links'] += 1
+    85	        counts['requests that showed it'] += link['requests that showed it']
+    86	        counts['judgements that cited it'] += link['judgements that cited it']
+    87	    requests_touched = sum(1 for request in requests if any((evidence_id, request['view']) in {(l['evidence'], l['question']) for l in carried}
+    88	                                                            for evidence_id in request['shown']))
+    89	    # The second way a relation reaches the judge: under the new record the request prints one line naming the piece it is read as a
+    90	    # later version of. Only the relation written last is printed (store.revision_of).
+    91	    group_of_original = {evidence_of[group['original']['id']]: group_id for group_id, group in library['groups'].items()
+    92	                         if group['original']['id'] in evidence_of}
+    93	    with contextlib.closing(sqlite3.connect(f"file:{saved / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+    94	        revision_rows = conn.execute('select id, old_evidence_id, new_evidence_id from revisions order by id').fetchall()
+    95	    printed = {new: old for _, old, new in revision_rows}                      # the last row per new record wins
+    96	    shown_anywhere = collections.Counter(evidence_id for request in requests for evidence_id in request['shown'])
+    97	    notes = collections.defaultdict(collections.Counter)
+    98	    for new, old in printed.items():
+    99	        readers = label_of[record_of[new], group_of_original[old]]
+   100	        notes[readers]['records carrying the note'] += 1
+
+ succeeded in 0ms:
+   195	            self.counts['links lost with a dropped record'] += 1
+   196	            return
+   197	        if thesis_id in self.mapping:
+   198	            for view_id in self.mapping[thesis_id]:
+   199	                self.counts['links through a matched clean thesis'] += 1
+   200	                self._link(evidence_id, view_id, k, changed)
+   201	            return
+   202	        if thesis_id not in self.views:
+   203	            self.counts['links to other clean-opened theses dropped'] += 1
+   204	            return
+   205	        if store.link(self.conn, evidence_id, thesis_id, k):
+   206	            changed.add(thesis_id)
+   207	            self.counts['links written'] += 1
+   208	
+   209	    def article(self, k, records, library, revisions_by_record, later_entries, changed):
+   210	        for record in records:
+   211	            evidence_id = self._new_evidence(record, k)
+   212	            for thesis_id in record['thesis_ids']:
+   213	                self._link(evidence_id, thesis_id, k, changed)
+   214	            group = library['groups'][library['placement'][record['id']]]
+   215	            if group['original']['id'] != record['id']:
+   216	                original = self.evidence_of.get(group['original']['id'])
+   217	                if evidence_id and original:
+   218	                    store.relate_same(self.conn, original, evidence_id, k)
+   219	                    self.counts['same_claims written'] += 1
+   220	                else:
+   221	                    self.counts['same_claims lost with a dropped record'] += 1
+   222	            for revised_group in revisions_by_record.get(record['id'], []):
+   223	                old = self.evidence_of.get(library['groups'][revised_group]['original']['id'])
+   224	                if not (evidence_id and old):
+   225	                    self.counts['revisions lost with a dropped record'] += 1
+   226	                    continue
+   227	                store.revise(self.conn, old, evidence_id, record.get('statement_date') or record['publication_date'], k)
+   228	                self.counts['revisions written'] += 1
+   229	                for view_id in store.views_linked_to(self.conn, old):
+   230	                    self._link(evidence_id, view_id, k, changed)
+   231	        for entry in later_entries:
+   232	            for record_id in entry['linked']:
+   233	                self._link(self.evidence_of.get(record_id), entry['thesis'], k, changed)
+   234	
+   235	    def leakage_check(self, day, seq):
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'answers the schema refused|refused:|schema:' scripts/preflight.py clean-arch/step2-edge-effect-2026-11-10/edge_replay.py clean-arch/e2e-2026-11-09/control_v108.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step2-edge-effect-2026-11-10/edge_replay.py:38:REFUSED = re.compile(r':refused:[0-9a-f]+$')
+scripts/preflight.py:8:  A. answers the schema refused (prompt and schema disagree: a value the prompt's wording suggested but the enum lacks)
+scripts/preflight.py:61:    rows = archive_conn.execute("select purpose, request_sha256, answer_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%' or request_sha256 like '%:refused:%'")
+scripts/preflight.py:71:    tally('A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side)', judged, judged, reasons, examples)
+scripts/preflight.py:113:        if any(marker in sha for marker in (':schema:', ':malformed:', ':refused:')):
+
+codex
+**NOT READY:** the reader can still stop on a valid judge answer if the response’s usage metadata has an unexpected shape.
+
+For example, an answer with valid JSON content and `"usage": "unavailable"` is saved by the sender, but the reader calls `.get()` on that string and stops before reporting any verdict.
+
+**A. The three earlier findings**
+
+- **Not serious — schema-refused answer: closed for the reported cases.** The reader now reports a schema refusal and immediately continues without reading fields from the invalid answer. The separate usage-metadata defect below occurs before that check. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:177)
+- **Not serious — retry cost: closed.** The protocol now includes three attempts per send. The no-send check returned **$0.1994** for all three attempts, below the $0.25 cap; the protocol’s **$0.1995** is a slightly higher, conservative figure. The budget reserves each attempt under a lock. [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:55), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63)
+- **Not serious — preflight record: closed with the stated limits.** The log records the 10 refused rows, 43 enum values checked, and the unexercised extraction and matching checks. The protocol discloses those limits. [preflight.log](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/preflight.log:3), [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:58)
+
+**B. Sender and reader**
+
+1. **Serious — unexpected usage metadata can stop the reader.** The spending code explicitly treats a non-dictionary `usage` as unavailable and can return and save the response. The reader then assumes any truthy `usage` has `.get()`. A string or nonempty list therefore raises before the answer is checked, recorded in `reading.json`, or included in a verdict. The raw response remains in the per-draw file, but the promised reading is not produced. [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:41), [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:143), [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:177)
+
+- **Not serious — verdict rule.** For rows the reader successfully processes, the code requires three accepted answers in each arm, prints a difference only for two distinct unanimous rungs, and treats mixed answers as undecided. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:52), [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:66)
+- **Not serious — request identity.** The no-send check passed. It compares the whole request after replacing only the user text, then checks the four-line removal and count change. Historical wire bytes remain unavailable, and the protocol says the current ordering is *consistent with* them rather than proven identical. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:77), [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:46)
+
+**C. Protocol claims**
+
+- **Not serious — rounding discrepancy.** The protocol says $0.1995 while the current check prints $0.1994. The protocol does not understate the check’s estimate. [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:55)
+- **Not serious — replay evidence.** The saved reports support the 239-request control and the first differing round, including the 14 identical requests and the unbuilt remainder. I found no other sentence in the scoped protocol that claims more than the inspected evidence supports. [control-report.json](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/control/control-report.json:1), [counterfactual-report.json](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation/counterfactual-report.json:14)
+
+No file was edited and no network request was sent.
+
+**NOT READY — serious finding 1.**
+tokens used
+68,417
+**NOT READY:** the reader can still stop on a valid judge answer if the response’s usage metadata has an unexpected shape.
+
+For example, an answer with valid JSON content and `"usage": "unavailable"` is saved by the sender, but the reader calls `.get()` on that string and stops before reporting any verdict.
+
+**A. The three earlier findings**
+
+- **Not serious — schema-refused answer: closed for the reported cases.** The reader now reports a schema refusal and immediately continues without reading fields from the invalid answer. The separate usage-metadata defect below occurs before that check. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:177)
+- **Not serious — retry cost: closed.** The protocol now includes three attempts per send. The no-send check returned **$0.1994** for all three attempts, below the $0.25 cap; the protocol’s **$0.1995** is a slightly higher, conservative figure. The budget reserves each attempt under a lock. [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:55), [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:63)
+- **Not serious — preflight record: closed with the stated limits.** The log records the 10 refused rows, 43 enum values checked, and the unexercised extraction and matching checks. The protocol discloses those limits. [preflight.log](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/preflight.log:3), [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:58)
+
+**B. Sender and reader**
+
+1. **Serious — unexpected usage metadata can stop the reader.** The spending code explicitly treats a non-dictionary `usage` as unavailable and can return and save the response. The reader then assumes any truthy `usage` has `.get()`. A string or nonempty list therefore raises before the answer is checked, recorded in `reading.json`, or included in a verdict. The raw response remains in the per-draw file, but the promised reading is not produced. [budget.py](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:41), [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:143), [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:177)
+
+- **Not serious — verdict rule.** For rows the reader successfully processes, the code requires three accepted answers in each arm, prints a difference only for two distinct unanimous rungs, and treats mixed answers as undecided. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:52), [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:66)
+- **Not serious — request identity.** The no-send check passed. It compares the whole request after replacing only the user text, then checks the four-line removal and count change. Historical wire bytes remain unavailable, and the protocol says the current ordering is *consistent with* them rather than proven identical. [judge_probe.py](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:77), [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:46)
+
+**C. Protocol claims**
+
+- **Not serious — rounding discrepancy.** The protocol says $0.1995 while the current check prints $0.1994. The protocol does not understate the check’s estimate. [PROTOCOL.md](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/PROTOCOL.md:55)
+- **Not serious — replay evidence.** The saved reports support the 239-request control and the first differing round, including the 14 identical requests and the unbuilt remainder. I found no other sentence in the scoped protocol that claims more than the inspected evidence supports. [control-report.json](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/control/control-report.json:1), [counterfactual-report.json](/Users/lchingen/hivemind/poc/data/clean-step2-edge-effect-2026-11-10/remove-relation/counterfactual-report.json:14)
+
+No file was edited and no network request was sent.
+
+**NOT READY — serious finding 1.**

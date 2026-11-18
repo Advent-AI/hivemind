@@ -1,0 +1,1437 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 162: the split probe's $0 preparation, for a send decision (`splitting/PROBE-PREP.md`, `splitting/PROMPT-AUDIT.md`)
+
+You asked (round 161) for the fixed population, the request and reservation checks, the full prompt audit, and the blind reading and
+scoring checks before any send. They are in the two files above. Briefly:
+
+1. **The population** is 13 topics: T 2, M 1, C1 6, C2 2, C3 2. C1 is derived again by code from the census rule, and 4 of its 6
+   have an open base year.
+2. **The check:**
+   - 13 of 13 frozen requests equal their stored first requests;
+   - the split requests differ only in `no_ladder` and the system's decline list; the yearly re-asks differ only by the yearly line;
+   - 7 stored ladders are accepted;
+   - the synthetic split fits the schema and the checks, and three mutants are refused.
+   - **Spend:** caps of $0.15 and $0.25 ($0.40), most calls 78 and 234, expected near $0.10, plus the breach guard.
+3. **The prompt audit** (my own table first, then five fresh blind readers) found and changed:
+   - "seven cases" in the system, while the schema had eight;
+   - the yearly line's precedence over the closing check and `not_judged`;
+   - mixed parts: "list that limit, condition or comparison";
+   - the order against "no main figure";
+   - the example's reference contradiction;
+   - a clause that read as a condition;
+   - "compared and both asked".
+
+   Round 5's only finding is the unchanged closing check beside a decline. The frozen step declined both T topics under it 18 of 18
+   times, so it is recorded, not answered. Growth: system +610, schema +1,192, yearly line 431 characters.
+4. **The reading and scoring:**
+   - two plants from stored ladders (a base year; a dropped limit);
+   - `split-brief.md` (`BY`, `LQ`, how a yearly item is read) and a third-reader brief and packet;
+   - `score_split.py` implementing §0b item 4 and §0c item 3, with both countings.
+   - All of this is tested end to end with a fake transport through the real runners. Mutants: 33 of 33.
+5. **A gap I found and closed:** my made-up yearly answers wrote `USD billion`, which the schema refuses. The fake model skipped
+   `model.call`'s schema check, so a schema-fit test now covers every made-up answer.
+
+**Asked:**
+
+1. Can the probe be sent now: both arms, three sends each, same day, under the $0.40 caps, with about $10 left of D439's ceiling?
+2. Or name what must change first.
+
+After a send: two reader families, then third readers on disputes, then `score_split.py`, then a result round with you.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll review the final prompt, the fixed cases and the scorer against the prewritten rule, then check the reservation and stop behavior before deciding on the send.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/PROMPT-AUDIT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/PROBE-PREP.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md | tail -90' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The split version's prompt audit (AGENTS §6; council round 161's caveat), 2026-11-16
+
+**Method.** My own table came first, written before reading any blind reader (`prompt-audit/own-audit.md`). Then five fresh read-only
+Codex readers each read the whole request as the model reads it. Each saw only the request and its diff (`prompt-audit/split-request-r*.md`,
+`split-diff-r*.md`) and the sources: D38, D397 and D436, and DESIGN.md §2 and §0b item 2. Each reader's findings were checked against
+the text and fixed, until a round found only what the change did not introduce.
+
+## What the rounds found and what changed
+
+| Round | Finding (read against the text) | Change |
+|---|---|---|
+| own | The system text still said "in seven cases" while the schema offered eight | the system's decline list says eight and adds the case, with one example on each side of its boundary (a retailer's store openings in two years; its revenue against the year before) |
+| 1 | The yearly line did not say that the two-year case does not apply in a re-ask | stated in the line |
+| 1 | A part naming the other year and another limit could be dropped whole | the line keeps "every other part, including a condition or comparison that names" the other year |
+| 1 | The new case and "no main figure" (the case the frozen step used for both T topics in every send) had no order | the case says it applies "rather than the first, since each year has its main figure" |
+| 1 | The example's "2026 as its reference" contradicted the reference rule | removed |
+| 2 | The yearly line, the closing check, the schema's `not_judged` and line 5 did not say which prevails | the line says "where the instructions above differ, this line prevails"; "that value alone is not listed"; "where a part joins the other year's value with another limit, a condition or a comparison, list that limit, condition or comparison" |
+| 3 | My round-2 clause read as a condition ("neither year is picked as the one the outcome names") | reworded as an instruction ("rather than judging only one of the two years as the one the outcome names") |
+| 4 | Both values asked and also compared: is either a base? | "a comparison between the two does not make either a base when the value of each is asked" (system and schema) |
+| 5 | The unchanged closing check ("does it ask one thing … listed in not_judged?") sits beside the new decline on the topic's first request | **not changed:** the closing check has stood beside the seven frozen decline cases. In every stored frozen send of both T topics the model declined under it (9 of 9 and 9 of 9). It reads a written question back, and a decline writes none. Recorded, not answered |
+
+## Growth (characters)
+
+- System text: 9,545 → 10,155 (+610).
+- Schema: 6,116 → 7,308 (+1,192).
+- A yearly re-ask's added line: 431.
+
+**Reasons:**
+- the decline cases become the closed set AGENTS §6 asks for;
+- the system lists the case where the seven are;
+- one example on each side of the boundary replaces an abstract clause;
+- each sentence of the yearly line answers a finding above.
+
+## Left to the probe, not settled by reading
+
+- whether the model names the case on the four C1 topics with an open base year (the control count, `BY`);
+- whether a mixed part keeps its other limit (`LQ`);
+- whether the model follows the yearly line's precedence (`L` on yearly items).
+
+ succeeded in 0ms:
+# The split probe's $0 preparation (council round 161 → round 162), 2026-11-16
+
+Nothing has been sent. The frozen answer-choice step's files are unchanged.
+
+## The population (13 topics; `probe_split.TOPICS`, fixed before any send)
+
+| Group | Topics | Rule |
+|---|---|---|
+| T | week 10-06 c1/clean-12 (global AI capex 2026 and 2027), c1/clean-4 (the five largest hyperscalers' capex 2026 and 2027) | the two stored one-quantity-two-open-years topics, declined in every stored send (DESIGN-REVIEW.md) |
+| M | Stage B u1/clean-5 (AI memory contract prices "through 2026-2027") | the several-products memory topic named there |
+| C1 | fortnight c1/clean-11 and c1/clean-9; Stage B u3/clean-6, acc/clean-10, acc/clean-6 and u2/clean-4 | the census's topics naming exactly two years, every stored send a figure ladder for one of them, most sends first. Derived again by code (`c1_by_rule`), and 4 of the 6 have both years open (an open base year) |
+| C2 | Stage B acc/clean-9, u3/clean-11 | the official gate's two line-4 failures that are not year pairs |
+| C3 | July c1/clean-2 (the Intel stake), c1/clean-11 (Firmus) | the guards |
+
+## The check (`probe_split.py check` → `check-output.txt`, `check-passed.json`)
+
+- **13 of 13** frozen requests equal their stored first request (sha256), with keys in the same order.
+- **13 of 13** split first requests differ from the frozen one only in the schema's `no_ladder` and the system text's decline list
+  (exactly `ladder_split.SYSTEM_REPLACEMENTS`). Each yearly re-ask differs from the split first request only by the yearly line.
+- The **7** stored frozen ladders among them pass the step's checks.
+- On both T topics, a synthetic split decline fits the schema and passes the checks. Three mutants are refused: an ended year, a
+  split named again in a yearly re-ask, and stray periods.
+- **Spend:**
+  - at most 78 calls in the frozen arm and 234 in the split arm;
+  - the sum of their worst-case reserves, if every call were made at its worst: $0.81 and $2.48;
+  - caps of $0.15 and $0.25 (together $0.40), reserved before every attempt;
+  - a guard stops every later attempt once an answer costs more than its reserve;
+  - the stored charges of this step average $0.0008 a call (at most $0.0017), so the probe is expected near $0.10.
+  - The bound holds while every charge stays within its reserve (`test_split_budget.py`).
+
+## The reading and the verdict (DESIGN.md v4 §3, §0b item 4, §0c item 3)
+
+- **`reading_split.py`** builds one Stage A run folder of the items:
+  - every yearly ladder of T and M, each with `split: {asked_year, asked_separately}`;
+  - every C1 ladder of both arms, with `split: null`;
+  - two plants made from stored frozen ladders: `plant|1` asks the base year (u3/clean-6's 2027 question rewritten for 2026, given
+    as a yearly item), and `plant|2` drops a limit (acc/clean-6's "server DRAM" asked as "DRAM").
+  - The key sits outside the repository. Item order is shuffled, and arms are not named.
+- **The briefs:** `stage-a-reader-brief.md` plus `split-brief.md`. `split-brief.md` explains how a yearly item is read, and adds `BY`
+  (asks a base year) and `LQ` (drops a limit). `split-third-reader-brief.md` and `reading_split.py disputes` give the third readers the
+  `BY` and `LQ` points, marks shown as a and b. The gate marks' disputes use Stage A's own collector.
+- **`score_split.py`:** the counts (T at least 2 of 3 each; no control naming the case or changing kind), then the reading's vetoes,
+  under both countings of unresolved points. The verdict is lead, negative, inconclusive or void.
+
+## Proofs
+
+- **Tests:** 13 for the probe (`test_split_probe.py`: the send of both arms through the real runners with a fake transport, the
+  refusal of a changed request, the counts, the reading, the verdicts and the third readers' packet), and 52 for the build.
+- **The whole suite passes:** 346 tests, 256 in the new system's folders, and the frozen checks.
+- **Mutants: 33 of 33** (`all-mutants.txt`). Two were missed at first, and each was caught once a test was added:
+  - a T topic passing with one success;
+  - the third readers seeing which family marked what.
+- **A gap closed:** the made-up yearly answers had written units outside the schema (`USD billion`). The fake model had skipped the
+  schema check that `model.call` makes, so this was never caught. Every made-up answer is now checked against the schema
+  (`test_every_made_up_answer_fits_the_schema_production_validates_against`), and the probe's synthetic split is too.
+- **The prompt audit:** `PROMPT-AUDIT.md`, five blind rounds, the last with no finding the change introduced.
+
+ succeeded in 0ms:
+   - **A $0 test** shows a cap below the parent and yearly total stopping before it is passed, with workers running concurrently.
+
+## 1. The unit, ownership and the writer path
+
+- **The topic:** the parent thesis stays the one topic Steps 1 to 3 know (its id, its links, Step 1's list of open theses, Step 3's
+  library, revisions). No child topic exists upstream, so later matching, revisions and links find the parent as today. This avoids
+  changing Step 3's frozen library (D427).
+- **The views:**
+  - the answer-choice step writes one view per year for the parent, `v12@2026` and `v12@2027`, each with its own year, question,
+    ladder and due day by the existing rules (D414);
+  - each yearly attempt has a ladder row keyed (`thesis_id`, `period`), as §0b item 1 and §0c item 1 specify;
+  - the writer's mapping is `mapping['clean-12'] = ['v12@2026', 'v12@2027']`.
+- **The departure from D397, named:** for this case only, one topic carries one judged question per open year.
+  - D38 (Alex) makes one quantity in two years two views.
+  - D397 (Alex) calls the present behaviour for such a topic "an open defect until splitting is built".
+  - Every other multi-part topic keeps D397's one judged question.
+  - Recorded as a council decision under D439 before any build, reversed on Alex's word.
+- **Evidence:** every statement linked to the parent reaches both yearly views' judges, as it reaches the one view today. Each judge
+  reasons for its own year. That a 2026 statement reaches the 2027 judge, and the reverse, is a property of this design. Its effect on
+  judgements is **not tested by the ladder probe**; it is named as an open question for any later judging test.
+- **Not judged:** as §0b item 2: it depends on which years were written.
+- **Closing:** per view, as today. A statement arriving after one year's view has closed reaches it as a closed view (linked, not
+  judged, counted: the existing behaviour and its test) and reaches the open sibling normally.
+- **Presentation:** the page and `bundle` read ladder rows by view, so each yearly view is an ordinary question with its year. No new
+  state reaches the page. The $0 checks show the library, the detail page and the Idea bundles on a store holding a split parent,
+  unchanged for unsplit topics.
+
+## 2. The boundary and every outcome
+
+| Case | Who decides | What happens |
+|---|---|---|
+| One quantity, both years asked independently, both open | **the model:** typed case `one_quantity_two_periods` with `periods: [Y1, Y2]` | **code:** two distinct years, both this year or next by the step's existing year rules, so the case is accepted; the step is re-asked once per year with the one-line restriction |
+| Either year ended, or beyond next year | — | **code:** the case is refused as malformed; re-asked once (the existing retry), then `refused twice`. Nothing is split |
+| One open year as the question and another open year as its base or reference ("2027 against 2026") | **the model:** it must answer the asked year with the other as reference, as it does in the 20 stored one-year topics | **if the model names the case anyway, code cannot tell.** That is the misuse the probe's controls measure, and it is a stop condition |
+| Two quantities, a second side (D436), a two-thing stake (Intel, Firmus) | the existing main-part rule | not this case; naming it without two open years is malformed (as above) |
+| Several products over two open years | the model may name the case | each yearly re-ask meets the main-part rule for its year and may refuse |
+
+**Every outcome of a split send:**
+- both years write valid ladders, giving two views;
+- one writes and the other refuses or fails validation twice, giving one view and the other year's refusal recorded on its row with its
+  reason. This is not claimed equal to today's behaviour;
+- both refuse or fail, giving no view and both refusals recorded;
+- a re-ask naming the case again is malformed, and `refused twice` (no recursion).
+- **Interrupted:** see §0b item 3. The boundary is article-level, with no resume.
+
+**The schema change is a behaviour change, and it is measured as a new version.** `no_ladder` becomes `{case, reason, periods?}`, with
+`case` a closed set: the existing prose decline cases, transcribed without a new rule, plus `one_quantity_two_periods`. The prompt
+audit and a request diff come before any send.
+
+## 3. The measurement (a product rule, apart from the official gate)
+
+**The probe** (separately reviewed; about $0.10). Topics:
+- T: the 2 development topics, one quantity over two open years;
+- C1: 6 stored topics naming two years and tracking one, including at least 2 with an open base year ("2027 against 2026");
+- C2: 2 second-side topics;
+- C3: the 2 guards, Intel and Firmus;
+- M: the several-products memory topic.
+
+**Arms:** frozen step, 3 sends a topic; new version, 3 sends a topic, with children re-asked as the design says. Same day.
+
+**Counts, fixed now:**
+1. **T, per topic:** a send succeeds when it names the case and both yearly re-asks write valid ladders. A missing, refused or invalid
+   re-ask fails the send. The topic passes with at least 2 of 3 sends succeeding. Both T topics must pass.
+2. **C1, C2, C3, per topic:**
+   - any send of the new version naming the case fails the topic;
+   - an outcome change also fails it: the frozen step's 3 sends agree on their kind (ladder or refusal) and at least 2 of the new
+     version's 3 sends have the other kind;
+   - when the frozen step's sends themselves disagree on kind, only the case rule applies.
+   - Every control topic must pass.
+3. **Readers:** two blind families read every yearly ladder of T and M and the C1 ladders, mixed, with the gate form's marks plus two
+   questions: does this question ask a year that was only a base or reference, and does it lose a qualification of the original
+   topic?
+   - Disagreements go to third readers of both families, as in the gate method.
+   - Planted: one yearly ladder that asks a base year, and one that drops a qualification. A missed plant voids the reading.
+   - A base-year question or a lost qualification settled by both families fails the probe.
+
+**Verdict:** as §0b item 4 and §0c item 3: lead, negative, or no verdict when the reading is void.
+
+**The 44:** the official gate's topics hold no one-quantity-two-open-years topic. Whether a no-change regression read of the 44 may be
+sent under D426's stop is **a council decision before any adoption**, not assumed. If it may not, adoption is decided with that limit
+stated.
+
+## 4. The stop condition
+
+Close the candidate if any of these happens:
+- the model names the case on any control;
+- a yearly question asks a base or reference year;
+- a qualification is lost;
+- the guards break;
+- the $0 checks show any reader of `clean_ladders`, the page or the Idea path changing what it shows for an unsplit topic.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files docs/research/2026-11-14-use-acceptance/splitting | rg 'score_split|split-brief|probe|mutant'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/splitting/score_split.py
+docs/research/2026-11-14-use-acceptance/splitting/split-brief.md
+docs/research/2026-11-14-use-acceptance/splitting/all-mutants.txt
+docs/research/2026-11-14-use-acceptance/splitting/test_split_probe.py
+docs/research/2026-11-14-use-acceptance/splitting/probe-mutants.txt
+docs/research/2026-11-14-use-acceptance/splitting/probe_split.py
+docs/research/2026-11-14-use-acceptance/splitting/split-mutants.txt
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/probe_split.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/reading_split.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/score_split.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The split probe's reading folder (DESIGN.md v4 §3 item 3): the items the two reader families read, blind, in one Stage A run folder,
+so the Stage A collector and accounting read it unchanged.
+
+Items: every yearly ladder of T and M (the split arm's children), every C1 ladder of both arms, and two plants. Yearly items carry
+`split` ({asked_year, asked_separately}); every other item carries `split: null`. The arm and the topic are in the key only, outside
+the repository. The plants are stored frozen ladders edited in one way each, with the field a reader must mark `yes`:
+- `plant|1` asks the base year: a stored 2027 ladder of a topic that tracks 2027 against 2026, rewritten for 2026 and given as that
+  topic's 2026 yearly item (`BY`);
+- `plant|2` drops a limit: a stored server-DRAM ladder whose question asks DRAM prices (`LQ`).
+
+  python3 reading_split.py <probe data folder> <key folder outside the repository>
+  python3 reading_split.py disputes <reading folder> <key path>        # the third readers' BY and LQ packet
+
+Writes <probe data folder>/reading/ (send-{1,2,3}/outcomes.jsonl, cases.json, readers/packet-<n>.json) and, in the key folder,
+key.json and plants-expected.json. Refuses an existing reading folder or a key folder inside the repository.
+"""
+import copy
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+sys.path[:0] = [str(HERE), str(ROOT / 'clean-arch/step4-2026-11-10/stage_a'), str(ROOT / 'src')]
+import build_reader_packets  # noqa: E402
+import probe_split  # noqa: E402
+from hivemind import universe  # noqa: E402
+
+READ_YEARLY = ('T', 'M')
+READ_BOTH_ARMS = ('C1',)
+ITEMS_A_PACKET = build_reader_packets.ITEMS_A_PACKET
+SHUFFLE_SEED = 20261117
+PLANTS = {   # plant: (source, stored case, the edit, the field a reader must mark yes)
+    'plant|1': ('stage-b', 'u3/clean-6', 'base year', 'BY'),
+    'plant|2': ('stage-b', 'acc/clean-6', 'limit dropped', 'LQ'),
+}
+
+
+def group_of():
+    return {f'{source}:{name}': group for group, entries in probe_split.TOPICS.items() for source, name in entries}
+
+
+def rows_of(arm_folder):
+    return [json.loads(line) for pass_folder in sorted(Path(arm_folder).glob('send-*'))
+            for line in (pass_folder / 'outcomes.jsonl').read_text().splitlines() if line]
+
+
+def replace_year(value, old, new):
+    """Every string in a ladder or view with one year written for another."""
+    if isinstance(value, str):
+        return value.replace(old, new)
+    if isinstance(value, list):
+        return [replace_year(item, old, new) for item in value]
+    if isinstance(value, dict):
+        return {key: replace_year(item, old, new) for key, item in value.items()}
+    return value
+
+
+def plants():
+    """(rows, cases, expected): the two planted items as outcome rows of pass 1, their cases, and the field each must be marked yes."""
+    rows, cases, expected = [], [], {}
+    topics = {f'{source}:{name}': case for _, source, name, case in probe_split.load_topics()}
+    for plant, (source, name, edit, field) in PLANTS.items():
+        stored = copy.deepcopy(probe_split.stored_first(source, name))
+        if stored['status'] != 'ladder':
+            raise SystemExit(f'{plant}: the stored send of {source}:{name} wrote no ladder')
+        answer, view = stored['answer'], stored['view']
+        split = None
+        if edit == 'base year':
+            if view['year'] != '2027' or '2027' not in view['question']:
+                raise SystemExit(f'{plant}: the stored ladder of {name} is not a 2027 question')
+            answer, view = replace_year(answer, '2027', '2026'), replace_year(view, '2027', '2026')
+            split = {'asked_year': '2026', 'asked_separately': '2027'}
+        else:
+            if 'server DRAM' not in view['question']:
+                raise SystemExit(f'{plant}: the stored question of {name} does not name server DRAM')
+            view = dict(view, question=view['question'].replace('server DRAM', 'DRAM'))
+            answer = copy.deepcopy(answer)
+            answer['ladder']['question'] = answer['ladder']['question'].replace('server DRAM', 'DRAM')
+        rows.append(dict(stored, case=plant, **{'pass': 1}, answer=answer, view=view, split=split))
+        cases.append(dict(topics[f'{source}:{name}'], case=plant))
+        expected[plant] = {'field': field, 'expected': 'yes'}
+    return rows, cases, expected
+
+
+def reading_rows(probe_folder):
+    """(rows, cases): every item to read as an outcome row (with `split`), and a case under each row's name."""
+    groups, topics = group_of(), {f'{source}:{name}': case for _, source, name, case in probe_split.load_topics()}
+    rows, cases = [], {}
+    for arm in probe_split.ARMS:
+        for row in rows_of(Path(probe_folder) / arm):
+            topic = row['case'].split('|', 1)[1]
+            group = groups[topic]
+            if arm == 'split' and group in READ_YEARLY and row['status'] == 'split':
+                for year, child in row['children'].items():
+                    if child['status'] != 'ladder':
+                        continue
+                    other = next(period for period in row['periods'] if period != year)
+                    name = f"{row['case']}@{year}"
+                    rows.append({'case': name, 'pass': row['pass'], 'status': 'ladder', 'reason': child['reason'], 'requests': child['requests'],
+                                 'answer': child['answer'], 'passage': child['passage'], 'view': child['view'],
+                                 'split': {'asked_year': year, 'asked_separately': other}})
+                    cases[name] = dict(topics[topic], case=name)
+            elif group in READ_BOTH_ARMS and row['status'] == 'ladder':
+                rows.append(dict(row, split=None))
+                cases[row['case']] = dict(topics[topic], case=row['case'])
+    planted, planted_cases, _ = plants()
+    rows += planted
+    cases.update({case['case']: case for case in planted_cases})
+    return rows, cases
+
+
+def prep(probe_folder, key_folder):
+    probe_folder, key_folder = Path(probe_folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    reading = probe_folder / 'reading'
+    reading.mkdir(exist_ok=False)
+    rows, cases = reading_rows(probe_folder)
+    for pass_number in probe_split.PASSES:
+        (reading / f'send-{pass_number}').mkdir()
+        (reading / f'send-{pass_number}' / 'outcomes.jsonl').write_text(
+            ''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows if row['pass'] == pass_number))
+    (reading / 'cases.json').write_text(json.dumps(list(cases.values()), ensure_ascii=False, indent=1) + '\n')
+    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+    order = sorted(rows, key=lambda row: (row['case'], row['pass']))
+    random.Random(SHUFFLE_SEED).shuffle(order)
+    (reading / 'readers').mkdir()
+    key, packets = {}, []
+    for number, row in enumerate(order, start=1):
+        key[str(number)] = [row['case'], row['pass']]
+        if (number - 1) % ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], research_list), 'split': row['split']})
+    for packet_number, packet in enumerate(packets, start=1):
+        (reading / 'readers' / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'plants-expected.json').write_text(json.dumps(plants()[2], indent=1) + '\n')
+    if sorted(map(tuple, key.values())) != sorted((row['case'], row['pass']) for row in rows) or len(set(map(tuple, key.values()))) != len(rows):
+        raise SystemExit('check failed: not every item is in the key exactly once')
+    yearly = sum(1 for row in rows if row['split'] and not row['case'].startswith('plant|'))
+    print(f'{len(rows)} items in {len(packets)} packets: {yearly} yearly, {len(rows) - yearly - len(PLANTS)} C1, {len(PLANTS)} plants')
+    return reading
+
+
+SIDES_SEED = 20261118
+
+
+def disputes(reading, key_path):
+    """The third readers' BY and LQ packet (split-third-reader-brief.md): every point where the two first readers differ or either
+    cannot tell, plants left out (a missed plant voids the reading instead). Each point carries the item as the first readers saw it,
+    and the two marks as `a` and `b`, drawn per point from a fixed seed. Writes <reading>/third-reader/split-packet-1.json, refusing
+    an existing one; returns the number of points."""
+    import collect_readings as collector
+    import score_split
+    reading = Path(reading)
+    _, item_of, outcomes, readers, _ = collector.read_rows(reading, key_path)
+    packets = {item['item']: item for packet in sorted((reading / 'readers').glob('packet-*.json')) for item in json.loads(packet.read_text())}
+    points = []
+    for send, field in sorted(score_split.field_points(outcomes, readers, item_of), key=lambda point: (item_of[point[0]], point[1])):
+        values = [readers[reader][send][field] for reader in collector.FAMILIES]
+        random.Random(f'{SIDES_SEED}|{send[0]}|{send[1]}|{field}').shuffle(values)
+        number = item_of[send]
+        points.append({'id': f'{number}-{field}', 'item': packets[number], 'field': field, 'marks': {'a': values[0], 'b': values[1]}})
+    folder = reading / 'third-reader'
+    folder.mkdir(exist_ok=True)
+    target = folder / 'split-packet-1.json'
+    if target.exists():
+        raise SystemExit(f'{target} exists: refused')
+    target.write_text(json.dumps(points, indent=1, ensure_ascii=False) + '\n')
+    return len(points)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 4 and sys.argv[1] == 'disputes':
+        print(disputes(sys.argv[2], sys.argv[3]), 'points')
+    elif len(sys.argv) == 3:
+        prep(sys.argv[1], sys.argv[2])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+"""The period split's probe (DESIGN.md v4 §3 and §0c item 4; D616–D620): the frozen answer-choice step and the split version, three
+sends each, on 13 stored topics. Nothing here judges a ladder; `score_split.py` applies the counts and the reading's verdict.
+
+`check` ($0) builds every request with the production builder and requires:
+- the population as fixed below, C1 derived again from the two-year census by its written rule;
+- each control request equal to the topic's stored first request (sha256 over sorted keys) and its keys in the stored order;
+- each split first request equal to the control except the schema's `no_ladder` and the system text's decline list (exactly
+  `ladder_split.SYSTEM_REPLACEMENTS`), and each yearly re-ask equal to the split first
+  request except the yearly line after the closing text;
+- every stored control answer that wrote answer choices accepted by the step's checks; a synthetic split refusal of each T topic
+  accepted, and mutants (an ended year, a split named again in a yearly re-ask, stray periods) refused;
+- the spend: the most calls the arms can make, the sum of their worst-case reserves, the stored charges of the same step, and each
+  arm's cap (together $0.40).
+It then writes a record binding the code and request files, the population and every request's sha256.
+
+`send` rebuilds every request, refuses unless each equals the record, and sends the frozen arm through Stage A's runner and the split
+arm through `run_split` (the same runner with the split step), each under its own cap of the answer-choice runner's limit, behind a
+guard that stops every later attempt once an answer costs more than its reserve.
+
+  python3 probe_split.py check
+  python3 probe_split.py send <new data folder>
+"""
+import concurrent.futures
+import copy
+import hashlib
+import json
+import os
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+STAGE_A = ROOT / 'clean-arch/step4-2026-11-10/stage_a'
+LADDER = ROOT / 'clean-arch/step4-2026-11-10/ladder'
+sys.path[:0] = [str(STAGE_A), str(LADDER), str(ROOT / 'src'), str(ROOT / 'clean-arch/e2e-2026-11-09')]
+import budget  # noqa: E402
+import ladder_split  # noqa: E402
+import ladder_step  # noqa: E402
+import model_calls  # noqa: E402
+import stage_a  # noqa: E402
+from hivemind import extraction, model, universe  # noqa: E402
+
+DATA = ROOT / 'poc/data'
+SOURCES = {   # source: (its cases files, its stored Stage A folder holding the frozen step's sends of those cases)
+    'fortnight': ([DATA / 'clean-carried-run-2026-11-16/c1/cases/cases.json'], DATA / 'clean-carried-run-2026-11-16/stage-a'),
+    'week-10-06': ([DATA / 'clean-second-week-2026-11-15/week-continued/c1/cases/cases.json'], DATA / 'clean-second-week-2026-11-15/week-continued/stage-a'),
+    'july': ([DATA / f'clean-e2e-full-2026-11-13/c{n}/cases/cases.json' for n in (1, 2, 3)], DATA / 'clean-e2e-full-2026-11-13/stage-a'),
+    'stage-b': ([STAGE_A / 'cases.json'], DATA / 'clean-ladder-stage-a-2026-11-10/run-4'),
+}
+# The population (DESIGN.md v4 §3), fixed before any send:
+# - T: the two stored topics asking one quantity for two open years, refused in every stored send (DESIGN-REVIEW.md, "The cases");
+# - M: the several-products memory topic named there, also refused in every send;
+# - C1: by the rule in `c1_by_rule` (stored topics naming exactly two years, every stored send a figure ladder for one of them, most
+#   stored sends first), at least two of them with both years open on the item's day;
+# - C2: the official gate's two line-4 failures that are not year pairs (D436's own example and a spending split; DESIGN-REVIEW.md);
+# - C3: the guards, the Intel stake and Firmus.
+TOPICS = {
+    'T': [('week-10-06', 'c1/clean-12'), ('week-10-06', 'c1/clean-4')],
+    'M': [('stage-b', 'u1/clean-5')],
+    'C1': [('fortnight', 'c1/clean-11'), ('fortnight', 'c1/clean-9'), ('stage-b', 'u3/clean-6'), ('stage-b', 'acc/clean-10'),
+           ('stage-b', 'acc/clean-6'), ('stage-b', 'u2/clean-4')],
+    'C2': [('stage-b', 'acc/clean-9'), ('stage-b', 'u3/clean-11')],
+    'C3': [('july', 'c1/clean-2'), ('july', 'c1/clean-11')],
+}
+CENSUS = HERE / 'two-year-topics.jsonl'
+ARMS = ('frozen', 'split')
+PASSES = [1, 2, 3]
+CAPS = {'frozen': 0.15, 'split': 0.25}          # together the probe's ceiling, $0.40 (DESIGN.md v4 §0c item 4)
+RECORD = HERE / 'check-passed.json'
+CODE_FILES = [LADDER / 'ladder_split.py', LADDER / 'ladder_step.py', LADDER / 'candidate-system.txt', LADDER / 'candidate-closing.txt',
+              LADDER / 'candidate-schema.json', STAGE_A / 'stage_a.py', Path(__file__)]
+
+
+def c1_by_rule():
+    """C1's written rule over the two-year census: topics naming exactly two years whose every stored send wrote a figure ladder, most
+    stored sends first (ties in census order), each found once in the probe's sources; the first six."""
+    candidates = []
+    for order, line in enumerate(CENSUS.read_text().splitlines()):
+        topic = json.loads(line)
+        if len(topic['years']) == 2 and {send['kind'] for send in topic['sends']} == {'figure'}:
+            candidates.append((-len(topic['sends']), order, topic['description']))
+    chosen = []
+    for _, _, description in sorted(candidates):
+        found = [(source, case['case']) for source, (paths, _) in SOURCES.items() for path in paths
+                 for case in json.loads(path.read_text()) if case['thesis']['description'] == description]
+        if len(found) != 1:
+            raise SystemExit(f'C1: {len(found)} stored cases carry "{description[:60]}", not one')
+        chosen.append(found[0])
+    return chosen[:6]
+
+
+def open_years(case, research_list):
+    """This year and next as of the item's day, written as a calendar year (the step's own year rules)."""
+    this = int(case['item']['publication_date'][:4])
+    return [str(this), str(this + 1)]
+
+
+def load_topics():
+    """(group, source, stored case name, case) for every topic; refuses a topic missing or found twice."""
+    found = []
+    for group, entries in TOPICS.items():
+        for source, name in entries:
+            cases = [case for path in SOURCES[source][0] for case in json.loads(path.read_text()) if case['case'] == name]
+            if len(cases) != 1:
+                raise SystemExit(f'{source} {name}: {len(cases)} cases found, not one')
+            found.append((group, source, name, cases[0]))
+    return found
+
+
+def arm_cases(topics, arm):
+    """Each arm's cases under names unique across arms ('<arm>|<source>:<case>'); the name is a label only, never sent."""
+    return [dict(case, case=f'{arm}|{source}:{name}') for _, source, name, case in topics]
+
+
+def texts_of(arm):
+    frozen = stage_a.request_texts()
+    return frozen if arm == 'frozen' else dict(frozen, system=ladder_split.split_system(frozen['system']),
+                                                 schema=ladder_split.split_schema(frozen['schema']))
+
+
+def built(case, texts, research_list, closing=None):
+    user = ladder_step.user_text(stage_a.payload_for(case, research_list), texts['closing'] if closing is None else closing)
+    return model.build_request(stage_a.SETTING, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def yearly_closing(texts, year, other):
+    return texts['closing'] + '\n\n' + ladder_split.RESTRICTION.format(year=year, other=other)
+
+
+def key_order(value):
+    if isinstance(value, dict):
+        return [(key, key_order(item)) for key, item in value.items()]
+    if isinstance(value, list):
+        return [key_order(item) for item in value]
+    return None
+
+
+def stored_first(source, name):
+    rows = [json.loads(line) for line in (SOURCES[source][1] / 'send-1/outcomes.jsonl').read_text().splitlines() if line]
+    rows = [row for row in rows if row['case'] == name and row['pass'] == 1]
+    if len(rows) != 1:
+        raise SystemExit(f'{source} {name}: {len(rows)} stored first sends, not one')
+    return rows[0]
+
+
+def frozen_check(case, research_list):
+    def check(answer):
+        return ladder_step.check_answer(answer, thesis=case['thesis'], article=case['item'], company=stage_a.COMPANY, research_list=research_list,
+                                        repair_quote=extraction.repair_quote, normalise=extraction.normalise, quote_tokens=extraction._quote_tokens,
+                                        beyond_next_year=extraction.beyond_next_year, binding_horizon_days=extraction.BINDING_HORIZON_DAYS)
+    return check
+
+
+def split_check_for(case, research_list):
+    return lambda year: ladder_split.checker(frozen_check(case, research_list), article_day=case['item']['publication_date'],
+                                             company=stage_a.COMPANY, research_list=research_list, year=year)
+
+
+def requests_of(topics, research_list):
+    """Every request the arms can send first: the frozen request, the split first request and each yearly re-ask, by sha256."""
+    texts = {arm: texts_of(arm) for arm in ARMS}
+    out = {'frozen': {}, 'split': {}, 'yearly': {}}
+    for _, source, name, case in topics:
+        out['frozen'][f'{source}:{name}'] = model.request_identity(built(case, texts['frozen'], research_list))[1]
+        out['split'][f'{source}:{name}'] = model.request_identity(built(case, texts['split'], research_list))[1]
+        this, following = open_years(case, research_list)
+        for year, other in ((this, following), (following, this)):
+            closing = yearly_closing(texts['split'], year, other)
+            out['yearly'][f'{source}:{name}@{year}'] = model.request_identity(built(case, texts['split'], research_list, closing))[1]
+    return out
+
+
+def code_digest():
+    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+
+
+def check():
+    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+    texts = {arm: texts_of(arm) for arm in ARMS}
+    failures = []
+    derived = c1_by_rule()
+    if derived != TOPICS['C1']:
+        failures.append(f'C1 by its rule is {derived}, not the fixed list')
+    topics = load_topics()
+    census = {json.loads(line)['description']: json.loads(line)['years'] for line in CENSUS.read_text().splitlines()}
+    both_open = [name for group, _, name, case in topics if group == 'C1' and census[case['thesis']['description']] == open_years(case, research_list)]
+    print(f'C1 whose two named years are both open on the item\'s day (census years): {both_open}')
+    if len(both_open) < 2:
+        failures.append('fewer than two C1 topics with an open base year')
+    judged = 0
+    for group, source, name, case in topics:
+        control, split = built(case, texts['frozen'], research_list), built(case, texts['split'], research_list)
+        stored = stored_first(source, name)
+        same = model.request_identity(control)[1] == stored['requests'][0]['request_sha256']
+        without = [copy.deepcopy(request) for request in (control, split)]
+        for request in without:
+            del request['response_format']['json_schema']['schema']['properties']['no_ladder']
+        frozen_system = texts['frozen']['system']
+        system_index = next(i for i, message in enumerate(control['messages']) if message['content'] == frozen_system)
+        without[1]['messages'][system_index]['content'] = frozen_system if split['messages'][system_index]['content'] == ladder_split.split_system(frozen_system) else None
+        only_schema = (without[0] == without[1] and key_order(without[0]) == key_order(without[1]) and texts['split']['system'] != frozen_system
+                       and split['response_format']['json_schema']['schema']['properties']['no_ladder'] == texts['split']['schema']['properties']['no_ladder'])
+        this, following = open_years(case, research_list)
+        yearly_ok = True
+        for year, other in ((this, following), (following, this)):
+            yearly = built(case, texts['split'], research_list, yearly_closing(texts['split'], year, other))
+            first_user, yearly_user = split['messages'][-1]['content'], yearly['messages'][-1]['content']
+            line = '\n\n' + ladder_split.RESTRICTION.format(year=year, other=other)
+            body = copy.deepcopy(yearly)
+            body['messages'][-1]['content'] = first_user
+            yearly_ok = yearly_ok and body == split and first_user.count(texts['split']['closing']) == 1 and \
+                yearly_user == first_user.replace(texts['split']['closing'], texts['split']['closing'] + line)
+        answer_state = f"stored send '{stored['status']}'"
+        if stored['status'] == 'ladder':
+            reasons, _ = frozen_check(case, research_list)(ladder_step.parse_exactly(stored['requests'][-1]['answer_text']))
+            judged += 1
+            answer_state = 'stored ladder accepted' if reasons == [] else f'STORED LADDER REFUSED: {reasons}'
+        print(f'{group:3} {source}:{name:13} control equals stored: {same}; split differs only in no_ladder and the system decline list: {only_schema}; '
+              f'yearly re-asks differ only by the line: {yearly_ok}; {answer_state}')
+        if not (same and only_schema and yearly_ok) or 'REFUSED' in answer_state:
+            failures.append(f'{source}:{name}')
+    for _, source, name, case in (t for t in topics if t[0] == 'T'):
+        check_for = split_check_for(case, research_list)
+        this, following = open_years(case, research_list)
+
+        def answer(no_ladder):
+            return ladder_step.parse_exactly(json.dumps({'no_ladder': no_ladder, 'ladder': None}))
+        synthetic = answer({'case': ladder_split.SPLIT_CASE, 'reason': 'one quantity for each year', 'periods': [this, following]})
+        valid = model.check_schema(json.loads(json.dumps(synthetic, default=float)), texts['split']['schema']) + check_for(None)(synthetic)[0]
+        ended = check_for(None)(answer({'case': ladder_split.SPLIT_CASE, 'reason': 'x', 'periods': [str(int(this) - 1), this]}))[0]
+        again = check_for(this)(answer({'case': ladder_split.SPLIT_CASE, 'reason': 'x', 'periods': [this, following]}))[0]
+        stray = check_for(None)(answer({'case': 'no_main', 'reason': 'x', 'periods': [this, following]}))[0]
+        print(f'T {source}:{name}: synthetic split {valid or "accepted"}; mutants refused: ended year {bool(ended)}, '
+              f'split again in a yearly re-ask {bool(again)}, stray periods {bool(stray)}')
+        if valid or not (ended and again and stray):
+            failures.append(f'synthetic or mutant answers of {source}:{name}')
+    sends = len(topics) * len(PASSES)
+    calls = {'frozen': sends * 2, 'split': sends * 2 * 3}          # a send and its one resend; the split adds two yearly re-asks, each resent
+    worst = {arm: sum(budget.worst_cost(built(case, texts[arm], research_list)) for *_, case in topics) * len(PASSES) * (calls[arm] // sends)
+             for arm in ARMS}
+    print(f'topics {len(topics)}; stored ladders judged {judged}; sends {sends} an arm; most calls {calls}; the sum of worst-case reserves '
+          f'if every call were made at its worst {{{", ".join(f"{a}: ${w:.2f}" for a, w in worst.items())}}}; caps {CAPS} '
+          f'(${sum(CAPS.values()):.2f}); each attempt reserved before it is sent, so the caps hold while every charge stays within its reserve')
+    if failures or len(topics) != 13:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': requests_of(topics, research_list)}, indent=1) + '\n')
+    print(f'check passed; record {RECORD.name}')
+    return 0
+
+
+def run_split(cases, passes, folder, cap_usd, *, research_list, texts, transport=None, workers=8):
+    """`stage_a.run` with the split step: the same folder layout, limit, archives, labels and outcome rows; a split send's row adds
+    `periods` and `children` (each year's outcome with its view, built as Stage A builds one)."""
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=False)
+    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+    checksum = hashlib.sha256(json.dumps({'system': texts['system'], 'closing': texts['closing'], 'schema': texts['schema'],
+                                          'setting': [stage_a.SETTING.model, stage_a.SETTING.reasoning_effort, stage_a.SETTING.max_output_tokens]},
+                                         ensure_ascii=False).encode()).hexdigest()[:16]
+    call_config = SimpleNamespace(provider='openai', version='clean-ladder-split-probe', checksum=checksum)
+    archives, outcome_files = {}, {}
+    for pass_number in passes:
+        (folder / f'send-{pass_number}').mkdir()
+        archives[pass_number] = model.Archive(str(folder / f'send-{pass_number}' / 'archive.sqlite'))
+        outcome_files[pass_number] = folder / f'send-{pass_number}' / 'outcomes.jsonl'
+    write_lock, written = threading.Lock(), []
+
+    def view_of(outcome, case):
+        if outcome['status'] != 'ladder':
+            return None
+        return ladder_step.write_view(outcome['answer']['ladder'], outcome['passage'], thesis=case['thesis'],
+                                      article_day=case['item']['publication_date'], company=stage_a.COMPANY, research_list=research_list)
+
+    def work(job):
+        case, pass_number = job
+        labelled = SimpleNamespace(request_number=0)
+        labelled.send = lambda provider, request: limit.send_labelled(f"{case['case']}|{pass_number}|{labelled.request_number}", provider, request)
+        call_model = model_calls.model_caller(model, archives[pass_number], call_config, stage_a.SETTING, labelled)
+
+        def counted_call(system_text, user_text, schema):
+            labelled.request_number += 1
+            return call_model(system_text, user_text, schema)
+        try:
+            outcome = ladder_split.ladder_for_thesis_split(stage_a.payload_for(case, research_list), system_text=texts['system'],
+                                                           closing_text=texts['closing'], schema=texts['schema'], call_model=counted_call,
+                                                           check_for=split_check_for(case, research_list))
+            row = {'case': case['case'], 'pass': pass_number, 'status': outcome['status'], 'reason': outcome['reason'],
+                   'requests': outcome['requests'], 'answer': outcome['answer'], 'passage': outcome['passage'], 'view': view_of(outcome, case)}
+            if outcome['status'] == 'split':
+                row['periods'] = outcome['periods']
+                row['children'] = {year: dict(child, view=view_of(child, case)) for year, child in outcome['children'].items()}
+            with write_lock:
+                with outcome_files[pass_number].open('a') as handle:
+                    handle.write(ladder_step.as_json(row) + '\n')
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                written.append((case['case'], pass_number, outcome['status']))
+        except (stage_a.Stopped, budget.OverBudget):
+            return
+        except Exception as error:                      # not an answer's own fault: stop every worker
+            limit.stop(f"{case['case']} pass {pass_number}: {type(error).__name__}: {error}")
+            return
+
+    jobs = [(case, pass_number) for pass_number in passes for case in cases]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(work, jobs))
+    return written, limit, len(jobs)
+
+
+class BreachGuard:
+    """The transport each attempt goes through. An answer whose reported cost is above its attempt's worst-case reserve is returned
+    (so the ledger charges it), and no new attempt is sent after it: each raises `stage_a.Stopped`."""
+
+    def __init__(self, transport=None):
+        self.transport = transport or (lambda provider, request: model.openai_transport(provider, request, max_attempts=1))
+        self.breaches, self.lock = [], threading.Lock()
+
+    def __call__(self, provider, request):
+        with self.lock:
+            if self.breaches:
+                raise stage_a.Stopped('a breach of an attempt reserve was seen')
+        response = self.transport(provider, request)
+        charged, reserve = budget.cost(request, response), budget.worst_cost(request)
+        if charged is not None and charged > reserve:
+            with self.lock:
+                self.breaches.append((round(charged, 6), round(reserve, 6)))
+        return response
+
+
+def over_reserve(spend_path):
+    reserves, out = {}, []
+    for line in Path(spend_path).read_text().splitlines():
+        entry = json.loads(line)
+        if 'reserve' in entry:
+            reserves[entry['attempt']] = entry['reserve']
+        elif entry['charge'] > reserves[entry['attempt']] + 1e-12:
+            out.append((entry['attempt'], entry['charge'], reserves[entry['attempt']]))
+    return out
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+    topics = load_topics()
+    if requests_of(topics, research_list) != record['requests']:
+        raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), BreachGuard(transport)
+    for arm in ARMS:
+        cases, texts = arm_cases(topics, arm), texts_of(arm)
+        runner = stage_a.run if arm == 'frozen' else run_split
+        written, limit, job_count = runner(cases, PASSES, folder / arm, CAPS[arm], research_list=research_list, texts=texts, transport=guard)
+        (folder / arm / 'cases.json').write_text(json.dumps(cases, ensure_ascii=False, indent=1) + '\n')
+        known, in_full, _ = stage_a.ledger_total(folder / arm / 'spend.jsonl')
+        over = over_reserve(folder / arm / 'spend.jsonl')
+        print(f'{arm}: {len(written)} of {job_count} sends have an outcome; spent ${known + in_full:.4f}; attempts charged above their reserve: {len(over)}')
+        if over or guard.breaches:
+            raise SystemExit(f'{arm} BREACH: ledger {over}; seen at the transport {guard.breaches}')
+        if limit.stopped or len(written) != job_count:
+            raise SystemExit(f'{arm} STOPPED: {limit.stop_reason}. NOT MEASURED.')
+    return 0
+
+
+if __name__ == '__main__':
+    arguments = sys.argv[1:]
+    mode = arguments[0] if arguments else ''
+    sys.exit(check() if mode == 'check' else send(arguments[1]) if mode == 'send' and len(arguments) == 2 else f'usage: {__doc__}')
+
+ succeeded in 0ms:
+"""The split probe's verdict ($0; it judges nothing itself): DESIGN.md v4 §3's counts, then §0b item 4's reading rule with §0c item 3's
+two countings.
+
+Counts, from the two arms' outcomes:
+- T, per topic: a send succeeds when it splits and both years write a ladder; the topic passes with at least 2 of 3; both must pass.
+- C1, C2 and C3, per topic: it fails when any split send names the split case, or when the frozen step's 3 sends agree on their kind
+  (ladder or not) and at least 2 of the split arm's 3 have another.
+- M is reported.
+
+The reading (reading_split.py's folder, the Stage A form plus `BY` and `LQ`, split-brief.md): each mark is settled from the two first
+readers where they agree, else from the two third readers where they agree, else counted for the answer and then against it.
+`BY` and `LQ` points go to the third readers when the first readers differ or either cannot tell, in
+`third-reader/split-rulings-<family>-*.jsonl` lines {"id": "<item>-BY", "ruling": "yes"|"no"|"cannot_tell"}.
+- Vetoes: on a yearly item of T or M, a hard-line mark (Q, O, R, L, N) failing, `BY` yes or `LQ` yes; on a split-arm C1 item, `BY`
+  or `LQ` yes, or a hard-line mark failing that no frozen-arm item of the same topic fails.
+- A plant not marked `yes` in its field by a first reader voids the reading; so does any missing or invalid row or ruling.
+
+The verdict: negative when a count fails; void when the reading is void; otherwise lead when no veto holds under either counting,
+negative when one holds under both, inconclusive when it holds under one.
+
+  python3 score_split.py <probe data folder> <key folder>
+"""
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+sys.path[:0] = [str(HERE), str(ROOT / 'clean-arch/step4-2026-11-10/stage_a')]
+import probe_split  # noqa: E402   (first: it puts the ladder step's folder on the path)
+import accounting  # noqa: E402
+import collect_readings as collector  # noqa: E402
+import ladder_split  # noqa: E402
+import reading_split  # noqa: E402
+
+FIELDS = ('BY', 'LQ')
+FIELD_VALUES = ('yes', 'no', 'cannot_tell')
+HARD = ('Q', 'O', 'R', 'L', 'N')
+CONTROLS = ('C1', 'C2', 'C3')
+
+
+def names_case(row):
+    """Whether any answer the split arm's topic call got names the split case (a refused one included)."""
+    for request in row['requests']:
+        try:
+            no_ladder = json.loads(request.get('answer_text') or 'null').get('no_ladder')
+        except (ValueError, AttributeError):
+            continue
+        if isinstance(no_ladder, dict) and no_ladder.get('case') == ladder_split.SPLIT_CASE:
+            return True
+    return False
+
+
+def kind(row):
+    return {'ladder': 'ladder', 'split': 'split'}.get(row['status'], 'no ladder')
+
+
+def counts(probe_folder):
+    groups = reading_split.group_of()
+    sends = {arm: {(row['case'].split('|', 1)[1], row['pass']): row for row in reading_split.rows_of(Path(probe_folder) / arm)}
+             for arm in probe_split.ARMS}
+    expected = {(topic, n) for topic in groups for n in probe_split.PASSES}
+    for arm, found in sends.items():
+        if set(found) != expected:
+            raise SystemExit(f'NOT SCORED: the {arm} arm does not hold every topic and pass once')
+    out = {'T': {}, 'controls': {}, 'M': {}}
+    for topic, group in groups.items():
+        split_rows = [sends['split'][(topic, n)] for n in probe_split.PASSES]
+        if group == 'T':
+            succeeded = [row['pass'] for row in split_rows if row['status'] == 'split' and len(row['children']) == 2
+                         and all(child['status'] == 'ladder' for child in row['children'].values())]
+            out['T'][topic] = {'sends succeeding': succeeded, 'passes': len(succeeded) >= 2}
+        elif group in CONTROLS:
+            frozen_kinds = [kind(sends['frozen'][(topic, n)]) for n in probe_split.PASSES]
+            split_kinds = [kind(row) for row in split_rows]
+            named = [row['pass'] for row in split_rows if names_case(row)]
+            changed = len(set(frozen_kinds)) == 1 and sum(k != frozen_kinds[0] for k in split_kinds) >= 2
+            out['controls'][topic] = {'group': group, 'frozen kinds': frozen_kinds, 'split kinds': split_kinds, 'sends naming the case': named,
+                                      'kind changed': changed, 'kind rule exercised': len(set(frozen_kinds)) == 1, 'passes': not named and not changed}
+        else:
+            out['M'][topic] = [{'status': row['status'], 'years': {y: c['status'] for y, c in (row.get('children') or {}).items()}} for row in split_rows]
+    out['pass'] = all(entry['passes'] for entry in out['T'].values()) and all(entry['passes'] for entry in out['controls'].values())
+    return out
+
+
+def field_rulings(reading):
+    given = {}
+    for family in collector.FAMILIES.values():
+        for answer_file in sorted((Path(reading) / 'third-reader').glob(f'split-rulings-{family}-*.jsonl')):
+            for line in answer_file.read_text().splitlines():
+                line = line.strip()
+                if not line or line.startswith('```'):
+                    continue
+                try:
+                    ruling = json.loads(line)
+                    point, value = ruling['id'], ruling['ruling']
+                except (ValueError, KeyError, TypeError):
+                    raise SystemExit(f'VOID: {answer_file.name}: a line that is not a ruling: {line[:80]}')
+                if value not in FIELD_VALUES or family in given.get(point, {}):
+                    raise SystemExit(f'VOID: {answer_file.name}: {point} is ruled {value!r} or ruled twice by {family}')
+                given.setdefault(point, {})[family] = value
+    return given
+
+
+def needs_ruling(first, second):
+    return first != second or 'cannot_tell' in (first, second)
+
+
+def field_points(outcomes, readers, item_of):
+    return [(send, field) for send in outcomes if not send[0].startswith('plant|') for field in FIELDS
+            if needs_ruling(readers['reader 1'][send][field], readers['reader 2'][send][field])]
+
+
+def load_reading(reading, key_path, plants_path):
+    """Everything the verdict reads; raises SystemExit('VOID: …') for an incomplete or invalid reading or a missed plant."""
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading, key_path)
+    for reader in collector.FAMILIES:
+        for send in outcomes:
+            row = readers[reader].get(send)
+            if row is not None and any(row.get(field) not in FIELD_VALUES for field in FIELDS):
+                problems[reader]['rows'].append((item_of[send], send, f'BY and LQ are each one of {FIELD_VALUES}'))
+    bad = {reader: found['rows'] or found['unreadable lines'] for reader, found in problems.items() if found['rows'] or found['unreadable lines']}
+    if bad:
+        raise SystemExit(f'VOID: rows missing or not valid: {bad}')
+    expected = json.loads(Path(plants_path).read_text())
+    if set(expected) != set(reading_split.PLANTS) or any((plant, 1) not in outcomes for plant in expected):
+        raise SystemExit('VOID: the plants are not the ones reading_split.py builds')
+    missed = [(plant, reader) for plant, entry in expected.items() for reader in collector.FAMILIES
+              if readers[reader][(plant, 1)][entry['field']] != entry['expected']]
+    if missed:
+        raise SystemExit(f'VOID: a plant was missed: {missed}')
+    both = sorted(collector.FAMILIES.values())
+    families = collector.third_reader_families(reading)
+    if collector.disputes_of(outcomes, readers) and families != both:
+        raise SystemExit(f'VOID: differences need both third-reader families; found {families}')
+    read = {family: collector.read_rulings(reading, item_of, outcomes, readers, family) for family in families}
+    if any(found[1] for found in read.values()):
+        raise SystemExit(f'VOID: third-reader rulings missing: { {family: found[1] for family, found in read.items() if found[1]} }')
+    given = field_rulings(reading)
+    missing = [f'{item_of[send]}-{field}' for send, field in field_points(outcomes, readers, item_of)
+               if len(given.get(f'{item_of[send]}-{field}', {})) < 2]
+    if missing:
+        raise SystemExit(f'VOID: BY or LQ rulings missing for {missing}')
+    return outcomes, readers, item_of, {family: found[0] for family, found in read.items()}, families, given
+
+
+def settled_field(values, ruled, unresolved_as):
+    if len(set(values)) == 1 and values[0] != 'cannot_tell':
+        return values[0]
+    third = set(ruled.values())
+    if len(ruled) == 2 and len(third) == 1 and 'cannot_tell' not in third:
+        return next(iter(third))
+    return 'yes' if unresolved_as == 'fails' else 'no'
+
+
+def faults_of(send, outcome, readers, of_family, families, given, item, unresolved_as):
+    rows = [readers[reader][send] for reader in collector.FAMILIES]
+    empty = {'marks': {}, 'W': {}}
+    ruling, _ = accounting.rulings_of_two(of_family[families[0]].get(send, empty), of_family[families[-1]].get(send, empty), unresolved_as)
+    faults = set()
+    for mark in accounting.marks_that_apply(accounting.kind_of(outcome)):
+        value = rows[0][mark] if rows[0][mark] == rows[1][mark] else ruling['marks'].get(mark, unresolved_as)
+        if mark in HARD and value == 'fails':
+            faults.add(mark)
+    for field in FIELDS:
+        if settled_field([rows[0][field], rows[1][field]], given.get(f'{item}-{field}', {}), unresolved_as) == 'yes':
+            faults.add(field)
+    return faults
+
+
+def vetoes(outcomes, readers, item_of, of_family, families, given, unresolved_as):
+    groups = reading_split.group_of()
+    faults = {send: faults_of(send, outcome, readers, of_family, families, given, item_of[send], unresolved_as)
+              for send, outcome in outcomes.items() if not send[0].startswith('plant|')}
+    frozen_faults = {}
+    for (case, _), found in faults.items():
+        arm, topic = case.split('|', 1)
+        if arm == 'frozen':
+            frozen_faults.setdefault(topic, set()).update(found & set(HARD))
+    found_vetoes = []
+    for (case, pass_number), found in sorted(faults.items()):
+        arm, topic = case.split('|', 1)
+        topic = topic.split('@', 1)[0]
+        if arm != 'split' or not found:
+            continue
+        if groups[topic] in reading_split.READ_YEARLY:
+            found_vetoes.append((case, pass_number, sorted(found)))
+        else:
+            new = (found & set(FIELDS)) | (found & set(HARD)) - frozen_faults.get(topic, set())
+            if new:
+                found_vetoes.append((case, pass_number, sorted(new)))
+    return found_vetoes
+
+
+def verdict(probe_folder, key_folder):
+    counted = counts(probe_folder)
+    print(json.dumps(counted, indent=1))
+    if not counted['pass']:
+        return 'negative', counted, None
+    try:
+        loaded = load_reading(Path(probe_folder) / 'reading', Path(key_folder) / 'key.json', Path(key_folder) / 'plants-expected.json')
+    except SystemExit as stop:
+        if str(stop).startswith('VOID'):
+            print(stop)
+            return 'void', counted, None
+        raise
+    found = {unresolved_as: vetoes(*loaded, unresolved_as) for unresolved_as in ('holds', 'fails')}
+    for unresolved_as, listed in found.items():
+        print(f'vetoes, unresolved counted as {unresolved_as}: {listed}')
+    if not found['holds'] and not found['fails']:
+        return 'lead', counted, found
+    if found['holds'] and found['fails']:
+        return 'negative', counted, found
+    return 'inconclusive', counted, found
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
+    decision, _, _ = verdict(sys.argv[1], sys.argv[2])
+    print(f'VERDICT: {decision}')
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/split-brief.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The split probe's reading: what this brief adds to `stage-a-reader-brief.md`
+
+Read `stage-a-reader-brief.md` first. Mark every item by that brief. This brief adds one thing to read and two fields to return.
+
+## Items asked for one year of a topic
+
+Some items carry `split`: `{"asked_year": "2026", "asked_separately": "2027"}`. Their topic asks one quantity for two years. The step
+was asked for `asked_year` only, and the other year is asked as its own question.
+
+- For these items, read the thesis as asking `asked_year` only. The other year is not a part this question leaves out, so it is not
+  owed in `not_judged` (`L`).
+- Asking one of the two years is not a fault of `Q`.
+- Every other part of the topic's wording that the question leaves out is still owed, as the brief says.
+
+Items with `split: null` are read exactly as the brief says.
+
+## Two more fields, on every item
+
+| field | values | the mark |
+|---|---|---|
+| `BY` | `yes`, `no`, `cannot_tell` | `yes` when the question asks the value for a year that the thesis names only as a base or a point of comparison (for example, the thesis asks 2027's spending against 2026's, and the question asks 2026's). Decide it from the thesis's own wording, for an item with `split` too: a `split` item whose thesis asks the value of both years does not ask a base year, and one whose thesis names `asked_year` only as a base or comparison does. `no` otherwise. |
+| `LQ` | `yes`, `no`, `cannot_tell` | `yes` when the question measures something wider or different from what the thesis asks, because it drops a limit the thesis's wording sets (a group, a product, a region, a measure's basis) and does not list it in `not_judged`. For example, the thesis asks server DRAM prices and the question asks DRAM prices. `no` otherwise. |
+
+When either field is `yes`, `why` names the year or the limit dropped.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'counts\\(|verdict\\(|duplicate|disput|no third|missing|schema' docs/research/2026-11-14-use-acceptance/splitting/test_split_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4:the other topics with their stored answer in the split schema's shape. Nothing is sent.
+25:YEARLY = {   # (topic, year): (the article's words, the unit, its value, the four bounds of the ranges); amounts in full (the schema's USD)
+44:    """A stored frozen answer as the split schema writes it: a decline's text becomes the reason of the case no_main."""
+58:        split_arm = request['response_format']['json_schema']['schema']['properties']['no_ladder']['anyOf'][1].get('type') == 'object'
+117:    counted = score_split.counts(sent)
+122:def test_a_control_naming_the_split_case_fails_the_counts(checked, tmp_path, monkeypatch):
+125:    counted = score_split.counts(tmp_path / 'run')
+127:    assert score_split.verdict(tmp_path / 'run', tmp_path / 'keys')[0] == 'negative'
+130:def test_a_control_whose_kind_changes_in_two_of_three_sends_fails_the_counts(checked, tmp_path, monkeypatch):
+133:    entry = score_split.counts(tmp_path / 'run')['controls']['stage-b:u3/clean-6']
+138:def test_a_t_topic_whose_second_year_is_declined_in_every_send_fails_the_counts(checked, tmp_path, monkeypatch):
+141:    counted = score_split.counts(tmp_path / 'run')
+202:    assert score_split.verdict(probe, keys)[0] == 'lead'
+208:    assert score_split.verdict(probe, keys)[0] == 'void'
+215:    decision, _, found = score_split.verdict(probe, keys)
+223:    assert score_split.verdict(probe, keys)[0] == 'void'
+230:    assert score_split.verdict(probe, keys)[0] == 'inconclusive'
+233:def test_the_third_readers_packet_holds_each_disputed_point_once_with_the_marks_hidden_and_no_plant(reading):
+239:    count = reading_split.disputes(probe / 'reading', keys / 'key.json')
+247:        reading_split.disputes(probe / 'reading', keys / 'key.json')
+254:    assert score_split.verdict(probe, keys)[0] == 'lead'
+256:    decision, _, found = score_split.verdict(probe, keys)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 3 'def third_reader_families|def read_rows|def disputes_of|FAMILIES' clean-arch/step4-2026-11-10/stage_a/collect_readings.py | head -110" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+30-sys.path.insert(0, str(HERE))
+31-import accounting  # noqa: E402
+32-
+33:FAMILIES = {'reader 1': 'codex', 'reader 2': 'claude'}
+34-ITEMS_A_RULING_PACKET = 12
+35-SIDES_SEED = 20261110
+36-
+--
+60-    return rows, unreadable
+61-
+62-
+63:def read_rows(run_folder, key_path):
+64-    key = json.loads(Path(key_path).read_text())
+65-    item_of = {(case, pass_number): int(item) for item, (case, pass_number) in key.items()}
+66-    outcomes = {(outcome['case'], outcome['pass']): outcome for outcome in outcomes_of(run_folder)}
+67-    readers, problems = {}, {}
+68:    for reader, family in FAMILIES.items():
+69-        rows, unreadable = rows_of(run_folder, key, family)
+70-        readers[reader] = rows
+71-        problems[reader] = {'unreadable lines': unreadable, 'rows': []}
+--
+78-    return key, item_of, outcomes, readers, problems
+79-
+80-
+81:def disputes_of(outcomes, readers):
+82-    """[(send, differing marks, [(reader, fault named)])] over the sends both readers gave a valid row for."""
+83-    found = []
+84-    for send, outcome in outcomes.items():
+85-        if accounting.kind_of(outcome) == 'refused twice':
+86-            continue
+87:        rows = [readers[reader].get(send) for reader in FAMILIES]
+88-        if any(accounting.row_problem(row, outcome) for row in rows):
+89-            continue
+90-        marks = [mark for mark in accounting.marks_that_apply(accounting.kind_of(outcome)) if rows[0][mark] != rows[1][mark]]
+91:        faults = [(reader, row['W'].strip()) for reader, row in zip(FAMILIES, rows) if row['W'].strip()]
+92-        if marks or faults:
+93-            found.append((send, marks, faults))
+94-    return found
+--
+96-
+97-def sides_of(send):
+98-    """Which reader the third reader sees as "a" for this send: drawn from a fixed seed and the send's name."""
+99:    order = list(FAMILIES)
+100-    random.Random(f'{SIDES_SEED}|{send[0]}|{send[1]}').shuffle(order)
+101-    return {'a': order[0], 'b': order[1]}
+102-
+--
+104-def command_rows(run_folder, key_path):
+105-    _, _, outcomes, readers, problems = read_rows(run_folder, key_path)
+106-    to_read = sum(1 for outcome in outcomes.values() if accounting.kind_of(outcome) != 'refused twice')
+107:    for reader, family in FAMILIES.items():
+108-        bad = problems[reader]
+109-        print(f"{reader} ({family}): {len(readers[reader])} rows for {to_read} answers to read; "
+110-              f"{len(bad['rows'])} missing or not valid; {len(bad['unreadable lines'])} lines not read as a row")
+--
+112-            print(f'   item {item} ({send[0]} pass {send[1]}): {problem}')
+113-        for entry in bad['unreadable lines']:
+114-            print('   unreadable:', entry)
+115:    return all(not problems[reader]['rows'] for reader in FAMILIES)
+116-
+117-
+118-def command_disputes(run_folder, key_path):
+119-    _, item_of, outcomes, readers, problems = read_rows(run_folder, key_path)
+120:    if any(problems[reader]['rows'] for reader in FAMILIES):
+121-        raise SystemExit('a row is missing or not valid: ask the reader again first (the `rows` command lists them)')
+122-    packets = {}
+123-    for packet_file in sorted((Path(run_folder) / 'readers').glob('packet-*.json')):
+--
+152-          f'{-(-len(to_rule) // ITEMS_A_RULING_PACKET)} packets of at most {ITEMS_A_RULING_PACKET}')
+153-
+154-
+155:def third_reader_families(run_folder):
+156-    """The families that ruled: ['codex', 'claude'] for two third readers, [None] for the single one of an earlier run."""
+157-    names = {answer_file.name.split('-')[1] for answer_file in (Path(run_folder) / 'third-reader').glob('rulings-*.jsonl')}
+158-    return sorted(name for name in names if not name[0].isdigit()) or [None]
+--
+212-    print('refusals by the model, each with N as the two readers gave it and as ruled:')
+213-    for send, outcome in sorted(outcomes.items()):
+214-        if accounting.kind_of(outcome) == 'refusal':
+215:            values = [readers[reader].get(send, {}).get('N', 'not read') for reader in FAMILIES]
+216-            ruled = rulings.get(send, {}).get('marks', {}).get('N', values[0] if values[0] == values[1] else 'no ruling')
+217-            print(f"   {send[0]} pass {send[1]} | N {values[0]} / {values[1]} -> {ruled} | {outcome['reason'][:230]}")
+218-    print('refused twice by code, with the reasons of each attempt:')
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '180,265p' docs/research/2026-11-14-use-acceptance/splitting/test_split_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+            row = reader_row(int(item), outcomes[(case, pass_number)], values)
+            if change:
+                change(family, case, row)
+            lines.append(json.dumps(row))
+        (answers / f'reader-{family}-packet-1.jsonl').write_text('\n'.join(lines) + '\n')
+
+
+def test_the_reading_holds_the_yearly_items_the_c1_ladders_of_both_arms_and_two_plants(reading):
+    probe, keys = reading
+    rows = reading_split.rows_of(probe / 'reading')
+    yearly = [row for row in rows if row['split'] and not row['case'].startswith('plant|')]
+    assert len(yearly) == 2 * 3 * 2 and all(row['case'].startswith('split|') for row in yearly)
+    c1 = [row for row in rows if not row['split'] and not row['case'].startswith('plant|')]
+    assert {row['case'].split('|')[0] for row in c1} == {'frozen', 'split'} and len(c1) == 2 * 6 * 3
+    packet = json.loads((probe / 'reading' / 'readers' / 'packet-1.json').read_text())
+    assert all('split' in item for item in packet) and not any('frozen|' in json.dumps(item) or 'split|' in json.dumps(item) for item in packet)
+    assert not (probe / 'reading' / 'key.json').exists() and (keys / 'key.json').exists()
+
+
+def test_a_clean_reading_gives_a_lead(reading):
+    probe, keys = reading
+    write_rows(probe, keys)
+    assert score_split.verdict(probe, keys)[0] == 'lead'
+
+
+def test_a_missed_plant_voids_the_reading(reading):
+    probe, keys = reading
+    write_rows(probe, keys, lambda family, case, row: row.update(BY='no') if family == 'claude' and case == 'plant|1' else None)
+    assert score_split.verdict(probe, keys)[0] == 'void'
+
+
+def test_a_base_year_settled_by_both_families_on_a_yearly_item_is_negative(reading):
+    probe, keys = reading
+    target = next(row['case'] for row in reading_split.rows_of(probe / 'reading') if row['split'] and not row['case'].startswith('plant|'))
+    write_rows(probe, keys, lambda family, case, row: row.update(BY='yes') if case == target else None)
+    decision, _, found = score_split.verdict(probe, keys)
+    assert decision == 'negative' and any(case == target and 'BY' in marks for case, _, marks in found['holds'])
+
+
+def test_a_split_point_without_its_third_rulings_voids_and_with_split_rulings_is_inconclusive(reading):
+    probe, keys = reading
+    target = next(row['case'] for row in reading_split.rows_of(probe / 'reading') if row['split'] and not row['case'].startswith('plant|'))
+    write_rows(probe, keys, lambda family, case, row: row.update(LQ='yes', why='a limit') if case == target and family == 'codex' else None)
+    assert score_split.verdict(probe, keys)[0] == 'void'
+    key = json.loads((keys / 'key.json').read_text())
+    items = [item for item, (case, _) in key.items() if case == target]
+    (probe / 'reading' / 'third-reader').mkdir()
+    for family, ruling in (('codex', 'yes'), ('claude', 'no')):
+        (probe / 'reading' / 'third-reader' / f'split-rulings-{family}-1.jsonl').write_text(
+            ''.join(json.dumps({'id': f'{item}-LQ', 'ruling': ruling}) + '\n' for item in items))
+    assert score_split.verdict(probe, keys)[0] == 'inconclusive'
+
+
+def test_the_third_readers_packet_holds_each_disputed_point_once_with_the_marks_hidden_and_no_plant(reading):
+    probe, keys = reading
+    rows = reading_split.rows_of(probe / 'reading')
+    targets = [row['case'] for row in rows if row['split'] and not row['case'].startswith('plant|')][:6]
+    write_rows(probe, keys, lambda family, case, row: row.update(LQ='yes', why='a limit') if case in targets and family == 'codex'
+               else row.update(BY='cannot_tell') if case == 'plant|2' else None)
+    count = reading_split.disputes(probe / 'reading', keys / 'key.json')
+    packet = json.loads((probe / 'reading' / 'third-reader' / 'split-packet-1.json').read_text())
+    key = json.loads((keys / 'key.json').read_text())
+    expected = {f'{item}-LQ' for item, (case, _) in key.items() if case in targets}
+    assert count == len(packet) == len(expected) and {point['id'] for point in packet} == expected
+    assert all(sorted(point['marks'].values()) == ['no', 'yes'] and point['item']['split'] for point in packet)
+    assert {point['marks']['a'] for point in packet} == {'yes', 'no'}           # the codex reader's mark is shown as a in some, b in others
+    with pytest.raises(SystemExit, match='exists: refused'):
+        reading_split.disputes(probe / 'reading', keys / 'key.json')
+
+
+def test_a_c1_fault_the_frozen_arm_shares_is_not_a_veto_but_a_new_one_is(reading):
+    probe, keys = reading
+    topic = 'fortnight:c1/clean-9'
+    write_rows(probe, keys, lambda family, case, row: row.update(R='fails', why='gap') if case.endswith(topic) else None)
+    assert score_split.verdict(probe, keys)[0] == 'lead'
+    write_rows(probe, keys, lambda family, case, row: row.update(R='fails', why='gap') if case == f'split|{topic}' else None)
+    decision, _, found = score_split.verdict(probe, keys)
+    assert decision == 'negative' and {case for case, _, _ in found['holds']} == {f'split|{topic}'}
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,90p' clean-arch/step4-2026-11-10/stage_a/collect_readings.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""Stage A's readings, from the readers' answer files to what the accounting takes ($0; DESIGN.md §8, "The accounting").
+
+Three steps, each a command:
+
+  rows     read both readers' answer files, join each row to its case and pass through the key, check every row with the
+           accounting's own rule, and print the rows that are missing or not valid (a reader is asked again for those).
+  disputes write the third reader's packets: every send on which the two valid rows differ on a mark that applies, and every
+           send on which a reader named a fault under `W`, with the thesis and the article. Which reader is "a" and which "b"
+           is drawn per send from a fixed seed, so the third reader cannot rule by family.
+  report   read the rulings and print the six lines (accounting.account). With two third readers, one of each family
+           (`third-reader/rulings-codex-<n>.jsonl` and `rulings-claude-<n>.jsonl`), a point they rule alike takes that ruling
+           and a point they rule differently is unresolved: the lines are printed twice, with every unresolved point counted
+           for the answer and then against it, and the unresolved points are listed. A run read before that rule has one third
+           reader (`rulings-<n>.jsonl`).
+
+  python3 clean-arch/step4-2026-11-10/stage_a/collect_readings.py rows <run folder> <key path>
+  python3 clean-arch/step4-2026-11-10/stage_a/collect_readings.py disputes <run folder> <key path>
+  python3 clean-arch/step4-2026-11-10/stage_a/collect_readings.py report <run folder> <key path>
+
+Reader 1 is the Codex family (`readers-answers/reader-codex-packet-<n>*.jsonl`), reader 2 the Claude family
+(`reader-claude-packet-<n>*.jsonl`). A later file of the same packet (an asked-again answer, named `...-again-<k>.jsonl`)
+replaces the rows it gives and no others.
+"""
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import accounting  # noqa: E402
+
+FAMILIES = {'reader 1': 'codex', 'reader 2': 'claude'}
+ITEMS_A_RULING_PACKET = 12
+SIDES_SEED = 20261110
+
+
+def outcomes_of(run_folder):
+    return [json.loads(line) for pass_folder in sorted(Path(run_folder).glob('send-*'))
+            for line in (pass_folder / 'outcomes.jsonl').read_text().splitlines()]
+
+
+def rows_of(run_folder, key, family):
+    """{(case, pass): row} for one reader, with the lines that could not be read as a row."""
+    rows, unreadable = {}, []
+    answer_files = sorted((Path(run_folder) / 'readers-answers').glob(f'reader-{family}-packet-*.jsonl'),
+                          key=lambda answer_file: ('-again-' in answer_file.name, answer_file.name))     # first answers, then asked-again ones
+    for answer_file in answer_files:
+        for line_number, line in enumerate(answer_file.read_text().splitlines(), start=1):
+            line = line.strip()
+            if not line or line.startswith('```'):
+                continue
+            try:
+                row = json.loads(line)
+                send = key[str(row['item'])]
+            except (ValueError, KeyError, TypeError):
+                unreadable.append((answer_file.name, line_number, line[:80]))
+                continue
+            rows[(send[0], send[1])] = row
+    return rows, unreadable
+
+
+def read_rows(run_folder, key_path):
+    key = json.loads(Path(key_path).read_text())
+    item_of = {(case, pass_number): int(item) for item, (case, pass_number) in key.items()}
+    outcomes = {(outcome['case'], outcome['pass']): outcome for outcome in outcomes_of(run_folder)}
+    readers, problems = {}, {}
+    for reader, family in FAMILIES.items():
+        rows, unreadable = rows_of(run_folder, key, family)
+        readers[reader] = rows
+        problems[reader] = {'unreadable lines': unreadable, 'rows': []}
+        for send, outcome in sorted(outcomes.items(), key=lambda pair: item_of.get(pair[0], 0)):
+            if accounting.kind_of(outcome) == 'refused twice':
+                continue
+            problem = accounting.row_problem(rows.get(send), outcome)
+            if problem:
+                problems[reader]['rows'].append((item_of[send], send, problem))
+    return key, item_of, outcomes, readers, problems
+
+
+def disputes_of(outcomes, readers):
+    """[(send, differing marks, [(reader, fault named)])] over the sends both readers gave a valid row for."""
+    found = []
+    for send, outcome in outcomes.items():
+        if accounting.kind_of(outcome) == 'refused twice':
+            continue
+        rows = [readers[reader].get(send) for reader in FAMILIES]
+        if any(accounting.row_problem(row, outcome) for row in rows):
+            continue
+        marks = [mark for mark in accounting.marks_that_apply(accounting.kind_of(outcome)) if rows[0][mark] != rows[1][mark]]
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 2 'def rulings_of_two|marks_that_apply' clean-arch/step4-2026-11-10/stage_a/accounting.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+34-
+35-
+36:def marks_that_apply(kind):
+37-    """The marks on which a reader must give `holds` or `fails` for an outcome of this kind (G is not among them: it is reported)."""
+38-    if kind == 'refusal':
+--
+51-        return 'no row'
+52-    kind = kind_of(outcome)
+53:    applicable = marks_that_apply(kind)
+54-    for mark in ALL_MARKS:
+55-        if mark not in row:
+--
+76-
+77-
+78:def rulings_of_two(ruling_of_one, ruling_of_other, unresolved_as):
+79-    """One send's rulings from two third readers, one of each reader family. Where the two rule a mark alike, that is the
+80-    mark's value. Where they differ the mark is unresolved: it takes `unresolved_as` ('holds' or 'fails'), so that every line can
+--
+128-        ruling = rulings.get(key, {})
+129-        send_values, complete = {}, True
+130:        for mark in marks_that_apply(kind):
+131-            applicable_pairs += 1
+132-            if rows[0][mark] == rows[1][mark]:
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'ATTEMPTS\\s*=' clean-arch src | head -15" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step1/live.py:24:NETWORK_ATTEMPTS = 3          # as production's transport (model.openai_transport): a dropped connection is tried up to three times
+src/hivemind/jev.py:18:ATTEMPTS = 3
+clean-arch/e2e-2026-11-09/budget.py:21:ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/step4-2026-11-10/stage_b/baseline_count.py:26:MOST_ATTEMPTS = 2
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r4-codex.log:73:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r4-codex.log:580:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:1437:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-codex.log:2111:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r2-codex.log:1490:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/step2-edge-effect-2026-11-10/council/sender-review-r3-codex.log:422:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/e2e-misses-2026-11-11/council/sender-review-codex.log:853:    21	ATTEMPTS = 3                                # model.openai_transport's default max_attempts
+clean-arch/e2e-comparison-2026-11-13/budget_step2.py:25:EMBEDDING_ATTEMPTS = 3                          # search.openai_embeddings' own loop
+clean-arch/step1-unfiled-2026-11-08/council/fe-challenge.md:6:   - Each reserve covers `TRANSPORT_ATTEMPTS = 3`, model.openai_transport's default attempts.
+
+codex
+**No-go on the send yet.** The preparation has three issues that could make its verdict or spending report misleading.
+
+1. **The probe includes topics from the 44 on which D426 stopped tuning.** C2 explicitly contains the two official-gate failure topics, and the changed request would be sent on them. Calling them guards does not by itself resolve that conflict. Replace them with suitable non-44 controls or establish a decision that specifically permits this use before sending. [Population](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/PROBE-PREP.md), [D426](/Users/lchingen/hivemind/docs/DECISIONS.md:770)
+
+2. **The call maximum omits transport retries.** The stated 78 and 234 are the maxima for logical requests including the answer-check resend. The budget transport can attempt each request up to three times, so the corresponding maximum is **234 and 702 transport attempts**, absent an earlier stop. [Retry setting](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:21) Recalculate the reservation report for retries and the actual longer yearly and repair requests. The caps can stop the run first; an incomplete run must remain not measured, and the $0.40 bound remains conditional on charges within reserves.
+
+3. **The scorer needs an exact population check.** [Its count](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/score_split.py:49) builds dictionaries keyed by topic and pass, so a duplicate can overwrite another row while the expected key set still matches. The reading collector similarly builds dictionaries from outcomes. Refuse duplicate, missing or extra sends and verify that the reading and key contain exactly the items derived from those sends. Test those breaches.
+
+One reading limitation should be stated: yearly items carry a `split` field and are only produced by the changed arm, so readers can infer the arm for those items. The arm labels are hidden, but that is not full arm blindness. Also settle whether a missed plant voids the reading even when the count has already failed; the scorer currently returns negative before checking the plants.
+
+Bring the corrected population, accounting tests and reservation calculation back before sending.
+
+CONSENSUS: no, because the 44-topic boundary, retry accounting and exact reading population need to be resolved first.
+tokens used
+4,243,104
+**No-go on the send yet.** The preparation has three issues that could make its verdict or spending report misleading.
+
+1. **The probe includes topics from the 44 on which D426 stopped tuning.** C2 explicitly contains the two official-gate failure topics, and the changed request would be sent on them. Calling them guards does not by itself resolve that conflict. Replace them with suitable non-44 controls or establish a decision that specifically permits this use before sending. [Population](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/PROBE-PREP.md), [D426](/Users/lchingen/hivemind/docs/DECISIONS.md:770)
+
+2. **The call maximum omits transport retries.** The stated 78 and 234 are the maxima for logical requests including the answer-check resend. The budget transport can attempt each request up to three times, so the corresponding maximum is **234 and 702 transport attempts**, absent an earlier stop. [Retry setting](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:21) Recalculate the reservation report for retries and the actual longer yearly and repair requests. The caps can stop the run first; an incomplete run must remain not measured, and the $0.40 bound remains conditional on charges within reserves.
+
+3. **The scorer needs an exact population check.** [Its count](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/score_split.py:49) builds dictionaries keyed by topic and pass, so a duplicate can overwrite another row while the expected key set still matches. The reading collector similarly builds dictionaries from outcomes. Refuse duplicate, missing or extra sends and verify that the reading and key contain exactly the items derived from those sends. Test those breaches.
+
+One reading limitation should be stated: yearly items carry a `split` field and are only produced by the changed arm, so readers can infer the arm for those items. The arm labels are hidden, but that is not full arm blindness. Also settle whether a missed plant voids the reading even when the count has already failed; the scorer currently returns negative before checking the plants.
+
+Bring the corrected population, accounting tests and reservation calculation back before sending.
+
+CONSENSUS: no, because the 44-topic boundary, retry accounting and exact reading population need to be resolved first.

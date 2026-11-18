@@ -1,0 +1,343 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 116: the operating contract, version 6 (`live-service/OPERATING-CONTRACT.md`): your four findings answered
+
+1. **A signal outside the store** (row 7):
+   - The new writer holds an operating-system lock (`flock`) on `<store>.writer.lock` for its whole life. The operating system
+     releases it on any exit, crash included.
+   - Preflight takes the same lock without waiting before it touches a store, and refuses if it is held.
+   - If it gets the lock, it keeps it while it copies (the backup API from a `mode=ro` source), so no writer can start under the
+     copy. Nothing about the store is opened or read to decide.
+   - Stores with no lock file (every historical one, and production's) are handled as today. AGENTS §9 stays the only protection for
+     production's own writer, which takes no such lock; that limit is stated.
+   - The manifest and the journal-mode test are removed.
+2. **A store identity that changes on replacement:** a random identifier the writer stores when it creates the store. Proof 8b uses
+   two stores at the same path with the same first sequence and day.
+3. **One retry rule:** staged rows are keyed by (store identity, view, text sha256, embedding model), and the target day is not
+   part of the key. A refresh reuses a row exactly when all four parts match, and publishes a day only when every view visible at it
+   has a row under the current identity.
+4. **Orderly stop with a busy reader:**
+   - The writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store, it stays in WAL mode and
+     "stopped in order, WAL kept" is recorded in the run's outcome; then the lock is released.
+   - Journal mode is never the sign of liveness; the lock is.
+   - Proof 8d covers both outcomes and preflight's acceptance afterwards.
+
+End with `CONSENSUS: yes` (ready for its $0 proof build, which comes back to you) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check version 6’s lock lifecycle, store identity and retry rules against the written contract and existing entry points.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '1,240p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/run_stage_b.py | sed -n '25,65p'
+nl -ba src/hivemind/views/store.py | sed -n '55,70p'
+rg -n 'snapshot.sh|live run' AGENTS.md /Users/lchingen/.codex/memories/MEMORY.md | head -10" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# A live new-system store: the operating contract, version 6 for the council (D592; $0 design, nothing built)
+     2	
+     3	**Status:** D575 paused the earlier design (`DESIGN.md`) as recorded input; it was not accepted. Round 110 resumed the work as this
+     4	$0 contract. Version 2 answered round 111's six findings; version 3 answered round 112's four; version 4 answered round 113's five; version 5 answered round 114's four; version 6 answers round 115's four. It returns to the council before any build or live run. The new system has
+     5	not passed its quality gates, and adopting it is Alex's choice. This contract only states what a live store would have to guarantee.
+     6	
+     7	**Falsifier (round 110):** a required operating case that cannot be served consistently under this contract without blocking the
+     8	writer's commits or exposing partial work. The proof plan names one test per case, and one failing test sends the contract back.
+     9	
+    10	## What touches a live store (searched in the code)
+    11	
+    12	- **The writer:** the new system's daily loop through `clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py`.
+    13	  - It opens the store with `store.open_db`, today in SQLite's default rollback-journal mode.
+    14	  - It commits several times within a day; `close_and_complete` closes due questions, records the day in `days_completed` and
+    15	    commits.
+    16	  - **A stopped run is never resumed** (the module's docstring; `run_stage_b.py` records a crash as the folder's outcome).
+    17	
+    18	| Toucher | How | When |
+    19	|---|---|---|
+    20	| API (`scripts/hivemind_api.py`) | `Connections`: one read-only connection per request; `search.ensure_index(ledger, index)` at start, which embeds view text through an outside service (row 4a) | every request; once at start |
+    21	| MCP server (`scripts/hivemind_mcp.py`) | one read-only connection at start (`LEDGER`), shared by every call, including overlapping calls under streamable HTTP; `ensure_index` and the object list computed at start | the whole process |
+    22	| The page | only through the API | — |
+    23	| The page's embedded snapshot (`scripts/mock_build.py` → `bundle.library`) | `service.open_ledger` | one build |
+    24	| Idea and evaluation scripts (`idea_probe`, `idea_gold`, `idea_stability`, `agent_day0`, `search_eval`) | `open_read_only` / `open_ledger` | one run |
+    25	| Research and census scripts (`docs/research/**`) | `open_read_only` | one run |
+    26	| Preflight (`scripts/preflight.py`) | **`shutil.copy` of `views.sqlite`** to a scratch file (row 7: snapshot or finished store only, then the backup API) | before a paid run |
+    27	| A run's `snapshot.sh` (a per-run file, not a repository script) | SQLite's backup API | on demand |
+    28	
+    29	## The contract
+    30	
+    31	1. **Journal mode, side files, opening.**
+    32	   - The live store is in WAL mode, set by the writer when it creates the store. Production's stores stay as they are.
+    33	   - The `-wal` and `-shm` files sit beside the store on a local disk. **No reader reaches a live store through a container bind mount
+    34	     or a network share.**
+    35	   - **Opening precondition:** every reader runs as the writer's user, and the store's directory is writable by it. SQLite needs the
+    36	     `-wal` and `-shm` files readable, or permission to create them, to open a WAL store with `mode=ro`.
+    37	   - Readers open with `mode=ro`, never `immutable=1`.
+    38	   - A reader that cannot open the store, or cannot begin a read transaction, fails loudly with the store's path. It never serves an
+    39	     empty or stale answer in its place.
+    40	   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+    41	     example while the WAL index is being rebuilt.
+    42	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+    43	2. **One committed state per request, one connection per concurrent request.**
+    44	   - Each API request and each MCP tool call runs every read inside one explicit read transaction: `BEGIN`, the reads, the end.
+    45	   - The transaction always ends, failure included (`finally`).
+    46	   - **MCP opens a connection per tool call,** as the API does per request, in place of today's one process-wide `LEDGER`.
+    47	     Overlapping calls under streamable HTTP each hold their own transaction and never share one.
+    48	   - The service's start-up reads run the same way. MCP's object list is computed per call.
+    49	3. **Every date bound, resolved in one function.**
+    50	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    51	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    52	     explicit date bypasses any check placed in `default_as_of`.
+    53	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    54	     caller's read transaction.
+    55	     - An omitted bound gives the last completed day.
+    56	     - An explicit bound later than the last completed day is refused, naming that day.
+    57	     - An explicit bound on or before it passes.
+    58	   - Every one of the 13 sites calls it, and lower bounds (`from_day`, `since_day`) are unaffected.
+    59	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    60	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    61	4. **The first day** (open defect 10).
+    62	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    63	   - An empty store (no step) and a legacy ledger read as today.
+    64	4a. **Search: visibility before ranking and limits, and a published index day.**
+    65	   - **Lexical:**
+    66	     - today `store.search_views` ranks the whole `views_fts` table by SQLite's `rank`, whose statistics cover the whole index;
+    67	     - so filtering before the limit is not enough, because unfinished views would still move the ranks of visible ones;
+    68	     - **the lexical rank is computed over the visible corpus only:** per request, the visible candidates' texts (from
+    69	       `service.summaries` at the request's bound; tens to hundreds of views) are put into an in-memory full-text table with the same
+    70	       trigram tokenizer, and ranked there;
+    71	     - its statistics are then those of the completed-day library, equal to what the same query gives on that day's backup.
+    72	   - **The store's identity:** a random identifier the writer stores in the store when it creates it (a one-row table). A store
+    73	     replaced at the same path, even with the same first sequence and day, gets a new one.
+    74	   - **The index publishes a day:**
+    75	     - it holds vectors only for views visible as of its published day, and their text as of that day;
+    76	     - a refresh embeds into a staging table, each staged row keyed by **(store identity, view, the text's sha256, the embedding
+    77	       model)**. A vector depends only on its text and model, so the target day is not part of the key;
+    78	     - only when every view visible at the target day has a row under the current store identity does one index transaction move
+    79	       those rows in and advance the published day;
+    80	     - a failure leaves the published day and its vectors unchanged;
+    81	     - **one reuse rule:** any later refresh, for the same or a newer target day, reuses a staged row exactly when all four key parts
+    82	       match. Every row under another store identity is discarded.
+    83	     - A view written during an unfinished day is never embedded and never sent to the embedding service.
+    84	   - **A request's state:**
+    85	     - search reads the index's published day and uses vectors only for views visible at the smaller of that day and the request's
+    86	       bound;
+    87	     - if a visible view has no published vector, search runs lexically and says so, as today;
+    88	     - the ledger and the index are separate files, so the published day is what ties them.
+    89	   - On a first-day store nothing is indexed, and search is refused as in row 4.
+    90	5. **Checkpoints and disk: what is guaranteed, and the disk-exhaustion behaviour.**
+    91	   - The writer sets `journal_size_limit` (proposed 64 MB) and keeps SQLite's automatic passive checkpoint.
+    92	   - After each completed day it asks for a truncating checkpoint with a short busy timeout.
+    93	   - **Guaranteed:**
+    94	     - readers do not block the writer's commits;
+    95	     - after a completed day whose truncating checkpoint succeeds, the `-wal` is within the limit;
+    96	     - if the truncating checkpoint fails on 3 consecutive completed days, the writer stops before the next day with a recorded
+    97	       reason.
+    98	   - **Not guaranteed:** a byte bound on the `-wal` within an unfinished day, or across the failed days. Its growth there is the
+    99	     day's own writes, which the contract does not bound.
+   100	   - **Disk:**
+   101	     - before each day the writer checks the free space on the store's disk against a minimum stated in the run's limits file
+   102	       (proposed: 20 times the store's size), and stops before the day with a recorded reason if it is below;
+   103	     - a write that still meets a full filesystem mid-day (extending the store, its `-wal` or a side file) fails, and the writer
+   104	       exits non-zero as in a crash (row 6);
+   105	     - its stop reason may then be lost too, if the run's log is on the full disk;
+   106	     - **the guarantee in that case is the readers' boundedness** (they keep the last completed day), not the record.
+   107	       The process's exit status, seen by its supervisor, is the signal.
+   108	6. **A crash.**
+   109	   - WAL drops the unfinished transaction. The day's **already committed writes stay** in the store.
+   110	   - Readers stay bounded to the last completed day. Every row written during the unfinished day is dated by that day's processing
+   111	     steps, after the last completed day, so it is outside every allowed bound.
+   112	   - **The writer does not resume** (today's loop). The store is served as of its last completed day until it is replaced.
+   113	   - Resuming a stopped live store is a separate design, not covered here.
+   114	7. **Who is writing: a signal outside the store, and copies.**
+   115	   - **The writer's lock:** for its whole life the writer holds an exclusive operating-system lock (`flock`) on a file beside the
+   116	     store, `<store>.writer.lock`. The operating system releases it when the process ends, crash included.
+   117	   - Whether a store is being written is then known without opening it.
+   118	   - **Preflight, before it touches a store:**
+   119	     - it takes the same lock without waiting;
+   120	     - **if the lock is held, the store is being written:** preflight refuses it, naming the run's snapshot script (AGENTS §9's
+   121	       sanctioned way);
+   122	     - if it takes the lock, no new-system writer is running, and preflight keeps the lock while it copies (the backup API, from a
+   123	       `mode=ro` source), so no writer can start meanwhile;
+   124	     - **a store with no lock file** (every historical store, and production's) is handled as today. AGENTS §9 remains the only
+   125	       protection for production's own writer, which takes no such lock; changing production's writer is out of scope.
+   126	   - **Snapshots:** the snapshot script is the one toucher that copies a store while its writer runs, with the backup API.
+   127	     Preflight accepts its snapshots like any store with no writer.
+   128	   - **Orderly stop:**
+   129	     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+   130	       timeout);
+   131	     - if service readers hold it, the store stays in WAL mode and the writer records "stopped in order, WAL kept" in its run's
+   132	       outcome;
+   133	     - either way it then releases its lock.
+   134	     - Journal mode is never used as the sign of a live store; the lock is.
+   135	8. **AGENTS §9 ("Never open a live run's databases") stays in force.**
+   136	   - **Proposed decision P1, to be resolved before any live-service operation and not assumed by any proof:** the product's API and
+   137	     MCP server may read a live WAL store under rows 1 to 7. Every other toucher above uses a backup-API snapshot.
+   138	   - The proofs run on test stores made for them, never on a live run.
+   139	
+   140	## State × event (the store's state at the request's transaction × the request)
+   141	
+   142	| State | Bounds omitted | Upper bound ≤ last completed day | Upper bound > last completed day | Start-up reads | Copy |
+   143	|---|---|---|---|---|---|
+   144	| Empty store | as today | as today | as today | as today | consistent |
+   145	| First day in progress | refused (4) | — | refused (4) | wait; requests refused | consistent (an in-progress copy, read under the same rules) |
+   146	| A later day in progress | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   147	| A day completing during a request | the request's own transaction | same | same | same | consistent |
+   148	| Crashed mid-day, not resumed | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   149	| `-wal`/`-shm` absent and directory not writable | fails loudly (1) | same | same | fails loudly | — |
+   150	
+   151	## Proof plan ($0, on test stores made for it; nothing built until the council accepts the contract)
+   152	
+   153	1. **WAL mode:** the writer's store is in WAL mode with the size limit set; production's stores are unchanged.
+   154	2. **Every upper bound:**
+   155	   - the structural check that no bound is resolved outside `resolve_bound`;
+   156	   - for each of the 13 callers, an explicit future bound is refused naming the last completed day, an explicit past bound passes,
+   157	     and an omitted bound gives the last completed day;
+   158	   - lower bounds are unaffected.
+   159	3. **One state per request:** an API request held between its first and last read while the writer commits a judgement and
+   160	   completes a day returns the state at its start, and the writer's commits succeed. Run on a first-day store and a store with one
+   161	   completed day.
+   162	4. **Start-up and MCP concurrency:**
+   163	   - two overlapping MCP calls across a writer's commit each return their own transaction's state;
+   164	   - a call that fails mid-read leaves no open transaction and no open connection;
+   165	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   166	   - MCP's object list after a later day includes that day's objects;
+   167	   - no transaction is open between MCP calls.
+   168	5. **Checkpoint and disk:**
+   169	   - below the free-space minimum, the writer stops before the day with its reason, and readers serve the last completed day;
+   170	   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+   171	   - a filesystem-full error mid-day: the store on a small disk image (`hdiutil`, a few MB), filled while the `-wal` grows. The
+   172	     writer exits non-zero, and readers serve the last completed day. Whether its reason was recorded is reported, not required;
+   173	   - with a long read held, the writer commits;
+   174	   - after the read ends, a checkpoint completes, and a reset brings the `-wal` within the limit;
+   175	   - with a reader held across three completed days, the writer stops before the fourth with its reason recorded, and readers serve
+   176	     the last completed day.
+   177	6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+   178	   within the timeout.
+   179	7. **A crash:** the writer is killed after committed writes mid-day.
+   180	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+   181	   - The search index and the text sent to the embedding service (recorded by a fake transport) equal the backup's.
+   182	   - The partial day's rows are present in the file and invisible to every route and to the index.
+   183	8. **Copies:**
+   184	   - a backup taken while the writer commits passes an integrity check, and its manifest's sha256 matches;
+   185	   - preflight refuses a store whose writer holds the lock, whatever its path (a live store placed or linked under `snapshots/`
+   186	     included);
+   187	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   188	     and every historical input it accepts today;
+   189	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   190	8a. **Lexical search under an unfinished day:** a paused writer and a crashed one, each with more than 50 unfinished views matching a
+   191	   query. The search at the last completed day equals the same search on that day's backup: the same results, ranks and mode.
+   192	8b. **The index:**
+   193	   - a refresh that fails after one successful batch leaves the published day and the search results unchanged;
+   194	   - a retry with the same target completes and advances the day;
+   195	   - a retry after another day has completed reuses exactly the staged rows whose four key parts match;
+   196	   - two stores at the same path with the same first sequence and day but different identities: no staged row of the first is
+   197	     reused for the second.
+   198	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   199	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   200	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   201	   the last completed day. After the day completes, the index is extended to it, and search names the index's day until then.
+   202	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   203	   same answers before and after `resolve_bound` is introduced.
+   204	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   205	
+   206	## Not covered
+   207	
+   208	- Resuming a stopped live store.
+   209	- The Idea planner on a new-system ledger.
+   210	- A long-running service's restart and monitoring.
+   211	- The page's note when its live read fails, which is Alex's presentation choice.
+    25	sys.path.insert(0, str(HERE))
+    26	import ladder_adapter  # noqa: E402
+    27	
+    28	CAP_USD = 2.0
+    29	RUNS = ('u1', 'u2', 'u3')
+    30	
+    31	
+    32	def resendable(error):
+    33	    """A stop a second send can change, because it comes from the model's answer or the network: the judge's refusal of one
+    34	    judgement twice, an answer that does not fit the schema, or a transport failure."""
+    35	    from hivemind import model
+    36	    from hivemind.views import judging
+    37	    return isinstance(error, (judging.JudgementRefused, model.SchemaError, model.TransportError))
+    38	
+    39	
+    40	class AlreadyRunning(Exception):
+    41	    pass
+    42	
+    43	
+    44	def send(root, transport=None, sleep=None, *, runs=None, cap_usd=None, inputs_of=None, shared=None):
+    45	    """Run the send while holding an exclusive lock on `<root>/launch.lock`: a second launch while one runs is refused, so two
+    46	    processes never spend against the same balance."""
+    47	    import fcntl
+    48	    root = Path(root)
+    49	    root.mkdir(parents=True, exist_ok=True)
+    50	    with open(root / 'launch.lock', 'w') as lock:
+    51	        try:
+    52	            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    53	        except BlockingIOError:
+    54	            raise AlreadyRunning(f'another launch holds {root / "launch.lock"}; this one sends nothing')
+    55	        return _send(root, transport, sleep, runs, cap_usd, inputs_of or {}, shared)
+    56	
+    57	
+    58	class Stopped(Exception):
+    59	    pass
+    60	
+    61	
+    62	def _send(root, transport, sleep, runs=None, cap_usd=None, inputs_of=None, shared=None):
+    63	    """One stop rule (`ladder_adapter.LedgerBudget`): the first stop of any kind ends the send and every later launch. A draw is
+    64	    replayed once more only for a stop a second send can change; any draw that ends incomplete records the stop."""
+    65	    record_path = root / 'run.json'
+    55	def open_db(path):
+    56	    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    57	    conn = sqlite3.connect(path)
+    58	    conn.row_factory = sqlite3.Row
+    59	    for name, columns in TABLES.items():
+    60	        conn.execute(f'create table if not exists {name} ({columns})')
+    61	        conn.execute(f"create trigger if not exists {name}_no_update before update on {name} begin select raise(abort, 'append-only'); end")
+    62	        conn.execute(f"create trigger if not exists {name}_no_delete before delete on {name} begin select raise(abort, 'append-only'); end")
+    63	    for statement in INDEXES:
+    64	        conn.execute(statement)
+    65	    ensure_writable_columns(conn)
+    66	    conn.execute("create virtual table if not exists views_fts using fts5(view_id unindexed, text, tokenize='trigram')")
+    67	    conn.execute("create virtual table if not exists groups_fts using fts5(group_id unindexed, text, tokenize='trigram')")
+    68	    conn.execute('create index if not exists members_view on thesis_group_members(view_id)')
+    69	    conn.commit()
+    70	    return conn
+AGENTS.md:431:- Never open a live run's databases: run `sh <run folder>/snapshot.sh` and query the snapshot.
+
+codex
+**Not yet. The lock is a better signal, but the proposed path-based lock does not support the promise that preflight refuses a live store under any path.**
+
+1. **Aliases bypass the lock.** The writer locks `<store>.writer.lock`. If preflight receives a symlink or hard link to that database under another name, the corresponding `<alias>.writer.lock` can be absent, so the “no lock file” rule accepts it. The planned alias test should catch this, but the contract does not say how it can pass. Define a shared identity and lock location that both entry points resolve *before opening the database*, and state how unsupported aliases are refused. [Contract, row 7 and proof 8](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:114).
+
+2. **The missing-lock rule leaves a start race.** If preflight checks for a lock file, finds none and proceeds as for a historical store, a new-system writer can create and acquire that file immediately afterwards. The rule must ensure that preflight holds the same lock through the copy even when the file did not previously exist, or establish from trusted external information that the input cannot be a new-system writer’s target. Test preflight arriving just before the writer creates its lock. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:118).
+
+3. **Replacement needs to invalidate published vectors too.** The new random identifier distinguishes separately created stores, and the staged-row key is now clear. The contract says to discard *staged* rows from another identity, but must also require search to reject the **published** day and vectors from the prior store until the replacement’s index is published. Specify what happens when a replacement is copied from a snapshot that retains the original identifier. [Contract, index](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:72).
+
+There is also a stale proof item: proof 8 still requires a manifest hash even though version 6 removes the manifest. [Proof plan](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:183).
+
+The busy-reader shutdown now has a defined outcome, and the revised retry key resolves the earlier contradiction. The production writer remains outside the new lock’s protection, as the contract says; §9 still applies to it.
+
+CONSENSUS: no, because the lock identity and startup race are unresolved, and index replacement must cover published as well as staged vectors.
+tokens used
+3,161,303
+**Not yet. The lock is a better signal, but the proposed path-based lock does not support the promise that preflight refuses a live store under any path.**
+
+1. **Aliases bypass the lock.** The writer locks `<store>.writer.lock`. If preflight receives a symlink or hard link to that database under another name, the corresponding `<alias>.writer.lock` can be absent, so the “no lock file” rule accepts it. The planned alias test should catch this, but the contract does not say how it can pass. Define a shared identity and lock location that both entry points resolve *before opening the database*, and state how unsupported aliases are refused. [Contract, row 7 and proof 8](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:114).
+
+2. **The missing-lock rule leaves a start race.** If preflight checks for a lock file, finds none and proceeds as for a historical store, a new-system writer can create and acquire that file immediately afterwards. The rule must ensure that preflight holds the same lock through the copy even when the file did not previously exist, or establish from trusted external information that the input cannot be a new-system writer’s target. Test preflight arriving just before the writer creates its lock. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:118).
+
+3. **Replacement needs to invalidate published vectors too.** The new random identifier distinguishes separately created stores, and the staged-row key is now clear. The contract says to discard *staged* rows from another identity, but must also require search to reject the **published** day and vectors from the prior store until the replacement’s index is published. Specify what happens when a replacement is copied from a snapshot that retains the original identifier. [Contract, index](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:72).
+
+There is also a stale proof item: proof 8 still requires a manifest hash even though version 6 removes the manifest. [Proof plan](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:183).
+
+The busy-reader shutdown now has a defined outcome, and the revised retry key resolves the earlier contradiction. The production writer remains outside the new lock’s protection, as the contract says; §9 still applies to it.
+
+CONSENSUS: no, because the lock identity and startup race are unresolved, and index replacement must cover published as well as staged vectors.

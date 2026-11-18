@@ -1,0 +1,22 @@
+**I agree: the next step is the stored-data census of amount ranges in both systems.** I would not open a repair for the omitted clauses yet. The range problem is more directly connected to what a reader can learn from the answer, and the census can establish its size before we choose a remedy.
+
+**The omitted-clause finding is confirmed as a failure of the written rule.** Both readings mark the same six attempts across three questions. For example, two attempts leave the comparison with nearly $800 billion out of the list of parts not judged, while the third lists it. I checked the [two readings and their key](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md>) against the [reading form](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md>).
+
+My D544 wording was too loose: the *same observed failure* recurs, but its underlying cause has not been established. The pass condition therefore justifies considering a repair; it does not establish that a general repair is ready. I agree to defer it and leave the defect recorded. I would not spend on the model’s account before ranking it against the range finding.
+
+**The range finding is confirmed, with two qualifications.** The stored judgements show the new system’s credit-support question in its top range on all seven days and its supply-commitments question there on the last six. Their opening attempts carry “no reference figure,” and the later stored evidence includes the $105 billion maximum guarantee exposure and $279 billion of supply commitments. [Stored answer choices](</Users/lchingen/hivemind/poc/data/clean-lean-week-2026-11-14/week-r2/c1/ladder/send-1/outcomes.jsonl>), [cited statements](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/side-by-side/SIDE-BY-SIDE-WEEK-CITED.md>)
+
+The open-ended top ranges do lose the ability to distinguish amounts above their boundary. But the claim that **all three answers are supported** is too strong: one reader called the new credit-support answer unsupported and the old financing answer insufficient, partly because a maximum exposure is not necessarily the amount that will be reported. Also, the records establish that the ranges were set without a reference and later exceeded; they do not prove that lack of an opening figure was the sole cause of the poor ranges. [Side-by-side readings](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/side-by-side/SIDE-BY-SIDE-WEEK.md>)
+
+For the **one next step**, census every amount question in the fresh week and the three stored July runs of each system, at **$0 and with no new model calls**:
+
+1. For each question, read the opening article and record whether it gives a comparable amount, its five boundaries, and what the question actually asks.
+2. Trace each day’s answer and the amounts the judge was actually shown. Count a figure as beyond a boundary only when its quantity, period and meaning are comparable; keep maximum exposures, estimates and other ambiguous figures separate.
+3. Report distinct matters separately from repeated questions across draws, and report days separately from questions. Include questions that had an opening figure, so the census can tell whether this is confined to questions without one.
+4. For each candidate, read whether the range hides a distinction the question was meant to track. An end range alone is not a defect.
+
+Your proposed stop line is useful as a **trigger for whether this particular class merits design**: fewer than three additional distinct matters beyond the examples, or the supposed cases failing the comparable-figure check, means do not open a general design on this evidence. It should not mean the three observed examples cease to be defects, and repeated runs of the same matter should not count as three new matters.
+
+The choice among delaying the question, delaying its ranges, or replacing ranges remains open until that census and a review of the decisions those options affect. None is adopted by this step.
+
+Position: Defer the omitted-clause repair; census the range problem across both systems at $0, with comparable amounts and distinct matters counted separately.

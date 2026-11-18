@@ -1,0 +1,902 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1c914-75b7-7030-ad09-ccdaa8bbae4f
+--------
+user
+You are an independent, read-only reviewer, new to this work. Do not edit any file and do not send any network request.
+
+Scope: a small paid probe (18 requests to the frozen production judge, about 4 cents) in /Users/lchingen/hivemind, branch clean-arch.
+Protocol: clean-arch/e2e-misses-2026-11-11/PROBE.md. Sender and reader: clean-arch/e2e-misses-2026-11-11/resend.py.
+
+A first review (clean-arch/e2e-misses-2026-11-11/council/sender-review-codex.md) said NOT READY for four serious findings: (1) an answer
+lost if writing its raw body fails; (2) the reader not checking the case and send recorded inside each outcome; (3) the reading rule
+counting the rung of an answer refused for a reason other than its citations; (4) the reader able to write outside the data folder or
+over an existing reading. Each was changed in resend.py (and the protocol's counts and wording corrected). Check only whether these four
+are closed, and whether the changes broke anything a send or a reading depends on. You may run, it sends nothing:
+  python3 clean-arch/e2e-misses-2026-11-11/resend.py check --case 3 v17 2026-07-08 first --case 3 v17 2026-07-08 accepted --case 1 v17 2026-07-08 accepted --case 3 v17 2026-07-14 accepted --case 2 v22 2026-07-14 accepted --case 3 v22 2026-07-14 accepted
+
+Mark each finding "serious" (it could make a send differ from production's bytes, lose an answer, spend past the cap, damage saved
+data, or apply the reading rule to the wrong answers) or "not serious", with file and line. End with one line: READY TO SEND, or NOT
+READY with the serious findings numbered.
+
+codex
+I’ll review the four fixes and their effect on the send and reading paths using local files only. I won’t send requests or modify files.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'e2e-misses|resend|judge' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+112:- D392: `70:e4` originally linked only to v18; an unsupported `69:e5`/`e181` relation made experimental adapter output `e185` inherit v20. Saved judge requests included `e185` and a revision marker 23 times; v20 and v7 judgments cited it eight times each. This establishes historical propagation, not a changed conclusion. `clean-arch/e2e-2026-11-09/adapter.py` is experimental, not production integration. [Task 3]
+113:- Proposed offline replay: first reproduce untouched execution with a fresh archive and stored full responses only for exact canonical request matches; stop at misses/divergence. Keep the evidence item and change only the disputed edge, checking independent relevance. Changed judge inputs require separately bounded model calls to measure output sensitivity. Proposal was not implemented or validated; see `reports/step2-after-failed-probe-council-2026-11-09/CONCLUSIONS.md`. [Task 3]
+189:- latest_library, all-open context, pre-item snapshot, IREN, MediaTek, Jev, part_of 0.49, collision judge, same_question_other_period, 152/470
+248:- Preflight checks historical identity and selected saved-request portions, not reconstructed complete request bytes; test bytes explicitly for equivalence claims. An old alternate-provider request containing temperature could miss the new request-hash cache and trigger a resend; none was found among 82 local archives, which does not establish external archive contents. [Task 1]
+313:- when aligning text “geometrically with the 3D slab,” the user rejected an overcorrection as “too left are you fucking blind” -> judge placement against the actual slab face, render a cropped preview, and make small measured adjustments rather than a large jump. [Task 1]
+450:- Symptom: evaluation appears to judge semantics. Cause: `assemble_review.py` serializes assistant labels and defaults unlisted records to useful/pass; `evaluate_trial.py` validates completeness/arithmetic. Fix: treat them as mechanics checks and use independent blinded source/output review for semantic claims. [Task 1]
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/e2e-misses-2026-11-11/PROBE.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/e2e-misses-2026-11-11/resend.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/e2e-misses-2026-11-11/council/sender-review-codex.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Re-sending the saved requests behind the two untraced misses: protocol
+     2	
+     3	2026-11-11. Written before any send; revised after the council's challenge (`council/b-codex.md`) and after a finding at no cost
+     4	(below). Part of the round in [LOG.md](LOG.md). Nothing in any step, prompt, rule or saved run changes.
+     5	
+     6	## Found at no cost before the send (`refusal_census.py`)
+     7	
+     8	Draw 3's judge first answered the China share question on 2026-07-08 with **rung 4**, the rung draws 1 and 2 chose that day. The
+     9	frozen check refused that answer because it named the export-controls theme (v8) as a dependency ("v8 is not a dependency of v17");
+    10	the day then re-asked with a note, and the re-sent answer was **rung 5**, which the question kept to the window end. Over the six
+    11	draws, 65 judgements were refused and re-asked (clean 10, 16, 18; production 10, 5, 6); 42 of the refusals are this one, on this
+    12	question. The re-sent answer changed the rung 8 times; 5 of the 8 are on the China share question (clean draw 2 on 07-05, clean
+    13	draw 3 on 07-08, production draw 1 on 07-08 and 07-12, production draw 4 on 07-02); clean draw 3's and production draw 4's changes
+    14	held to the window end and both are misses on the ruler.
+    15	
+    16	## What the sends decide
+    17	
+    18	- China share: whether, on draw 3's first request of 07-08, rung 4 is the judge's usual answer (then the refusal and its re-ask turned
+    19	  an agreeing answer into the miss) or a minority one (then the re-ask only drew the usual answer); and whether the note added on the
+    20	  re-ask itself moves the rung.
+    21	- FY2028 revenue: whether draw 2's window-end request and draw 3's differ in what the judge answers, or each allows both answers.
+    22	
+    23	## The cases (`resend.py`; requests rebuilt by the offline replay of each draw)
+    24	
+    25	| Case | Request | Saved answer to it |
+    26	|---|---|---|
+    27	| A. draw 3, China share, 07-08, first | the day's first request, whose answer the check refused | rung 4, refused (theme named as a dependency) |
+    28	| F. draw 3, China share, 07-08, accepted | the same request with the re-ask note | rung 5, kept |
+    29	| B. draw 1, China share, 07-08, accepted | the request of a draw that moved to rung 4 that day | rung 4, kept |
+    30	| C. draw 3, China share, 07-14, accepted | the window end of the miss | rung 5, kept |
+    31	| D. draw 2, FY2028 revenue, 07-14, accepted | the window end of the miss (one "41%" item, 19 items, previous rung 3) | rung 3, kept |
+    32	| E. draw 3, FY2028 revenue, 07-14, accepted | the window end of a draw that agrees (two "41%" items, 24 items, previous rung 3) | rung 2, kept |
+    33	
+    34	Three sends a case, 18 in all, interleaved and sent at once through the production transport, no archive, one spending limit.
+    35	Cost: about $0.04 expected; $0.65 if every send were tried three times at its worst; cap $0.70. Reviewed before the send
+    36	(`council/sender-review-codex.md`: four serious findings, each closed in `resend.py`, then a second review).
+    37	
+    38	`resend.py check` passed for all six, with no send: each request equals, sorted, the saved archive's request and, as production
+    39	serializes it, what `model.build_request` builds today; each draw's ledger is rebuilt and stopped before that day's judging round; on
+    40	it the saved kept answers pass the frozen check, case A's saved answer is refused again for the same reason, and an answer citing an
+    41	id the request does not show is refused.
+    42	
+    43	## Reading rule, fixed now
+    44	
+    45	Each answer is read for its rung, and for whether the frozen check accepts it. **An answer the check refuses counts for its rung
+    46	only when every reason it was refused for concerns which ids it names** (a dependency, a shown item or theme, a push); a refusal for
+    47	the rung or for `changed` leaves its rung uncounted. Refusals are reported beside, with their reasons. A case with fewer than three
+    48	counted rungs decides nothing. Three answers give a lead, not a rate.
+    49	
+    50	- **A.** Rung 4 in at least two of three: rung 4 is the more common answer to that request in these samples, a lead that the refusal
+    51	  and its re-ask turned an agreeing answer into the miss. Rung 5 in at least two of three: the re-ask drew the more common answer, and
+    52	  the refusal is not shown to be the cause. Anything else: not decided.
+    53	- **F against A.** If F's rungs sit lower (toward 5) than A's by two or more answers, the note itself may move the rung; otherwise the
+    54	  note is not shown to matter.
+    55	- **B.** Read beside A: if both give mostly 4, draw 3's and draw 1's inputs of that day are not shown to differ in what they produce.
+    56	- **C.** Rung 5 in three of three: the window-end request holds the rung the question reached. A rung 4 in any: the window-end answer is
+    57	  itself open. Neither says why the saved run chose 5.
+    58	- **D, E.** D at rung 3 in three of three and E at rung 2 in three of three: the requests differ in what they produce, a lead to trace
+    59	  (not which difference matters). Both mixed: each request allows both answers. Any other pattern: not decided. In D, whether any
+    60	  answer again reads $553 billion as below the $550 billion floor.
+    61	
+    62	## What it cannot say
+    63	
+    64	Three answers a case give no rate. Nothing here covers other days or other questions. An outcome that supports the refusal as the
+    65	cause of the China miss still leaves the window-end rung as the product of every later day.
+
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Re-send saved judge requests of the D392 clean draws as production sends them, several times each, and read the answers through the
+     3	frozen judge's own checks. Each send is a fresh answer: no archive stands in between.
+     4	
+     5	A case is (draw, question, day, which): `accepted` is the request whose answer the saved run accepted for that question on that day;
+     6	`first` is the day's first request of that question when the check refused its answer and the day re-asked with a note. Both come
+     7	from the offline replay of the draw (`poc/data/clean-e2e-misses-2026-11-11/control-d<N>/control-requests.json`, which reproduced every saved
+     8	request of the draw). The answers are checked against the draw's ledger as it stood before that day's judging round, rebuilt by the
+     9	same replay stopped there.
+    10	
+    11	  resend.py check --case 3 v17 2026-07-08 first [--case ...]         no send: every identity below, the ledgers, the worst cost
+    12	  resend.py send  <new folder> --case ... [--sends 3]                 the sends, all cases interleaved and concurrent, one spending limit
+    13	  resend.py read  <send folder> --case ...                            each answer through the schema and the frozen check; rungs by case
+    14	
+    15	Checks before any send, each refusing the run: the request's sorted form is the saved archive's request of the accepted answer, byte
+    16	for byte; the request as production serializes it (json.dumps in the order model.build_request builds) equals what build_request
+    17	builds today from its system and user text; the saved accepted answer passes the frozen check against the rebuilt ledger (positive
+    18	control; for a `first` case, the saved refused answer is refused again), and the same answer with a citation of an id the request
+    19	does not show is refused (negative control). An answer the check refuses still has its rung read: the refusal is about citations."""
+    20	import argparse, concurrent.futures, contextlib, glob, hashlib, json, sqlite3, sys, threading, time
+    21	from pathlib import Path
+    22	
+    23	HERE = Path(__file__).resolve().parent
+    24	ROOT = HERE.parents[1]
+    25	sys.dont_write_bytecode = True
+    26	sys.path[:0] = [str(ROOT / 'clean-arch/step2-edge-effect-2026-11-10')]
+    27	import edge_replay  # noqa: E402  (puts clean-arch/e2e-2026-11-09 and src on the path)
+    28	import budget  # noqa: E402
+    29	from hivemind import config, model  # noqa: E402
+    30	from hivemind.views import judging  # noqa: E402
+    31	
+    32	DATA = ROOT / 'poc/data/clean-e2e-misses-2026-11-11'
+    33	# The check's refusals that concern only which ids an answer names (judging.check_answer); a refused answer's rung is read only when
+    34	# every reason it was refused for is one of these. A refusal for the rung itself, or for `changed`, leaves the rung uncounted.
+    35	CITATION_REASONS = (' is not a dependency of ', ' is not among the evidence shown to ', ' is not a theme in force shown to ',
+    36	                    'push on ', ' is named twice in theme_pushes')
+    37	CAP_USD = 0.70
+    38	
+    39	
+    40	class StopBeforeRound(Exception):
+    41	    pass
+    42	
+    43	
+    44	def sha256(text):
+    45	    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    46	
+    47	
+    48	def saved_first_request(draw, view, day):
+    49	    """The day's first request of the question, when its answer was refused: the refused row of the saved archive, and the reason the
+    50	    check gives for it."""
+    51	    edge_replay.use_draw(draw)
+    52	    rounds = json.loads((DATA / f'control-d{draw}' / 'control-rounds.json').read_text())
+    53	    entries = [entry for entry in rounds.get(day, []) if entry['view'] == view]
+    54	    if len(entries) < 2:
+    55	        raise SystemExit(f'draw {draw} asked {view} once on {day}: there is no refused first request')
+    56	    first_sha = entries[0]['sha256']
+    57	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'archive.sqlite'}?mode=ro", uri=True)) as conn:
+    58	        rows = conn.execute("select request_sha256, request_json, answer_json from model_calls where request_sha256 like ?", (first_sha + ':refused:%',)).fetchall()
+    59	    if len(rows) != 1:
+    60	        raise SystemExit(f'draw {draw} {view} {day}: {len(rows)} refused rows for the first request')
+    61	    _, request_json, answer_json = rows[0]
+    62	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+    63	        rung = conn.execute('select rung from judgements where view_id=? and publication_day=?', (view, day)).fetchone()[0]
+    64	    return {'request_sha256': first_sha, 'rung': rung, 'request_json': request_json, 'answer': json.loads(answer_json)}
+    65	
+    66	
+    67	def saved_judgement(draw, view, day):
+    68	    edge_replay.use_draw(draw)
+    69	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'views.sqlite'}?mode=ro", uri=True)) as conn:
+    70	        row = conn.execute('select request_sha256, rung, seq from judgements where view_id=? and publication_day=?', (view, day)).fetchone()
+    71	    if not row:
+    72	        raise SystemExit(f'draw {draw} has no judgement of {view} on {day}')
+    73	    request_sha, rung, seq = row
+    74	    with contextlib.closing(sqlite3.connect(f"file:{edge_replay.SAVED / 'archive.sqlite'}?mode=ro", uri=True)) as conn:
+    75	        request_json, answer_json = conn.execute('select request_json, answer_json from model_calls where request_sha256=?', (request_sha,)).fetchone()
+    76	    return {'request_sha256': request_sha, 'rung': rung, 'seq': seq, 'request_json': request_json, 'answer': json.loads(answer_json)}
+    77	
+    78	
+    79	def ledger_before(draw, day):
+    80	    """The draw's ledger after the articles of `day` and before its judging round, rebuilt once by the offline replay."""
+    81	    folder = DATA / f'ledger-d{draw}-before-{day}'
+    82	    if (folder / 'views.sqlite').exists() and (folder / 'stopped-before.json').exists():
+    83	        return folder / 'views.sqlite'
+    84	    edge_replay.use_draw(draw)
+    85	    production_judge = edge_replay.e2e_adapter.Adapter.judge
+    86	
+    87	    def stop_or_judge(self, round_day, seq, changed):
+    88	        if round_day == day:
+    89	            raise StopBeforeRound(round_day)
+    90	        return production_judge(self, round_day, seq, changed)
+    91	
+    92	    edge_replay.e2e_adapter.Adapter.judge = stop_or_judge
+    93	    try:
+    94	        edge_replay.run_replay(folder, edge_replay.STEP2)
+    95	        raise SystemExit(f'the replay of draw {draw} never reached a judging round on {day}')
+    96	    except StopBeforeRound:
+    97	        pass
+    98	    finally:
+    99	        edge_replay.e2e_adapter.Adapter.judge = production_judge
+   100	    (folder / 'stopped-before.json').write_text(json.dumps({'draw': draw, 'day': day, 'saved run': str(edge_replay.SAVED)}))
+   101	    return folder / 'views.sqlite'
+   102	
+   103	
+   104	def read_only(path):
+   105	    conn = sqlite3.connect(f'file:{Path(path).resolve()}?mode=ro', uri=True)
+   106	    conn.row_factory = sqlite3.Row
+   107	    return conn
+   108	
+   109	
+   110	def load_case(draw, view, day, which='accepted'):
+   111	    if which not in ('accepted', 'first'):
+   112	        raise SystemExit(f'a case is the accepted or the first request, not {which}')
+   113	    saved = saved_judgement(draw, view, day) if which == 'accepted' else saved_first_request(draw, view, day)
+   114	    requests = json.loads((DATA / f'control-d{draw}' / 'control-requests.json').read_text())
+   115	    report = json.loads((DATA / f'control-d{draw}' / 'control-report.json').read_text())
+   116	    if not report['passed'] or report['saved run'] != str(edge_replay.SAVED):
+   117	        raise SystemExit(f'the offline replay of draw {draw} did not pass or is of another run')
+   118	    request = requests.get(saved['request_sha256'])
+   119	    if request is None:
+   120	        raise SystemExit(f'the replay of draw {draw} holds no request {saved["request_sha256"]}')
+   121	    canonical = json.dumps(request, sort_keys=True, ensure_ascii=False)
+   122	    if canonical != saved['request_json'] or sha256(canonical) != saved['request_sha256']:
+   123	        raise SystemExit(f'draw {draw} {view} {day}: the rebuilt request is not the saved one')
+   124	    cfg = config.load(edge_replay.e2e_adapter.CONFIG)
+   125	    rebuilt = model.build_request(cfg.rejudging, request['messages'][0]['content'], request['messages'][-1]['content'],
+   126	                                  judging.schema_for(cfg.rejudging.prompt_version), 'judgement', cfg.provider)
+   127	    if json.dumps(rebuilt) != json.dumps(request):
+   128	        raise SystemExit(f'draw {draw} {view} {day}: the request is not, byte for byte, what model.build_request builds today')
+   129	    ledger = ledger_before(draw, day)
+   130	    with contextlib.closing(read_only(ledger)) as conn:
+   131	        if conn.execute('select 1 from judgements where view_id=? and publication_day=?', (view, day)).fetchone():
+   132	            raise SystemExit(f'the ledger before {day} already holds that day\'s judgement of {view}')
+   133	        user = request['messages'][-1]['content']
+   134	        errors = judging.check_answer(conn, view, saved['answer'], user)
+   135	        refused = judging.check_answer(conn, view, {**saved['answer'], 'cites': saved['answer']['cites'] + ['e999999']}, user)
+   136	    if which == 'accepted' and errors:
+   137	        raise SystemExit(f'draw {draw} {view} {day}: the saved answer fails the check on the rebuilt ledger: {errors}')
+   138	    if which == 'first' and not errors:
+   139	        raise SystemExit(f'draw {draw} {view} {day}: the saved refused answer passes the check on the rebuilt ledger')
+   140	    if not refused:
+   141	        raise SystemExit(f'draw {draw} {view} {day}: negative control failed, an unshown citation was not refused')
+   142	    return {'key': f'd{draw}-{view}-{day}-{which}', 'draw': draw, 'view': view, 'day': day, 'which': which, 'request': request,
+   143	            'ledger': str(ledger), 'saved rung': saved['rung'], 'saved answer': saved['answer'], 'saved answer rung': saved['answer']['rung'],
+   144	            'saved answer refused for': errors, 'as sent sha256': sha256(json.dumps(request)), 'worst cost per attempt (usd)': budget.worst_cost(request)}
+   145	
+   146	
+   147	def cases_of(arguments):
+   148	    return [load_case(int(draw), view, day, which) for draw, view, day, which in arguments.case]
+   149	
+   150	
+   151	def facts(cases, sends):
+   152	    worst = sum(case['worst cost per attempt (usd)'] for case in cases) * sends * budget.ATTEMPTS
+   153	    return {'cases': {case['key']: {'saved rung': case['saved rung'], 'saved answer to this request': case['saved answer rung'],
+   154	                                    'saved answer refused for': case['saved answer refused for'], 'as sent sha256': case['as sent sha256'], 'ledger': case['ledger'],
+   155	                                    'user text characters': len(case['request']['messages'][-1]['content'])} for case in cases},
+   156	            'sends per case': sends, 'sends': sends * len(cases), 'worst cost, every send tried three times (usd)': round(worst, 4), 'cap (usd)': CAP_USD}
+   157	
+   158	
+   159	def send(cases, output, sends):
+   160	    registered = facts(cases, sends)
+   161	    if registered['worst cost, every send tried three times (usd)'] > CAP_USD:
+   162	        raise SystemExit('the worst cost passes the cap')
+   163	    output = Path(output).resolve()
+   164	    if DATA.resolve() not in output.parents:
+   165	        raise SystemExit(f'the sends are written only under {DATA}')
+   166	    output.mkdir(parents=True, exist_ok=False)
+   167	    (output / 'raw').mkdir()
+   168	    (output / 'registration.json').write_text(json.dumps({**registered, 'registered at': time.strftime('%Y-%m-%dT%H:%M:%S%z')}, indent=1))
+   169	    current = threading.local()
+   170	
+   171	    def attempt(provider, request):
+   172	        """One attempt through the production transport; the body is on disk before anything else reads it."""
+   173	        current.attempts += 1
+   174	        response = model.openai_transport(provider, request, max_attempts=1)
+   175	        current.returned = response                     # held before anything that can fail
+   176	        try:
+   177	            (output / 'raw' / f'{current.name}-attempt-{current.attempts}.json').write_text(json.dumps(response, ensure_ascii=False))
+   178	        except Exception as error:                     # the answer stays in memory and reaches the outcome file
+   179	            current.raw_write_failure = f'{type(error).__name__}: {error}'
+   180	        return response
+   181	
+   182	    limit = budget.Budget(CAP_USD, attempt=attempt)
+   183	    provider = config.load(edge_replay.e2e_adapter.CONFIG).provider
+   184	
+   185	    def one(job):
+   186	        case, number = job
+   187	        current.name, current.attempts, current.returned, current.raw_write_failure = f"{case['key']}-{number}", 0, None, None
+   188	        outcome, started = {'case': case['key'], 'send': number}, time.time()
+   189	        try:
+   190	            outcome['response'] = limit.send(provider, case['request'])
+   191	        except Exception as error:   # recorded as an outcome; never re-sent by this script
+   192	            outcome['error'] = f'{type(error).__name__}: {error}'
+   193	            if getattr(error, 'response_body', None) is not None:
+   194	                outcome['response body of the failed attempt'] = error.response_body
+   195	            if current.returned is not None:
+   196	                outcome['response'] = current.returned
+   197	                outcome['failure after the answer returned'] = outcome.pop('error')
+   198	        outcome.update(seconds=round(time.time() - started, 1), attempts=current.attempts)
+   199	        if current.raw_write_failure:
+   200	            outcome['raw body not written'] = current.raw_write_failure
+   201	        (output / f"{case['key']}-{number}.json").write_text(json.dumps(outcome, ensure_ascii=False, indent=1))
+   202	        return outcome
+   203	
+   204	    jobs = [(case, number) for number in range(1, sends + 1) for case in cases]
+   205	    with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(jobs), 16)) as pool:
+   206	        outcomes = list(pool.map(one, jobs))
+   207	    (output / 'spent.json').write_text(json.dumps({'spent usd (from tokens; a lost answer at its reserve)': round(limit.spent_usd, 4),
+   208	                                                   'answered': sum('response' in o for o in outcomes), 'failed': sum('error' in o for o in outcomes)}, indent=1))
+   209	    print((output / 'spent.json').read_text())
+   210	
+   211	
+   212	def read_outcome(outcome, case):
+   213	    if 'error' in outcome:
+   214	        return {'status': 'not answered', 'detail': str(outcome['error'])}
+   215	    try:
+   216	        answer = json.loads(outcome['response']['choices'][0]['message']['content'])
+   217	    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+   218	        return {'status': 'malformed', 'detail': str(error)}
+   219	    schema = case['request']['response_format']['json_schema']['schema']
+   220	    errors = model.check_schema(answer, schema)
+   221	    if errors:
+   222	        return {'status': 'refused by the schema', 'detail': '; '.join(errors[:3])}
+   223	    with contextlib.closing(read_only(case['ledger'])) as conn:
+   224	        errors = judging.check_answer(conn, case['view'], answer, case['request']['messages'][-1]['content'])
+   225	    rung_counts = not errors or all(any(reason in error for reason in CITATION_REASONS) for error in errors)
+   226	    return {'status': 'refused by the check' if errors else 'accepted', 'detail': '; '.join(errors), 'rung': answer['rung'], 'rung counts': rung_counts,
+   227	            'cites_views': answer['cites_views'], 'theme_pushes': answer['theme_pushes'],
+   228	            'changed': answer['changed'], 'cites': answer['cites'], 'reference': answer['reference'], 'implied_outcome': answer['implied_outcome'],
+   229	            'reasons': answer['reasons'], 'why_changed': answer['why_changed'], 'key order as production': list(answer) == list(case['saved answer'])}
+   230	
+   231	
+   232	def read(cases, send_folder):
+   233	    send_folder = Path(send_folder).resolve()
+   234	    if DATA.resolve() not in send_folder.parents:
+   235	        raise SystemExit(f'a reading is written only under {DATA}')
+   236	    if (send_folder / 'reading.json').exists():
+   237	        raise SystemExit(f'{send_folder} already holds a reading; nothing is overwritten')
+   238	    registration = json.loads((send_folder / 'registration.json').read_text())
+   239	    for case in cases:
+   240	        if registration['cases'].get(case['key'], {}).get('as sent sha256') != case['as sent sha256']:
+   241	            raise SystemExit(f"{send_folder} registers another request for {case['key']}; nothing is read")
+   242	    rows, summary = [], {}
+   243	    for case in cases:
+   244	        for number in range(1, registration['sends per case'] + 1):
+   245	            try:
+   246	                outcome = json.loads((send_folder / f"{case['key']}-{number}.json").read_text())
+   247	                if outcome.get('case') != case['key'] or outcome.get('send') != number:
+   248	                    raise ValueError(f"the file records case {outcome.get('case')} send {outcome.get('send')}")
+   249	                row = read_outcome(outcome, case)
+   250	            except Exception as error:   # an outcome this reader cannot read is reported and not counted
+   251	                row = {'status': 'unreadable', 'detail': f'{type(error).__name__}: {error}'}
+   252	            rows.append({'case': case['key'], 'send': number, **row})
+   253	        accepted = [row['rung'] for row in rows if row['case'] == case['key'] and row['status'] == 'accepted']
+   254	        refused = [row['rung'] for row in rows if row['case'] == case['key'] and row['status'] == 'refused by the check' and row['rung counts']]
+   255	        summary[case['key']] = {'saved rung of the day': case['saved rung'], 'saved answer to this request': case['saved answer rung'],
+   256	                                'accepted rungs': sorted(accepted), 'rungs of answers the check refused for a cited id only': sorted(refused),
+   257	                                'answers whose rung is not counted': registration['sends per case'] - len(accepted) - len(refused)}
+   258	    (send_folder / 'reading.json').write_text(json.dumps({'summary': summary, 'rows': rows}, ensure_ascii=False, indent=1))
+   259	    for row in rows:
+   260	        print(json.dumps({k: v for k, v in row.items() if k in ('case', 'send', 'status', 'detail', 'rung', 'rung counts', 'changed', 'key order as production')}))
+   261	    print(json.dumps(summary, indent=1))
+   262	
+   263	
+   264	if __name__ == '__main__':
+   265	    parser = argparse.ArgumentParser()
+   266	    parser.add_argument('mode', choices=['check', 'send', 'read'])
+   267	    parser.add_argument('folder', nargs='?')
+   268	    parser.add_argument('--case', nargs=4, action='append', required=True, metavar=('DRAW', 'QUESTION', 'DAY', 'WHICH'),
+   269	                        help='WHICH: accepted (the request whose answer the run kept) or first (the day\'s first request, refused)')
+   270	    parser.add_argument('--sends', type=int, default=3)
+   271	    arguments = parser.parse_args()
+   272	    cases = cases_of(arguments)
+   273	    if arguments.mode == 'check':
+   274	        print(json.dumps(facts(cases, arguments.sends), indent=1))
+   275	    elif not arguments.folder:
+   276	        parser.error(f'{arguments.mode} needs a folder')
+   277	    elif arguments.mode == 'send':
+   278	        send(cases, arguments.folder, arguments.sends)
+   279	    else:
+   280	        read(cases, arguments.folder)
+
+ succeeded in 0ms:
+     1	The probe is **not ready to send**. The six-request check passed, but a returned answer can be lost, and the reader can count an answer under the wrong case or count a refusal for a reason other than the one assumed by the protocol.
+     2	
+     3	**Serious findings**
+     4	
+     5	1. **A returned answer can be lost if saving the raw response fails.** In [resend.py](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:167), the response is assigned to `current.returned` only *after* the raw file is written. If that write raises, the exception handler has no saved response to put in the outcome. The spending guard charges the attempt, but the answer is lost.
+     6	
+     7	2. **The reader does not verify an outcome’s case or send number.** [resend.py](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:222) checks the folder’s registered request hashes, then reads each file by name without checking the `case` and `send` recorded inside it. For example, a copied or misnamed outcome can be counted as an answer to another case. A matching folder registration does not bind each outcome to its request.
+     8	
+     9	3. **The reading rule counts refusals whose rung may itself be invalid.** [PROBE.md](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/PROBE.md:44) says refused answers count because the observed refusals concern cited IDs. But [judging.py](/Users/lchingen/hivemind/src/hivemind/views/judging.py:210) can also refuse an out-of-range rung or an inconsistent `changed` value, and [resend.py](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:235) counts every check-refused rung. The reason for a future refusal must be inspected before applying that reading rule.
+    10	
+    11	4. **`read` can overwrite a file outside the data folder.** [resend.py](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:222) accepts any folder with a matching registration and writes `reading.json` there without checking its location or whether that file already exists. That can damage an existing reading.
+    12	
+    13	**A. Saved requests and ledger.** The permitted offline check passed all six cases. For the first case, the first recorded request matches a refused archive row; its saved answer is rung 4 and is refused again for `v8 is not a dependency of v17`. All six rebuilt requests match their saved canonical requests and today’s production serialization. The ledger is stopped **before the day’s round**, not at the precise instant that answer was checked. The check’s relevant state appears consistent with that use: other judgments in the round are recorded separately, while the request supplies the shown IDs. The passing checks do not independently prove every ledger value is identical at the exact checking instant.
+    14	
+    15	**B. Sending.** Apart from finding 1, the sender uses one-attempt transports inside the shared limit’s maximum of three attempts. The six cases’ computed worst cost is $0.6528 against the $0.70 cap; the limit reserves under a lock. The send output is constrained to a new folder beneath the data directory. This conclusion assumes the budget’s token-price and worst-cost bounds hold.
+    16	
+    17	**C. Reading.** Individual malformed or unreadable outcomes are caught and reported rather than crashing the outcome loop. Findings 2–4 remain. A missing or malformed registration can still stop the reader before that loop; it does not produce a count.
+    18	
+    19	**D. Protocol claims — not serious.** [PROBE.md](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/PROBE.md:11) says **4 of 8** changed rungs were on the China question, but lists five; the stored census also shows five. Its descriptions of a two-out-of-three result as the judge’s “usual” answer and as showing that the re-ask turned an answer into a miss go beyond what three samples establish. They support a lead, not a demonstrated rate or cause.
+    20	
+    21	No network request was sent and no file was edited.
+    22	
+    23	
+    24	
+    25	NOT READY — serious findings 1, 2, 3 and 4.
+exec
+/opt/homebrew/bin/zsh -lc 'git status --short --branch' in /Users/lchingen/hivemind
+ succeeded in 1178ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-fcaeBuDT' (errno=Operation not permitted)
+2026-11-11 00:28:48.559 xcodebuild[29175:45082467]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-11 00:28:48.672 xcodebuild[29175:45082466] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-kbYy2wQP' (errno=Operation not permitted)
+2026-11-11 00:28:48.996 xcodebuild[29177:45082479]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-11 00:28:49.107 xcodebuild[29177:45082478] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+## clean-arch
+ M AGENTS.md
+ M clean-arch/PRD.md
+ M clean-arch/architecture.html
+ M clean-arch/step1-unfiled-2026-11-08/LOG.md
+ M clean-arch/step2-validation-2026-11-07/LOG.md
+ M clean-arch/step4-2026-11-10/DESIGN.md
+ M docs/CURRENT_STATE.md
+ M docs/DECISIONS-log.md
+ M docs/DECISIONS.md
+?? clean-arch/e2e-misses-2026-11-11/
+?? clean-arch/step1-unfiled-2026-11-08/council/gh-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gi-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gi-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gj-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gk-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gl-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gm-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gm-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gn-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gn-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/go-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/go-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gp-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gp-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gq-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gq-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gr-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gr-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gs-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gs-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gt-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gt-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gu-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gu-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gv-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gw-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gw-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gx-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gx-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gy-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gy-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/gz-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ha-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ha-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hb-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hb-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hc-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hc-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hd-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hd-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/he-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/he-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hf-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hf-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hg-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hg-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hh-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hh-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hi-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hi-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hj-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hk-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hl-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hm-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hm-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hn-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hn-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ho-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ho-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hp-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hp-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hq-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hq-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hr-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hr-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hs-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hs-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ht-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ht-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hu-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hu-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hv-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hw-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hw-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hx-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hx-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hy-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hy-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/hz-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ia-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ia-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ib-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ib-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ic-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ic-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/id-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/id-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ie-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ie-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/if-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/if-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ig-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ig-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ih-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ih-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ii-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ii-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ij-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ij-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ik-audit-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ik-audit-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/il-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/il-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/im-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/im-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/in-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/in-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/io-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/io-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ip-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ip-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iq-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iq-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ir-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ir-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/is-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/is-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/it-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/it-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iu-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iu-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iu-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iv-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iw-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iw-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ix-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iy-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iy-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iz-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/iz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ja-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ja-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ja-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jb-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jb-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jc-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jc-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jd-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jd-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/je-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/je-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jf-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jf-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jg-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jg-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jh-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jh-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ji-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ji-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jj-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jk-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jl-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jm-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jm-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jn-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jn-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jo-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jo-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jp-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jp-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jq-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jq-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jr-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jr-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/js-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/js-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jt-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jt-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ju-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ju-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jv-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jv-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jw-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jw-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jx-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jx-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jy-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jy-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jz-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/jz-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ka-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ka-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kb-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kb-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kc-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kc-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kd-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kd-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ke-challenge.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ke-claude.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ke-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kf-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kf-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kg-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kg-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kh-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kh-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ki-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/ki-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kj-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kj-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kk-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kk-handoff.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kl-codex.md
+?? clean-arch/step1-unfiled-2026-11-08/council/kl-handoff.md
+?? clean-arch/step2-edge-effect-2026-11-10/
+?? clean-arch/step2-revision-links-2026-11-10/
+?? clean-arch/step4-2026-11-10/census/
+?? clean-arch/step4-2026-11-10/dryrun/
+?? clean-arch/step4-2026-11-10/dryrun10/
+?? clean-arch/step4-2026-11-10/dryrun11/
+?? clean-arch/step4-2026-11-10/dryrun12/
+?? clean-arch/step4-2026-11-10/dryrun13/
+?? clean-arch/step4-2026-11-10/dryrun14/
+?? clean-arch/step4-2026-11-10/dryrun2/
+?? clean-arch/step4-2026-11-10/dryrun3/
+?? clean-arch/step4-2026-11-10/dryrun4/
+?? clean-arch/step4-2026-11-10/dryrun5/
+?? clean-arch/step4-2026-11-10/dryrun6/
+?? clean-arch/step4-2026-11-10/dryrun7/
+?? clean-arch/step4-2026-11-10/dryrun8/
+?? clean-arch/step4-2026-11-10/dryrun9/
+?? clean-arch/step4-2026-11-10/ladder/
+?? clean-arch/step4-2026-11-10/probe-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d413-d414-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d416-d418-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d420-d421-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-d421c-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-direction-2026-11-10/
+?? clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/
+?? clean-arch/step4-2026-11-10/readings_summary.md
+?? clean-arch/step4-2026-11-10/readings_summary.py
+?? clean-arch/step4-2026-11-10/reference/
+?? clean-arch/step4-2026-11-10/stage_a/
+?? clean-arch/step4-2026-11-10/stage_b/
+?? reports/step2-after-failed-probe-council-2026-11-09/
+?? reports/step2-jev-decision-council-2026-11-09/
+?? reports/step2-jev-strengthening-council-2026-11-09/
+?? reports/step2-loop-retrospective-2026-11-09/
+?? reports/step2-merge-fix-council-2026-11-09/
+?? reports/step2-next-action-2026-11-09/
+?? reports/step2-revision-census-2026-11-09/
+?? reports/step2-score-council-2026-11-08/
+?? reports/step2-wrong-merge-council-2026-11-09/
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba clean-arch/step2-edge-effect-2026-11-10/budget.py' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+nl: clean-arch/step2-edge-effect-2026-11-10/budget.py: No such file or directory
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/views/judging.py | sed -n '180,275p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   180	
+   181	
+   182	def themes_shown_in(request_text):
+   183	    """The theme ids of the block a request carried: the ids the answer may name, whatever the ledger says now."""
+   184	    block = request_text.split('\n[Themes in force, ', 1)
+   185	    return set(re.findall(r'^- (v\d+) \(', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
+   186	
+   187	
+   188	def evidence_shown_in(request_text):
+   189	    """The evidence ids the request listed: the ids the answer may cite and push."""
+   190	    block = request_text.split('\n[Evidence in ', 1)
+   191	    return set(re.findall(r'^- (e\d+) \[', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
+   192	
+   193	
+   194	def check_answer(conn, view_id, data, request_text=None):
+   195	    """request_text: the user message that was sent, so theme and evidence ids are checked against what it carried (a theme may have
+   196	    closed or opened since); without it, against what the ledger would show now."""
+   197	    errors = []
+   198	    shown = themes_shown_in(request_text) if request_text is not None else {theme['view_id'] for theme in themes_in_force(conn, view_id)}
+   199	    named = []
+   200	    for entry in data.get('theme_pushes', []):
+   201	        if entry['view_id'] in named:
+   202	            errors.append(f'{entry["view_id"]} is named twice in theme_pushes')
+   203	        elif entry['view_id'] not in shown:
+   204	            errors.append(f'{entry["view_id"]} is not a theme in force shown to {view_id}')
+   205	        named.append(entry['view_id'])
+   206	    # the closed set is what the request showed (D198), read from the text that was sent, else computed from the ledger
+   207	    allowed = evidence_shown_in(request_text) if request_text is not None else {p['evidence_id'] for p in evidence_in_view(conn, view_id)[0]}
+   208	    not_allowed = lambda e: f'{e} is not among the evidence shown to {view_id}'
+   209	    bad_push = lambda e: f'push on {e} which was not shown to {view_id}'
+   210	    deps = {d['resolved_to'] for d in store.dependencies_of(conn, view_id) if d['resolved_to']}
+   211	    rungs = store.rungs_of(conn, view_id)
+   212	    if not 1 <= data['rung'] <= len(rungs):
+   213	        errors.append(f'rung {data["rung"]} outside 1..{len(rungs)}')
+   214	    for cited in data['cites']:
+   215	        if cited not in allowed:
+   216	            errors.append(not_allowed(cited))
+   217	    for cited in data['cites_views']:
+   218	        if cited not in deps:
+   219	            errors.append(f'{cited} is not a dependency of {view_id}')
+   220	    for push in data['pushes']:
+   221	        if push['evidence_id'] not in allowed:
+   222	            errors.append(bad_push(push['evidence_id']))
+   223	    for field in STANCE_FIELDS:
+   224	        if not str(data.get(field) or '').strip():
+   225	            errors.append(f'{field} is empty: state what the market expects and the figure or date the evidence implies')
+   226	    last = store.current_state(conn, view_id)
+   227	    if last is None and not data['changed']:
+   228	        errors.append('first judgement must say changed')
+   229	    if last is not None and last['rung'] != data['rung'] and not data['changed']:
+   230	        errors.append(f'rung moved from {last["rung"]} to {data["rung"]} but changed is false')
+   231	    return errors
+   232	
+   233	
+   234	def _record(conn, cfg, view_id, seq, item, answer):
+   235	    data = vocabulary.judgement_answer(answer.data)
+   236	    judgement_id = store.insert(conn, 'judgements', view_id=view_id, seq=seq, input_id=item['input_id'], rung=data['rung'],
+   237	                                reasons=data['reasons'], cited_evidence_json=json.dumps(data['cites']), cited_views_json=json.dumps(data['cites_views']),
+   238	                                pushes_json=json.dumps(data['pushes'], ensure_ascii=False), changed=1 if data['changed'] else 0,
+   239	                                theme_pushes_json=json.dumps(data.get('theme_pushes', []), ensure_ascii=False),
+   240	                                reference=data.get('reference'), implied_outcome=data.get('implied_outcome'),
+   241	                                why_changed=data['why_changed'], config_checksum=cfg.checksum, call_id=answer.call_id,
+   242	                                request_sha256=answer.request_sha256, publication_day=item['publication_day'])
+   243	    conn.commit()
+   244	    return {'view_id': view_id, 'judgement_id': judgement_id, 'rung': data['rung'], 'changed': data['changed'], 'cost': answer.cost_usd, 'cached': answer.cached}
+   245	
+   246	
+   247	JUDGE_WORKERS = 32     # a day's round is up to 40 judgements of about 16 s each in two dependency levels (themes, then assets); 32 at a time makes a round about two calls long (2026-11-02)
+   248	
+   249	
+   250	def upstream(conn, view_id):
+   251	    """Every view this one depends on, directly or through its dependencies."""
+   252	    seen, stack = set(), [view_id]
+   253	    while stack:
+   254	        for dep in store.dependencies_of(conn, stack.pop()):
+   255	            target = dep['resolved_to']
+   256	            if target and target not in seen:
+   257	                seen.add(target)
+   258	                stack.append(target)
+   259	    return seen
+   260	
+   261	
+   262	def open_asset_views(conn):
+   263	    return [v for v in store.open_views(conn) if store.view(conn, v)['object_kind'] != 'theme']
+   264	
+   265	
+   266	def queued_by_change(conn, view_id):
+   267	    """What a changed conclusion of this view queues: its dependants and, for a theme thesis, every open asset thesis. The one rule,
+   268	    read for a live judgement and for the judgements a resumed round finds committed."""
+   269	    queued = store.dependants_of(conn, view_id)
+   270	    if store.view(conn, view_id)['object_kind'] == 'theme':
+   271	        queued = queued + open_asset_views(conn)
+   272	    return queued
+   273	
+   274	
+   275	def queued_by_ledger(conn, seq):
+
+exec
+/opt/homebrew/bin/zsh -lc 'python3 clean-arch/e2e-misses-2026-11-11/resend.py check --case 3 v17 2026-07-08 first --case 3 v17 2026-07-08 accepted --case 1 v17 2026-07-08 accepted --case 3 v17 2026-07-14 accepted --case 2 v22 2026-07-14 accepted --case 3 v22 2026-07-14 accepted' in /Users/lchingen/hivemind
+ succeeded in 71ms:
+{
+ "cases": {
+  "d3-v17-2026-07-08-first": {
+   "saved rung": 5,
+   "saved answer to this request": 4,
+   "saved answer refused for": [
+    "v8 is not a dependency of v17"
+   ],
+   "as sent sha256": "69d9e275efe88fb4425c2b02dca0781807abaa26528919bd72a9f6bb3bc7b359",
+   "ledger": "/Users/lchingen/hivemind/poc/data/clean-e2e-misses-2026-11-11/ledger-d3-before-2026-07-08/views.sqlite",
+   "user text characters": 37683
+  },
+  "d3-v17-2026-07-08-accepted": {
+   "saved rung": 5,
+   "saved answer to this request": 5,
+   "saved answer refused for": [],
+   "as sent sha256": "9cf3230ea7919886238ddffc631f5702d5654a188805b816827eb7e3a6765ab0",
+   "ledger": "/Users/lchingen/hivemind/poc/data/clean-e2e-misses-2026-11-11/ledger-d3-before-2026-07-08/views.sqlite",
+   "user text characters": 37818
+  },
+  "d1-v17-2026-07-08-accepted": {
+   "saved rung": 4,
+   "saved answer to this request": 4,
+   "saved answer refused for": [],
+   "as sent sha256": "72d712173340575cec8435d7a57045cd1d0e5821055535205fe955d9e8e823ff",
+   "ledger": "/Users/lchingen/hivemind/poc/data/clean-e2e-misses-2026-11-11/ledger-d1-before-2026-07-08/views.sqlite",
+   "user text characters": 35721
+  },
+  "d3-v17-2026-07-14-accepted": {
+   "saved rung": 5,
+   "saved answer to this request": 5,
+   "saved answer refused for": [],
+   "as sent sha256": "b5bf1273cefb7e5711e0fb1d09a56493f253b2dfcf259b946d499bafa0324a22",
+   "ledger": "/Users/lchingen/hivemind/poc/data/clean-e2e-misses-2026-11-11/ledger-d3-before-2026-07-14/views.sqlite",
+   "user text characters": 47186
+  },
+  "d2-v22-2026-07-14-accepted": {
+   "saved rung": 3,
+   "saved answer to this request": 3,
+   "saved answer refused for": [],
+   "as sent sha256": "7a552fe97916cdad84c1f4eebb955765787888d58cc2683d37f4383c77a62ff2",
+   "ledger": "/Users/lchingen/hivemind/poc/data/clean-e2e-misses-2026-11-11/ledger-d2-before-2026-07-14/views.sqlite",
+   "user text characters": 21704
+  },
+  "d3-v22-2026-07-14-accepted": {
+   "saved rung": 2,
+   "saved answer to this request": 2,
+   "saved answer refused for": [],
+   "as sent sha256": "6d5aadf121aeabfe69dd01acbb87139d5f0c17ab7838533d477f88ed2786cd16",
+   "ledger": "/Users/lchingen/hivemind/poc/data/clean-e2e-misses-2026-11-11/ledger-d3-before-2026-07-14/views.sqlite",
+   "user text characters": 25107
+  }
+ },
+ "sends per case": 3,
+ "sends": 18,
+ "worst cost, every send tried three times (usd)": 0.6528,
+ "cap (usd)": 0.7
+}
+
+codex
+The probe is **not ready**: an answer can still be lost if both saves fail, and the reading’s overwrite check is not atomic.
+
+For example, if the disk fills after an answer returns, the raw-body write and the outcome write can both fail. The returned answer then remains only in memory.
+
+1. **Serious — answer preservation remains incomplete.** [resend.py:175](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:175) now retains the response before the raw write, closing the original failure when the outcome write succeeds. But [resend.py:201](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:201) has no fallback if that write also fails.
+
+2. **Not serious — closed.** [resend.py:247](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:247) checks the case and send number inside each outcome; a mismatch is reported as unreadable and not counted.
+
+3. **Not serious — closed.** [resend.py:225](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:225) counts a refused answer only when every reason matches a cited-ID reason. The current judge’s rung, `changed`, and empty-field refusals do not match those reasons.
+
+4. **Serious — protection is incomplete.** [resend.py:233](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:233) checks the folder and an existing reading, but [resend.py:258](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:258) later opens the file without exclusive creation. A file created between those operations can be overwritten; a dangling `reading.json` symlink can also direct the write outside the data folder.
+
+The permitted offline check passed all six cases: 18 sends, with a calculated worst cost of $0.6528 against the $0.70 cap. I sent no network request and edited no file.
+
+NOT READY — serious findings 1 and 4.
+tokens used
+50,959
+The probe is **not ready**: an answer can still be lost if both saves fail, and the reading’s overwrite check is not atomic.
+
+For example, if the disk fills after an answer returns, the raw-body write and the outcome write can both fail. The returned answer then remains only in memory.
+
+1. **Serious — answer preservation remains incomplete.** [resend.py:175](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:175) now retains the response before the raw write, closing the original failure when the outcome write succeeds. But [resend.py:201](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:201) has no fallback if that write also fails.
+
+2. **Not serious — closed.** [resend.py:247](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:247) checks the case and send number inside each outcome; a mismatch is reported as unreadable and not counted.
+
+3. **Not serious — closed.** [resend.py:225](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:225) counts a refused answer only when every reason matches a cited-ID reason. The current judge’s rung, `changed`, and empty-field refusals do not match those reasons.
+
+4. **Serious — protection is incomplete.** [resend.py:233](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:233) checks the folder and an existing reading, but [resend.py:258](/Users/lchingen/hivemind/clean-arch/e2e-misses-2026-11-11/resend.py:258) later opens the file without exclusive creation. A file created between those operations can be overwritten; a dangling `reading.json` symlink can also direct the write outside the data folder.
+
+The permitted offline check passed all six cases: 18 sends, with a calculated worst cost of $0.6528 against the $0.70 cap. I sent no network request and edited no file.
+
+NOT READY — serious findings 1 and 4.

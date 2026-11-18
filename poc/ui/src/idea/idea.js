@@ -161,6 +161,7 @@ export function ideaCard({
   scoreOf,
   onOpen,
   composite,
+  compositeNote = '',
   day,
   chartStart,
   progress = ['search'],
@@ -190,7 +191,9 @@ export function ideaCard({
       : `<span class="chip ${chip.cls}">${esc(chip.badge)}</span>`;
   const chart = composite
     ? `<div class="idea-composite">${scoreHistoryChart(confidenceHistory(composite), { start: chartStart || composite.start, end: composite.as_of, day: day || composite.as_of, width: width - 34, scoreLabel: formatConfidence(confidenceFromScore(point?.value ?? null)), scale: 'confidence' })}</div>`
-    : '';
+    : compositeNote
+      ? `<div class="card__status">${esc(compositeNote)}</div>`
+      : '';
   const html = `${cardHeaderHtml('Idea', badge)}
     <div class="card__body"><div class="card__q card__q--two">${esc(text)}</div>
     ${state === 'pending' ? ideaProgressHtml(progress) : ''}${line ? `<div class="card__status">${line}</div>` : ''}${summary ? `<div class="card__summary">${summary}</div>` : ''}${chart}</div>`;

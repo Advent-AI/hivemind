@@ -1,0 +1,350 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 144: slice 5, row 1 made true in code, and the open proofs (contract, "Slice 5")
+
+Your three points:
+
+1. **7′ now has an independent reference.** The killed writer backs up its own store right after its second day completes, before any
+   third-day write. The crashed store and preflight's post-crash copy are each compared with that reference.
+   - The calls are exactly `bound_cases.calls`' 14: 8 service, 5 bundle and lexical search.
+   - Each runs at the omitted bound, the first completed day, the last completed day and a future day.
+   - Idea functions are not in the list, and the report says so.
+2. **6a is specified as a product change.**
+   - A new `service.open_pinned(path)` opens, begins and pins. It is the one opener for the API's `Connections` and MCP's
+     `connections()`, replacing their two copies.
+   - On a SQLite failure it closes what it opened and raises `StoreUnreadable("<path>: <message>")`, a `LedgerError`.
+   - The API answers 500 with the path, before headers on the streamed route. MCP raises it.
+3. **Busy reads.**
+   - `store.open_read_only` sets `timeout=READ_BUSY_TIMEOUT_SECONDS` (5 s) explicitly. SQLite's busy handler retries within it,
+     with no application-level retry, and row 1's wording is narrowed to that.
+   - The test holds a WAL store with a connection in exclusive locking mode, as a stand-in for SQLite's rare WAL busy cases (such as
+     index recovery), which cannot be timed.
+   - Released after 0.5 s, the read waits and succeeds. Held past a 0.3 s timeout, it fails loudly with the path.
+
+**Kept:** 5a (`max_page_count`) beside the real-disk proof, which it does not replace. Also 5b (a busy checkpoint during a held read,
+then `done` with the `-wal` at 0 bytes) and 8′ (snapshot through a symlink equals one through the own path, row by row).
+
+End with `CONSENSUS: yes` (build slice 5) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the new opener and busy-read design against the actual API and MCP connection paths, then verify the crash comparison’s scope.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Slice 5|open_pinned|busy|7′|max_page_count|8′' docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -35
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -100
+nl -ba src/hivemind/service.py | sed -n '15,62p;280,293p'
+nl -ba src/hivemind/views/store.py | sed -n '212,227p'
+nl -ba scripts/hivemind_api.py | sed -n '38,92p'
+nl -ba scripts/hivemind_mcp.py | sed -n '34,58p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+41:   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+129:   - After each completed day it asks for a truncating checkpoint with a short busy timeout.
+200:     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+245:   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+252:6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+434:**Its end.** After the last day the writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store,
+544:- `truncate_checkpoint` answers `done`, `busy` or the error's own text. `busy` means SQLite's own "database is locked" messages,
+547:  - Only `busy` counts toward the three-day stop "another connection held the store".
+615:## Slice 5: row 1's reader rules and the proofs still open (council rounds 143 and 144)
+617:**Row 1, made true in code** (a product change: today readers set no busy timeout of their own, and a failed open names no path):
+619:- **One opener for a reader's pinned state:** `service.open_pinned(path)` opens with `mode=ro`, runs `BEGIN` and the first read, and
+622:- **Loud, with the store's path:** if the open, the `BEGIN` or the first read fails with a SQLite error, `open_pinned` closes what it
+627:- **An explicit busy timeout:** `store.open_read_only` connects with `timeout=READ_BUSY_TIMEOUT_SECONDS` (5 s, the value Python
+628:  applied by default until now). SQLite's busy handler retries `SQLITE_BUSY` within it; there is no application-level retry, and
+634:  - `open_pinned` raises `StoreUnreadable` naming the path;
+638:- **6b.** A WAL store held by a connection in exclusive locking mode, a stand-in for SQLite's rare WAL busy cases (such as WAL-index
+640:  - released after 0.5 s, a reader's `open_pinned` waits and succeeds;
+642:- **5a.** `max_page_count` set on the writer's connection during a day, so the day fails with SQLite's "database or disk is full":
+648:  - the checkpoint after that day is `busy`;
+650:- **7′.** In the `SIGKILL` test, the killed writer takes a reference backup through its own connection right after its second day
+658:- **8′.** On the same crashed store, `scripts/snapshot_store.py` through a symlink and through the own path gives two copies whose
+   567	
+   568	**Starting the API.** The API is started on the store being written at the first pause, lexical. It is ready when `/days` answers
+   569	200, or 503 with exactly "the store's first day has not completed". Any other answer fails the proof, and the D573 harness's "known
+   570	finding" exception is gone.
+   571	
+   572	**At each of the seven pauses (states labelled):**
+   573	
+   574	1. **The API, `/days` and `/library`:** every D573 check holds, the first-day one included.
+   575	   - At 2026-09-22 before close (the first day, nothing completed), both answer 503 with that body.
+   576	   - Fresh pages are rendered at the same two pauses as before.
+   577	2. **MCP, a module-level check:** the MCP module is loaded once at the first pause, as its entry point builds it, lexical, and its
+   578	   tool functions are called in-process. This exercises the tools' implementation, not the MCP transport, which stays a stated
+   579	   limit.
+   580	   - On the first day, its instructions say no day has completed, and `thesis_library()` and `views()` refuse.
+   581	   - Afterwards, `thesis_library()`'s day and view ids equal `/library`'s.
+   582	3. **Lock and copies:**
+   583	   - `live_lock.acquire` is refused, and so is preflight's `store_copies`, which names the snapshot route;
+   584	   - the store is in WAL mode.
+   585	4. **Snapshots in two distinct states:**
+   586	   - **2026-09-25 before judging, a day's articles committed and the day not completed:** the copy's last day is 2026-09-24 and it
+   587	     holds processing steps dated 2026-09-25;
+   588	   - **2027-01-31 before close, a due-day closing not yet completed (no articles that day):** the copy's last day is 2027-01-30 and
+   589	     none of the three questions due that day (v3, v4, v7) is closed in it. A switch has no day of its own, so the first run's query
+   590	     of a day column failed: my error, the harness's, not the product's.
+   591	   - Both copies are out of WAL mode, with integrity `ok`.
+   592	
+   593	**Concurrent reads.** A poller asks `GET /library` back to back from the API's start to the writer's return. The harness brackets
+   594	each day's completion with the times just before and just after `close_and_complete`. For every answer:
+   595	
+   596	- the status is 200, or 503 only for a request sent before the first day's completion ended;
+   597	- the day it serves completed no later than the answer arrived (the day's completion started before the answer was received);
+   598	- it is no older than the last day whose completion had ended before the request was sent;
+   599	- the days never go backwards;
+   600	- after the run, `GET /library?as_of=<that day>` decodes to the same JSON (compared by a hash of its canonical form). The first
+   601	  difference is read before anything is called a leak; this is a test of the historical filter, not a guarantee row 3 already
+   602	  gives.
+   603	- **The polling must not be vacuous:** at least 20 answers, and at least one day whose completion has answers on both sides (one
+   604	  served an earlier day and arrived before the completion started; one served that day or later).
+   605	
+   606	**After the writer ends:**
+   607	
+   608	- the lock is free;
+   609	- the store is out of WAL mode, or WAL is kept with "another connection held the store at the end" recorded (the poller may hold a
+   610	  read at that moment);
+   611	- the API answers as of the store's last completed day.
+   612	
+   613	**It exits 1 unless every check holds.** A failure is read to its first differing value before anything is changed.
+   614	
+   615	## Slice 5: row 1's reader rules and the proofs still open (council rounds 143 and 144)
+   616	
+   617	**Row 1, made true in code** (a product change: today readers set no busy timeout of their own, and a failed open names no path):
+   618	
+   619	- **One opener for a reader's pinned state:** `service.open_pinned(path)` opens with `mode=ro`, runs `BEGIN` and the first read, and
+   620	  returns the connection. The API's `Connections` and MCP's `connections()` both call it, replacing their own copies of those three
+   621	  steps.
+   622	- **Loud, with the store's path:** if the open, the `BEGIN` or the first read fails with a SQLite error, `open_pinned` closes what it
+   623	  opened and raises `service.StoreUnreadable("<path>: <SQLite's message>")`, a `LedgerError`.
+   624	  - The API answers 500 with that message, before any header on the streamed route.
+   625	  - MCP raises it from the tool.
+   626	  - It never serves an empty or stale answer in its place.
+   627	- **An explicit busy timeout:** `store.open_read_only` connects with `timeout=READ_BUSY_TIMEOUT_SECONDS` (5 s, the value Python
+   628	  applied by default until now). SQLite's busy handler retries `SQLITE_BUSY` within it; there is no application-level retry, and
+   629	  row 1's wording is narrowed to say so.
+   630	
+   631	**Tests, at $0:**
+   632	
+   633	- **6a.** A WAL store whose side files are absent, in a read-only directory:
+   634	  - `open_pinned` raises `StoreUnreadable` naming the path;
+   635	  - `GET /days` answers 500 with the path;
+   636	  - the streamed Idea route answers 500 before any header;
+   637	  - an MCP tool raises it.
+   638	- **6b.** A WAL store held by a connection in exclusive locking mode, a stand-in for SQLite's rare WAL busy cases (such as WAL-index
+   639	  recovery), which cannot be timed in a test:
+   640	  - released after 0.5 s, a reader's `open_pinned` waits and succeeds;
+   641	  - with the timeout set to 0.3 s and the hold kept for 1.5 s, it raises `StoreUnreadable` with "database is locked" and the path.
+   642	- **5a.** `max_page_count` set on the writer's connection during a day, so the day fails with SQLite's "database or disk is full":
+   643	  - through `run_stage_b.send`, the draw is incomplete with no redo;
+   644	  - readers serve the last completed day;
+   645	  - the lock is free.
+   646	  - Kept beside the real-disk proof, which it does not replace.
+   647	- **5b.** A real reader held across one completed day, then released:
+   648	  - the checkpoint after that day is `busy`;
+   649	  - the next one is `done`, and the `-wal` is then 0 bytes.
+   650	- **7′.** In the `SIGKILL` test, the killed writer takes a reference backup through its own connection right after its second day
+   651	  completes, before any write of the third. After the kill, the crashed store and preflight's copy are each compared with the
+   652	  reference.
+   653	  - The calls are `tests/bound_cases.calls`: 8 service functions, 5 bundle functions and lexical search.
+   654	  - Each runs at the omitted bound, an explicit past bound (the first completed day), an explicit bound equal to the last completed
+   655	    day, and a future bound (refused alike).
+   656	  - Equality is of the outcome (the canonical JSON's hash or the error).
+   657	  - The API and MCP routes call these functions. Idea functions are not in the list, and the report says so.
+   658	- **8′.** On the same crashed store, `scripts/snapshot_store.py` through a symlink and through the own path gives two copies whose
+   659	  every table is equal row by row.
+   660	
+   661	## Not covered
+   662	
+   663	- Resuming a stopped live store.
+   664	- The Idea planner on a new-system ledger.
+   665	- A long-running service's restart and monitoring.
+   666	- The page's note when its live read fails, which is Alex's presentation choice.
+    15	COMPARATORS = ('>=', '<', '=')
+    16	
+    17	
+    18	def open_ledger(path):
+    19	    """A read-only connection to a views database."""
+    20	    return store.open_read_only(path)
+    21	
+    22	
+    23	def default_as_of(conn):
+    24	    """Today's default day: the last completed day, or a legacy ledger's last judgement day. Read only through `resolve_bound`."""
+    25	    return store.last_completed_day(conn) or conn.execute('select max(publication_day) from judgements').fetchone()[0]
+    26	
+    27	
+    28	class FirstDayNotCompleted(ValueError):
+    29	    """The store holds processing steps and no completed day: its first day is still in progress, and nothing is served from it
+    30	    (live-service/OPERATING-CONTRACT.md, row 4; open defect 10)."""
+    31	
+    32	    def __init__(self):
+    33	        super().__init__("the store's first day has not completed")
+    34	
+    35	
+    36	class BoundNotCompleted(ValueError):
+    37	    """An explicit upper bound later than the store's last completed day: refused, naming that day (OPERATING-CONTRACT.md, row 3)."""
+    38	
+    39	    def __init__(self, requested, last_completed_day):
+    40	        self.requested, self.last_completed_day = requested, last_completed_day
+    41	        super().__init__(f'day not completed: {requested} is after the last completed day {last_completed_day}')
+    42	
+    43	
+    44	class RangeNotOrdered(ValueError):
+    45	    """A range whose start is after its resolved end: a window reaching into days not yet completed (council round 124)."""
+    46	
+    47	    def __init__(self, start, end):
+    48	        self.start, self.end = start, end
+    49	        super().__init__(f'range start after its end: {start} to {end}')
+    50	
+    51	
+    52	def first_day_unfinished(conn):
+    53	    return store.last_completed_day(conn) is None and conn.execute('select 1 from processing_steps limit 1').fetchone() is not None
+    54	
+    55	
+    56	def resolve_bound(conn, bound, *, unfiltered=False):
+    57	    """The one owner of an upper date bound, explicit or omitted (OPERATING-CONTRACT.md, row 3).
+    58	
+    59	    A store whose first day is in progress is refused. An omitted bound is today's default day; with `unfiltered` (the bundle
+    60	    functions, whose omitted bound read every record), it is the last completed day, or None (no filter, as before) on a store with
+    61	    none. An explicit bound later than the last completed day is refused, whatever the store holds after it; one on or before it
+    62	    passes. Idempotent: a bound it passed passes again."""
+   280	                for s in conn.execute('select * from view_switches where view_id=? order by id', (view_id,)) if day_of_seq(conn, s['after_seq']) and from_day <= day_of_seq(conn, s['after_seq']) <= to_day]
+   281	    return {'view_id': view_id, 'from_day': from_day, 'to_day': to_day, 'judgements': judgements,
+   282	            'changes': [j for j in judgements if j['moved_from'] is not None], 'arrivals': dict(sorted(arrivals.items())),
+   283	            'replacements': replacements, 'switches': switches}
+   284	
+   285	
+   286	class LedgerError(ValueError):
+   287	    """A ledger record the service cannot read (corrupt JSON): refused, never read as empty."""
+   288	
+   289	
+   290	def _unique(ids):
+   291	    """A judgement's cites as the UI contract reads them: each id once, first occurrence kept. The writer stores the set from
+   292	    2026-10-28; the sealed ledger sealed-2026-10-28-v34-nvda-3m-through-0828 holds one judgement (v2, id 736) that cites an id twice."""
+   293	    seen, out = set(), []
+   212	def has_judgement(conn, view_id, seq):
+   213	    return conn.execute('select 1 from judgements where view_id=? and seq=?', (view_id, seq)).fetchone() is not None
+   214	
+   215	
+   216	def open_read_only(path):
+   217	    """The views database for a reader (the agent layer, reports): no schema creation, no writes. Opened by its own path: a symlink
+   218	    resolved, a store with another hard link refused (`live_lock.LockRefused`; live-service/OPERATING-CONTRACT.md, row 7), since
+   219	    SQLite finds a WAL store's side files by the opened path."""
+   220	    from hivemind import live_lock
+   221	    real, _ = live_lock.own_path(path)
+   222	    conn = sqlite3.connect(f'file:{real}?mode=ro', uri=True)
+   223	    conn.row_factory = sqlite3.Row
+   224	    return conn
+   225	
+   226	
+   227	def current_state(conn, view_id):
+    38	ALIASES = {}
+    39	CFG = None
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, live_lock.LockRefused, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    """(status, body) for a request's error. The store's date refusals carry their days (OPERATING-CONTRACT.md, row 3)."""
+    46	    if isinstance(error, service.FirstDayNotCompleted):
+    47	        return 503, {'error': str(error)}
+    48	    if isinstance(error, service.BoundNotCompleted):
+    49	        return 409, {'error': 'day not completed', 'requested': error.requested, 'last_completed_day': error.last_completed_day}
+    50	    if isinstance(error, service.RangeNotOrdered):
+    51	        return 409, {'error': 'range start after its end', 'start': error.start, 'end': error.end}
+    52	    if isinstance(error, KeyError):
+    53	        return 404, {'error': f'not found: {error}'}
+    54	    if isinstance(error, (service.LedgerError, live_lock.LockRefused)):     # the store cannot be served as configured (row 7)
+    55	        return 500, {'error': str(error)}
+    56	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    57	        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    58	    return 400, {'error': str(error)}
+    59	
+    60	
+    61	class Connections:
+    62	    """The databases one request reads: opened on entry, closed on exit, never shared between threads. The ledger's committed state
+    63	    is pinned by BEGIN and a first read, so every read of the request sees one state while a writer commits (live-service/
+    64	    OPERATING-CONTRACT.md, row 2); a failure while opening closes what was already opened."""
+    65	
+    66	    def __init__(self, read_only=False):
+    67	        self.read_only = read_only
+    68	
+    69	    def __enter__(self):
+    70	        self.ledger = self.index = self.items = self.archive = None
+    71	        try:
+    72	            self.ledger = service.open_ledger(PATHS['views'])
+    73	            self.ledger.execute('begin')
+    74	            self.ledger.execute('select 1 from sqlite_master limit 1').fetchone()
+    75	            self.index = None if self.read_only else search.open_index(PATHS['index'])
+    76	            self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+    77	            self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+    78	        except BaseException:
+    79	            self._close()
+    80	            raise
+    81	        return self
+    82	
+    83	    def _close(self):
+    84	        if self.ledger is not None and self.ledger.in_transaction:
+    85	            self.ledger.rollback()
+    86	        for conn in (self.ledger, self.index, self.items):
+    87	            if conn is not None:
+    88	                conn.close()
+    89	
+    90	    def __exit__(self, *exc):
+    91	        self._close()
+    92	
+    34	
+    35	
+    36	@contextlib.contextmanager
+    37	def connections():
+    38	    """One tool call's databases (live-service/OPERATING-CONTRACT.md, row 2): the ledger, items and index opened per call, never shared
+    39	    between calls (a search writes the index's query cache); the ledger's committed state pinned by BEGIN and a first read; every
+    40	    connection closed on every path, a failure while opening included."""
+    41	    opened = []
+    42	    try:
+    43	        ledger = service.open_ledger(ARGS.views)
+    44	        opened.append(ledger)
+    45	        ledger.execute('begin')
+    46	        ledger.execute('select 1 from sqlite_master limit 1').fetchone()
+    47	        index = search_module.open_index(ARGS.index)
+    48	        opened.append(index)
+    49	        items = store.open_read_only(ARGS.items) if os.path.exists(ARGS.items) else None
+    50	        if items is not None:
+    51	            opened.append(items)
+    52	        yield ledger, items, index
+    53	    finally:
+    54	        if opened and opened[0].in_transaction:
+    55	            opened[0].rollback()
+    56	        for conn in reversed(opened):
+    57	            conn.close()
+    58	
+
+codex
+**Yes: build slice 5 and return with the results.** The crash comparison now has an independent pre-partial-day reference, and the proposed report names the 14 functions and four bounds it will actually exercise. [Slice 5 design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:615).
+
+For the proof:
+
+- In **6b**, verify the exclusive-lock fixture actually makes the first read wait before testing release and timeout. If it cannot exercise that WAL condition, report it as unexercised; the test is a stand-in, not proof of every WAL recovery case.
+- Keep **7′** described as the listed function comparison. It does not cover Idea functions or every API and MCP route.
+- Limit the new `StoreUnreadable` claim to failures during opening, `BEGIN` and the pinning read. A later SQLite error is a separate path unless it is also mapped and tested.
+
+CONSENSUS: yes
+tokens used
+3,629,448
+**Yes: build slice 5 and return with the results.** The crash comparison now has an independent pre-partial-day reference, and the proposed report names the 14 functions and four bounds it will actually exercise. [Slice 5 design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:615).
+
+For the proof:
+
+- In **6b**, verify the exclusive-lock fixture actually makes the first read wait before testing release and timeout. If it cannot exercise that WAL condition, report it as unexercised; the test is a stand-in, not proof of every WAL recovery case.
+- Keep **7′** described as the listed function comparison. It does not cover Idea functions or every API and MCP route.
+- Limit the new `StoreUnreadable` claim to failures during opening, `BEGIN` and the pinning read. A later SQLite error is a separate path unless it is also mapped and tested.
+
+CONSENSUS: yes

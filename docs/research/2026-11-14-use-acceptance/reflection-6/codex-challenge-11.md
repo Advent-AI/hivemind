@@ -1,0 +1,13 @@
+**Do not send the proposed sentence yet.** The trace identifies a useful pattern, but D436 does not establish the proposed rule that the description always selects the main part.
+
+1. **The mechanism is a lead, not yet one proven cause.** Sol often declined when the outcome named several things. But its reasons differ: the CPO answer treats a span of checkpoints as a nonannual figure; the memory answer says HBM and DRAM have separate price series; the China answer names two authorities’ decisions. The record does not yet show that the same instruction caused all three.
+
+   There is also a count to correct: the trace table contains **4 agreed-unjustified, 12 disputed and 8 agreed-justified refusals**, totalling 24—not 13 disputed. [Refusal trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/REFUSAL-TRACE.md)
+
+2. **The sentence adds a rule.** D436 says two sides of an already identified bet stay together; it does not say the description decides which part is main whenever the fields differ. D397 says the judged part is the one named by the outcome. The proposed “only when the description singles out none” could override a more precise outcome or choose one of two genuinely separate bets. The earlier independent review expressly identified this boundary. [D397 and D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [prior rule review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md)
+
+3. **The proposed check is not a $0 stored-data check:** it is **27 paid model calls**. Writing a ladder would not alone show recovery; it could fuse decisions, omit a part, or ask a different question. The stop rules also need reconciliation: “all controls decline in 2 of 3” permits a flipped control, while “any control flipped” closes the arm.
+
+The **one next step** is a $0, independent audit of the whole request and the proposed description-priority rule against D397, D436 and the stored cases, including true no-main topics and descriptions that conflict with their outcomes. A sourced rule that survives those counterexamples moves to a separately reviewed probe; an unsourced or overbroad rule closes this candidate. Any probe must judge the written questions and their omissions, not merely whether a ladder appears.
+
+**CONSENSUS: no, because the sentence introduces an unconfirmed priority rule and the proposed paid test does not establish sound recovery; audit the rule and request first at $0.**

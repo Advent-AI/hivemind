@@ -1,0 +1,13 @@
+The census supports the mapping to the **previously studied refusal class**. D612’s hold on paid work stands for now. It does not rule out a new candidate if the council can identify one that addresses the open splitting defect and survives the existing guards.
+
+I would not decide today that one topic should have two judged questions. [D397](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) records Alex’s explicit choice: at most one judged question per topic, and no question when there is no main part. It also calls the departure from his one-bet-per-question rule an **open defect until splitting is built**. So D397 does not forbid investigating a future split; it does rule out treating two judged questions under one topic as already authorized by that decision.
+
+[D439](/Users/lchingen/hivemind/AGENTS.md:41) explicitly lets the council decide choices that would otherwise go to Alex, including opening new versions, within its stated limits. It does not erase his existing decisions. A proposal that changes D397’s behavior needs to name that departure, argue its authority and consequences in the council, and record a reversible decision before building. The frozen ruler remains unchanged.
+
+There is a distinction within the 13 refusals: the census says readers identified **one main figure** on each of the six topics. Creating two questions is a possible response to a different, related problem—two worthwhile bets held apart—but the census alone does not show that it fixes those 13. Nor does a refusal that occurred once become harmless: the repeated send helps distinguish recurrence, but the observed fault remains in the record.
+
+The next available step is a **$0 design review of splitting**, not a decision to build two questions per topic. Compare the two paths—separate topics before judging, and two judged questions under one topic—against D397, D436 and D38. Include the six refusal topics, true two-bet cases, and the Intel and Firmus guards. Preserve the frozen gate and report whether each path could be measured against it.
+
+It moves forward only if one path has a general, sourced way to recover worthwhile separate bets while keeping the guards and can be tested without changing the ruler. It closes if it creates unworthy questions, cannot distinguish the cases without fitting them, or has no valid gate measurement. No paid send follows from the design alone. The earlier [boundary study](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6907) already found that “a question for each thing” fails the unworthy-topic guard, so any proposal must show what is materially different.
+
+CONSENSUS: keep D612’s paid hold; review splitting at $0 under D439, without yet changing D397 or opening a new version.

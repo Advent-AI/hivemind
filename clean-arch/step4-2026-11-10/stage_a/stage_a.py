@@ -42,17 +42,20 @@ class StageALimit(budget.Budget):
     before every send, a transport retry included: the stop flag is read, and the ledger's reserve line is written. A send
     either took its reserve before the flag was set, and then runs, finishes and is charged, or it never begins."""
 
-    def __init__(self, cap_usd, ledger_path, attempt=None, sleep=time.sleep):
+    def __init__(self, cap_usd, ledger_path, attempt=None, sleep=time.sleep, shared=None):
         super().__init__(cap_usd, attempt=attempt, sleep=sleep)
         self.ledger_path = Path(ledger_path)
+        self.shared = shared            # a run's shared ledger (WIRING-DESIGN.md §B2, D448): reserved and settled inside each attempt
         self.stopped = False
         self.stop_reason = None
 
     def stop(self, reason):
-        """Set the stop flag, once; no send begins after it."""
+        """Set the stop flag, once; no send begins after it. With a shared ledger, the run stops too (every Stage A stop is final)."""
         with self.lock:
             if not self.stopped:
                 self.stopped, self.stop_reason = True, reason
+        if self.shared is not None:
+            self.shared.stop(f'the ladder step: {reason}')
 
     def _write_line(self, line):
         """One whole JSON object a line, flushed and synced; called under the lock, so lines never interleave."""
@@ -71,8 +74,14 @@ class StageALimit(budget.Budget):
                     raise Stopped(self.stop_reason)
                 if self.spent_usd + self.reserved_usd + reserve > self.cap_usd:
                     self.stopped, self.stop_reason = True, 'the spending cap'
+                    if self.shared is not None:
+                        self.shared.stop('the ladder step: its local spending cap')
                     raise budget.OverBudget(f'spent ${self.spent_usd:.4f}, ${self.reserved_usd:.4f} in flight; '
                                             f'${reserve:.4f} more would pass the ${self.cap_usd:.2f} cap')
+                shared_reserve = self.shared.estimate(request) if self.shared is not None else None
+                if self.shared is not None and not self.shared.reserve(shared_reserve):
+                    self.stopped, self.stop_reason = True, 'the shared ledger'
+                    raise budget.OverBudget('the shared ledger refused the reservation')
                 self.reserved_usd += reserve
                 self._write_line({'attempt': attempt_id, 'reserve': reserve})
             response, failure = None, None
@@ -86,6 +95,8 @@ class StageALimit(budget.Budget):
                     charged = budget.cost(request, response) if response is not None else None
                     self.spent_usd += reserve if charged is None else charged
                     self._write_line({'attempt': attempt_id, 'charge': reserve if charged is None else charged, 'known': charged is not None})
+                    if self.shared is not None:
+                        self.shared.settle(shared_reserve, charged)       # the ledger settles a missing or zero charge at its reservation
             if response is not None:
                 return response
             retried = getattr(failure, 'http_status', None) not in budget.NOT_RETRIED and str(failure) not in budget.UNDECODABLE
@@ -134,11 +145,12 @@ def payload_for(case, research_list):
             'themes': themes, 'thesis': case['thesis'], 'item': case['item']}
 
 
-def run(cases, passes, folder, cap_usd, *, research_list, texts, transport=None, workers=8):
-    """Send every case once in each pass. Returns (outcomes written, the limit). The folder must not exist."""
+def run(cases, passes, folder, cap_usd, *, research_list, texts, transport=None, workers=8, shared=None):
+    """Send every case once in each pass. Returns (outcomes written, the limit). The folder must not exist. `shared` is a run's
+    shared ledger (WIRING-DESIGN.md §B2, D448)."""
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=False)
-    limit = StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+    limit = StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport, shared=shared)
     checksum = hashlib.sha256(json.dumps({'system': texts['system'], 'closing': texts['closing'], 'schema': texts['schema'],
                                           'setting': [SETTING.model, SETTING.reasoning_effort, SETTING.max_output_tokens]},
                                          ensure_ascii=False).encode()).hexdigest()[:16]
@@ -200,16 +212,26 @@ def main():
     parser.add_argument('--cap', type=float, required=True)
     parser.add_argument('--passes', type=int, default=3)
     parser.add_argument('--cases', default='', help='comma-separated case names; all 44 when empty')
+    parser.add_argument('--cases-file', default=str(HERE / 'cases.json'), help="the cases to send (default: Stage A's 44)")
+    parser.add_argument('--shared-ledger', default=None, help='a run\'s shared ledger (budget_replay.SharedLedger), reserved inside each attempt')
     arguments = parser.parse_args()
-    cases = json.loads((HERE / 'cases.json').read_text())
+    cases = json.loads(Path(arguments.cases_file).read_text())
     if arguments.cases:
         wanted = arguments.cases.split(',')
         cases = [case for case in cases if case['case'] in wanted]
         if len(cases) != len(wanted):
-            raise SystemExit('a named case is not in cases.json')
+            raise SystemExit(f'a named case is not in {Path(arguments.cases_file).name}')
     research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+    shared = None
+    if arguments.shared_ledger:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('budget_replay', ROOT / 'clean-arch/e2e-comparison-2026-11-13/budget_replay.py')
+        budget_replay = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(budget_replay)
+        shared = budget_replay.SharedLedger(arguments.shared_ledger)
+        budget_replay.install_stop_gate(shared)            # every actual send reads the run's stop first (council mo R1)
     written, limit, job_count = run(cases, list(range(1, arguments.passes + 1)), arguments.folder, arguments.cap, research_list=research_list,
-                                    texts=request_texts())
+                                    texts=request_texts(), shared=shared)
     known, in_full, dropped = ledger_total(Path(arguments.folder) / 'spend.jsonl')
     statuses = {}
     for _, _, status in written:

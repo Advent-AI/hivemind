@@ -1,0 +1,10 @@
+(The Claude-family blind auditor's report on version 5, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+Verdict line: SOUND. Optional, non-blocking wording fixes: "as a second side of that same bet" -> "one of these second sides of the same bet"; give the retailer example a figure that measures supply.
+1. Consistent with D436: shape (b) from Alex's own words; (a) and (c) from the Decided line; PREREAD's main/second labels agree with all three orientations (acc/clean-9 main "world chip revenue", acc/clean-10 main "CMX-driven NAND demand", u3/clean-10 main "HBM capacity added"). Narrower than D436's six theses (u1/clean-5's and u3/clean-7's shapes not carried), right given D631/D635. Scope carried by "(D397)", disclosed. A deliberate exception to line 6; the no_ladder description does not mention it (weak collision). The retailer example fits shape (c) better than (b) (wording-level). The counter-case restates D397's test.
+2. Targets: all four as D436 rules; pool-17 an extension by shape (not among the six); acc/clean-9 now asks the part both PREREAD readers said fails the opening tests, as D436 rules (disclosed).
+3. Controls: all six still decline; u2/clean-10 defensible, not airtight (its decline rests on "meaningful … through late 2027" not checkable on a date).
+4. Boundary: none decided; memory prices the nearest risk by analogy, not on a careful reading.
+5. Examples: none from a test article; mirror the targets shape for shape (permitted, as D436 names the shapes); passing shows the model follows the examples, not that the rule generalises; shape (c) has no target.
+6. Growth: +951 chars, ~199 tokens; sufficient in kind; "remove at least as much" not met (non-blocking); each shape stated twice.
+7. u3/clean-11: stays asked as the share (the total appears only in the period text).
+8. The same-bet clause gives no test; in effect the shape decides, which for these three shapes is what D436's Decided line rules; read as a real condition it could reopen the family split and bring back the declines.

@@ -1,0 +1,373 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 149: the postponed-event audit (`postponement/AUDIT-RESULT.md`)
+
+The frozen step's own event answers: 246 shown, 195 distinct, over 43 topics. The previous census's 296 counted more. Timing
+ruling-outs: 34 distinct answers over 7 matters, each read whole.
+
+**Findings:**
+
+1. **In every answer, rung 1 states the event with its date** ("begins shipping Vera Rubin by December 31, 2026"). Code's sentence
+   makes Ruled out "any other decision against the event of rung 1 as a whole … standing on the due day, and only when rung 1 does
+   not". The brief's R row says "the Yes condition is the event the question asks about … not the event's merely being still
+   awaited". So a company's formal "will not … by <due day>" is a decision against the dated event.
+   - The dissenting readers (8 readings over 4 matters) read the event without its date.
+   - The guards hold by code: a delay inside the deadline, a changed decision, a cancellation.
+2. **D606's provisional "Still open" misstates these dated questions.** It would show "Still open" after the date while the company has
+   said it will not happen by then. By D606's reversal condition, I propose reversing it: rung 1's dated event decides, and an authority's
+   proceeding follows D420. This is also my D591 lean. I changed it in round 148 without saying so, which was my error.
+3. **The authority kind:** Taiwan p3 is one isolated misapplication of D420 (one send of three; the model's account is on record).
+4. **Another class, not pursued:** 2 Kyber answers have Yes "by 2027-12-31" for a question "during 2027".
+
+**Conclusion by your criterion:** only isolated misapplications and no missing general rule, so the route closes and line 3 stays
+unmet.
+
+**Next, as I see it, to challenge.** The D split on company figures is the largest remaining reader split (D590: Codex fails D on 133
+of 225 code-set days). It traces to a contradiction inside the product's own request: the fiscal-year note (`universe.py:136`) tells
+the step "use that day as the due date", while code sets the due day by D414.
+- AGENTS §3 (code over prose) and §6 (a contract code enforces stays out of prompts) say the sentence should not be in the step's
+  request. But it is shared text: if the frozen extraction prompt uses it, it cannot change there.
+- A $0 check: who else reads that note, and what the ladder step would send without its due-day clause (a new ladder version beside
+  the frozen one, D426).
+- **Effect:** the due day shown does not change (code sets it). What changes is that the request no longer contradicts what the product
+  shows. Whether that is product-relevant or measurement-only is the question for you.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll read the audit and the underlying rung and request code, then assess the proposed reversal and whether the fiscal-year sentence is the right next target.
+exec
+/opt/homebrew/bin/zsh -lc "cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md
+nl -ba src/hivemind/universe.py | sed -n '105,155p'
+rg -n 'fiscal_year_note|fiscal.year.note|fiscal_note|year_note' src clean-arch scripts tests --glob '*.py' | head -80
+nl -ba clean-arch/step4-2026-11-10/ladder/ladder_step.py | sed -n '272,320p'
+rg -n 'D606|D590|D591|D605|D414' docs/DECISIONS.md | tail -12
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The postponed-event class, audited (D606's step), 2026-11-16, $0
+
+`audit_collect.py` → `audit-answers.jsonl`: every event answer the frozen answer-choice step wrote in the stored gate-1 readings.
+- Probe readings contribute their control sends only, by their sealed keys; changed arms, plants, and runs 2 and 3 before the frozen
+  step are left out.
+- That gives 246 answers shown, 195 distinct, over 43 topics.
+- The census's "296" counted more readings' answers; this audit uses only the frozen step's own, which is the narrower base.
+
+`audit-screen.txt` and `audit-class.txt` hold the timing ruling-outs, picked by a narrow screen: "will not … by/during", postpone,
+defer, delay, "moved … to after". A sample of 12 unpicked decisions found one missed form ("moved … to after"), now added. The
+result is 34 distinct answers (45 shown) over 7 matters, each read whole, with its rungs and every first and third reader's R and
+reason.
+
+## The matters
+
+| Matter (decider) | Distinct answers | First readers' R on the answers shown | Readers' reasons for a fail |
+|---|---|---|---|
+| Vera Rubin first shipments by 2026-12-31 (NVIDIA) | 12 | mostly both hold; 3 split (third readers: 2 both hold, 1 split) | "a delay rather than a decision against first shipments as a whole" |
+| Vera Rubin volume shipments and revenue in FY2027 (NVIDIA) | 8 | 8 both hold, 1 split, 1 both fail | the same, plus a W about the 10-K's day |
+| Kyber NVL144 / Rubin Ultra first shipments (NVIDIA) | 8 | 9 both hold, 2 split | **another class:** the question asks "during 2027" but Yes says "by 2027-12-31", which accepts earlier shipments |
+| Rubin volume ramp by fiscal Q4 FY2027 (NVIDIA) | 3 | all both hold | |
+| Groq 3 LPX volume shipments in fiscal Q3 FY2027 (NVIDIA) | 2 | all both hold | |
+| Hugging Face acquisition closing by 2028-03-24 (NVIDIA or Hugging Face) | 1 | both fail, twice (settled, no third reader) | "will not close by the date is a delay with the deal still pending" |
+| Taiwan's export controls by 2027-01-31 (an authority) | 1 | split; both third readers fail | the wait (D420) |
+
+## The whole rung, read as the judge and the page see it
+
+In every answer, rung 1 states the event **with its date**. Examples:
+- "NVIDIA begins shipping Vera Rubin by December 31, 2026 …";
+- "NVIDIA reports Vera Rubin volume customer shipments with first revenue recognition on or before the end of FY2027";
+- "NVIDIA completes the Hugging Face acquisition by March 24, 2028".
+
+The Ruled-out rung is the model's decision followed by code's sentence: "This rung holds when that, or any other decision against the
+event of rung 1 as a whole, … was made after <article day> and stands on <due day>, and only when rung 1 does not."
+
+- **A company's formal announcement that the event will not happen by the due day** is a decision against rung 1's event as written:
+  the dated event, as a whole. The reader brief's R row says the same: "the `Yes` condition is the event the question asks about; the
+  first sentence of the `Ruled out` condition … is a decision against that event as a whole … and not the event's merely being still
+  awaited".
+  - The readers who fail these answers read the event without its date.
+- **A delay inside the deadline** cannot rule out: code's "only when rung 1 does not" and "stands on the due day" leave rung 1 to
+  hold if the event happens by the due day.
+- **A changed decision** that no longer stands on the due day does not rule out, by code's sentence.
+- **A cancellation** rules out in every answer read.
+- **An authority's proceeding** follows D420 and the brief's own clause: its formal abandonment or withdrawal rules it out, and its
+  going on is the wait.
+  - Taiwan p3's "will not adopt … by January 31, 2027" names a timetable while the proceeding goes on. That is the wait, so it is a
+    misapplication.
+  - It is one send of three; the topic's other two name abandonment or withdrawal.
+  - The model's own account is on record (`taiwan-account-output.txt`): it carried the deadline into the decision.
+
+## What it gives
+
+- **The company-delay class is not a model error.** Across 6 company matters (33 distinct answers), the frozen step's ruling outs agree
+  with rung 1's dated event, code's sentence, D409, D416 and the reader brief. The dissenting readings read the event without its
+  date.
+- **D606's provisional reading misstates these questions.** That reading was "a formal postponement where the event remains possible
+  reads Still open". Read against the undated event, it would leave a dated question "Still open" after its date while the company
+  has already announced it will not happen by then. **By D606's own reversal condition** ("if worked cases show it misstates the
+  question an analyst holds"), the reading is reversed:
+  - for an event with a due day, the event is rung 1's, with its date;
+  - a decision that it will not happen by the due day, standing on the due day, rules it out;
+  - an authority's proceeding follows D420.
+- **The authority kind is one isolated misapplication** (Taiwan p3, one send of three).
+- **By D606's criterion the route closes,** since it found only isolated misapplications and no general rule is missing. Line 3 stays
+  unmet on the fresh week by that one send.
+- **Found on the way, another class, not pursued here:** two Kyber answers whose Yes ("by 2027-12-31") is wider than their question
+  ("during 2027"). That is a question-to-rung window mismatch (the Q and R marks), 2 answers on 1 matter.
+- **My error:** in round 148 I proposed "Still open" as my lean. My recorded lean on Alex's page (D591) was the opposite, "rules out",
+  and I did not say I had changed it. The audit supports the D591 lean.
+   105	            return f'FY{y}'
+   106	        return str(y)
+   107	
+   108	    def fiscal_year_of(self, object_id, publication_day):
+   109	        """The fiscal year a day falls in, named for the calendar year in which it ends (NVDA, ending in January: 2026-07-02 is
+   110	        in FY2027); the calendar year for a theme, a December year-end or an unknown object."""
+   111	        month = self.fiscal_year_end_month(object_id)
+   112	        year = int(publication_day[:4])
+   113	        return year + 1 if int(publication_day[5:7]) > month else year
+   114	
+   115	    def fiscal_note(self, object_id, publication_day, english=False):
+   116	        """One line telling the model how this company's fiscal years map onto the calendar, so a number's year and
+   117	        due day are written right (NVDA's FY2027 ends in January 2027, not 2028)."""
+   118	        company = self.companies.get(object_id)
+   119	        if not company:
+   120	            return ''
+   121	        month = int(company.get('fiscal_year_end_month') or 12)
+   122	        year = int(publication_day[:4])
+   123	        if month == 12:
+   124	            if english:
+   125	                return (f"{object_id}'s fiscal year is the calendar year and ends in December: this year is FY{year}, next year is FY{year + 1}; "
+   126	                        f'full-year figures are published in the annual report in January to March of the following year.')
+   127	            return f'{object_id} 的财年和自然年一样，12 月结束：今年是 FY{year}，明年是 FY{year + 1}；全年数在次年 1 到 3 月的年报里公布。'
+   128	        # the fiscal year is named by the calendar year in which it ends
+   129	        current = self.fiscal_year_of(object_id, publication_day)
+   130	        start_month = month % 12 + 1
+   131	        start_year = current - 1 if start_month > month else current
+   132	        report_month = month + 1 if month < 12 else 1
+   133	        if english:
+   134	            return (f"{object_id}'s fiscal year ends in month {month} and is named for the calendar year in which it ends: FY{current} runs from "
+   135	                    f'{start_year}-{start_month:02d} to {current}-{month:02d}; the publication day {publication_day} falls in FY{current}, so this year is FY{current} '
+   136	                    f"and next year is FY{current + 1}; FY{current}'s full-year figures are published in the annual report around {current}-{report_month:02d}; use that day as the due date.")
+   137	        return (f'{object_id} 的财年在 {month} 月结束，财年按结束的那一年命名：FY{current} 从 {start_year}-{start_month:02d} 到 {current}-{month:02d}，'
+   138	                f'发布日 {publication_day} 落在 FY{current}，所以今年是 FY{current}，明年是 FY{current + 1}；FY{current} 的全年数在 {current}-{report_month:02d} 前后的年报里公布，到期日按那天写。')
+   139	
+   140	
+   141	# The accepted spellings of one year (docs/research/2026-10-25-english/plan.md, "Period text"): a full match, nothing else.
+   142	FISCAL_YEAR = re.compile(r'(?:FY\s*|fiscal\s+(?:year\s+)?)(\d{4})|(\d{4})\s*财年|FY\s*(\d{2})', re.I)
+   143	CALENDAR_YEAR = re.compile(r'(?:CY\s*|calendar\s+(?:year\s+)?)(\d{4})|(\d{4})\s*自然年|(\d{4})\s*calendar\s+year', re.I)
+   144	BARE_YEAR = re.compile(r'(\d{4})\s*年?')
+   145	
+   146	
+   147	def parse_year(text):
+   148	    """('fiscal' | 'calendar' | 'bare', year) for text that names exactly one year, else None. A bare year takes the
+   149	    object's fiscal year when its period is computed (06-views: 公司的数按它的财年)."""
+   150	    value = (text or '').strip()
+   151	    if not value:
+   152	        return None
+   153	    m = FISCAL_YEAR.fullmatch(value)
+   154	    if m:
+   155	        year = m.group(1) or m.group(2) or m.group(3)
+src/hivemind/extraction.py:379:    theme list and the fiscal-year note, what to read out, the research reference, the questions open at the start of the item's day
+src/hivemind/extraction.py:387:    fiscal = '\n'.join(note for note in (universe.fiscal_note(o, item['publication_day'], english=True) for o in objects) if note)
+src/hivemind/universe.py:115:    def fiscal_note(self, object_id, publication_day, english=False):
+clean-arch/step4-2026-11-10/probe-2026-11-10/control_first_request.py:44:        payload = {'company': 'NVDA', 'fiscal_year_note': research_list.fiscal_note('NVDA', article['publication_date'], english=True),
+clean-arch/step4-2026-11-10/probe-2026-11-10/run_probe.py:62:                   'fiscal_year_note': research_list.fiscal_note(COMPANY, article['publication_date'], english=True),
+clean-arch/step4-2026-11-10/ladder/test_ladder_step.py:518:    return {'company': company, 'fiscal_year_note': 'a note', 'themes': [], 'thesis': thesis,
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py:35:            'fiscal_year_note': research_list.fiscal_note(COMPANY, article['publication_date'], english=True)}
+clean-arch/step4-2026-11-10/stage_a/stage_a.py:144:    return {'company': COMPANY, 'fiscal_year_note': research_list.fiscal_note(COMPANY, case['item']['publication_date'], english=True),
+   272	
+   273	# ---- check 7: the view as it will be written --------------------------------------------------------------------------------
+   274	
+   275	FIGURE_DUE_LAG_DAYS = {'company': 60, 'theme': 90}      # D414: days after the end of the year a figure covers
+   276	
+   277	
+   278	def year_end_of(year, object_kind, object_id, research_list):
+   279	    """The last day of the year a figure covers: the company's fiscal year-end, or 31 December for a theme's figure. None when
+   280	    the year is not written as its kind asks or the company's fiscal calendar does not hold it."""
+   281	    if object_kind == 'company':
+   282	        if not COMPANY_YEAR.fullmatch(year):
+   283	            return None
+   284	        period = research_list.fiscal_period(object_id, year, bare_is_calendar=True)
+   285	        return datetime.date.fromisoformat(str(period[1])[:10]) if period else None
+   286	    return datetime.date(int(year), 12, 31) if CALENDAR_YEAR.fullmatch(year) else None
+   287	
+   288	
+   289	def due_day_of(ladder, object_kind, object_id, research_list):
+   290	    """The day the question is due, as an ISO string (D414). A figure whose day the model would estimate (due_day_basis
+   291	    expected_publication) is due a fixed number of days after the end of the year it covers; every other day is the answer's."""
+   292	    figure = ladder.get('figure')
+   293	    if figure is not None and ladder['due_day_basis'] == 'expected_publication':
+   294	        year_end = year_end_of(figure['year'], object_kind, object_id, research_list)
+   295	        if year_end is not None:
+   296	            return (year_end + datetime.timedelta(days=FIGURE_DUE_LAG_DAYS[object_kind])).isoformat()
+   297	    return ladder['due_day']
+   298	
+   299	
+   300	def event_rungs(event, due_day, article_day):
+   301	    """An event's rungs (D409): it happened; it is ruled out; neither. The model writes the first condition and, when something
+   302	    can rule the event out before the due day, the way it names for that. Code writes the rest, so that exactly one rung holds
+   303	    for every outcome whatever the two conditions say. The second rung takes the way the model names and every other decision
+   304	    against the event as a whole, or abandonment or withdrawal of it as a whole, and asks of each of them, the model's own
+   305	    included, that it was made after the article's day and stands on the due day: so a rejection the model did not name is
+   306	    never counted as still open, and one that was lifted, that concerns only a part, or that was already in place when the
+   307	    question opened, is not counted as a ruling out, whether or not the model's sentence says so. The second
+   308	    rung holds only when the first does not, and the last rung is the complement of the others. The labels answer the question
+   309	    as it is printed beside them: Yes and No, or Yes, Ruled out and Still open."""
+   310	    happened = {'label': 'Yes', 'condition': event['happened']}
+   311	    if event['ruled_out'] is None:
+   312	        return [happened, {'label': 'No', 'condition': f'Rung 1 does not hold on {due_day}.'}]
+   313	    ruled_out = ruling_out_of(event).rstrip()
+   314	    return [happened,
+   315	            {'label': 'Ruled out',
+   316	             'condition': f"{ruled_out}{'' if ruled_out.endswith('.') else '.'} This rung holds when that, or any other decision against the event of "
+   317	                          f'rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after {article_day} and '
+   318	                          f'stands on {due_day}, and only when rung 1 does not.'},
+   319	            {'label': 'Still open', 'condition': f'Neither rung 1 nor rung 2 holds on {due_day}.'}]
+   320	
+758:| D414 | 2026-11-10 | Code sets the due day of a year's figure whose day would be an estimate: the fiscal year-end plus 60 days for the company, the calendar year-end plus 90 for a theme; a stated day is kept; a figure that is not a year's is dealt with first, apart | in force; built, measured in the third Stage A | `clean-arch/step4-2026-11-10/DESIGN.md` §5.2.4 |
+759:| D415 | 2026-11-10 | The third Stage A of the clean ladder step is sent without asking again once each change (D413, D414, the scope of a ruling out, D411) is proved small and reviewed; a change that does not pass stops and goes to Alex; Stage B needs his word | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+814:| D470 | 2026-11-13 | Ladder-refusal candidate stopped (readers split on the boundary); 41 Stage A splits recorded, eight read provisionally by D414; Stage A verdict unchanged; the written-ladder line question opened for the council (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/stage-a-splits/splits.json` |
+934:| D590 | 2026-11-16 | The fresh A2 comparison closes (no verdict; a fresh gate-1 reading of the frozen step: lines 2, 3, 5 missed, 4 met); the due-day mark's family split (133 Codex vs 0 Claude fails on code-set days) is a reader discrepancy: a D-only diagnostic held all 12 class items in both families, the brief is unchanged; next a $0 census of Ruled-out rungs that catch a postponement | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md` |
+935:| D591 | 2026-11-16 | An announced "not by the due day" as a ruling out (37 company delays and 1 authority case in 296 frozen-step event answers): no decision settles the boundary; form and step unchanged, both readings recorded, 38 answers listed as candidates affected; the question on Alex's page (Claude's lean: it rules out); next a $0 design for the final-answer test's control shortfall | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/BOUNDARY-CASES.md` |
+949:| D605 | 2026-11-16 | Under D439 (council rounds 146, 147): D604's line-5 route closes with no candidate (fresh misses are reference choices whose rule-following form gives the same answer choices, a stopped class, Alex's boundary, and a reader discrepancy on D414); the gate stays unmet; no paid send without a new reviewable candidate; resume on Alex's rulings or new evidence | in force | `unlisted-parts/fresh-a2/line5/RESULT.md` |
+950:| D606 | 2026-11-16 | Under D439 (council round 148), reversibly: next product test from a real earlier library (empty starts as diagnostics); Alex's six lines and accounting stay in force; postponement provisionally reads Still open; D520/D571 running behaviour retained; P1 not taken; next a $0 audit of the postponed-event class (by topic and matter, full rungs, guards) | in force | `reflection-4/council-codex-148.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/audit-class.txt | head -70
+rg -n 'clean-4|Kyber|fy2027|volume' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/audit-class.txt | head -20
+nl -ba clean-arch/step4-2026-11-10/stage_a/stage_a.py | sed -n '134,155p'
+nl -ba src/hivemind/extraction.py | sed -n '375,392p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+timing ruling-outs: 34 distinct answers (45 answers shown) over 16 matters
+
+== Vera Rubin volume shipments and revenue in FY2027: 8 distinct answers; first readers R {('fails', 'holds'): 1, ('fails', 'fails'): 1, ('holds', 'holds'): 8}
+   [3] R=('fails', 'holds') third={'codex': 'fails', 'claude': 'holds'} | why: An announcement that Vera Rubin will not reach the milestone is not necessarily a decision against it, and the FY2027 Form 10-K is expected around February 2027, after January 31. / W: revenue first recognised in the quarter ending January 2027 is disclosed only after the 2027-01-31 due day, so the named FY2027 Form 10-K cannot settle the question on that day.
+   [3] R=('fails', 'fails') third={} | why: An announcement that Vera Rubin will not reach shipments and revenue during FY2027 can be a forecast of delay rather than a decision against the event. / R fails because the Ruled out rung's first sentence counts NVIDIA announcing that Vera Rubin will not reach volume shipments during FY2027, a delay that leaves the event still awaited rather than deci
+
+== Hugging Face acquisition closing: 1 distinct answers; first readers R {('fails', 'fails'): 2}
+   [5] R=('fails', 'fails') third={} | why: A statement that the acquisition will not close by March 24 is not necessarily a decision against it, the omitted acquisition price and repricing are not listed, and the article's agreed approximately / R fails because the Ruled out rung counts a formal statement that the deal 'will not close by March 24, 2028', which is a delay with the deal still pending rather than a decision against it; L fails b
+   [5] R=('fails', 'fails') third={} | why: A statement that the deal will not close by the date can be a forecast of delay, the possible repricing is omitted from not_judged, and the article's agreed acquisition is missing from the reference. / R fails because the Ruled out rung's first sentence counts NVIDIA or Hugging Face formally stating that the deal 'will not close by March 24, 2028', a delay that leaves the acquisition still awaited r
+
+== other: Will NVIDIA begin shipping Vera Rubin by December 31, 2026, as confirmed by an o: 1 distinct answers; first readers R {('holds', 'holds'): 1}
+
+== other: Will NVIDIA begin shipping its Vera Rubin platform by December 31, 2026, as show: 1 distinct answers; first readers R {('holds', 'holds'): 1}
+
+== Kyber NVL144 / Rubin Ultra first shipments: 8 distinct answers; first readers R {('fails', 'holds'): 2, ('holds', 'holds'): 9}
+   [23] R=('fails', 'holds') third={'codex': 'fails', 'claude': 'holds'} | why: The question asks for shipments in calendar 2027, but the Yes condition also accepts earlier shipments, and the reference omits the stated year 2027.
+   [53] R=('fails', 'holds') third={'codex': 'fails', 'claude': 'holds'} | why: The Yes condition says shipments by 2027-12-31, so it also accepts first shipments before calendar 2027, while the question asks for shipments during 2027.
+
+== other: Will NVIDIA confirm that it has made first customer shipments of its Vera Rubin : 1 distinct answers; first readers R {('holds', 'holds'): 1}
+
+== other: Will NVIDIA make revenue-generating first shipments of its Vera Rubin platform b: 1 distinct answers; first readers R {('holds', 'holds'): 1}
+
+== Taiwan export controls (an authority): 1 distinct answers; first readers R {('fails', 'holds'): 1}
+   [62] R=('fails', 'holds') third={'codex': 'fails', 'claude': 'fails'} | why: An announcement that controls will not be adopted by January 31 can mean delay rather than a decision against tightening as a whole, and the null reference omits the article's stated expectation that  / XR fails: the reference is null although the article states the expected event ('Taiwan will tighten export controls on high-end AI processors and servers, mirroring U.S. rules'); W: the Ruled out run
+
+== other: Will NVIDIA confirm in a company disclosure or official shipment announcement by: 1 distinct answers; first readers R {('holds', 'holds'): 1, ('fails', 'holds'): 1}
+   [63] R=('fails', 'holds') third={'codex': 'holds', 'claude': 'holds'} | why: A postponement until after December 31 is not necessarily a decision against first shipments as a whole.
+
+== other: Will NVIDIA begin first shipments of its Vera Rubin AI chip platform by December: 2 distinct answers; first readers R {('holds', 'holds'): 3, ('fails', 'holds'): 1}
+   [69] R=('fails', 'holds') third={'codex': 'holds', 'claude': 'holds'} | why: An announcement that shipments will not begin by December 31 can be a delay rather than a decision against first shipments as a whole.
+
+== other: Will NVIDIA begin shipping its Vera Rubin next-generation AI chip platform by De: 1 distinct answers; first readers R {('holds', 'holds'): 2}
+
+== other: Will first Vera Rubin shipments have begun by December 31, 2026, as shown by NVI: 1 distinct answers; first readers R {('holds', 'holds'): 1}
+
+== other: Will NVIDIA’s Vera Rubin platform have begun shipping by December 31, 2026, as v: 1 distinct answers; first readers R {('holds', 'holds'): 1, ('holds', 'fails'): 1}
+   [90] R=('holds', 'fails') third={'codex': 'holds', 'claude': 'fails'} | why: R fails: the Ruled out rung's first sentence counts NVIDIA announcing that first Vera Rubin shipments 'are deferred until 2027 or later', which is a postponement that leaves the first shipments still 
+
+== Groq 3 LPX volume shipments in fiscal Q3 FY2027: 2 distinct answers; first readers R {('holds', 'holds'): 2}
+
+== Rubin volume ramp by fiscal Q4 FY2027: 3 distinct answers; first readers R {('holds', 'holds'): 3}
+
+== other: Will NVIDIA make volume customer shipments of its next-generation Vera Rubin AI : 1 distinct answers; first readers R {('holds', 'holds'): 1}
+3:== Vera Rubin volume shipments and revenue in FY2027: 8 distinct answers; first readers R {('fails', 'holds'): 1, ('fails', 'fails'): 1, ('holds', 'holds'): 8}
+5:   [3] R=('fails', 'fails') third={} | why: An announcement that Vera Rubin will not reach shipments and revenue during FY2027 can be a forecast of delay rather than a decision against the event. / R fails because the Ruled out rung's first sentence counts NVIDIA announcing that Vera Rubin will not reach volume shipments during FY2027, a delay that leaves the event still awaited rather than deci
+15:== Kyber NVL144 / Rubin Ultra first shipments: 8 distinct answers; first readers R {('fails', 'holds'): 2, ('holds', 'holds'): 9}
+39:== Groq 3 LPX volume shipments in fiscal Q3 FY2027: 2 distinct answers; first readers R {('holds', 'holds'): 2}
+41:== Rubin volume ramp by fiscal Q4 FY2027: 3 distinct answers; first readers R {('holds', 'holds'): 3}
+43:== other: Will NVIDIA make volume customer shipments of its next-generation Vera Rubin AI : 1 distinct answers; first readers R {('holds', 'holds'): 1}
+   134	    """The request the build uses: the system text, the closing check and the schema (the request as first sent, D407, with an
+   135	    event answered in three outcomes, D409)."""
+   136	    return {'system': (STEP / 'ladder' / 'candidate-system.txt').read_text(),
+   137	            'closing': (STEP / 'ladder' / 'candidate-closing.txt').read_text().strip(),
+   138	            'schema': json.loads((STEP / 'ladder' / 'candidate-schema.json').read_text())}
+   139	
+   140	
+   141	def payload_for(case, research_list):
+   142	    """The payload of one case, with the keys in the order the design gives."""
+   143	    themes = [{'id': theme_id, 'name': theme['name']} for theme_id, theme in research_list.themes.items()]
+   144	    return {'company': COMPANY, 'fiscal_year_note': research_list.fiscal_note(COMPANY, case['item']['publication_date'], english=True),
+   145	            'themes': themes, 'thesis': case['thesis'], 'item': case['item']}
+   146	
+   147	
+   148	def run(cases, passes, folder, cap_usd, *, research_list, texts, transport=None, workers=8, shared=None):
+   149	    """Send every case once in each pass. Returns (outcomes written, the limit). The folder must not exist. `shared` is a run's
+   150	    shared ledger (WIRING-DESIGN.md §B2, D448)."""
+   151	    folder = Path(folder)
+   152	    folder.mkdir(parents=True, exist_ok=False)
+   153	    limit = StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport, shared=shared)
+   154	    checksum = hashlib.sha256(json.dumps({'system': texts['system'], 'closing': texts['closing'], 'schema': texts['schema'],
+   155	                                          'setting': [SETTING.model, SETTING.reasoning_effort, SETTING.max_output_tokens]},
+   375	
+   376	
+   377	def build_prompt(item, text, shown_views, universe, version):
+   378	    """The request's two texts. The system text is the role; the user text is the category and how to read it, the subjects with the
+   379	    theme list and the fiscal-year note, what to read out, the research reference, the questions open at the start of the item's day
+   380	    with their takes lines, the research-group instruction, the item, the closing sentence and the end-of-request check."""
+   381	    require_supported(version)
+   382	    category = item['category']
+   383	    categories = _categories(version)
+   384	    blocks = categories.get(category) or categories['T7']
+   385	    objects = [o['value'] for o in item.get('object_identifiers') or []]
+   386	    themes = '\n'.join(f'  - {theme_id}: {name}' for theme_id, name in universe.theme_list())
+   387	    fiscal = '\n'.join(note for note in (universe.fiscal_note(o, item['publication_day'], english=True) for o in objects) if note)
+   388	    parts = [
+   389	        f'[Category and how to read it] {category}. {blocks["what"]}',
+   390	        f'[Subjects] The objects this item concerns: {", ".join(objects) or "(not labelled upstream)"}. For a candidate thesis about a company, object is its ticker; '
+   391	        f'about a theme, choose an id from this list, or state what the matter is when none fits:\n{themes}'
+   392	        + (f'\nFiscal-year note (a numeric thesis takes its year and due date from it):\n{fiscal}' if fiscal else ''),
+
+codex
+**Reverse D606’s postponement reading provisionally, and check the fiscal-year note’s consumers at $0.** The full-rung audit is a reason to change our earlier position: for a dated shipment question, a formal decision that it will not happen by that date can be read as a decision against the event the Yes rung asks about. Preserve the alternative and the card’s tradeoff in the record; do not describe the boundary as settled by Alex. [Audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md), [D409](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4502).
+
+Two qualifications matter before closing the route:
+
+- **An announcement is not necessarily a decision.** “It will not happen by the date” can be a forecast of delay rather than the company deciding against the dated event. Some dissenting reader reasons make that distinction; it is too strong to say they all ignored the date. Keep a forecast-versus-decision guard in any future reading. [Reader reasons](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/audit-class.txt).
+- **Reconcile the audit’s matter counts.** Its summary says 34 distinct answers over 7 matters and 33 company answers, while the displayed matter rows add to 35 and the six company rows to 34. The raw class output labels 16 groups before the report combines them. This may be an overlap or grouping issue, but the report should show it before the totals are used. [Audit table](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md), [class output](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/audit-class.txt).
+
+Subject to those corrections, I agree to **close the proposed postponement repair route**: the audit has not established a missing general instruction. Keep Taiwan’s ruling as a recorded failure under the present reading, without claiming that one send establishes a recurring class. Keep the Kyber window mismatch as a lead on one matter.
+
+The fiscal-note check is a reasonable next step, provided it asks **what a change could affect**, rather than assuming a gate improvement. The note is shared: the ladder payload calls it, and production extraction also puts it in its request. Do not edit the shared function. [Ladder payload](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:141), [extraction request](/Users/lchingen/hivemind/src/hivemind/extraction.py:377).
+
+At $0, trace the note’s callers and the ladder’s full request, validation and view-writing path. In particular, determine whether removing the clause could affect the model’s choice of year, basis, refusal or rung—not just the date code ultimately writes. The **128** stored obligation failures name the annual filing, but the D-only diagnostic did not reproduce their split and did not prove the note caused it. [Diagnostic](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md).
+
+A result that advances the path is a general, sourced request contradiction with a product-visible or gate-relevant effect and a bounded comparison against the frozen step. Close it as a cleanup-only or unproven-cause lead if the check cannot show that; no new version or paid send follows from the contradiction alone.
+
+CONSENSUS: provisionally reverse the postponement reading, correct the audit’s counts and qualifications, close that repair route, and audit the shared fiscal-year note at $0.
+tokens used
+3,719,996
+**Reverse D606’s postponement reading provisionally, and check the fiscal-year note’s consumers at $0.** The full-rung audit is a reason to change our earlier position: for a dated shipment question, a formal decision that it will not happen by that date can be read as a decision against the event the Yes rung asks about. Preserve the alternative and the card’s tradeoff in the record; do not describe the boundary as settled by Alex. [Audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md), [D409](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4502).
+
+Two qualifications matter before closing the route:
+
+- **An announcement is not necessarily a decision.** “It will not happen by the date” can be a forecast of delay rather than the company deciding against the dated event. Some dissenting reader reasons make that distinction; it is too strong to say they all ignored the date. Keep a forecast-versus-decision guard in any future reading. [Reader reasons](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/audit-class.txt).
+- **Reconcile the audit’s matter counts.** Its summary says 34 distinct answers over 7 matters and 33 company answers, while the displayed matter rows add to 35 and the six company rows to 34. The raw class output labels 16 groups before the report combines them. This may be an overlap or grouping issue, but the report should show it before the totals are used. [Audit table](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md), [class output](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/audit-class.txt).
+
+Subject to those corrections, I agree to **close the proposed postponement repair route**: the audit has not established a missing general instruction. Keep Taiwan’s ruling as a recorded failure under the present reading, without claiming that one send establishes a recurring class. Keep the Kyber window mismatch as a lead on one matter.
+
+The fiscal-note check is a reasonable next step, provided it asks **what a change could affect**, rather than assuming a gate improvement. The note is shared: the ladder payload calls it, and production extraction also puts it in its request. Do not edit the shared function. [Ladder payload](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:141), [extraction request](/Users/lchingen/hivemind/src/hivemind/extraction.py:377).
+
+At $0, trace the note’s callers and the ladder’s full request, validation and view-writing path. In particular, determine whether removing the clause could affect the model’s choice of year, basis, refusal or rung—not just the date code ultimately writes. The **128** stored obligation failures name the annual filing, but the D-only diagnostic did not reproduce their split and did not prove the note caused it. [Diagnostic](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md).
+
+A result that advances the path is a general, sourced request contradiction with a product-visible or gate-relevant effect and a bounded comparison against the frozen step. Close it as a cleanup-only or unproven-cause lead if the check cannot show that; no new version or paid send follows from the contradiction alone.
+
+CONSENSUS: provisionally reverse the postponement reading, correct the audit’s counts and qualifications, close that repair route, and audit the shared fiscal-year note at $0.

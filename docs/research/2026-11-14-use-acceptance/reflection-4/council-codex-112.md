@@ -1,0 +1,13 @@
+**No-go on version 2 yet.** It answers several round-111 points, but the contract still assumes that limiting dates makes every reader’s output equivalent to the last completed day.
+
+- **Startup indexing can read partial-day views.** `search.ensure_index` selects every view without an `as_of` filter. A transaction gives it a consistent database state, but that state can include views committed during the unfinished day; it can then send their text to the embedding service and store them in the index. Define indexing from the completed-day view, its update after later days, and how search behaves while the index is behind. [Search indexing](</Users/lchingen/hivemind/src/hivemind/search.py:80>)
+
+- **The proposed preflight guard is not a reliable live-store test yet.** A WAL file can exist for a finished store, and checking for a writer or side file before a later `shutil.copy` leaves a race. Define the authority that distinguishes a finished store from a live one and how the check and copy remain safe together; alternatively make preflight require an explicitly supplied, validated backup. [Preflight copy](</Users/lchingen/hivemind/scripts/preflight.py:185>)
+
+- **The checkpoint policy needs a bounded failure state.** A truncating checkpoint can wait for readers up to its timeout and can remain unable to reset if readers continue. `journal_size_limit` is not a bound on a growing WAL during that period. Specify what happens when the file keeps growing, who observes it, and whether the writer may continue; the current proof covers a reader that eventually ends, not the sustained case. [Contract, row 5](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md>)
+
+- **One date resolver requires changes at all callers.** Several functions use `as_of or default_as_of(...)`, so an explicitly supplied date bypasses `default_as_of` today. The design should identify the shared resolver that receives *both* explicit and omitted bounds, including `to_day`, and test each caller—not just a list of route names. [Service](</Users/lchingen/hivemind/src/hivemind/service.py:199>), [bundle](</Users/lchingen/hivemind/src/hivemind/bundle.py:210>)
+
+The proposed P1 decision correctly keeps AGENTS §9 in force during the test-store proofs. Keep the crash comparison against a completed-day backup, but include indexing and its externally sent text in that comparison.
+
+CONSENSUS: no, because startup indexing can consume partial-day views and the copy, checkpoint and explicit-date contracts are not yet sufficient to prevent the failure cases.

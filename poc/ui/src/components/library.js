@@ -170,10 +170,11 @@ export function createLibrary(root, { dataset }) {
     getDay: () => state.day,
     openThesis: (id) => details.open(id, state.day),
     close: () => details.close(),
-    setDataset(input) {
+    setDataset(input, { day } = {}) {
+      // A supplied day (the served snapshot's, on the page's first automatic read) is shown; otherwise the day is kept, clamped.
       const next = parseDataset(input);
       data = next;
-      state.day = [data.days[0] || data.as_of, state.day, data.as_of].sort()[1];
+      state.day = [data.days[0] || data.as_of, day ?? state.day, data.as_of].sort()[1];
       if (!data.groups.some((g) => g.id === state.group) && state.group !== 'ungrouped')
         state.group = '';
       if (!data.theses.some((t) => t.object === state.object)) state.object = '';

@@ -1,0 +1,685 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 138: your three points from round 137, done (D599; contract, "Round 137's corrections")
+
+1. **Readers open a store by its own path.**
+   - `store.open_read_only`, used by the API, MCP, `service` and reports, resolves a symlink and refuses a store with another hard
+     link (`LockRefused`, naming the reason).
+   - Census first: none of the 702 stored `.sqlite` files has a second link.
+   - The API refuses at start (`index_at_start`) and per request (500, reason in the body). MCP refuses at start and per tool.
+   - Tested through `hivemind_api.index_at_start`, a real HTTP `GET /days`, an MCP tool on a store linked after start, and an MCP
+     load on a linked store.
+2. **The finding is narrowed** to its tested conditions: SQLite 3.51.0, scratch stores, and a read-only reader that cannot create the
+   `-shm`. It is labelled a guard on a reachable state, not an observed writer failure. A failed change out of WAL is kept distinct
+   from a reader holding the store.
+3. **Cleanup when cleanup fails:**
+   - **`LadderAdapter.close`** releases the lock only once the connection is closed. If leaving WAL fails, it closes and then
+     releases (tested). If closing fails, it keeps the lock until the process ends (tested with a connection whose close fails: the
+     lock is still held afterwards).
+   - **`snapshot`** closes its source if the target cannot be opened, leaving nothing (tested). Its entry point now reports SQLite
+     errors as a refusal.
+
+**Found while testing, and fixed:**
+
+- On a store renamed mid-run, SQLite raised "disk I/O error" on the writer's next statement, before its own path check. This
+  happened only after the hard-link test had run in the same process, so the launcher recorded `OperationalError` and not the path
+  reason. I did not identify which SQLite state in that process makes the difference.
+- The writer no longer depends on it:
+  - its stop takes the last completed day from its loop, not from the store;
+  - the checkpoint and the change out of WAL keep every statement inside their error handling.
+- The moved-store test now passes alone, after the hard-link test, and with all three files together (twice).
+
+**Numbers:** the suite passes (341), the new system's folders (188), and the frozen checks. Mutants: 4 more, all caught (R1 to R4;
+21 of 21 in `live-service/lock-mutants.txt`).
+
+**Asked of you:** whether 4b is now accepted. Is leaving the SQLite trigger unidentified acceptable, given that the writer no longer
+depends on it?
+
+**Next, if yes:** proof 10. I will read `page-contract/serving_while_writing.py` and propose its exact steps, naming the real API and
+MCP calls and the pause points, before running it.
+
+End with `CONSENSUS: yes` (4b accepted; proof 10 design next) or `CONSENSUS: no, because …`.
+
+codex
+I’ll review the reader and cleanup changes against the new tests, then assess whether the unresolved SQLite behavior limits acceptance.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Round 137|D599|moved|trigger|hard.link' docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md docs/DECISIONS.md | tail -30
+nl -ba src/hivemind/views/store.py | sed -n '210,232p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '210,280p;448,480p'
+nl -ba src/hivemind/live_lock.py | sed -n '109,146p'
+nl -ba scripts/hivemind_api.py | sed -n '35,62p;258,283p'
+rg -n 'hard.link|close.*fail|leave.*fail|target.*open|moved|PathChanged|sqlite' tests/test_live_lock.py clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py | tail -50
+cat docs/research/2026-11-14-use-acceptance/live-service/lock-mutants.txt | tail -9
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:168:     - a store file with more than one hard link (`st_nlink` > 1) is refused, naming the reason. A hard link elsewhere would open the
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:261:   - a store with a hard link elsewhere is refused by every entry point;
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:463:- **The same path rules as `acquire`:** the source's `realpath`, and a source with more than one hard link refused. It takes no lock,
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:469:  - it is then published **without replacing**: a hard link from the temporary file to the destination, which fails if the
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:470:    destination exists, then the temporary file is removed. A plain rename could replace a file that appeared during the copy
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:472:  - on any failure (the backup, the conversion, the check) the temporary file is removed, nothing is left at the destination, and
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:477:  - a refused hard-linked source;
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:509:- **`verify` reports a missing store and a newly added hard link** as a changed path (`PathChanged`), so the writer stops at its
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:519:**Round 137's corrections (D599).**
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:522:  resolves a symlink and refuses a store with another hard link (`live_lock.LockRefused`, naming the reason).
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:525:  - Census before the change: none of the 702 `.sqlite` files under `poc/data` and `clean-arch` has a second hard link.
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:532:- **A store moved mid-run, a finding:** SQLite itself raised "disk I/O error" on the writer's next statement after its store file
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:533:  was renamed. This happened before the writer's own path check, and only in a process that had run the API/MCP hard-link test
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:538:  - The path's reason is now recorded either way: the moved-store test passes alone, after the hard-link test, and with all three
+docs/DECISIONS.md:52:  mode is the only place where time triggers work, with its "now" passed in. The boundary is a stream of classified items from
+docs/DECISIONS.md:77:Alex removed the separate coverage-start earnings-report reading and report background added to news extraction. He retained extraction's lookup of the existing research library. An earnings release itself can still enter as an ordinary source item (D28). D363–D366's separate report-import requirement is superseded; their historical evidence and frozen materials remain historical. The small real-news comparison tested appended extraction context, not the distinct coverage-start mechanism. The implementation status is recorded in `CURRENT_STATE.md`.
+docs/DECISIONS.md:85:Alex removed the gold-inconsistency stop and asked to score the new split prompts on a few cases first, reusing existing old results where comparable. Keep frozen gold unchanged; record and disclose the three disputed question entries with any relevant score rather than stopping. D372 remains the evidence counting rule. This does not resolve the disputed entries or authorize production deployment.
+docs/DECISIONS.md:400:| D55 | 2026-10-22 | The final verdict checked against the rebuilt views database; a removed object's views stop updating | in force (amended by D57, D356) | §7 Thesis library |
+docs/DECISIONS.md:406:| D61 | 2026-10-22 | Clean-up: a code review, bloat removed, superseded seals out of the tree | record | Operations |
+docs/DECISIONS.md:514:| D170 | 2026-10-25 | Phase close-out: what the code review removed, fixed and left | record | Operations |
+docs/DECISIONS.md:538:| D194 | 2026-10-26 | The six persistent misses read against the transcripts: one gold key removed, five stand | record | Ruler and measurement |
+docs/DECISIONS.md:703:| D359 | 2026-11-04 | The code builds only the frozen prompts (extraction v74i, judging-v7); old worktrees removed; the preflight… | in force (amended by D364, D365) | §6 Extraction |
+docs/DECISIONS.md:771:| D427 | 2026-11-11 | Clean Step 2 (search, Jev comparison, best-match grouping, forward runner, Step 3 library) closed and frozen; not moved into production alone; goes to production with the whole clean path after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each) | in force | `tests/test_frozen_clean_step2.py`; clean-arch PRD §5; Step 2 log §19 |
+docs/DECISIONS.md:809:| D465 | 2026-11-13 | Identity diagnostic: the year boundary moved its error (2026 swapped for 2027); line stopped, c16 not adopted, c8 stays; Ohio clause and F6 kept as leads (council consensus) | in force | `clean-arch/e2e-comparison-2026-11-13/identity-probe/v2/RESULT.md` |
+docs/DECISIONS.md:819:| D475 | 2026-11-13 | c18 not adopted (unseen target not moved: 4 of 6 against c8 3 of 6; no regression; Ohio 6 of 9 against 0); D473 federal line within c8 variance (correction note) | in force | `clean-arch/e2e-comparison-2026-11-13/unsigned-deals/RESULT.md` |
+docs/DECISIONS.md:837:| D493 | 2026-11-14 | Reflection council (D492): every change from D439 to D491 was words in the one Step 1 call and moved a neighbour; the reader's loss is around the company's main numbers; no further request change now; next a $0 test of the kept figures assembled as a company record; the standing-question comparison stays a candidate that goes to Alex first (D370) | in force | `docs/research/2026-11-14-use-acceptance/record/RECORD-TEST-DESIGN.md` |
+docs/DECISIONS.md:890:| D546 | 2026-11-15 | Under D439 (council consensus): the census of 49 amount questions closes the general range design for now (12 opened without a comparable amount, 9 of them on an end range, mostly one matter; the trigger of three further matters not met); next, a prompt audit of the omitted-clause fault of the answer-choice step, ceiling $0.05 | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md` |
+docs/DECISIONS.md:900:| D556 | 2026-11-15 | Under D439 (council consensus): no candidate for the "no main part" refusals among those considered; next, at $0, one map of every stored topic short of the first gate (104 topics, four readings kept apart), with overlapping and unresolved causes, reconciled to each report; it cannot by itself prove the gate out of reach or trigger D544's reversal | in force | `docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md` |
+docs/DECISIONS.md:943:| D599 | 2026-11-16 | Round 137's corrections to slice 4b: `store.open_read_only` resolves symlinks and refuses a hard-linked store (API 500 and refusal at start; MCP at start and per tool; none of 702 stored files is hard-linked); the writer releases its lock only once its connection is closed; the snapshot closes its source on any failure; a stop takes its last day from the loop, not a moved store; 341 + 188 tests, 21 of 21 mutants | in force | `live-service/OPERATING-CONTRACT.md` (Round 137's corrections) |
+   210	
+   211	
+   212	def has_judgement(conn, view_id, seq):
+   213	    return conn.execute('select 1 from judgements where view_id=? and seq=?', (view_id, seq)).fetchone() is not None
+   214	
+   215	
+   216	def open_read_only(path):
+   217	    """The views database for a reader (the agent layer, reports): no schema creation, no writes. Opened by its own path: a symlink
+   218	    resolved, a store with another hard link refused (`live_lock.LockRefused`; live-service/OPERATING-CONTRACT.md, row 7), since
+   219	    SQLite finds a WAL store's side files by the opened path."""
+   220	    from hivemind import live_lock
+   221	    real, _ = live_lock.own_path(path)
+   222	    conn = sqlite3.connect(f'file:{real}?mode=ro', uri=True)
+   223	    conn.row_factory = sqlite3.Row
+   224	    return conn
+   225	
+   226	
+   227	def current_state(conn, view_id):
+   228	    row = conn.execute('select judgement_id, rung, reasons, changed, seq, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+   229	    return dict(row) if row else None
+   230	
+   231	
+   232	def dependencies_of(conn, view_id):
+   210	    return sum(p.stat().st_size for p in (path, path.with_name(path.name + '-wal')) if p.exists())
+   211	
+   212	
+   213	def free_bytes(folder):
+   214	    return shutil.disk_usage(folder).free
+   215	
+   216	
+   217	def truncate_checkpoint(conn):
+   218	    """A truncating checkpoint with a short wait; True when it completed (no reader held it back)."""
+   219	    try:
+   220	        conn.execute('pragma busy_timeout=1000')
+   221	        return conn.execute('pragma wal_checkpoint(TRUNCATE)').fetchone()[0] == 0
+   222	    except sqlite3.OperationalError:
+   223	        return False
+   224	
+   225	
+   226	def leave_wal(conn):
+   227	    """The writer's orderly end: rollback-journal mode when no reader holds the store; otherwise WAL is kept. Returns the mode."""
+   228	    try:
+   229	        conn.execute('pragma busy_timeout=1000')
+   230	        return conn.execute('pragma journal_mode=delete').fetchone()[0]
+   231	    except sqlite3.OperationalError:
+   232	        return 'wal'
+   233	
+   234	
+   235	class LadderAdapter(adapter.Adapter):
+   236	    """The Stage 2 adapter in its ladder mode: no seed, no ruler view; views come only from the ladder step's answers."""
+   237	
+   238	    def __init__(self, views_path, archive_path, ledger_path, *, transport=None, cap_usd=0.66, sleep=None, limit=None, shared=None):
+   239	        self.conn, self.lock = open_wal_store(views_path)
+   240	        try:
+   241	            self.conn.execute(f"create table if not exists clean_ladders ({', '.join(LADDER_COLUMNS)}, primary key (thesis_id))")
+   242	            self.conn.commit()
+   243	            self._finish_init(archive_path, ledger_path, transport, cap_usd, sleep, limit, shared)
+   244	        except BaseException:
+   245	            self.close()
+   246	            raise
+   247	
+   248	    def close(self):
+   249	        """The writer's end on every path: the store taken out of WAL mode when no reader holds it (so no WAL-mode store is left
+   250	        without its side files, which a read-only reader could not open), its connection closed, then its lock released (no
+   251	        writable connection outlives it). Returns the store's journal mode at the end."""
+   252	        mode = None
+   253	        try:
+   254	            if self.conn is not None:
+   255	                try:
+   256	                    mode = leave_wal(self.conn)
+   257	                finally:
+   258	                    self.conn.close()
+   259	                    self.conn = None
+   260	        finally:
+   261	            if self.conn is None and self.lock is not None:      # a connection that failed to close keeps the lock (until the process ends)
+   262	                live_lock.release(self.lock)
+   263	                self.lock = None
+   264	        return mode
+   265	
+   266	    def _finish_init(self, archive_path, ledger_path, transport, cap_usd, sleep, limit, shared):
+   267	        self.archive = model.Archive(archive_path)
+   268	        self.cfg = config.load(adapter.CONFIG)
+   269	        self.transport = transport
+   270	        self.budget = limit if limit is not None else LedgerBudget(cap_usd, ledger_path, attempt=transport, sleep=sleep, shared=shared)
+   271	        self.q23 = None
+   272	        self.views = set()
+   273	        self.mapping = {}
+   274	        self.unjudged = set()            # theses with a ladder row and no view
+   275	        self.evidence_of = {}
+   276	        self.counts = collections.Counter()
+   277	        self.next_number = 1
+   278	        self.sent = []
+   279	
+   280	    def open_thesis(self, thesis_id, outcome, k, seq, day, input_id, source):
+   448	        end_day = end_day or last_article_day
+   449	        if end_day < last_article_day:
+   450	            raise SystemExit(f'the end day {end_day} is before the last article day {last_article_day}: refused')
+   451	        sequences = {}                                   # the trace's article number k -> the store's sequence (CLOSING-DESIGN.md §1)
+   452	        views_path, failed_checkpoints, last_completed = output / 'views.sqlite', 0, None
+   453	
+   454	        def stop(reason):
+   455	            """Record the stop and the store's last completed day beside the store, then stop before the day."""
+   456	            last = last_completed                    # the loop's own record: a stop never depends on reading the store
+   457	            runner.counts['store journal mode at the end'] = leave_wal(runner.conn)
+   458	            runner.counts['stopped'] = reason
+   459	            runner.counts['last completed day'] = last
+   460	            (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   461	            raise WriterStopped(reason, last)
+   462	
+   463	        for day in calendar_days(list(days)[0], end_day):
+   464	            if failed_checkpoints >= CHECKPOINT_FAILURES_TO_STOP:
+   465	                stop(f'the truncating checkpoint failed after {failed_checkpoints} consecutive completed days (a reader held the store)')
+   466	            try:
+   467	                live_lock.verify(runner.lock)                # the store and its lock file still the ones locked (OPERATING-CONTRACT row 7)
+   468	            except live_lock.PathChanged as changed:
+   469	                stop(f'{changed} before {day}')
+   470	            needed = FREE_SPACE_FACTOR * store_bytes(views_path)
+   471	            if free_bytes(output) < needed:
+   472	                stop(f'free space below {FREE_SPACE_FACTOR} times the store ({needed} bytes needed) before {day}')
+   473	            articles = days.get(day, [])
+   474	            runner.overdue_invariant(day)
+   475	            changed = set()
+   476	            for k in articles:
+   477	                seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+   478	                input_id = by_article[k][0]['input_id'] if k in by_article else f'article:{k}'
+   479	                opened_here = sorted(opened.get(k, {}), key=lambda name: int(name.split('-', 1)[1]))
+   480	                for thesis_id in opened_here:
+   109	def snapshot(store_path, destination):
+   110	    """A consistent copy of a store, even while it is written: only to a new path (so never onto the store itself); made in a temporary
+   111	    file beside the destination, taken out of WAL mode, integrity checked, then published by a hard link that fails if the destination
+   112	    has appeared meanwhile. On any failure nothing created by this call is left. Returns the destination."""
+   113	    real, _ = own_path(store_path)
+   114	    destination = os.path.abspath(destination)
+   115	    if os.path.lexists(destination):
+   116	        raise FileExistsError(f'{destination} exists: a snapshot is written only to a new path')
+   117	    descriptor, temporary = tempfile.mkstemp(prefix='.snapshot-', suffix='.sqlite', dir=os.path.dirname(destination) or '.')
+   118	    os.close(descriptor)
+   119	    source = target = None
+   120	    try:
+   121	        try:
+   122	            source = sqlite3.connect(f'file:{real}?mode=ro', uri=True)
+   123	            target = sqlite3.connect(temporary)
+   124	            source.backup(target)
+   125	            leave_wal_mode(target)
+   126	            check = target.execute('pragma integrity_check').fetchone()[0]
+   127	            if check != 'ok':
+   128	                raise RuntimeError(f'the snapshot failed its integrity check: {check}')
+   129	        finally:
+   130	            for connection in (target, source):
+   131	                if connection is not None:
+   132	                    connection.close()
+   133	        os.link(temporary, destination)                      # fails if the destination appeared during the copy: nothing is replaced
+   134	        return destination
+   135	    finally:
+   136	        for leftover in (temporary, temporary + '-journal', temporary + '-wal', temporary + '-shm'):
+   137	            if os.path.exists(leftover):
+   138	                os.remove(leftover)
+    35	from hivemind.views import store  # noqa: E402
+    36	
+    37	PATHS = {}
+    38	ALIASES = {}
+    39	CFG = None
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, live_lock.LockRefused, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    """(status, body) for a request's error. The store's date refusals carry their days (OPERATING-CONTRACT.md, row 3)."""
+    46	    if isinstance(error, service.FirstDayNotCompleted):
+    47	        return 503, {'error': str(error)}
+    48	    if isinstance(error, service.BoundNotCompleted):
+    49	        return 409, {'error': 'day not completed', 'requested': error.requested, 'last_completed_day': error.last_completed_day}
+    50	    if isinstance(error, service.RangeNotOrdered):
+    51	        return 409, {'error': 'range start after its end', 'start': error.start, 'end': error.end}
+    52	    if isinstance(error, KeyError):
+    53	        return 404, {'error': f'not found: {error}'}
+    54	    if isinstance(error, (service.LedgerError, live_lock.LockRefused)):     # the store cannot be served as configured (row 7)
+    55	        return 500, {'error': str(error)}
+    56	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    57	        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    58	    return 400, {'error': str(error)}
+    59	
+    60	
+    61	class Connections:
+    62	    """The databases one request reads: opened on entry, closed on exit, never shared between threads. The ledger's committed state
+   258	def main():
+   259	    global ALIASES, CFG, SEMANTIC
+   260	    parser = argparse.ArgumentParser()
+   261	    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+   262	    parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'), help='the items database, for source titles in the idea card')
+   263	    parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
+   264	    parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
+   265	    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-idea.json'), help='the config whose idea settings name the mapping and final assessment models and prompts')
+   266	    parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
+   267	    parser.add_argument('--host', default='127.0.0.1')
+   268	    parser.add_argument('--port', type=int, default=8788)
+   269	    parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
+   270	    args = parser.parse_args()
+   271	    PATHS.update(views=args.views, items=args.items, index=args.index, archive=args.archive)
+   272	    os.makedirs(os.path.dirname(os.path.abspath(args.archive)), exist_ok=True)
+   273	    ALIASES = search.object_aliases(args.universe)
+   274	    CFG = config.load(args.config) if args.config and os.path.exists(args.config) else None
+   275	    SEMANTIC = not args.lexical
+   276	    if not os.path.exists(args.items):
+   277	        print(f'items database not found ({args.items}): idea cards name sources by input id', flush=True)
+   278	    if CFG is None:
+   279	        print('no config: GET routes only, POST /ideas answers 502', flush=True)
+   280	    else:
+   281	        print(f'config {CFG.version}: ideas read by {CFG.idea.model} ({CFG.idea.prompt_version}, effort {CFG.idea.reasoning_effort}); archive {os.path.basename(args.archive)}', flush=True)
+   282	        if CFG.idea_summary is not None:
+   283	            print(f'analyst summary: {CFG.idea_summary.model} ({CFG.idea_summary.prompt_version}, effort {CFG.idea_summary.reasoning_effort})', flush=True)
+tests/test_live_lock.py:8:import sqlite3
+tests/test_live_lock.py:17:FINISHED = os.path.join(ROOT, 'poc', 'data', 'sealed-2026-10-24-run3-through-0815', 'views.sqlite')
+tests/test_live_lock.py:42:def wal_store(folder, name='views.sqlite'):
+tests/test_live_lock.py:46:    source, target = service.open_ledger(FINISHED), sqlite3.connect(path)
+tests/test_live_lock.py:56:    with sqlite3.connect(f'file:{path}?mode=ro', uri=True) as conn:
+tests/test_live_lock.py:71:def test_the_store_and_a_symlink_to_it_meet_one_lock_and_a_hard_linked_store_is_refused_by_the_lock_preflight_and_the_snapshot(tmp_path):
+tests/test_live_lock.py:73:    os.symlink(path, tmp_path / 'alias.sqlite')
+tests/test_live_lock.py:76:        live_lock.acquire(tmp_path / 'alias.sqlite')
+tests/test_live_lock.py:78:    os.link(path, tmp_path / 'second-name.sqlite')
+tests/test_live_lock.py:79:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:81:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:83:    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1 and not (tmp_path / 'snap.sqlite').exists()
+tests/test_live_lock.py:97:    with sqlite3.connect(f'file:{copy}?mode=ro', uri=True) as conn:
+tests/test_live_lock.py:104:    path, other = wal_store(tmp_path), wal_store(tmp_path, 'other.sqlite')
+tests/test_live_lock.py:113:    with pytest.raises(live_lock.PathChanged, match='no longer names the locked store'):
+tests/test_live_lock.py:120:    path, other = wal_store(tmp_path), wal_store(tmp_path, 'other.sqlite')
+tests/test_live_lock.py:127:    scratch = tmp_path / 'scratch.sqlite'
+tests/test_live_lock.py:128:    with pytest.raises(live_lock.PathChanged):
+tests/test_live_lock.py:159:    finished = subprocess.run([sys.executable, SNAPSHOT, path, str(tmp_path / 'snap.sqlite')], capture_output=True, text=True)
+tests/test_live_lock.py:161:    with sqlite3.connect(f'file:{tmp_path / "snap.sqlite"}?mode=ro', uri=True) as conn:
+tests/test_live_lock.py:164:    assert last_day(tmp_path / 'snap.sqlite') == '2026-08-15'
+tests/test_live_lock.py:173:    (tmp_path / 'taken.sqlite').write_text('someone else')
+tests/test_live_lock.py:175:    assert snapshot_store.main([path, str(tmp_path / 'taken.sqlite')]) == 1
+tests/test_live_lock.py:177:    assert (tmp_path / 'taken.sqlite').read_text() == 'someone else' and open(path, 'rb').read() == before
+tests/test_live_lock.py:186:    monkeypatch.setattr(live_lock, 'leave_wal_mode', fail)
+tests/test_live_lock.py:187:    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1
+tests/test_live_lock.py:188:    assert not (tmp_path / 'snap.sqlite').exists() and leftovers(tmp_path) == []
+tests/test_live_lock.py:191:def test_a_destination_created_just_before_publication_stays_untouched_and_the_temporary_copy_is_removed(tmp_path, monkeypatch):
+tests/test_live_lock.py:197:        (tmp_path / 'snap.sqlite').write_text('someone else')
+tests/test_live_lock.py:199:    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1
+tests/test_live_lock.py:200:    assert (tmp_path / 'snap.sqlite').read_text() == 'someone else' and leftovers(tmp_path) == []
+tests/test_live_lock.py:213:    model.Archive(str(tmp_path / 'archive.sqlite'))
+tests/test_live_lock.py:214:    monkeypatch.setattr(sys, 'argv', ['preflight.py', '--archive', str(tmp_path / 'archive.sqlite'), '--items', str(tmp_path / 'items.sqlite'),
+tests/test_live_lock.py:218:    with sqlite3.connect(f'file:{given["c"][0]}?mode=ro', uri=True) as conn:
+tests/test_live_lock.py:222:def test_the_api_and_mcp_refuse_a_hard_linked_store_at_start_and_on_each_request_naming_the_reason(tmp_path, monkeypatch):
+tests/test_live_lock.py:223:    """Row 7: every entry point opens a store by its own path; a store with another hard link is refused, by the API at start and per
+tests/test_live_lock.py:231:    for name, file in (('views', 'views.sqlite'), ('index', 'index.sqlite'), ('items', 'no-items.sqlite'), ('archive', 'archive.sqlite')):
+tests/test_live_lock.py:233:    WRITERS.append(a_wal_store(tmp_path / 'views.sqlite'))
+tests/test_live_lock.py:235:    os.link(tmp_path / 'views.sqlite', tmp_path / 'second-name.sqlite')
+tests/test_live_lock.py:236:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:244:    assert refused.value.code == 500 and '2 hard links' in json_module.loads(refused.value.read())['error']
+tests/test_live_lock.py:245:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:247:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:251:def test_a_snapshot_whose_target_fails_to_open_closes_its_source_and_leaves_nothing(tmp_path, monkeypatch):
+tests/test_live_lock.py:253:    real_connect, opened = sqlite3.connect, []
+tests/test_live_lock.py:257:            raise sqlite3.OperationalError('the target cannot be opened (test)')
+tests/test_live_lock.py:260:    monkeypatch.setattr(live_lock.sqlite3, 'connect', connect)
+tests/test_live_lock.py:261:    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1
+tests/test_live_lock.py:263:    with pytest.raises(sqlite3.ProgrammingError):
+tests/test_live_lock.py:265:    assert not (tmp_path / 'snap.sqlite').exists() and leftovers(tmp_path) == []
+W11 no identity check after creation: CAUGHT | 1 failed, 19 passed in 1.77s
+W12 an opening failure keeps the lock: CAUGHT | 1 failed, 17 passed in 1.26s
+W13 close leaves WAL mode in place: CAUGHT | 1 failed, 14 passed in 1.01s
+-- round 137 additions
+control: 38 passed in 10.19s
+R1 readers open a hard-linked store: CAUGHT | 1 failed, 37 passed in 9.67s
+R2 the snapshot source stays open when its target fails: CAUGHT | 1 failed, 37 passed in 10.18s
+R3 the lock released while the connection is open: CAUGHT | 1 failed, 37 passed in 9.81s
+R4 a stop reads the moved store for its last day: CAUGHT | 1 failed, 37 passed in 9.80s
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '215,275p;450,478p'
+nl -ba src/hivemind/live_lock.py | sed -n '115,143p'
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '517,544p'
+nl -ba tests/test_live_lock.py | sed -n '220,268p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py | rg -n -C 2 'moving|moved|close_fails|leave.*fail'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   215	
+   216	
+   217	def truncate_checkpoint(conn):
+   218	    """A truncating checkpoint with a short wait; True when it completed (no reader held it back)."""
+   219	    try:
+   220	        conn.execute('pragma busy_timeout=1000')
+   221	        return conn.execute('pragma wal_checkpoint(TRUNCATE)').fetchone()[0] == 0
+   222	    except sqlite3.OperationalError:
+   223	        return False
+   224	
+   225	
+   226	def leave_wal(conn):
+   227	    """The writer's orderly end: rollback-journal mode when no reader holds the store; otherwise WAL is kept. Returns the mode."""
+   228	    try:
+   229	        conn.execute('pragma busy_timeout=1000')
+   230	        return conn.execute('pragma journal_mode=delete').fetchone()[0]
+   231	    except sqlite3.OperationalError:
+   232	        return 'wal'
+   233	
+   234	
+   235	class LadderAdapter(adapter.Adapter):
+   236	    """The Stage 2 adapter in its ladder mode: no seed, no ruler view; views come only from the ladder step's answers."""
+   237	
+   238	    def __init__(self, views_path, archive_path, ledger_path, *, transport=None, cap_usd=0.66, sleep=None, limit=None, shared=None):
+   239	        self.conn, self.lock = open_wal_store(views_path)
+   240	        try:
+   241	            self.conn.execute(f"create table if not exists clean_ladders ({', '.join(LADDER_COLUMNS)}, primary key (thesis_id))")
+   242	            self.conn.commit()
+   243	            self._finish_init(archive_path, ledger_path, transport, cap_usd, sleep, limit, shared)
+   244	        except BaseException:
+   245	            self.close()
+   246	            raise
+   247	
+   248	    def close(self):
+   249	        """The writer's end on every path: the store taken out of WAL mode when no reader holds it (so no WAL-mode store is left
+   250	        without its side files, which a read-only reader could not open), its connection closed, then its lock released (no
+   251	        writable connection outlives it). Returns the store's journal mode at the end."""
+   252	        mode = None
+   253	        try:
+   254	            if self.conn is not None:
+   255	                try:
+   256	                    mode = leave_wal(self.conn)
+   257	                finally:
+   258	                    self.conn.close()
+   259	                    self.conn = None
+   260	        finally:
+   261	            if self.conn is None and self.lock is not None:      # a connection that failed to close keeps the lock (until the process ends)
+   262	                live_lock.release(self.lock)
+   263	                self.lock = None
+   264	        return mode
+   265	
+   266	    def _finish_init(self, archive_path, ledger_path, transport, cap_usd, sleep, limit, shared):
+   267	        self.archive = model.Archive(archive_path)
+   268	        self.cfg = config.load(adapter.CONFIG)
+   269	        self.transport = transport
+   270	        self.budget = limit if limit is not None else LedgerBudget(cap_usd, ledger_path, attempt=transport, sleep=sleep, shared=shared)
+   271	        self.q23 = None
+   272	        self.views = set()
+   273	        self.mapping = {}
+   274	        self.unjudged = set()            # theses with a ladder row and no view
+   275	        self.evidence_of = {}
+   450	            raise SystemExit(f'the end day {end_day} is before the last article day {last_article_day}: refused')
+   451	        sequences = {}                                   # the trace's article number k -> the store's sequence (CLOSING-DESIGN.md §1)
+   452	        views_path, failed_checkpoints, last_completed = output / 'views.sqlite', 0, None
+   453	
+   454	        def stop(reason):
+   455	            """Record the stop and the store's last completed day beside the store, then stop before the day."""
+   456	            last = last_completed                    # the loop's own record: a stop never depends on reading the store
+   457	            runner.counts['store journal mode at the end'] = leave_wal(runner.conn)
+   458	            runner.counts['stopped'] = reason
+   459	            runner.counts['last completed day'] = last
+   460	            (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   461	            raise WriterStopped(reason, last)
+   462	
+   463	        for day in calendar_days(list(days)[0], end_day):
+   464	            if failed_checkpoints >= CHECKPOINT_FAILURES_TO_STOP:
+   465	                stop(f'the truncating checkpoint failed after {failed_checkpoints} consecutive completed days (a reader held the store)')
+   466	            try:
+   467	                live_lock.verify(runner.lock)                # the store and its lock file still the ones locked (OPERATING-CONTRACT row 7)
+   468	            except live_lock.PathChanged as changed:
+   469	                stop(f'{changed} before {day}')
+   470	            needed = FREE_SPACE_FACTOR * store_bytes(views_path)
+   471	            if free_bytes(output) < needed:
+   472	                stop(f'free space below {FREE_SPACE_FACTOR} times the store ({needed} bytes needed) before {day}')
+   473	            articles = days.get(day, [])
+   474	            runner.overdue_invariant(day)
+   475	            changed = set()
+   476	            for k in articles:
+   477	                seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+   478	                input_id = by_article[k][0]['input_id'] if k in by_article else f'article:{k}'
+   115	    if os.path.lexists(destination):
+   116	        raise FileExistsError(f'{destination} exists: a snapshot is written only to a new path')
+   117	    descriptor, temporary = tempfile.mkstemp(prefix='.snapshot-', suffix='.sqlite', dir=os.path.dirname(destination) or '.')
+   118	    os.close(descriptor)
+   119	    source = target = None
+   120	    try:
+   121	        try:
+   122	            source = sqlite3.connect(f'file:{real}?mode=ro', uri=True)
+   123	            target = sqlite3.connect(temporary)
+   124	            source.backup(target)
+   125	            leave_wal_mode(target)
+   126	            check = target.execute('pragma integrity_check').fetchone()[0]
+   127	            if check != 'ok':
+   128	                raise RuntimeError(f'the snapshot failed its integrity check: {check}')
+   129	        finally:
+   130	            for connection in (target, source):
+   131	                if connection is not None:
+   132	                    connection.close()
+   133	        os.link(temporary, destination)                      # fails if the destination appeared during the copy: nothing is replaced
+   134	        return destination
+   135	    finally:
+   136	        for leftover in (temporary, temporary + '-journal', temporary + '-wal', temporary + '-shm'):
+   137	            if os.path.exists(leftover):
+   138	                os.remove(leftover)
+   517	    (20 times the 0.88 MB store, schema and `-wal` included) and the disk had 1.9 MB.
+   518	
+   519	**Round 137's corrections (D599).**
+   520	
+   521	- **Every reader opens a store by its own path.** `store.open_read_only`, which the API, MCP, `service` and reports all use,
+   522	  resolves a symlink and refuses a store with another hard link (`live_lock.LockRefused`, naming the reason).
+   523	  - The API refuses at start (`index_at_start`) and per request (500, the reason in the body).
+   524	  - MCP refuses at start and per tool call.
+   525	  - Census before the change: none of the 702 `.sqlite` files under `poc/data` and `clean-arch` has a second hard link.
+   526	- **Cleanup when cleanup itself fails:**
+   527	  - **`LadderAdapter.close`:** if leaving WAL mode fails, the connection is still closed and then the lock released. If closing
+   528	    the connection fails, the lock is kept until the process ends (the operating system releases it then). So a writable
+   529	    connection never outlives its lock.
+   530	  - **`snapshot`:** if the target cannot be opened, the source is closed and nothing is left.
+   531	  - **`scripts/snapshot_store.py`** also reports a SQLite error as a refusal (exit 1) instead of a traceback.
+   532	- **A store moved mid-run, a finding:** SQLite itself raised "disk I/O error" on the writer's next statement after its store file
+   533	  was renamed. This happened before the writer's own path check, and only in a process that had run the API/MCP hard-link test
+   534	  first. Which SQLite state in that process makes the difference was not identified.
+   535	  - The writer no longer depends on it: its stop takes the last completed day from its own loop, not from the store.
+   536	  - The checkpoint and the change out of WAL put every statement inside their error handling, so they report a failure instead of
+   537	    masking the stop.
+   538	  - The path's reason is now recorded either way: the moved-store test passes alone, after the hard-link test, and with all three
+   539	    test files together.
+   540	
+   541	## Not covered
+   542	
+   543	- Resuming a stopped live store.
+   544	- The Idea planner on a new-system ledger.
+   220	
+   221	
+   222	def test_the_api_and_mcp_refuse_a_hard_linked_store_at_start_and_on_each_request_naming_the_reason(tmp_path, monkeypatch):
+   223	    """Row 7: every entry point opens a store by its own path; a store with another hard link is refused, by the API at start and per
+   224	    request (500, the reason named) and by MCP at start and per tool call."""
+   225	    import json as json_module
+   226	    import urllib.error
+   227	    import urllib.request
+   228	    sys.path.insert(0, os.path.join(ROOT, 'scripts'))
+   229	    import hivemind_api
+   230	    from test_live_reads import a_wal_store, load_mcp, serve
+   231	    for name, file in (('views', 'views.sqlite'), ('index', 'index.sqlite'), ('items', 'no-items.sqlite'), ('archive', 'archive.sqlite')):
+   232	        monkeypatch.setitem(hivemind_api.PATHS, name, str(tmp_path / file))
+   233	    WRITERS.append(a_wal_store(tmp_path / 'views.sqlite'))
+   234	    mcp = load_mcp(tmp_path, monkeypatch)                                     # started before the second name exists
+   235	    os.link(tmp_path / 'views.sqlite', tmp_path / 'second-name.sqlite')
+   236	    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+   237	        hivemind_api.index_at_start()
+   238	    server = serve(hivemind_api)
+   239	    try:
+   240	        with pytest.raises(urllib.error.HTTPError) as refused:
+   241	            urllib.request.urlopen(f'http://127.0.0.1:{server.server_address[1]}/days', timeout=10)
+   242	    finally:
+   243	        server.shutdown()
+   244	    assert refused.value.code == 500 and '2 hard links' in json_module.loads(refused.value.read())['error']
+   245	    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+   246	        mcp.views()
+   247	    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+   248	        load_mcp(tmp_path, monkeypatch)
+   249	
+   250	
+   251	def test_a_snapshot_whose_target_fails_to_open_closes_its_source_and_leaves_nothing(tmp_path, monkeypatch):
+   252	    path = wal_store(tmp_path)
+   253	    real_connect, opened = sqlite3.connect, []
+   254	
+   255	    def connect(*arguments, **keywords):
+   256	        if opened:
+   257	            raise sqlite3.OperationalError('the target cannot be opened (test)')
+   258	        opened.append(real_connect(*arguments, **keywords))
+   259	        return opened[-1]
+   260	    monkeypatch.setattr(live_lock.sqlite3, 'connect', connect)
+   261	    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1
+   262	    monkeypatch.undo()
+   263	    with pytest.raises(sqlite3.ProgrammingError):
+   264	        opened[0].execute('select 1')
+   265	    assert not (tmp_path / 'snap.sqlite').exists() and leftovers(tmp_path) == []
+115-   115	            calls.append(1)
+116-   116	            if len(calls) == 2:
+117:   117	                raise live_lock.PathChanged('moved (test)')
+118-   118	            return real_verify(held)
+119-   119	        monkeypatch.setattr(live_lock, 'verify', verify)
+--
+180-   180	                Path(self.lock.lock_path).write_text('')
+181-   181	            else:
+182:   182	                os.rename(self.lock.real_path, self.lock.real_path + '.moved')
+183-   183	        return closed_today
+184-   184	    monkeypatch.setattr(ladder_adapter.LadderAdapter, 'close_and_complete', change_after_the_first_day)
+--
+255-   255	def test_a_failure_while_leaving_wal_mode_still_closes_the_connection_then_releases_the_lock(tmp_path, monkeypatch):
+256-   256	    seen = watch_the_writer(monkeypatch)
+257:   257	    monkeypatch.setattr(ladder_adapter, 'leave_wal', lambda conn: (_ for _ in ()).throw(RuntimeError('leaving WAL failed (test)')))
+258-   258	    with pytest.raises(RuntimeError, match='leaving WAL failed'):
+259-   259	        ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '490,507p'
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '519,539p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py | sed -n '164,205p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   490	                runner.judge(day, sequences[max(articles)], changed)
+   491	            runner.close_and_complete(day)
+   492	            last_completed = day
+   493	            failed_checkpoints = 0 if truncate_checkpoint(runner.conn) else failed_checkpoints + 1
+   494	        mode = leave_wal(runner.conn)
+   495	        runner.counts['store journal mode at the end'] = mode
+   496	        if mode != 'delete':
+   497	            runner.counts['stopped in order'] = 'WAL kept: a reader held the store at the end'
+   498	        (output / 'sequences.json').write_text(json.dumps({str(k): seq for k, seq in sequences.items()}, indent=1) + '\n')
+   499	        runner.counts['judging usd this draw (charged: from tokens, or the reserve when no usage came back)'] = round(runner.budget.spent_usd - spent_before, 4)
+   500	        runner.counts['judging usd of the whole limit so far (from its ledger)'] = round(ledger_total(runner.budget.ledger_path), 4)
+   501	        (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   502	        (output / 'judge-requests.json').write_text(json.dumps(runner.sent, indent=1))
+   503	    finally:
+   504	        runner.close()                                   # every exit: the connection closed, then the lock released
+   505	    return runner
+   506	
+   507	
+   519	**Round 137's corrections (D599).**
+   520	
+   521	- **Every reader opens a store by its own path.** `store.open_read_only`, which the API, MCP, `service` and reports all use,
+   522	  resolves a symlink and refuses a store with another hard link (`live_lock.LockRefused`, naming the reason).
+   523	  - The API refuses at start (`index_at_start`) and per request (500, the reason in the body).
+   524	  - MCP refuses at start and per tool call.
+   525	  - Census before the change: none of the 702 `.sqlite` files under `poc/data` and `clean-arch` has a second hard link.
+   526	- **Cleanup when cleanup itself fails:**
+   527	  - **`LadderAdapter.close`:** if leaving WAL mode fails, the connection is still closed and then the lock released. If closing
+   528	    the connection fails, the lock is kept until the process ends (the operating system releases it then). So a writable
+   529	    connection never outlives its lock.
+   530	  - **`snapshot`:** if the target cannot be opened, the source is closed and nothing is left.
+   531	  - **`scripts/snapshot_store.py`** also reports a SQLite error as a refusal (exit 1) instead of a traceback.
+   532	- **A store moved mid-run, a finding:** SQLite itself raised "disk I/O error" on the writer's next statement after its store file
+   533	  was renamed. This happened before the writer's own path check, and only in a process that had run the API/MCP hard-link test
+   534	  first. Which SQLite state in that process makes the difference was not identified.
+   535	  - The writer no longer depends on it: its stop takes the last completed day from its own loop, not from the store.
+   536	  - The checkpoint and the change out of WAL put every statement inside their error handling, so they report a failure instead of
+   537	    masking the stop.
+   538	  - The path's reason is now recorded either way: the moved-store test passes alone, after the hard-link test, and with all three
+   539	    test files together.
+   164	            ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+   165	    finally:
+   166	        parent.chmod(0o700)
+   167	    assert os.path.getsize(tmp_path / 'out' / 'views.sqlite') == 0
+   168	
+   169	
+   170	@pytest.mark.parametrize('replaced, reason', [('the lock file', 'was replaced'), ('the store', 'no longer exists')])
+   171	def test_a_path_changed_during_the_run_stops_the_writer_at_the_next_day_through_the_launcher(tmp_path, monkeypatch, replaced, reason):
+   172	    real, days = ladder_adapter.LadderAdapter.close_and_complete, []
+   173	
+   174	    def change_after_the_first_day(self, day):
+   175	        closed_today = real(self, day)
+   176	        days.append(day)
+   177	        if len(days) == 1:
+   178	            if replaced == 'the lock file':
+   179	                os.remove(self.lock.lock_path)
+   180	                Path(self.lock.lock_path).write_text('')
+   181	            else:
+   182	                os.rename(self.lock.real_path, self.lock.real_path + '.moved')
+   183	        return closed_today
+   184	    monkeypatch.setattr(ladder_adapter.LadderAdapter, 'close_and_complete', change_after_the_first_day)
+   185	    record = run_stage_b.send(tmp_path, transport=fake_judge, sleep=lambda seconds: None)
+   186	    assert record['u1']['state'] == 'incomplete' and not (tmp_path / 'draw-u1-redo').exists()
+   187	    assert record['stopped'].startswith('u1 incomplete: ') and reason in record['stopped'] and f'before {days[0]}' not in record['stopped'], record['u1']['attempts'][0].get('traceback')
+   188	    assert len(days) == 1
+   189	
+   190	
+   191	KILLED_WRITER = '''
+   192	import sys, time
+   193	from pathlib import Path
+   194	here, out, marker, locks = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4]
+   195	sys.path[:0] = [str(here), str(here.parents[0] / 'e2e-2026-11-09'), str(here.parents[2] / 'src')]
+   196	import ladder_adapter
+   197	from hivemind import jev, live_lock, model
+   198	live_lock.LOCK_FOLDER = locks
+   199	def refuse(*arguments):
+   200	    raise SystemExit('a credential was read')
+   201	model._key = jev._key = refuse
+   202	from test_ladder_adapter import fake_judge
+   203	real, done = ladder_adapter.LadderAdapter.close_and_complete, []
+   204	def close(self, day):
+   205	    if len(done) == 2:                       # the third day's articles are committed; its completion never comes
+
+codex
+**Not yet.** The reader and cleanup corrections address the round-137 findings, but the writer still reports some SQLite failures as though a reader held the store.
+
+`truncate_checkpoint` turns **every** `sqlite3.OperationalError` into `False`; after three, the stop reason says a reader held the store. `leave_wal` likewise turns every `OperationalError` into `'wal'`, and the normal-end record says a reader held it. A disk I/O error can therefore be reported as reader contention, despite the contract saying those cases are kept distinct. Preserve or report the actual failure separately from a confirmed busy checkpoint, and test both paths. [Checkpoint and WAL exit](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:217), [normal-end record](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:490).
+
+On the unidentified SQLite trigger: **do not claim it is fixed or understood.** The moved-store case violates the contract’s stated operating precondition, and the revised stop no longer needs to read that moved store to record the last completed day. That makes the unknown trigger an explicit limit on this test case, rather than by itself a reason to block proof 10. The misleading classification of *other* operational errors, however, needs correction before accepting 4b. [Recorded finding](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:532).
+
+I inspected the changes and saved mutant results; I did not rerun the suites. Once the failure reasons are distinguished, designing proof 10 around the real API and MCP paths is the right next step.
+
+CONSENSUS: no, because SQLite I/O failures can still be recorded as reader contention.
+tokens used
+3,577,645
+**Not yet.** The reader and cleanup corrections address the round-137 findings, but the writer still reports some SQLite failures as though a reader held the store.
+
+`truncate_checkpoint` turns **every** `sqlite3.OperationalError` into `False`; after three, the stop reason says a reader held the store. `leave_wal` likewise turns every `OperationalError` into `'wal'`, and the normal-end record says a reader held it. A disk I/O error can therefore be reported as reader contention, despite the contract saying those cases are kept distinct. Preserve or report the actual failure separately from a confirmed busy checkpoint, and test both paths. [Checkpoint and WAL exit](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:217), [normal-end record](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:490).
+
+On the unidentified SQLite trigger: **do not claim it is fixed or understood.** The moved-store case violates the contract’s stated operating precondition, and the revised stop no longer needs to read that moved store to record the last completed day. That makes the unknown trigger an explicit limit on this test case, rather than by itself a reason to block proof 10. The misleading classification of *other* operational errors, however, needs correction before accepting 4b. [Recorded finding](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:532).
+
+I inspected the changes and saved mutant results; I did not rerun the suites. Once the failure reasons are distinguished, designing proof 10 around the real API and MCP paths is the right next step.
+
+CONSENSUS: no, because SQLite I/O failures can still be recorded as reader contention.

@@ -1,0 +1,617 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebb0-9724-7e51-a979-bae88cb9cba9
+--------
+user
+# Council round 2: design version 2
+
+Version 2 is `NEW-REFERENCE-DESIGN-v2.md` in this folder, a read-only copy. It answers your round-1 review and the Claude-family review,
+condensed in `council-claude-1.md`. The change list is in §9. The material conflict is corrected in D659: search the decision log for "## D659 ".
+
+Check each of your round-1 findings against version 2:
+1. the material and D658;
+2. the event mapping;
+3. the reference rule and the closed set at signing;
+4. the access boundary for every participant;
+5. the missing rows: rung gaps, three-outcome events, no decisive items, no_view, no judgement, unresolved, Ohio, construction and failure states.
+
+Then look for anything new that version 2 introduces:
+- the items-only shown brief;
+- the validity schema;
+- the null baselines;
+- the line scored against reader A;
+- the predictions.
+
+Out of scope: the ladder step's prompt, gate 1, and cost. The frozen ruler's files must not change.
+
+End with `READY` or `NOT READY: <the smallest change>`.
+
+codex
+I’ll check each round-1 finding against version 2 and D659, then review the new scoring and reader instructions for gaps.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba council-claude-1.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba NEW-REFERENCE-DESIGN-v2.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py | head -220' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control-reader-brief.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+     1	(The Claude-family independent review of NEW-REFERENCE-DESIGN.md version 1, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Verdict: NOT READY: add an addendum recording the packet as D658's material with its reason, Ohio as c16 listed apart, reader isolation, the scorer's no_view and no-item exclusions, both null baselines, and the line scored against reader A.
+     3	1. Scope: matches option 1; no frozen file edited. D658's record says "written from the complete material the judge is shown" (DL:9222), the design picks the packet: state the reading before any reader runs. "Unit unchanged" is inaccurate (ruler-v1 defines the unit as its 23 questions): call it a new piece. The astra column pre-authorises a new application, which needs its own decision. "D3" is the desk ruler's number, not the decision log's.
+     4	2. Material: keep the packet (stable across draws; with the shown filter it separates reasoning from delivery). The judge's own evidence is what Stage B's per-judgement readers already measure.
+     5	3. Reference rule: sound (D262; A as noise). Stronger reason: Stage B's judge is gpt-6-luna (80/80 archive rows), the same family as reader A. Prediction: 9 of 12 Stage B splits went by family. Add a "neither" ruling; print the line against A; limit Alex's amendments to a closed set.
+     6	4. Fitting: the claim that Claude has not seen the judgements is false (Claude read 17 UNSUPPORTED judgements; control-census.txt lists agreement). Protect by procedure: code builds only question fields; readers isolated with logs checked; validity schema fixed before reading; code-only reconciliation and prompts; a code-generated signing page with no judge answer; the shown check after the freeze; the scorer fixed before the readers. If a miss leads to a judge change, the 15 become tuning data.
+     7	5. Population: D658 names these 15; waiting for astra decides nothing now. Predictions: under old items exactly 8 of 15 had every item shown, so an unexercised result is likely and points to delivery. 15 controls are 7 matters plus Ohio.
+     8	6. Missing rows: no_view exclusion; an empty item list counts as shown in CT:245 (refuse fewer than 2 items); events: a yes/no reference cannot tell Ruled out from Still open (Stage B pattern 1 on u2/clean-5), keep and state; rung gaps: none today, refuse at build; null baselines; an items-only shown brief; the brief names questions-v1.json; Ohio as c16.
+
+ succeeded in 0ms:
+     1	# A new reference for the final-answer test's control line (D658): design, version 2, for council review ($0; nothing run)
+     2	
+     3	**In one line:** answer the 15 control questions, plus Ohio listed apart, as the new system asks them. The answers come from the frozen
+     4	ruler's own 14-day material and brief, written by two blind readers of two families. Code assembles everything, and every disagreement goes to
+     5	Alex with the third readers' reasons. Alex signs, the reference is frozen, and only then are the judge's stored answers scored, by a scorer fixed
+     6	before any reader runs.
+     7	
+     8	Version 2 answers the two independent reviews of version 1 (`council-codex-1.md`, thread 01a1ebb0-9724-7e51-a979-bae88cb9cba9; the Claude-family
+     9	review, condensed in `council-claude-1.md`). Both read version 1 NOT READY. The changes are listed in §9.
+    10	
+    11	## 1. What Alex decided, and the material
+    12	
+    13	- **D658** (Alex: "第一条ok, 仔细的跑run council review"). The option he chose read: "按新系统实际出的这 15 道题，重写一份标准答案（推荐）：请两组没参与造这个系统的审查者，用同样的材料各自独立作答…你看过签字后冻结，再拿判答案那一步的结果去批一次".
+    14	- **"同样的材料" is the frozen ruler's material,** the material the old reference was written from: `packet-v1.json` (golden-v5's 309 items, sha
+    15	  `53d1e8b4…`).
+    16	- **D658's record line "written from the complete material the judge is shown" is my paraphrase of AGENTS §7.1, not his option,** and it contradicts
+    17	  the option. His option governs ("check it against his raw messages, not against a log you wrote", AGENTS, Authority and scope). The correction is
+    18	  recorded in D659.
+    19	- **Why the packet, not the evidence the judge was shown:**
+    20	  - **The packet measures** whether the judge's last answer lands where an analyst would land after reading everything collected for the window.
+    21	    It is the same for all three draws (ruler-v1: "账本随每臂变，尺子不能随臂变").
+    22	  - **The material-shown filter** (§4) keeps only controls whose decisive items reached the judge. That separates the judge's reasoning from
+    23	    delivery.
+    24	  - **The judge's own evidence** would measure whether the answer follows from what it saw. Stage B's per-judgement readers already measure that
+    25	    (`STAGE_B_READING.md`).
+    26	  - **The packet cannot see** statements the judge saw that the packet lacks, delivery (a control whose items were not shown drops out), or
+    27	    questions read as no_view.
+    28	
+    29	## 2. What this piece is
+    30	
+    31	A new piece beside the frozen ruler (AGENTS §7.1), never an edit of it.
+    32	- **Its own unit:** 16 questions. They are the 15 controls (c01 to c15) and Ohio (c16, listed apart as today), each a question as the system wrote it
+    33	  in one draw, judged at the window end 2026-07-14.
+    34	- **Kept from the frozen ruler:** the material, the brief, the fields and the agreement rule. Old scores are never compared with it.
+    35	- **Its own name and version:** `control-reference-v1`.
+    36	
+    37	| Piece of the line | Today (D428 line 3) | Under this design |
+    38	|---|---|---|
+    39	| The reference answer | Reader B's frozen answer to the seed question | The new reference's answer to the system's own question |
+    40	| Same question, same due day | Two readers and third readers | Holds by construction |
+    41	| Material | `packet-v1.json` | the same file, copied and sha-checked |
+    42	| The analysts' brief | `reader-brief.md` | the same file, copied byte for byte. The question file is named `questions-v1.json` inside the readers' folder, so the brief's file names hold (its content: the 16 questions). Its example id "q01" is a shape example; the ids are c01 to c16 |
+    43	| Agreement (a figure) | The chosen rung's band overlaps the reference range | Unchanged |
+    44	| Agreement (an event) | Yes against yes; "Ruled out" or "Still open" against no | Unchanged; the limit in §6 is stated |
+    45	| Material shown | Every decisive item shown by 2026-07-14 | Unchanged rule, by an items-only brief (§4); an empty or one-item list never counts as shown |
+    46	| Threshold | At least 8 controls with material shown; all but one agree; Ohio apart | Unchanged |
+    47	
+    48	## 3. The procedure, fixed before any reader runs
+    49	
+    50	**The access boundary:**
+    51	- **Claude has already seen the stored judgements.** It read the 17 a reader called UNSUPPORTED, and `control-census.txt` lists each control's
+    52	  agreement with reader B. So the protection cannot rest on Claude not having seen them.
+    53	- **Claude writes no reference content.** Code builds every file a reader, a third reader or Alex sees. Claude only runs code and passes on the
+    54	  handoffs code generates.
+    55	- **No file shown to any participant carries a judge's answer, a chosen rung, a judgement reason or a stored agreement.** Code checks every packet
+    56	  it writes against the stored judgement rows, and refuses any packet that names a chosen rung or a judgement's text.
+    57	- **The steps:**
+    58	1. **Build** (code, `build_control_reference.py`).
+    59	   - From the stored ladders it copies only question, unit, year, due day, rungs and kind. It never copies the ladder's reason, reference_status or
+    60	     checked answer.
+    61	   - It refuses a figure ladder with a gap, an overlap or an unbounded middle rung. There are none today: all six figure ladders are contiguous.
+    62	   - It writes the readers' folder `poc/data/clean-control-reference-2026-11-17/readers-input/` holding exactly three files: `reader-brief.md` and
+    63	     `packet-v1.json`, each a byte copy with its sha checked against the frozen file, and `questions-v1.json` with the 16 questions.
+    64	   - The draw and thesis behind each question are kept in `keys/` outside the readers' folder.
+    65	2. **Readers.**
+    66	   - **A** (Codex, `codex exec -s read-only -C <readers-input>`) and **B** (a Claude-family subagent) each answer all 16, independently, in fresh
+    67	     sessions.
+    68	   - Each is told to open only the three files. A's command log is checked for any other path. B's handoff names only the folder.
+    69	   - **Validity** is defined now by a code schema: the brief's fields; a figure's low ≤ high in the question's unit; an event's yes_no set; and,
+    70	     unless no_view, at least 2 decisive items that exist in the packet (the brief asks "2–6").
+    71	   - An invalid row is asked again once, in the established wording. Both rows are kept. A row still invalid makes that question unresolved, and it
+    72	     goes to Alex.
+    73	3. **Reconcile** (code, then readers).
+    74	   - Code compares the two readers per question: figures overlap or not, yes/no equal or not, no_view on either side.
+    75	   - **The proposed reference is reader B's answer as written.** This is the D262 precedent, and a stronger reason applies here: the judge is
+    76	     gpt-6-luna (OpenAI), the same family as reader A, so B is the only reader outside the judge's family.
+    77	   - Every disagreement goes to two third readers, one of each family. They see the packet, the brief, the question and both answers, on sides
+    78	     drawn by a fixed seed. Each rules **A**, **B** or **neither** (giving its own range or yes/no with items), citing item ids. Code writes their
+    79	     prompts.
+    80	   - **Nothing is replaced automatically.** All disagreements, with both rulings, go to Alex.
+    81	   - **A prediction, written now:** on 9 of Stage B's 12 splits, each third reader sided with its own family's first reader. So most A–B disputes
+    82	     here will split and reach Alex.
+    83	4. **Alex signs.**
+    84	   - The signing page `control-reference-v1-for-signing.md` is generated by code, in plain English. It shows the 16 questions, each reference
+    85	     answer with its cited items, every disagreement with both third readers' reasons, and every no_view or unresolved row. It shows no judge
+    86	     answer.
+    87	   - For each disputed question, Alex picks one of a closed set: A's answer, B's answer, a third reader's answer, or a range or yes/no in his own
+    88	     words with items cited.
+    89	   - Nothing is scored before his signature.
+    90	5. **Freeze.**
+    91	   - `control-reference-v1.json` records `reference_version: 1`, both readers' sha256, each question's source (A and B agree, or Alex's pick and
+    92	     why), and the label model-authored.
+    93	   - Its sha goes into `control-reference-v1.sha256` and the decision. It is never edited: a later defect is a dated correction record printed with
+    94	     every score.
+    95	6. **Material shown** (after the freeze).
+    96	   - A new items-only brief, `control-items-brief.md`. It is the "items" part of `control-reader-brief.md`, with the same-question and same-due
+    97	     parts removed because they hold by construction. It is reviewed before use.
+    98	   - Two readers, one of each family, mark each of the reference's decisive items shown or not_shown in the evidence the judge's requests listed on
+    99	     or before 2026-07-14. Third readers rule the disputes.
+   100	   - The readers see the evidence and the items, never the chosen rung.
+   101	7. **Score** (code, `control_reference_count.py`, with its tests, written and sha-recorded before step 2).
+   102	   - It reads `control_theses.py`'s stored-judgement and evidence functions and edits no frozen file.
+   103	   - It refuses a reference whose sha or version differs.
+   104	
+   105	## 4. The count, fixed now
+   106	
+   107	For each control c01 to c15:
+   108	- **Excluded, listed as not exercised, with the reason:** no judgement on or before 2026-07-14; no_view in the frozen reference; a reference
+   109	  citing fewer than 2 items; material not shown (any item not_shown or unresolved); a figure rung with no bounds.
+   110	- **Otherwise counted:** it agrees when the last judgement's rung overlaps the reference range (a figure), or Yes matches yes and "Ruled out" or
+   111	  "Still open" matches no (an event).
+   112	- **The line passes** when at least 8 controls are counted and all but one of them agree. It is unexercised when fewer than 8 are counted.
+   113	- **Ohio** (c16) is scored and printed apart. It never counts towards the 8.
+   114	- **Printed beside the verdict:**
+   115	  - **The noise.** The line scored against reader A's answers instead of the reference, and the A–B disagreement rate.
+   116	  - **Null baselines.** For figures, the lookup baseline (the rung that contains the reference's stated value) and always-neutral. For events,
+   117	    always "Still open" and always Yes.
+   118	  - **Per matter.** The 15 controls are 7 matters (q07, q08 and q18 three times each; q09 and q13 twice each; q04 and q16 once each), so 8
+   119	    controls are not 8 independent tests.
+   120	
+   121	## 5. Predictions, written before any reader runs
+   122	
+   123	- **Under the old reference's decisive items, exactly 8 of 15 controls had every item shown:** u1/clean-3, u1/clean-6, u2/clean-2, u2/clean-5,
+   124	  u2/clean-7, u3/clean-1, u3/clean-3 and u3/clean-7 (`control-census.txt`). The new reference may cite other items. One more not_shown leaves the
+   125	  line unexercised, and the shortfall is then delivery (D511, D592), not the questions.
+   126	- **Most A–B disputes will split by family and reach Alex** (§3, step 3).
+   127	
+   128	## 6. What it does not measure, and its weak points
+   129	
+   130	- **What it does not measure:** whether the system opened the right questions (D1), whether evidence reached them (D2, beyond the shown filter),
+   131	  the judge's daily path, or which "no" an event lands on. The yes/no reference cannot tell "Ruled out" from "Still open", so Stage B's pattern 1
+   132	  ("Still open" kept because nothing is settled; u2 v5 is control u2/clean-5) is invisible to this line. Lines 1 and 2 of Stage B see it. Keeping
+   133	  the brief word for word is chosen over adding a field.
+   134	- **Model-authored.** Two model readers, with Alex's signature as the human vote. The noise is printed (§4).
+   135	- **One stored run, the luna configuration's questions.**
+   136	  - A pass shows the line exercised and met on these 15. It does not pass Stage B, which also missed the strictest last-answer reading.
+   137	  - A miss is a finding about the judge, or about the reference, that carries over to any ladder configuration. It stops the line before any further
+   138	    spend (D355).
+   139	  - An unexercised result points to delivery.
+   140	- **Tuning exposure.** If a miss leads to a judge change (D263), these 15 become tuning data, and the next application must be on unseen
+   141	  questions.
+   142	- **The next application.** A reference for another run's questions, such as astra's, is a new gold and needs its own decision (AGENTS §7.1). This
+   143	  design does not pre-authorise it.
+   144	
+   145	## 7. State × event
+   146	
+   147	| Step | Invalid row | A–B disagree | Third readers rule neither, or split | Alex amends at signing | Defect after freezing | Missing or malformed ladder data | Shown check fails or is unresolved |
+   148	|---|---|---|---|---|---|---|---|
+   149	| 1 Build | — | — | — | — | — | refused; that control is listed not built, with the reason | — |
+   150	| 2 Readers | asked again once; still invalid: unresolved, to Alex | — | — | — | — | — | — |
+   151	| 3 Reconcile | — | two third readers | both rulings to Alex | — | — | — | — |
+   152	| 4 Sign | — | — | Alex picks from the closed set | recorded in his words; the page is regenerated and re-signed | — | — | — |
+   153	| 5 Freeze | — | — | — | — | a dated correction record, printed with every score | — | — |
+   154	| 6 Shown | — | — | — | — | — | — | not shown; the control is excluded (§4) |
+   155	| 7 Score | — | — | — | — | printed beside | — | — |
+   156	
+   157	## 8. Prior decisions read
+   158	
+   159	- **D261, D262** (the frozen ruler; reader B as gold); ruler-v1 §2 (the "desk ruler", D3 in its own numbering); AGENTS §7.1.
+   160	- **D428** (line 3), **D430** (a figure's due day).
+   161	- **D575, D592** (the shortfall; a new reference is Alex's), **D658** (his choice), **D659** (the material correction).
+   162	- **D263** (a gap between system and gold is the system's to close).
+   163	- **D355** (a result against the hypothesis stops the line).
+   164	
+   165	## 9. Changes from version 1
+   166	
+   167	- **The material** follows Alex's option text; D658's paraphrase is corrected (D659).
+   168	- **The unit** is called a new piece with its own unit (16 questions), not "unchanged".
+   169	- **No automatic replacement of B by A.** All disagreements go to Alex, the third readers can rule "neither", and Alex picks from a closed set.
+   170	- **The access boundary covers every participant,** and the false claim that Claude had not seen the judgements is removed.
+   171	- **Ohio** is c16, listed apart.
+   172	- **The count's exclusions are fixed:** no_view, fewer than 2 items, an unbounded rung.
+   173	- **Added:** null baselines, the line against reader A, and the per-matter report.
+   174	- **The items-only shown brief** is new and reviewed; the old brief is not used unchanged.
+   175	- **The scorer** is written and its sha recorded before the readers run.
+   176	- **The astra application** needs its own decision.
+   177	- **Predictions** are written down.
+
+ succeeded in 0ms:
+     1	"""D3, the judgement score (ruler-v1.md §1): for each gold question, the run's last judgement on or before the window end; a numeric
+     2	question agrees when the gold's implied range overlaps the band of the rung the judge chose, a yes/no question when the answers match.
+     3	Prints every question, the totals, the two null baselines (the rung containing the gold's reference figure; always the neutral rung) and
+     4	the gold's own reader-disagreement count. Refuses a gold whose sha256 or ruler version is not the one written here (D261).
+     5	
+     6	    python3 score_judgement.py <run folder> [--day 2026-07-14] [--map q23=v25 ...]
+     7	"""
+     8	import argparse
+     9	import hashlib
+    10	import json
+    11	import sqlite3
+    12	from pathlib import Path
+    13	
+    14	HERE = Path(__file__).resolve().parent
+    15	RULER_VERSION = 1
+    16	GOLD_SHA256 = '636c056d1e4252fa759660803067e6ccd67a81067b012905e918aa9dec4005f2'   # frozen 2026-11-02 (D262); gold-v1.sha256 holds the same value
+    17	
+    18	
+    19	def main():
+    20	    ap = argparse.ArgumentParser()
+    21	    ap.add_argument('run'); ap.add_argument('--day', default='2026-07-14'); ap.add_argument('--map', nargs='*', default=[])
+    22	    args = ap.parse_args()
+    23	    gold_path = HERE / 'gold-v1.json'
+    24	    sha = hashlib.sha256(gold_path.read_bytes()).hexdigest()
+    25	    gold = json.loads(gold_path.read_text(encoding='utf-8'))
+    26	    if gold.get('ruler_version') != RULER_VERSION:
+    27	        raise SystemExit(f'gold ruler_version {gold.get("ruler_version")} != scorer {RULER_VERSION}: refused')
+    28	    frozen = (HERE / 'gold-v1.sha256').read_text().split()[0] if (HERE / 'gold-v1.sha256').exists() else None
+    29	    if GOLD_SHA256 and frozen != GOLD_SHA256:
+    30	        raise SystemExit(f'gold-v1.sha256 {frozen} != the frozen value in this scorer {GOLD_SHA256}: refused')
+    31	    if frozen and frozen != sha:
+    32	        raise SystemExit(f'gold sha256 {sha} != frozen {frozen}: refused')
+    33	    corrections = json.loads((HERE / 'corrections-v1.json').read_text()) if (HERE / 'corrections-v1.json').exists() else []
+    34	    label = 'FROZEN' if frozen else f'DRAFT, {gold.get("status")}'
+    35	    print(f'gold v{RULER_VERSION} sha256 {sha[:16]}… [{label}]; corrections on record, not applied: {len(corrections)}; run {args.run}; window end {args.day}')
+    36	    conn = sqlite3.connect(f'file:{args.run}/views.sqlite?mode=ro', uri=True); conn.row_factory = sqlite3.Row
+    37	    mapping = {k: v for k, v in (m.split('=') for m in args.map)}
+    38	    seeds = {f'q{k:02d}': f'v{k}' for k in range(1, 23)}
+    39	    questions = {q['id']: q for q in json.loads((HERE / 'questions-v1.json').read_text(encoding='utf-8'))['questions']}
+    40	    for qid, vid in seeds.items():     # the seeds keep their ids in every run: check the text, refuse a run that differs
+    41	        row = conn.execute('select question from views where view_id=?', (vid,)).fetchone()
+    42	        if not row or row['question'] != questions[qid]['question']:
+    43	            raise SystemExit(f'{vid} in the run is not the seed question {qid}: refused')
+    44	    mapping = {**seeds, **mapping}
+    45	    if 'q23' not in mapping:
+    46	        hit = conn.execute("select view_id from views where question like '%Ohio%' and question like '%guarantee%' order by created_seq limit 1").fetchone()
+    47	        if hit:
+    48	            mapping['q23'] = hit['view_id']
+    49	    totals = {'agree': 0, 'disagree': 0, 'no judgement': 0, 'not in run': 0, 'gold open': 0, 'no_view': 0}
+    50	    base_lookup = [0, 0]; base_neutral = [0, 0]
+    51	    print(f'{"q":<4}{"outcome":<14}{"gold implied":<28}{"judge rung / band":<40}{"lookup":<8}{"neutral":<8}question')
+    52	    for entry in gold['entries']:
+    53	        qid = entry['question_id']; q = questions[qid]
+    54	        if entry.get('no_view'):
+    55	            totals['no_view'] += 1; print(f'{qid:<4}{"no_view":<14}{"":<28}{"":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    56	        if not entry.get('implied_outcome'):
+    57	            totals['gold open'] += 1; print(f'{qid:<4}{"gold open":<14}{"":<28}{"":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    58	        resolved = entry.get('resolution') or entry
+    59	        implied, direction = resolved['implied_outcome'], resolved.get('direction')
+    60	        vid = mapping.get(qid)
+    61	        if not vid:
+    62	            totals['not in run'] += 1; print(f'{qid:<4}{"not in run":<14}{"":<28}{"":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    63	        j = conn.execute('select rung from judgements where view_id=? and publication_day<=? order by judgement_id desc limit 1', (vid, args.day)).fetchone()
+    64	        rungs = [dict(r) for r in conn.execute('select position, label, lo, hi from rungs where view_id=? order by position', (vid,))]
+    65	        if j is None:
+    66	            totals['no judgement'] += 1; print(f'{qid:<4}{"no judgement":<14}{str(implied):<28}{vid + " never judged":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    67	        chosen = rungs[j['rung'] - 1]
+    68	        if q['unit'] == 'yes/no':
+    69	            agree = (chosen['label'].lower() == 'yes') == bool(implied['yes_no'])
+    70	            gold_text = 'yes' if implied['yes_no'] else 'no'; band = chosen['label']
+    71	            lookup = neutral = None
+    72	        else:
+    73	            lo, hi = chosen['lo'], chosen['hi']
+    74	            agree = (lo is None or implied['high'] >= lo) and (hi is None or implied['low'] < hi)
+    75	            gold_text = f'{implied["low"]:,.4g}..{implied["high"]:,.4g}'; band = f'{lo if lo is not None else "-inf"}..{hi if hi is not None else "inf"}'
+    76	            ref = ((entry.get('reference') or {}).get('A') or {}).get('value') if isinstance(entry.get('reference'), dict) and 'A' in entry['reference'] else (entry.get('reference') or {}).get('value')
+    77	            lookup = None
+    78	            if ref is not None:
+    79	                for r in rungs:
+    80	                    if (r['lo'] is None or ref >= r['lo']) and (r['hi'] is None or ref < r['hi']):
+    81	                        lookup = (r['lo'] is None or implied['high'] >= r['lo']) and (r['hi'] is None or implied['low'] < r['hi']); break
+    82	            neutral = None
+    83	            n = next((r for r in rungs if r['label'].lower() == 'neutral'), None)
+    84	            if n:
+    85	                neutral = (n['lo'] is None or implied['high'] >= n['lo']) and (n['hi'] is None or implied['low'] < n['hi'])
+    86	        totals['agree' if agree else 'disagree'] += 1
+    87	        if lookup is not None:
+    88	            base_lookup[0] += lookup; base_lookup[1] += 1
+    89	        if neutral is not None:
+    90	            base_neutral[0] += neutral; base_neutral[1] += 1
+    91	        print(f'{qid:<4}{("agree" if agree else "DISAGREE"):<14}{gold_text:<28}{(vid + " rung " + str(j["rung"]) + " " + chosen["label"][:12] + " " + band)[:39]:<40}'
+    92	              f'{("" if lookup is None else ("yes" if lookup else "no")):<8}{("" if neutral is None else ("yes" if neutral else "no")):<8}{q["question"][:60]}')
+    93	    judged = totals['agree'] + totals['disagree']
+    94	    print(f'\ntotals: {totals}; agreement {totals["agree"]}/{judged} of judged questions')
+    95	    print(f'null baselines: the rung containing the gold reference agrees {base_lookup[0]}/{base_lookup[1]}; always neutral agrees {base_neutral[0]}/{base_neutral[1]}')
+    96	    noise = (gold.get('readers') or {}).get('stick_noise') or {}
+    97	    print(f'gold = reader B (D262); control reader A differs on {len(noise.get("range_or_yesno_disagreements", []))} questions by range or yes/no and on {len(noise.get("direction_label_splits", []))} direction labels; [{label}]')
+    98	
+    99	
+   100	if __name__ == '__main__':
+   101	    main()
+
+ succeeded in 0ms:
+     1	# Stage B: reading the control theses (read-only)
+     2	
+     3	You are an independent reader. Do not edit files, run model calls or start runs, and do not read any file other than this brief
+     4	and the one packet you are given.
+     5	
+     6	Each item of your packet pairs a **ruler question** (a question written by hand for an earlier, frozen measurement, with its
+     7	unit, due day and ladder of rungs) with a **judged question** the system wrote itself for a thesis it opened (its question, the
+     8	outcome it looks at, due day, year and rungs). It also lists **reader B's decisive items**: the evidence an earlier reader, called
+     9	reader B, cited for the frozen answer to the ruler question (each with its day, title, passage and meaning), and **the evidence
+    10	shown to the judge**: every evidence entry the system's judge was shown for the judged question in any of its requests on or
+    11	before 2026-07-14 (empty when there is none). You are not told either answer, and you do not judge which answer is right.
+    12	
+    13	For each item, answer three questions.
+    14	
+    15	1. `same_question`: **yes** when the judged question asks what the ruler question asks: the same quantity measured the same way
+    16	   (the same total, scope and unit: not a part of it, a ceiling on it, another quantity or another unit), or the same event,
+    17	   for the same period. **no** otherwise. Wording may differ; a judged question that asks for more or less than the ruler's,
+    18	   or for another period, is **no**.
+    19	2. `same_due`: for an **event** (a yes-or-no question), **yes** only when the judged question's deadline is the ruler's
+    20	   deadline. For a **figure**, **yes** when the two due days both mark the publication of the same period's figure (for
+    21	   example, both the annual report of the same fiscal year, even if the two days differ); **no** otherwise.
+    22	3. `items`: for **each** of reader B's decisive items, by its id, **shown** when its content is present in the evidence shown to
+    23	   the judge (the same fact or figure, in any wording, from any source), **not_shown** when it is absent. Search the entries for
+    24	   the figure or the fact; do not mark an item shown because a related item is.
+    25	
+    26	Return one JSON object per item, one per line, in packet order, and nothing else (no prose, no code fence):
+    27	`{"control": 3, "same_question": "yes"|"no", "same_due": "yes"|"no", "items": {"i005": "shown"|"not_shown", ...}, "why": "one sentence naming what decides each no and each not_shown"}`.
+    28	
+    29	## Third reader (only where the two readers differ)
+    30	
+    31	A third reader of each family is given this brief, the packet, and a list of the disputed points, each a control number and a
+    32	field (`same_question`, `same_due`, or `item <id>`), without the two readers' answers. For each point, answer that one question
+    33	afresh by the rules above and return one JSON object per point, one per line, and nothing else:
+    34	`{"control": 3, "field": "item i005", "ruling": "yes"|"no"|"shown"|"not_shown", "why": "one sentence"}` (`yes`/`no` for the two
+    35	question fields, `shown`/`not_shown` for an item).
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D659 '"' /Users/lchingen/hivemind/docs/DECISIONS-log.md" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+9229:## D659 · 2026-11-17 · Correction of D658's material line; the new reference's design, version 2, goes to council round 2
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/reader-brief.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba control-census.txt | head -100' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/CONTROL_TRACE.md | sed -n '17,38p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+     1	u1/clean-1 q09 | not eligible (question no, due yes) | material not shown (3 shown, 2 not) | agrees True
+     2	   opened: How much credit support will NVIDIA have committed to AI cloud partners for their NVIDIA-powered compute infrastructure, and how large is the resulting guarantee/credit exposure?
+     3	   ladder: What outstanding amount of credit support, guarantees or backstops has NVIDIA extended to AI cloud partners as of FY2027 year-end, as disclosed in its next annual report (Form 10-K)?
+     4	u1/clean-2 q23 | Ohio (listed apart) | material not shown (2 shown, 2 not) | agrees True
+     5	   opened: Will NVIDIA sign a financial guarantee/backstop for OpenAI's lease of a large data center in Ohio — and at what amount — large enough to change NVIDIA's credit risk?
+     6	   ladder: By December 31, 2027, will NVIDIA execute a financial guarantee or capacity/lease backstop for OpenAI's Ohio data-center lease, as verifiable through NVIDIA filings, an official NVIDIA confirmation, or announcement of the definitive agreement?
+     7	u1/clean-3 q07 | counted | material shown (4 shown, 0 not) | agrees True
+     8	   opened: Will NVIDIA's next-generation Vera Rubin AI chip platform begin first shipments — the step that brings revenue — before the end of calendar 2026?
+     9	   ladder: Will NVIDIA begin first shipments of its Vera Rubin AI chip platform by December 31, 2026, as confirmed by NVIDIA disclosures or shipping confirmations?
+    10	u1/clean-4 q13 | eligible, material not shown | material not shown (2 shown, 2 not) | agrees True
+    11	   opened: Will the combined data center capital expenditure of the big four AI hyperscalers reach $1 trillion in calendar 2027, the aggregate AI-infrastructure spend Nvidia projects and on which its GPU demand depends?
+    12	   ladder: What was the big four AI hyperscalers' combined data center capital expenditure for calendar 2027, as disclosed in their full-year results?
+    13	u1/clean-6 q18 | not eligible (question unresolved, due no) | material shown (5 shown, 0 not) | agrees True
+    14	   opened: Will NVIDIA's Rubin Ultra rack-scale platform — the Kyber NVL144 architecture that houses 144 Rubin Ultra GPUs — reach first shipments in 2027 as originally planned, or slip to 2028 as SemiAnalysis reports?
+    15	   ladder: Will NVIDIA make first shipments of the Kyber NVL144 / Rubin Ultra rack platform during calendar 2027, as confirmed by NVIDIA or reported by SemiAnalysis?
+    16	u1/clean-11 q08 | not eligible (question unresolved, due yes) | material not shown (3 shown, 1 not) | agrees True
+    17	   opened: Will China's government approve imports of Nvidia's H200 AI chips into China — and roughly how many — enabling Nvidia to begin generating H200 revenue in the country?
+    18	   ladder: Will Chinese authorities approve imports of Nvidia H200 chips into China by January 31, 2027, as shown by official Chinese government decisions?
+    19	u2/clean-2 q07 | counted | material shown (4 shown, 0 not) | agrees True
+    20	   opened: Will NVIDIA's Vera Rubin next-generation AI chip platform, the product line carrying its data-center value, begin shipping by the end of 2026?
+    21	   ladder: Will NVIDIA make its first shipments of the Vera Rubin next-generation AI chip platform by December 31, 2026, as confirmed in an NVIDIA disclosure or official shipment announcement?
+    22	u2/clean-3 q08 | not eligible (question no, due yes) | material not shown (3 shown, 1 not) | agrees True
+    23	   opened: Will China's government allow NVIDIA to sell its H200 AI chips into mainland China, the world's second-largest chip market, by the check date — i.e. will Beijing lift the block that currently keeps NVIDIA's China share at zero despite U.S. clearance?
+    24	   ladder: Will the Chinese government permit NVIDIA to sell H200 AI chips in mainland China by January 31, 2027, as shown by an official Chinese government or regulatory announcement, or by NVIDIA disclosing H200 sales or shipments to China?
+    25	u2/clean-4 q04 | eligible, material not shown | material not shown (3 shown, 1 not) | agrees True
+    26	   opened: How much will the big four AI hyperscalers spend on data-center capital expenditures in calendar 2026, and does their combined spend approach the ~$1 trillion level NVIDIA projects for 2027?
+    27	   ladder: What will the big four AI hyperscalers' combined data-center capital expenditure be for calendar 2026, as disclosed in their full-year 2026 Q4 earnings and capital-expenditure reports?
+    28	u2/clean-5 q18 | counted | material shown (5 shown, 0 not) | agrees True
+    29	   opened: Will NVIDIA's Kyber NVL144 rack-scale architecture — the rack system designed to house its 2027 Rubin Ultra chips — begin shipping by end-2027 as originally scheduled, or has it slipped to 2028 as SemiAnalysis reports?
+    30	   ladder: Will NVIDIA’s first shipments of the Kyber NVL144 rack-scale system paired with Vera Rubin Ultra occur by 2027-12-31, as confirmed by NVIDIA disclosure or an official shipment announcement?
+    31	u2/clean-7 q16 | not eligible (question no, due yes) | material shown (4 shown, 0 not) | agrees False
+    32	   opened: How much will Amazon, Google, Microsoft and Meta spend in calendar 2026 on custom AI accelerators (such as Trainium, TPU, Maia and MTIA), a measure of how much AI compute demand bypasses NVIDIA's GPUs?
+    33	   ladder: How much did Amazon, Google, Microsoft, and Meta spend in calendar 2026 on custom AI accelerators, as settled by their Q4 2026 earnings and capex/custom-silicon disclosures reported in early 2027?
+    34	u3/clean-1 q09 | not eligible (question no, due yes) | material shown (5 shown, 0 not) | agrees False
+    35	   opened: How much credit support will NVIDIA have extended to AI cloud partners under its new revenue-sharing / credit-support model, and does it materially raise NVIDIA's contingent obligations and credit risk?
+    36	   ladder: What total amount of credit-support and backstop commitments for AI cloud partners’ compute procurement does NVIDIA disclose as outstanding at FY2027 year-end in its FY2027 Form 10-K, including the guarantees and commitments note and MD&A?
+    37	u3/clean-3 q07 | counted | material shown (4 shown, 0 not) | agrees True
+    38	   opened: Will NVIDIA's Vera Rubin next-generation AI chip platform, the product line that carries its data center value, begin shipping by a check date (end of calendar 2026)?
+    39	   ladder: Will NVIDIA’s Vera Rubin platform have begun shipping by December 31, 2026, as verified by NVIDIA’s earnings disclosures or shipment confirmation from NVIDIA or its server and system partners?
+    40	u3/clean-5 q08 | not eligible (question no, due yes) | material not shown (3 shown, 1 not) | agrees True
+    41	   opened: Will Nvidia actually resume selling H200 AI chips into China by Nvidia's FY2027 year-end — i.e., will Beijing permit Chinese commercial users to buy the chips the U.S. cleared for export in December 2025?
+    42	   ladder: Will Nvidia make and disclose sales of H200 AI chips to Chinese commercial customers by FY2027 year-end (2027-01-31), as shown by Nvidia disclosures or confirmation of the sales?
+    43	u3/clean-6 q13 | eligible, material not shown | material not shown (2 shown, 2 not) | agrees True
+    44	   opened: What will the big four AI hyperscalers' combined data center capital expenditures be in calendar 2027, and will they approach the roughly $1 trillion level Nvidia projects for next year?
+    45	   ladder: What will the big four AI hyperscalers' combined data-center capital expenditure be in calendar 2027, according to their full-year 2027 capital-spending disclosures?
+    46	u3/clean-7 q18 | not eligible (question no, due no) | material shown (5 shown, 0 not) | agrees False
+    47	   opened: Will Nvidia's Kyber NVL144 rack-scale architecture — the rack system that houses its Rubin Ultra generation, the generation after Vera Rubin — reach first shipments in 2028, after SemiAnalysis reported the program has slipped more than 12 months from a planned 2027 debut?
+    48	   ladder: Will Nvidia make first shipments of the Kyber NVL144 rack system for the Rubin Ultra generation during calendar 2028, as determined by Nvidia shipment confirmations and data-center product commentary and SemiAnalysis follow-up reporting?
+    49	== tally: {"Ohio (listed apart)": 1, "counted": 4, "eligible, material not shown": 3, "not eligible (question no, due no)": 1, "not eligible (question no, due yes)": 5, "not eligible (question unresolved, due no)": 1, "not eligible (question unresolved, due yes)": 1}
+
+ succeeded in 0ms:
+     1	# Brief for the analyst reader
+     2	
+     3	You are a senior hedge-fund analyst who follows NVIDIA. It is the evening of 2026-07-14. You have in front of you everything an analyst
+     4	following the company would have noted from the news of 2026-07-01 to 2026-07-14: the items in `packet-v1.json` (each with an id `iNNN`,
+     5	the publication day, the article title, the source tier, who said it, the exact passage and its meaning). You are asked, for each open
+     6	question in `questions-v1.json`, where you stand tonight and why.
+     7	
+     8	Use only the material in the packet. Do not use anything you know from outside it, and do not guess what happened after 2026-07-14.
+     9	Every claim you make must cite item ids from the packet. If the packet carries nothing about a question, say so (`no_view: true`) rather
+    10	than reasoning from general knowledge.
+    11	
+    12	How an analyst forms a stance (these are the house rules, quoted):
+    13	- "A thesis is an argued view about the business and the world; its stance comes from the argument weighed against what is priced."
+    14	  So first establish what the market expected for the question as of 2026-07-14 (a consensus figure, the company's guidance, the stated
+    15	  plan or deadline), then ask what the evidence implies, then compare the two.
+    16	- "Only facts can establish which rung holds." Published figures, official actions and completed transactions fix what is known; company
+    17	  guidance and management statements are the strongest forward input; analyst and media views and rumours move the view in proportion to
+    18	  their specificity (a number, a date, a named party). "A repeat is not new evidence, and model agreement is not corroboration": the same
+    19	  claim in several outlets counts once.
+    20	- "Lean cautious, catch the increment": most of what is written is noise; new information that changes the answer is never missed.
+    21	- Work the numbers where they exist: reported quarters and guidance give a run-rate; a quantified revision, a customer's demand number, a
+    22	  supplier's constraint, a confirmed delay or cancellation shift it. A part cannot exceed the whole it belongs to; a figure that spans
+    23	  several periods or products gives a question only its share.
+    24	- Say how far the material settles the matter (confidence), and name the strongest item against your view.
+    25	
+    26	Write one JSON object per question, exactly in this shape (numbers as plain numbers in the question's `unit`; use null where a field does
+    27	not apply):
+    28	
+    29	{
+    30	  "question_id": "q01",
+    31	  "no_view": false,
+    32	  "reference": {"text": "what the market expected and where it comes from, or 'none stated: status quo is ...'", "value": 392000000000, "items": ["i034"]},
+    33	  "implied_outcome": {"text": "the outcome the material implies and how you derived it", "low": 395000000000, "high": 420000000000, "yes_no": null, "items": ["i012", "i040"]},
+    34	  "direction": "above | in_line | below | yes | no",
+    35	  "confidence": "high | medium | low",
+    36	  "decisive_items": ["i012", "i040", "i077"],
+    37	  "against": {"text": "the strongest item against the view, or null", "items": ["i090"]},
+    38	  "reasoning": "three to six sentences, every claim with item ids"
+    39	}
+    40	
+    41	For a yes/no question set `implied_outcome.yes_no` to true or false and `low`/`high` to null; `direction` is then "yes" or "no". For a
+    42	numeric question give `low` and `high` as the range you would bet on (a point estimate is low = high); `direction` compares that range
+    43	with `reference.value` (in_line when the range contains the reference or the difference is within the noise of the estimate).
+
+ succeeded in 0ms:
+    17	## The 8 excluded on the question
+    18	
+    19	| control | ruler question | the Step 1 thesis asks | where the difference first appears |
+    20	|---|---|---|---|
+    21	| u1/clean-1, q09 | NVIDIA's total financing commitments and capacity backstops at FY2027 year-end | credit support to AI cloud partners under the new model | **in the Step 1 thesis** (one programme); the ladder keeps it. The pairing counts a programme inside a total as the same matter (D248 boundary 1), so whether this is a Step 1 fault or the comparison's breadth is a separate decision |
+    22	| u3/clean-1, q09 | as above | as above | as above |
+    23	| u2/clean-7, q16 | cloud providers' custom AI silicon spend in 2026 | the big four's custom accelerator spend in 2026 | **in the Step 1 thesis**: four named companies, one of them (Meta) outside "cloud providers", so not simply a part of the total |
+    24	| u3/clean-7, q18 | Rubin Ultra in Kyber racks ships by 2027-12-31 | Kyber "reach first shipments in 2028" (the article's reported date), and whether NVL576 ships in volume | **in the Step 1 thesis** (the article's date); the ladder asks "during calendar 2028", due 2028-12-31. The pairing readers disagreed (one held NVL576 volume a separate check) |
+    25	| u1/clean-6, q18 | as above | Kyber in 2027 "or slip to 2028"; period "2028" | **both**: Step 1's period (2028) became the ladder's due day 2028-12-31; the ladder's "during calendar 2027" adds a restriction "by the end of 2027" does not have (third readers split on it) |
+    26	| u2/clean-3, q08 | Chinese authorization for companies to import H200 by 2027-01-31 | Beijing allows NVIDIA to sell H200, settled by an announcement or by NVIDIA disclosing China sales or shipments | **in the Step 1 outcome** (NVIDIA's own disclosure can settle it without an authorization); the ladder keeps it. Both third readers: not comparable, for different stated reasons |
+    27	| u3/clean-5, q08 | as above | will NVIDIA "actually resume selling" H200 into China, "i.e." will Beijing permit buyers | **in the Step 1 outcome** (sales taking place); the pairing readers disagreed on which wording controls |
+    28	| u1/clean-11, q08 | as above | China approves H200 imports, and how many | **the ladder step's wording** for the company-scope difference the readers tested ("at least one Chinese AI firm" for "any Chinese company"); disputed, third readers split |
+    29	
+    30	## The 3 eligible with material not shown
+    31	
+    32	| control | reader B's missing item | the exact statement in the draw's records? | linked to any thesis? |
+    33	|---|---|---|---|
+    34	| u1/clean-4, q13 (2027 capex) | i090: analysts project NVIDIA revenue +82% this year, +41% next | **yes**: e86 (created with the capex thesis, same step 42), e131 (step 60) | **no** |
+    35	| | i143: about half of 2027 data-centre spend goes to memory | **yes**: e145 (step 63, after the thesis opened) | **no** |
+    36	| u3/clean-6, q13 (2027 capex) | i090 | **yes**: e88 (step 42, with the thesis), e135 (step 60) | **no** |
+    37	| | i143 | **yes**: e149 (step 63) | **no** |
+    38	| u2/clean-4, q04 (2026 capex) | i295: NVIDIA management, relayed by Morgan Stanley, describes "accelerating growth rates" as quarterly revenue approaches $100bn | **not found**: its source article (`gnews:ecde98f04e1a057b56113670`) left no record in the draw; whether it was read is not traced. Related statements from other articles are stored unlinked: e400 (Morgan Stanley after meeting management; revenue approaching $100bn, without "accelerating growth") and e392 (an $82bn quarter, a third quarter of accelerating growth) | (the related ones: no) |
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'reference figure|reference_status|neutral|Still open|rungs|unit' /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_READING.md | head -25" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/docs/DECISIONS-log.md | sed -n '9208,9248p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+65:three rungs, no bounds) is a yes/no. In the first send, 12 of the 26 laddered theses are figures and 14 are events
+86:   "Still open" against no (both mean the event has not happened by the deadline).
+130:  ruler question, the judged question and its rungs, reader B's decisive items from the frozen packet, and every evidence entry
+
+ succeeded in 0ms:
+  9208	## D658 · 2026-11-17 · Alex: a new reference for the final-answer test's control line, written for the questions the new system asks
+  9209	
+  9210	- **Asked** (D592's open choice, in plain words): the control line needs 8 of 15 control questions comparable with the frozen answer key (reader B,
+  9211	  D3), and only 4 are, because the new system asks most of them differently. There were three ways:
+  9212	  1. write a new reference answer for the 15 control questions as the new system asks them: two independent reader groups who did not build the
+  9213	     system answer from the same material; disagreements are ruled against the source; Alex reviews and signs; it is frozen; then the judge's
+  9214	     answers are scored against it once (recommended);
+  9215	  2. change two frozen steps and deliver three missing facts to fit the old key (at most 8, unproven);
+  9216	  3. leave it.
+  9217	- **Alex:** "第一条ok, 仔细的跑run council review".
+  9218	- **Decided:**
+  9219	  - A new reference for the control line is opened. It is a new piece added beside the frozen ruler (AGENTS §7.1), never an edit of it: reader B's
+  9220	    gold, its packet and its scorer stay as they are.
+  9221	  - It follows AGENTS §7.1's rules for a new gold. The unit and the material are fixed before any answer is read. The reference is written from the
+  9222	    complete material the judge is shown. It has two blind readers of different families, and every disagreement is ruled against the source with
+  9223	    the reason recorded. It is labelled model-authored, frozen with its sha256 after Alex signs, and never edited after the judge's answers are
+  9224	    read. Old scores are never compared with it.
+  9225	  - Its design goes through council review rounds until consensus before any reader is run.
+  9226	- **Next:** the design (population, material, unit, the readers' brief taken from the frozen ruler's definition, the agreement rule, and the line it
+  9227	  serves), then council rounds, then the readers, then Alex's signature.
+  9228	
+  9229	## D659 · 2026-11-17 · Correction of D658's material line; the new reference's design, version 2, goes to council round 2
+  9230	
+  9231	- **Correction.** D658's line "It is written from the complete material the judge is shown" is the recorder's paraphrase of AGENTS §7.1. It
+  9232	  contradicts the option Alex chose, which read "请两组没参与造这个系统的审查者，用同样的材料各自独立作答". "同样的材料" is the material the old reference
+  9233	  was written from: the frozen ruler's `packet-v1.json` (golden-v5's 309 items).
+  9234	  - His option governs ("Before sealing a design, check it against his raw messages, not against a log you wrote").
+  9235	  - Both independent reviews of design version 1 found the conflict: the Codex review (thread 01a1ebb0-9724-7e51-a979-bae88cb9cba9) and the
+  9236	    Claude-family review.
+  9237	- **Design version 2** (`docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN.md`) answers both version-1 reviews:
+  9238	  - the packet as the material, with its reason;
+  9239	  - a new piece with its own unit: 16 questions, Ohio listed apart;
+  9240	  - no automatic replacement: all disagreements, with "neither" rulings allowed, go to Alex, who picks from a closed set;
+  9241	  - an access boundary for every participant, because Claude has already seen the stored judgements;
+  9242	  - a validity schema, the count's exclusions and both null baselines fixed before any reader runs;
+  9243	  - an items-only material-shown brief;
+  9244	  - the line scored against reader A, and a per-matter report;
+  9245	  - predictions written down;
+  9246	  - the astra application left to its own decision.
+  9247	- **Next:** council round 2 on version 2, then the build and the scorer with tests, then the readers.
+
+codex
+**Version 2 is closer, but it is not ready to run.** The material conflict is recorded and the main review gaps are addressed, but the proposed event comparison can still award a match to the wrong answer, and the scoring procedure leaves several outcomes undefined.
+
+For example, if the reference says a shipment will not happen by the deadline, the design counts both “Ruled out” and “Still open” as matching. The stored case says “Ruled out” requires a formal announcement, which the same evidence may not support. [Stored result](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md:60).
+
+1. **Material and D658.** D659 explicitly corrects the recorder’s sentence and records the frozen 14-day packet as the intended material. Version 2 follows that correction and explains the distinction between an independent view of the full packet and a review of what the judge actually saw. The correction resolves my round-1 conflict finding as a decision-record reading; the quoted option itself says “same material” without naming the packet, so that identification rests on D659’s interpretation. [D659](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9229), [design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:11).
+
+2. **Event mapping.** The design acknowledges the limitation but still uses it to decide the pass line. Disclosure does not prevent a false match: the actual “Ruled out” and “Still open” conditions are different, and a yes/no reference cannot decide which one holds. The frozen comparison was built for the old reference; extending it to differently worded three-outcome questions needs a source-based comparison that can return **unresolved**, or those cases must be reported apart. This needs agreement before scoring; it should not be fitted to the stored answers. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:107), [limitation](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:128).
+
+3. **Reference and signing.** The automatic replacement of B is removed. Both third-reader opinions, including “neither,” go to Alex, which answers my principal concern. However, the closed set at signing does not say how Alex resolves an invalid row, a `no_view` disagreement, or his own answer with fewer than two items. Those cases affect whether a control can be scored, and the selected answer needs to satisfy the same defined validity requirements before freezing. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:69), [signing](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:83).
+
+4. **Access boundary.** The design now acknowledges that Claude already saw stored judgments and separates question building, reference writing, signing and the shown-material check. That is a substantive improvement. The boundary is still incomplete: only A’s command log is explicitly checked; B and both families of third readers are merely given restricted handoffs. Also, the packet legitimately contains *all* choices, including the chosen choice, so a check that refuses any packet that “names a chosen rung” cannot distinguish that permitted content from disclosure of **which choice was chosen**. Define the allowed fields and audit access for every reader and third reader, including retries; verify that the signing page contains no chosen-answer designation or judgment text. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:50).
+
+5. **Missing cases.**
+
+   - **Numeric gaps:** the builder refuses them, addressing the immediate finding. Clarify whether one malformed ladder stops the entire fixed 16-question build or produces a smaller population; the table says it is “not built,” while the procedure requires all 16. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:58), [state table](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:145).
+   - **Three-outcome events:** the problem is described, but the pass-line mapping remains unsafe, as above.
+   - **No decisive items, `no_view`, no judgment, unresolved shown check:** these now have explicit exclusions. Keep **unresolved** distinct from **not shown** in the report: a split does not establish that the material was absent. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:105), [state table](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:154).
+   - **Ohio:** it is now explicitly built, scored and printed apart, without counting toward eight. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:107).
+   - **Failure states:** specify missing or invalid third-reader output, a second invalid retry, an unresolved signing decision, a failed shown-check packet or missing ruling, and interruption or changed inputs between steps. None should quietly become a completed score. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:145).
+
+**New parts in version 2:**
+
+- **Items-only brief:** removing the two question-comparison questions is sensible. The brief itself is not yet supplied, so it cannot yet be reviewed. It must preserve the existing requirement to find the same fact, not merely related evidence, and define the two-reader and split handling. Also disclose that the current check searches requests through the window end, which may include evidence shown *after* the last judgment being scored; that does not prove the final judgment saw every item. [Existing brief](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control-reader-brief.md:22), [existing request collection](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control_theses.py:77).
+- **Validity schema:** “the brief’s fields” is not yet a closed schema. Define required keys, types, nulls, unique question IDs, item IDs, 2–6 distinct items where required, numeric and event shapes, and valid `no_view` rows. The frozen brief permits null where a field does not apply; it does not itself state the proposed two-item minimum. Avoid forcing a reader to invent a second decisive item. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:65), [reader brief](/Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/reader-brief.md:26).
+- **Null baselines:** define what is printed when the reference has no numeric value, no rung contains it, or there is no choice named “Neutral” or “Still open.” Give each baseline its own denominator and unavailable count. The frozen scorer already makes lookup and neutral unavailable in some cases. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:114), [frozen scorer](/Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py:76).
+- **Line against A:** useful as sensitivity information, but specify whether it uses the signed reference’s eligible population or repeats the material-shown check against A’s own decisive items. Print both the population and denominator; otherwise a difference in score can reflect a different set of questions rather than reader disagreement. It must not replace the signed reference. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:114).
+- **Predictions:** the eight shown under the **old** reference is a useful historical count, not a bound for the new one: different decisive items could make either more or fewer controls eligible. Likewise, an unexercised result may arise from `no_view`, invalid references, missing judgments, unresolved checks, or delivery; it does not by itself establish a delivery defect. A miss is specific to this reference, these questions and these stored judgments; it does not automatically carry over to another configuration. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:121), [exclusions](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:107).
+
+NOT READY: Define a source-based outcome comparison and complete the scoring, validity, access and failure rules before readers run.
+tokens used
+101,959
+**Version 2 is closer, but it is not ready to run.** The material conflict is recorded and the main review gaps are addressed, but the proposed event comparison can still award a match to the wrong answer, and the scoring procedure leaves several outcomes undefined.
+
+For example, if the reference says a shipment will not happen by the deadline, the design counts both “Ruled out” and “Still open” as matching. The stored case says “Ruled out” requires a formal announcement, which the same evidence may not support. [Stored result](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RESULT.md:60).
+
+1. **Material and D658.** D659 explicitly corrects the recorder’s sentence and records the frozen 14-day packet as the intended material. Version 2 follows that correction and explains the distinction between an independent view of the full packet and a review of what the judge actually saw. The correction resolves my round-1 conflict finding as a decision-record reading; the quoted option itself says “same material” without naming the packet, so that identification rests on D659’s interpretation. [D659](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9229), [design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:11).
+
+2. **Event mapping.** The design acknowledges the limitation but still uses it to decide the pass line. Disclosure does not prevent a false match: the actual “Ruled out” and “Still open” conditions are different, and a yes/no reference cannot decide which one holds. The frozen comparison was built for the old reference; extending it to differently worded three-outcome questions needs a source-based comparison that can return **unresolved**, or those cases must be reported apart. This needs agreement before scoring; it should not be fitted to the stored answers. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:107), [limitation](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:128).
+
+3. **Reference and signing.** The automatic replacement of B is removed. Both third-reader opinions, including “neither,” go to Alex, which answers my principal concern. However, the closed set at signing does not say how Alex resolves an invalid row, a `no_view` disagreement, or his own answer with fewer than two items. Those cases affect whether a control can be scored, and the selected answer needs to satisfy the same defined validity requirements before freezing. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:69), [signing](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:83).
+
+4. **Access boundary.** The design now acknowledges that Claude already saw stored judgments and separates question building, reference writing, signing and the shown-material check. That is a substantive improvement. The boundary is still incomplete: only A’s command log is explicitly checked; B and both families of third readers are merely given restricted handoffs. Also, the packet legitimately contains *all* choices, including the chosen choice, so a check that refuses any packet that “names a chosen rung” cannot distinguish that permitted content from disclosure of **which choice was chosen**. Define the allowed fields and audit access for every reader and third reader, including retries; verify that the signing page contains no chosen-answer designation or judgment text. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:50).
+
+5. **Missing cases.**
+
+   - **Numeric gaps:** the builder refuses them, addressing the immediate finding. Clarify whether one malformed ladder stops the entire fixed 16-question build or produces a smaller population; the table says it is “not built,” while the procedure requires all 16. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:58), [state table](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:145).
+   - **Three-outcome events:** the problem is described, but the pass-line mapping remains unsafe, as above.
+   - **No decisive items, `no_view`, no judgment, unresolved shown check:** these now have explicit exclusions. Keep **unresolved** distinct from **not shown** in the report: a split does not establish that the material was absent. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:105), [state table](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:154).
+   - **Ohio:** it is now explicitly built, scored and printed apart, without counting toward eight. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:107).
+   - **Failure states:** specify missing or invalid third-reader output, a second invalid retry, an unresolved signing decision, a failed shown-check packet or missing ruling, and interruption or changed inputs between steps. None should quietly become a completed score. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:145).
+
+**New parts in version 2:**
+
+- **Items-only brief:** removing the two question-comparison questions is sensible. The brief itself is not yet supplied, so it cannot yet be reviewed. It must preserve the existing requirement to find the same fact, not merely related evidence, and define the two-reader and split handling. Also disclose that the current check searches requests through the window end, which may include evidence shown *after* the last judgment being scored; that does not prove the final judgment saw every item. [Existing brief](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control-reader-brief.md:22), [existing request collection](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/control_theses.py:77).
+- **Validity schema:** “the brief’s fields” is not yet a closed schema. Define required keys, types, nulls, unique question IDs, item IDs, 2–6 distinct items where required, numeric and event shapes, and valid `no_view` rows. The frozen brief permits null where a field does not apply; it does not itself state the proposed two-item minimum. Avoid forcing a reader to invent a second decisive item. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:65), [reader brief](/Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/reader-brief.md:26).
+- **Null baselines:** define what is printed when the reference has no numeric value, no rung contains it, or there is no choice named “Neutral” or “Still open.” Give each baseline its own denominator and unavailable count. The frozen scorer already makes lookup and neutral unavailable in some cases. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:114), [frozen scorer](/Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py:76).
+- **Line against A:** useful as sensitivity information, but specify whether it uses the signed reference’s eligible population or repeats the material-shown check against A’s own decisive items. Print both the population and denominator; otherwise a difference in score can reflect a different set of questions rather than reader disagreement. It must not replace the signed reference. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:114).
+- **Predictions:** the eight shown under the **old** reference is a useful historical count, not a bound for the new one: different decisive items could make either more or fewer controls eligible. Likewise, an unexercised result may arise from `no_view`, invalid references, missing judgments, unresolved checks, or delivery; it does not by itself establish a delivery defect. A miss is specific to this reference, these questions and these stored judgments; it does not automatically carry over to another configuration. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:121), [exclusions](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/NEW-REFERENCE-DESIGN-v2.md:107).
+
+NOT READY: Define a source-based outcome comparison and complete the scoring, validity, access and failure rules before readers run.
