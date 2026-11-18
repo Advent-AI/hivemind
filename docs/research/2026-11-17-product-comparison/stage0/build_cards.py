@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 RUNG = re.compile(r'rung (\d+) ([^:]*): ')
+ANNOTATION = re.compile(r'\s*\((?:no reference figure when the question opened|the reference when the question opened: ".*?")\)')   # D673 form check
 ITEM = re.compile(r'^- e\d+ \[([^;\]]*); ([^;\]]*);.*?from \S+ (\d{4}-\d{2}-\d{2})\] (.*)$')
 
 
@@ -26,7 +27,7 @@ def ro(path):
 
 def conditions(view_id, conn):
     """{position: condition} with stance labels removed: the store's own conditions, as the system wrote them."""
-    return {r['position']: (r['condition'] or r['label'] or '').strip() for r in
+    return {r['position']: ANNOTATION.sub('', (r['condition'] or r['label'] or '')).strip() for r in
             conn.execute('select position, label, condition from rungs where view_id=? order by position', (view_id,))}
 
 
@@ -56,7 +57,9 @@ def library(views_path, archive_path, items_path):
         latest = conn.execute('select rung, reasons, request_sha256, seq from judgements where view_id=? order by seq desc limit 1',
                               (v['view_id'],)).fetchone()
         rungs = conditions(v['view_id'], conn)
+        bounded = conn.execute('select count(*) from rungs where view_id=? and (lo is not null or hi is not null)', (v['view_id'],)).fetchone()[0]
         entry = {'question_id': v['view_id'], 'question': v['question'], 'due': v['due_day'], 'opened': day_of(v['created_from_input']),
+                 'type': 'figure' if bounded else 'yes/no',
                  'possible_answers': [rungs[p] for p in sorted(rungs)], 'answer': None, 'reasons': None, 'material': []}
         if latest is not None:
             entry['answer'] = rungs.get(latest['rung'])

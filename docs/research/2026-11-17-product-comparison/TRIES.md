@@ -16,3 +16,4 @@
 |---|---|---|---|---|
 | 0a | 2026-11-17 | Slice 1 (07-01..07-07) | Old system complete. The new system stopped at the ladder: a $10 guard against about $10.7 of concurrent astra reservations | Size every guard for the concurrent worst-case reservations, not the expected spend |
 | 0b | 2026-11-17 | Slice 2 (07-01..07-03, new guard $25) | All six slice checks pass after two of the checks were corrected (copies merged by the old system; day-end judgements carry their day) | Read a failing check to its first differing line: both failures were the check's error, not the system's |
+| 1 | 2026-11-17 22:36 | Full comparison, try 1: three draws of each system, 07-01..09-20, frozen instruments | running | — |

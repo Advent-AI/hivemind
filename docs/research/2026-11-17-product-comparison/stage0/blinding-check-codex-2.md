@@ -1,0 +1,1 @@
+{"form_elements":[{"element":"Possible answers:","why":"Some cards have two answer bullets, some have three, and others have five. The two- and three-bullet layouts distinguish the respective card groups."},{"element":"Other questions in the same library, in opening order:","why":"This section contains 12 question bullets on one group of cards and 11 on the other."}]}
