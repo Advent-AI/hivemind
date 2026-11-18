@@ -9881,3 +9881,10 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - **The outcome:** "too small", as the rule orders (4 and 2 distinct bets).
   - **One gap it showed, fixed:** an invalid or too-small reading returned before the rule's printed-beside quantities were computed.
     They are now computed first and printed with every verdict, as diagnostics; the verdict order is unchanged (a test was added).
+- **Round 11 (Codex, `tools-review-codex-11.md`):**
+  - **Confirmed:** the verdict order and its thresholds are unchanged.
+  - **Found a regression:** a malformed opening date crashed the eager diagnostics before "invalid" or "too small" could print.
+  - **Fixed:** both early verdicts are now decided first; their diagnostics are printed when they can be computed, and flagged ("diagnostics
+    not computed: …") when they cannot.
+  - **Proof:** a test plus a mutant. The mutant is caught by the crash it guards against (`ValueError`, traceback read).
+  - **Now:** 94 stage0 tests.

@@ -315,20 +315,6 @@ def verdict(readings):
     n = len(readings['matters'])
     controls = readings['controls']
     report = {'N': n}
-    # The quantities behind the verdict and the rule's printed-beside items are computed first, so an invalid or too-small reading
-    # still prints them (as diagnostics); the verdict order below is unchanged.
-    margin = max(3, math.ceil(0.15 * n))
-    per_counting = {}
-    for counting in ('1', '2'):
-        served = served_by(readings, counting)
-        a = len(served['new'] - served['old'])
-        b = len(served['old'] - served['new'])
-        per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
-                                  'guardrails': guardrails(readings, counting)}
-    report['margin'] = margin
-    report['countings'] = per_counting
-    report['beside'] = beside(readings, per_counting)
-    report['beside'].update(printed_beside(readings, per_counting))
     invalid = []
     def rejected(m):
         return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
@@ -340,8 +326,6 @@ def verdict(readings):
         invalid.append('fewer than 2 of 3 repeats marked the same')
     if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
         invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
-    if invalid:
-        return dict(report, verdict='invalid', why=invalid)
     small = []
     if n < 20:
         small.append(f'N = {n} < 20')
@@ -349,8 +333,33 @@ def verdict(readings):
         both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
         if min(both_ways) < 30:
             small.append(f'{draw}: {both_ways} distinct bets')
-    if small:
-        return dict(report, verdict='too small', why=small)
+    margin = max(3, math.ceil(0.15 * n))
+
+    def diagnostics():
+        """The quantities behind the verdict and the rule's printed-beside items."""
+        per_counting = {}
+        for counting in ('1', '2'):
+            served = served_by(readings, counting)
+            a = len(served['new'] - served['old'])
+            b = len(served['old'] - served['new'])
+            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+                                      'guardrails': guardrails(readings, counting)}
+        shown = beside(readings, per_counting)
+        shown.update(printed_beside(readings, per_counting))
+        return per_counting, shown
+
+    if invalid or small:
+        # The verdict is decided first; the diagnostics are printed when they can be computed, and flagged when they cannot.
+        try:
+            per_counting, shown = diagnostics()
+            report.update(margin=margin, countings=per_counting, beside=shown)
+        except Exception as error:
+            report['diagnostics not computed'] = f'{type(error).__name__}: {error}'
+        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+    per_counting, shown = diagnostics()
+    report['margin'] = margin
+    report['countings'] = per_counting
+    report['beside'] = shown
     lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
     all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
     if lead and all_exercised_pass:

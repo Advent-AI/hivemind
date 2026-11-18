@@ -304,3 +304,13 @@ def test_an_invalid_or_too_small_reading_still_prints_what_the_rule_prints_besid
     r['controls']['repeats_same'] = [False, False, True]
     out = verdict(r)
     assert out['verdict'] == 'invalid' and 'sign test (illustrative)' in out['beside']
+
+
+def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict():
+    """The verdict is decided first; a printed-beside quantity that fails is flagged, never in the verdict's way (D675, Codex round 11)."""
+    r = base(n=19, new_served=5, old_served=1)
+    for d in ('new-1', 'new-2', 'new-3'):
+        r['cards'][d][f'{d}-q0']['opened'] = 'not a date'
+    r['matter_first_day'] = {'M01': '2026-09-08'}
+    out = verdict(r)
+    assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
