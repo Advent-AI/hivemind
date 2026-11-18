@@ -175,8 +175,11 @@ def validate_readings(readings):
     problems = []
     def mark_ok(value, kind):
         if isinstance(value, dict):
-            return set(value) == {'split'} and len(value['split']) == 2 and all(v in MARKS[kind] for v in value['split'])
-        return value in MARKS[kind] or (kind == 'answer' and value == 'no answer')
+            pair = value.get('split')
+            return set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2 and all(isinstance(v, str) and v in MARKS[kind] for v in pair)
+        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
+    def cover_ok(value):
+        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
     def day_ok(value):
         try:
             datetime.date.fromisoformat(value)
@@ -186,22 +189,29 @@ def validate_readings(readings):
     for draw, cards in readings['cards'].items():
         for q, card in cards.items():
             if not (mark_ok(card.get('worth'), 'worth') and mark_ok(card.get('answer'), 'answer') and card.get('type') in ('figure', 'yes/no', 'other')
-                    and isinstance(card.get('guardrail'), bool) and card.get('covering') in (True, False, 'split')
+                    and isinstance(card.get('guardrail'), bool) and cover_ok(card.get('covering'))
                     and (card.get('opened') is None or day_ok(card.get('opened')))):
                 problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
+    frozen_matters = {m['matter'] for m in readings['matters']}
     for draw, by_matter in readings['mapping'].items():
         for matter, questions in by_matter.items():
+            if matter not in frozen_matters or not isinstance(questions, list):
+                problems.append(f'{draw} {matter}: a mapped matter outside the frozen list, or its questions not a list')
+                continue
             for entry in questions:
-                if entry.get('covers') not in (True, False, 'split') or entry.get('question') not in readings['cards'].get(draw, {}):
+                if not cover_ok(entry.get('covers')) or entry.get('question') not in readings['cards'].get(draw, {}):
                     problems.append(f'{draw} {matter}: a cover outside the closed set or naming no carded question')
     for draw, d in readings['distinct'].items():
         if not all(isinstance(d.get(k), int) and not isinstance(d.get(k), bool) and d.get(k) >= 0 for k in ('ids', 'duplicates_both', 'duplicates_split')):
             problems.append(f'{draw}: a distinct-bet count that is not a non-negative integer')
+        elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
+            problems.append(f'{draw}: more duplicates than ids')
     for matter, day in (readings.get('matter_first_day') or {}).items():
         if not day_ok(day):
             problems.append(f'{matter}: a first-article day that is not an ISO date')
     controls = readings['controls']
-    if not (all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
+    if not (all(isinstance(controls[k], list) for k in ('plants', 'supported', 'repeats_same'))
+            and all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
             and all(isinstance(x, bool) for x in controls['repeats_same'])):
         problems.append('a control mark outside the closed set')
     if problems:

@@ -9910,3 +9910,16 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     `mark_cards.readings` writes only such values, and the chain dry run's readings pass.
   - **Kept:** per-item diagnostics remain for any other failure, tested by forcing one item to fail.
   - **Now:** 95 tests; the mutants are as predicted, each caught by its assertion.
+- **Round 15 (Codex, `tools-review-codex-15.md`):**
+  - **Confirmed:** our writer's output passes the entry check, and well-formed results match the parent byte for byte across all five
+    verdicts.
+  - **Two holes in the check's closed set:**
+    - a split stored as an object;
+    - `covers: 1`, which Python treats as equal to `True`.
+  - **Fixed, with a full pass of my own:** every field the scorer reads was listed (by search), and each is now held to an exact type.
+    - A split must be a list of two marks.
+    - A cover must be a JSON boolean or "split".
+    - Duplicate counts may not exceed ids.
+    - A mapped matter must be on the frozen list, and its questions must be a list.
+    - Each control must be a list.
+  - **Now:** 95 tests, 56 mutants, all as predicted. The chain dry-run log has been refreshed under the new check.

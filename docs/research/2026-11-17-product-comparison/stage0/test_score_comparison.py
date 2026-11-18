@@ -330,6 +330,24 @@ def test_malformed_readings_are_refused_before_any_verdict():
     r = base(n=19, new_served=5, old_served=1)
     r['cards']['new-1']['new-1-q0']['opened'] = 'not a date'
     cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['cards']['new-1']['new-1-g-figure-0']['answer'] = {'split': {'supported': 1, 'unsupported': 2}}   # a split that is not a pair list
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['mapping']['new-1']['M01'][0]['covers'] = 1                                                      # a number is not a JSON boolean
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['cards']['new-1']['new-1-q0']['covering'] = 1
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['distinct']['new-1']['duplicates_both'] = r['distinct']['new-1']['ids'] + 1                    # more duplicates than ids
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['mapping']['new-1']['not a frozen matter'] = []
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['controls']['plants'] = {'unsupported': 'supported'}                # a mapping whose keys are marks: iterable, but not the list
+    cases.append(r)
     for r in cases:
         try:
             verdict(r)
