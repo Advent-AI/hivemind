@@ -9614,3 +9614,30 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
 - **Frozen:** `matters.json` (sha 5e68fb7c29820dc4…): **N = 32**, 7 of them company figures (D505's list). Each matter
   has one canonical question.
 - **The plan** (v11) names `matters.json` as the only scoring list. Its hash goes in the versions manifest.
+
+## D672 · 2026-11-17 · Alex's "开始跑" with the stage-0 freeze review: the slice goes ahead; the scorer and cards are built during the run against a rule frozen to the last choice
+
+- **Alex** (after N = 32 was reported): "好，你clean up提交，然后开始跑". Committed as `099f4a8`.
+- **The freeze review** (`docs/research/2026-11-17-product-comparison/freeze-review-codex.md`; a closed Claude reviewer), both NOT READY.
+  - **Fixed** (all agreed):
+    - each ladder pass is checked on its own, so an empty pass no longer passes by the others (test and mutant);
+    - the verdict rule names the direction of the 10-point bar, the minimum per system, closed questions counting, the two third readers,
+      the sampler (sorted ids, `random.Random(20261117).sample(ids, 35)`) and the controls (a rung moved, 3 per system; supported controls
+      confirmed first);
+    - the card the readers see is frozen (`stage0/card-spec.md`), with a blinding test on stored draws;
+    - the launcher refuses uncommitted code in `src`, `scripts`, `clean-arch`, `poc/config` and the stage-0 scripts, refuses a ledger whose
+      ceiling is not the guard, and takes redos;
+    - the new judge's size was measured: at most 100 KB, 21.9K input tokens over the carried fortnight.
+  - **Split, on building the scorer, the card builder and the §1.6 tools during the run instead of before the slice:**
+    - Codex refuses. D665 and D667 make the reviewed instruments a gate before the first send.
+    - The Claude reviewer accepts under D665 (it freezes the rule, not the code that applies it), provided the rule leaves the code nothing to
+      choose and the departure from D667 is recorded.
+  - **Taken,** on Alex's word and the Claude reviewer's conditions: the rule and the card are frozen to the last choice. The scorer, the
+    builder (with its blinding test) and the §1.6 tools are built and council-reviewed before any output is read. No output is read during
+    the run except progress counts.
+- **The slice** (07-01..07-07, one draw of each system, its own ledgers at $10 and $3) stands in for the fake-answer dry run, with two added
+  checks:
+  - each draw processed exactly the manifest's items for those days, in order;
+  - a day's state can be read back from the stored outputs (for D431's 07-14 reading).
+
+  It has no other job. Any failure goes back to the council before the full run.

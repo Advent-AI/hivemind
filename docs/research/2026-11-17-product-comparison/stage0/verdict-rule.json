@@ -1,0 +1,93 @@
+{
+ "source": "clean-arch/PRD.md §1.5 (D665); RUN-PLAN-v11.md §1.4 (D667-D671)",
+ "scored_window": [
+  "2026-09-07",
+  "2026-09-20"
+ ],
+ "cutoff": "2026-09-20 (end of day); libraries read as they stand then; closed questions still count; timeliness not scored (days from first source to opening printed beside)",
+ "matter_list": "stage0/census/matters.json",
+ "N_frozen": 32,
+ "covers": "both families mark the question opened, or narrower with both saying it carries the main outcome; broader and missed do not cover; mapping blind (each draw library under a random X/Y label, key outside the repository); a disagreement goes to two third readers, one per family; a remaining split is resolved per counting (covers > does not cover)",
+ "same_question": {
+  "question": "an id in a system-draw library at the cutoff",
+  "duplicate": "later-opened question of a same-bet pair (A1 rule, D248)",
+  "distinct_bets": "ids less duplicates both families mark; a split duplicate counted both ways"
+ },
+ "marks": {
+  "worth": [
+   "worth",
+   "trivia",
+   "duplicate"
+  ],
+  "answer": [
+   "supported",
+   "unsupported",
+   "insufficient",
+   "no answer"
+  ],
+  "split": "cannot tell after the debate rounds"
+ },
+ "served_in_draw": "at least one covering question marked worth and supported, in each counting after split resolution",
+ "served_by_system": "served in at least 2 of 3 draws",
+ "quantities": {
+  "a": "served only by the new system",
+  "b": "served only by the old system",
+  "N": "all listed matters"
+ },
+ "countings": {
+  "1": "every split resolved to the most favourable mark its readers gave for the new system and the least favourable for the old",
+  "2": "the reverse",
+  "order": {
+   "mapping": "covers > does not cover",
+   "answer": "supported > insufficient > unsupported",
+   "worth": "worth > duplicate or trivia"
+  },
+  "resolved_insufficient": "outside the decided denominators"
+ },
+ "guardrails": {
+  "sample": "per system-draw: the question ids its library holds at the cutoff, sorted as strings; random.Random(20261117).sample(ids, 35), or all ids when fewer than 35; covering cards are not in the shares; the three draws pooled per system",
+  "shares": [
+   "decided figure answers unsupported",
+   "decided yes/no answers unsupported",
+   "decided worth marks trivia or duplicate"
+  ],
+  "beside": [
+   "insufficient",
+   "no answer",
+   "splits and their resolution"
+  ],
+  "not_exercised": "cannot breach; blocks only a practical lead",
+  "bar": "for each share, the new system's share minus the old system's share must be at most 10 percentage points (a larger difference is a breach)",
+  "exercised": "a subgroup is exercised only when each system has at least 10 cards in it decided without a split (pooled over its three draws)"
+ },
+ "controls": {
+  "planted_wrong": "6 in all, 3 per system: a real card of that system with its latest answer moved one rung; each needs an explicit unsupported or insufficient mark, else the reading is invalid",
+  "supported_controls": "4, each confirmed supported first by a separate closed reader before it enters the deck; at least 3 of 4 must be marked supported",
+  "repeats": "3 hidden repeats of real cards; at least 2 of 3 must receive the same marks",
+  "outside_product_counts": true
+ },
+ "complete_draws": "no release verdict without six complete draws within the D667 timing; a replacement draw is a diagnostic only",
+ "verdict_order": [
+  "invalid: a plant without explicit rejection, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same",
+  "too small: N < 20, or fewer than 30 distinct bets in any system-draw (both ways for split duplicates)",
+  "practical lead: a - b >= max(3, ceil(0.15 N)) and a >= 2b under both countings, every guardrail exercised and passing under both",
+  "practical loss: b - a >= max(3, ceil(0.15 N)) and b >= 2a under both countings (no guardrail needed), or a breach in an exercised guardrail under both",
+  "no practical winner: everything else"
+ ],
+ "hard_checks": [
+  "D400 accounting code parts on all three passes (figure ranges end to end; favourable end stable; due day agreeing across all three sends for >= 90% of eligible questions)",
+  "Step 2 three lines (>= 90% recall on 100 records; <= 2% clearly wrong merges on 200; no fewer later details on 30 groups); a line short of its sample is not measured and cannot clear release"
+ ],
+ "printed_beside": [
+  "D428 limits",
+  "sign test and interval (illustrative)",
+  "company-figure subgroup a, b, N",
+  "days from first source to opening",
+  "D400 reader lines",
+  "D431 frozen-reference reading for both systems",
+  "floors: coverage >= 80%, trivia <= 20%, supported >= 90% from the cards; citations and omissions not measured",
+  "37 bulk-viewer articles excluded (kept would be 447)",
+  "2 split matter pairs kept apart"
+ ],
+ "card": "stage0/card-spec.md (frozen with this rule)"
+}

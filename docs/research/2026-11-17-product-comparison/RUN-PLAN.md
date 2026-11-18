@@ -1,4 +1,6 @@
-# The product comparison that decides release (D665): run plan, version 11 (D668–D671 amendments)
+# The product comparison that decides release (D665): run plan, version 12 (D668–D672 amendments)
+
+**Amendments in force over the text below:** the scored window is 2026-09-07 to 09-20 with the warm-up 07-01 to 09-06 unfiltered (D669); 410 kept articles (D670); N = 32 (D671); the scorer, the card builder and the §1.6 tools are built during the run against `stage0/verdict-rule.json` and `stage0/card-spec.md`, and reviewed before any output is read (D672); the slice stands in for the dry run (D672). Where §1.2 and §1.3 still say 07-20 or 08-31, D669 governs.
 
 v9 answers rounds 7 and 8 (`review-codex-7.md`, `review-codex-8.md`). The Claude reviewer found v7 READY. The decisions this plan takes are drafted in `D667-draft.md`.
 

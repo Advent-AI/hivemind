@@ -394,19 +394,18 @@ class Draw:
         if status != 0:
             return 'stopped-run', f'stage_a exit {status}: a pass is incomplete (see its log)'
         expected = LADDER_CONFIGURATIONS[variant]
-        found = set()
-        for pass_number in range(1, self.options['passes'] + 1):       # every pass, not only the one the judge reads
+        for pass_number in range(1, self.options['passes'] + 1):       # every pass, each on its own: an empty pass fails too
             archive = folder / f'send-{pass_number}' / 'archive.sqlite'
             if not archive.exists():
                 return 'stopped-run', f'pass {pass_number} wrote no archive'
             conn = sqlite3.connect(f'file:{archive}?mode=ro', uri=True)
             try:
-                found |= set(conn.execute('select distinct config_version, config_checksum from model_calls').fetchall())
+                found = sorted(f'{v} {c}' for v, c in conn.execute('select distinct config_version, config_checksum from model_calls').fetchall())
             finally:
                 conn.close()
-        if sorted(f'{version} {checksum}' for version, checksum in found) != [expected]:
-            record['configuration mismatch'] = sorted(found)
-            return 'stopped-run', f'the ladder ran {sorted(found)}, not the {variant} configuration {expected}'
+            if found != [expected]:
+                record['configuration mismatch'] = {f'pass {pass_number}': found}
+                return 'stopped-run', f'pass {pass_number} of the ladder ran {found}, not the {variant} configuration {expected}'
         return 'completed', None
 
     def _judge(self, record, folder):

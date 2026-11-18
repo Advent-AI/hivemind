@@ -14,7 +14,7 @@ REPO = Path('/Users/lchingen/hivemind')
 LAUNCHER = REPO / 'clean-arch/e2e-comparison-2026-11-13/run_fresh.py'
 TESTS = REPO / 'clean-arch/e2e-comparison-2026-11-13/test_run_fresh.py'
 MUTANTS = {
-    'control': ([], ['test_the_given_items_limits_and_judge_end_day_reach_every_component',
+    'control': ([], ['test_the_given_items_limits_and_judge_end_day_reach_every_component', 'test_a_pass_with_an_empty_archive_stops_the_run',
                      'test_the_astra_variant_runs_the_wrapper_and_checks_every_pass', 'test_one_pass_under_another_configuration_stops_the_run']),
     'production ignores the items database': ([("            argv += ['--testdb', self.items()]", "            pass")],
                                               ['test_the_given_items_limits_and_judge_end_day_reach_every_component']),
@@ -22,8 +22,11 @@ MUTANTS = {
                                        ['test_the_given_items_limits_and_judge_end_day_reach_every_component']),
     'the judge gets no end day': ([("            inputs[self.label]['end_day'] = self.options['judge_end_day']", "            pass")],
                                   ['test_the_given_items_limits_and_judge_end_day_reach_every_component']),
-    'only the first pass is checked': ([("        for pass_number in range(1, self.options['passes'] + 1):", "        for pass_number in range(1, 2):")],
+    'only the first pass is checked': ([("        for pass_number in range(1, self.options['passes'] + 1):       # every pass, each on its own: an empty pass fails too",
+                                         "        for pass_number in range(1, 2):")],
                                        ['test_one_pass_under_another_configuration_stops_the_run']),
+    'an empty pass passes': ([("            if found != [expected]:", "            if found and found != [expected]:")],
+                             ['test_a_pass_with_an_empty_archive_stops_the_run']),
     'astra runs the frozen script': ([("        script = ASTRA_WRAPPER if variant == 'astra-frozen' else STEP4 / 'stage_a/stage_a.py'",
                                        "        script = STEP4 / 'stage_a/stage_a.py'")],
                                      ['test_the_astra_variant_runs_the_wrapper_and_checks_every_pass']),

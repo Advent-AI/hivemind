@@ -68,9 +68,10 @@ class Components:
                 conn = sqlite3.connect(value('--folder') / f'send-{pass_number}' / 'archive.sqlite')
                 conn.execute('create table model_calls (config_version, config_checksum)')
                 configuration = self.ladder_configuration
-                if isinstance(configuration, dict):                   # a configuration per pass
+                if isinstance(configuration, dict):                   # a configuration per pass; None writes an empty archive
                     configuration = configuration[pass_number]
-                conn.execute('insert into model_calls values (?, ?)', configuration)
+                if configuration is not None:
+                    conn.execute('insert into model_calls values (?, ?)', configuration)
                 conn.commit()
                 conn.close()
         elif script == 'budget_replay.py':
@@ -483,3 +484,14 @@ def test_one_pass_under_another_configuration_stops_the_run(setup, tmp_path):
     options = comparison_options(tmp_path, ladder_variant='astra-frozen', passes=3)
     record = draw(components=components, options=options).launch()
     assert record['state'] == 'stopped' and 'astra-frozen configuration' in record['stopped'] and ledger.read()['stopped']
+
+
+def test_a_pass_with_an_empty_archive_stops_the_run(setup, tmp_path):
+    """§1.5 D (freeze review): each pass must carry the expected configuration; an empty pass does not pass by the others."""
+    ledger, draw, root = setup
+    astra = tuple(run_fresh.LADDER_CONFIGURATIONS['astra-frozen'].split())
+    components = Components(ledger)
+    components.ladder_configuration = {1: astra, 2: None, 3: astra}
+    options = comparison_options(tmp_path, ladder_variant='astra-frozen', passes=3)
+    record = draw(components=components, options=options).launch()
+    assert record['state'] == 'stopped' and 'pass 2' in record['stopped']
