@@ -314,3 +314,8 @@ def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_smal
     r['matter_first_day'] = {'M01': '2026-09-08'}
     out = verdict(r)
     assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
+    assert out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']     # the other diagnostics are kept
+    r['controls']['repeats_same'] = [False, False, True]
+    r['distinct']['new-1']['ids'] = 'not a count'                                       # the size check is skipped once invalid
+    out = verdict(r)
+    assert out['verdict'] == 'invalid' and 'ValueError' in out['diagnostics not computed']

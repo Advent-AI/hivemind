@@ -1,0 +1,347 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 12, confirmation only (read-only, $0)
+
+Your round 11 (`tools-review-codex-11.md`) asked to decide `invalid` and `too small` before the diagnostics, and to flag diagnostics that
+cannot be computed. This is done in `stage0/score_comparison.py` `verdict`, with
+`test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict`. It is committed (see `git log -1`).
+
+Confirm or refute, citing file and line. End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 150 words.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check whether the scorer now preserves both early verdicts when a diagnostic fails.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba score_comparison.py | sed -n '285,415p'
+nl -ba test_score_comparison.py | sed -n '285,365p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+   285	            decided += 1
+   286	            trivia += resolve(card['worth'], 'worth', fav) == 'trivia'
+   287	    return trivia, decided
+   288	
+   289	
+   290	def days_to_opening(readings):
+   291	    """Per draw and covered matter: days from the matter's earliest listed article to the first covering question's opening. A question
+   292	    opened before the scored window (09-07) is 'opened in the warm-up'; one opened in the window before the matter's first listed article
+   293	    is 'opened before the first listed article'."""
+   294	    import datetime
+   295	    out = {}
+   296	    for draw, by_matter in readings['mapping'].items():
+   297	        for matter, questions in by_matter.items():
+   298	            opened = [readings['cards'][draw][q['question']].get('opened') for q in questions if q['covers'] is True]
+   299	            opened = [d for d in opened if d]
+   300	            first = readings.get('matter_first_day', {}).get(matter)
+   301	            if not opened or not first:
+   302	                continue
+   303	            days = (datetime.date.fromisoformat(min(opened)) - datetime.date.fromisoformat(first)).days
+   304	            out.setdefault(matter, {})[draw] = (days if days >= 0 else 'opened in the warm-up' if min(opened) < '2026-09-07'
+   305	                                                else 'opened before the first listed article')
+   306	    return out
+   307	
+   308	
+   309	def verdict(readings):
+   310	    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+   311	    for k, draws in present.items():
+   312	        if sorted(DRAWS) != draws:
+   313	            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+   314	    verify_inputs(readings)
+   315	    n = len(readings['matters'])
+   316	    controls = readings['controls']
+   317	    report = {'N': n}
+   318	    invalid = []
+   319	    def rejected(m):
+   320	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   321	    if any(not rejected(m) for m in controls['plants']):
+   322	        invalid.append('a planted wrong answer without an explicit rejection')
+   323	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   324	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   325	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   326	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   327	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   328	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   329	    small = []
+   330	    if n < 20:
+   331	        small.append(f'N = {n} < 20')
+   332	    for draw, d in readings['distinct'].items():
+   333	        both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   334	        if min(both_ways) < 30:
+   335	            small.append(f'{draw}: {both_ways} distinct bets')
+   336	    margin = max(3, math.ceil(0.15 * n))
+   337	
+   338	    def diagnostics():
+   339	        """The quantities behind the verdict and the rule's printed-beside items."""
+   340	        per_counting = {}
+   341	        for counting in ('1', '2'):
+   342	            served = served_by(readings, counting)
+   343	            a = len(served['new'] - served['old'])
+   344	            b = len(served['old'] - served['new'])
+   345	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   346	                                      'guardrails': guardrails(readings, counting)}
+   347	        shown = beside(readings, per_counting)
+   348	        shown.update(printed_beside(readings, per_counting))
+   349	        return per_counting, shown
+   350	
+   351	    if invalid or small:
+   352	        # The verdict is decided first; the diagnostics are printed when they can be computed, and flagged when they cannot.
+   353	        try:
+   354	            per_counting, shown = diagnostics()
+   355	            report.update(margin=margin, countings=per_counting, beside=shown)
+   356	        except Exception as error:
+   357	            report['diagnostics not computed'] = f'{type(error).__name__}: {error}'
+   358	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   359	    per_counting, shown = diagnostics()
+   360	    report['margin'] = margin
+   361	    report['countings'] = per_counting
+   362	    report['beside'] = shown
+   363	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   364	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   365	    if lead and all_exercised_pass:
+   366	        return dict(report, verdict='practical lead')
+   367	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   368	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   369	    if loss_count or breaches:
+   370	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   371	    return dict(report, verdict='no practical winner')
+   372	
+   373	
+   374	if __name__ == '__main__':
+   375	    print(json.dumps(verdict(json.loads(open(sys.argv[1]).read())), indent=1, ensure_ascii=False, default=str))
+   285	    out = verdict(r)
+   286	    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['supported'] == {'count': '8/10', 'met': False}
+   287	
+   288	
+   289	def test_the_floors_count_every_random_sample_card_covering_or_not():
+   290	    """floors: trivial or duplicate and supported are over the library's random sample; covering cards leave only the guardrail shares."""
+   291	    r = base(n=20, new_served=5, old_served=1, guard_cards=5)
+   292	    card = r['cards']['new-1']['new-1-g-figure-0']
+   293	    card.update(worth='trivia', covering=True)
+   294	    out = verdict(r)
+   295	    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['trivial or duplicate'] == {'count': '1/10', 'met': True}
+   296	
+   297	
+   298	def test_an_invalid_or_too_small_reading_still_prints_what_the_rule_prints_beside():
+   299	    """printed_beside: the quantities accompany every verdict, as diagnostics when the reading is invalid or too small (D675)."""
+   300	    r = base(n=19, new_served=5, old_served=1)
+   301	    out = verdict(r)
+   302	    assert out['verdict'] == 'too small' and out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']
+   303	    r = base(n=20, new_served=5, old_served=1)
+   304	    r['controls']['repeats_same'] = [False, False, True]
+   305	    out = verdict(r)
+   306	    assert out['verdict'] == 'invalid' and 'sign test (illustrative)' in out['beside']
+   307	
+   308	
+   309	def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict():
+   310	    """The verdict is decided first; a printed-beside quantity that fails is flagged, never in the verdict's way (D675, Codex round 11)."""
+   311	    r = base(n=19, new_served=5, old_served=1)
+   312	    for d in ('new-1', 'new-2', 'new-3'):
+   313	        r['cards'][d][f'{d}-q0']['opened'] = 'not a date'
+   314	    r['matter_first_day'] = {'M01': '2026-09-08'}
+   315	    out = verdict(r)
+   316	    assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py" in /Users/lchingen/hivemind
+ succeeded in 2641ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-QD6k7qsB' (errno=Operation not permitted)
+2026-11-18 13:14:41.025 xcodebuild[42795:60080944]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:14:41.188 xcodebuild[42795:60080943] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-mC0hRDGP' (errno=Operation not permitted)
+2026-11-18 13:14:41.543 xcodebuild[42797:60080958]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:14:41.656 xcodebuild[42797:60080957] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+01a6bbb9 Scorer: decide invalid and too-small first, flag diagnostics that fail (D675, Codex round 11)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-pJLpHeOL' (errno=Operation not permitted)
+2026-11-18 13:14:42.380 xcodebuild[42801:60080978]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:14:42.491 xcodebuild[42801:60080977] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-L4TSRkNU' (errno=Operation not permitted)
+2026-11-18 13:14:42.814 xcodebuild[42803:60080989]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:14:42.923 xcodebuild[42803:60080988] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 01a6bbb90760e38e0dc50e2253a820a1da92dc39
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer: decide invalid and too-small first, flag diagnostics that fail (D675, Codex round 11)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index 5825badf..e680d331 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -315,20 +315,6 @@ def verdict(readings):
+     n = len(readings['matters'])
+     controls = readings['controls']
+     report = {'N': n}
+-    # The quantities behind the verdict and the rule's printed-beside items are computed first, so an invalid or too-small reading
+-    # still prints them (as diagnostics); the verdict order below is unchanged.
+-    margin = max(3, math.ceil(0.15 * n))
+-    per_counting = {}
+-    for counting in ('1', '2'):
+-        served = served_by(readings, counting)
+-        a = len(served['new'] - served['old'])
+-        b = len(served['old'] - served['new'])
+-        per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+-                                  'guardrails': guardrails(readings, counting)}
+-    report['margin'] = margin
+-    report['countings'] = per_counting
+-    report['beside'] = beside(readings, per_counting)
+-    report['beside'].update(printed_beside(readings, per_counting))
+     invalid = []
+     def rejected(m):
+         return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+@@ -340,8 +326,6 @@ def verdict(readings):
+         invalid.append('fewer than 2 of 3 repeats marked the same')
+     if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+         invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+-    if invalid:
+-        return dict(report, verdict='invalid', why=invalid)
+     small = []
+     if n < 20:
+         small.append(f'N = {n} < 20')
+@@ -349,8 +333,33 @@ def verdict(readings):
+         both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+         if min(both_ways) < 30:
+             small.append(f'{draw}: {both_ways} distinct bets')
+-    if small:
+-        return dict(report, verdict='too small', why=small)
++    margin = max(3, math.ceil(0.15 * n))
++
++    def diagnostics():
++        """The quantities behind the verdict and the rule's printed-beside items."""
++        per_counting = {}
++        for counting in ('1', '2'):
++            served = served_by(readings, counting)
++            a = len(served['new'] - served['old'])
++            b = len(served['old'] - served['new'])
++            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
++                                      'guardrails': guardrails(readings, counting)}
++        shown = beside(readings, per_counting)
++        shown.update(printed_beside(readings, per_counting))
++        return per_counting, shown
++
++    if invalid or small:
++        # The verdict is decided first; the diagnostics are printed when they can be computed, and flagged when they cannot.
++        try:
++            per_counting, shown = diagnostics()
++            report.update(margin=margin, countings=per_counting, beside=shown)
++        except Exception as error:
++            report['diagnostics not computed'] = f'{type(error).__name__}: {error}'
++        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
++    per_counting, shown = diagnostics()
++    report['margin'] = margin
++    report['countings'] = per_counting
++    report['beside'] = shown
+     lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+     all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+     if lead and all_exercised_pass:
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+index 591241ac..cf2da993 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+@@ -304,3 +304,13 @@ def test_an_invalid_or_too_small_reading_still_prints_what_the_rule_prints_besid
+     r['controls']['repeats_same'] = [False, False, True]
+     out = verdict(r)
+     assert out['verdict'] == 'invalid' and 'sign test (illustrative)' in out['beside']
++
++
++def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict():
++    """The verdict is decided first; a printed-beside quantity that fails is flagged, never in the verdict's way (D675, Codex round 11)."""
++    r = base(n=19, new_served=5, old_served=1)
++    for d in ('new-1', 'new-2', 'new-3'):
++        r['cards'][d][f'{d}-q0']['opened'] = 'not a date'
++    r['matter_first_day'] = {'M01': '2026-09-08'}
++    out = verdict(r)
++    assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import hashlib, json
+import score_comparison as scorer
+from test_score_comparison import base
+
+class MemoryPath:
+    files = {}
+    def __init__(self, name):
+        self.name = name
+    def exists(self):
+        return self.name in self.files
+    def read_bytes(self):
+        return self.files[self.name]
+    def read_text(self):
+        return self.read_bytes().decode()
+
+def put(name, data):
+    MemoryPath.files[name] = json.dumps(data).encode()
+    return hashlib.sha256(MemoryPath.files[name]).hexdigest()
+
+def score(readings):
+    eligibility = put(\"eligibility\", {\"eligible\": True})
+    cards = [dict(draw=d, question=q, role=\"product\", **{f:c[f] for f in (\"guardrail\", \"covering\", \"type\")})
+             for d, entries in readings[\"cards\"].items() for q,c in entries.items()]
+    readings[\"inputs\"] = dict(
+        matters_sha256=put(\"matters\", {\"matters\":readings[\"matters\"]}),
+        mapping_path=\"mapping\", mapping_sha256=put(\"mapping\", {\"mapping\":readings[\"mapping\"], \"distinct\":readings[\"distinct\"], \"eligibility_sha256\":eligibility}),
+        eligibility_path=\"eligibility\", eligibility_sha256=eligibility,
+        deck_key_path=\"deck\", deck_key_sha256=put(\"deck\", dict(enumerate(cards))))
+    scorer.verify_inputs(readings)
+    return scorer.verdict(readings)
+
+scorer.Path = MemoryPath
+scorer.MATTERS = MemoryPath(\"matters\")
+for n in (19,20):
+    readings = base(n=n, new_served=5, old_served=1)
+    if n == 20:
+        readings[\"controls\"][\"repeats_same\"] = [False, False, True]
+    readings[\"cards\"][\"new-1\"][\"new-1-q0\"][\"opened\"] = \"bad-date\"
+    readings[\"matter_first_day\"] = {\"M01\": \"2026-09-08\"}
+    print(score(readings))
+    if n == 20:
+        readings[\"distinct\"][\"new-1\"][\"ids\"] = None
+        try:
+            score(readings)
+        except TypeError as error:
+            print(\"Malformed size on invalid reading:\", error)
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 1265ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-Qdc9cvpF' (errno=Operation not permitted)
+2026-11-18 13:14:54.773 xcodebuild[42837:60081271]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:14:54.884 xcodebuild[42837:60081270] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-3gjG3irL' (errno=Operation not permitted)
+2026-11-18 13:14:55.200 xcodebuild[42839:60081282]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:14:55.313 xcodebuild[42839:60081281] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+{'N': 19, 'diagnostics not computed': "ValueError: Invalid isoformat string: 'bad-date'", 'verdict': 'too small', 'why': ['N = 19 < 20']}
+{'N': 20, 'diagnostics not computed': "ValueError: Invalid isoformat string: 'bad-date'", 'verdict': 'invalid', 'why': ['fewer than 2 of 3 repeats marked the same']}
+Malformed size on invalid reading: unsupported operand type(s) for -: 'NoneType' and 'int'
+
+codex
+The malformed-date case now returns `invalid` or `too small` and reports the error. I confirmed both paths in memory. The committed test covers `too small` only. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:351) · [Test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:309)
+
+Two gaps remain. A malformed size count can still crash a reading whose controls already establish `invalid`. And a failed date calculation discards diagnostics the scorer already computed, including the counts. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:329) · [Diagnostic reporting](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:347)
+
+NOT READY: Skip the size check when controls establish `invalid`, and keep successful diagnostics when another fails.
+tokens used
+4,203,478
+The malformed-date case now returns `invalid` or `too small` and reports the error. I confirmed both paths in memory. The committed test covers `too small` only. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:351) · [Test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:309)
+
+Two gaps remain. A malformed size count can still crash a reading whose controls already establish `invalid`. And a failed date calculation discards diagnostics the scorer already computed, including the counts. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:329) · [Diagnostic reporting](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:347)
+
+NOT READY: Skip the size check when controls establish `invalid`, and keep successful diagnostics when another fails.

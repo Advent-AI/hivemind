@@ -1,0 +1,5 @@
+The malformed-date case now returns `invalid` or `too small` and reports the error. I confirmed both paths in memory. The committed test covers `too small` only. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:351) · [Test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:309)
+
+Two gaps remain. A malformed size count can still crash a reading whose controls already establish `invalid`. And a failed date calculation discards diagnostics the scorer already computed, including the counts. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:329) · [Diagnostic reporting](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:347)
+
+NOT READY: Skip the size check when controls establish `invalid`, and keep successful diagnostics when another fails.

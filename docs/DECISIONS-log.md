@@ -9888,3 +9888,7 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     not computed: …") when they cannot.
   - **Proof:** a test plus a mutant. The mutant is caught by the crash it guards against (`ValueError`, traceback read).
   - **Now:** 94 stage0 tests.
+- **Round 12 (Codex, `tools-review-codex-12.md`):** two smaller gaps, both fixed.
+  - The size check no longer runs once the controls make a reading invalid.
+  - On an invalid or too-small verdict, each diagnostic that fails is flagged and the others are kept.
+  - Each has its mutant; one is caught by the crash it guards against (`TypeError`, traceback read).

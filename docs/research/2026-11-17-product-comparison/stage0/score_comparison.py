@@ -196,9 +196,26 @@ def sign_test(a, b):
     return {'discordant': n, 'p': min(1.0, 2 * tail), 'share': round(phat, 3), 'wilson95': [round(centre - half, 3), round(centre + half, 3)]}
 
 
-def printed_beside(readings, per_counting):
+def printed_beside(readings, per_counting, tolerant=False):
     """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
-    the days from a matter's first article to its opening. None of them enters the verdict."""
+    the days from a matter's first article to its opening. None of them enters the verdict. With `tolerant` (an invalid or too-small
+    verdict), a part that cannot be computed is flagged and the other parts are kept."""
+    if tolerant:
+        out = {}
+        for part in (lambda: printed_beside_counts(readings, per_counting),
+                     lambda: {'days from first article to opening (confirmed coverage only; split covers not counted)': days_to_opening(readings)}):
+            try:
+                out.update(part())
+            except Exception as error:
+                out.setdefault('not computed', []).append(f'{type(error).__name__}: {error}')
+        return out
+    out = printed_beside_counts(readings, per_counting)
+    out['days from first article to opening (confirmed coverage only; split covers not counted)'] = days_to_opening(readings)
+    return out
+
+
+def printed_beside_counts(readings, per_counting):
+    """D428's limits, the sign test and the floors."""
     out = {'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)': {}, 'sign test (illustrative)': {},
            'floors (proposed)': {}}
     for c, v in per_counting.items():
@@ -219,7 +236,6 @@ def printed_beside(readings, per_counting):
             floors[system] = floors_per_draw(readings, system, system == fav_system)
         out['D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'][c] = limits
         out['floors (proposed)'][c] = floors
-    out['days from first article to opening (confirmed coverage only; split covers not counted)'] = days_to_opening(readings)
     return out
 
 
@@ -327,16 +343,16 @@ def verdict(readings):
     if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
         invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
     small = []
-    if n < 20:
-        small.append(f'N = {n} < 20')
-    for draw, d in readings['distinct'].items():
-        both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
-        if min(both_ways) < 30:
-            small.append(f'{draw}: {both_ways} distinct bets')
+    if not invalid:                                            # the size check runs only when the controls hold
+        if n < 20:
+            small.append(f'N = {n} < 20')
+        for draw, d in readings['distinct'].items():
+            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+            if min(both_ways) < 30:
+                small.append(f'{draw}: {both_ways} distinct bets')
     margin = max(3, math.ceil(0.15 * n))
 
-    def diagnostics():
-        """The quantities behind the verdict and the rule's printed-beside items."""
+    def countings():
         per_counting = {}
         for counting in ('1', '2'):
             served = served_by(readings, counting)
@@ -344,19 +360,30 @@ def verdict(readings):
             b = len(served['old'] - served['new'])
             per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
                                       'guardrails': guardrails(readings, counting)}
-        shown = beside(readings, per_counting)
-        shown.update(printed_beside(readings, per_counting))
-        return per_counting, shown
+        return per_counting
 
     if invalid or small:
-        # The verdict is decided first; the diagnostics are printed when they can be computed, and flagged when they cannot.
+        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+        flags = []
         try:
-            per_counting, shown = diagnostics()
-            report.update(margin=margin, countings=per_counting, beside=shown)
+            per_counting = countings()
+            report.update(margin=margin, countings=per_counting)
+            shown = {}
+            for part in (lambda: beside(readings, per_counting), lambda: printed_beside(readings, per_counting, tolerant=True)):
+                try:
+                    shown.update(part())
+                except Exception as error:
+                    flags.append(f'{type(error).__name__}: {error}')
+            flags += shown.pop('not computed', [])
+            report['beside'] = shown
         except Exception as error:
-            report['diagnostics not computed'] = f'{type(error).__name__}: {error}'
+            flags.append(f'{type(error).__name__}: {error}')
+        if flags:
+            report['diagnostics not computed'] = '; '.join(flags)
         return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
-    per_counting, shown = diagnostics()
+    per_counting = countings()
+    shown = beside(readings, per_counting)
+    shown.update(printed_beside(readings, per_counting))
     report['margin'] = margin
     report['countings'] = per_counting
     report['beside'] = shown
