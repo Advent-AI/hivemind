@@ -123,7 +123,10 @@ def run(family, prompt):
     """One closed session; returns (answer text, void reason or None). The Deck 1 rule (council_mark.run)."""
     with tempfile.TemporaryDirectory(prefix='census-reader-') as empty:
         command = CODEX + ['-C', empty, '-'] if family == 'codex' else CLAUDE
-        result = subprocess.run(command, input=prompt, text=True, capture_output=True, cwd=empty, timeout=3600)
+        try:
+            result = subprocess.run(command, input=prompt, text=True, capture_output=True, cwd=empty, timeout=3600)
+        except subprocess.TimeoutExpired:                      # a void, so every caller's retry rule applies (D675)
+            return None, 'no answer within 3600 s'
     events = [json.loads(line) for line in result.stdout.splitlines() if line.strip().startswith('{')]
     if family == 'codex':
         started = False

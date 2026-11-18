@@ -9,3 +9,9 @@
 - 2026-11-17: `stage_a_astra.py`'s first test stopped its run (`limit.stopped` true on the resend case); not yet diagnosed. Code work paused
   with the census result.
 - 2026-11-17: a folder `downloaded_files/` with an empty `dashboard.lock` appears in the repository root (18:34, 18:35); not created by this work, not touched.
+
+- 2026-11-18 00:40 — **Step 2 line 3 (a hard check) is predetermined under design v6's key.**
+  - The frozen dossier renderer `group_text` drops a later report's tier, stated day, period and speaker. v6 counted those as details,
+    and on c1, 78 of 79 eligible groups differ in them.
+  - The product's judge reads each member's own full record, with a same-claim note (PRD §6), not `group_text`.
+  - Taken to the council (round 8) before any output; the decision is recorded in D675.

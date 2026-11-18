@@ -1,4 +1,4 @@
-# The §1.6 tools: what D665 prints beside the verdict (design v6, before any output is read; D672)
+# The §1.6 tools: what D665 prints beside the verdict (design v7, before any output is read; D672)
 
 Governing text:
 - `RUN-PLAN-v12.md` §1.6;
@@ -96,19 +96,27 @@ Inputs: new-1's Step 1 trace, its `decisions.json` and its `library.json`. The s
   - "grouped": the frozen dossier, `step3/library.group_text(member_text=True)`;
   - "apart": each member as its own entry, `record_text`.
   - Any loss the frozen renderer causes, such as a later report's tier, stated day, period or speaker, counts against it.
-- **An independent detail key, defined before it is made:**
-  - **A detail** is what the Step 2 reference's question 2 asks for (`v2-prompt-*.md`): "a figure, condition, party, date or
-    qualification an analyst would want to keep" that a later report adds to its group's original.
-  - A later report's own fields count: its tier, stated day, period and speaker.
-  - Two closed key readers, one per family, each list the details from the members' own records. A third session settles every
-    detail they do not share.
+- **An independent detail key, of content only** (the council's round-8 consensus, D675):
+  - **A detail** is what a later report's statement adds to its group's original: "a figure, condition, party, date or qualification an
+    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+    condition"; the recorded test's "detail" category).
+  - The record's own attribution fields (tier, stated day, period, reporting speaker) are not shown to the key readers, so the key
+    holds content by construction. A party or period that changes the claim still counts when the statement's own text says it.
+  - Two closed key readers, one per family, each list the details. A third session settles every detail they do not share.
   - The key is frozen before either rendering is read.
-- **Reading:** each rendering of a group goes to its own closed session in each family: four sessions per group. No session sees both
-  renderings, as in the recorded test, where each reader read one view. The session marks which key details its rendering states. The
-  group's other context is the same in both renderings.
-- **Pass:** over the 30 groups, the grouped rendering's detail total is no fewer than the apart rendering's, under both readers (the
-  recorded "no fewer" test). The mean paired difference per group is printed with a 95% bootstrap interval over groups. Fewer than 30
-  groups: **not measured**.
+- **Reading:**
+  - Each rendering of a group goes to its own closed session in each family: four sessions per group. No session sees both renderings,
+    as in the recorded test, where each reader read one view.
+  - Both renderings carry the same surrounding dossier: the other groups under the same thesis, each as its original's record.
+  - The session marks which key details its rendering states.
+- **Pass:** over the 30 groups, the grouped rendering's detail total is no fewer than the apart rendering's, summed over both families,
+  as the recorded test summed both readers. Each family's totals are printed beside.
+  - The mean paired difference per group is printed with a 95% bootstrap interval over groups.
+  - Fewer than 30 groups: **not measured**.
+- **Printed beside:** the count of later reports whose tier, stated day, period or speaker differs from the original's (the fields
+  `group_text` drops), counted by code.
+- **Disclosed with the result:** both renderings carry the same content, so the line checks that grouping loses no content a later
+  report adds, against the readers' own noise. It is weaker than the recorded test's unprompted questions.
 
 Lines 1 and 2 are decided on their point estimates, with a Wilson 95% interval printed beside.
 
@@ -120,13 +128,14 @@ the ruler's question, is not built (D442's precedent).
 - **The as-of state:** every view created on or before 2026-07-14 is listed first: by `created_seq` up to the last sequence of 07-14,
   closed views included. Then `service.state_as_of` at 2026-07-14 is read for each one. New-system units are joined by
   `clean_ladders.view_id`, split children included.
-- **Step 4, matching:** MATCHING-v2's SAME rule, two blind families and a third reader on each disagreement, with D442's rule for a ruler
-  question's candidates.
+- **Step 4, matching:** MATCHING-v2's SAME rule, two blind families, and two third readers, one per family, on each disagreement, as the
+  full run did (`READING-COMMITMENT.md`). A split stays unresolved. D442's rule for a ruler question's candidates applies.
 - **Step 5, eligibility:** question, period and quantity the ruler's, and due day the ruler's (D430). Decided by two blind readers with
   a third on disagreement; the literal reading (the same due day) beside.
 - **Step 6, outcomes:** the first that applies, (i) to (ix).
   - Several SAME views: the first created is judged and the others listed.
-  - A figure rung with no bound: "no comparison".
+  - A figure rung with no bound: "no comparison". A unit that differs from the ruler question's, or that cannot be established:
+    "no comparison (unit)". No conversion is made.
   - Agreement by the frozen scorer's rule (`prod_records.outcome` for the old system; for the new system the same rule, as Stage B counted
     it: "Ruled out" and "Still open" answer no, `stage_b/control_theses.py`).
 - **Printed:** per ruler question and draw, its outcome; and per draw and system, the agreements on the seven graded questions.
@@ -150,7 +159,8 @@ Wrong citations and answer-changing omissions: **not measured**.
 | Value | Written by | Read by |
 |---|---|---|
 | `eligibility.json` (all fingerprints) | eligibility | every §1.6 tool, export, scorer |
-| d400 code check and reader lines | `d400_code_check`, Stage A tools | report: release status |
+| d400 code check | `d400_code_check` | report: release status |
+| d400 reader lines 1–5 | `d400_reader_lines.py` (Stage A's tools on verified copies) | report: printed beside only |
 | step2-lines.json | `step2_lines.py` | report: release status |
 | d431-0714.json | `d431_reading.py` | report |
 | beside quantities | `score_comparison.beside` | report |

@@ -9818,3 +9818,40 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - **Step 2 line 1** counts the first 100 labelled records in draw order.
   - **`d400_code_check`'s release order** (a miss before "not measured") has its test.
   - **Now:** 54 tests; 43 mutants and 6 controls, all as predicted.
+- **Round 8: the council's consensus on Step 2's line 3, a hard check** (Codex in `tools-review-codex-8.md`, and a Claude reader;
+  recorded before any output). The decision is that line 3 counts details of content only.
+  - **What was found:**
+    - v6's key counted a later report's tier, stated day, period and speaker, and the frozen `group_text` drops those fields;
+    - in stored runs, 78 of 79 (c1), 72 of 75 (c2) and 85 of 85 (c3) groups differ in them, so the line would fail whatever the merging
+      does.
+  - **The new definition:** a detail is what a later report's statement adds — "a figure, condition, party, date or qualification an
+    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+    condition"; the recorded test's "detail" category, in which attribution was a separate category outside the line).
+  - **How the key is made:** key readers do not see the four attribution fields. A party or period that changes the claim still counts
+    when the statement's text says it.
+  - **Printed beside:** the differences in the four fields are counted by code and printed beside the line.
+  - **The pass rule:** the line passes on the two families' pooled totals, as the recorded test summed both readers.
+  - **Disclosed with the result:** the line now checks that grouping loses no content against the readers' own noise; it is weaker
+    than the recorded unprompted questions.
+  - **The reason rests on** the recorded test and the PRD. It does not rest on the judge, which sees tier, speaker and stated day but no
+    period, and quotes cut at 400 characters (`judging.py:130`); the Claude reader corrected the lean's first reason on this.
+- **Round 8, also decided:**
+  - **D431 at 07-14:** identity matching uses two third readers, one per family, as the full run did (`READING-COMMITMENT.md`), and a
+    split stays unresolved. Numeric agreement is withheld when the units differ or cannot be established ("no comparison (unit)"), with
+    no conversion.
+  - **D400's reader lines** have no ask-again round; a missing session leaves them "not measured". They are printed beside only.
+  - **The shared launcher** (`census_readers.run`) now returns a void on a timeout instead of raising, so every tool's retry applies.
+  - **Codex's tool fixes,** sent to the three builders:
+    - packet validation as the collector reads it;
+    - strata by manifest position;
+    - unverified quotes flagged;
+    - the same surrounding dossier in both renderings;
+    - units in the eligibility packets.
+- **The three remaining §1.6 tools are built to design v7, with round 8's fixes in place:**
+  - `d400_reader_lines.py`: 10 tests, 16 mutants;
+  - `step2_lines.py`: 15 tests, 25 mutants;
+  - `d431_reading.py`: 9 tests, 22 mutants.
+- Each was built by a subagent with fake readers and no model call, and dry-run on stored draws. The mutants were run by each builder on
+  scratch copies, and each was caught by its own test.
+- In all: 88 stage0 tests, and the frozen-file tests green.
+- On c1, line 3's rendering prompts reach at most 29 KB, and 205 of 206 later reports differ in attribution fields (printed beside).
