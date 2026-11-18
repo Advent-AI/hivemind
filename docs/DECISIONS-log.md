@@ -9950,3 +9950,8 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - `verify_inputs` turns any failure to read a named file as its writer wrote it into a refusal.
 
   Now at 96 tests and 62 mutants, all as predicted.
+- **Round 18 (Codex, `tools-review-codex-18.md`):** a well-formed but edited readings file could flip a verdict. Codex turned one answered card into "no answer" and the verdict went from loss to lead. Changed opening and first-article days were also accepted. Separately, a draw that opened no question was refused instead of scored as too small, because the writer left out its card map.
+  - **Structural rule, one owner:** the scorer no longer scores a readings file it is handed. `score_comparison.score(mapping out, marks folder)` builds the readings with their one writer, `mark_cards.build_readings`, from the named inputs, scores what it built, and refuses a `readings.json` that differs. The command line uses this entry, and so does the chain dry run.
+  - **The deck key now decides two more card fields:** each card's answered flag and its opening day. Every draw keeps a card map, empty when the draw opened no question.
+  - **Results:** 99 tests; 66 mutants, all as predicted; the chain dry run reaches its verdict through the new entry.
+  - **Updated:** the step-4 command in CURRENT_STATE.

@@ -50,7 +50,8 @@ def seal(r):
     sc.MATTERS = folder / 'matters.json'
     eligibility_sha = hashlib.sha256((folder / 'eligibility.json').read_bytes()).hexdigest()
     (folder / 'mapping.json').write_text(json.dumps({'mapping': r['mapping'], 'distinct': r['distinct'], 'eligibility_sha256': eligibility_sha}))
-    key = {f'C{n}': {'draw': d, 'question': q, 'role': 'product', **{f: r['cards'][d][q][f] for f in ('guardrail', 'covering', 'type')}}
+    key = {f'C{n}': {'draw': d, 'question': q, 'role': 'product', **{f: r['cards'][d][q].get(f) for f in ('guardrail', 'covering', 'type', 'opened')},
+                     'answered': r['cards'][d][q]['answer'] != 'no answer'}
            for n, (d, q) in enumerate((d, q) for d in r['cards'] for q in r['cards'][d])}
     (folder / 'deck-key.json').write_text(json.dumps(key))
     sha = lambda name: hashlib.sha256((folder / name).read_bytes()).hexdigest()
@@ -205,6 +206,28 @@ def test_a_split_cover_on_a_sampled_card_resolves_per_counting():
     assert sc.guardrails(r, '2')['figure']['new']['bad'] == 1          # counting 2: it does not cover, so it is in the shares
 
 
+def test_an_answer_or_opening_day_that_differs_from_the_deck_key_is_refused():
+    """The deck key decides whether a card was answered and when its question opened; readings that say otherwise are refused (D675,
+    Codex round 18: an answered card turned into "no answer" flipped a loss into a lead)."""
+    for change in (lambda c: c.update(answer='no answer'), lambda c: c.update(opened='2026-09-10')):
+        r = seal(base(n=20, new_served=5, old_served=1))
+        change(r['cards']['new-1']['new-1-g-figure-0'])
+        try:
+            sc.verdict(r)
+        except SystemExit as e:
+            assert 'deck key' in str(e)
+        else:
+            raise AssertionError('readings that differ from the deck key were scored')
+
+
+def test_a_draw_that_opened_no_question_is_scored_not_refused():
+    """A completed draw with no questions has an empty card map and is scored (too small), not refused (verdict-rule.json; Codex round 18)."""
+    r = base(n=20, new_served=5, old_served=1)
+    r['cards']['new-1'], r['mapping']['new-1'] = {}, {}
+    r['distinct']['new-1'] = {'ids': 0, 'duplicates_both': 0, 'duplicates_split': 0}
+    assert verdict(r)['verdict'] == 'too small'
+
+
 def test_readings_not_made_from_their_named_inputs_are_refused():
     """No verdict on other matters than the frozen list's, or on a mapping that is not the mapping file's (D671, D675)."""
     r = seal(base(n=20, new_served=5, old_served=1))
@@ -244,7 +267,7 @@ def test_card_marks_that_differ_from_the_deck_key_are_refused():
     try:
         sc.verdict(r)
     except SystemExit as e:
-        assert 'guardrail, covering or type' in str(e)
+        assert "deck key's product cards" in str(e)
     else:
         raise AssertionError('a guardrail flag changed after the deck was scored')
 

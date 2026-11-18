@@ -297,7 +297,9 @@ def matter_first_days():
     return {m['matter']: day_of[min(m['articles'])] for m in json.loads(mapping_tool.MATTERS.read_text())['matters']}
 
 
-def readings(mapping_out, folder):
+def build_readings(mapping_out, folder):
+    """The readings the scorer takes, built from the mapping output and the marks folder (the one writer of their shape;
+    `score_comparison.score` builds them again and scores what is built). Every mapped draw has a card map, empty when it opened no question."""
     folder = Path(folder)
     for n in (0, 1, 2):
         if not (folder / f'round-{n}.done').exists():
@@ -306,7 +308,8 @@ def readings(mapping_out, folder):
     matters = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(mapping_tool.MATTERS.read_text())['matters']]
     mapped_text = (Path(mapping_out) / 'mapping.json').read_bytes()
     mapped = json.loads(mapped_text)
-    cards, plants, supported, repeats = {}, [], [], []
+    cards = {draw: {} for draw in mapped['mapping']}
+    plants, supported, repeats = [], [], []
     by_question = {}
     for cid, k in sorted(key.items()):
         f = final(folder, cid)
@@ -330,7 +333,13 @@ def readings(mapping_out, folder):
                       'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),
                       'eligibility_path': str((Path(mapping_out) / 'eligibility.json').resolve()), 'eligibility_sha256': mapped['eligibility_sha256'],
                       'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
-    (folder / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
+    return out
+
+
+def readings(mapping_out, folder):
+    """Writes the readings record (readings.json) beside the marks."""
+    out = build_readings(mapping_out, folder)
+    (Path(folder) / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
     print('readings.json written')
 
 

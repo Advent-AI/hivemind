@@ -437,12 +437,13 @@ The council's reversible decisions on Alex's page are recorded in D606 and D607.
   - stage 0 and slice 2;
   - the full run, six draws, launched together at 22:36 on 2026-11-17 under `poc/data/comparison-2026-11-17/run/`;
   - every reading instrument built and passed by the council before any output was read: reading tools in round 5, the §1.6 tools in
-    round 10; 92 stage0 tests, mutants for each tool.
+    round 10; the scorer hardened through Codex rounds 11–18 (D675); 99 stage0 tests, 66 mutants on the reading tools.
 - **When all six draws end, in this order:**
   1. `eligibility.py`: six complete draws, launched within 1 h, sends within 72 h.
   2. `mapping.py export`, then `read`, `third`, `result`.
   3. `mark_cards.py deck`, then `mark`, `debate 1`, `debate 2`, `readings`.
-  4. `score_comparison.py`: the verdict and the printed-beside quantities.
+  4. `score_comparison.py <mapping out> <marks folder>`: builds the readings with their one writer, refuses a `readings.json` that
+     differs from them, then gives the verdict and the printed-beside quantities.
   5. `d400_code_check.py` and `step2_lines.py`: the hard checks and the release status.
   6. `d400_reader_lines.py` and `d431_reading.py`: printed beside.
   7. A council loop on the result, and a row in `TRIES.md`.

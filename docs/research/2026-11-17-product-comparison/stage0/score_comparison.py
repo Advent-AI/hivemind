@@ -301,13 +301,16 @@ def compare_inputs(readings):
         raise SystemExit('refused: the readings\' mapping differs from the mapping file')
     if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
         raise SystemExit('refused: the mapping was not made from a passing eligibility check')
-    keyed = {}
+    keyed = {draw: {} for draw in DRAWS}                       # a draw that opened no question has no product card
     for k in key.values():
         if k['role'] == 'product':
-            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
-    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+            keyed[k['draw']][k['question']] = {'guardrail': k['guardrail'], 'covering': k['covering'], 'type': k['type'],
+                                               'opened': k.get('opened'), 'answered': k['answered']}
+    held = {draw: {q: {'guardrail': card['guardrail'], 'covering': card['covering'], 'type': card['type'], 'opened': card['opened'],
+                       'answered': card['answer'] != 'no answer'} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
     if keyed != held:
-        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
+        raise SystemExit('refused: the readings\' cards, or their guardrail, covering, type, opening day or answered flag, are not the deck '
+                         'key\'s product cards')
 
 
 D428_LATEST = Fraction(3, 30)                                    # D428: at most 3 in 30 decided latest answers unsupported, scaled
@@ -527,5 +530,17 @@ def verdict(readings):
     return dict(report, verdict='no practical winner')
 
 
+def score(mapping_out, folder):
+    """The scorer's entry: the readings are built here by their one writer (`mark_cards.build_readings`) from the named mapping output
+    and marks folder, and what is built is scored, so an edited intermediate is never scored. The readings.json record beside the marks
+    must equal what is built."""
+    import mark_cards
+    built = mark_cards.build_readings(mapping_out, folder)
+    recorded = Path(folder) / 'readings.json'
+    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
+        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
+    return verdict(built)
+
+
 if __name__ == '__main__':
-    print(json.dumps(verdict(json.loads(open(sys.argv[1]).read())), indent=1, ensure_ascii=False, default=str))
+    print(json.dumps(score(sys.argv[1], sys.argv[2]), indent=1, ensure_ascii=False, default=str))
