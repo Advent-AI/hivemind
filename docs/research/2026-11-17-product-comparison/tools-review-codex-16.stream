@@ -1,0 +1,641 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 16, confirmation only (read-only, $0)
+
+Round 15 (`tools-review-codex-15.md`) found two holes in `validate_readings`'s closed set. They are fixed (`git log -1`), with my own
+pass over every field the scorer reads:
+- a split must be a list of two marks;
+- a cover must be a JSON boolean or "split";
+- duplicate counts may not exceed ids;
+- a mapped matter must be on the frozen list, and its questions must be a list;
+- each control must be a list.
+
+Check, citing file and line:
+1. Is there any field `verdict` or a printed item reads that `validate_readings` does not hold to an exact type or closed set?
+2. Does `mark_cards.readings` still pass? `stage0/chain-dry-run.txt` was refreshed under the new check.
+3. Is any value or verdict changed for well-formed readings?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 200 words. Report only a case that changes a verdict, a
+printed value, or a refusal; do not report wording.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll compare the validator with the fields the scorer reads, then check the refreshed dry-run log and report parity.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba score_comparison.py | sed -n '160,280p;350,520p'
+nl -ba chain-dry-run.txt
+nl -ba mark_cards.py | sed -n '289,334p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+   160	
+   161	def beside(readings, per_counting):
+   162	    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
+   163	    return {'company-figure subgroup': company_figure_subgroup(readings, per_counting), 'marks': mark_counts(readings, per_counting),
+   164	            'split resolutions': split_resolutions(readings, per_counting)}
+   165	
+   166	
+   167	MARKS = {'worth': ('worth', 'trivia', 'duplicate'), 'answer': ('supported', 'unsupported', 'insufficient')}
+   168	
+   169	
+   170	def validate_readings(readings):
+   171	    """Refuses malformed readings before any verdict or diagnostic (one owner for the readings' shape): every mark a frozen mark or a
+   172	    split of two, every cover true, false or "split" and naming a carded question, every count a non-negative integer, every day an ISO
+   173	    date. `mark_cards.readings` writes only such values; anything else means the file was not made by the reading."""
+   174	    import datetime
+   175	    problems = []
+   176	    def mark_ok(value, kind):
+   177	        if isinstance(value, dict):
+   178	            pair = value.get('split')
+   179	            return set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2 and all(isinstance(v, str) and v in MARKS[kind] for v in pair)
+   180	        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
+   181	    def cover_ok(value):
+   182	        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
+   183	    def day_ok(value):
+   184	        try:
+   185	            datetime.date.fromisoformat(value)
+   186	            return True
+   187	        except (TypeError, ValueError):
+   188	            return False
+   189	    for draw, cards in readings['cards'].items():
+   190	        for q, card in cards.items():
+   191	            if not (mark_ok(card.get('worth'), 'worth') and mark_ok(card.get('answer'), 'answer') and card.get('type') in ('figure', 'yes/no', 'other')
+   192	                    and isinstance(card.get('guardrail'), bool) and cover_ok(card.get('covering'))
+   193	                    and (card.get('opened') is None or day_ok(card.get('opened')))):
+   194	                problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
+   195	    frozen_matters = {m['matter'] for m in readings['matters']}
+   196	    for draw, by_matter in readings['mapping'].items():
+   197	        for matter, questions in by_matter.items():
+   198	            if matter not in frozen_matters or not isinstance(questions, list):
+   199	                problems.append(f'{draw} {matter}: a mapped matter outside the frozen list, or its questions not a list')
+   200	                continue
+   201	            for entry in questions:
+   202	                if not cover_ok(entry.get('covers')) or entry.get('question') not in readings['cards'].get(draw, {}):
+   203	                    problems.append(f'{draw} {matter}: a cover outside the closed set or naming no carded question')
+   204	    for draw, d in readings['distinct'].items():
+   205	        if not all(isinstance(d.get(k), int) and not isinstance(d.get(k), bool) and d.get(k) >= 0 for k in ('ids', 'duplicates_both', 'duplicates_split')):
+   206	            problems.append(f'{draw}: a distinct-bet count that is not a non-negative integer')
+   207	        elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
+   208	            problems.append(f'{draw}: more duplicates than ids')
+   209	    for matter, day in (readings.get('matter_first_day') or {}).items():
+   210	        if not day_ok(day):
+   211	            problems.append(f'{matter}: a first-article day that is not an ISO date')
+   212	    controls = readings['controls']
+   213	    if not (all(isinstance(controls[k], list) for k in ('plants', 'supported', 'repeats_same'))
+   214	            and all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
+   215	            and all(isinstance(x, bool) for x in controls['repeats_same'])):
+   216	        problems.append('a control mark outside the closed set')
+   217	    if problems:
+   218	        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
+   219	
+   220	
+   221	def verify_inputs(readings):
+   222	    """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
+   223	    they name: each file is read again and compared with what the readings carry."""
+   224	    inputs = readings.get('inputs') or {}
+   225	    def read(kind):
+   226	        path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
+   227	        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):
+   228	            raise SystemExit(f'refused: the {kind} file the readings name is missing or differs from its fingerprint')
+   229	        return json.loads(path.read_text())
+   230	    frozen = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(MATTERS.read_text())['matters']]
+   231	    if readings['matters'] != frozen or inputs.get('matters_sha256') != hashlib.sha256(MATTERS.read_bytes()).hexdigest():
+   232	        raise SystemExit('refused: the readings were not made on the frozen matter list')
+   233	    mapped, eligibility, key = read('mapping'), read('eligibility'), read('deck_key')
+   234	    if mapped['mapping'] != readings['mapping'] or mapped['distinct'] != readings['distinct']:
+   235	        raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+   236	    if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+   237	        raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+   238	    keyed = {}
+   239	    for k in key.values():
+   240	        if k['role'] == 'product':
+   241	            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
+   242	    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+   243	    if keyed != held:
+   244	        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
+   245	
+   246	
+   247	D428_LATEST = Fraction(3, 30)                                    # D428: at most 3 in 30 decided latest answers unsupported, scaled
+   248	
+   249	
+   250	def sign_test(a, b):
+   251	    """Two-sided exact binomial p of a against b at one half, and the Wilson 95% interval of a / (a + b): illustrative only."""
+   252	    n = a + b
+   253	    if n == 0:
+   254	        return {'discordant': 0, 'p': None, 'share': None, 'wilson95': None}
+   255	    tail = sum(math.comb(n, k) for k in range(0, min(a, b) + 1)) / 2 ** n
+   256	    z, phat = 1.959963984540054, a / n
+   257	    centre = (phat + z * z / (2 * n)) / (1 + z * z / n)
+   258	    half = z * math.sqrt(phat * (1 - phat) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+   259	    return {'discordant': n, 'p': min(1.0, 2 * tail), 'share': round(phat, 3), 'wilson95': [round(centre - half, 3), round(centre + half, 3)]}
+   260	
+   261	
+   262	D428_KEY = 'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'
+   263	DAYS_KEY = 'days from first article to opening (confirmed coverage only; split covers not counted)'
+   264	
+   265	
+   266	def d428_limits(readings, per_counting):
+   267	    out = {}
+   268	    for c, v in per_counting.items():
+   269	        fav_system = 'new' if c == '1' else 'old'
+   270	        limits = {}
+   271	        for system in SYSTEMS:
+   272	            fig, yn = v['guardrails']['figure'][system], v['guardrails']['yes/no'][system]
+   273	            latest_bad, latest_decided = fig['bad'] + yn['bad'], fig['decided'] + yn['decided']
+   274	            limits[system] = {
+   275	                'figure unsupported': f"{fig['bad']}/{fig['decided']} against 12.7%-14.4%" if fig['decided'] else 'none decided',
+   276	                'yes/no unsupported': f"{yn['bad']}/{yn['decided']} against 5%" if yn['decided'] else 'none decided',
+   277	                'latest answers unsupported': f"{latest_bad}/{latest_decided} against {float(D428_LATEST * latest_decided):.1f} (3 in 30 scaled)"
+   278	                                              if latest_decided else 'none decided',
+   279	                'latest answers insufficient (beside)': insufficient_count(readings, system, system == fav_system)}
+   280	        out[c] = limits
+   350	
+   351	def insufficient_count(readings, system, fav):
+   352	    """Latest answers resolved to insufficient among the system's guardrail-share cards (outside the decided denominators)."""
+   353	    count = 0
+   354	    for draw, cards in readings['cards'].items():
+   355	        if system_of(draw) != system:
+   356	            continue
+   357	        for card in cards.values():
+   358	            covering = card['covering'] if card['covering'] != 'split' else fav
+   359	            if card['guardrail'] and not covering and card['answer'] != 'no answer' and resolve(card['answer'], 'answer', fav) == 'insufficient':
+   360	                count += 1
+   361	    return count
+   362	
+   363	
+   364	def trivia_count(readings, system, fav):
+   365	    """Trivia marks (duplicates apart) among the decided worth marks of the system's guardrail shares' cards."""
+   366	    trivia = decided = 0
+   367	    for draw, cards in readings['cards'].items():
+   368	        if system_of(draw) != system:
+   369	            continue
+   370	        for card in cards.values():
+   371	            covering = card['covering'] if card['covering'] != 'split' else fav
+   372	            if not card['guardrail'] or covering:
+   373	                continue
+   374	            decided += 1
+   375	            trivia += resolve(card['worth'], 'worth', fav) == 'trivia'
+   376	    return trivia, decided
+   377	
+   378	
+   379	def days_to_opening(readings):
+   380	    """Per draw and covered matter: days from the matter's earliest listed article to the first covering question's opening. A question
+   381	    opened before the scored window (09-07) is 'opened in the warm-up'; one opened in the window before the matter's first listed article
+   382	    is 'opened before the first listed article'."""
+   383	    import datetime
+   384	    out = {}
+   385	    for draw, by_matter in readings['mapping'].items():
+   386	        for matter, questions in by_matter.items():
+   387	            opened = [readings['cards'][draw][q['question']].get('opened') for q in questions if q['covers'] is True]
+   388	            opened = [d for d in opened if d]
+   389	            first = readings.get('matter_first_day', {}).get(matter)
+   390	            if not opened or not first:
+   391	                continue
+   392	            days = (datetime.date.fromisoformat(min(opened)) - datetime.date.fromisoformat(first)).days
+   393	            out.setdefault(matter, {})[draw] = (days if days >= 0 else 'opened in the warm-up' if min(opened) < '2026-09-07'
+   394	                                                else 'opened before the first listed article')
+   395	    return out
+   396	
+   397	
+   398	def verdict(readings):
+   399	    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+   400	    for k, draws in present.items():
+   401	        if sorted(DRAWS) != draws:
+   402	            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+   403	    verify_inputs(readings)
+   404	    validate_readings(readings)
+   405	    n = len(readings['matters'])
+   406	    controls = readings['controls']
+   407	    report = {'N': n}
+   408	    invalid = []
+   409	    def rejected(m):
+   410	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   411	    if any(not rejected(m) for m in controls['plants']):
+   412	        invalid.append('a planted wrong answer without an explicit rejection')
+   413	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   414	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   415	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   416	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   417	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   418	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   419	    small = []
+   420	    if not invalid:                                            # the size check runs only when the controls hold
+   421	        if n < 20:
+   422	            small.append(f'N = {n} < 20')
+   423	        for draw, d in readings['distinct'].items():
+   424	            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   425	            if min(both_ways) < 30:
+   426	                small.append(f'{draw}: {both_ways} distinct bets')
+   427	    margin = max(3, math.ceil(0.15 * n))
+   428	
+   429	    def countings():
+   430	        per_counting = {}
+   431	        for counting in ('1', '2'):
+   432	            served = served_by(readings, counting)
+   433	            a = len(served['new'] - served['old'])
+   434	            b = len(served['old'] - served['new'])
+   435	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   436	                                      'guardrails': guardrails(readings, counting)}
+   437	        return per_counting
+   438	
+   439	    if invalid or small:
+   440	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   441	        flags = []
+   442	        try:
+   443	            per_counting = countings()
+   444	            report.update(margin=margin, countings=per_counting)
+   445	            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+   446	        except Exception as error:
+   447	            flags.append(f'countings: {type(error).__name__}: {error}')
+   448	        if flags:
+   449	            report['diagnostics not computed'] = '; '.join(flags)
+   450	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   451	    per_counting = countings()
+   452	    shown = beside(readings, per_counting)
+   453	    shown.update(printed_beside(readings, per_counting))
+   454	    report['margin'] = margin
+   455	    report['countings'] = per_counting
+   456	    report['beside'] = shown
+   457	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   458	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   459	    if lead and all_exercised_pass:
+   460	        return dict(report, verdict='practical lead')
+   461	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   462	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   463	    if loss_count or breaches:
+   464	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   465	    return dict(report, verdict='no practical winner')
+   466	
+   467	
+   468	if __name__ == '__main__':
+   469	    print(json.dumps(verdict(json.loads(open(sys.argv[1]).read())), indent=1, ensure_ascii=False, default=str))
+     1	VERDICT too small ['new-1: (4, 4) distinct bets', 'new-2: (4, 4) distinct bets', 'new-3: (4, 4) distinct bets', 'old-1: (2, 2) distinct bets', 'old-2: (2, 2) distinct bets', 'old-3: (2, 2) distinct bets']
+     2	sessions {'read': 12, 'third': 12, 'mark': 62, 'debate': 20, 'other': 0}
+     3	D400 code check not measured
+   289	def matter_first_days():
+   290	    """Each frozen matter's earliest article day: the census numbered the kept articles 1.. by (day, published_at, id) from its source
+   291	    database (`census_readers.build`), so a matter's earliest article is its lowest number."""
+   292	    kept = json.loads(census_readers.KEPT.read_text())
+   293	    conn = build_cards.ro(census_readers.SOURCE)
+   294	    rows = sorted((tuple(conn.execute('select publication_day, coalesce(published_at, \'\') from items where input_id=?', (a,)).fetchone()) + (a,)
+   295	                   for a in kept['kept_ids']))
+   296	    day_of = {n: row[0] for n, row in enumerate(rows, 1)}
+   297	    return {m['matter']: day_of[min(m['articles'])] for m in json.loads(mapping_tool.MATTERS.read_text())['matters']}
+   298	
+   299	
+   300	def readings(mapping_out, folder):
+   301	    folder = Path(folder)
+   302	    for n in (0, 1, 2):
+   303	        if not (folder / f'round-{n}.done').exists():
+   304	            raise SystemExit(f'refused: round {n} is not complete')
+   305	    key = json.loads(KEY.read_text())
+   306	    matters = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(mapping_tool.MATTERS.read_text())['matters']]
+   307	    mapped_text = (Path(mapping_out) / 'mapping.json').read_bytes()
+   308	    mapped = json.loads(mapped_text)
+   309	    cards, plants, supported, repeats = {}, [], [], []
+   310	    by_question = {}
+   311	    for cid, k in sorted(key.items()):
+   312	        f = final(folder, cid)
+   313	        answer = f['answer'] if k['answered'] else 'no answer'
+   314	        if k['role'] == 'product':
+   315	            cards.setdefault(k['draw'], {})[k['question']] = {'worth': f['worth'], 'answer': answer, 'type': k['type'], 'guardrail': k['guardrail'],
+   316	                                                              'covering': k['covering'], 'opened': k.get('opened')}
+   317	            by_question[(k['draw'], k['question'])] = (f['worth'], answer)
+   318	        elif k['role'] == 'plant':
+   319	            plants.append(answer)
+   320	        elif k['role'] == 'supported control':
+   321	            supported.append(answer)
+   322	    for cid, k in sorted(key.items()):
+   323	        if k['role'] == 'repeat':
+   324	            f = final(folder, cid)
+   325	            answer = f['answer'] if k['answered'] else 'no answer'
+   326	            repeats.append((f['worth'], answer) == by_question[(k['draw'], k['question'])])
+   327	    out = {'matters': matters, 'matter_first_day': matter_first_days(), 'mapping': mapped['mapping'], 'distinct': mapped['distinct'], 'cards': cards,
+   328	           'controls': {'plants': plants, 'supported': supported, 'repeats_same': repeats},
+   329	           'inputs': {'matters_sha256': hashlib.sha256(mapping_tool.MATTERS.read_bytes()).hexdigest(),
+   330	                      'mapping_path': str((Path(mapping_out) / 'mapping.json').resolve()), 'mapping_sha256': hashlib.sha256(mapped_text).hexdigest(),
+   331	                      'eligibility_path': str((Path(mapping_out) / 'eligibility.json').resolve()), 'eligibility_sha256': mapped['eligibility_sha256'],
+   332	                      'deck_key_path': str(KEY), 'deck_key_sha256': hashlib.sha256(KEY.read_bytes()).hexdigest()}}
+   333	    (folder / 'readings.json').write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
+   334	    print('readings.json written')
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt" in /Users/lchingen/hivemind
+ succeeded in 2667ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-ZKC5LKvX' (errno=Operation not permitted)
+2026-11-18 13:27:12.615 xcodebuild[48747:60119828]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:12.780 xcodebuild[48747:60119827] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-THcx81IX' (errno=Operation not permitted)
+2026-11-18 13:27:13.132 xcodebuild[48749:60119836]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:13.246 xcodebuild[48749:60119835] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+b503481c Scorer: exact types at entry for every field it reads (D675, Codex round 15)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-73kjFwF7' (errno=Operation not permitted)
+2026-11-18 13:27:13.986 xcodebuild[48754:60119875]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:14.098 xcodebuild[48754:60119874] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-TH7Bkgsy' (errno=Operation not permitted)
+2026-11-18 13:27:14.425 xcodebuild[48756:60119885]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:14.536 xcodebuild[48756:60119884] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit b503481c898824a717f9962f1fec84d23f9f0c7f
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer: exact types at entry for every field it reads (D675, Codex round 15)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index 57c92181..d9bbb435 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -175,8 +175,11 @@ def validate_readings(readings):
+     problems = []
+     def mark_ok(value, kind):
+         if isinstance(value, dict):
+-            return set(value) == {'split'} and len(value['split']) == 2 and all(v in MARKS[kind] for v in value['split'])
+-        return value in MARKS[kind] or (kind == 'answer' and value == 'no answer')
++            pair = value.get('split')
++            return set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2 and all(isinstance(v, str) and v in MARKS[kind] for v in pair)
++        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
++    def cover_ok(value):
++        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
+     def day_ok(value):
+         try:
+             datetime.date.fromisoformat(value)
+@@ -186,22 +189,29 @@ def validate_readings(readings):
+     for draw, cards in readings['cards'].items():
+         for q, card in cards.items():
+             if not (mark_ok(card.get('worth'), 'worth') and mark_ok(card.get('answer'), 'answer') and card.get('type') in ('figure', 'yes/no', 'other')
+-                    and isinstance(card.get('guardrail'), bool) and card.get('covering') in (True, False, 'split')
++                    and isinstance(card.get('guardrail'), bool) and cover_ok(card.get('covering'))
+                     and (card.get('opened') is None or day_ok(card.get('opened')))):
+                 problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
++    frozen_matters = {m['matter'] for m in readings['matters']}
+     for draw, by_matter in readings['mapping'].items():
+         for matter, questions in by_matter.items():
++            if matter not in frozen_matters or not isinstance(questions, list):
++                problems.append(f'{draw} {matter}: a mapped matter outside the frozen list, or its questions not a list')
++                continue
+             for entry in questions:
+-                if entry.get('covers') not in (True, False, 'split') or entry.get('question') not in readings['cards'].get(draw, {}):
++                if not cover_ok(entry.get('covers')) or entry.get('question') not in readings['cards'].get(draw, {}):
+                     problems.append(f'{draw} {matter}: a cover outside the closed set or naming no carded question')
+     for draw, d in readings['distinct'].items():
+         if not all(isinstance(d.get(k), int) and not isinstance(d.get(k), bool) and d.get(k) >= 0 for k in ('ids', 'duplicates_both', 'duplicates_split')):
+             problems.append(f'{draw}: a distinct-bet count that is not a non-negative integer')
++        elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
++            problems.append(f'{draw}: more duplicates than ids')
+     for matter, day in (readings.get('matter_first_day') or {}).items():
+         if not day_ok(day):
+             problems.append(f'{matter}: a first-article day that is not an ISO date')
+     controls = readings['controls']
+-    if not (all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
++    if not (all(isinstance(controls[k], list) for k in ('plants', 'supported', 'repeats_same'))
++            and all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
+             and all(isinstance(x, bool) for x in controls['repeats_same'])):
+         problems.append('a control mark outside the closed set')
+     if problems:
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+index 97fed11e..3ecd5e87 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+@@ -330,6 +330,24 @@ def test_malformed_readings_are_refused_before_any_verdict():
+     r = base(n=19, new_served=5, old_served=1)
+     r['cards']['new-1']['new-1-q0']['opened'] = 'not a date'
+     cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['cards']['new-1']['new-1-g-figure-0']['answer'] = {'split': {'supported': 1, 'unsupported': 2}}   # a split that is not a pair list
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['mapping']['new-1']['M01'][0]['covers'] = 1                                                      # a number is not a JSON boolean
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['cards']['new-1']['new-1-q0']['covering'] = 1
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['distinct']['new-1']['duplicates_both'] = r['distinct']['new-1']['ids'] + 1                    # more duplicates than ids
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['mapping']['new-1']['not a frozen matter'] = []
++    cases.append(r)
++    r = base(n=19, new_served=5, old_served=1)
++    r['controls']['plants'] = {'unsupported': 'supported'}                # a mapping whose keys are marks: iterable, but not the list
++    cases.append(r)
+     for r in cases:
+         try:
+             verdict(r)
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import copy, hashlib, json, subprocess, types
+import score_comparison as new
+import test_score_comparison as tests
+
+old = types.ModuleType(\"previous_score_comparison\")
+old.__file__ = new.__file__
+p = \"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\", \"--no-pager\", \"show\", \"b503481c"'^:" + p], text=True), p, "exec"), old.__dict__)
+
+class MemoryPath:
+    files = {}
+    def __init__(self, name):
+        self.name = name
+    def exists(self):
+        return self.name in self.files
+    def read_bytes(self):
+        return self.files[self.name]
+    def read_text(self):
+        return self.read_bytes().decode()
+
+def put(name, data):
+    MemoryPath.files[name] = json.dumps(data).encode()
+    return hashlib.sha256(MemoryPath.files[name]).hexdigest()
+
+def seal(r):
+    es = put("eligibility", {"eligible": True})
+    key = [dict(draw=d, question=q, role="product", **{f:c[f] for f in ("guardrail","covering","type")})
+           for d, cards in r["cards"].items() for q,c in cards.items()]
+    r["inputs"] = dict(matters_sha256=put("matters", {"matters":r["matters"]}),
+                       mapping_path="mapping",
+                       mapping_sha256=put("mapping", {"mapping":r["mapping"], "distinct":r["distinct"], "eligibility_sha256":es}),
+                       eligibility_path="eligibility", eligibility_sha256=es,
+                       deck_key_path="key", deck_key_sha256=put("key", dict(enumerate(key))))
+    return r
+
+for m in (new, old):
+    m.Path, m.MATTERS = MemoryPath, MemoryPath("matters")
+tests.seal = seal
+tests.test_malformed_readings_are_refused_before_any_verdict()
+print("Committed malformed-input regression test passed in memory.")
+for n,a,b,invalid in ((32,10,2,False),(32,2,10,False),(32,5,4,False),(19,5,1,False),(32,5,1,True)):
+    r = tests.base(n=n,new_served=a,old_served=b)
+    r["matters"][0]["company_figure"] = True
+    r["matter_first_day"] = {"M01":"2026-09-08"}
+    for d,cards in r["cards"].items():
+        for q,card in cards.items():
+            card["opened"] = "2026-09-09"
+            if q.endswith("-g-figure-0"):
+                card["answer"] = {"split":["supported","insufficient"]}
+            if q.endswith("-g-yes/no-1"):
+                card["answer"] = "no answer"
+    if invalid:
+        r["controls"]["plants"][0] = {"split":["supported","unsupported"]}
+    seal(r)
+    prior, actual = old.verdict(copy.deepcopy(r)), new.verdict(copy.deepcopy(r))
+    assert json.dumps(prior,default=str) == json.dumps(actual,default=str)
+    print(actual["verdict"], "serialized report matches parent")
+def attempt(label, r):
+    seal(r)
+    new.verify_inputs(r)
+    try:
+        out = new.verdict(r)
+        print(label, "scored", out["verdict"], out["beside"].get(new.DAYS_KEY))
+    except (AttributeError, TypeError, SystemExit) as e:
+        print(label, type(e).__name__, str(e))
+r = tests.base(n=32,new_served=10,old_served=2)
+r["cards"]["new-1"]["new-1-q0"]["opened"] = "2026-09-01"
+r["matter_first_day"] = {"M01":"2026-09-08"}
+attempt("Normal date", r)
+r["cards"]["new-1"]["new-1-q0"]["opened"] = "20260901"
+attempt("Compact date", r)
+r["matter_first_day"] = []
+attempt("Empty list date map", r)
+r["matter_first_day"] = None
+attempt("Null date map", r)
+r["matter_first_day"] = {}
+r["mapping"]["new-1"]["M01"][0] = None
+attempt("Null mapped entry", r)
+r["mapping"]["new-1"]["M01"][0] = {"covers":True, "question":[]}
+attempt("Unhashable mapped question", r)
+r = tests.base(n=32,new_served=10,old_served=2,guard_cards=4)
+for d in ("new-1","new-2","new-3"):
+    c = r["cards"][d][d+"-g-figure-0"]
+    c["answer"] = {"split":["supported","supported"]}
+attempt("Identical marks in split",r)
+r = tests.base(n=32,new_served=10,old_served=2)
+r["matters"][0]["company_figure"] = True
+seal(r)
+r["matters"][0]["company_figure"] = 1
+print("Numeric company flag passed frozen check and scorer:",new.verdict(r)["verdict"])
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 2594ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-byy8cq6I' (errno=Operation not permitted)
+2026-11-18 13:27:46.926 xcodebuild[48809:60120486]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:47.043 xcodebuild[48809:60120485] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-Xk6Mg1Bv' (errno=Operation not permitted)
+2026-11-18 13:27:47.376 xcodebuild[48816:60120502]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:47.490 xcodebuild[48816:60120501] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-7Gu6DHS6' (errno=Operation not permitted)
+2026-11-18 13:27:48.246 xcodebuild[48822:60120566]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:48.366 xcodebuild[48822:60120565] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-EPJEHmJk' (errno=Operation not permitted)
+2026-11-18 13:27:48.699 xcodebuild[48824:60120577]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:27:48.813 xcodebuild[48824:60120576] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Committed malformed-input regression test passed in memory.
+practical lead serialized report matches parent
+practical loss serialized report matches parent
+no practical winner serialized report matches parent
+too small serialized report matches parent
+invalid serialized report matches parent
+Normal date scored practical lead {'M01': {'new-1': 'opened in the warm-up'}}
+Compact date SystemExit refused: malformed readings: new-1 new-1-q0: a card mark, type, flag or day outside the closed set
+Empty list date map SystemExit refused: malformed readings: new-1 new-1-q0: a card mark, type, flag or day outside the closed set
+Null date map SystemExit refused: malformed readings: new-1 new-1-q0: a card mark, type, flag or day outside the closed set
+Null mapped entry AttributeError 'NoneType' object has no attribute 'get'
+Unhashable mapped question TypeError unhashable type: 'list'
+Identical marks in split scored no practical winner {}
+Numeric company flag passed frozen check and scorer: practical lead
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import copy, hashlib, json
+import score_comparison as sc
+from test_score_comparison import base
+data = {}
+class MemoryPath:
+    def __init__(self, name): self.name = name
+    def exists(self): return self.name in data
+    def read_bytes(self): return data[self.name]
+    def read_text(self): return self.read_bytes().decode()
+sc.Path, sc.MATTERS = MemoryPath, MemoryPath(\"matters\")
+def put(name, obj):
+    data[name] = json.dumps(obj).encode()
+    return hashlib.sha256(data[name]).hexdigest()
+def seal(r):
+    es = put(\"eligibility\", {\"eligible\":True})
+    key = {str(i): dict(role=\"product\", draw=d, question=q, **{f:c[f] for f in (\"guardrail\",\"covering\",\"type\")})
+           for i,(d,q,c) in enumerate((d,q,c) for d,cards in r[\"cards\"].items() for q,c in cards.items())}
+    r[\"inputs\"] = dict(matters_sha256=put(\"matters\", {\"matters\":r[\"matters\"]}),
+                       mapping_path=\"map\",mapping_sha256=put(\"map\",dict(mapping=r[\"mapping\"],distinct=r[\"distinct\"],eligibility_sha256=es)),
+                       deck_key_path=\"key\",deck_key_sha256=put(\"key\", key),eligibility_path=\"eligibility\",eligibility_sha256=es)
+    return r
+r = seal(base(n=32,new_served=10,old_served=2,guard_cards=4))
+print(\"Baseline\",sc.verdict(r)[\"verdict\"])
+for d in (\"new-1\",\"new-2\",\"new-3\"):
+    r[\"cards\"][d][d+\"-g-figure-0\"][\"answer\"] = {\"split\":[\"supported\",\"supported\"]}
+print(\"Equal mark pair\",sc.verdict(r)[\"verdict\"])
+for bad in (None, [], 0, \"\"):
+    q = seal(base(n=32,new_served=10,old_served=2))
+    q[\"matter_first_day\"] = bad
+    sc.verify_inputs(q); sc.validate_readings(q)
+    try:
+        sc.verdict(q)
+    except AttributeError as e:
+        print(\"Bad date-map value accepted by validator, aborts verdict\",repr(bad),e)
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 1245ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-odY5CkJW' (errno=Operation not permitted)
+2026-11-18 13:28:02.664 xcodebuild[48854:60120893]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:28:02.782 xcodebuild[48854:60120892] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-eCSHZbgJ' (errno=Operation not permitted)
+2026-11-18 13:28:03.109 xcodebuild[48856:60120910]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:28:03.222 xcodebuild[48856:60120909] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Baseline practical lead
+Equal mark pair no practical winner
+Bad date-map value accepted by validator, aborts verdict None 'NoneType' object has no attribute 'get'
+Bad date-map value accepted by validator, aborts verdict [] 'list' object has no attribute 'get'
+Bad date-map value accepted by validator, aborts verdict 0 'int' object has no attribute 'get'
+Bad date-map value accepted by validator, aborts verdict '' 'str' object has no attribute 'get'
+
+codex
+The refreshed dry run reached `too small`, and well-formed synthetic reports matched the parent byte for byte across all five verdicts. The round‑15 regression test passed in memory. [Dry run](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1) · [Regression test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:321)
+
+Three gaps remain:
+
+- `matter_first_day: null` passes validation and crashes reporting. A null mapping entry or array-valued question ID crashes validation itself. [Container checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:195) · [Date lookup](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:389)
+- A split containing two identical marks passes. In memory, this reduced the unsplit guardrail count and changed a lead to no winner. The writer emits a settled mark when readers agree. [Split check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:176) · [Writer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:251)
+- `company_figure: 1` passes the frozen-list check against `true`. [Frozen-list check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:230)
+
+NOT READY: Check container and ID types before access, require different marks in a split, and enforce Boolean company flags.
+tokens used
+4,376,631
+The refreshed dry run reached `too small`, and well-formed synthetic reports matched the parent byte for byte across all five verdicts. The round‑15 regression test passed in memory. [Dry run](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1) · [Regression test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:321)
+
+Three gaps remain:
+
+- `matter_first_day: null` passes validation and crashes reporting. A null mapping entry or array-valued question ID crashes validation itself. [Container checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:195) · [Date lookup](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:389)
+- A split containing two identical marks passes. In memory, this reduced the unsplit guardrail count and changed a lead to no winner. The writer emits a settled mark when readers agree. [Split check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:176) · [Writer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/mark_cards.py:251)
+- `company_figure: 1` passes the frozen-list check against `true`. [Frozen-list check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:230)
+
+NOT READY: Check container and ID types before access, require different marks in a split, and enforce Boolean company flags.

@@ -343,7 +343,22 @@ def test_malformed_readings_are_refused_before_any_verdict():
     r['distinct']['new-1']['duplicates_both'] = r['distinct']['new-1']['ids'] + 1                    # more duplicates than ids
     cases.append(r)
     r = base(n=19, new_served=5, old_served=1)
-    r['mapping']['new-1']['not a frozen matter'] = []
+    r['mapping']['new-1']['not a frozen matter'] = [{'question': 'new-1-q0', 'covers': True}]     # well formed, but not a listed matter
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['matter_first_day'] = None                                                                     # Codex round 16
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['mapping']['new-1']['M01'] = [None]
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['mapping']['new-1']['M01'][0]['question'] = ['new-1-q0']
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['cards']['new-1']['new-1-g-figure-0']['answer'] = {'split': ['supported', 'supported']}       # readers agreed: not a split
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['matters'][0]['company_figure'] = 1
     cases.append(r)
     r = base(n=19, new_served=5, old_served=1)
     r['controls']['plants'] = {'unsupported': 'supported'}                # a mapping whose keys are marks: iterable, but not the list

@@ -167,55 +167,114 @@ def beside(readings, per_counting):
 MARKS = {'worth': ('worth', 'trivia', 'duplicate'), 'answer': ('supported', 'unsupported', 'insufficient')}
 
 
+CARD_FIELDS = {'worth', 'answer', 'type', 'guardrail', 'covering'}
+INPUT_FIELDS = {'matters_sha256', 'mapping_path', 'mapping_sha256', 'eligibility_path', 'eligibility_sha256', 'deck_key_path', 'deck_key_sha256'}
+
+
 def validate_readings(readings):
-    """Refuses malformed readings before any verdict or diagnostic (one owner for the readings' shape): every mark a frozen mark or a
-    split of two, every cover true, false or "split" and naming a carded question, every count a non-negative integer, every day an ISO
-    date. `mark_cards.readings` writes only such values; anything else means the file was not made by the reading."""
+    """Refuses readings that are not exactly what `mark_cards.readings` writes, before any verdict or diagnostic (one owner for the
+    readings' shape). The whole file is walked top down, and every container's type is checked before it is read:
+    - the top level holds matters, mapping, distinct, cards, controls and inputs, and may hold matter_first_day;
+    - mapping, cards and distinct each hold the six draws;
+    - a matter is {matter: text, company_figure: a JSON boolean};
+    - a card holds worth, answer, type, guardrail and covering, and may hold opened. A mark is a frozen mark or a split of two different
+      ones; an answer may be "no answer"; the guardrail is a JSON boolean; covering is a JSON boolean or "split"; opened is null or a day;
+    - a mapped matter is on the matter list, with a non-empty list of {question: a carded question of the draw, covers: true or "split"};
+    - a draw's distinct counts are ids, duplicates_both and duplicates_split: non-negative integers, the duplicates no more than the ids;
+    - matter_first_day maps listed matters to days; a day is YYYY-MM-DD;
+    - the controls are lists: plants and supported of answer marks, repeats_same of JSON booleans;
+    - the inputs are the seven named paths and fingerprints, as text."""
     import datetime
-    problems = []
-    def mark_ok(value, kind):
-        if isinstance(value, dict):
-            pair = value.get('split')
-            return set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2 and all(isinstance(v, str) and v in MARKS[kind] for v in pair)
-        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
-    def cover_ok(value):
-        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
-    def day_ok(value):
+    import re
+
+    def refuse(problems):
+        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
+
+    def is_count(value):
+        return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+    def is_day(value):
+        if not (isinstance(value, str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}', value)):
+            return False
         try:
             datetime.date.fromisoformat(value)
             return True
-        except (TypeError, ValueError):
+        except ValueError:
             return False
-    for draw, cards in readings['cards'].items():
+
+    def is_mark(value, kind):
+        if isinstance(value, dict):
+            pair = value.get('split')
+            return (set(value) == {'split'} and isinstance(pair, list) and len(pair) == 2
+                    and all(isinstance(v, str) and v in MARKS[kind] for v in pair) and pair[0] != pair[1])
+        return isinstance(value, str) and (value in MARKS[kind] or (kind == 'answer' and value == 'no answer'))
+
+    def is_cover(value):
+        return value is True or value is False or value == 'split'          # JSON booleans only: 1 is not True here
+
+    if not isinstance(readings, dict):
+        refuse(['the readings are not an object'])
+    required = {'matters', 'mapping', 'distinct', 'cards', 'controls', 'inputs'}
+    if not required <= set(readings) <= required | {'matter_first_day'}:
+        refuse([f'top-level fields {sorted(map(str, readings))}'])
+    for k in ('mapping', 'cards', 'distinct'):
+        held = readings[k]
+        if not isinstance(held, dict) or set(held) != set(DRAWS):
+            raise SystemExit(f'refused: readings[{k!r}] holds {sorted(map(str, held)) if isinstance(held, dict) else type(held).__name__}, '
+                             f'not the six draws {list(DRAWS)}')
+    matters = readings['matters']
+    if not (isinstance(matters, list) and all(isinstance(m, dict) and set(m) == {'matter', 'company_figure'} and isinstance(m['matter'], str)
+                                              and isinstance(m['company_figure'], bool) for m in matters)):
+        refuse(['the matter list is not a list of {matter: text, company_figure: true or false}'])
+    listed = {m['matter'] for m in matters}
+    problems = []
+    carded = {}
+    for draw in DRAWS:
+        cards = readings['cards'][draw]
+        if not isinstance(cards, dict):
+            problems.append(f'{draw}: the cards are not an object')
+            continue
+        carded[draw] = set(cards)
         for q, card in cards.items():
-            if not (mark_ok(card.get('worth'), 'worth') and mark_ok(card.get('answer'), 'answer') and card.get('type') in ('figure', 'yes/no', 'other')
-                    and isinstance(card.get('guardrail'), bool) and cover_ok(card.get('covering'))
-                    and (card.get('opened') is None or day_ok(card.get('opened')))):
+            if not (isinstance(card, dict) and CARD_FIELDS <= set(card) <= CARD_FIELDS | {'opened'}):
+                problems.append(f'{draw} {q}: a card without exactly its fields')
+            elif not (is_mark(card['worth'], 'worth') and is_mark(card['answer'], 'answer') and card['type'] in ('figure', 'yes/no', 'other')
+                      and isinstance(card['guardrail'], bool) and is_cover(card['covering'])
+                      and (card.get('opened') is None or is_day(card['opened']))):
                 problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
-    frozen_matters = {m['matter'] for m in readings['matters']}
-    for draw, by_matter in readings['mapping'].items():
+    for draw in DRAWS:
+        by_matter = readings['mapping'][draw]
+        if not isinstance(by_matter, dict):
+            problems.append(f'{draw}: the mapping is not an object')
+            continue
         for matter, questions in by_matter.items():
-            if matter not in frozen_matters or not isinstance(questions, list):
-                problems.append(f'{draw} {matter}: a mapped matter outside the frozen list, or its questions not a list')
+            if matter not in listed or not isinstance(questions, list) or not questions:
+                problems.append(f'{draw} {matter}: a mapped matter not on the list, or its questions not a non-empty list')
                 continue
             for entry in questions:
-                if not cover_ok(entry.get('covers')) or entry.get('question') not in readings['cards'].get(draw, {}):
-                    problems.append(f'{draw} {matter}: a cover outside the closed set or naming no carded question')
-    for draw, d in readings['distinct'].items():
-        if not all(isinstance(d.get(k), int) and not isinstance(d.get(k), bool) and d.get(k) >= 0 for k in ('ids', 'duplicates_both', 'duplicates_split')):
-            problems.append(f'{draw}: a distinct-bet count that is not a non-negative integer')
+                if not (isinstance(entry, dict) and set(entry) == {'question', 'covers'} and isinstance(entry['question'], str)
+                        and entry['question'] in carded.get(draw, set()) and (entry['covers'] is True or entry['covers'] == 'split')):
+                    problems.append(f'{draw} {matter}: a mapping entry outside the closed set or naming no carded question')
+    for draw in DRAWS:
+        d = readings['distinct'][draw]
+        if not (isinstance(d, dict) and set(d) == {'ids', 'duplicates_both', 'duplicates_split'} and all(is_count(v) for v in d.values())):
+            problems.append(f'{draw}: the distinct-bet counts are not three non-negative integers')
         elif d['duplicates_both'] + d['duplicates_split'] > d['ids']:
             problems.append(f'{draw}: more duplicates than ids')
-    for matter, day in (readings.get('matter_first_day') or {}).items():
-        if not day_ok(day):
-            problems.append(f'{matter}: a first-article day that is not an ISO date')
+    days = readings.get('matter_first_day', {})
+    if not (isinstance(days, dict) and all(m in listed and is_day(v) for m, v in days.items())):
+        problems.append('matter_first_day is not a map of listed matters to days')
     controls = readings['controls']
-    if not (all(isinstance(controls[k], list) for k in ('plants', 'supported', 'repeats_same'))
-            and all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
+    if not (isinstance(controls, dict) and set(controls) == {'plants', 'supported', 'repeats_same'}
+            and all(isinstance(v, list) for v in controls.values())
+            and all(is_mark(m, 'answer') for m in controls['plants'] + controls['supported'])
             and all(isinstance(x, bool) for x in controls['repeats_same'])):
-        problems.append('a control mark outside the closed set')
+        problems.append('the controls are not three lists of answer marks and JSON booleans')
+    inputs = readings['inputs']
+    if not (isinstance(inputs, dict) and set(inputs) == INPUT_FIELDS and all(isinstance(v, str) for v in inputs.values())):
+        problems.append('the inputs are not the seven named paths and fingerprints')
     if problems:
-        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
+        refuse(problems)
 
 
 def verify_inputs(readings):
@@ -396,12 +455,8 @@ def days_to_opening(readings):
 
 
 def verdict(readings):
-    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
-    for k, draws in present.items():
-        if sorted(DRAWS) != draws:
-            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
-    verify_inputs(readings)
     validate_readings(readings)
+    verify_inputs(readings)
     n = len(readings['matters'])
     controls = readings['controls']
     report = {'N': n}

@@ -9923,3 +9923,20 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     - A mapped matter must be on the frozen list, and its questions must be a list.
     - Each control must be a list.
   - **Now:** 95 tests, 56 mutants, all as predicted. The chain dry-run log has been refreshed under the new check.
+- **Round 16 (Codex, `tools-review-codex-16.md`):** three more shapes got through the entry check:
+  - a null first-day map, a null mapping entry, or a list used as a question id;
+  - a split of two identical marks, which turned a lead into no winner in memory;
+  - `company_figure: 1`.
+
+  This was the sixth round in a row with findings from one mechanism, so I stopped patching cases (AGENTS §1). The structural rule:
+  `validate_readings` now walks the whole readings file top down, as one closed contract, and checks each container's type before
+  reading it. Its docstring lists every shape, which is exactly what `mark_cards.readings` writes:
+  - a split is two different marks;
+  - flags are JSON booleans;
+  - a mapping entry is exactly `{question, covers: true or "split"}`, naming a carded question;
+  - the six draws are checked here (folded in from `verdict`);
+  - the inputs are seven text fields.
+
+  It runs before `verify_inputs`, so neither can crash on a malformed file.
+
+  Results: 95 tests; 59 mutants, all as predicted (three stale ones repointed); the chain dry run passes the check.
