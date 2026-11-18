@@ -9655,3 +9655,18 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - A closed reader shown 10 cards of each stored system names any element of the form that tells them apart. Each named element is
     removed, and the test repeats until none is named.
   - Differences of wording are disclosed with the result.
+
+## D674 · 2026-11-17 · Alex's goal for the comparison: run, and keep tackling until the set criteria pass
+
+- **Alex** (session goal): "start running and work towards passing the set criterias, every round of experiment, if no pass run council skill through the traces, evaluate yourslef looking in, nno need to ask my feedback, but do not scope drift, keep a log of the trys so you can summarize and learn from the past, and keep on tackling from different angles until done".
+- **Read as:**
+  - **The criteria:** D665's verdict (a practical lead, with the hard checks) on the frozen ruler of this comparison (D667–D673), which does not
+    move.
+  - **Each round:** a run, a reading and a verdict.
+  - **A round that does not pass:** the council-loop skill reads the traces, finds the mechanism, and the next round takes a different angle.
+  - **No question goes to Alex** while this goal holds. The limits that stay:
+    - no scope drift;
+    - the frozen ruler and the frozen comparison instruments never change to make a round pass;
+    - no push, deploy or publish;
+    - credentials and provider caps are untouched.
+- **Every try is logged** with what it taught: `docs/research/2026-11-17-product-comparison/TRIES.md`.
