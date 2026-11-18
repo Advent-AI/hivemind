@@ -9898,3 +9898,15 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
     item is computed on its own (`PRINTED_ITEMS`). On an invalid or too-small verdict, an item that fails is flagged by name and the others
     are kept (`printed_items_tolerant`).
   - Tests and mutants were updated: 94 tests; every mutant is caught by its assertion or by the crash it guards against.
+- **Round 14 (Codex, `tools-review-codex-14.md`):**
+  - **Confirmed:** the restructuring left every value beside a lead, loss or no-winner verdict unchanged, byte for byte.
+  - **Two more malformed-input cases found:** a bad guardrail mark, and a null size count.
+  - **One structural fix at the owner, instead of a fourth patch:** `validate_readings` refuses malformed readings before any verdict or
+    diagnostic. It checks:
+    - marks are frozen marks or splits of two;
+    - covers are true, false or "split" and name a carded question;
+    - counts are non-negative integers;
+    - days are ISO dates.
+    `mark_cards.readings` writes only such values, and the chain dry run's readings pass.
+  - **Kept:** per-item diagnostics remain for any other failure, tested by forcing one item to fail.
+  - **Now:** 95 tests; the mutants are as predicted, each caught by its assertion.

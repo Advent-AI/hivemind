@@ -306,21 +306,34 @@ def test_an_invalid_or_too_small_reading_still_prints_what_the_rule_prints_besid
     assert out['verdict'] == 'invalid' and 'sign test (illustrative)' in out['beside']
 
 
-def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict():
-    """The verdict is decided first; a printed-beside quantity that fails is flagged, never in the verdict's way (D675, Codex round 11)."""
+def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict(monkeypatch):
+    """The verdict is decided first; on an early verdict each printed item is computed on its own, and one that fails is flagged by name
+    while the others are kept (D675, Codex rounds 11-13)."""
+    def broken(readings, per_counting):
+        raise ValueError('a failing item')
+    items = tuple((name, broken if name == 'floors (proposed)' else compute) for name, compute in sc.PRINTED_ITEMS)
+    monkeypatch.setattr(sc, 'PRINTED_ITEMS', items)
+    out = verdict(base(n=19, new_served=5, old_served=1))
+    assert out['verdict'] == 'too small' and 'floors (proposed): ValueError' in out['diagnostics not computed']
+    assert 'sign test (illustrative)' in out.get('beside', {}) and out['countings']['1']['a'] == 5
+
+
+def test_malformed_readings_are_refused_before_any_verdict():
+    """One owner for the readings' shape: a mark, flag, count or day outside the closed set is refused with its reason (D675, Codex round 14)."""
+    cases = []
     r = base(n=19, new_served=5, old_served=1)
-    for d in ('new-1', 'new-2', 'new-3'):
-        r['cards'][d][f'{d}-q0']['opened'] = 'not a date'
-    r['matter_first_day'] = {'M01': '2026-09-08'}
-    out = verdict(r)
-    assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
-    assert out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']     # the other diagnostics are kept
-    r2 = base(n=19, new_served=5, old_served=1)
-    r2['cards']['new-1']['new-1-g-figure-0'].update(worth={'split': ['not a mark', 'also not']}, covering=True)
-    # a sampled covering card: outside the guardrail shares, inside the floors, so only the floors fail on it
-    out2 = verdict(r2)
-    assert 'sign test (illustrative)' in out2.get('beside', {}) and 'floors (proposed)' in out2['diagnostics not computed']
-    r['controls']['repeats_same'] = [False, False, True]
-    r['distinct']['new-1']['ids'] = 'not a count'                                       # the size check is skipped once invalid
-    out = verdict(r)
-    assert out['verdict'] == 'invalid' and 'ValueError' in out['diagnostics not computed']
+    r['cards']['new-1']['new-1-g-figure-0']['worth'] = {'split': ['not a mark', 'also not']}
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['distinct']['new-1']['ids'] = None
+    cases.append(r)
+    r = base(n=19, new_served=5, old_served=1)
+    r['cards']['new-1']['new-1-q0']['opened'] = 'not a date'
+    cases.append(r)
+    for r in cases:
+        try:
+            verdict(r)
+        except SystemExit as e:
+            assert 'malformed readings' in str(e)
+        else:
+            raise AssertionError('malformed readings were scored')

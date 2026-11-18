@@ -1,0 +1,5 @@
+1. The fix isolates the seven listed items once `countings()` succeeds. The round‑13 regression test passed in memory. But a malformed guardrail mark still suppresses independently computable mark totals and opening delays on both early verdicts. I reproduced both cases. [Item loop](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:250) · [Shared counting step](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:384)
+2. With 19 matters, a `null` draw count still raises `TypeError` before `too small` prints. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:364)
+3. Synthetic lead, loss and no-winner reports matched the parent commit byte for byte. [Normal verdict path](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:396)
+
+NOT READY: Let each diagnostic depend only on the inputs it needs, and preserve `too small` once established even if another size count fails.

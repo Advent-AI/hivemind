@@ -1,0 +1,922 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 14, confirmation only (read-only, $0)
+
+Rounds 11 to 13 found gaps of one kind: a diagnostic that fails on an invalid or too-small reading takes other diagnostics with it.
+Instead of a third patch, one structural rule was made. It is committed at a9696395 and recorded in D675's last entry:
+- every printed item is computed on its own (`PRINTED_ITEMS` in `stage0/score_comparison.py`);
+- on an early verdict, `printed_items_tolerant` flags by name each item that fails and keeps the rest;
+- the verdict itself is decided before any diagnostic.
+
+Check, citing file and line:
+1. Does the rule close the class, not only your round-13 example?
+2. Is anything left in the scorer that could stop an invalid or too-small verdict from printing?
+3. Did the restructuring change any value printed beside a lead, loss or no-winner verdict?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 200 words.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check whether a failed diagnostic can still suppress another item, and compare the reports before and after the change.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba score_comparison.py
+nl -ba test_score_comparison.py | sed -n '285,430p'
+rg -n 'Round 14|PRINTED_ITEMS|printed_items_tolerant|"'^## D675 '"' ../../../DECISIONS-log.md" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+     1	"""The comparison's verdict (D665; `verdict-rule.json`, frozen before the first send; D672). Code applies the frozen rule to the readers'
+     2	marks; it decides nothing the rule leaves open.
+     3	
+     4	    python3 score_comparison.py <readings.json>
+     5	
+     6	`readings.json` holds what the reading produces, by system-draw ('new-1'..'new-3', 'old-1'..'old-3'):
+     7	  matters:      [{"matter": "M01", "company_figure": bool}, ...]                       (stage0/census/matters.json)
+     8	  mapping:      {draw: {matter: [{"question": id, "covers": true|false|"split"}]}}     (blind mapping, third readers applied)
+     9	  cards:        {draw: {question id: {"worth": mark, "answer": mark, "type": "figure"|"yes/no"|"other", "guardrail": bool,
+    10	                                         "covering": true|false|"split"}}}
+    11	                a mark is a final mark, or {"split": [mark given by one family, mark given by the other]}
+    12	  distinct:     {draw: {"ids": n, "duplicates_both": n, "duplicates_split": n}}
+    13	  controls:     {"plants": [mark, ...], "supported": [mark, ...], "repeats_same": [bool, ...]}
+    14	  inputs:       {"matters_sha256", "mapping_path", "mapping_sha256", "eligibility_path", "eligibility_sha256", "deck_key_path",
+    15	                 "deck_key_sha256"}    (mark_cards.readings); the scorer re-reads each file and checks it against the readings
+    16	Prints the verdict and every quantity behind it, under both countings.
+    17	
+    18	Readings of the frozen rule written here (D675): the guardrail shares hold the random sample's cards that cover no matter, as the rule's
+    19	words say ("covering cards are not in the shares"); the 10-point bar is compared exactly, as fractions; a plant counts as explicitly rejected
+    20	when every mark its readers left is unsupported or insufficient, split between the two or not. A guardrail card whose cover the third readers
+    21	split is resolved per counting like any cover (covers > does not cover: covering, so out of the shares, for the favoured system). A supported
+    22	control is accepted only when marked supported by both (a split is not accepted); a repeat is the same only when both of its final marks equal
+    23	the original card's, splits included. No verdict without all six draws and the frozen matter list, and only on eligible draws.
+    24	"""
+    25	import hashlib
+    26	import json
+    27	import math
+    28	import sys
+    29	from fractions import Fraction
+    30	from pathlib import Path
+    31	
+    32	DRAWS = ('new-1', 'new-2', 'new-3', 'old-1', 'old-2', 'old-3')
+    33	MATTERS = Path(__file__).resolve().parent / 'census' / 'matters.json'
+    34	REJECTED = ('unsupported', 'insufficient')
+    35	
+    36	RANK = {'answer': ['unsupported', 'insufficient', 'supported'], 'worth': ['trivia', 'duplicate', 'worth'], 'covers': [False, True]}
+    37	SYSTEMS = ('new', 'old')
+    38	
+    39	
+    40	def resolve(mark, kind, favoured):
+    41	    """A final mark, or a split resolved to one of the marks its readers gave: the most favourable for a favoured system, the least for the
+    42	    other (verdict-rule.json, countings). 'no answer' is never split."""
+    43	    if not (isinstance(mark, dict) and 'split' in mark):
+    44	        return mark
+    45	    given = [m for m in mark['split'] if m in RANK[kind]]
+    46	    if not given:
+    47	        raise ValueError(f'a split of unknown marks: {mark}')
+    48	    order = sorted(given, key=RANK[kind].index)
+    49	    return order[-1] if favoured else order[0]
+    50	
+    51	
+    52	def is_split(mark):
+    53	    return isinstance(mark, dict) and 'split' in mark
+    54	
+    55	
+    56	def system_of(draw):
+    57	    return draw.split('-')[0]
+    58	
+    59	
+    60	def served_by(readings, counting):
+    61	    """{system: set of matters served in at least 2 of its 3 draws} under one counting ('1': new favoured, '2': old favoured)."""
+    62	    favoured = 'new' if counting == '1' else 'old'
+    63	    served_draws = {}
+    64	    for draw, by_matter in readings['mapping'].items():
+    65	        system = system_of(draw)
+    66	        fav = system == favoured
+    67	        for matter, questions in by_matter.items():
+    68	            for q in questions:
+    69	                covers = q['covers'] if q['covers'] != 'split' else fav       # covers > does not cover
+    70	                if not covers:
+    71	                    continue
+    72	                card = readings['cards'][draw].get(q['question'])
+    73	                if card is None:
+    74	                    raise ValueError(f'{draw} {q["question"]}: a covering question has no card')
+    75	                if card['answer'] == 'no answer':
+    76	                    continue
+    77	                if resolve(card['worth'], 'worth', fav) == 'worth' and resolve(card['answer'], 'answer', fav) == 'supported':
+    78	                    served_draws.setdefault((system, matter), set()).add(draw)
+    79	                    break
+    80	    return {s: {m for (sys_, m), draws in served_draws.items() if sys_ == s and len(draws) >= 2} for s in SYSTEMS}
+    81	
+    82	
+    83	def guardrails(readings, counting):
+    84	    """Per system: the three shares over its pooled guardrail cards, and whether each subgroup is exercised (10 unsplit decided cards)."""
+    85	    favoured = 'new' if counting == '1' else 'old'
+    86	    out = {}
+    87	    for system in SYSTEMS:
+    88	        fav = system == favoured
+    89	        counts = {'figure': [0, 0, 0], 'yes/no': [0, 0, 0], 'worth': [0, 0, 0]}     # [bad, decided, decided without a split]
+    90	        for draw, cards in readings['cards'].items():
+    91	            if system_of(draw) != system:
+    92	                continue
+    93	            for card in cards.values():
+    94	                covering = card['covering'] if card['covering'] != 'split' else fav      # covers > does not cover
+    95	                if not card['guardrail'] or covering:
+    96	                    continue
+    97	                if card['type'] in ('figure', 'yes/no') and card['answer'] != 'no answer':
+    98	                    answer = resolve(card['answer'], 'answer', fav)
+    99	                    if answer in ('supported', 'unsupported'):
+   100	                        c = counts[card['type']]
+   101	                        c[0] += answer == 'unsupported'
+   102	                        c[1] += 1
+   103	                        c[2] += not is_split(card['answer'])
+   104	                worth = resolve(card['worth'], 'worth', fav)
+   105	                c = counts['worth']
+   106	                c[0] += worth in ('trivia', 'duplicate')
+   107	                c[1] += 1
+   108	                c[2] += not is_split(card['worth'])
+   109	        out[system] = {k: {'share': Fraction(v[0], v[1]) if v[1] else None, 'bad': v[0], 'decided': v[1], 'unsplit': v[2]} for k, v in counts.items()}
+   110	    result = {}
+   111	    for k in ('figure', 'yes/no', 'worth'):
+   112	        new, old = out['new'][k], out['old'][k]
+   113	        exercised = new['unsplit'] >= 10 and old['unsplit'] >= 10
+   114	        breach = exercised and (new['share'] - old['share']) > Fraction(1, 10)
+   115	        result[k] = {'new': new, 'old': old, 'exercised': exercised, 'breach': breach}
+   116	    return result
+   117	
+   118	
+   119	def company_figure_subgroup(readings, per_counting):
+   120	    figure = {m['matter'] for m in readings['matters'] if m['company_figure']}
+   121	    return {c: {'N': len(figure), 'a': len((set(v['served_new']) - set(v['served_old'])) & figure),
+   122	                'b': len((set(v['served_old']) - set(v['served_new'])) & figure)} for c, v in per_counting.items()}
+   123	
+   124	
+   125	def mark_counts(readings, per_counting):
+   126	    counts = {}
+   127	    for draw, cards in readings['cards'].items():
+   128	        c = counts.setdefault(system_of(draw), {'insufficient': 0, 'no answer': 0, 'split worth': 0, 'split answer': 0, 'cards': 0})
+   129	        for card in cards.values():
+   130	            c['cards'] += 1
+   131	            c['insufficient'] += card['answer'] == 'insufficient'
+   132	            c['no answer'] += card['answer'] == 'no answer'
+   133	            c['split worth'] += is_split(card['worth'])
+   134	            c['split answer'] += is_split(card['answer'])
+   135	    return counts
+   136	
+   137	
+   138	def split_resolutions(readings, per_counting):
+   139	    resolutions = {}
+   140	    for c in per_counting:
+   141	        favoured = 'new' if c == '1' else 'old'
+   142	        tally = {}
+   143	        for draw, cards in readings['cards'].items():
+   144	            fav = system_of(draw) == favoured
+   145	            for card in cards.values():
+   146	                for kind in ('worth', 'answer'):
+   147	                    if is_split(card[kind]):
+   148	                        key = f'{system_of(draw)} {kind} split resolved to {resolve(card[kind], kind, fav)}'
+   149	                        tally[key] = tally.get(key, 0) + 1
+   150	        for draw, by_matter in readings['mapping'].items():
+   151	            fav = system_of(draw) == favoured
+   152	            for matter, questions in by_matter.items():
+   153	                for q in questions:
+   154	                    if q['covers'] == 'split':                       # every split matter-question pair, as the counting resolves it
+   155	                        key = f"{system_of(draw)} cover split resolved to {'covers' if fav else 'does not cover'}"
+   156	                        tally[key] = tally.get(key, 0) + 1
+   157	        resolutions[c] = tally
+   158	    return resolutions
+   159	
+   160	
+   161	def beside(readings, per_counting):
+   162	    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
+   163	    return {'company-figure subgroup': company_figure_subgroup(readings, per_counting), 'marks': mark_counts(readings, per_counting),
+   164	            'split resolutions': split_resolutions(readings, per_counting)}
+   165	
+   166	
+   167	def verify_inputs(readings):
+   168	    """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
+   169	    they name: each file is read again and compared with what the readings carry."""
+   170	    inputs = readings.get('inputs') or {}
+   171	    def read(kind):
+   172	        path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
+   173	        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):
+   174	            raise SystemExit(f'refused: the {kind} file the readings name is missing or differs from its fingerprint')
+   175	        return json.loads(path.read_text())
+   176	    frozen = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(MATTERS.read_text())['matters']]
+   177	    if readings['matters'] != frozen or inputs.get('matters_sha256') != hashlib.sha256(MATTERS.read_bytes()).hexdigest():
+   178	        raise SystemExit('refused: the readings were not made on the frozen matter list')
+   179	    mapped, eligibility, key = read('mapping'), read('eligibility'), read('deck_key')
+   180	    if mapped['mapping'] != readings['mapping'] or mapped['distinct'] != readings['distinct']:
+   181	        raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+   182	    if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+   183	        raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+   184	    keyed = {}
+   185	    for k in key.values():
+   186	        if k['role'] == 'product':
+   187	            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
+   188	    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+   189	    if keyed != held:
+   190	        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
+   191	
+   192	
+   193	D428_LATEST = Fraction(3, 30)                                    # D428: at most 3 in 30 decided latest answers unsupported, scaled
+   194	
+   195	
+   196	def sign_test(a, b):
+   197	    """Two-sided exact binomial p of a against b at one half, and the Wilson 95% interval of a / (a + b): illustrative only."""
+   198	    n = a + b
+   199	    if n == 0:
+   200	        return {'discordant': 0, 'p': None, 'share': None, 'wilson95': None}
+   201	    tail = sum(math.comb(n, k) for k in range(0, min(a, b) + 1)) / 2 ** n
+   202	    z, phat = 1.959963984540054, a / n
+   203	    centre = (phat + z * z / (2 * n)) / (1 + z * z / n)
+   204	    half = z * math.sqrt(phat * (1 - phat) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+   205	    return {'discordant': n, 'p': min(1.0, 2 * tail), 'share': round(phat, 3), 'wilson95': [round(centre - half, 3), round(centre + half, 3)]}
+   206	
+   207	
+   208	D428_KEY = 'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'
+   209	DAYS_KEY = 'days from first article to opening (confirmed coverage only; split covers not counted)'
+   210	
+   211	
+   212	def d428_limits(readings, per_counting):
+   213	    out = {}
+   214	    for c, v in per_counting.items():
+   215	        fav_system = 'new' if c == '1' else 'old'
+   216	        limits = {}
+   217	        for system in SYSTEMS:
+   218	            fig, yn = v['guardrails']['figure'][system], v['guardrails']['yes/no'][system]
+   219	            latest_bad, latest_decided = fig['bad'] + yn['bad'], fig['decided'] + yn['decided']
+   220	            limits[system] = {
+   221	                'figure unsupported': f"{fig['bad']}/{fig['decided']} against 12.7%-14.4%" if fig['decided'] else 'none decided',
+   222	                'yes/no unsupported': f"{yn['bad']}/{yn['decided']} against 5%" if yn['decided'] else 'none decided',
+   223	                'latest answers unsupported': f"{latest_bad}/{latest_decided} against {float(D428_LATEST * latest_decided):.1f} (3 in 30 scaled)"
+   224	                                              if latest_decided else 'none decided',
+   225	                'latest answers insufficient (beside)': insufficient_count(readings, system, system == fav_system)}
+   226	        out[c] = limits
+   227	    return out
+   228	
+   229	
+   230	def sign_tests(readings, per_counting):
+   231	    return {c: sign_test(v['a'], v['b']) for c, v in per_counting.items()}
+   232	
+   233	
+   234	def floors(readings, per_counting):
+   235	    return {c: {system: floors_per_draw(readings, system, system == ('new' if c == '1' else 'old')) for system in SYSTEMS}
+   236	            for c in per_counting}
+   237	
+   238	
+   239	PRINTED_ITEMS = (('company-figure subgroup', company_figure_subgroup), ('marks', mark_counts), ('split resolutions', split_resolutions),
+   240	                 (D428_KEY, d428_limits), ('sign test (illustrative)', sign_tests), ('floors (proposed)', floors),
+   241	                 (DAYS_KEY, lambda readings, per_counting: days_to_opening(readings)))
+   242	
+   243	
+   244	def printed_beside(readings, per_counting):
+   245	    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
+   246	    the days from a matter's first article to its opening. None of them enters the verdict."""
+   247	    return {name: compute(readings, per_counting) for name, compute in PRINTED_ITEMS[3:]}
+   248	
+   249	
+   250	def printed_items_tolerant(readings, per_counting):
+   251	    """Every printed item on its own (one item, one computation): the items that can be computed, and a flag naming each that cannot."""
+   252	    shown, flags = {}, []
+   253	    for name, compute in PRINTED_ITEMS:
+   254	        try:
+   255	            shown[name] = compute(readings, per_counting)
+   256	        except Exception as error:
+   257	            flags.append(f'{name}: {type(error).__name__}: {error}')
+   258	    return shown, flags
+   259	
+   260	
+   261	FLOORS = {'covered': Fraction(80, 100), 'trivial or duplicate': Fraction(20, 100), 'supported': Fraction(90, 100)}
+   262	
+   263	
+   264	def floors_per_draw(readings, system, fav):
+   265	    """The proposed absolute floors as their source states them (reflection-10 `codex-1.md`; RUN-PLAN-v2 §1.6), per draw, met when met in
+   266	    at least two of the system's three draws: important matters covered (a covering question, after the counting's split resolution) at
+   267	    least 80%; trivial or duplicate questions among the random sample's decided worth marks at most 20% (covering cards included: the
+   268	    frozen rule keeps them out of the guardrail shares, not the floors); supported latest answers among the random sample's answered cards
+   269	    at least 90%, an insufficient or unresolved (split) answer counted and given no credit (the
+   270	    verdict's own split resolution is unchanged). Citations and omissions are not measured."""
+   271	    n = len(readings['matters'])
+   272	    per_draw = {}
+   273	    for draw in DRAWS:
+   274	        if system_of(draw) != system:
+   275	            continue
+   276	        covered = sum(1 for questions in readings['mapping'][draw].values()
+   277	                      if any(q['covers'] is True or (q['covers'] == 'split' and fav) for q in questions))
+   278	        trivial = worth_decided = supported = answered = 0
+   279	        for card in readings['cards'][draw].values():
+   280	            if not card['guardrail']:                       # every random-sample card, covering or not: the floors speak of the library
+   281	                continue
+   282	            worth_decided += 1
+   283	            trivial += resolve(card['worth'], 'worth', fav) in ('trivia', 'duplicate')
+   284	            if card['answer'] != 'no answer':
+   285	                answered += 1
+   286	                supported += card['answer'] == 'supported'      # an unresolved (split) answer is counted without credit, as the source says
+   287	        shares = {'covered': (covered, n), 'trivial or duplicate': (trivial, worth_decided), 'supported': (supported, answered)}
+   288	        per_draw[draw] = {k: {'count': f'{a}/{b}', 'met': (b > 0 and (Fraction(a, b) <= FLOORS[k] if k == 'trivial or duplicate'
+   289	                                                                      else Fraction(a, b) >= FLOORS[k]))} for k, (a, b) in shares.items()}
+   290	    out = {'per draw': per_draw}
+   291	    for k in FLOORS:
+   292	        out[f'{k}: met in at least 2 of 3 draws'] = sum(d[k]['met'] for d in per_draw.values()) >= 2
+   293	    out['wrong citations'] = out['answer-changing omissions'] = 'not measured'
+   294	    return out
+   295	
+   296	
+   297	def insufficient_count(readings, system, fav):
+   298	    """Latest answers resolved to insufficient among the system's guardrail-share cards (outside the decided denominators)."""
+   299	    count = 0
+   300	    for draw, cards in readings['cards'].items():
+   301	        if system_of(draw) != system:
+   302	            continue
+   303	        for card in cards.values():
+   304	            covering = card['covering'] if card['covering'] != 'split' else fav
+   305	            if card['guardrail'] and not covering and card['answer'] != 'no answer' and resolve(card['answer'], 'answer', fav) == 'insufficient':
+   306	                count += 1
+   307	    return count
+   308	
+   309	
+   310	def trivia_count(readings, system, fav):
+   311	    """Trivia marks (duplicates apart) among the decided worth marks of the system's guardrail shares' cards."""
+   312	    trivia = decided = 0
+   313	    for draw, cards in readings['cards'].items():
+   314	        if system_of(draw) != system:
+   315	            continue
+   316	        for card in cards.values():
+   317	            covering = card['covering'] if card['covering'] != 'split' else fav
+   318	            if not card['guardrail'] or covering:
+   319	                continue
+   320	            decided += 1
+   321	            trivia += resolve(card['worth'], 'worth', fav) == 'trivia'
+   322	    return trivia, decided
+   323	
+   324	
+   325	def days_to_opening(readings):
+   326	    """Per draw and covered matter: days from the matter's earliest listed article to the first covering question's opening. A question
+   327	    opened before the scored window (09-07) is 'opened in the warm-up'; one opened in the window before the matter's first listed article
+   328	    is 'opened before the first listed article'."""
+   329	    import datetime
+   330	    out = {}
+   331	    for draw, by_matter in readings['mapping'].items():
+   332	        for matter, questions in by_matter.items():
+   333	            opened = [readings['cards'][draw][q['question']].get('opened') for q in questions if q['covers'] is True]
+   334	            opened = [d for d in opened if d]
+   335	            first = readings.get('matter_first_day', {}).get(matter)
+   336	            if not opened or not first:
+   337	                continue
+   338	            days = (datetime.date.fromisoformat(min(opened)) - datetime.date.fromisoformat(first)).days
+   339	            out.setdefault(matter, {})[draw] = (days if days >= 0 else 'opened in the warm-up' if min(opened) < '2026-09-07'
+   340	                                                else 'opened before the first listed article')
+   341	    return out
+   342	
+   343	
+   344	def verdict(readings):
+   345	    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+   346	    for k, draws in present.items():
+   347	        if sorted(DRAWS) != draws:
+   348	            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+   349	    verify_inputs(readings)
+   350	    n = len(readings['matters'])
+   351	    controls = readings['controls']
+   352	    report = {'N': n}
+   353	    invalid = []
+   354	    def rejected(m):
+   355	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   356	    if any(not rejected(m) for m in controls['plants']):
+   357	        invalid.append('a planted wrong answer without an explicit rejection')
+   358	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   359	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   360	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   361	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   362	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   363	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   364	    small = []
+   365	    if not invalid:                                            # the size check runs only when the controls hold
+   366	        if n < 20:
+   367	            small.append(f'N = {n} < 20')
+   368	        for draw, d in readings['distinct'].items():
+   369	            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   370	            if min(both_ways) < 30:
+   371	                small.append(f'{draw}: {both_ways} distinct bets')
+   372	    margin = max(3, math.ceil(0.15 * n))
+   373	
+   374	    def countings():
+   375	        per_counting = {}
+   376	        for counting in ('1', '2'):
+   377	            served = served_by(readings, counting)
+   378	            a = len(served['new'] - served['old'])
+   379	            b = len(served['old'] - served['new'])
+   380	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   381	                                      'guardrails': guardrails(readings, counting)}
+   382	        return per_counting
+   383	
+   384	    if invalid or small:
+   385	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   386	        flags = []
+   387	        try:
+   388	            per_counting = countings()
+   389	            report.update(margin=margin, countings=per_counting)
+   390	            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+   391	        except Exception as error:
+   392	            flags.append(f'countings: {type(error).__name__}: {error}')
+   393	        if flags:
+   394	            report['diagnostics not computed'] = '; '.join(flags)
+   395	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   396	    per_counting = countings()
+   397	    shown = beside(readings, per_counting)
+   398	    shown.update(printed_beside(readings, per_counting))
+   399	    report['margin'] = margin
+   400	    report['countings'] = per_counting
+   401	    report['beside'] = shown
+   402	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   403	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   404	    if lead and all_exercised_pass:
+   405	        return dict(report, verdict='practical lead')
+   406	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   407	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   408	    if loss_count or breaches:
+   409	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   410	    return dict(report, verdict='no practical winner')
+   411	
+   412	
+   413	if __name__ == '__main__':
+   414	    print(json.dumps(verdict(json.loads(open(sys.argv[1]).read())), indent=1, ensure_ascii=False, default=str))
+   285	    out = verdict(r)
+   286	    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['supported'] == {'count': '8/10', 'met': False}
+   287	
+   288	
+   289	def test_the_floors_count_every_random_sample_card_covering_or_not():
+   290	    """floors: trivial or duplicate and supported are over the library's random sample; covering cards leave only the guardrail shares."""
+   291	    r = base(n=20, new_served=5, old_served=1, guard_cards=5)
+   292	    card = r['cards']['new-1']['new-1-g-figure-0']
+   293	    card.update(worth='trivia', covering=True)
+   294	    out = verdict(r)
+   295	    assert out['beside']['floors (proposed)']['1']['new']['per draw']['new-1']['trivial or duplicate'] == {'count': '1/10', 'met': True}
+   296	
+   297	
+   298	def test_an_invalid_or_too_small_reading_still_prints_what_the_rule_prints_beside():
+   299	    """printed_beside: the quantities accompany every verdict, as diagnostics when the reading is invalid or too small (D675)."""
+   300	    r = base(n=19, new_served=5, old_served=1)
+   301	    out = verdict(r)
+   302	    assert out['verdict'] == 'too small' and out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']
+   303	    r = base(n=20, new_served=5, old_served=1)
+   304	    r['controls']['repeats_same'] = [False, False, True]
+   305	    out = verdict(r)
+   306	    assert out['verdict'] == 'invalid' and 'sign test (illustrative)' in out['beside']
+   307	
+   308	
+   309	def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict():
+   310	    """The verdict is decided first; a printed-beside quantity that fails is flagged, never in the verdict's way (D675, Codex round 11)."""
+   311	    r = base(n=19, new_served=5, old_served=1)
+   312	    for d in ('new-1', 'new-2', 'new-3'):
+   313	        r['cards'][d][f'{d}-q0']['opened'] = 'not a date'
+   314	    r['matter_first_day'] = {'M01': '2026-09-08'}
+   315	    out = verdict(r)
+   316	    assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
+   317	    assert out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']     # the other diagnostics are kept
+   318	    r2 = base(n=19, new_served=5, old_served=1)
+   319	    r2['cards']['new-1']['new-1-g-figure-0'].update(worth={'split': ['not a mark', 'also not']}, covering=True)
+   320	    # a sampled covering card: outside the guardrail shares, inside the floors, so only the floors fail on it
+   321	    out2 = verdict(r2)
+   322	    assert 'sign test (illustrative)' in out2.get('beside', {}) and 'floors (proposed)' in out2['diagnostics not computed']
+   323	    r['controls']['repeats_same'] = [False, False, True]
+   324	    r['distinct']['new-1']['ids'] = 'not a count'                                       # the size check is skipped once invalid
+   325	    out = verdict(r)
+   326	    assert out['verdict'] == 'invalid' and 'ValueError' in out['diagnostics not computed']
+8554:- **Round 14:** "CONSENSUS: Send the fixed paired screen after preflight, within the $6.70 cap; treat every result as a bounded
+9674:## D675 · 2026-11-18 · Under D672: the reading tools' review found them not ready; fixed, and the frozen rule's open readings written down (before any output)
+9898:    item is computed on its own (`PRINTED_ITEMS`). On an invalid or too-small verdict, an item that fails is flagged by name and the others
+9899:    are kept (`printed_items_tolerant`).
+
+exec
+/opt/homebrew/bin/zsh -lc 'git --no-pager show --no-ext-diff --format=short a9696395 -- docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py' in /Users/lchingen/hivemind
+ succeeded in 1331ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-LUsnhwpo' (errno=Operation not permitted)
+2026-11-18 13:20:49.239 xcodebuild[45762:60099770]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:20:49.400 xcodebuild[45762:60099769] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-WNeAThGJ' (errno=Operation not permitted)
+2026-11-18 13:20:49.738 xcodebuild[45764:60099784]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:20:49.850 xcodebuild[45764:60099783] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit a9696395c7532ab65276ff2a97f42132c3cbe38d
+Author: Alex Lee <alex@adventai.io>
+
+    Scorer: every printed item computed on its own; failures flagged by name on early verdicts (D675, Codex round 13)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index 464d1fb0..c79d068c 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -116,22 +116,26 @@ def guardrails(readings, counting):
+     return result
+ 
+ 
+-def beside(readings, per_counting):
+-    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
++def company_figure_subgroup(readings, per_counting):
+     figure = {m['matter'] for m in readings['matters'] if m['company_figure']}
+-    out = {'company-figure subgroup': {c: {'N': len(figure), 'a': len((set(v['served_new']) - set(v['served_old'])) & figure),
+-                                            'b': len((set(v['served_old']) - set(v['served_new'])) & figure)} for c, v in per_counting.items()}}
++    return {c: {'N': len(figure), 'a': len((set(v['served_new']) - set(v['served_old'])) & figure),
++                'b': len((set(v['served_old']) - set(v['served_new'])) & figure)} for c, v in per_counting.items()}
++
++
++def mark_counts(readings, per_counting):
+     counts = {}
+     for draw, cards in readings['cards'].items():
+-        system = system_of(draw)
+-        c = counts.setdefault(system, {'insufficient': 0, 'no answer': 0, 'split worth': 0, 'split answer': 0, 'cards': 0})
++        c = counts.setdefault(system_of(draw), {'insufficient': 0, 'no answer': 0, 'split worth': 0, 'split answer': 0, 'cards': 0})
+         for card in cards.values():
+             c['cards'] += 1
+             c['insufficient'] += card['answer'] == 'insufficient'
+             c['no answer'] += card['answer'] == 'no answer'
+             c['split worth'] += is_split(card['worth'])
+             c['split answer'] += is_split(card['answer'])
+-    out['marks'] = counts
++    return counts
++
++
++def split_resolutions(readings, per_counting):
+     resolutions = {}
+     for c in per_counting:
+         favoured = 'new' if c == '1' else 'old'
+@@ -151,8 +155,13 @@ def beside(readings, per_counting):
+                         key = f"{system_of(draw)} cover split resolved to {'covers' if fav else 'does not cover'}"
+                         tally[key] = tally.get(key, 0) + 1
+         resolutions[c] = tally
+-    out['split resolutions'] = resolutions
+-    return out
++    return resolutions
++
++
++def beside(readings, per_counting):
++    """What the rule prints beside the verdict (verdict-rule.json `printed_beside`, `guardrails.beside`)."""
++    return {'company-figure subgroup': company_figure_subgroup(readings, per_counting), 'marks': mark_counts(readings, per_counting),
++            'split resolutions': split_resolutions(readings, per_counting)}
+ 
+ 
+ def verify_inputs(readings):
+@@ -196,36 +205,17 @@ def sign_test(a, b):
+     return {'discordant': n, 'p': min(1.0, 2 * tail), 'share': round(phat, 3), 'wilson95': [round(centre - half, 3), round(centre + half, 3)]}
+ 
+ 
+-def printed_beside(readings, per_counting, tolerant=False):
+-    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
+-    the days from a matter's first article to its opening. None of them enters the verdict. With `tolerant` (an invalid or too-small
+-    verdict), a part that cannot be computed is flagged and the other parts are kept."""
+-    if tolerant:
+-        out = {}
+-        for part in (lambda: printed_beside_counts(readings, per_counting),
+-                     lambda: {'days from first article to opening (confirmed coverage only; split covers not counted)': days_to_opening(readings)}):
+-            try:
+-                out.update(part())
+-            except Exception as error:
+-                out.setdefault('not computed', []).append(f'{type(error).__name__}: {error}')
+-        return out
+-    out = printed_beside_counts(readings, per_counting)
+-    out['days from first article to opening (confirmed coverage only; split covers not counted)'] = days_to_opening(readings)
+-    return out
++D428_KEY = 'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'
++DAYS_KEY = 'days from first article to opening (confirmed coverage only; split covers not counted)'
+ 
+ 
+-def printed_beside_counts(readings, per_counting):
+-    """D428's limits, the sign test and the floors."""
+-    out = {'D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)': {}, 'sign test (illustrative)': {},
+-           'floors (proposed)': {}}
++def d428_limits(readings, per_counting):
++    out = {}
+     for c, v in per_counting.items():
+-        a, b = v['a'], v['b']
+-        out['sign test (illustrative)'][c] = sign_test(a, b)
+         fav_system = 'new' if c == '1' else 'old'
+-        limits, floors = {}, {}
++        limits = {}
+         for system in SYSTEMS:
+-            g = {k: v['guardrails'][k][system] for k in ('figure', 'yes/no', 'worth')}
+-            fig, yn = g['figure'], g['yes/no']
++            fig, yn = v['guardrails']['figure'][system], v['guardrails']['yes/no'][system]
+             latest_bad, latest_decided = fig['bad'] + yn['bad'], fig['decided'] + yn['decided']
+             limits[system] = {
+                 'figure unsupported': f"{fig['bad']}/{fig['decided']} against 12.7%-14.4%" if fig['decided'] else 'none decided',
+@@ -233,12 +223,41 @@ def printed_beside_counts(readings, per_counting):
+                 'latest answers unsupported': f"{latest_bad}/{latest_decided} against {float(D428_LATEST * latest_decided):.1f} (3 in 30 scaled)"
+                                               if latest_decided else 'none decided',
+                 'latest answers insufficient (beside)': insufficient_count(readings, system, system == fav_system)}
+-            floors[system] = floors_per_draw(readings, system, system == fav_system)
+-        out['D428 limits (a comparison on the guardrail sample, not Stage B\'s measurement)'][c] = limits
+-        out['floors (proposed)'][c] = floors
++        out[c] = limits
+     return out
+ 
+ 
++def sign_tests(readings, per_counting):
++    return {c: sign_test(v['a'], v['b']) for c, v in per_counting.items()}
++
++
++def floors(readings, per_counting):
++    return {c: {system: floors_per_draw(readings, system, system == ('new' if c == '1' else 'old')) for system in SYSTEMS}
++            for c in per_counting}
++
++
++PRINTED_ITEMS = (('company-figure subgroup', company_figure_subgroup), ('marks', mark_counts), ('split resolutions', split_resolutions),
++                 (D428_KEY, d428_limits), ('sign test (illustrative)', sign_tests), ('floors (proposed)', floors),
++                 (DAYS_KEY, lambda readings, per_counting: days_to_opening(readings)))
++
++
++def printed_beside(readings, per_counting):
++    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
++    the days from a matter's first article to its opening. None of them enters the verdict."""
++    return {name: compute(readings, per_counting) for name, compute in PRINTED_ITEMS[3:]}
++
++
++def printed_items_tolerant(readings, per_counting):
++    """Every printed item on its own (one item, one computation): the items that can be computed, and a flag naming each that cannot."""
++    shown, flags = {}, []
++    for name, compute in PRINTED_ITEMS:
++        try:
++            shown[name] = compute(readings, per_counting)
++        except Exception as error:
++            flags.append(f'{name}: {type(error).__name__}: {error}')
++    return shown, flags
++
++
+ FLOORS = {'covered': Fraction(80, 100), 'trivial or duplicate': Fraction(20, 100), 'supported': Fraction(90, 100)}
+ 
+ 
+@@ -368,16 +387,9 @@ def verdict(readings):
+         try:
+             per_counting = countings()
+             report.update(margin=margin, countings=per_counting)
+-            shown = {}
+-            for part in (lambda: beside(readings, per_counting), lambda: printed_beside(readings, per_counting, tolerant=True)):
+-                try:
+-                    shown.update(part())
+-                except Exception as error:
+-                    flags.append(f'{type(error).__name__}: {error}')
+-            flags += shown.pop('not computed', [])
+-            report['beside'] = shown
++            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+         except Exception as error:
+-            flags.append(f'{type(error).__name__}: {error}')
++            flags.append(f'countings: {type(error).__name__}: {error}')
+         if flags:
+             report['diagnostics not computed'] = '; '.join(flags)
+         return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+index b42a9772..7ac910c8 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py
+@@ -315,6 +315,11 @@ def test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_smal
+     out = verdict(r)
+     assert out['verdict'] == 'too small' and 'ValueError' in out['diagnostics not computed']
+     assert out['countings']['1']['a'] == 5 and 'floors (proposed)' in out['beside']     # the other diagnostics are kept
++    r2 = base(n=19, new_served=5, old_served=1)
++    r2['cards']['new-1']['new-1-g-figure-0'].update(worth={'split': ['not a mark', 'also not']}, covering=True)
++    # a sampled covering card: outside the guardrail shares, inside the floors, so only the floors fail on it
++    out2 = verdict(r2)
++    assert 'sign test (illustrative)' in out2.get('beside', {}) and 'floors (proposed)' in out2['diagnostics not computed']
+     r['controls']['repeats_same'] = [False, False, True]
+     r['distinct']['new-1']['ids'] = 'not a count'                                       # the size check is skipped once invalid
+     out = verdict(r)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba ../../../DECISIONS-log.md | sed -n '9883,9908p'
+nl -ba score_comparison.py | sed -n '239,258p;344,410p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+  9883	    They are now computed first and printed with every verdict, as diagnostics; the verdict order is unchanged (a test was added).
+  9884	- **Round 11 (Codex, `tools-review-codex-11.md`):**
+  9885	  - **Confirmed:** the verdict order and its thresholds are unchanged.
+  9886	  - **Found a regression:** a malformed opening date crashed the eager diagnostics before "invalid" or "too small" could print.
+  9887	  - **Fixed:** both early verdicts are now decided first; their diagnostics are printed when they can be computed, and flagged ("diagnostics
+  9888	    not computed: …") when they cannot.
+  9889	  - **Proof:** a test plus a mutant. The mutant is caught by the crash it guards against (`ValueError`, traceback read).
+  9890	  - **Now:** 94 stage0 tests.
+  9891	- **Round 12 (Codex, `tools-review-codex-12.md`):** two smaller gaps, both fixed.
+  9892	  - The size check no longer runs once the controls make a reading invalid.
+  9893	  - On an invalid or too-small verdict, each diagnostic that fails is flagged and the others are kept.
+  9894	  - Each has its mutant; one is caught by the crash it guards against (`TypeError`, traceback read).
+  9895	- **Round 13 (Codex, `tools-review-codex-13.md`)** found a third gap of the same kind: a malformed worth mark lost the sign test along with
+  9896	  the floors.
+  9897	  - Rounds 11 to 13 drew findings from one mechanism, so instead of a third patch one structural rule was made (AGENTS §1): every printed
+  9898	    item is computed on its own (`PRINTED_ITEMS`). On an invalid or too-small verdict, an item that fails is flagged by name and the others
+  9899	    are kept (`printed_items_tolerant`).
+  9900	  - Tests and mutants were updated: 94 tests; every mutant is caught by its assertion or by the crash it guards against.
+   239	PRINTED_ITEMS = (('company-figure subgroup', company_figure_subgroup), ('marks', mark_counts), ('split resolutions', split_resolutions),
+   240	                 (D428_KEY, d428_limits), ('sign test (illustrative)', sign_tests), ('floors (proposed)', floors),
+   241	                 (DAYS_KEY, lambda readings, per_counting: days_to_opening(readings)))
+   242	
+   243	
+   244	def printed_beside(readings, per_counting):
+   245	    """The rule's printed-beside quantities that come from the cards (DESIGN-1.6.md §0, §4): D428's limits, the sign test, the floors and
+   246	    the days from a matter's first article to its opening. None of them enters the verdict."""
+   247	    return {name: compute(readings, per_counting) for name, compute in PRINTED_ITEMS[3:]}
+   248	
+   249	
+   250	def printed_items_tolerant(readings, per_counting):
+   251	    """Every printed item on its own (one item, one computation): the items that can be computed, and a flag naming each that cannot."""
+   252	    shown, flags = {}, []
+   253	    for name, compute in PRINTED_ITEMS:
+   254	        try:
+   255	            shown[name] = compute(readings, per_counting)
+   256	        except Exception as error:
+   257	            flags.append(f'{name}: {type(error).__name__}: {error}')
+   258	    return shown, flags
+   344	def verdict(readings):
+   345	    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+   346	    for k, draws in present.items():
+   347	        if sorted(DRAWS) != draws:
+   348	            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+   349	    verify_inputs(readings)
+   350	    n = len(readings['matters'])
+   351	    controls = readings['controls']
+   352	    report = {'N': n}
+   353	    invalid = []
+   354	    def rejected(m):
+   355	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   356	    if any(not rejected(m) for m in controls['plants']):
+   357	        invalid.append('a planted wrong answer without an explicit rejection')
+   358	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   359	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   360	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   361	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   362	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   363	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   364	    small = []
+   365	    if not invalid:                                            # the size check runs only when the controls hold
+   366	        if n < 20:
+   367	            small.append(f'N = {n} < 20')
+   368	        for draw, d in readings['distinct'].items():
+   369	            both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   370	            if min(both_ways) < 30:
+   371	                small.append(f'{draw}: {both_ways} distinct bets')
+   372	    margin = max(3, math.ceil(0.15 * n))
+   373	
+   374	    def countings():
+   375	        per_counting = {}
+   376	        for counting in ('1', '2'):
+   377	            served = served_by(readings, counting)
+   378	            a = len(served['new'] - served['old'])
+   379	            b = len(served['old'] - served['new'])
+   380	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   381	                                      'guardrails': guardrails(readings, counting)}
+   382	        return per_counting
+   383	
+   384	    if invalid or small:
+   385	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   386	        flags = []
+   387	        try:
+   388	            per_counting = countings()
+   389	            report.update(margin=margin, countings=per_counting)
+   390	            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+   391	        except Exception as error:
+   392	            flags.append(f'countings: {type(error).__name__}: {error}')
+   393	        if flags:
+   394	            report['diagnostics not computed'] = '; '.join(flags)
+   395	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   396	    per_counting = countings()
+   397	    shown = beside(readings, per_counting)
+   398	    shown.update(printed_beside(readings, per_counting))
+   399	    report['margin'] = margin
+   400	    report['countings'] = per_counting
+   401	    report['beside'] = shown
+   402	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   403	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   404	    if lead and all_exercised_pass:
+   405	        return dict(report, verdict='practical lead')
+   406	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   407	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   408	    if loss_count or breaches:
+   409	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   410	    return dict(report, verdict='no practical winner')
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import copy, hashlib, json, subprocess, types
+import score_comparison as new
+import test_score_comparison as tests
+
+old = types.ModuleType(\"previous_score_comparison\")
+old.__file__ = new.__file__
+path = \"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+src = subprocess.check_output([\"git\", \"--no-pager\", \"show\", \"a9696395"'^:" + path], text=True)
+exec(compile(src, path, "exec"), old.__dict__)
+
+class MemoryPath:
+    files = {}
+    def __init__(self, name):
+        self.name = name
+    def exists(self):
+        return self.name in self.files
+    def read_bytes(self):
+        return self.files[self.name]
+    def read_text(self):
+        return self.read_bytes().decode()
+
+def put(name, data):
+    MemoryPath.files[name] = json.dumps(data).encode()
+    return hashlib.sha256(MemoryPath.files[name]).hexdigest()
+
+def seal(r):
+    es = put("eligibility", {"eligible": True})
+    key = [dict(draw=d, question=q, role="product", **{f:c[f] for f in ("guardrail","covering","type")})
+           for d, cards in r["cards"].items() for q,c in cards.items()]
+    r["inputs"] = dict(matters_sha256=put("matters", {"matters":r["matters"]}),
+                       mapping_path="mapping",
+                       mapping_sha256=put("mapping", {"mapping":r["mapping"], "distinct":r["distinct"], "eligibility_sha256":es}),
+                       eligibility_path="eligibility", eligibility_sha256=es,
+                       deck_key_path="key", deck_key_sha256=put("key", dict(enumerate(key))))
+    return r
+
+for mod in (new, old):
+    mod.Path, mod.MATTERS = MemoryPath, MemoryPath("matters")
+tests.seal = seal
+tests.test_a_diagnostic_that_cannot_be_computed_never_stops_an_invalid_or_too_small_verdict()
+print("Committed regression test passed in memory")
+for a, b in ((10,2),(2,10),(5,4)):
+    r = tests.base(n=32,new_served=a,old_served=b)
+    r["matters"][0]["company_figure"] = True
+    r["matter_first_day"] = {"M01":"2026-09-08"}
+    for d, cards in r["cards"].items():
+        for q, card in cards.items():
+            card["opened"] = "2026-09-09"
+            if q.endswith("-g-figure-0"):
+                card["answer"] = {"split":["supported","insufficient"]}
+    seal(r)
+    prior = old.verdict(copy.deepcopy(r))
+    after = new.verdict(copy.deepcopy(r))
+    assert json.dumps(prior,default=str) == json.dumps(after,default=str)
+    print(after["verdict"], "serialized report matches parent")
+
+for invalid in (False,True):
+    r = tests.base(n=19,new_served=5,old_served=1)
+    if invalid:
+        r["controls"]["plants"][0] = "supported"
+    r["matter_first_day"] = {"M01":"2026-09-08"}
+    r["cards"]["new-1"]["new-1-q0"]["opened"] = "2026-09-09"
+    r["cards"]["new-1"]["new-1-g-figure-0"]["worth"] = {"split":["unknown"]}
+    after = tests.verdict(r)
+    print(after["verdict"], "marks independently computable:", bool(new.mark_counts(r, {})),
+          "opening lag:", new.days_to_opening(r), "reported beside:", after.get("beside"),
+          "flag:", after["diagnostics not computed"])
+    if not invalid:
+        r["distinct"]["new-1"]["ids"] = None
+        seal(r)
+        new.verify_inputs(r)
+        try:
+            new.verdict(r)
+        except TypeError as error:
+            print("N under 20, but no verdict:", error)
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 2526ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-TCzZymPA' (errno=Operation not permitted)
+2026-11-18 13:21:09.164 xcodebuild[45832:60100335]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:21:09.275 xcodebuild[45832:60100334] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-0upFUOqb' (errno=Operation not permitted)
+2026-11-18 13:21:09.594 xcodebuild[45834:60100346]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:21:09.704 xcodebuild[45834:60100345] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-UAH4N0GC' (errno=Operation not permitted)
+2026-11-18 13:21:10.464 xcodebuild[45842:60100426]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:21:10.575 xcodebuild[45842:60100425] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-zR62iHuG' (errno=Operation not permitted)
+2026-11-18 13:21:10.894 xcodebuild[45844:60100442]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:21:11.005 xcodebuild[45844:60100441] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Committed regression test passed in memory
+practical lead serialized report matches parent
+practical loss serialized report matches parent
+no practical winner serialized report matches parent
+too small marks independently computable: True opening lag: {'M01': {'new-1': 1}} reported beside: None flag: countings: ValueError: a split of unknown marks: {'split': ['unknown']}
+N under 20, but no verdict: unsupported operand type(s) for -: 'NoneType' and 'int'
+invalid marks independently computable: True opening lag: {'M01': {'new-1': 1}} reported beside: None flag: countings: ValueError: a split of unknown marks: {'split': ['unknown']}
+
+codex
+1. The fix isolates the seven listed items once `countings()` succeeds. The round‑13 regression test passed in memory. But a malformed guardrail mark still suppresses independently computable mark totals and opening delays on both early verdicts. I reproduced both cases. [Item loop](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:250) · [Shared counting step](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:384)
+2. With 19 matters, a `null` draw count still raises `TypeError` before `too small` prints. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:364)
+3. Synthetic lead, loss and no-winner reports matched the parent commit byte for byte. [Normal verdict path](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:396)
+
+NOT READY: Let each diagnostic depend only on the inputs it needs, and preserve `too small` once established even if another size count fails.
+tokens used
+4,322,613
+1. The fix isolates the seven listed items once `countings()` succeeds. The round‑13 regression test passed in memory. But a malformed guardrail mark still suppresses independently computable mark totals and opening delays on both early verdicts. I reproduced both cases. [Item loop](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:250) · [Shared counting step](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:384)
+2. With 19 matters, a `null` draw count still raises `TypeError` before `too small` prints. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:364)
+3. Synthetic lead, loss and no-winner reports matched the parent commit byte for byte. [Normal verdict path](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:396)
+
+NOT READY: Let each diagnostic depend only on the inputs it needs, and preserve `too small` once established even if another size count fails.

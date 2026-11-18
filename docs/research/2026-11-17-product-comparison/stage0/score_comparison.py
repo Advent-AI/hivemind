@@ -164,6 +164,50 @@ def beside(readings, per_counting):
             'split resolutions': split_resolutions(readings, per_counting)}
 
 
+MARKS = {'worth': ('worth', 'trivia', 'duplicate'), 'answer': ('supported', 'unsupported', 'insufficient')}
+
+
+def validate_readings(readings):
+    """Refuses malformed readings before any verdict or diagnostic (one owner for the readings' shape): every mark a frozen mark or a
+    split of two, every cover true, false or "split" and naming a carded question, every count a non-negative integer, every day an ISO
+    date. `mark_cards.readings` writes only such values; anything else means the file was not made by the reading."""
+    import datetime
+    problems = []
+    def mark_ok(value, kind):
+        if isinstance(value, dict):
+            return set(value) == {'split'} and len(value['split']) == 2 and all(v in MARKS[kind] for v in value['split'])
+        return value in MARKS[kind] or (kind == 'answer' and value == 'no answer')
+    def day_ok(value):
+        try:
+            datetime.date.fromisoformat(value)
+            return True
+        except (TypeError, ValueError):
+            return False
+    for draw, cards in readings['cards'].items():
+        for q, card in cards.items():
+            if not (mark_ok(card.get('worth'), 'worth') and mark_ok(card.get('answer'), 'answer') and card.get('type') in ('figure', 'yes/no', 'other')
+                    and isinstance(card.get('guardrail'), bool) and card.get('covering') in (True, False, 'split')
+                    and (card.get('opened') is None or day_ok(card.get('opened')))):
+                problems.append(f'{draw} {q}: a card mark, type, flag or day outside the closed set')
+    for draw, by_matter in readings['mapping'].items():
+        for matter, questions in by_matter.items():
+            for entry in questions:
+                if entry.get('covers') not in (True, False, 'split') or entry.get('question') not in readings['cards'].get(draw, {}):
+                    problems.append(f'{draw} {matter}: a cover outside the closed set or naming no carded question')
+    for draw, d in readings['distinct'].items():
+        if not all(isinstance(d.get(k), int) and not isinstance(d.get(k), bool) and d.get(k) >= 0 for k in ('ids', 'duplicates_both', 'duplicates_split')):
+            problems.append(f'{draw}: a distinct-bet count that is not a non-negative integer')
+    for matter, day in (readings.get('matter_first_day') or {}).items():
+        if not day_ok(day):
+            problems.append(f'{matter}: a first-article day that is not an ISO date')
+    controls = readings['controls']
+    if not (all(mark_ok(m, 'answer') for m in controls['plants']) and all(mark_ok(m, 'answer') for m in controls['supported'])
+            and all(isinstance(x, bool) for x in controls['repeats_same'])):
+        problems.append('a control mark outside the closed set')
+    if problems:
+        raise SystemExit('refused: malformed readings: ' + '; '.join(problems[:10]) + (f' (and {len(problems) - 10} more)' if len(problems) > 10 else ''))
+
+
 def verify_inputs(readings):
     """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
     they name: each file is read again and compared with what the readings carry."""
@@ -347,6 +391,7 @@ def verdict(readings):
         if sorted(DRAWS) != draws:
             raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
     verify_inputs(readings)
+    validate_readings(readings)
     n = len(readings['matters'])
     controls = readings['controls']
     report = {'N': n}
