@@ -1,0 +1,7 @@
+CONSENSUS: Reopen the investigation at $0 under D674. Start C and check A on saved cases. Alex’s objection warrants reopening the diagnosis. D677’s conditions still govern paid work. [D677](/Users/lchingen/hivemind/docs/DECISIONS-log.md:10042)
+
+1. **Arithmetic.** With four old-only wins, the new system needs nine new-only wins. If M31 leaves five old-only wins, it needs **ten**. With B, zero or one old-only win means **five or six** new-only wins. Count M14 and M16 once across A and C. The coverage margin is only one release requirement. [Path](/Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review/PATH-TO-PASS.md:12) · [Verdict rule](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/verdict-rule.json:73)
+
+2. **A is a structural proposal.** It leaves Step 1’s request alone. Splitting one refused question into several judged questions would change the behavior Alex chose in D397. Check which saved cases contain independent questions with their own evidence. One worker limits concurrent reservations. Total cost still needs checking. [D397](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326)
+
+3. **Scope.** C and the free check of A directly explain the loss. Keep B and the full comparison on hold.
