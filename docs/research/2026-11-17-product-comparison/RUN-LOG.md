@@ -46,3 +46,97 @@ One dated row per event and check, with numbers. Newest last.
   - Any derived file that differs from the rebuild is refused.
   - Coverage: 101 stage0 tests; 75 mutants, all as predicted; the chain dry run passes (D675).
   - The run is unchanged: old-1..3 finished; new-1..3 are in Step 1, at $16.2–17.0 each at 13:39.
+
+- 2026-11-18 18:12: new-2 finished Step 1 after 19 h 36 min. Its step1.log reads `status complete, error null, calls 1899`, and $21.14 was spent.
+  Step 2 then started at 18:12:37. Two figures to keep apart: `reserved_usd` 265.30 in the log is the running sum of what each call set
+  aside before it ran, while the ledger's spend is $21.14. new-1 and new-3 are still in Step 1.
+
+- 2026-11-18 19:00: new-2 finished Step 2 (18:12–19:00) and wrote its cases.
+  - Step 2: 1473 articles, 5256 records, 2327 groups. Outcomes: 2181 new, 2929 repeat, 146 revision; none refused. Later linking judged
+    26647 and linked 205.
+  - Cases: the trace opened 60, and all 60 were written.
+  - The ladder started at 19:00:09. Spent so far: $25.94.
+
+- 2026-11-18 19:04: **new-1 Step 1 stopped, `complete_with_failures`.**
+  - 1890 calls, $22.03. One manifest item failed: gnews:24da4cc269dbf1a4b9fdf76b. On the send and again on its own retry, the answer
+    left out the required `figures` field of evidence items 2 to 4 (`SchemaError`).
+  - The draw is now awaiting a redo decision.
+  - This is an answer that does not fit its schema after its retry, so D449 makes it eligible for a redo, and plan §3 allows one per
+    component.
+- 2026-11-18 19:05: **new-1 Step 1 redo launched,** with the reason recorded, through `launch_comparison.py`.
+  - The launch checks passed: no uncommitted code, versions manifest unchanged, guard $65.
+  - New pid 92883, folder `step1-redo`, running from empty.
+  - **Projection:** the first attempt cost $22.03. The redo should cost about $21, then Step 2 about $5, the ladder about $7, and the
+    judge $5 to $10. That puts new-1 at about $60 to $65, at its $65 guard. If the guard stops it, the draw gives no release verdict
+    (plan §1.4 item 10).
+  - **Timing:** expected to finish by about 15:00 to 17:00 on 11-19, inside D667's 72-hour window, which closes 2026-11-20 22:36.
+- 2026-11-18 19:05: **The Mac is on battery,** at 12% with about 40 minutes left. Four draws are live: new-1 redo, new-2 judge, new-3
+  Step 1.
+  - If the machine dies, the launchers die and the draws stop.
+  - Alex was notified to plug in the charger. A power monitor is armed.
+- 2026-11-18 19:06: AC power back (13%, charging); no draw lost. The power monitor stays on for source changes.
+- 2026-11-18 ~20:10: new-3 Step 1 ended with `status complete`, `error None`, 1892 calls. Step 2 started. new-2's judge stands at $33.28 so far: $0.91 in its first 66 minutes.
+- 2026-11-18 20:56: **new-2 complete**, at $34.66 in all.
+  - By component: Step 1 $21.14; Step 2 about $4.80; the ladder about $6.40; the judge about $2.30, against the plan's $5 to $10.
+  - Revised projection for new-1, which pays for the Step 1 redo: about $22.0 + $21.2 + $4.8 + $6.4 + $2.3 = about $57. That is under
+    its $65 guard, with about $8 to spare.
+- 2026-11-18 21:03: new-3 Step 2 and cases done; ladder started ($27.76). Step 2: groups 2324; outcomes {'new': 2193, 'repeat': 2956, 'revision': 131}; refused 0; several same_statement answers 1306; later linking: judged 28281, linked 135, pending 0. Cases: new-3: 60 cases written to poc/data/comparison-2026-11-17/run/new-3/cases/cases.json (the trace opened 60)
+- 2026-11-18 21:02: Mac unplugged at 100%. Alex was notified to keep it on power overnight; new-1's redo needs about 18 h.
+- 2026-11-18 22:57: **new-3 complete**, at $37.64 in all.
+  - Step 1 $21.3; Step 2 and the cases about $6.4; the ladder about $6.9; the judge about $3.0.
+  - Five of the six draws are complete. new-1's Step 1 redo, launched at 19:05, is still running.
+  - Eligibility and the reading wait for all six draws, so nothing is read before then.
+- 2026-11-19 00:54: AC power back at 39% and charging, after about 4 h on battery. No draw was lost; new-1's Step 1 redo continues ($27.8).
+- 2026-11-19 10:55: **Alex:** "i think you are really wasting my time and money with my reruns, just get it done and tell me the results".
+  - Asked whether to wait for new-1 (about 4 h, about $17) or stop it and score the five finished draws. **He chose: "Let it finish, then score".**
+  - No new reruns.
+  - `reading-chain.sh` started detached (pid in `poc/data/comparison-2026-11-17/reading-chain.pid`). It waits for new-1 to complete, then
+    runs the CURRENT_STATE order: eligibility, then mapping, then cards, then the verdict, then the release checks. Outputs go to
+    `poc/data/comparison-2026-11-17/reading/`.
+
+- 2026-11-19 12:27: **new-1's Step 1 redo stopped**, again `complete_with_failures`. It failed on the same single item
+  (gnews:24da4cc269dbf1a4b9fdf76b), with the same `SchemaError` (`figures` missing on evidence items 2 to 4), on the send and on its retry.
+  - Under D449 this second stop ends the draw: new-1 is `stopped`, and its ledger stopped at $43.36.
+  - There is **no release verdict** (plan §1.4 item 10). The reading chain exited unread.
+  - **My mistake:** the failure was reproducible, and I relaunched a full Step 1 (about 17 h and about $21) without first re-sending
+    that one stored request, which is a cent and a few seconds (AGENTS §7.3, "a model call is a sampler, re-send before calling it a
+    defect"; small first). Re-sending it would have shown that the redo could not pass.
+- 2026-11-19 12:30: **diagnostic reading of the five finished draws started** (`diagnostic-chain.sh`, pid in
+  `diagnostic-chain.pid`), as the plan directs: "what finished goes to Alex as a diagnostic, with the cause".
+  - Same tools, with the export's `--diagnostic` mode, and a labelled diagnostic count: a matter is served when it is served in 2 of the
+    system's finished draws.
+  - Readers are the codex and claude command-line tools. No system is rerun.
+- 2026-11-19 12:36: **Alex:** "just look at this single article what the fuck is wrong and just do it individually".
+  - **What was wrong.** At step1-redo sequence 365 the model wrote 5 evidence items. For items 2 to 4, which are qualitative and carry no
+    number, it left out the `figures` key, where the schema requires `figures: []`. Item 1 had no number either and did write `[]`.
+    - The other new draws hit the same thing: new-2 failed the first send identically and passed on its retry; new-3 passed first time.
+    - It is a sampler failure: new-1 failed 4 sends of 4.
+  - **What was done** (`single_item.py`):
+    - The item was sent alone through Step 1's own `run`, with the open theses it met (that row's `before_state`). The request was
+      byte-identical to the stored one. It passed first time. It opened 0 theses, and its `after_state` equals row 366's
+      `before_state`, so every later row stays valid.
+    - The send was charged on `ledgers/new-1-item.json` ($2 ceiling).
+    - It was spliced into a copy, `new-1/step1-patched/trace.sqlite`, which now has 1884 of 1884 rows complete. The originals are kept.
+    - Backups were made of `run.json` and the ledger (`*.bak-20261119-before-single-item`).
+    - The ledger stop was cleared, Step 1 marked completed in `step1-patched`, and new-1 relaunched normally at 12:40. Step 2 started.
+    - **This departs from D449's whole-component redo, on Alex's instruction.**
+  - **The release chain** (`reading-chain.sh`) was restarted and waits for new-1. Before its deck it sets the diagnostic deck key aside.
+- 2026-11-19 ~13:40: **DIAGNOSTIC result on the five finished draws** (`reading-diagnostic/diagnostic-count.json`; not a release verdict).
+  - **Controls:** all pass. 6/6 plants caught, 4/4 supported controls supported, 3/3 repeats the same.
+  - **Served matters (N = 32, margin 5):**
+    | | new | old | a (new only) | b (old only) |
+    |---|---|---|---|---|
+    | Counting 1 | 3 | 10 | 0 | 7 |
+    | Counting 2 | 2 | 10 | 0 | 8 |
+  - **Best case for the new system if new-1 served every matter served in new-2 or new-3:** new 4–5, old 10, a = 1, b = 6–7. That is
+    still no lead for the new system, and b − a ≥ 5.
+  - **What the old system serves and the new one misses:** M04 hyperscaler capex, M06 FY27 data-center revenue, M10 and M11 FY28 margin
+    and revenue, M17 the Anthropic anchor investment, M18 the FY27 gross margin.
+  - **What the new system serves:** M13, M15, M31, plus M19 and M32 in one draw only.
+- 2026-11-19 12:55: **Alex chose "Stop it now"**: new-1 cannot change the conclusion.
+  - new-1's launcher was stopped by SIGTERM in Step 2. Its record shows `crashed`, at $45.29.
+  - The release chain was stopped too. No process is left.
+  - **Final paid spend:** about $145 in all.
+    - Old system: $27.26 for its three draws.
+    - New system: new-2 $34.66, new-3 $37.64, new-1 $45.29, plus the $0.12 single-item send.
+  - **The answer stands as the 5-draw diagnostic:** the new system loses (served: new 2–3, old 10).

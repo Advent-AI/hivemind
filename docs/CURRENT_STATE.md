@@ -438,7 +438,13 @@ The council's reversible decisions on Alex's page are recorded in D606 and D607.
   - the full run, six draws, launched together at 22:36 on 2026-11-17 under `poc/data/comparison-2026-11-17/run/`;
   - every reading instrument built and passed by the council before any output was read: reading tools in round 5, the §1.6 tools in
     round 10; the scorer hardened through Codex rounds 11–21 (D675); 101 stage0 tests, 75 mutants on the reading tools.
-- **When all six draws end, in this order:**
+- **Result, 2026-11-19 (diagnostic, 5 draws; Alex stopped new-1).** The new system loses on the release comparison.
+  - Of 32 key matters, the new system serves 2–3 and the old one 10 (a = 0, b = 7–8). The controls pass.
+  - Even a perfect new-1 could not reverse it.
+  - The new libraries miss the core revenue, margin and capex matters.
+  - Details: `docs/research/2026-11-17-product-comparison/RUN-LOG.md`, `poc/data/comparison-2026-11-17/reading-diagnostic/`.
+  - **The next task:** find why the new system's questions miss those matters, from the stored traces, at no cost, before any new run.
+- **(Superseded) When all six draws end, in this order:**
   1. `eligibility.py`: six complete draws, launched within 1 h, sends within 72 h.
   2. `mapping.py export`, then `read`, `third`, `result`.
   3. `mark_cards.py deck`, then `mark`, `debate 1`, `debate 2`, `readings`.
