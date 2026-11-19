@@ -155,3 +155,8 @@ One dated row per event and check, with numbers. Newest last.
     them and the new system 0. That is 4 of the old system's 7–8 old-only matters.
   - **Outside the company figures** the new system still trails: old serves 6 and new 3. It misses M04, hyperscaler capex (a shared
     quantity, which D384 allows), M17, the Anthropic anchor investment (an obligation), and M19 in 2 of its draws.
+- 2026-11-19 ~14:00: **The goal's loop stops, on its limits.**
+  - **A pass needs much broader opening.** At least 9 of 14 rule-allowed matters under D382, against 0–1 today, or D382 reversed. The $0
+    census found three loss points, and none yields to a wording fix.
+  - **Confirming any candidate needs a full comparison,** about $110. That is above D439's $40 ceiling, so it starts only on Alex's word.
+  - **Probe spend this round:** about $3 by the ledgers.
