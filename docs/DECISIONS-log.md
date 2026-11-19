@@ -10057,3 +10057,21 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - No paid work continues.
   - **Reversal conditions:** Alex reverses D505, or funds a full run. Either way, a written path to passing the frozen criteria comes
     first.
+
+## D678 · 2026-11-19 · Merge design (council consensus): the old system opens questions, the clean system reads and organises evidence, the same judge answers; a 12-article test awaits Alex's approval
+
+- **Alex:** "I think you should run council to determine how to merge the best of both worlds, and come up with a small scale test to
+  validate".
+- **Council:** Claude's proposal (written first), Codex's cold independent design and one challenge round, which ended in consensus.
+- **The design:** `docs/research/2026-11-19-merge-council/MERGE-PLAN.md`.
+  - Opening and answer choices come from the old system, and a refused proposal stays out of the open list.
+  - Reading, earlier versions, repeats and unlinked facts come from clean Steps 1–3.
+  - Judging stays the frozen judge.
+  - NVIDIA's own figures follow D382/D505 unless Alex makes an exception. The ceilings are 6 and 10 of 32.
+  - The main risk is meaning drift.
+- **The test:**
+  - 11 frozen articles for M04 and M17, plus 1 control, against old-2's and old-3's question lists;
+  - 4 judge answers, blind-read;
+  - 5 pass lines, written beforehand;
+  - $0.33–0.42.
+  - It waits for Alex's approval, since D677 holds paid sends.
