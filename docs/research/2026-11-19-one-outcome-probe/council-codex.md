@@ -1,0 +1,7 @@
+**Hold the send.** A drug trial result and the regulator’s approval can each matter on their own. The proposed rewrite keeps only one, while the signed standard says to track both separately. [Signed standard](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:302)
+
+I verified that the closing check is the only prompt change, at +241 characters. The one-quantity, one-period or one-event rule comes directly from section 3 and works across industries. “The one the item bears on most directly” adds a selection rule that section 3 does not give. Split independently worthwhile questions before checking for duplicates and evidence links. Let the probe’s third criterion permit those splits while rejecting unrelated openings. [Section 3](/Users/lchingen/hivemind/clean-arch/PRD.md:626) · [Proposed closing check](/Users/lchingen/hivemind/docs/research/2026-11-19-one-outcome-probe/arm-closing.txt:14)
+
+The probe also stops before its first send. It searches the keys of the saved question-ID map for `clean-5`, which is a value. I verified that searching the values finds all seven cases. The probe should pass only questions Step 1 actually opened to the next step. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-19-one-outcome-probe/probe.py:35) · [Step 1](/Users/lchingen/hivemind/clean-arch/step1/runner.py:345)
+
+DO NOT SEND: Preserve independently worthwhile questions and use the saved ID map to select actual openings.
