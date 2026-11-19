@@ -444,7 +444,16 @@ The council's reversible decisions on Alex's page are recorded in D606 and D607.
   - The new libraries miss the core revenue, margin and capex matters.
   - Details: `docs/research/2026-11-17-product-comparison/RUN-LOG.md`, `poc/data/comparison-2026-11-17/reading-diagnostic/`.
   - **Diagnosed (D676, council):** D382's figure exclusion plus the Step 1→ladder bundled-question loss (D432). Even repaired, the new system ties at best. The old system stays; no further comparison run.
-  - **The next task:** none started. Continuing the new path waits on Alex: his D382 call and a cents-level test of the hand-off repair.
+  - **The next task:** none started. Continuing the new path waits on Alex's D382 call.
+  - **The one-outcome probe failed its line 1** (`docs/research/2026-11-19-one-outcome-probe/RESULT.md`): it fixes the period bundles
+    but not the deal bundles.
+  - **What a pass would take** ($0 arithmetic on the frozen list; pass = a − b ≥ 5 and a ≥ 2b):
+    - **Under D382:** the old system keeps 4 figure matters the new one can never take, so b ≥ 4. The new system would need at least 9
+      matters only it serves, out of the 14 its rules allow that the old system misses: 6 shared quantities, 5 obligations and 3
+      policy steps. Today it serves 0–1 of them.
+    - **With D382 reversed:** at least 5 of 17, the 14 plus 3 figures the old system misses, provided it also matches the old system on
+      the rest.
+    - **Either way:** passing needs much broader opening, not a wording fix.
 - **(Superseded) When all six draws end, in this order:**
   1. `eligibility.py`: six complete draws, launched within 1 h, sends within 72 h.
   2. `mapping.py export`, then `read`, `third`, `result`.
