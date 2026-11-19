@@ -1,0 +1,9 @@
+**Gate publication before the next article reads the open list.** If one article proposes two questions and only one gets answer choices, keep the evidence and its link to the accepted question.
+
+1. **The tables are incomplete.** Separate a valid decline, two invalid answers, transport failure, and a budget stop. Stage A currently stops an incomplete run. The design continues after transport failure, and moving the call into Step 1 risks inheriting its whole-step redo. Specify what commits when a crash follows one acceptance in a multi-question item. [Stage A](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:181) · [Launcher](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:277)
+
+2. **The reader contract is incomplete.** Removing an ID alone leaves an unresolved link in frozen Step 2. Remove the rejected link from the saved result, preserve valid links, and retain the raw answer for audit. The judge and release checks expect the first-pass files under the ladder component. `build_cases` would now count only accepted questions, so D400’s three-pass test population also needs an explicit contract. [Step 2](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:52) · [Release checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:86)
+
+3. **The simplest place** is Step 1’s existing open-state write, using the caller’s frozen ladder logic. The PRD places the ladder after Step 3 and explicitly retains unjudged theses. This changes both behaviors and needs a recorded decision. [Write boundary](/Users/lchingen/hivemind/clean-arch/step1/runner.py:342) · [PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:370)
+
+NOT READY: Specify one publication gate that preserves stop behavior, evidence links, and the release-check population, then record the PRD change.

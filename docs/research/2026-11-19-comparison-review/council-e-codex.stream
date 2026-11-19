@@ -1,0 +1,1422 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f5a4-8ad4-7341-8f91-1b5676ea2d72
+--------
+user
+# Blind review of a design (read-only, $0). Under 250 words, ending `READY` or `NOT READY: <smallest change>`.
+
+Review `DESIGN-refused-not-open.md`: a thesis the ladder refuses does not enter Step 1's open-thesis state, and the ladder runs at opening
+inside Step 1's loop. The evidence for why it is needed is the census C section of `PATH-TO-PASS.md`.
+
+Check against the code: `clean-arch/step1/runner.py` `run`, `clean-arch/e2e-comparison-2026-11-13/run_fresh.py`,
+`clean-arch/step4-2026-11-10/stage_a/build_cases.py` and `stage_a.py`.
+1. Are the state × event table, the value × reader table and the new-path × old-checks table complete?
+2. Does it break a frozen piece or a prior decision?
+3. Is there a simpler place for the rule?
+
+Nothing is built, and nothing is sent.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll trace when a question becomes open today, then check whether the design covers what happens when the answer-choice step refuses it or stops midway.
+exec
+/opt/homebrew/bin/zsh -lc 'r=/Users/lchingen/hivemind; nl -ba $r/clean-arch/step1/runner.py | sed -n '"'215,393p'; nl -ba "'$r/clean-arch/step4-2026-11-10/stage_a/build_cases.py | sed -n '"'1,195p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+exec
+/opt/homebrew/bin/zsh -lc "r=/Users/lchingen/hivemind; rg -n '"'^(def|class) |step1|stage_a_astra|ladder'"' "'$r/clean-arch/e2e-comparison-2026-11-13/run_fresh.py | head -100; nl -ba $r/clean-arch/step4-2026-11-10/stage_a/stage_a.py | sed -n '"'130,246p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+exec
+/opt/homebrew/bin/zsh -lc "pwd; rg --files -g 'DESIGN-refused-not-open.md' -g 'PATH-TO-PASS.md' -g 'AGENTS.md' | head -25; ls" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+   215	def run(source_path, output_path, manifest, initial_theses, settings, transport, prd_path, texts=None, schema=None):
+   216	    """Run once. A live answer that fails the format check (not JSON, or not the schema) is sent once more unchanged; if the retry
+   217	    also fails, the item is marked failed with both reasons and the run continues, ending 'complete_with_failures' with the failed
+   218	    items listed (Alex, 2026-11-08). Any other failure stops the run. Every item retains its request and response. `texts`, when given, is a candidate's
+   219	    (system prompt, closing check) used in place of the PRD's; either way the closing check ends the user message, after the item, so
+   220	    the model applies it last (AGENTS §6). `schema`, when given, is a candidate's response schema in place of the PRD's."""
+   221	    if type(transport) not in (RecordedTransport, LiveTransport):
+   222	        raise ContractError('unsupported transport')
+   223	    cap = settings['max_output_tokens']
+   224	    if isinstance(cap, bool) or not isinstance(cap, int) or not 0 < cap <= 128000:
+   225	        raise ContractError('max_output_tokens must be a positive integer within the model limit')
+   226	    limit = manifest['item_limit']
+   227	    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+   228	        raise ContractError('item_limit must be a positive integer')
+   229	    if type(transport) is LiveTransport and (settings['provider'], settings['model']) not in SUPPORTED:
+   230	        raise ContractError('live transport supports OpenAI gpt-6-luna and DeepSeek flash or v4-pro only')
+   231	    if type(transport) is LiveTransport:
+   232	        transport.reasoning_effort = settings['reasoning_effort']
+   233	    prompt, prd_schema = draft(prd_path)
+   234	    schema = schema or prd_schema
+   235	    closing = closing_check(prd_path)
+   236	    if texts is not None:
+   237	        prompt, closing = texts
+   238	        if not prompt.strip() or not closing.strip():
+   239	            raise ContractError('a candidate needs a system prompt and a closing check')
+   240	    items = selected_items(source_path, manifest)
+   241	    entity = manifest['entity']
+   242	    ids = [t['id'] for t in initial_theses]
+   243	    if len(ids) != len(set(ids)) or any(not isinstance(x, str) or not x.strip() for x in ids):
+   244	        raise ContractError('initial thesis IDs must be unique and nonempty')
+   245	    for t in initial_theses:
+   246	        if (t['entity'] != entity or not isinstance(t['description'], str) or not t['description'].strip()
+   247	                or not isinstance(t['outcome'], str) or not t['outcome'].strip() or 'period' not in t):
+   248	            raise ContractError('initial thesis requires entity, question, outcome and period')
+   249	    # The caller chooses limits for an exploratory run; never guess a paid-run budget.
+   250	    if len(items) > manifest['item_limit']:
+   251	        raise ContractError('item limit exceeded')
+   252	    setting = config.Setting('clean-step1', settings['model'], 'clean-step1', settings['reasoning_effort'], settings['max_output_tokens'])
+   253	    fd = os.open(output_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+   254	    os.close(fd)
+   255	    conn = sqlite3.connect(output_path)
+   256	    archive = None
+   257	    try:
+   258	        conn.executescript('''
+   259	          create table run (manifest text not null, settings text not null, source_items text not null, initial_theses text not null);
+   260	          create table trace (sequence integer primary key, input_id text not null, before_state text not null,
+   261	            request text not null, raw_response text, result text, after_state text, status text not null, error text, reserved_usd real,
+   262	            retry_reason text);
+   263	        ''')
+   264	        dump = lambda obj: json.dumps(obj, ensure_ascii=False)
+   265	        conn.execute('insert into run values (?, ?, ?, ?)', (dump(manifest), dump(settings), dump(items), dump(initial_theses)))
+   266	        conn.commit()
+   267	        if type(transport) is LiveTransport:
+   268	            archive = model.Archive(str(output_path))
+   269	            checksum = hashlib.sha256(dump({'settings': settings, 'prompt': prompt, 'closing': closing, 'schema': schema}).encode()).hexdigest()
+   270	            call_config = SimpleNamespace(provider=settings['provider'], version='clean-step1', checksum=checksum)
+   271	        theses = copy.deepcopy(initial_theses)
+   272	        outcome = {'status': 'complete', 'error': None}
+   273	        failed_items = []
+   274	        for sequence, item in enumerate(items, 1):
+   275	            shown = [{k: t[k] for k in ('id', 'description', 'outcome', 'period')} for t in theses]
+   276	            tags = [x['value'] for x in item['object_identifiers'] if x.get('kind') == 'ticker']
+   277	            payload = {'current_entity': entity, 'company_tags': tags, 'open_theses': shown, 'source_item': {
+   278	                'id': item['input_id'], 'publisher': item['publisher'], 'publication_date': item['publication_day'],
+   279	                'published_at': item['published_at'], 'publisher_type': item.get('publisher_type'),
+   280	                'authors': item.get('authors'), 'category': item.get('category'),
+   281	                'source_uri': item['source_uri'], 'title': item['title'], 'text': item['text']}}
+   282	            user = dump(payload) + (f'\n\n{closing}' if closing else '')
+   283	            request = model.build_request(setting, prompt, user, schema, 'clean_step1', settings['provider'])
+   284	            conn.execute('insert into trace (sequence,input_id,before_state,request,status) values (?,?,?,?,?)',
+   285	                         (sequence, item['input_id'], dump(theses), json.dumps(request), 'in_flight'))
+   286	            conn.commit()
+   287	            if type(transport) is LiveTransport:
+   288	                def record_reservation(amount):
+   289	                    conn.execute('update trace set reserved_usd=? where sequence=?', (amount, sequence))
+   290	                    conn.commit()
+   291	                transport.on_reserve = record_reservation
+   292	            response = None
+   293	            notes = []          # this step's retries, network and format, in order: written to retry_reason, none overwriting another
+   294	            try:
+   295	                if type(transport) is LiveTransport:
+   296	                    def capture(provider, built_request):
+   297	                        nonlocal response
+   298	                        try:
+   299	                            response = transport(provider, built_request)
+   300	                        except model.TransportError as error:
+   301	                            if hasattr(error, 'response_body'):
+   302	                                response = {'http_status': error.http_status, 'raw_body': error.response_body}
+   303	                                if hasattr(error, 'response_body_base64'):
+   304	                                    response['raw_body_base64'] = error.response_body_base64
+   305	                            raise
+   306	                        finally:
+   307	                            notes.extend(f'network retry, {note}' for note in transport.network_errors)
+   308	                            if notes:
+   309	                                with conn:
+   310	                                    conn.execute('update trace set retry_reason=? where sequence=?', ('; '.join(notes), sequence))
+   311	                        if transport.last_sent is not built_request:   # a provider adaptation changed the bytes: keep what was sent
+   312	                            response = dict(response, sent_request=transport.last_sent)
+   313	                        conn.execute('update trace set raw_response=? where sequence=?', (dump(response), sequence))
+   314	                        conn.commit()
+   315	                        choice = response['choices'][0]
+   316	                        if choice['message'].get('refusal'):
+   317	                            raise ContractError('provider refused')
+   318	                        if choice.get('finish_reason') == 'length':   # a cut answer is not JSON: the format rule retries it once
+   319	                            raise model.SchemaError('incomplete output: the answer reached the output limit')
+   320	                        if choice.get('finish_reason') != 'stop':
+   321	                            raise ContractError('provider refused or returned incomplete output')
+   322	                        return response
+   323	                    try:
+   324	                        recorded = model.call(archive, call_config, setting, prompt, user, schema,
+   325	                                              'clean_step1', 'clean_step1', transport=capture)
+   326	                    except model.SchemaError as first:
+   327	                        first_reason = f'SchemaError: {first}'
+   328	                        notes.append(first_reason)
+   329	                        with conn:
+   330	                            conn.execute('update trace set retry_reason=? where sequence=?', ('; '.join(notes), sequence))
+   331	                        try:   # the failed answer is archived under its own key, so the identical request is sent again
+   332	                            recorded = model.call(archive, call_config, setting, prompt, user, schema,
+   333	                                                  'clean_step1', 'clean_step1', transport=capture)
+   334	                        except model.SchemaError as second:
+   335	                            raise FormatFailure(f'{first_reason}; retry: SchemaError: {second}') from second
+   336	                    if recorded.cached:
+   337	                        raise ContractError('unexpected cached answer in fresh run')
+   338	                    answer = recorded.data
+   339	                else:
+   340	                    response = transport(settings['provider'], request)
+   341	                    answer = json.loads(response['choices'][0]['message']['content'])
+   342	                result = validate(answer, schema, item, shown)
+   343	                updated = copy.deepcopy(theses)
+   344	                used = {t['id'] for t in updated}
+   345	                allocated = {}
+   346	                counter = 1
+   347	                for proposed in answer['new_theses']:
+   348	                    if proposed['local_id'] in result['unlinked_new_thesis_ids']:
+   349	                        continue
+   350	                    while f'clean-{counter}' in used:
+   351	                        counter += 1
+   352	                    thesis_id = f'clean-{counter}'
+   353	                    used.add(thesis_id)
+   354	                    allocated[proposed['local_id']] = thesis_id
+   355	                    updated.append({'id': thesis_id, 'entity': entity, 'description': proposed['description'],
+   356	                                    'outcome': proposed['outcome'], 'period': proposed['period']})
+   357	                result['new_thesis_ids'] = allocated
+   358	                with conn:
+   359	                    conn.execute('update trace set raw_response=?,result=?,after_state=?,status=? where sequence=?',
+   360	                                 (dump(response), dump(result), dump(updated), 'complete', sequence))
+   361	                theses = updated
+   362	            except Exception as error:
+   363	                reason = f'{type(error).__name__}: {error}'
+   364	                with conn:
+   365	                    conn.execute('update trace set raw_response=?,after_state=?,status=?,error=? where sequence=?',
+   366	                                 (dump(response) if response is not None else None, dump(theses), 'failed',
+   367	                                  reason, sequence))
+   368	                if isinstance(error, FormatFailure):
+   369	                    failed_items.append({'input_id': item['input_id'], 'error': reason})
+   370	                    continue
+   371	                outcome = {'status': 'failed', 'input_id': item['input_id'], 'error': reason}
+   372	                break
+   373	        if failed_items:
+   374	            outcome['failed_items'] = failed_items
+   375	            if outcome['status'] == 'complete':
+   376	                outcome['status'] = 'complete_with_failures'
+   377	        if type(transport) is LiveTransport:
+   378	            outcome['reserved_usd'] = transport.reserved
+   379	            outcome['calls'] = transport.calls
+   380	        return outcome
+   381	    finally:
+   382	        if archive is not None:
+   383	            archive.conn.close()
+   384	        conn.close()
+     1	"""The 44 cases of Stage A ($0, read-only): the 34 theses the three unseeded draws opened (the census packet) and the 10 theses the
+     2	fresh acceptance run opened, each with the fields Step 1 wrote and its opening article. A thesis id is local to its draw, so a case
+     3	is named by draw and thesis id: `u1/clean-3`, `acc/clean-2`. Writes cases.json beside this file.
+     4	
+     5	Usage: python3 clean-arch/step4-2026-11-10/stage_a/build_cases.py
+     6	       python3 clean-arch/step4-2026-11-10/stage_a/build_cases.py --fresh <label> --draws <folder> --parts <trace>[,<segment>] --output <file>
+     7	
+     8	The fresh path (WIRING-DESIGN.md §A, D448) writes one draw's opened theses as cases to the named file, named `<label>/<thesis id>`; the
+     9	count is the number of theses the trace opened (counted from its states, not a constant), each case is unique and has its opening
+    10	article. The default path is unchanged and still requires the 44."""
+    11	import json
+    12	import sys
+    13	from pathlib import Path
+    14	
+    15	HERE = Path(__file__).resolve().parent
+    16	STEP = HERE.parent
+    17	ROOT = STEP.parents[1]
+    18	sys.path.insert(0, str(STEP / 'census'))
+    19	import build_packet  # noqa: E402
+    20	
+    21	ACCEPTANCE = ROOT / 'poc/data/clean-acceptance-2026-11-09'
+    22	THESIS_FIELDS = ('description', 'outcome', 'period', 'opens_as', 'settled_by')
+    23	ITEM_FIELDS = ('publication_date', 'publisher', 'title', 'text')
+    24	
+    25	
+    26	def opened_count(draws, parts):
+    27	    """The theses a trace opened, counted from its before and after states alone (independent of build_packet)."""
+    28	    import sqlite3
+    29	    seen = set()
+    30	    for part in parts:
+    31	        conn = sqlite3.connect(f'file:{Path(draws) / part}?mode=ro', uri=True)
+    32	        try:
+    33	            for before, after in conn.execute("select before_state, after_state from trace where status='complete' order by sequence"):
+    34	                before_ids = {t['id'] for t in json.loads(before)}
+    35	                seen |= {t['id'] for t in json.loads(after) if t['id'] not in before_ids}
+    36	        finally:
+    37	            conn.close()
+    38	    return len(seen)
+    39	
+    40	
+    41	def fresh(label, draws, parts, output):
+    42	    expected = opened_count(draws, parts)
+    43	    entries = build_packet.theses_of(label, parts, draws=draws, expected=expected)
+    44	    cases = [{'case': f"{label}/{entry['id']}",
+    45	              'thesis': {'id': entry['id'], **{field: entry['thesis'][field] for field in THESIS_FIELDS}},
+    46	              'item': {field: entry['article'][field] for field in ITEM_FIELDS}} for entry in entries]
+    47	    names = [case['case'] for case in cases]
+    48	    if len(set(names)) != len(names) or any(not case['item'].get('text') or not case['item'].get('publication_date') for case in cases):
+    49	        raise SystemExit(f'{label}: case names not unique, or a case without its opening article')
+    50	    Path(output).write_text(json.dumps(cases, indent=1, ensure_ascii=False) + '\n')
+    51	    print(f'{label}: {len(cases)} cases written to {output} (the trace opened {expected})')
+    52	
+    53	
+    54	def main():
+    55	    import argparse
+    56	    parser = argparse.ArgumentParser()
+    57	    parser.add_argument('--fresh')
+    58	    parser.add_argument('--draws')
+    59	    parser.add_argument('--parts')
+    60	    parser.add_argument('--output')
+    61	    arguments = parser.parse_args()
+    62	    if arguments.fresh:
+    63	        if not (arguments.draws and arguments.parts and arguments.output):
+    64	            raise SystemExit('--fresh needs --draws, --parts and --output')
+    65	        if Path(arguments.output).exists():
+    66	            raise SystemExit(f'{arguments.output} exists: refused')
+    67	        return fresh(arguments.fresh, arguments.draws, arguments.parts.split(','), arguments.output)
+    68	    stored = json.loads((STEP / 'census' / 'packet.json').read_text())
+    69	    acceptance = build_packet.theses_of('acc', ['step1/trace.sqlite'], draws=ACCEPTANCE, expected=10)
+    70	    cases = []
+    71	    for entry in stored + acceptance:
+    72	        cases.append({'case': f"{entry['run']}/{entry['id']}",
+    73	                      'thesis': {'id': entry['id'], **{field: entry['thesis'][field] for field in THESIS_FIELDS}},
+    74	                      'item': {field: entry['article'][field] for field in ITEM_FIELDS}})
+    75	    names = [case['case'] for case in cases]
+    76	    if len(cases) != 44 or len(set(names)) != 44:
+    77	        raise SystemExit(f'{len(cases)} cases, {len(set(names))} different names: expected 44 and 44')
+    78	    (HERE / 'cases.json').write_text(json.dumps(cases, indent=1, ensure_ascii=False) + '\n')
+    79	    by_draw = {}
+    80	    for name in names:
+    81	        by_draw[name.split('/')[0]] = by_draw.get(name.split('/')[0], 0) + 1
+    82	    print('cases:', len(cases), by_draw, '| the same thesis id in more than one draw:', len(names) - len({name.split('/')[1] for name in names}))
+    83	
+    84	
+    85	if __name__ == '__main__':
+    86	    main()
+
+ succeeded in 0ms:
+2:→ the opened theses as cases → the ladder step → the frozen judge) or a production draw (v118 through `budget_replay`), every paid call on
+17:redo (the cases, the ladder step, the judge, whose own one redo is inside `run_stage_b`); a configuration that is not the frozen one.
+50:CLEAN = ('step1', 'step2', 'cases', 'ladder', 'judge')
+52:REDO_ALLOWED = {'step1', 'step2', 'prod'}                          # design §D's table: the ladder and the judge have no outer redo
+53:LADDER_CONFIGURATION = 'clean-ladder-stage-a d3b4a5f696c7cc82'       # run 4's, the configuration D426 froze
+54:ASTRA_WRAPPER = ROOT / 'docs/research/2026-11-17-product-comparison/stage0/stage_a_astra.py'   # D667: the frozen request on gpt-6-astra
+56:                         'astra-frozen': 'clean-ladder-stage-a 14d0e269c8fe0335'}   # stage_a_astra.configuration_checksum
+62:def load(name, path):
+72:def now():
+78:class Interrupted(BaseException):
+82:def child_environment():
+88:def execute(argv, log_path, on_start=lambda process: None):
+98:def check(argv, log_path):
+103:def frozen_unseeded_changed(listing=ROOT / 'clean-arch/unseeded-2026-11-10/unseeded-frozen.sha256'):
+114:def preconditions(kind, run_check=check, log_path=None):
+124:        checks.append(([sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', ROOT / 'clean-arch/step1/test_runner.py', '-k', 'adopted_c8'],
+134:def manifest_until(until_day, manifest_path=None, items=ITEMS):
+151:class Draw:
+347:    def _step1(self, record, folder):
+353:        crash, status = self._call([sys.executable, ROOT / 'clean-arch/step1/run_live.py', '--source', self.items(), '--output', folder / 'trace.sqlite',
+361:        trace = self.done_folder(record, 'step1') / 'trace.sqlite'
+373:        step1 = self.done_folder(record, 'step1')
+374:        crash, status = self._call([sys.executable, STEP4 / 'stage_a/build_cases.py', '--fresh', self.label, '--draws', step1, '--parts', 'trace.sqlite',
+381:            for component in ('ladder', 'judge'):
+383:            return 'completed', 'no thesis opened: the ladder step and the judge have nothing to do'
+386:    def _ladder(self, record, folder):
+388:        variant = self.options.get('ladder_variant', 'frozen')
+408:                return 'stopped-run', f'pass {pass_number} of the ladder ran {found}, not the {variant} configuration {expected}'
+412:        ladder = self.done_folder(record, 'ladder')
+413:        inputs = {self.label: {'trace': str(self.done_folder(record, 'step1') / 'trace.sqlite'), 'step2': str(self.done_folder(record, 'step2')),
+414:                               'ladders': str(ladder / 'send-1' / 'outcomes.jsonl'), 'ladder_archive': str(ladder / 'send-1' / 'archive.sqlite'),
+447:def main(argv=None):
+460:    parser.add_argument('--ladder-variant', choices=sorted(LADDER_CONFIGURATIONS), default='frozen')
+478:    if arguments.ladder_variant != 'frozen':
+479:        options['ladder_variant'] = arguments.ladder_variant
+   130	    return known, in_full, dropped
+   131	
+   132	
+   133	def request_texts():
+   134	    """The request the build uses: the system text, the closing check and the schema (the request as first sent, D407, with an
+   135	    event answered in three outcomes, D409)."""
+   136	    return {'system': (STEP / 'ladder' / 'candidate-system.txt').read_text(),
+   137	            'closing': (STEP / 'ladder' / 'candidate-closing.txt').read_text().strip(),
+   138	            'schema': json.loads((STEP / 'ladder' / 'candidate-schema.json').read_text())}
+   139	
+   140	
+   141	def payload_for(case, research_list):
+   142	    """The payload of one case, with the keys in the order the design gives."""
+   143	    themes = [{'id': theme_id, 'name': theme['name']} for theme_id, theme in research_list.themes.items()]
+   144	    return {'company': COMPANY, 'fiscal_year_note': research_list.fiscal_note(COMPANY, case['item']['publication_date'], english=True),
+   145	            'themes': themes, 'thesis': case['thesis'], 'item': case['item']}
+   146	
+   147	
+   148	def run(cases, passes, folder, cap_usd, *, research_list, texts, transport=None, workers=8, shared=None):
+   149	    """Send every case once in each pass. Returns (outcomes written, the limit). The folder must not exist. `shared` is a run's
+   150	    shared ledger (WIRING-DESIGN.md §B2, D448)."""
+   151	    folder = Path(folder)
+   152	    folder.mkdir(parents=True, exist_ok=False)
+   153	    limit = StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport, shared=shared)
+   154	    checksum = hashlib.sha256(json.dumps({'system': texts['system'], 'closing': texts['closing'], 'schema': texts['schema'],
+   155	                                          'setting': [SETTING.model, SETTING.reasoning_effort, SETTING.max_output_tokens]},
+   156	                                         ensure_ascii=False).encode()).hexdigest()[:16]
+   157	    call_config = SimpleNamespace(provider='openai', version='clean-ladder-stage-a', checksum=checksum)
+   158	    archives, outcome_files = {}, {}
+   159	    for pass_number in passes:
+   160	        (folder / f'send-{pass_number}').mkdir()
+   161	        archives[pass_number] = model.Archive(str(folder / f'send-{pass_number}' / 'archive.sqlite'))
+   162	        outcome_files[pass_number] = folder / f'send-{pass_number}' / 'outcomes.jsonl'
+   163	    write_lock = threading.Lock()
+   164	    written = []
+   165	
+   166	    def work(job):
+   167	        case, pass_number = job
+   168	        labelled = SimpleNamespace(request_number=0)
+   169	        labelled.send = lambda provider, request: limit.send_labelled(f"{case['case']}|{pass_number}|{labelled.request_number}", provider, request)
+   170	        call_model = model_calls.model_caller(model, archives[pass_number], call_config, SETTING, labelled)
+   171	
+   172	        def counted_call(system_text, user_text, schema):
+   173	            labelled.request_number += 1
+   174	            return call_model(system_text, user_text, schema)
+   175	
+   176	        def check(answer):
+   177	            return ladder_step.check_answer(answer, thesis=case['thesis'], article=case['item'], company=COMPANY, research_list=research_list,
+   178	                                            repair_quote=extraction.repair_quote, normalise=extraction.normalise,
+   179	                                            quote_tokens=extraction._quote_tokens,
+   180	                                            beyond_next_year=extraction.beyond_next_year, binding_horizon_days=extraction.BINDING_HORIZON_DAYS)
+   181	        try:
+   182	            outcome = ladder_step.ladder_for_thesis(payload_for(case, research_list), system_text=texts['system'], closing_text=texts['closing'],
+   183	                                                    schema=texts['schema'], call_model=counted_call, check=check)
+   184	            view = None
+   185	            if outcome['status'] == 'ladder':
+   186	                view = ladder_step.write_view(outcome['answer']['ladder'], outcome['passage'], thesis=case['thesis'],
+   187	                                              article_day=case['item']['publication_date'], company=COMPANY,
+   188	                                              research_list=research_list)
+   189	            row = {'case': case['case'], 'pass': pass_number, 'status': outcome['status'], 'reason': outcome['reason'],
+   190	                   'requests': outcome['requests'], 'answer': outcome['answer'], 'passage': outcome['passage'], 'view': view}
+   191	            with write_lock:
+   192	                with outcome_files[pass_number].open('a') as handle:
+   193	                    handle.write(ladder_step.as_json(row) + '\n')
+   194	                    handle.flush()
+   195	                    os.fsync(handle.fileno())
+   196	                written.append((case['case'], pass_number, outcome['status']))
+   197	        except (Stopped, budget.OverBudget):
+   198	            return
+   199	        except Exception as error:                      # not an answer's own fault, the writing of the outcome included: stop every worker
+   200	            limit.stop(f"{case['case']} pass {pass_number}: {type(error).__name__}: {error}")
+   201	            return
+   202	
+   203	    jobs = [(case, pass_number) for pass_number in passes for case in cases]
+   204	    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+   205	        list(pool.map(work, jobs))                      # the pool waits for every worker before the spend is read
+   206	    return written, limit, len(jobs)
+   207	
+   208	
+   209	def main():
+   210	    parser = argparse.ArgumentParser()
+   211	    parser.add_argument('--folder', required=True)
+   212	    parser.add_argument('--cap', type=float, required=True)
+   213	    parser.add_argument('--passes', type=int, default=3)
+   214	    parser.add_argument('--cases', default='', help='comma-separated case names; all 44 when empty')
+   215	    parser.add_argument('--cases-file', default=str(HERE / 'cases.json'), help="the cases to send (default: Stage A's 44)")
+   216	    parser.add_argument('--shared-ledger', default=None, help='a run\'s shared ledger (budget_replay.SharedLedger), reserved inside each attempt')
+   217	    arguments = parser.parse_args()
+   218	    cases = json.loads(Path(arguments.cases_file).read_text())
+   219	    if arguments.cases:
+   220	        wanted = arguments.cases.split(',')
+   221	        cases = [case for case in cases if case['case'] in wanted]
+   222	        if len(cases) != len(wanted):
+   223	            raise SystemExit(f'a named case is not in {Path(arguments.cases_file).name}')
+   224	    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+   225	    shared = None
+   226	    if arguments.shared_ledger:
+   227	        import importlib.util
+   228	        spec = importlib.util.spec_from_file_location('budget_replay', ROOT / 'clean-arch/e2e-comparison-2026-11-13/budget_replay.py')
+   229	        budget_replay = importlib.util.module_from_spec(spec)
+   230	        spec.loader.exec_module(budget_replay)
+   231	        shared = budget_replay.SharedLedger(arguments.shared_ledger)
+   232	        budget_replay.install_stop_gate(shared)            # every actual send reads the run's stop first (council mo R1)
+   233	    written, limit, job_count = run(cases, list(range(1, arguments.passes + 1)), arguments.folder, arguments.cap, research_list=research_list,
+   234	                                    texts=request_texts(), shared=shared)
+   235	    known, in_full, dropped = ledger_total(Path(arguments.folder) / 'spend.jsonl')
+   236	    statuses = {}
+   237	    for _, _, status in written:
+   238	        statuses[status] = statuses.get(status, 0) + 1
+   239	    print(f'{len(written)} of {job_count} sends have an outcome: {statuses}')
+   240	    print(f'spent ${known + in_full:.4f} (known ${known:.4f}, reserves counted in full ${in_full:.4f}); cap ${arguments.cap:.2f}'
+   241	          + ('; a last ledger line that was not whole was dropped' if dropped else ''))
+   242	    if limit.stopped or len(written) != job_count:
+   243	        raise SystemExit(f'STOPPED: {limit.stop_reason}. The result reads NOT MEASURED; this folder is not started again.')
+   244	
+   245	
+   246	if __name__ == '__main__':
+
+ succeeded in 0ms:
+/Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+PATH-TO-PASS.md
+DESIGN-refused-not-open.md
+DESIGN-refused-not-open.md
+PATH-TO-PASS.md
+claude-reflection.md
+council-a-brief.md
+council-a-codex.md
+council-a-codex.stream
+council-a.done
+council-b-brief.md
+council-b-codex.md
+council-b-codex.stream
+council-c-brief.md
+council-c-codex.md
+council-c-codex.stream
+council-d-brief.md
+council-d-codex.md
+council-d-codex.stream
+council-e-brief.md
+council-e-codex.md
+council-e-codex.stream
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba DESIGN-refused-not-open.md; nl -ba PATH-TO-PASS.md' in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+     1	# Design: a thesis the ladder refuses is not open (fix 1 of PATH-TO-PASS; $0 design, nothing built)
+     2	
+     3	**The defect** (census C)
+     4	- Step 1 runs over the whole window before the ladder, so a thesis the ladder later refuses stays in Step 1's open-thesis state.
+     5	- Later items file their evidence under it and never open a well-formed thesis.
+     6	- In the two new draws, capex, DRAM, Groq and the neocloud matters were lost this way.
+     7	
+     8	**The rule, owned by code (identity, not judgement):** a thesis is open only once the ladder has accepted it.
+     9	
+    10	**Where it goes:** in Step 1's item loop (`clean-arch/step1/runner.py` `run`), after an answer is checked. Each new thesis of that answer is
+    11	laddered at once, with the frozen ladder request (astra-frozen, pass 1, the same thesis and item fields `build_cases` writes).
+    12	- **Accepted:** the thesis enters `theses`, which is the next item's open list. Its pass-1 ladder is stored with the trace row.
+    13	- **Refused:** the thesis does not enter `theses`.
+    14	  - The evidence the answer linked only to it is kept unlinked (D383), so the later-linking step can file it.
+    15	  - The refusal and its reason are recorded on the trace row.
+    16	- **The pipeline's ladder component reads the stored pass-1 ladders** and runs passes 2 and 3 as now, for D400's checks.
+    17	
+    18	## State × event
+    19	| State | Event | Transition and what is written |
+    20	|---|---|---|
+    21	| Item answered, new thesis proposed | Ladder accepts | The thesis is added to `theses`; the ladder is stored on the row; the next item sees it |
+    22	| Same | Ladder refuses (one refusal note and one resend, stage_a's rule) | Not added; the refusal and its reason are on the row; evidence linked only to it goes unlinked |
+    23	| Same | Ladder transport failure after its retries | The row is failed with its reason; the run continues; the thesis is not opened. Recorded beside D449: a format or transport failure at the ladder is not a refusal |
+    24	| Same | Crash midway (the row is in flight) | As now: the run stops; a relaunch finds the row in flight |
+    25	| A thesis already open | A later item proposes the same bet | As now (Step 1 links to the open thesis); the ladder is not run again |
+    26	| Refused thesis | A later item raises the same matter, well formed | Proposed anew, laddered, opened if accepted. The earlier unlinked evidence is found by later linking |
+    27	| Configuration changed between days | — | Refused by the launcher's identity check, as now |
+    28	| End of the run | — | Every open thesis has a pass-1 ladder; `build_cases` counts the opened theses from the states. Its count rule is unchanged: refused theses never enter a state |
+    29	
+    30	## Value × reader
+    31	- **`theses`, the open state:** read by the next item's request (`open_theses`), by `build_cases` (`opened_count`, from the states) and
+    32	  by Step 2 (links). All of them now see accepted theses only.
+    33	- **The pass-1 ladder:** stored with the trace row. It is read by the ladder component, which must not re-send pass 1, and by the judge's
+    34	  inputs.
+    35	- **Evidence linked only to a refused thesis:** unlinked, read by Step 2 and by later linking (D383, D513).
+    36	
+    37	## New path × old checks
+    38	- **`build_cases`'s count check:** it holds, because states contain accepted theses only.
+    39	- **The ladder's pass-1 archive:** it moves into the Step 1 folder. The judge's input path changes (`judge-inputs.json` names it).
+    40	- **The D400 three-pass checks:** pass 1 is stored at opening, passes 2 and 3 are sent as now, and the fingerprints are unchanged.
+    41	- **Cost:** about one ladder call per opened thesis, the same calls the ladder component makes now, moved earlier.
+    42	
+    43	## Prior decisions
+    44	| Decision | What it says | How the design stands |
+    45	|---|---|---|
+    46	| D383 | A kept statement no thesis takes is kept and linked later | Holds |
+    47	| D397 / D436 | A second side of the same bet is one question | Unchanged; the ladder still decides |
+    48	| D432 | The no-ladder theses were diagnosed | This acts on their consequence, not their wording |
+    49	| D493 | No further Step 1 request change | No request text changes; the loop's control flow does |
+    50	| D427 | Clean Step 2 is frozen | Untouched |
+    51	| D448 / D449 | The wiring and the redo | The ladder's failure policy is listed above for review |
+    52	
+    53	**Not decided here:** the ladder's own refusal of a deal's completion and size (fix 3), and D505 (fix 4).
+    54	
+    55	**The test, after Alex's word:** a cents probe that replays new-2's July–September items over the capex, DRAM and Groq matters with the
+    56	rule. Measured: whether a well-formed thesis opens and is accepted for M02, M03, M16 and M25.
+     1	# What it would take for the new system to pass the release comparison (written path, D677's condition for reopening)
+     2	
+     3	**The pass line.** a − b ≥ 5 and a ≥ 2b, under both countings, on the frozen 32 matters. The old system serves 10.
+     4	
+     5	## The three changes, and what each could add (counted on the 5-draw diagnostic; these are ceilings)
+     6	
+     7	### A. Stop losing opened questions (mechanism 2)
+     8	- **The loss:** 27 of 60 (new-2) and 19 of 60 (new-3) theses get no ladder, most for bundling several periods or outcomes.
+     9	- **Where the fix goes:** structural, not in Step 1's wording (D493). When the ladder refuses a thesis for bundling, a splitter writes one
+    10	  thesis per period or outcome that meets section 3, and each is laddered.
+    11	- **The cheap test:** the 46 stored no-ladder cases. The ladder runs with one worker, so the local cap holds a single reservation.
+    12	- **The ceiling:** the new system gains M04 and M17 in both draws, and M19 in new-2, plus possibly M14 and M16. It reaches 5–6 matters.
+    13	  With A alone the old system still has 4 to 5 matters only it serves (NVIDIA's own figures, and M31 at counting 2): no winner at
+    14	  counting 1 and a loss at counting 2, never a lead.
+    15	
+    16	### B. Hold the company's core figures (mechanism 1): needs Alex to lift D505
+    17	- **The gain:** M06, M10, M11 and M18, which the old system serves, and M07, M09 and M30, which it does not or only in one draw.
+    18	- **What it brings b to:** about 0–1.
+    19	- **The known side effect** (D490/D491): Vera Rubin product statements filed under revenue. Cents probes on stored states must show the
+    20	  product question still opens.
+    21	
+    22	### C. Open more of the rule-allowed big matters (framing and coverage)
+    23	- **The candidates:** 14 matters the new rules allow and the old system misses.
+    24	  - Shared quantities: M02, M03, M05, M14, M16, M24.
+    25	  - Obligations: M08, M12, M20, M27, M32.
+    26	  - Policy: M25, M26, M28.
+    27	- **Today:** some are opened but framed beside the analysts' matter (M20 as an amount where the matter is a signing; M25 as review closure
+    28	  where the matter is enforcement; M32 in one draw). M05 and M08 are never opened.
+    29	- **What a lead needs:**
+    30	  - with B, about 5 of these served by the new system alone, reliably in 2 of 3 draws;
+    31	  - without B, about 9.
+    32	
+    33	## The arithmetic
+    34	- **A, B and five from C:** a ≈ 5–8, b ≈ 0–1. A lead is possible.
+    35	- **A and C without B:** b ≥ 4, so a lead needs a ≥ 9 of 14. Very unlikely.
+    36	
+    37	## The order and the cost
+    38	1. **A** on stored cases: cents.
+    39	2. **B** probe on stored states: cents, but only if Alex lifts D505.
+    40	3. **C:** a $0 census of why each of the 14 is framed off or never opened, then cents probes.
+    41	4. **One full comparison:** about $150 for six draws, run only after 1–3 pass on stored data and only on Alex's word, as it exceeds D439's
+    42	   $40.
+    43	
+    44	## Census C ($0), 2026-11-19: why the 14 rule-allowed matters are lost
+    45	- **No new thesis opens in the window.** On the articles behind these matters in 09-07..09-20, new-2 opened 0 new theses, and new-3 the
+    46	  same.
+    47	- **The evidence is filed under questions the ladder dropped.** Step 1 runs over the whole window before the ladder, so its open-thesis
+    48	  state still holds theses the ladder later refuses. It files the window's evidence under them, and so never opens a well-formed one.
+    49	  - M02 and M03, five-hyperscaler capex 2026 and 2027: about 25 evidence links per draw go to dropped theses (new-2 clean-26, clean-7,
+    50	    clean-5; new-3 clean-29, clean-6, clean-12, clean-4).
+    51	  - M25, DOJ and Groq, is even filed under a dropped capex thesis.
+    52	  - M16 and M32 are mostly unlinked, or linked to dropped theses.
+    53	- **A refusal loses its matter for the rest of the run:** the cascade, a refusal plus a stale open-thesis state.
+    54	- **The structural fix is code-owned identity:** a thesis with no ladder is not open. The ladder runs when a thesis opens, and a
+    55	  refused thesis leaves Step 1's open-thesis state, so a later item can open a well-formed one.
+    56	  - This is an identity rule, not a judgement.
+    57	  - In the batch replay it needs the ladder interleaved with Step 1 by day.
+    58	
+    59	## Check A ($0), 2026-11-19: what the 46 no-ladder theses bundle
+    60	Read by Claude, from the stored ladder reasons and theses (new-2's 27; new-3's 19 are the same kinds).
+    61	- **(i) Two years in one**, independent annual quantities: capex 2026 and 2027 (M02/M04 and M03/M14), custom-ASIC capacity, used-GPU value,
+    62	  build cost per gigawatt, global AI capex. Splitting by year is clean, and D397 is not touched.
+    63	- **(ii) Several measures of one quantity:** neocloud capex, OEM server revenue and orders, Gulf, Korea, EU, desktop GPUs. The main
+    64	  measure is to be named; this is one bet.
+    65	- **(iii) A deal's completion and its size, or signing and closing:** Anthropic (M17) and Hugging Face (M19), Poolside, the Vera CPU's
+    66	  shipments and revenue. Under D397 a second side of the same bet is one question, but the frozen ladder refuses anything with no single
+    67	  main outcome.
+    68	  - This is a contract mismatch between the Step 1 standard and the ladder.
+    69	  - The ladder should take the deal by its main outcome (completion), with size as context. That is a change to the ladder, a frozen
+    70	    piece.
+    71	- **(iv) Off-entity or out of scope:** TSMC's own prices, Huawei, AI labs' revenue, Ooredoo. These are refused rightly; Step 1 should not
+    72	  open them.
+    73	- **For the key matters:** (i) and (iii) carry them (capex, Anthropic, Hugging Face). (i) is fixable in code and by the cascade fix;
+    74	  (iii) needs a new version of the ladder.
+
+exec
+/opt/homebrew/bin/zsh -lc 'r=/Users/lchingen/hivemind; nl -ba $r/clean-arch/e2e-comparison-2026-11-13/run_fresh.py | sed -n '"'230,330p;340,430p'; rg -n 'D(38|383|386|397|405|426|427|429|432|448|449|493|677|678|679|680) \\|' ../../DECISIONS.md | tail -31" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+   230	
+   231	    def mark_crashed(self, reason):
+   232	        """The attempt left `started`, if any, becomes `crashed`; the draw is stopped either way."""
+   233	        record = self.load()
+   234	        record['state'], record['stopped'] = 'stopped', f'the launcher crashed: {reason}'
+   235	        for component, entry in record['components'].items():
+   236	            if entry['attempts'] and entry['attempts'][-1]['state'] == 'started':
+   237	                entry['attempts'][-1].update(state='crashed', reason=reason)
+   238	                record['stopped'] = f'{component} crashed: {reason}'
+   239	        self.save(record)
+   240	
+   241	    def _launch(self, redo, redo_reason):
+   242	        record = self.load()
+   243	        if record.get('identity') != self.identity():
+   244	            raise SystemExit(f"{self.label} was first launched as {record.get('identity')}; this launch differs: refused")
+   245	        for component, entry in record['components'].items():   # an attempt left started: its launcher died (a crash)
+   246	            if entry['attempts'] and entry['attempts'][-1]['state'] == 'started':
+   247	                entry['attempts'][-1].update(state='crashed', reason='found started at a later launch: its launcher died')
+   248	                return self.stop_run(record, f'{component} crashed in {entry["attempts"][-1]["folder"]} (recorded; no redo)')
+   249	        ledger_state = self.ledger.read()
+   250	        if ledger_state.get('stopped'):
+   251	            record.setdefault('refused launches', []).append(f"the run is stopped: {ledger_state.get('stop_reason')}")
+   252	            self.save(record)
+   253	            return record
+   254	        if record['state'] in ('stopped', 'complete'):
+   255	            return record
+   256	        if record['state'] == 'awaiting a redo decision' and redo != record.get('awaiting'):
+   257	            raise SystemExit(f"{self.label} awaits a redo decision on {record['awaiting']}: relaunch with --redo {record['awaiting']} "
+   258	                             '--redo-reason <text> after reading its output')
+   259	        failures = preconditions(self.kind, self.run_check, self.folder / 'preconditions.log')
+   260	        if failures:
+   261	            record.setdefault('refused launches', []).append('; '.join(failures))
+   262	            self.save(record)
+   263	            raise SystemExit('nothing started: ' + '; '.join(failures))
+   264	        record['state'] = 'running'
+   265	        record.pop('awaiting', None)
+   266	        self.working = True                                # from here on, any exit but a normal return stops the run (close)
+   267	        self.local_cap = ledger_state['ceiling']           # the shared ledger binds first: local reservations are smaller
+   268	        for component in (CLEAN if self.kind == 'clean' else PROD):
+   269	            entry = record['components'].setdefault(component, {'attempts': []})
+   270	            if entry.get('state') in ('completed', 'skipped'):
+   271	                continue
+   272	            stopped = self.ledger.read()
+   273	            if stopped.get('stopped'):                     # another draw, or a component of this one, stopped the run
+   274	                record['state'], record['stopped'] = 'stopped', f"the shared ledger, before {component}: {stopped.get('stop_reason')}"
+   275	                self.save(record)
+   276	                return record
+   277	            attempts = entry['attempts']
+   278	            if attempts:                                   # the last attempt stopped: only an explicit redo goes on (a stopped redo has
+   279	                # already stopped the run on the ledger, so a third attempt is refused above)
+   280	                if redo != component or component not in REDO_ALLOWED:
+   281	                    return self.stop_run(record, f'{component}: no redo allowed after {len(attempts)} attempt(s)')
+   282	            folder_name = component if not attempts else f'{component}-redo'
+   283	            if (self.folder / folder_name).exists():
+   284	                attempts.append({'folder': folder_name, 'state': 'crashed', 'reason': 'its folder exists with no recorded attempt'})
+   285	                return self.stop_run(record, f'{component}: {folder_name} exists with no recorded attempt')
+   286	            attempts.append({'folder': folder_name, 'state': 'started', 'started at': now(), **({'redo reason': redo_reason} if attempts else {})})
+   287	            self.save(record)
+   288	            outcome, reason = getattr(self, f'_{component}')(record, self.folder / folder_name)   # any exception: `close` handles it
+   289	            attempts[-1]['ended at'] = now()
+   290	            if outcome == 'crashed':
+   291	                attempts[-1].update(state='crashed', reason=reason)
+   292	                return self.stop_run(record, f'{component} crashed: {reason}')
+   293	            if outcome not in ('completed', 'skipped') and self.ledger.read().get('stopped'):
+   294	                attempts[-1].update(state='stopped', reason=f"the shared ledger: {self.ledger.read().get('stop_reason')}")
+   295	                record['state'], record['stopped'] = 'stopped', attempts[-1]['reason']
+   296	                self.save(record)
+   297	                return record
+   298	            if outcome in ('completed', 'skipped'):
+   299	                attempts[-1]['state'] = 'completed'
+   300	                entry['state'], entry['folder'] = outcome, folder_name
+   301	                if reason:
+   302	                    entry['note'] = reason
+   303	                self.save(record)
+   304	                continue
+   305	            attempts[-1].update(state='stopped', reason=reason)
+   306	            if outcome == 'stopped' and component in REDO_ALLOWED and len(attempts) == 1:
+   307	                record['state'], record['awaiting'] = 'awaiting a redo decision', component
+   308	                self.save(record)
+   309	                return record
+   310	            return self.stop_run(record, f'{component}: {reason}')
+   311	        record['state'] = 'complete'
+   312	        self.save(record)
+   313	        return record
+   314	
+   315	    def end_child(self):
+   316	        if self.child is not None and self.child.poll() is None:
+   317	            self.child.terminate()
+   318	            try:
+   319	                self.child.wait(timeout=10)
+   320	            except subprocess.TimeoutExpired:
+   321	                self.child.kill()
+   322	                self.child.wait()
+   323	
+   324	    def done_folder(self, record, component):
+   325	        return self.folder / record['components'][component]['folder']
+   326	
+   327	    def items(self):
+   328	        """The items database both systems read: the one given (--items), or the default corpus."""
+   329	        return Path(self.options.get('items', ITEMS))
+   330	
+   340	        status = self.run_component(argv, folder.parent / f'{folder.name}.log', started)
+   341	        self.child = None
+   342	        if status < 0:
+   343	            return 'crashed', f'killed by signal {-status} (see {folder.name}.log)'
+   344	        return None, status
+   345	
+   346	    # the components: each returns (outcome, reason); outcome 'completed', 'stopped' (a redo may follow), 'stopped-run' or 'crashed'
+   347	    def _step1(self, record, folder):
+   348	        folder.mkdir()
+   349	        (folder / 'manifest.json').write_text(json.dumps(manifest_until(self.options['until_day'], self.options.get('manifest'), self.items()), indent=1))
+   350	        shutil.copy(ROOT / 'clean-arch/unseeded-2026-11-10/initial-empty.json', folder / 'initial.json')
+   351	        shutil.copy(STAGE2 / 'stage2-settings.json', folder / 'settings.json')
+   352	        shutil.copy(self.options.get('limits') or STAGE2 / 'stage2-limits.json', folder / 'limits.json')
+   353	        crash, status = self._call([sys.executable, ROOT / 'clean-arch/step1/run_live.py', '--source', self.items(), '--output', folder / 'trace.sqlite',
+   354	                                    '--manifest', folder / 'manifest.json', '--initial', folder / 'initial.json', '--settings', folder / 'settings.json',
+   355	                                    '--limits', folder / 'limits.json', '--shared-ledger', self.ledger_path], folder, record)
+   356	        if crash:
+   357	            return crash, status
+   358	        return ('completed', None) if status == 0 else ('stopped', f'run_live exit {status}: the trace is not complete (see its log)')
+   359	
+   360	    def _step2(self, record, folder):
+   361	        trace = self.done_folder(record, 'step1') / 'trace.sqlite'
+   362	        crash, status = self._call([sys.executable, HERE / 'budget_step2.py', '--shared-ledger', self.ledger_path, trace, folder], folder, record)
+   363	        if crash:
+   364	            return crash, status
+   365	        if status != 0:
+   366	            return 'stopped', f'Step 2 exit {status}: refused, pending or unresolved links, or a failed call (see its log)'
+   367	        stamp = '\n'.join(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path}' for path in (trace, folder / 'library.json'))
+   368	        (folder / 'inputs.sha256').write_text(stamp + '\n')
+   369	        return 'completed', None
+   370	
+   371	    def _cases(self, record, folder):
+   372	        folder.mkdir()
+   373	        step1 = self.done_folder(record, 'step1')
+   374	        crash, status = self._call([sys.executable, STEP4 / 'stage_a/build_cases.py', '--fresh', self.label, '--draws', step1, '--parts', 'trace.sqlite',
+   375	                                    '--output', folder / 'cases.json'], folder, record)
+   376	        if crash:
+   377	            return crash, status
+   378	        if status != 0:
+   379	            return 'stopped-run', f'build_cases exit {status}: the cases do not match the opened theses (see its log)'
+   380	        if not json.loads((folder / 'cases.json').read_text()):
+   381	            for component in ('ladder', 'judge'):
+   382	                record['components'][component] = {'attempts': [], 'state': 'skipped', 'note': 'the draw opened no thesis'}
+   383	            return 'completed', 'no thesis opened: the ladder step and the judge have nothing to do'
+   384	        return 'completed', None
+   385	
+   386	    def _ladder(self, record, folder):
+   387	        cases = self.done_folder(record, 'cases') / 'cases.json'
+   388	        variant = self.options.get('ladder_variant', 'frozen')
+   389	        script = ASTRA_WRAPPER if variant == 'astra-frozen' else STEP4 / 'stage_a/stage_a.py'
+   390	        crash, status = self._call([sys.executable, script, '--folder', folder, '--cap', self.local_cap,
+   391	                                    '--passes', self.options['passes'], '--cases-file', cases, '--shared-ledger', self.ledger_path], folder, record)
+   392	        if crash:
+   393	            return crash, status
+   394	        if status != 0:
+   395	            return 'stopped-run', f'stage_a exit {status}: a pass is incomplete (see its log)'
+   396	        expected = LADDER_CONFIGURATIONS[variant]
+   397	        for pass_number in range(1, self.options['passes'] + 1):       # every pass, each on its own: an empty pass fails too
+   398	            archive = folder / f'send-{pass_number}' / 'archive.sqlite'
+   399	            if not archive.exists():
+   400	                return 'stopped-run', f'pass {pass_number} wrote no archive'
+   401	            conn = sqlite3.connect(f'file:{archive}?mode=ro', uri=True)
+   402	            try:
+   403	                found = sorted(f'{v} {c}' for v, c in conn.execute('select distinct config_version, config_checksum from model_calls').fetchall())
+   404	            finally:
+   405	                conn.close()
+   406	            if found != [expected]:
+   407	                record['configuration mismatch'] = {f'pass {pass_number}': found}
+   408	                return 'stopped-run', f'pass {pass_number} of the ladder ran {found}, not the {variant} configuration {expected}'
+   409	        return 'completed', None
+   410	
+   411	    def _judge(self, record, folder):
+   412	        ladder = self.done_folder(record, 'ladder')
+   413	        inputs = {self.label: {'trace': str(self.done_folder(record, 'step1') / 'trace.sqlite'), 'step2': str(self.done_folder(record, 'step2')),
+   414	                               'ladders': str(ladder / 'send-1' / 'outcomes.jsonl'), 'ladder_archive': str(ladder / 'send-1' / 'archive.sqlite'),
+   415	                               'cases': str(self.done_folder(record, 'cases') / 'cases.json'), 'output_root': str(folder)}}
+   416	        if self.options.get('judge_end_day'):
+   417	            inputs[self.label]['end_day'] = self.options['judge_end_day']   # the judge walks and closes to this day (D667)
+   418	        inputs_path = self.folder / f'{folder.name}-inputs.json'
+   419	        inputs_path.write_text(json.dumps(inputs, indent=1))
+   420	        crash, status = self._call([sys.executable, STEP4 / 'stage_b/run_stage_b.py', '--root', folder, '--runs', self.label, '--inputs', inputs_path,
+   421	                                    '--cap', self.local_cap, '--shared-ledger', self.ledger_path], folder, record)
+   422	        if crash:
+   423	            return crash, status
+   424	        return ('completed', None) if status == 0 else ('stopped-run', f'run_stage_b exit {status}: the draw is incomplete after its own redo rule')
+   425	
+   426	    def _prod(self, record, folder):
+   427	        folder.mkdir()
+   428	        argv = [sys.executable, HERE / 'budget_replay.py', '--ledger', self.ledger_path, '--from', self.options.get('from_day', FROM_DAY), '--until', self.options['until_day'],
+   429	                '--views', folder / 'views.sqlite', '--archive', folder / 'archive.sqlite', '--config', PROD_CONFIG, '--workers', 16]
+   430	        if 'items' in self.options:
+383:| D38 | 2026-10-20 | The views database rebuilt: a view is a question with a five-rung ladder and a due date | in force (amended by D42, D45, D46, D51, D54, D57, D58, D185, D186, D198, D260) | §7 Thesis library |
+727:| D383 | 2026-11-08 | D209 amended again: a material statement no thesis takes is kept unlinked and linked later | in force; amends D209 | clean-arch PRD §§5, 12 |
+730:| D386 | 2026-11-08 | Acceptance on fresh articles read by readers against the source; golden-v5 test no longer held out | in force | clean-arch PRD §12 |
+741:| D397 | 2026-11-10 | Clean Step 4's ladder step: a topic that asks more than one thing gets one judged question (the part its outcome names); the other parts are shown as not judged; a departure from D38 for topics with two real bets, recorded as an open defect | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §4 |
+749:| D405 | 2026-11-10 | The clean ladder step accepts a reference's words only as an unbroken passage of the article (spacing, case and quote-mark forms aside); otherwise the answer is refused and sent back once, and a second refusal writes no question | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §5.3, check 6 |
+770:| D426 | 2026-11-10 | The ladder step is not tuned further on the 44 theses and no fifth Stage A is sent; Stage A has not passed (lines 1, 3, 4 missed by 1 to 3 answers of 131); by his word the preparation of Stage B opens on that step, its $0 baseline reading of the 159 stored judgements first; no paid Stage B send without his word again | in force (an exception to D401's stop at a missed line) | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+771:| D427 | 2026-11-11 | Clean Step 2 (search, Jev comparison, best-match grouping, forward runner, Step 3 library) closed and frozen; not moved into production alone; goes to production with the whole clean path after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each) | in force | `tests/test_frozen_clean_step2.py`; clean-arch PRD §5; Step 2 log §19 |
+773:| D429 | 2026-11-11 | Build the adapter's ladder mode ($0, tests, mutants, fresh reviews until one finds nothing serious), then send Stage B's three draws without asking again (cap $2), read each judgement alone with the baseline's form, controls and count | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §5, §8 |
+776:| D432 | 2026-11-12 | After Stage B: diagnose how Step 1 cuts a matter into theses (the nine unopened graded questions, the eight theses with no ladder, the remaining Stage A faults); the diagnosis and one change, as a new Step 1 version measured on fresh articles, go to Alex before any build | in force | `clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md` |
+787:| D443 | 2026-11-13 | Shape B' (council consensus, D439): the stored clean chain against fresh production v118 draws as an exploratory census of final-answer losses; one-day slice first; one $5 shared ledger (conditional on stated bounds); shape A stays owed for D427 | in force | `clean-arch/e2e-comparison-2026-11-13/DESIGN.md` |
+792:| D448 | 2026-11-13 | Wiring contract settled (design v4); build the wiring and its $0 proof, then code review; the slice and the full run each by its own later decision (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md` |
+793:| D449 | 2026-11-13 | Wiring code review: shared stops read before every send, launcher liveness by its registered lock, the agreed reservation bound, the real orchestration proved; redo of Step 1, Step 2, production only by a reasoned relaunch; a crash stops the run (council consensus, D439; across draws, replaced for the release comparison by one ledger per draw, D667) | in force | `clean-arch/e2e-comparison-2026-11-13/run_fresh.py` |
+837:| D493 | 2026-11-14 | Reflection council (D492): every change from D439 to D491 was words in the one Step 1 call and moved a neighbour; the reader's loss is around the company's main numbers; no further request change now; next a $0 test of the kept figures assembled as a company record; the standing-question comparison stays a candidate that goes to Alex first (D370) | in force | `docs/research/2026-11-14-use-acceptance/record/RECORD-TEST-DESIGN.md` |
+1021:| D677 | 2026-11-19 | The release comparison's goal loop closed: the old system stays, no paid work continues; reversed only if Alex reverses D505 or funds a full run, with a written path to passing first (council consensus, D439/D544) | in force | `docs/research/2026-11-19-comparison-review/council-c-codex.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "r=/Users/lchingen/hivemind; rg -n 'new_thesis_ids|after_state|before_state' "'$r/clean-arch/step2 $r/clean-arch/step3 $r/clean-arch/step4-2026-11-10/{census,stage_b} $r/docs/research/2026-11-17-product-comparison/stage0 -g '"'*.py' | cut -c1-245 | head -88" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+/Users/lchingen/hivemind/clean-arch/step2/test_run_forward.py:38:            conn.execute('create table trace (sequence integer, input_id text, request text, result text, before_state text, '
+/Users/lchingen/hivemind/clean-arch/step2/test_run_forward.py:39:                         'after_state text, status text)')
+/Users/lchingen/hivemind/clean-arch/step2/test_run_forward.py:42:                         ('gnews:a1', json.dumps(request), json.dumps({'evidence': [evidence], 'new_thesis_ids': {}}),
+/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:48:            done = conn.execute("select input_id, request, result, before_state, after_state from trace where status='complete' order by sequence").fetchall()
+/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:57:        local = answer.get('new_thesis_ids', {})
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/census/build_packet.py:25:            rows = conn.execute("select before_state, request, result, after_state from trace where status='complete' order by sequence").fetchall()
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_step2_lines.py:38:    conn.execute('create table trace (sequence integer, input_id text, request text, result text, before_state text, after_state text, '
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_step2_lines.py:53:                     json.dumps({'evidence': evidence, 'new_thesis_ids': {}}), '[]', '[]', 'complete'))
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/clean-arch/PRD.md | sed -n '238,275p;349,396p'; nl -ba /Users/lchingen/hivemind/clean-arch/step1/run_live.py | sed -n '16,92p'; nl -ba /Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py | sed -n '160,215p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/clean-arch/step2/run_forward.py | sed -n '29,118p'; nl -ba /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/census/build_packet.py | sed -n '16,95p'; rg -n 'case|ladders|outcomes' /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | head -55" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+   238	
+   239	## 4. Step 1: read the item
+   240	
+   241	### Input
+   242	
+   243	Step 1 receives the whole item and every open thesis for the item's company: its identity, question, the outcome it tracks and its
+   244	period when known. Items are read one at a time, and each sees the library as the previous item left it. Step 1 does not see the
+   245	history of evidence; finding earlier versions of a statement is Step 2's job. The current flow covers one company at a time; finding
+   246	the other companies an item affects is future design (section 15).
+   247	
+   248	### What the model decides
+   249	
+   250	For each statement an analyst would note, one of four results:
+   251	
+   252	1. **Evidence for an open thesis.** The statement is linked to every open thesis it informs, with the reason.
+   253	2. **A new thesis.** Only for a big matter, by one of the standard's four reasons: an obligation the company takes on, its main
+   254	   product's next node, a policy stage, or a checkable shared quantity (D384; Alex: "按金标：只开大事"). Another company's single
+   255	   project, partnership or product line is evidence, not a thesis. A new thesis carries the entity (supplied by code), the question,
+   256	   the outcome to track and the period when known (Alex, 2026-11-06); a meaningful matter may open without a known decision date when
+   257	   later developments can settle it.
+   258	3. **A material statement no thesis takes yet.** It is kept in the company's record without links and linked when a thesis that
+   259	   covers it opens (D383; Alex: "先存着，有观点再挂").
+   260	4. **Nothing.** What the closing check rejects is dropped with its reason, never parked.
+   261	
+   262	Three of Alex's rules shape the reading:
+   263	- **A financial figure is a condition, not a thesis** (D382; Alex: "我觉得财务类型不应该是thesis，而更多的是条件。观点应该是独特的view，而不是喊出来的数字，除非有理由 - 这个理由恰恰才是观点").
+   264	  A statement of the company's own useful figures lists them, and code checks each value against a verified passage. Those figures are
+   265	  evidence for the judgements of related questions (D505).
+   266	- **Target prices and valuation conclusions are not kept**; the estimates they rest on are (D385).
+   267	- **Lean cautious, catch the increment** (D243): most of an item is common knowledge and is not kept; new information that can change
+   268	  an answer is never missed.
+   269	
+   270	Step 1 decides in the same reading whether a matter is already tracked; there is no separate thesis-routing stage. That is a choice
+   271	of this design, and where it fails it fails at opening (section 8).
+   272	
+   273	### Output
+   274	
+   275	One answer per item with two lists: new theses and evidence. Each evidence item carries its source passages (each checked by code
+   349	## 6. Step 3: save evidence and links
+   350	
+   351	Step 3 takes the proposals from Step 1 and the comparison outcomes from Step 2 and writes the resulting research information.
+   352	
+   353	| Result | What is saved |
+   354	|---|---|
+   355	| New thesis with supporting evidence | The new thesis and its evidence link; save new evidence or reuse a matching record according to Step 2. |
+   356	| New evidence for an existing thesis | The evidence and its link to the thesis. |
+   357	| Repeat | Place the incoming record in the existing evidence record's group: add its source and any missing link to the relevant thesis, and keep the incoming record's own text and fields inside the group. Do not rewrite the existing record, and do not create a separate evidence record for the same statement. |
+   358	| Material statement no thesis takes | The evidence, kept in the company's record without links (D383). When a thesis opens, Jev is asked of each earlier unlinked group whether it informs the thesis; a yes adds the link (section 13). |
+   359	| Revision | The new evidence and its source, linked to the earlier statement as a revision. In the judge's ledger the new record also takes the earlier record's thesis links (D202's rule, kept on the clean path by D424; written by the D392 adapter until Step 3 is joined to production storage). |
+   360	
+   361	A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). In the judge's ledger each member of a group is its own evidence record, related to the original as the same claim (D204), and the judge reads each copy with that note; a second or later copy of a statement already in the same request is 31% to 34% of what the judge is shown in the saved clean draws (26% to 31% in production's), and how a judgement weighs copies is not tested further (Step 2 log §17). Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the theses, evidence and relationships are saved. The grouping library (`step3/library.py`, frozen) holds them; a measurement writer (`step4-2026-11-10/stage_b/ladder_adapter.py`) writes them into the judge's ledger together with the judged questions, processing steps, completed days and closings (D429, D564, D567). Joining Step 3 to production storage is part of gate 5 (section 1.5).
+   362	
+   363	## 7. Step 4: judge the thesis
+   364	
+   365	Judgement is separate from reading and saving an item. Saving the revised capital-spending forecast records **what the company said**;
+   366	judgement says **what that means for the question**, from all the saved evidence. Alex opened this step's design on 2026-11-10:
+   367	"设计新系统自己的“判断”环节" (D396). The full design is [Step 4 design](step4-2026-11-10/DESIGN.md) (version 35); this section states
+   368	what it does.
+   369	
+   370	### Two parts
+   371	
+   372	1. **The ladder step (Step 4a).** One call per newly opened thesis, after Step 3 has saved the item that opened it and before that
+   373	   day's judging. It reads the thesis, the article that opened it, the company and its fiscal-year note, and the list of themes; it
+   374	   reads nothing later than the opening article. It writes the judged question, its answer choices and its due day, and lists every
+   375	   other part of the thesis as not judged. Model: gpt-6-luna at medium effort as frozen (D426); astra (gpt-6-astra) is the candidate under test (D648, D649, D653).
+   376	2. **The judge (Step 4b).** Production's frozen judge (judging-v7, D354), unchanged. Once a day it judges every judged question whose
+   377	   evidence changed, citing the evidence it used. On a question's due day production's closing step records the final answer (D567).
+   378	
+   379	### What the ladder step decides
+   380	
+   381	- **One judged question per thesis**, the part the thesis's outcome names. Every other part is listed as not judged and shown beside
+   382	  the answer (D397). A second side of the same bet is context, not a second question (D436).
+   383	- **An event** has at most three outcomes: it happened, it is ruled out, or still open by the due day. Code writes "still open"
+   384	  (D409). Ruling out is stated as who decides and what they decide (D416); a proceeding that formally ends without the conclusion
+   385	  asked for is ruled out (D420).
+   386	- **A figure** has exactly five ranges set against a reference, with the favourable end registered and its reason; code orders and
+   387	  labels the ranges (D398, carrying D186). An amount already reported may be the reference, labelled as that and never as the market's
+   388	  expectation (D411). Where the texts do not settle it, an amount the company owes or guarantees has the lower end favourable (D413).
+   389	- **The owner**: the company, or a theme. A government's permission or ban on a class of product belongs to the theme (D418).
+   390	- **The due day**: for an event, a stated date or the last day of the thesis's period (D403); for a year's figure, code sets it to the
+   391	  fiscal year-end plus 60 days for a company and the calendar year-end plus 90 days for a theme (D414).
+   392	- **A decline** is allowed with its reason: no main part, a rolling twelve months with no publication day (D417), or no theme that
+   393	  covers the matter. An answer refused twice by code writes no question (D405). A thesis without a judged question is kept, and the
+   394	  links to it are counted, not judged.
+   395	
+   396	### Where it stands
+    16	
+    17	
+    18	def main():
+    19	    parser = argparse.ArgumentParser(description=__doc__)
+    20	    for name in ('source', 'output', 'manifest', 'initial', 'settings', 'limits'):
+    21	        parser.add_argument('--' + name, required=True)
+    22	    parser.add_argument('--system', help='a candidate system prompt file, with --closing; the PRD prompt otherwise')
+    23	    parser.add_argument('--closing', help='the candidate closing check, appended to the end of the user message')
+    24	    parser.add_argument('--schema', help='a candidate response schema file in place of the PRD schema')
+    25	    parser.add_argument('--shared-ledger', help="a run's shared ledger (WIRING-DESIGN.md §B2, D448): each attempt reserves on it; the limits' max_usd is not applied")
+    26	    args = parser.parse_args()
+    27	    if bool(args.system) != bool(args.closing):
+    28	        parser.error('--system and --closing go together')
+    29	    texts = (Path(args.system).read_text(encoding='utf-8'), Path(args.closing).read_text(encoding='utf-8')) if args.system else None
+    30	    limits = read(args.limits)
+    31	    settings = read(args.settings)
+    32	    settings['live_limits'] = limits
+    33	    ledger = None
+    34	    if args.shared_ledger:
+    35	        import importlib.util
+    36	        spec = importlib.util.spec_from_file_location('budget_replay', ROOT / 'clean-arch/e2e-comparison-2026-11-13/budget_replay.py')
+    37	        budget_replay = importlib.util.module_from_spec(spec)
+    38	        spec.loader.exec_module(budget_replay)
+    39	        ledger = budget_replay.SharedLedger(args.shared_ledger)
+    40	        budget_replay.install_stop_gate(ledger)            # every actual send reads the run's stop first (council mo R1)
+    41	    result = run(args.source, args.output, read(args.manifest), read(args.initial), settings, LiveTransport(limits, ledger=ledger),
+    42	                 ROOT / 'clean-arch/PRD.md', texts, read(args.schema) if args.schema else None)
+    43	    print(json.dumps({'trace': args.output, **result}))
+    44	    return 0 if result['status'] == 'complete' else 1
+    45	
+    46	
+    47	if __name__ == '__main__':
+    48	    sys.exit(main())
+   160	        self.child = None
+   161	
+   162	    # the record
+   163	    def identity(self):
+   164	        return {'kind': self.kind, 'label': self.label, 'ledger': str(self.ledger_path), 'options': dict(self.options)}
+   165	
+   166	    def load(self):
+   167	        if self.record_path.exists():
+   168	            return json.loads(self.record_path.read_text())
+   169	        return {'identity': self.identity(), 'state': 'running', 'components': {}}
+   170	
+   171	    def save(self, record):
+   172	        temporary = self.record_path.with_suffix('.tmp')
+   173	        temporary.write_text(json.dumps(record, indent=1) + '\n')
+   174	        os.replace(temporary, self.record_path)
+   175	
+   176	    def stop_run(self, record, reason):
+   177	        """A stop of the whole run: on the shared ledger first (every other draw stops at its next send), then here."""
+   178	        self.ledger.stop(f'{self.label}: {reason}')
+   179	        record['state'], record['stopped'] = 'stopped', reason
+   180	        self.save(record)
+   181	        return record
+   182	
+   183	    # one launch
+   184	    def launch(self, redo=None, redo_reason=None):
+   185	        if redo is not None and not (redo_reason or '').strip():
+   186	            raise SystemExit('--redo needs --redo-reason: what in the component\'s output shows an eligible failure')
+   187	        self.folder.mkdir(parents=True, exist_ok=True)
+   188	        with open(self.lock_path, 'w') as lock:
+   189	            if not self.ledger.claim_launcher(self.label, lock):    # the probe, this lock and the registration in one ledger-locked step
+   190	                raise SystemExit(f'another launch of {self.label} is running')
+   191	            handlers = {}
+   192	
+   193	            def interrupted(signal_number, frame):
+   194	                raise Interrupted(signal.Signals(signal_number).name)
+   195	            for signal_number in (signal.SIGTERM, signal.SIGINT):
+   196	                handlers[signal_number] = signal.signal(signal_number, interrupted)
+   197	            self.working = False
+   198	            try:
+   199	                return self._launch(redo, redo_reason)
+   200	            finally:
+   201	                self.close(handlers)
+   202	
+   203	    def close(self, handlers):
+   204	        """Fail closed (council mo, D449). An abnormal exit is any exit of a launch that began work (past its refusals) other than a
+   205	        normal return, or any exit that leaves an attempt `started` in the record on disk; its first write is the shared stop, before
+   206	        the child is ended and the record marked. The registration is removed only after a normal end, a refusal before any work, or
+   207	        that stop; any other exit (a stop that cannot be written, an error while reading the record) leaves it, so the gate stops the
+   208	        run once this process's lock is released. Further signals are ignored while closing."""
+   209	        for signal_number in handlers:
+   210	            signal.signal(signal_number, signal.SIG_IGN)
+   211	        try:
+   212	            in_flight = sys.exc_info()[1]
+   213	            started = self.started_attempt()
+   214	            if started is not None or (in_flight is not None and self.working):
+   215	                reason = (f'the launcher ended abnormally ({type(in_flight).__name__}: {str(in_flight)[:200]})' if in_flight is not None
+
+ succeeded in 0ms:
+    29	
+    30	
+    31	def step1_records(trace):
+    32	    """Kept evidence of a completed Step 1 run (unlinked statements included), as Step 3 records grouped by article, with every thesis
+    33	    question and, per article, the thesis ids it opened. `trace` may join continuation segments with '+'. An article is numbered by its
+    34	    position in the first segment's manifest, so a failed item never shifts the numbers of the articles after it. A record keeps Step 1's
+    35	    verified passages beside the model's (None marks a passage not found in the source). A link resolves as the runner resolves it,
+    36	    by its type: an existing target must be among the theses shown open, a new one among the theses the answer opened; any other link
+    37	    stays out of `thesis_ids` and is listed in `unresolved_thesis_ids` as '<type>:<id>'."""
+    38	    questions = {}
+    39	    articles = []
+    40	    opened = []
+    41	    rows = []
+    42	    position = None
+    43	    for part in trace.split('+'):
+    44	        conn = sqlite3.connect(f'file:{part}?mode=ro', uri=True)
+    45	        try:
+    46	            if position is None:
+    47	                position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+    48	            done = conn.execute("select input_id, request, result, before_state, after_state from trace where status='complete' order by sequence").fetchall()
+    49	        finally:
+    50	            conn.close()
+    51	        rows += [(position[row[0]], *row[1:]) for row in done]
+    52	    for seq, request, result, before, after in rows:
+    53	        source = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']
+    54	        questions.update({t['id']: t['description'] for t in json.loads(after)})
+    55	        opened.append(sorted({t['id'] for t in json.loads(after)} - {t['id'] for t in json.loads(before)}))
+    56	        answer = json.loads(result)
+    57	        local = answer.get('new_thesis_ids', {})
+    58	        open_before = {t['id'] for t in json.loads(before)}
+    59	        def resolve(link):   # the runner's own rule: an existing target must have been shown open; a new one must have been opened
+    60	            if link['target_type'] == 'existing':
+    61	                return link['target_id'] if link['target_id'] in open_before else None
+    62	            return local.get(link['target_id'])
+    63	        def targets(ev, resolved):
+    64	            if resolved:
+    65	                return sorted({resolve(l) for l in ev['links'] if resolve(l)})
+    66	            return sorted({f"{l['target_type']}:{l['target_id']}" for l in ev['links'] if not resolve(l)})
+    67	        articles.append([{'id': f"{seq}:{ev['local_id']}", 'article': seq, 'input_id': source['id'], 'title': source.get('title'),
+    68	                          'publisher': source['publisher'], 'publication_date': source['publication_date'], 'summary': ev['summary'],
+    69	                          'passages': ev['source_passages'], 'verified_passages': ev.get('verified_source_passages'),
+    70	                          'original_party': ev['original_party'],
+    71	                          'reporting_speaker': ev['reporting_speaker'], 'tier': ev['tier'], 'statement_date': ev['statement_date'],
+    72	                          'statement_date_text': ev['statement_date_text'], 'evidence_period': ev['evidence_period'],
+    73	                          'figures': ev.get('figures') or [],
+    74	                          'thesis_ids': targets(ev, True), 'unresolved_thesis_ids': targets(ev, False)}
+    75	                         for ev in answer['evidence']])
+    76	    kept = [i for i, a in enumerate(articles) if a]
+    77	    return [articles[i] for i in kept], questions, [opened[i] for i in kept]
+    78	
+    79	
+    80	def main():
+    81	    parser = argparse.ArgumentParser(description=__doc__)
+    82	    parser.add_argument('trace')
+    83	    parser.add_argument('output')
+    84	    parser.add_argument('--seed-cache')
+    85	    parser.add_argument('--seed-items')
+    86	    parser.add_argument('--dry-run', action='store_true')
+    87	    args = parser.parse_args()
+    88	    out = Path(args.output)
+    89	    articles, questions, opened = step1_records(args.trace)
+    90	    records = [r for a in articles for r in a]
+    91	    texts = sorted({compare.doc_text(r) for r in records} | {compare.query_text(r, questions[t]) for r in records for t in r['thesis_ids']})
+    92	    cache_path = out / 'embeddings.json'
+    93	    vectors = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+    94	    if args.seed_cache and not vectors:   # an earlier cache keyed 'doc:<key>' / 'q1:<key>:<thesis>' over the same items
+    95	        seed = json.loads(Path(args.seed_cache).read_text())
+    96	        by_key = {r['id']: r for r in records}
+    97	        for item in json.loads(Path(args.seed_items).read_text()):
+    98	            r = by_key.get(item['key'])
+    99	            if r and f"doc:{item['key']}" in seed:
+   100	                vectors[compare.doc_text(r)] = seed[f"doc:{item['key']}"]
+   101	                for t in r['thesis_ids']:
+   102	                    if f"q1:{item['key']}:{t}" in seed:
+   103	                        vectors[compare.query_text(r, questions[t])] = seed[f"q1:{item['key']}:{t}"]
+   104	    missing = [t for t in texts if t not in vectors]
+   105	    print(f'articles {len(articles)}; records {len(records)}; texts {len(texts)}; to embed {len(missing)}')
+   106	    if args.dry_run:
+   107	        return 0
+   108	    out.mkdir(parents=True, exist_ok=True)
+   109	    for start in range(0, len(missing), 64):
+   110	        chunk = missing[start:start + 64]
+   111	        got, _tokens = search.openai_embeddings(chunk)
+   112	        vectors.update(zip(chunk, got))
+   113	    cache_path.write_text(json.dumps(vectors))
+   114	    archive = model.Archive(str(out / 'jev.sqlite'))
+   115	    cfg = SimpleNamespace(provider='jev', version='clean-step2', checksum=hashlib.sha256(b'clean-step2-piece-question').hexdigest()[:16])
+   116	    ask = lambda state, qs: jev.ask(archive, cfg, SETTING, state, qs, 'clean_step2').data
+   117	    store = library.Library()
+   118	    decisions = compare.forward(articles, store, vectors, questions, ask, opened=opened)
+    16	
+    17	def theses_of(run, parts, draws=DRAWS, expected=None):
+    18	    """The theses a stored draw opened, each with the fields Step 1 wrote and its opening article. `expected`, when given, is the
+    19	    count the caller knows the draw to hold; a different count stops the build."""
+    20	    expected = EXPECTED[run] if expected is None else expected
+    21	    seen, out = set(), []
+    22	    for part in parts:
+    23	        conn = sqlite3.connect(f'file:{Path(draws) / part}?mode=ro', uri=True)
+    24	        try:
+    25	            rows = conn.execute("select before_state, request, result, after_state from trace where status='complete' order by sequence").fetchall()
+    26	        finally:
+    27	            conn.close()
+    28	        for before, request, result, after in rows:
+    29	            before_ids = {t['id'] for t in json.loads(before)}
+    30	            new = [t for t in json.loads(after) if t['id'] not in before_ids and t['id'] not in seen]
+    31	            if not new:
+    32	                continue
+    33	            answer = json.loads(result)
+    34	            item = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']
+    35	            by_description = {t['description']: t for t in answer['new_theses']}
+    36	            if len(by_description) != len(answer['new_theses']):
+    37	                raise SystemExit(f'{run}: two new theses share a description in one answer')
+    38	            for thesis in new:
+    39	                seen.add(thesis['id'])
+    40	                written = by_description[thesis['description']]          # KeyError: the state and the answer disagree
+    41	                linked = [e for e in answer['evidence']
+    42	                          if any(l['target_type'] == 'new' and l['target_id'] == written['local_id'] for l in e['links'])]
+    43	                out.append({
+    44	                    'run': run, 'id': thesis['id'],
+    45	                    'thesis': {k: written[k] for k in ('description', 'outcome', 'period', 'opens_as', 'settled_by', 'why_a_separate_bet')},
+    46	                    'article': {k: item[k] for k in ('id', 'publisher', 'publication_date', 'title', 'text')},
+    47	                    'linked_evidence': [{'summary': e['summary'], 'source_passages': e['source_passages'], 'original_party': e['original_party'],
+    48	                                         'tier': e['tier'], 'statement_date': e['statement_date'], 'figures': e['figures']} for e in linked],
+    49	                })
+    50	    if len(out) != expected:
+    51	        raise SystemExit(f'{run}: {len(out)} theses, expected {expected}')
+    52	    return out
+    53	
+    54	
+    55	def main():
+    56	    packet = [t for run, parts in RUNS.items() for t in theses_of(run, parts)]
+    57	    (HERE / 'packet.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False))
+    58	    lines = ['# Step 4 census packet: the 34 theses the three unseeded draws opened, each with its opening article', '']
+    59	    for n, t in enumerate(packet, 1):
+    60	        th, art = t['thesis'], t['article']
+    61	        lines += [f'## Case {n}: {t["run"]} {t["id"]}', '',
+    62	                  f'- **Opening article:** {art["publication_date"]}, {art["publisher"]}, "{art["title"]}" (`{art["id"]}`)',
+    63	                  f'- **description:** {th["description"]}', f'- **outcome:** {th["outcome"]}', f'- **period:** {th["period"]}',
+    64	                  f'- **opens_as:** {th["opens_as"]}', f'- **settled_by:** {th["settled_by"]}',
+    65	                  f'- **why_a_separate_bet:** {th["why_a_separate_bet"]}', '', '**Evidence the opening article linked to this thesis:**', '']
+    66	        for e in t['linked_evidence']:
+    67	            lines.append(f'- [{e["tier"]}; {e["original_party"]}; {e["statement_date"]}] {e["summary"]}')
+    68	        lines += ['', '**Article text:**', '', '```', art['text'], '```', '']
+    69	    (HERE / 'packet.md').write_text('\n'.join(lines))
+    70	    print(len(packet), 'theses;', sum(len(t['linked_evidence']) for t in packet), 'linked evidence items;',
+    71	          sum(1 for t in packet if not t['linked_evidence']), 'theses with none;', (HERE / 'packet.md').stat().st_size, 'bytes of packet.md')
+    72	
+    73	
+    74	if __name__ == '__main__':
+    75	    main()
+8:  view `v<N>` for thesis `clean-<N>` (its stored view, as `ladder_step.write_view` built it) and a row of `clean_ladders`; a thesis
+46:LADDERS = ROOT / 'poc/data/clean-ladder-stage-a-2026-11-10/run-4/send-1/outcomes.jsonl'
+48:CASES = STEP / 'stage_a' / 'cases.json'
+256:            self.conn.execute(f'create table if not exists clean_ladders ({columns}, primary key (thesis_id, period))')
+319:        store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period='', view_id=view_id, status=status,
+351:        store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period='', view_id=None, status='split', reason=None,
+374:            store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period=year, view_id=view_id, status=status,
+441:def ladders_for(run, opened, days_of, cases_path=None, ladders_path=None):
+442:    """{thesis id: stored outcome} for the draw, after checking that the stored cases are exactly the theses the trace opened, each
+443:    with the same description, and that each has exactly one outcome. The cases and ladder files default to Stage B's."""
+444:    cases_path, ladders_path = Path(cases_path or CASES), Path(ladders_path or LADDERS)
+445:    cases = {case['case']: case for case in json.loads(cases_path.read_text()) if case['case'].startswith(f'{run}/')}
+446:    outcomes = collections.defaultdict(list)
+447:    for line in ladders_path.read_text().splitlines():
+449:        if row['case'].startswith(f'{run}/'):
+450:            outcomes[row['case']].append(row)
+453:    if {name.split('/', 1)[1] for name in cases} != set(opened_theses):
+454:        raise SystemExit(f'the stored cases of {run} are not the theses its trace opened')
+455:    for name, case in cases.items():
+458:        differing = [field for field in ('description', 'outcome', 'period') if field not in in_trace or case['thesis'].get(field) != in_trace[field]]
+460:            raise SystemExit(f'{name}: the stored case and the trace describe different theses ({differing})')
+461:        if case['item']['publication_date'] != opening_day[thesis_id]:
+462:            raise SystemExit(f'{name}: the stored case\'s article is of {case["item"]["publication_date"]}, the trace opened it on {opening_day[thesis_id]}')
+463:        if len(outcomes[name]) != 1 or outcomes[name][0]['pass'] != 1 or outcomes[name][0]['status'] not in (*STATUS, 'split'):
+464:            raise SystemExit(f'{name}: not exactly one first-send outcome with a known status in {ladders_path.name}')
+465:    return {name.split('/', 1)[1]: outcomes[name][0] for name in cases}
+489:    """`inputs` (WIRING-DESIGN.md §A, D448) names a fresh draw's files: {'trace', 'step2', 'ladders', 'ladder_archive', 'cases',
+500:    ladders_path = Path(inputs.get('ladders', LADDERS))
+503:    ladders = ladders_for(run, opened, days_of, inputs.get('cases'), ladders_path)
+523:        runner.counts['ladder answers file sha256'] = hashlib.sha256(ladders_path.read_bytes()).hexdigest()
+564:                    runner.open_thesis(thesis_id, ladders[thesis_id], k, seq, day, input_id, source)
+
+exec
+/opt/homebrew/bin/zsh -lc "p=/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0; rg -n 'send-|outcomes|cases|folders' "'$p/{eligibility,d400_code_check,d400_reader_lines,step2_lines}.py | head -90; rg -n '"'def ladder_for_thesis|def check_answer|no ladder|model.call|def identity|continued' /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py /Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py | head -70; rg -n 'D513 |D448|D449' /Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md | head -20" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:9:The ladder folder is the one each draw's run record names; every `outcomes.jsonl` read must carry the fingerprint the eligibility check
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:31:        outcomes = []
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:33:            path = eligibility_tool.verified(eligibility, run_root, draw, f"{ladder['folder']}/send-{p}/outcomes.jsonl")
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:34:            outcomes += [json.loads(line) for line in path.read_text().splitlines()]
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:35:        line6 = accounting.account(outcomes, {}, {}, {})['lines'][6]
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:36:        out[draw] = {'sends': len(outcomes), 'direction': line6['direction'], 'due day': line6['due day'],
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:23:`packets` reads each draw's ladder and cases folders from its `run.json` (`components[...]['folder']`, a redo's folder after a redo). A
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:26:draw with a completed ladder gets a reading folder `<out>/<draw>/`, the folder `collect_readings.py` reads: byte copies of `send-1..3/outcomes.jsonl` and
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:27:of `cases.json`, then `readers/`, `readers-answers/`, `third-reader/`, `stage-a-report.json` and `report.txt`. Sessions' raw answers and
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:171:def rows_problem(answer, family, packet_sends, key, outcomes):
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:175:    valid row (accounting.row_problem). `packet_sends` is {item: (case, pass)}; `outcomes` is {(case, pass): outcome}."""
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:190:    problems = [(item, accounting.row_problem(rows.get(send), outcomes[send])) for item, send in packet_sends.items()]
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:302:        cases_folder = record['components'].get('cases', {}).get('folder')
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:303:        sources = {f'send-{number}/outcomes.jsonl': f"{ladder['folder']}/send-{number}/outcomes.jsonl" for number in PASSES}
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:304:        sources['cases.json'] = f'{cases_folder}/cases.json'
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:326:        built = run_stage_a_tool([BUILD_READER_PACKETS, plan['key'], '--run', f'{folder}={folder / "cases.json"}',
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:345:        outcomes = {(outcome['case'], outcome['pass']): outcome for outcome in collect_readings.outcomes_of(folder)}
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:355:                                 lambda answer, family=family, packet_sends=packet_sends, key=key, outcomes=outcomes:
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:356:                                 rows_problem(answer, family, packet_sends, key, outcomes)))
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:86:SECTION_INPUTS = {'step1': ['trace.sqlite'], 'step2': ['decisions.json', 'library.json'], 'cases': ['cases.json'], 'ladder': ['send-1/outcomes.jsonl',
+/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:87:                  'send-2/outcomes.jsonl', 'send-3/outcomes.jsonl']}
+/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:163:    def identity(self):
+/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:403:                found = sorted(f'{v} {c}' for v, c in conn.execute('select distinct config_version, config_checksum from model_calls').fetchall())
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:3:For one thesis Step 1 opened, one model call writes the judged question, its answer ladder and its due day, or declines. Code
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:143:def check_answer(answer, *, thesis, article, company, research_list, repair_quote, normalise, quote_tokens, beyond_next_year,
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:367:def ladder_for_thesis(payload, *, system_text, closing_text, schema, call_model, check):
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:396:                record['result'] = 'no ladder'
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:398:                return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder', 'reason': answer['no_ladder'], 'requests': requests,
+/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:411:    return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder: refused', 'reason': None, 'requests': requests, 'answer': None,
+99:launcher found dead, or an attempt found `started` at a later launch). **Changed by D449 (council mo):** the one redo of Step 1, Step 2 and
+103:**What stops the entire run:** a budget refusal (the ledger's persisted stop), a crash (D449), a stop after the one redo or of a component
+110:| Step 1 draw | stamped | the runner's rules per item | the runner's format rule, then the draw stops: one reasoned redo (D449) | the run stops | recorded; the run stops (D449) |
+111:| Step 2 draw | stamped | reported | the helper's retries, then the draw stops: one reasoned redo (D449) | the run stops | recorded; the run stops (D449) |
+112:| ladder pass | outcomes per case | `refused twice` (Stage A) | Stage A's rule: the run stops | the run stops | the pass recorded incomplete; the run stops (D449) |
+113:| judge draw | judged | one new-folder redo inside `run_stage_b` (Stage B), then the run stops | the same | the run stops | recorded, never resumed; the run stops (D449) |
+114:| production draw | totals | its own | the draw stops: one reasoned redo from empty (D449) | the run stops | recorded; the run stops (D449) |
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '\"matter\": \"M25\"|M25 ' /Users/lchingen/hivemind/poc/data/comparison-2026-11-17/reading-diagnostic/mapping-out/map-L{3,5}-{codex,claude}.txt; nl -ba /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py | sed -n '19,47p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py | sed -n '367,414p'; nl -ba /Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_step2.py | sed -n '35,120p'; rg -n 'def line6|line6|all three|population|cases =' /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/accounting.py | head -23" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/reading-diagnostic/mapping-out/map-L5-claude.txt:25:{"matter": "M25", "status": "broader", "ids": ["Q39"], "main_outcome": null, "note": "Q39 resolves on any DOJ decision on Groq, including closure; enforcement is only one way to settle it."}
+/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/reading-diagnostic/mapping-out/map-L3-claude.txt:25:{"matter": "M25", "status": "broader", "ids": ["Q32"], "main_outcome": null, "note": "Q32 resolves on any formal DOJ resolution of the Groq review (closing or enforcement) by 2027-01-31; enforcement is a subset."}
+    19	import accounting  # noqa: E402
+    20	import eligibility as eligibility_tool  # noqa: E402
+    21	
+    22	
+    23	def check(run_root, eligibility):
+    24	    out = {}
+    25	    for draw in ('new-1', 'new-2', 'new-3'):
+    26	        record = json.loads((Path(run_root) / draw / 'run.json').read_text())
+    27	        ladder = record['components'].get('ladder', {})
+    28	        if ladder.get('state') != 'completed':
+    29	            out[draw] = {'status': f"not measured: the ladder component is {ladder.get('state')!r}"}
+    30	            continue
+    31	        outcomes = []
+    32	        for p in (1, 2, 3):
+    33	            path = eligibility_tool.verified(eligibility, run_root, draw, f"{ladder['folder']}/send-{p}/outcomes.jsonl")
+    34	            outcomes += [json.loads(line) for line in path.read_text().splitlines()]
+    35	        line6 = accounting.account(outcomes, {}, {}, {})['lines'][6]
+    36	        out[draw] = {'sends': len(outcomes), 'direction': line6['direction'], 'due day': line6['due day'],
+    37	                     'shape differs across sends': line6['shape differs across sends'],
+    38	                     'figure ranges meet end to end': 'enforced at the write (ladder_step.check_answer)'}
+    39	    states = [v[k][0] for v in out.values() for k in ('direction', 'due day') if k in v] + \
+    40	             [accounting.NOT_MEASURED for v in out.values() if 'status' in v]
+    41	    status = ('failed' if 'missed' in states else 'not measured' if accounting.NOT_MEASURED in states else 'passed')
+    42	    return out, status
+    43	
+    44	
+    45	if __name__ == '__main__':
+    46	    result, status = check(sys.argv[1], json.loads(Path(sys.argv[2]).read_text()))
+    47	    print(json.dumps(result, indent=1, default=str))
+
+ succeeded in 0ms:
+   367	def ladder_for_thesis(payload, *, system_text, closing_text, schema, call_model, check):
+   368	    """Ask for one thesis's ladder; send a refused answer back once, with the answer itself and the reasons, so that the model
+   369	    corrects what it wrote and does not start again. Returns the outcome record.
+   370	
+   371	    `call_model(system_text, user_text, schema)` sends one request and returns a dict with `answer_text` (the model's own text, or
+   372	    None when the response carried none), `input_tokens`, `output_tokens`, `request_sha256`, `cached` and `error` (None, or the
+   373	    reason the answer could not be read or did not fit the schema). `check(answer)` returns (reasons, passage) as `check_answer`
+   374	    does, with the thesis and its article bound in. A cached answer raises CachedAnswer.
+   375	    """
+   376	    requests = []
+   377	    note = ''
+   378	    for _ in range(2):
+   379	        sent = call_model(system_text, user_text(payload, closing_text) + note, schema)
+   380	        if sent.get('cached'):
+   381	            raise CachedAnswer(f"thesis {payload['thesis']['id']}: the model archive answered from its cache")
+   382	        record = {'request_sha256': sent['request_sha256'], 'answer_text': sent['answer_text'], 'input_tokens': sent['input_tokens'],
+   383	                  'output_tokens': sent['output_tokens']}
+   384	        reasons, answer, passage = [], None, None
+   385	        if sent['error']:
+   386	            reasons = [sent['error']]
+   387	        else:
+   388	            try:
+   389	                answer = parse_exactly(sent['answer_text'])
+   390	            except (ValueError, RecursionError) as error:
+   391	                reasons = [f'the answer could not be read: {type(error).__name__}']
+   392	            else:
+   393	                reasons, passage = check(answer)
+   394	        if not reasons:
+   395	            if answer['ladder'] is None:
+   396	                record['result'] = 'no ladder'
+   397	                requests.append(record)
+   398	                return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder', 'reason': answer['no_ladder'], 'requests': requests,
+   399	                        'answer': None, 'passage': None}
+   400	            record['result'] = 'ladder'
+   401	            requests.append(record)
+   402	            return {'thesis_id': payload['thesis']['id'], 'status': 'ladder', 'reason': None, 'requests': requests, 'answer': answer,
+   403	                    'passage': passage}
+   404	        record['result'] = 'refused'
+   405	        record['reasons'] = reasons
+   406	        requests.append(record)
+   407	        if answer is None:                               # the answer could not be read or did not fit the schema: nothing to show back
+   408	            note = RESEND_NOTE_UNREADABLE.format(reasons=' '.join(reasons))
+   409	        else:
+   410	            note = RESEND_NOTE.format(answer=sent['answer_text'], reasons='\n'.join(f'- {reason}' for reason in reasons))
+   411	    return {'thesis_id': payload['thesis']['id'], 'status': 'no ladder: refused', 'reason': None, 'requests': requests, 'answer': None,
+   412	            'passage': None}
+   413	
+   414	
+    35	budget_replay = load('budget_replay', HERE / 'budget_replay.py')
+    36	
+    37	
+    38	def embedding_estimate(texts, embedding_model=search.EMBEDDING_MODEL):
+    39	    body = json.dumps({'model': embedding_model, 'input': texts}).encode('utf-8')
+    40	    return EMBEDDING_ATTEMPTS * (2 * len(body) + 4096) * search.EMBEDDING_PRICE_PER_M / 1e6
+    41	
+    42	
+    43	def install(ledger):
+    44	    """Replace the two module attributes with budgeted wrappers; returns a function that restores the originals."""
+    45	    original_embeddings, original_jev = search.openai_embeddings, jev.transport
+    46	
+    47	    def budgeted_embeddings(texts, embedding_model=search.EMBEDDING_MODEL, timeout=120):
+    48	        estimate = embedding_estimate(texts, embedding_model)
+    49	        if not ledger.reserve(estimate):
+    50	            raise model.TransportError('the shared budget ceiling would be passed: embeddings not sent')
+    51	        try:
+    52	            vectors, tokens = original_embeddings(texts, embedding_model=embedding_model, timeout=timeout)
+    53	        except BaseException:
+    54	            ledger.settle(estimate, estimate, kind='embeddings')
+    55	            raise
+    56	        whole = isinstance(tokens, int) and not isinstance(tokens, bool) and tokens > 0
+    57	        ledger.settle(estimate, EMBEDDING_ATTEMPTS * tokens * search.EMBEDDING_PRICE_PER_M / 1e6 if whole else estimate, kind='embeddings',
+    58	                      tokens=tokens if whole else None)
+    59	        return vectors, tokens
+    60	
+    61	    def budgeted_jev(request, timeout=60):
+    62	        estimate = budget_replay.jev_estimate(request)
+    63	        if not ledger.reserve(estimate):
+    64	            raise model.TransportError('the shared budget ceiling would be passed: Jev not sent')
+    65	        try:
+    66	            response = original_jev(request, timeout=timeout)
+    67	        except BaseException:
+    68	            ledger.settle(estimate, estimate, kind='jev')
+    69	            raise
+    70	        usage = response.get('usage') if isinstance(response, dict) else None
+    71	        tokens = usage.get('input_tokens') if isinstance(usage, dict) else None
+    72	        whole = isinstance(tokens, int) and not isinstance(tokens, bool) and tokens > 0
+    73	        ledger.settle(estimate, jev.ATTEMPTS * tokens * model.PRICES[request['model']][0] / 1e6 if whole else estimate, kind='jev',
+    74	                      tokens=tokens if whole else None)
+    75	        return response
+    76	
+    77	    search.openai_embeddings, jev.transport = budgeted_embeddings, budgeted_jev
+    78	
+    79	    def restore():
+    80	        search.openai_embeddings, jev.transport = original_embeddings, original_jev
+    81	    return restore
+    82	
+    83	
+    84	def main(argv):
+    85	    if len(argv) < 2 or argv[0] != '--shared-ledger':
+    86	        raise SystemExit(__doc__)
+    87	    ledger = budget_replay.SharedLedger(argv[1])
+    88	    if ledger.read().get('stopped'):
+    89	        raise SystemExit(f"the shared ledger is stopped ({ledger.read().get('stop_reason')}): nothing is sent")
+    90	    run_forward = load('clean_step2_run_forward', ROOT / 'clean-arch/step2/run_forward.py')
+    91	    restore = install(ledger)
+    92	    remove_gate = budget_replay.install_stop_gate(ledger)  # a helper's internal retry reads the run's stop too (council mo R1)
+    93	    saved_argv = sys.argv
+    94	    sys.argv = ['run_forward.py', *argv[2:]]
+    95	    try:
+    96	        return run_forward.main()
+    97	    finally:
+    98	        sys.argv = saved_argv
+    99	        remove_gate()
+   100	        restore()
+   101	
+   102	
+   103	if __name__ == '__main__':
+   104	    sys.exit(main(sys.argv[1:]))
+171:    def failing(mark, population):
+172:        return [(outcome['case'], outcome['pass']) for outcome in population if values.get((outcome['case'], outcome['pass']), {}).get(mark) == 'fails']
+188:    cases = sorted({outcome['case'] for outcome in outcomes})
+193:        right_cases = [case for case in cases if sum(right[(o['case'], o['pass'])] for o in sends_of[case]) >= 2]
+194:        ladder_cases = [case for case in cases if sum(sound_ladder[(o['case'], o['pass'])] for o in sends_of[case]) >= 2]
+215:        populations = {mark: ladders for mark in LADDER_MARKS}
+216:        populations['F'] = [o for o in ladders if kind_of(o) in ('company figure', 'company states')]
+217:        populations['Y'] = [o for o in ladders if kind_of(o) in ('company figure', 'theme figure')]
+218:        populations['N'] = refusals
+219:        for mark, population in populations.items():
+220:            holding = sum(1 for o in population if values[(o['case'], o['pass'])][mark] == 'holds')
+221:            report['shares'][mark] = 'none to count' if not population else (holding, len(population))
+
+codex
+**Gate publication before the next article reads the open list.** If one article proposes two questions and only one gets answer choices, keep the evidence and its link to the accepted question.
+
+1. **The tables are incomplete.** Separate a valid decline, two invalid answers, transport failure, and a budget stop. Stage A currently stops an incomplete run. The design continues after transport failure, and moving the call into Step 1 risks inheriting its whole-step redo. Specify what commits when a crash follows one acceptance in a multi-question item. [Stage A](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:181) · [Launcher](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:277)
+
+2. **The reader contract is incomplete.** Removing an ID alone leaves an unresolved link in frozen Step 2. Remove the rejected link from the saved result, preserve valid links, and retain the raw answer for audit. The judge and release checks expect the first-pass files under the ladder component. `build_cases` would now count only accepted questions, so D400’s three-pass test population also needs an explicit contract. [Step 2](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:52) · [Release checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:86)
+
+3. **The simplest place** is Step 1’s existing open-state write, using the caller’s frozen ladder logic. The PRD places the ladder after Step 3 and explicitly retains unjudged theses. This changes both behaviors and needs a recorded decision. [Write boundary](/Users/lchingen/hivemind/clean-arch/step1/runner.py:342) · [PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:370)
+
+NOT READY: Specify one publication gate that preserves stop behavior, evidence links, and the release-check population, then record the PRD change.
+tokens used
+315,281
+**Gate publication before the next article reads the open list.** If one article proposes two questions and only one gets answer choices, keep the evidence and its link to the accepted question.
+
+1. **The tables are incomplete.** Separate a valid decline, two invalid answers, transport failure, and a budget stop. Stage A currently stops an incomplete run. The design continues after transport failure, and moving the call into Step 1 risks inheriting its whole-step redo. Specify what commits when a crash follows one acceptance in a multi-question item. [Stage A](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:181) · [Launcher](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:277)
+
+2. **The reader contract is incomplete.** Removing an ID alone leaves an unresolved link in frozen Step 2. Remove the rejected link from the saved result, preserve valid links, and retain the raw answer for audit. The judge and release checks expect the first-pass files under the ladder component. `build_cases` would now count only accepted questions, so D400’s three-pass test population also needs an explicit contract. [Step 2](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:52) · [Release checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:86)
+
+3. **The simplest place** is Step 1’s existing open-state write, using the caller’s frozen ladder logic. The PRD places the ladder after Step 3 and explicitly retains unjudged theses. This changes both behaviors and needs a recorded decision. [Write boundary](/Users/lchingen/hivemind/clean-arch/step1/runner.py:342) · [PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:370)
+
+NOT READY: Specify one publication gate that preserves stop behavior, evidence links, and the release-check population, then record the PRD change.
