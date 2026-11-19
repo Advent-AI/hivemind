@@ -69,3 +69,60 @@ rule. Measured: whether a well-formed thesis opens and is accepted for M02, M03,
    - D400's three-pass population needs an explicit contract once only accepted theses are counted.
 4. **A PRD change.** The PRD places the ladder after Step 3 and keeps unjudged theses (`clean-arch/PRD.md` around line 370). This design
    changes both. That is a recorded decision, and Alex's to make, since the PRD's design is his.
+
+## Revision 2: the four gaps closed
+
+**1. Failure taxonomy.** These are stage_a's own outcomes, kept as they are (`stage_a.py` lines 181–200).
+
+| Outcome at opening | What it means | What happens |
+|---|---|---|
+| `ladder` | The ladder accepted the thesis | The thesis is published to the open list |
+| `no ladder`, including "refused" after the refusal note and the resend | The ladder declined, or gave two invalid answers | Not published. Its links are removed (2 below) and the refusal is recorded on the row |
+| Any other exception, transport after its retries included | stage_a calls `limit.stop`, which stops every worker | The Step 1 run stops. The draw goes to D449's redo decision, as a Step 1 stop does today. It does not continue |
+| `Stopped` or `OverBudget` | The ledger stopped | The run stops on the ledger, as now |
+
+- **One commit per item.** An item's row (`result`, `after_state`, status complete) is written only once every new thesis of that item has
+  its pass-1 outcome.
+- **A crash between them** leaves the row in flight with no state written. The pass-1 lines of that item are then not counted: a relaunch
+  is D449's whole-step redo, in a new folder.
+
+**2. The link contract.**
+- After the item's ladders, the saved `result` (not `raw_response`, which is kept untouched for audit) is rewritten:
+  - each refused thesis is removed from `new_theses` and from `new_thesis_ids`;
+  - every link whose target is a refused local id is removed from each evidence item;
+  - an evidence item left with no link moves to `unfiled_evidence`, the runner's existing field (D383).
+- Links to a co-proposed accepted thesis and to existing theses stay.
+- A field `refused_at_opening`, a list of {local_id, description, reason}, records what was removed.
+- Frozen Step 2's resolver (`run_forward.py` line 52: "a new one must have been opened") then sees no unresolved link.
+
+**3. Files and populations.**
+- Pass 1 is written inside Step 1's folder (`step1/ladder-pass-1/outcomes.jsonl` and its `archive.sqlite`). The launcher refuses a
+  ladder folder it did not record.
+- The ladder component copies both, byte for byte, to `ladder/send-1/` before it sends passes 2 and 3. `judge-inputs.json` and the
+  release checks' `SECTION_INPUTS` keep their paths.
+- **The populations:**
+  - `build_cases`' cases are the opened (accepted) theses.
+  - D400's three-pass checks run on that population.
+  - The theses refused at opening are printed beside it as a count with reasons. They have no passes 2 and 3, since they never opened.
+
+**4. The PRD.**
+- **Timing already matches.** The PRD's Step 4a (§7) already places the ladder "one call per newly opened thesis, after Step 3 has saved
+  the item that opened it and before that day's judging". The batch replay, which ran Step 1 over the whole window first, is what
+  departed from it. Interleaving restores the PRD's order.
+- **What does change** is that a thesis the ladder refuses is no longer open. Today the PRD keeps such a thesis open, unjudged.
+- That one sentence is a PRD change, and Alex's decision.
+
+## Blind review, round 2 (`council-f-codex.md`): NOT READY. Remaining gaps
+1. **Stop rules.** Keep the existing ones. A transport failure at the ladder stops the shared ledger, and a crash has no redo; neither
+   becomes a Step 1 redo.
+2. **Evidence.** Frozen Step 2 reads only `result.evidence`. An evidence item whose last link is removed stays in `evidence` with
+   `links: []`; it does not move to `unfiled_evidence`.
+3. **Outputs.** Specify the judge-compatible and D400-compatible outputs: which population pass 1 holds, and how passes 2 and 3 run, since
+   stage_a's command starts at pass 1.
+4. **The PRD: two changes.**
+   - The ladder runs when Step 1 publishes, before Step 3 saves; the PRD has it after.
+   - A refused thesis is not open; the PRD keeps unjudged theses.
+   Both are Alex's.
+
+**Stop.** Design rounds stop here until Alex decides the two PRD changes. Each round finds finer interface detail (AGENTS §1: stop answering
+findings round after round), and none of it can be built without his decision.

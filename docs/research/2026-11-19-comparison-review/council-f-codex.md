@@ -1,0 +1,8 @@
+**Revision 2 fixes when an article’s open questions are saved. Four gaps remain.**
+
+1. **Failure.** Stage A stops the shared ledger on transport failure. The launcher records a crash with no redo. Revision 2 gives both a Step 1 redo. Keep the existing stop rules. [Stage A](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:52) · [Launcher](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/run_fresh.py:241)
+2. **Evidence.** Frozen Step 2 reads only `result.evidence`. Moving a statement to `unfiled_evidence` drops it. Keep it in `evidence` with `links: []` when its last link is removed. [Step 2 reader](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:67)
+3. **Files and population.** Copying all first-pass outcomes alongside accepted-only cases makes the D400 packet builder fail. Filtering the copy changes who gets measured. Specify both populations and how passes 2 and 3 run. The current command starts at pass 1. [Packet builder](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py:76) · [Stage A command](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:233)
+4. **PRD.** Running before Step 1 publishes puts the ladder before Step 3 saves. The PRD requires the reverse and retains unjudged theses. Record both changes. [PRD §7](/Users/lchingen/hivemind/clean-arch/PRD.md:372)
+
+NOT READY: Preserve the stop and evidence rules, specify compatible outputs for the judge and D400, and record both PRD changes.
