@@ -140,3 +140,18 @@ One dated row per event and check, with numbers. Newest last.
     - Old system: $27.26 for its three draws.
     - New system: new-2 $34.66, new-3 $37.64, new-1 $45.29, plus the $0.12 single-item send.
   - **The answer stands as the 5-draw diagnostic:** the new system loses (served: new 2–3, old 10).
+- 2026-11-19 ~13:30: **Why the new system loses.** This is the D674 round's diagnosis, $0, from stored traces and libraries.
+  - **The new libraries hold no question on the company's own figures.** Of their 33–41 questions, none is on revenue, data-center
+    revenue, gross margin or hyperscaler capex. They are deals, investments, shipments and regulators. The old libraries open FY27
+    revenue, FY28 revenue, FY27 data-center revenue, FY27 gross margin and hyperscaler capex from 07-02 to 07-08.
+  - **The new system extracts the evidence but files no question for it.** new-2's Step 1 extracted 642 evidence items on
+    revenue, margin or capex; 336 were linked elsewhere and 306 kept unlinked.
+  - **The cause is the prompt's rule, by decision:**
+    - D382 (Alex: "我觉得财务类型不应该是thesis，而更多的是条件…"): "a company's own figures are conditions, not questions".
+    - D384: "opens only the big matters", with class A, the main-driver quantity, left out under D382.
+    - The week acceptance (2026-09-22..28) already found the same thing: the clean path lacked FY27 and FY28 revenue and the FY28
+      margin, and its stored reasoning named this do-not-open sentence.
+  - **Size of the class.** 7 of the 32 matters are company figures (M06, M07, M09, M10, M11, M18, M30). The old system serves 5–6 of
+    them and the new system 0. That is 4 of the old system's 7–8 old-only matters.
+  - **Outside the company figures** the new system still trails: old serves 6 and new 3. It misses M04, hyperscaler capex (a shared
+    quantity, which D384 allows), M17, the Anthropic anchor investment (an obligation), and M19 in 2 of its draws.

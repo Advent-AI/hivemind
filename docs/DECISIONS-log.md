@@ -10003,3 +10003,38 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - The import path is restored on every exit.
   - Every check confirmed in round 21 still holds: the verdict is computed only on the rebuilt snapshot, an edited record is refused, and rebuild progress stays off stdout.
   - The scorer and the rebuild are closed for this run. They next run on the full run's outputs, in the CURRENT_STATE order.
+
+## D676 · 2026-11-19 · The release comparison: the new system loses for two known mechanisms; keep the old system; the outcome was computable before the run (council consensus)
+
+- **Alex:** "did you measure wrong or what … you go deep into the entire trace and logic and run council loop to reason on this
+  comparison and the runs of the two system".
+- **Council:**
+  - an independent cold Codex read (`docs/research/2026-11-19-comparison-review/council-a-codex.md`);
+  - Claude's reflection, written first (`claude-reflection.md`);
+  - one challenge round (`council-b-codex.md`).
+- **Agreed:**
+  - **The measurement is sound for the products as configured.**
+    - The matter list was built blind from the articles.
+    - The mapping was blind with third readers.
+    - The controls pass, 13 of 13.
+    - The old system's served cards hold on the ones read.
+    - No new question was mapped out wrongly.
+    - Codex found the old system's Anthropic serve generous; without it b is 6 or 7, still a loss.
+  - **Mechanism 1, by design (D382, D384, D505):** the company's own figures are not questions. 7 of the 32 matters are such figures,
+    and the old system serves 4 to 6 of them. By D384, five other companies' standalone figures are also outside the new system's
+    rules, so its ceiling is 20 of 32 matters.
+  - **Mechanism 2, a hand-off defect known since D432:**
+    - Step 1 opens bundled questions (two years, or several outcomes), and the frozen ladder refuses them. new-2 lost 27 of 60 and new-3
+      19 of 60.
+    - Among them are four-hyperscaler capex (M04) and the Anthropic investment (M17) in both runs, and Hugging Face (M19) in new-2.
+    - The judge uses pass 1's ladders; new-3's capex question got a valid ladder only on pass 3.
+  - **The ceiling ($0 check):** with every dropped key-matter question repaired and served, new is 5–6 against old 10, a = 0, b = 4–5:
+    no practical winner, never a lead. Only NVIDIA's own figures (M06, M10, M11, M18) remain.
+  - **Process failure:** the attainable verdict was computable in minutes before the run, from the frozen list, D505, D432 and the D489
+    week. Neither the council (D665–D667) nor Claude computed it (AGENTS §7.2); two days and about $145 measured a knowable result.
+- **Decided (council consensus):**
+  - The old system stays for release.
+  - No further comparison run.
+  - The new path continues only on Alex's word, and only after two things: his D382 call for such a comparison, and a cents-level test
+    of the one-outcome hand-off repair on the stored no-ladder cases.
+  - Before any future paid comparison, its attainable verdict is computed first.

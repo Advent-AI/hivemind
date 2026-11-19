@@ -443,7 +443,8 @@ The council's reversible decisions on Alex's page are recorded in D606 and D607.
   - Even a perfect new-1 could not reverse it.
   - The new libraries miss the core revenue, margin and capex matters.
   - Details: `docs/research/2026-11-17-product-comparison/RUN-LOG.md`, `poc/data/comparison-2026-11-17/reading-diagnostic/`.
-  - **The next task:** find why the new system's questions miss those matters, from the stored traces, at no cost, before any new run.
+  - **Diagnosed (D676, council):** D382's figure exclusion plus the Step 1→ladder bundled-question loss (D432). Even repaired, the new system ties at best. The old system stays; no further comparison run.
+  - **The next task:** none started. Continuing the new path waits on Alex: his D382 call and a cents-level test of the hand-off repair.
 - **(Superseded) When all six draws end, in this order:**
   1. `eligibility.py`: six complete draws, launched within 1 h, sends within 72 h.
   2. `mapping.py export`, then `read`, `third`, `result`.

@@ -1,0 +1,11 @@
+**Keep the old system for release. Do the free check first.** One saved answer already shows why it’s worth doing. The new system produced a valid 2026 capex question on its third attempt. The comparison used the first attempt, which bundled two years and produced no answer choices. [Saved third attempt](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/new-3/ladder/send-3/outcomes.jsonl:6)
+
+1. **Anthropic changes the margin by one in a sensitivity check.** Under the frozen reading, the old-only counts stay **7 and 8**. If we disallow the September deadline as a match for March, they fall to **6 and 7**. Both remain above the five-matter loss threshold. The frozen list also confirms **four** NVIDIA figure matters served by the old system across runs. [Counts](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/reading-diagnostic/diagnostic-count.json:12) · [Anthropic trace](/private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/full-trace.txt:97)
+
+2. **The tests answer different questions.** The free check asks what a perfect repair could recover. The paid test asks whether revised instructions actually recover it. Start free. Some of the 46 refusals concern out-of-scope topics, such as TSMC’s own prices. Shortening those questions solves nothing. The coverage penalty was knowable before launch. The exact loss was still uncertain. [TSMC refusal](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/new-2/ladder/send-1/outcomes.jsonl:52)
+
+3. **Keep the old system and the original 32-matter result.** Dropping the figures still leaves the old system ahead, 6 to 2–3. The earlier experiment that added revenue and margin lost the Rubin shipment question on its control case. [D491](/Users/lchingen/hivemind/docs/DECISIONS.md:835)
+
+**Approve or refuse:** Keep the old system for release and spend $0 checking how many of the 32 matters a one-outcome repair could recover, starting with capex and Anthropic.
+
+DISAGREE: Run the free coverage check before paying to resend the 46 cases.
