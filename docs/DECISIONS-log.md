@@ -10038,3 +10038,22 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - The new path continues only on Alex's word, and only after two things: his D382 call for such a comparison, and a cents-level test
     of the one-outcome hand-off repair on the stored no-ladder cases.
   - Before any future paid comparison, its attainable verdict is computed first.
+
+## D677 · 2026-11-19 · The release comparison's goal loop is closed; the old system stays; no paid work continues (council consensus, D439/D544)
+
+- **Context:** Alex's goal (D674) is to keep tackling until the comparison passes, without asking him. He has not answered the closing
+  question. D544 says the council decides reversibly, not "Alex's choice".
+- **Facts:**
+  - A pass needs at least 9 of 14 rule-allowed matters only the new system serves, under D382; it serves 0–1 today.
+  - The one-outcome probe failed its line 1.
+  - The $0 census found three loss points that no wording fix reaches.
+  - A verdict needs a full comparison, about $110, above D439's $40 ceiling.
+  - Two decisions stand: D493 (no further Step 1 request change) and D505 (figures are not questions).
+- **Council:** `docs/research/2026-11-19-comparison-review/council-c-codex.md`: "CONSENSUS: (a) Close the comparison loop, keep the old
+  system running, and stop paid work … Reconsider if Alex reverses D505 or funds a full run. Before spending, show a path to passing the
+  frozen criteria."
+- **Decided:**
+  - The loop is closed and the old system stays.
+  - No paid work continues.
+  - **Reversal conditions:** Alex reverses D505, or funds a full run. Either way, a written path to passing the frozen criteria comes
+    first.

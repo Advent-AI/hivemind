@@ -444,7 +444,8 @@ The council's reversible decisions on Alex's page are recorded in D606 and D607.
   - The new libraries miss the core revenue, margin and capex matters.
   - Details: `docs/research/2026-11-17-product-comparison/RUN-LOG.md`, `poc/data/comparison-2026-11-17/reading-diagnostic/`.
   - **Diagnosed (D676, council):** D382's figure exclusion plus the Step 1→ladder bundled-question loss (D432). Even repaired, the new system ties at best. The old system stays; no further comparison run.
-  - **The next task:** none started. Continuing the new path waits on Alex's D382 call.
+  - **The goal loop is closed (D677, council).** The old system stays and no paid work continues. It reopens only if Alex reverses D505
+    or funds a full run, with a written path to passing first.
   - **The one-outcome probe failed its line 1** (`docs/research/2026-11-19-one-outcome-probe/RESULT.md`): it fixes the period bundles
     but not the deal bundles.
   - **What a pass would take** ($0 arithmetic on the frozen list; pass = a − b ≥ 5 and a ≥ 2b):
