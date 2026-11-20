@@ -443,10 +443,64 @@ $2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
   - P2's proxy clause: total capex is used for data-center capex without being named a proxy, which old also misses;
   - V: the rebuilt control's v47 was unsupported, and a reconstruction effect is not ruled out.
 - **Not shown:** that the merge answers better. The old answers were already supported, and the capex band was set by 09-06 history.
-- **Next: Alex's call.** Closed per the council. Any further step is his: keep the old system, test the merge on matters the old system
-  misses (which needs the clean opener), or accept the frozen judge's proxy behaviour as the bar.
+- **Next:** superseded by D681, below.
 
-**The one next task (D665–D675): read the release comparison's six draws when they finish, with the council-reviewed tools**
+**The one next task: none open (D689, D690, 2026-11-20).** poc-v118 is the product (Alex chose A, D690), and the research line
+rests until his new direction. The hybrid's release line is paused, and the judge and c8 lines are closed for now. A line reopens only
+on its condition below. No paid send is open, and D439 has $0 available without Alex's word.
+- **D689 (Alex chose option 1; council N closed both lines; record:
+  [council-n-codex.md](research/2026-11-20-hybrid/council-n-codex.md), [council-n2-codex.md](research/2026-11-20-hybrid/council-n2-codex.md)).**
+  - **Judge.** The carried previous conclusion holds rejected forecasts: on full evidence, 0 of 13 move with it and 8 of 13 without it,
+    with 0 of 8 controls moving.
+    - The readers jointly support 4 net repairs against the 5 required, including M14 in two of three old draws.
+    - The frozen gold reads 44.3 against 45.0, with China share regressed.
+    - It reopens on eight eligible failures on fresh questions, which the design never read and are counted once across draws, with
+      matched controls and a source-checked summary of the omitted facts (D198 option 2). Then the D198 choice and its price go to
+      Alex.
+  - **c8.** It showed no improvement in the final answers tested, and adds about $24 to old's about $9 over 82 days. It reopens on a
+    traced decisive fact that old missed, c8 delivers, and that could change a named final answer.
+  - **Spend (an error of mine).** "Inside D439's $40" was written in D679, D682 and D684 with no tally. D439 stands at about $39.65 or
+    $44.42 under the two readings. Phase 1's ledger is $2.64, not $2.4.
+- **History of this line (D681–D688)** follows. Alex opened the hybrid's build and
+test, and asked that problems not be found only at the end (his words are in the D681 record). Plan: [PLAN.md](research/2026-11-20-hybrid/PLAN.md). Design:
+[DESIGN-J2.md](research/2026-11-20-hybrid/DESIGN-J2.md).
+- **Where old loses on the 32 matters:**
+  - it never opens 17;
+  - it opened M08 and M14 in 3/3 draws, but the judge reasoned wrongly: amounts that overlap were added, and a figure of another scope
+    was taken as the answer.
+- **Census:** 24 answers rejected by both readers ([CENSUS.md](research/2026-11-20-hybrid/census/CENSUS.md)).
+- **Found at $0:** the judge writes the rung first and its reference and derivation last (`schema_for` appends the stance fields to
+  the end of `properties`).
+- **Arms:**
+  - J2a, the schema order only;
+  - J2b, J2a plus an overlap and scope check.
+- **The probe and its rule** are written before any J2 send. Its regression guard is the frozen judgement gold: the stored v7 requests
+  give 15/17, 15/17 and 16/17, and are rebuilt byte for byte.
+- **Status (D685):**
+  - **The judge line is paused within D198.** Four angles have failed:
+    - J2a and J2b fail the locked blind reading;
+    - removing the previous conclusion misses its screen by one, and the frozen gold reads 44.3 against 45.0;
+    - H1, the heading only, gives 0 net repairs against 2 in council J's blind diagnostic.
+  - The carried derivation holds the rejected rungs. Every remaining lever changes D198.
+  - **No fresh test exists on this corpus.** The judge's errors sit in about ten numeric bets the design has read; 27 fresh bets gave
+    1 target against 8 needed.
+- **Opening census (D686):** [OPENING-CENSUS.md](research/2026-11-20-hybrid/OPENING-CENSUS.md). Of the 16 matters old never opens:
+  - 6 are merged into a held question, because the scoring list is finer than D197 and D248;
+  - 5 fall outside the library's NVIDIA-only subject;
+  - 5, plus M05, are never proposed, though D248 allows them; a fix needs a new extraction version (D274).
+- **D382 answered (D687; his words are in the record):** in the hybrid, a company's own material figure keeps its own question, as
+  old's opening does.
+- **Attainable check (D688, council M):** [OPENING-CENSUS.md](research/2026-11-20-hybrid/OPENING-CENSUS.md), last two sections.
+  - The census found no credible path to a D665 lead through opening changes alone.
+  - The concrete misses within Alex's rules are M20 (a $125B unsigned obligation, D388) and M05. M09, M30 and M25 are coin flips.
+  - Noise costs about 1.4.
+  - What binds: the list counts finer than D248/D388 on 9 matters, the NVIDIA-only subject on 5, and D198 on 2.
+  - No opening test is sent.
+- **D688's recommendation, answered by D689:** keep poc-v118 as production and pause the hybrid's release line. Questions on other
+  research-list companies' key figures are offered only for their own value. Spend: phase 1 $2.64 of $3 (ledger); `phase1b` $0.36 of
+  $2.
+
+**Earlier next task, closed by D676 and D677 (D665–D675): read the release comparison's six draws when they finish, with the council-reviewed tools**
 (`docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md` §1.4–§1.6; `DESIGN-1.6.md` v7; D675).
 
 - **Done:**

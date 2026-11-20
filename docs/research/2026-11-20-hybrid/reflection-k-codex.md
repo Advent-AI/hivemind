@@ -1,0 +1,11 @@
+Start phase 2 with a $0 review of the 17 matters the old system never turned into questions.
+
+**Lessons.** The judge can make a mistake once and repeat it for days. For example, it added $25B and $18B without establishing whether they overlapped, then carried that reasoning forward. With identical full evidence, removing the prior answer changed the chosen range in 8 of 13 rejected cases. Keeping it changed zero. Test whether readers support the answer against same-day repeats, then replay from day one so each version builds its own history.
+
+**Weaker conclusions.** Only four of those eight moves earned both readers’ support, one short of the threshold. Two were the same capex question in different draws. M08 still failed, and removing the prior answer hurt the China-share answer on the frozen check. Changing output order and adding reasoning checks both failed their screens. H1’s new heading repaired zero of three cases selected to give it a chance. Moving the prior answer earlier remains untested. The fresh pool yielded only one eligible failure, so it could not test whether a fix generalizes.
+
+**Impact on the 32 matters.** Opening ranks first. Seventeen never opened, and M05, M09 and M25 were served in only one draw each. The unresolved company-figure policy could put five or six matters the old system serves out of reach. Judge reasoning cost M08 and M14. M30 is a possible gain if company figures remain eligible.
+
+**Next angle and falsifier.** Trace where each unopened matter first fell out and whether the evidence available then could support an answer. Count the attainable gains under each figure policy. If even the generous ceiling, including both possible judge repairs, is below five additional matters, change the plan to address the constraint that sets that ceiling. Otherwise, test the strongest opening fix on final answers, requiring five net gains and at least twice as many wins as losses.
+
+CONSENSUS-READY: Start the opening census and keep D198 in place while the census establishes what the hybrid can realistically gain.

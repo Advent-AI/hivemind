@@ -10121,3 +10121,253 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - a judging copy refused by the store's append-only triggers.
 - **Closed with no further sends.** The next step is Alex's.
 - Record: `docs/research/2026-11-19-merge-council/RESULT.md`, `council-e-codex.md`.
+
+## D681 · 2026-11-20 · Alex opens the hybrid system's build and test; phase 1 is a new judge version (J2) for the judge's reasoning errors
+
+- Alex, 2026-11-20, after the merge test (D680) and the finding that the old system loses on the 32 matters at opening and in the judge's
+  reasoning, not in reading: "不是聊了半天就是要合并两边最好的来提升系统吗？"; then, on the proposal to fix the judge's reasoning errors
+  first as a new judge version, with a council review and a test of a few cents: "可以啊，你现在开始做hybrid system 的构建和测试，不要犯了和做新系统一样的错误到最后才发现问题".
+- Decided (his words): the hybrid system is built and tested. The judge (judging-v7, frozen by D354) may get a new version, J2, measured
+  against v7. The frozen ruler is unchanged.
+- The plan (`docs/research/2026-11-20-hybrid/PLAN.md`) guards against the new system's mistakes:
+  - a change is accepted by its effect on final answers, read by blind readers;
+  - an end-to-end slice runs in week 1;
+  - the attainable verdict is computed first;
+  - every line has a source;
+  - the design uses the stored dev failures, and acceptance is on a fresh window.
+- Attainable on the 32 matters (computed first):
+  - the judge fix can add M08 and M14 to old's 10;
+  - a release lead needs opening (phase 2);
+  - with D382 applied to the hybrid's figure questions, the hybrid loses by construction. That choice is Alex's.
+- First findings ($0, 2026-11-20):
+  - 24 answers rejected by both readers. In about 16 of them the answer leaves its own reference's rung on a weak step: overlapping
+    amounts added (6), a figure of another scope taken as the value (6), an adjustment with no basis (5).
+  - The judge writes the rung first and the reference and implied outcome last, in all 48 stored answers read. `schema_for` appends
+    the D260 stance fields to the end of the schema's properties, against its own comment: D260's intended order never ran.
+- Correction: the merge-test report cited a planted reader control (C140) as an old-2 answer. Corrected in its `RESULT.md`.
+- Record: `docs/research/2026-11-20-hybrid/` (PLAN.md, census/, DESIGN-J2.md).
+
+## D682 · 2026-11-20 · Under D681 (council): J2a and J2b retired; the carried previous conclusion is the lead mechanism; a separating test on complete evidence
+
+- Council thread `01a1f7a7…`, rounds A to G (`docs/research/2026-11-20-hybrid/council-*-codex.md`), consensus at E for the sends and at G for
+  what follows.
+- **Measured** on the 48 stored final requests (24 targets rejected by both readers, 24 supported controls), 3 repeats each:
+  - **J2a (schema order only):** moves the same 2 targets as v7's re-send; the falsifier fired.
+  - **J2b (order plus overlap and scope check):** 3 targets, with unchanged derivations.
+  - **Frozen judgement gold:** v7 45.0, J2a 44.3, J2b 44.7 of 51. Rule (c) is missed by both; J2b regresses d3-q18.
+  - **Production-check refusals:** 0 of 144 in every arm.
+- **The anchor.**
+  - Every final request carries "[Previous conclusion, for comparison only] rung N; reasons: …", the rejected derivation itself, held
+    for a median of 8.5 judgements.
+  - Sent without it: v7 moves 14 of 24 targets (2 with it) and 2 of 24 controls, mostly toward the rung the readers named. J2b without
+    it moves 16.
+  - It is confounded: in 34 of 48 requests, the previous conclusion also carries hidden pieces (D198).
+- **Decided (council):**
+  - retire J2a and J2b;
+  - separate the anchor from the hidden pieces on complete evidence: 21 cases with 1 to 100 hidden pieces, every piece in force shown
+    (each request first rebuilt byte for byte by `build_prompt` on the store as it stood, 48/48), with and without the previous
+    conclusion, and a screen written before the send;
+  - the end-to-end test of a judge change is a judge-only replay of the whole window from 07-01 with old's links fixed. It is validated
+    at $0: 82/82 days with the same judged set, and 1,612 of 1,616 requests byte-identical (the 4 others are retries);
+  - a new $2 ledger for the separating test, inside D439's $40.
+- **For Alex after the separation:** whether to change how the previous conclusion is presented (within D198), or what it carries
+  (a change to D198).
+- Record: `docs/research/2026-11-20-hybrid/DESIGN-J2.md`, results 1–3 and councils F–G.
+
+## D683 · 2026-11-20 · Under D681/D682 (council H): the removal of the previous conclusion is not accepted; one presentation-only test goes to Alex
+
+- **Measured** (`docs/research/2026-11-20-hybrid/DESIGN-J2.md`, results 4 to 7):
+  - **The 432-card blind reading:** J2a holds 2 of 24 targets and J2b 4 of 24, against a locked floor of 12 and a net of 8. Both are retired
+    by the rule. v7's own re-send loses 3 of 24 controls, which is the readers' noise.
+  - **The separating test** (13 targets, 8 controls, every piece in force shown):
+    - with the previous conclusion, 0 targets move;
+    - without it, 8 move toward the readers' rung, and 0 controls;
+    - blind reading: net 4 jointly supported repairs (two 2027 capex, total CPU, FY2028 gross margin) against the 5 required, so the
+      screen does not pass. No control was lost and none was refused. The M08 answers moved from rung 3 to 2, where the readers say 1.
+  - **Frozen gold without the previous conclusion:** 44.3 against v7's 45.0, with d3-q17 (China share) regressed.
+- **Decided (council H, consensus):**
+  - the carried previous conclusion is the mechanism that holds rejected rungs;
+  - removing it is not accepted;
+  - one recommendation goes to Alex: keep the previous conclusion and its reasons intact (what D198 carries), and change only its
+    heading to "Earlier assessment and carried evidence. Derive today's forecast afresh.";
+  - **one test**, on fresh, frozen cases (13 targets, 8 controls), 3 paired repeats against v7, every answer blind-read. Screen: net
+    repairs of at least 5, no control lost, no added refusals, and frozen gold at least v7's, with d3-q17 agreeing 3 of 3;
+  - the whole-window replay waits until a candidate clears the screen;
+  - card C100 (M08) is to be rechecked independently; the recorded score stands until then.
+- Spend: phase 1 $2.4 of $3, and the separating test $0.28 of the $2 `phase1b` ledger.
+
+## D684 · 2026-11-20 · Under D683: Alex approves the presentation-only test and hands the iteration to Claude ("那你自己持续迭代")
+
+- **Alex, 2026-11-20**, in reply to the request for approval of council H's one test: "那你自己持续迭代".
+- **Decided:**
+  - the presentation-only test runs on fresh cases, as council H wrote it;
+  - Claude continues the phase-1 loop on its own: council before every send, a council round on every result, every trace read by
+    Claude, every round logged. The limits of D439 stand: the frozen ruler and the frozen production files never change, nothing is
+    pushed, deployed or committed unasked, credentials and caps are untouched, and paid spend stays inside D439's $40;
+  - D382 (company-figure questions in the hybrid) stays open for Alex; the judge's phase does not depend on it.
+- **The fresh pool, written before any reading** (`fresh_test.py pool`, `DESIGN-J2.md`, "The fresh test"): each question's latest
+  judgement on or before 2026-09-06 in the 5 draws, excluding the 73 question-and-draw pairs whose answers the design read. 116 answers,
+  all rebuilt byte for byte under the frozen judge.
+
+## D685 · 2026-11-20 · Under D684 (councils I–K): the fresh test cannot be fed; H1 fails its diagnostic; the judge line pauses within D198; phase 2 (opening) starts
+
+- **The fresh census** (`DESIGN-J2.md`, "The fresh census and council J"): 116 answers as of 09-06, read blind by both families.
+  - Once the bets the design had read were excluded (council I), 27 fresh bets gave 1 target against the 8 required. The selection
+    refused itself, and nothing was sent.
+  - On this corpus, the judge's errors sit in about ten big numeric bets, all of which the design has read.
+- **H1** (the heading only, council H's recommendation) was tested in council J's diagnostic: three motivating targets, two controls,
+  3 repeats against same-day v7, 32 cards blind-read with 2 plants.
+  - Result: **0 net repairs against 2 required.** No control was lost, no refusals, and both plants were caught. **H1 is retired.**
+  - By code, it kept the rejected rung in 8 of 9 target answers. The carried derivation, not its label, holds the rung.
+  - Spend: $0.08 from `phase1b`, which now stands at $0.36 of $2.
+- **Reflection council K** (a cold read, consensus with Claude's reflection apart from one point):
+  - Four angles on the judge have failed. Every remaining lever changes D198.
+  - The judge's ceiling on the 32 matters is M08 and M14.
+  - **Decided:**
+    - D198 stays in place, and its options are not taken to Alex yet;
+    - **phase 2 starts**: a $0 census of the 17 matters old never opened (where each fell out, and whether the evidence then available
+      could support an answer), and the attainable gain under each company-figure policy (D382 open);
+    - **falsifier:** if even the generous ceiling, the two judge repairs included, is below 5 more matters, the plan changes to address
+      the constraint that sets that ceiling. Otherwise the strongest opening fix is tested on final answers against D665's line:
+      5 net gains, and at least twice as many wins as losses.
+  - Claude's reflection had proposed taking D198's options to Alex now. Council K: not before the census shows what the hybrid can
+    gain. Claude agrees.
+- **Errors of mine:**
+  - I read 7% at 09-06 against 17% at 09-20 as "errors accumulate". The two pools are chosen differently, so this is withdrawn
+    (council J).
+  - The first fresh pool held questions the design had read in other draws (council I).
+
+## D686 · 2026-11-20 · Under D685 (council L): the opening census; D382 goes to Alex first
+
+- **Census** (`docs/research/2026-11-20-hybrid/OPENING-CENSUS.md`, $0). The 16 matters old never opens fall into three causes:
+  - **A. Merged into a held question, or a variant of one** (the scoring list is finer than D197's key and D248), 6 matters:
+    five-company capex into four-company capex; the U.S. and EU review stages into one clearance question; capacity commitments into
+    credit support.
+  - **B. The library's subject is NVIDIA only**, 5 matters: Broadcom, CoreWeave, Alphabet, Marvell.
+  - **C. Never proposed, though D248 allows a separate question**, 5 matters, plus M05 (2026 semiconductor sales) in 2 of 3 draws:
+    FY2028 data-center revenue, the Ohio guarantee amount, the $125B residual-value support, the Hugging Face obligation, and DRAM
+    prices.
+- **Ceiling.**
+  - Within the standing decisions there are gross gains only: the judge +2 (not reached), and cause C up to +6, which needs a new
+    version of the frozen extraction (D274).
+  - D665's lead needs 5 net gains and at least twice as many wins as losses, which a gross count does not show.
+  - D382 (company figures as evidence only) would cost 5 or 6 matters old serves.
+- **Decided (council L, Claude agreeing):**
+  - D382 goes to Alex first, with the recommendation to keep a company's own figure as a forecast when it is material and separately
+    answerable;
+  - then one opening change is tested on final answers against old: three paired runs, blind readers, the frozen 32 matters, D665's
+    line, after a $0 check that 5 net gains are attainable.
+- **Error of mine:** the first census version claimed the facts were seen in every case, and put M07, M12 and M20 under "merged",
+  though no candidate had been proposed. Both were corrected after council L.
+
+## D687 · 2026-11-20 · Alex: in the hybrid, a company's own material figure gets its own question
+
+- Alex, 2026-11-20, asked whether in the hybrid NVIDIA's own financial figures (data-center revenue, gross margin, total revenue)
+  should get questions and forecasts of their own, or serve only as evidence to other questions, with the recommendation (council L
+  and Claude) to give one its own question when it is material and separately answerable: "单独开题吧".
+- **Decided:** in the hybrid, a company's own material, separately answerable figure opens its own question, as poc-v118's opening
+  already does. The hybrid keeps old's opening on this point. D382, D384 and D505 stay in force for the clean path and do not bind the
+  hybrid. This is the exception D678 left to Alex.
+- **Effect:** no code changes, since the hybrid opens questions with old's pieces. The company-figure matters old serves (M06, M10,
+  M11, M18) and those it serves in one draw (M09, M30) stay within the hybrid's reach.
+
+## D688 · 2026-11-20 · Under D687 (council M): no credible path to a D665 lead through opening changes alone; to Alex, keep old and pause the hybrid's release line
+
+- **Council M** (`docs/research/2026-11-20-hybrid/council-m-*`; Codex thread 01a1f7a7, memories off):
+  - round 1: CONSENSUS on deferring any release test, with corrections;
+  - round 2: DISAGREE, reclassifying M27 and recommending option 2;
+  - round 3: CONSENSUS, with one wording change, taken here.
+- **The attainable check, $0** (`OPENING-CENSUS.md`, last two sections).
+  - Old's per-draw served counts: 3 of 3 for M11, M13, M15, M18 and M31; 2 of 3 for M04 (counting 1), M06, M10, M17 and M19; 1 of
+    3 for M05, M09 and M25, and for M30 under counting 2.
+  - Noise alone costs an estimated 1.4 of the 2-of-3 matters.
+  - Within D687 and Alex's standing rules, the concrete opening misses are M20 and M05:
+    - M20: a $125B unsigned obligation that old folds into the total in 3 of 3 draws, against D388/D389;
+    - M05: a theme quantity refused once under a free name.
+  - M09, M30 and M25 are coin flips.
+  - Not misses under the rules:
+    - M12: a signed deal under a plan tracked by amount (D248 boundary 1, D388);
+    - M27: separately answerable in principle, but its public settlement source is unproven;
+    - M07: a distinct segment forecast, but the evidence does not establish a missed opening;
+    - M16: allowed by the standard, but its wording lever failed in D481 and leaves the ceiling until a different mechanism has
+      evidence behind it.
+  - What binds: the list counts finer than D248/D388 on 9 matters, the library's NVIDIA-only subject on 5, and D198 for the judge's 2.
+- **Decided (council, Claude agreeing):**
+  - The census found no credible path to a D665 lead through opening changes alone. Five gains with zero losses would pass on paper,
+    but only M20 and M05 are concrete, and the noise losses are an estimate.
+  - No opening test and no M20 account probe are sent for release.
+  - The release bar stays.
+- **To Alex, one recommendation:**
+  - Keep poc-v118 as production and pause the hybrid's release line. The judge and reading fixes remain quality work.
+  - Questions on key figures of other research-list companies are offered only if he wants those forecasts for their own value.
+  - D543 applies, since another test would leave the decision unchanged.
+- **Errors of mine, both corrected before council M closed:**
+  - the first attainable check counted M12, M27 and M16 as gains within the rules without reading D248 boundary 1, D388 and D481;
+  - the census section listed the categories without the decisions that bound them (AGENTS §2.4).
+
+## D689 · 2026-11-20 · Alex chooses option 1 (keep old, pause the hybrid's release line); council N closes the judge and c8 lines for now
+
+- **Alex, 2026-11-20**, on D688's three options, of which option 1 was recommended ("旧系统继续上线，混合系统暂停冲'比旧系统强'这一关。判答案和读文章的改进还可以接着做，但算作提升质量，不再当作上线的理由。"):
+  "1. 好你去做，review deeply with council before your actions, don't haste into making actions".
+- **Decided (Alex):**
+  - option 1: poc-v118 stays production, and the hybrid's release line is paused;
+  - the release bar (D665) is unchanged;
+  - no code or configuration changes.
+- **Council N** (`docs/research/2026-11-20-hybrid/council-n-*`): a fresh Codex thread (`01a1fac2…`, read-only, memories off) read the
+  record cold, while Claude wrote its position apart. Both independently reached the same exit. Round 2 reached CONSENSUS, with three
+  wording changes taken here.
+- **Decided (council N, under D543):** the judge line and the c8 reading line close for now. Nothing is sent, and D198 is not changed.
+  - **The judge.** The carried previous conclusion holds rejected forecasts in place.
+    - On identical full evidence, 0 of 13 targets move with it, and 8 of 13 without it, with 0 of 8 controls moving.
+    - Both blind readers support 4 net repairs, against the 5 required. The 4 are four test cases, M14 (four companies' 2027 capex)
+      twice, in two of three old draws.
+    - In the separate test with the usual limited evidence, the frozen gold reads 44.3 against v7's 45.0, with China share regressed.
+    - Every remaining lever changes D198, and every big numeric bet on this corpus has been read by the design.
+  - **c8** delivered the decisive statements but showed no improvement in the final answers tested. It adds about $24 to old's about
+    $9 over 82 days.
+- **Reopening conditions:**
+  - **Judge.** Eight eligible failures on fresh questions.
+    - "Fresh" means a question the design never read, counted once across draws, with close variants excluded (council I).
+    - New evidence on a read question can show whether a repair holds over time. It does not count toward the eight.
+    - Matched supported controls, and a source-checked summary of the omitted facts worth testing (D198 option 2), are also needed.
+    - Then the D198 choice and its price go to Alex. A paid test needs his approval and funding.
+    - Processing the 523 later articles (09-21..10-22) would cost about $2.5 a draw before readers, with no assurance of enough new
+      questions.
+  - **c8.** A traced case where:
+    - old missed a decisive fact;
+    - c8 delivers it;
+    - the final answer it could change is named.
+
+    A paired test with the same judge and question would then show whether it helps.
+  - **A future test's pass criteria** (proposed, not confirmed):
+    - net repairs on distinct final forecasts, backed by both blind readers in 2 of 3 same-day pairs;
+    - at least 4 at 8 targets;
+    - no lost control and no added refusal;
+    - frozen agreement at least v7's, with China share 3 of 3.
+- **Not reopened:**
+  - D368 item 2 (dependencies chosen at matching) stays open defect 4 in `CURRENT_STATE.md`, closed as a stretch by D542. None of the
+    24 rejected answers traces to it.
+  - The D260 stance-field order (D681) stays a recorded defect. J2a measured no effect from it.
+- **Spend, an error of mine.** The last D439 tally was about $39.29 of $40 (D647). D679, D682 and D684 then said "inside D439's $40"
+  with no tally.
+  - Under the two readings, D439 stands at about $39.65 (only `phase1b`, $0.36) or about $44.42 (the merge test's $2.13, `phase1` at
+    $2.64 by its ledger and `phase1b`).
+  - The records' "$2.4" for phase 1 is corrected to the ledger's $2.64.
+  - **$0 is available for new sends without Alex's word.**
+- **Dropped:** Claude's proposed $0 count of how often a forecast repeats. It cannot tell which forecasts were wrong, and it cannot
+  change the closure.
+
+## D690 · 2026-11-20 · Alex chooses A: poc-v118 is the product, the research line rests until his new direction; the D681–D689 records are committed locally
+
+- **Alex's words** (2026-11-20), replying to the two items put to him after D689: "1. OK 2. A". Item 1 was a local commit of the
+  D681–D689 records, not pushed. Item 2's options were:
+  - **A**, recommended: poc-v118 is the product, and the research line rests until his new direction;
+  - **B**, change the rules that bind the hybrid's lead: whether the library tracks other companies' own figures (5 matters, D688),
+    and whether the judge carries its previous conclusion (D198). "One bet, one question" (D248) was not offered for change, because
+    the comparison's list is finer than it;
+  - **C**, new test questions from another company or a later NVIDIA window, at a price he would set.
+- **Decided (Alex):** A. No improvement line on the hybrid, the judge, c8 or opening is open, and no paid send is open. The reopening
+  conditions of D689 stand. B and C are not taken.
+- **Done:** the D681–D690 records are committed on `clean-arch`, and nothing is pushed.
+- **Asked next by Alex, in the same message:** a description of the end-to-end system (its components, how it runs, its current
+  performance) and whether it is ready to go to production for testing. That answer is an assessment, recorded when it is given.

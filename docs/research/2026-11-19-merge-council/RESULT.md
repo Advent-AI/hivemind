@@ -104,9 +104,32 @@ c8 also links loosely: the merge cleans this pile only slightly. Step 2–3 grou
   82-day window's 1,884 articles that is about $24 on top of old's about $9.
 - **The sampler-sensitive v47 question needs more than one draw** before stability is claimed.
 
+## Where the old system loses on the 32 matters, and why this merge cannot raise its score ($0, read after the verdict)
+Sources: the comparison's `reading-diagnostic/mapping-out/mapping.json` and `deck/readings.json`, and the deck key.
+- **Old serves 10 and never opens 17.** The 17 are M01–M03, M07, M12, M16, M20–M24, M26–M29 and M32 (only new-3 opened M32). The merge
+  keeps old's opening, so these stay lost.
+- **Opened in at least 2 of 3 old draws but not served: M08, M14 and M30.**
+  - Every M08 and M14 answer was rejected by the readers. The readers' reasons are judge reasoning, not missing material:
+    - M14 (four companies' 2027 capex): rung 4 was taken from NVIDIA's own $1.3T forecast or a five-company $1.08T total. In old-1 the
+      material held BofA's four-company $930–980B.
+    - M08 (NVIDIA's outstanding investment commitments): $25B and $18B were added, though they probably overlap (old-2, old-3). In
+      old-1 the answer was anchored on Bank of America's $70B, a cumulative investment estimate rather than an outstanding balance.
+      (Corrected 2026-11-20. A first version cited "a range against its own estimate of about $53B". That card, C140, was a planted
+      reader control, not a system answer.)
+  - M30 is a company figure (D382/D505).
+- **Served in only 1 of 3 old draws:** M05, M09 and M25.
+- **The consequence.** Clean Step 1 reads more of the facts. The old system loses at opening and at the judge's reasoning, neither of
+  which better reading fixes. The test's targets, M04 and M17, were matters old already served, so the test could show "does not
+  break", never "improves". That was a design error of mine.
+- **Across all old cards rated worth tracking:** 18–21 of 28–29 supported per draw; 3–5 unsupported per draw.
+
 ## Errors of mine in this test (logged)
 - **I read the census article numbers as positions in `kept-articles.json`.** They are numbers in `census/numbering.json`. Codex caught it
   in round c. My first claim, that old filed none of the census articles, was wrong: 8 of 11 reached the old questions.
 - **The first article list included custom-chip and DRAM theses** as "capex" (the same misreading in PATH-TO-PASS's census C, to be
   re-checked).
 - **The first judging copy failed.** The store's append-only triggers refused the cut; Codex found it in round d before any send.
+- **P2's second clause has no source in the frozen ruler** (checked after the verdict, $0). The judgement ruler (`ruler-v1.md`) and the
+  judge's prompt say nothing about naming a proxy. The extraction standard counts "another population or proxy of one aggregate" as
+  evidence for the same question (D190, D197), and asks for no label. I wrote the clause myself, as a bar the frozen judge was known not
+  to meet. The verdict stays as scored. A judge that labels proxies would be a new rule, and its source can only be Alex's words.

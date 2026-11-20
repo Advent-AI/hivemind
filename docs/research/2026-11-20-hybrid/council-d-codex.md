@@ -1,0 +1,6 @@
+**Two gaps remain.** I reproduced 0/144 v7 probe refusals, 3/153 gold refusals, and strict gold agreement of 45, 46 and 42 out of 51. The coverage check rejects missing files. [judge_probe.py:336](/Users/lchingen/hivemind/docs/research/2026-11-20-hybrid/judge_probe.py:336)
+
+- **The deck skips a production refusal.** I set one stored answer’s range number to `0`. Production refused it, but the deck puts it in a separate list before recording refusals. The reader output omits that list. Count it as both refused and unsupported. [judge_probe.py:412](/Users/lchingen/hivemind/docs/research/2026-11-20-hybrid/judge_probe.py:412)
+- **The replay masks the queue behavior.** All 72 request texts matched. On September 18, though, production started with 18 questions and judged 36. The harness preloads all 36, so it would still judge `v11` if the theme failed to queue it. Start with the 18 questions production used and verify that `v11` is added. [judge_probe.py:535](/Users/lchingen/hivemind/docs/research/2026-11-20-hybrid/judge_probe.py:535) · [round.py:64](/Users/lchingen/hivemind/src/hivemind/views/round.py:64)
+
+DISAGREE: Count invalid answers before sending J2, and verify theme-triggered scheduling before the paid production-path check.
