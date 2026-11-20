@@ -1,0 +1,9 @@
+**Keep per-article timing, but fix the judging copy before sending.** I checked all 70 articles. Article 189 sees v40 and v47 at sequence 1664, and neither is visible at 1663. The converted questions satisfy c8’s input requirements. Include same-item openings and apply end-of-day closures after filing. No selected article shares a sequence with a closure.
+
+**The copy currently fails.** I ran `judging_copy` in memory against both stores. The first deletion raises `append-only` because the backup carries the original triggers. Build a fresh snapshot by inserting only rows through September 6. `restore_view` restores openings and choices. The replay still needs to close targets after judging. Both queue overrides limit judging to the supplied targets. [Merge harness](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/merge_test.py:206)
+
+**Control.** Preserve old evidence IDs, target links, source order and original sequences. Replay `same_claims`, `revisions` and any `replacements` when written, including their evidence and source records even when those records lack target links. I found six such counterparts in old-2 and seven in old-3. Use a common judging schedule that includes September 20. The archived Anthropic answers were judged that day despite receiving no direct link.
+
+Build both arms’ cards from the actual requests, including the truncated quotes, relationship notes and theme context. The current card builder substitutes full ledger quotes and omits that context.
+
+CONSENSUS: CHANGE build an insert-only cutoff snapshot and verify the matched control’s judge requests before sending.

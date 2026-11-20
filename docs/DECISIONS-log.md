@@ -10075,3 +10075,25 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - 5 pass lines, written beforehand;
   - $0.33–0.42.
   - It waits for Alex's approval, since D677 holds paid sends.
+
+## D679 · 2026-11-19 · Alex lifts D677's paid-send stop for the merge test only; the test runs on 70 articles, two old draws, two judging arms, under a $5 ledger
+
+- **Alex (the session goal):** "write the plan, execute the plan, and don't do full blown runs, validate it works based on metrics we
+  meassure for quality".
+- **The plan:** `docs/research/2026-11-19-merge-council/EXECUTION-PLAN.md`, revised by council rounds c and d (`council-c-codex.md`,
+  `council-d-codex.md`).
+- **The article set.** It became the 70 window articles that either system tied to M04 and M17, plus the census and the control.
+  - My first count read the census numbers as positions in `kept-articles.json`. They are numbers in `census/numbering.json`. Codex
+    caught it.
+  - The same misreading put custom-chip and DRAM theses into a first list of 126.
+- **Per-article open lists** were agreed in round d: the old questions open when the article was read.
+- **The judging copy.** A 09-06 cutoff copy of each old store, with the frozen judge restricted to the target questions on one daily
+  schedule for both arms (hybrid: c8's filing; control: old's own evidence).
+- **Checks before any send ($0):**
+  - c8's request, rebuilt, equals the stored c8 request byte for byte.
+  - The control arm, answered with old's archived answers on old's schedule, rebuilt 25 of 25 capex requests byte for byte, and all 22
+    Anthropic requests with the same evidence. Their only difference is the theme block: other questions held at 09-06.
+- **Lines** P1, P2, P3 and P5 hold in both draws, plus a validity line V; P4 is diagnostic only.
+- **Ceiling:** $5 on a new ledger. The estimate is about $1.4 for c8 and about $0.2 for judging. This is within D439's $40.
+- **Also recorded:** PATH-TO-PASS's census C named new-2's clean-26 and clean-7, and new-3's clean-29, clean-6 and clean-12, as capex
+  theses. They are custom-chip and memory theses, so census C's capex reading is to be re-checked before it is relied on.
