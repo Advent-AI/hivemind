@@ -10097,3 +10097,27 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
 - **Ceiling:** $5 on a new ledger. The estimate is about $1.4 for c8 and about $0.2 for judging. This is within D439's $40.
 - **Also recorded:** PATH-TO-PASS's census C named new-2's clean-26 and clean-7, and new-3's clean-29, clean-6 and clean-12, as capex
   theses. They are custom-chip and memory theses, so census C's capex reading is to be re-checked before it is relied on.
+
+
+## D680 · 2026-11-19 · Merge test closed (council e): delivery verified, the registered test did not pass (P2's proxy clause and V missed)
+
+- **Ran under D679**, for $2.13 of a $5 ledger: 140 c8 sends, 98 judge calls in two arms, 15 noise re-sends, and two blind reader
+  families on 20 cards with 5 controls.
+- **Held:**
+  - P1, delivery, 4/4: the hybrid's final requests carry c8's four-company $720–745B item and the Reuters anchor-talks items;
+  - P3, talks stay talks, 2/2;
+  - P5, both readers support all 4 hybrid answers, settled in round 0;
+  - P4 (diagnostic): 0 NVIDIA-figure proposals of 7;
+  - the reader controls: 3 plants unsupported, 2 controls supported.
+- **Missed:**
+  - **P2's second clause.** Total capex is used for data-center capex without being named a proxy; old misses it the same way.
+  - **V.** The control's v47 was unsupported. Its 09-16 request, re-sent, gave rungs 2, 1, 2 against old's 2, 2, 2. The requests differ in
+    the theme block and the previous wording, so a reconstruction effect is not ruled out.
+- **What the answers rest on.** Capex rests partly on 09-06 history: 26–27 c8 items against 16–20 history items in the final requests.
+  The Anthropic answers rest wholly on c8's filing.
+- **Errors of mine** (caught by Codex):
+  - the census numbering misread;
+  - a first article list with off-matter theses;
+  - a judging copy refused by the store's append-only triggers.
+- **Closed with no further sends.** The next step is Alex's.
+- Record: `docs/research/2026-11-19-merge-council/RESULT.md`, `council-e-codex.md`.

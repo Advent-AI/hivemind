@@ -377,7 +377,10 @@ def judge(ledger_path, arm, replay_check=False):
     judging.queued_by_change = lambda conn, view_id: []        # judge the target questions only
     judging.queued_by_ledger = lambda conn, seq: []
     results = {}
+    only = [d for d in sys.argv[4:]]            # optional: the draws to judge in this process
     for draw, targets in TARGETS.items():
+        if only and draw not in only:
+            continue
         folder = OUT / (f'judge-{arm}' if not replay_check else 'judge-replaycheck') / draw
         folder.mkdir(parents=True, exist_ok=False)
         if replay_check:
@@ -474,8 +477,99 @@ def cards():
                 print(draw, view_id, arm, 'rung', last['rung'], 'material', len(pieces))
 
 
+KEY = Path.home() / '.hivemind-keys/merge-test-2026-11-19/key.json'
+DIAGNOSTIC_DECK = ROOT / 'poc/data/comparison-2026-11-17/reading-diagnostic/deck'
+DIAGNOSTIC_KEY = Path.home() / '.hivemind-keys/comparison-2026-11-17/deck-key.json'
+STAGE0 = ROOT / 'docs/research/2026-11-17-product-comparison/stage0'
+
+
+def card_entry(build_cards, views_path, archive_path, view_id):
+    """`build_cards.library`'s entry for one question, read from one store and its own archive: the arms' copies hold other questions
+    whose judgements were made in the old archive, which the library builder would look for in the arm's archive."""
+    conn, archive, items = build_cards.ro(views_path), build_cards.ro(archive_path), build_cards.ro(ITEMS)
+    v = conn.execute('select view_id, question, due_day, created_seq, created_from_input from views where view_id=?', (view_id,)).fetchone()
+    latest = conn.execute('select rung, reasons, request_sha256, seq from judgements where view_id=? order by seq desc limit 1', (view_id,)).fetchone()
+    rungs = build_cards.conditions(view_id, conn)
+    publisher_of = lambda input_id: (items.execute('select publisher from items where input_id=?', (input_id,)).fetchone() or [None])[0]
+    day = (items.execute('select publication_day from items where input_id=?', (v['created_from_input'],)).fetchone() or [None])[0]
+    entry = {'question_id': view_id, 'question': v['question'], 'due': v['due_day'], 'opened': day, 'opened_from': v['created_from_input'],
+             'possible_answers': [rungs[p] for p in sorted(rungs)], 'answer': None, 'reasons': None, 'material': []}
+    if latest is not None:
+        row = archive.execute('select request_json from model_calls where request_sha256=? limit 1', (latest['request_sha256'],)).fetchone()
+        entry['answer'] = rungs.get(latest['rung'])
+        entry['rung'] = latest['rung']
+        entry['reasons'] = latest['reasons']
+        entry['material'] = [dict(item, publisher=publisher_of(item['input_id'])) for item in build_cards.material(row['request_json'])]
+        entry['context'] = build_cards.context(row['request_json'], conn)
+        if entry['context']['previous']:
+            entry['context']['previous']['answer'] = rungs.get(entry['context']['previous']['rung'])
+    return entry
+
+
+def deck():
+    """$0. The reading deck, in the comparison's card form (`build_cards.card_text`, card-spec.md): every target question in three arms
+    (the old answer as archived, the control and the hybrid), each card's library list taken from the old store so the arms show the
+    same list; plus five controls copied from the diagnostic deck (three plants confirmed not supported, two cards confirmed
+    supported). Shuffled; the key is kept outside the repository."""
+    import random
+    sys.path[:0] = [str(STAGE0), str(STAGE0 / 'census')]
+    import build_cards
+    folder = OUT / 'deck'
+    folder.mkdir(parents=True, exist_ok=False)
+    if KEY.exists():
+        raise SystemExit(f'refused: {KEY} exists')
+    cards = []
+    for draw, targets in TARGETS.items():
+        old_lib = build_cards.library(RUN / draw / 'prod/views.sqlite', RUN / draw / 'prod/archive.sqlite', ITEMS)
+        for arm, views, archive in (('old', RUN / draw / 'prod/views.sqlite', RUN / draw / 'prod/archive.sqlite'),
+                                    ('control', OUT / 'judge-control' / draw / 'views.sqlite', OUT / 'judge-control' / draw / 'archive.sqlite'),
+                                    ('hybrid', OUT / 'judge-hybrid' / draw / 'views.sqlite', OUT / 'judge-hybrid' / draw / 'archive.sqlite')):
+            for view_id, matter in targets.items():
+                entry = card_entry(build_cards, views, archive, view_id)
+                cards.append({'draw': draw, 'view': view_id, 'matter': matter, 'arm': arm, 'role': 'product',
+                              'answered': entry['answer'] is not None, 'answer': entry['answer'],
+                              'material': len(entry['material']), 'text': build_cards.card_text(entry, old_lib)})
+    diagnostic = json.loads(DIAGNOSTIC_KEY.read_text())
+    plants = sorted(c for c, k in diagnostic.items() if k['role'] == 'plant' and k['draw'].startswith('old'))[:3]
+    supported = sorted(c for c, k in diagnostic.items() if k['role'] == 'supported control')[:2]
+    for cid in plants + supported:
+        cards.append({'draw': diagnostic[cid]['draw'], 'view': diagnostic[cid]['question'], 'matter': None, 'arm': 'diagnostic ' + cid,
+                      'role': diagnostic[cid]['role'], 'answered': True, 'text': (DIAGNOSTIC_DECK / f'{cid}.txt').read_text()})
+    random.Random(20261119).shuffle(cards)
+    key = {}
+    for n, card in enumerate(cards, 1):
+        cid = f'C{n:03d}'
+        key[cid] = {k: v for k, v in card.items() if k != 'text'}
+        (folder / f'{cid}.txt').write_text(card['text'])
+    KEY.parent.mkdir(parents=True, exist_ok=True)
+    KEY.write_text(json.dumps(key, indent=1) + '\n')
+    print(f'{len(cards)} cards; key in {KEY}')
+    for cid, k in key.items():
+        print(cid, k['draw'], k['view'], k['arm'], k['role'], 'material', k.get('material'))
+
+
+def read():
+    """Both reader families mark every card (`mark_cards.mark`), then debate rounds 1 and 2 on differing marks; prints each card's
+    final marks beside its key."""
+    sys.path[:0] = [str(STAGE0), str(STAGE0 / 'census')]
+    import mark_cards
+    mark_cards.KEY = KEY                     # this deck's key (outside the repository), not the comparison deck's
+    folder = OUT / 'deck'
+    if not (folder / 'round-0.done').exists():
+        mark_cards.mark(folder)
+    for round_number in (1, 2):
+        if not (folder / f'round-{round_number}.done').exists():
+            mark_cards.debate(folder, round_number)
+    key = json.loads(KEY.read_text())
+    finals = {cid: mark_cards.final(folder, cid) for cid in sorted(key)}
+    (OUT / 'marks.json').write_text(json.dumps({cid: dict(key[cid], marks=finals[cid]) for cid in key}, indent=1, ensure_ascii=False))
+    for cid in sorted(key):
+        k = key[cid]
+        print(cid, k['draw'], k['view'], k['arm'], k['role'], json.dumps(finals[cid]))
+
+
 if __name__ == '__main__':
     command = sys.argv[1]
     {'lists': lambda: lists(), 'send': lambda: send(sys.argv[2]), 'census': lambda: census(),
      'judge': lambda: judge(sys.argv[2], sys.argv[3]), 'replaycheck': lambda: judge(None, 'control', replay_check=True),
-     'cards': lambda: cards()}[command]()
+     'cards': lambda: cards(), 'deck': lambda: deck(), 'read': lambda: read()}[command]()

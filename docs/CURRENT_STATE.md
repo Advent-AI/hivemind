@@ -430,6 +430,22 @@ Alex's.
 
 The council's reversible decisions on Alex's page are recorded in D606 and D607.
 
+**The merge test (D678–D680, 2026-11-19): closed; the registered test did not pass.** The old system opens questions, clean Step 1 reads
+and files under them, and the frozen judge answers. It ran on 70 articles × old-2 and old-3, with a hybrid arm and a control arm, for
+$2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
+- **Held:**
+  - delivery: the decisive statements reached the judge on 4/4 primary questions in both draws;
+  - talks stayed talks;
+  - both blind readers supported all 4 hybrid answers;
+  - no five-company or 2027 figure was taken as the answer;
+  - c8 proposed no NVIDIA-figure question.
+- **Missed:**
+  - P2's proxy clause: total capex is used for data-center capex without being named a proxy, which old also misses;
+  - V: the rebuilt control's v47 was unsupported, and a reconstruction effect is not ruled out.
+- **Not shown:** that the merge answers better. The old answers were already supported, and the capex band was set by 09-06 history.
+- **Next: Alex's call.** Closed per the council. Any further step is his: keep the old system, test the merge on matters the old system
+  misses (which needs the clean opener), or accept the frozen judge's proxy behaviour as the bar.
+
 **The one next task (D665–D675): read the release comparison's six draws when they finish, with the council-reviewed tools**
 (`docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md` §1.4–§1.6; `DESIGN-1.6.md` v7; D675).
 
