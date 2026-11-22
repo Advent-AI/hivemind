@@ -69,6 +69,16 @@ def refuse_links_engine(cfg):
         raise SystemExit(f'config {cfg.version}: matching engine jev-links is not a product entry point in this version (D694)')
 
 
+NOT_ADOPTED_JUDGING = ('judging-v12',)     # D719: built and kept, not adopted; no product launcher runs it
+
+
+def refuse_unadopted_judging(cfg):
+    """D719: a configuration whose re-judging names a version that is built but not adopted (judging-v12, poc-v121) is refused by an
+    ordinary launcher; its harnesses call the library directly."""
+    if cfg.rejudging.prompt_version in NOT_ADOPTED_JUDGING:
+        raise SystemExit(f'config {cfg.version}: {cfg.rejudging.prompt_version} is not adopted; an ordinary launcher does not run it (D719)')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--from', dest='from_day', required=True)
@@ -99,6 +109,7 @@ def main():
     if cfg.baseline is not None:
         raise SystemExit(f'config {cfg.version} uses retired seeded-question baseline; select a configuration without it')
     refuse_links_engine(cfg)
+    refuse_unadopted_judging(cfg)
     refuse_seeded_ledger(args.views)
     refuse_harness_ledger(args.views)
     uni = universe.load(args.universe)

@@ -10901,3 +10901,55 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
   - poc-v118 remains the product and no judge version is opened.
   - D721's findings stay a list, not a work order.
   - Nothing is queued or being spent.
+
+## D723 · 2026-11-22 · Code review of 95cf8da7..3ba40d8f: two defects fixed, eight findings recorded
+
+- **Alex's words** (2026-11-22): "做code review clean up".
+- **Fixed** (working tree, not committed; each with a test that fails on its mutant, checked by Claude on scratch copies):
+  1. **The ordinary launchers ran judging-v12.** D719 says no product launcher enables it. `scripts/replay.py` and `budget_replay.py`
+     now refuse it (`refuse_unadopted_judging`), and the harnesses keep calling the library.
+  2. **A link-step error other than a refusal escaped the round unrecorded.** `round.run` now records it in `link_selections` and fails
+     the article as `linking_failed`, as matching does. A budget stop inside the link step is therefore an article failure, as in
+     matching, and the ledger's `stopped` state still refuses later calls.
+- **Clean-ups:**
+  - preflight's dead judge schema entry is removed and its docstring updated;
+  - the one-letter names in `judging._dependency_lines_full` are renamed (the rendered text is unchanged; the frozen pins pass);
+  - a history comment in `research_context.py` now states behaviour.
+- **Recorded, not fixed:**
+  - a code-built setting can leave `link_questions` empty; the crash is now recorded;
+  - `unbound_waits` is checked store-wide;
+  - a dead pair re-check sits in `writing.py`;
+  - links-v2's missing full stop, pinned by its sha;
+  - engine strings are special-cased in several places;
+  - Jev link calls are serial;
+  - `current_state` runs PRAGMA on every call;
+  - the round's cost omits link calls.
+
+  None is in the product path (poc-v118), and each fix would change pinned text or tested records, or redesign the linking version.
+- **Checks:** suite 390 passed; frozen-piece tests 21 passed.
+
+## D724 · 2026-11-22 · Council round 44 converges the code review: keep the v12 launcher refusal and the clean-ups, revert the link-step catch; D723 corrected
+
+- **Alex's words** (2026-11-22), on D723's two bugs: "你能不能好好run council take a step back 到底这些是不是问题，你是不是在钻牛角尖，you need to get it 收敛".
+- **Council round 44** (`docs/research/2026-11-22-code-review/`: `round44-brief.md`, `claude-r44.md` written first, `codex-r44.md`, a
+  fresh read-only session).
+- **Bug 1, the launchers running poc-v121 when it is named: real, low exposure. Kept.**
+  - A named run could spend money and store v12 judgements through a product launcher.
+  - D359 says the product path refuses a configuration naming a version that is not frozen.
+  - Claude's lean to revert, as a safeguard for an unnamed case, was withdrawn on D359.
+- **Bug 2, a link-step error escaping the round: not a problem. Reverted, with its test.**
+  - Its only trigger is a setting built in Python with an empty question version, which `config.load` never produces.
+  - Every model-call failure in the link step, a budget refusal included, is already converted to `links.Refused` and recorded
+    (`links._ask`).
+  - Claude's claim that the catch would let a budget stop continue a run was wrong. Codex reproduced the refusal with and without the
+    catch, and the outcome was the same.
+- **Clean-ups kept:** preflight's dead entry and docstring, descriptive names in `judging.py`, and the behaviour comment in
+  `research_context.py`.
+- **D723 corrected:**
+  - "None is in the product path" is wrong for one finding: `store.current_state` runs a PRAGMA per call under poc-v118 too. Its cost
+    is unmeasured, and no change is made.
+  - A parallel replay left unfinished before 3ba40d8f cannot resume after it. The saved settings key changed with
+    `Setting.link_questions`, as D706 recorded. None is unfinished now.
+- **3ba40d8f does not change poc-v118's judging or filing.** The v7 request matched byte for byte on 43 stored views. `maxItems` applies
+  only where a format declares it, and v118 proposes no links.
+- **Checks:** suite 389 passed; frozen-piece tests 21 passed.

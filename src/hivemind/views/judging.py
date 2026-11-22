@@ -158,12 +158,12 @@ def _indented(text, indent='        '):
     return str(text).replace('\r\n', '\n').replace('\n', '\n' + indent)
 
 
-def _dependency_lines_full(conn, target, d, state, rung_label, tv, flag):
+def _dependency_lines_full(conn, target, dependency, state, rung_label, target_view, flag):
     """judging-v8 (D694, design §3): the read judgement's comparison point and the system's forecast in full, labelled as ours, beside
     the reasons excerpt; the read question not judged yet shows only that."""
     if not state:
-        return [f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now not judged yet']
-    return [f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"]} {rung_label}, judged {state["publication_day"]}',
+        return [f'- {target} ({flag}; {dependency["direction"]}) {target_view["question"]}: now not judged yet']
+    return [f'- {target} ({flag}; {dependency["direction"]}) {target_view["question"]}: now rung {state["rung"]} {rung_label}, judged {state["publication_day"]}',
             f'    Comparison point stated by that judgement: {_indented(state.get("reference") or "not stated")}',
             f'    The system\'s forecast for it (our own judgement, not evidence): {_indented(state.get("implied_outcome") or "not stated")}',
             f'    Reasons (excerpt): {_indented((state.get("reasons") or "")[:600])}']

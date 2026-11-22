@@ -125,6 +125,17 @@ def test_an_answer_outside_the_lists_is_refused_by_the_format_before_the_check(t
     assert store.current_state(conn, 'v1') is None
 
 
+def test_ordinary_launchers_refuse_the_unadopted_citation_version():
+    """D719: judging-v12 and poc-v121 are enabled by no product launcher; the product configuration passes."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('scripts_replay_d719', os.path.join(ROOT, 'scripts', 'replay.py'))
+    scripts_replay = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(scripts_replay)
+    with pytest.raises(SystemExit, match='judging-v12'):
+        scripts_replay.refuse_unadopted_judging(V121)
+    scripts_replay.refuse_unadopted_judging(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v118.json')))
+
+
 def test_preflight_fails_on_a_refused_judge_row_without_its_saved_format(tmp_path, capsys):
     """T5: judge rows are checked against the format saved with their request; one without a format is named and fails preflight."""
     import preflight

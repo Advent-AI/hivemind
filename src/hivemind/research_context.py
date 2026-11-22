@@ -33,7 +33,7 @@ class Reader:
 
     def dependencies(self, vid):
         result = self.rows('select dependency_id, view_id, depends_on, wait_chain_view_id, wait_year, direction, seq from dependencies '
-                           'where view_id=? and seq<? order by seq,dependency_id', (vid,self.seq))     # the response shape kept as before D694's kind column
+                           'where view_id=? and seq<? order by seq,dependency_id', (vid,self.seq))     # these columns only: the response carries no kind
         for dep in result:
             res = self.rows('select * from dependency_resolutions where dependency_id=? and seq<? order by seq desc,id desc limit 1', (dep['dependency_id'],self.seq))
             dep['resolved_to'] = res[0]['resolved_to'] if res else dep['depends_on']

@@ -451,7 +451,7 @@ $2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
 - Why (D721): the frozen gold's q01 lists the Vera CPU target among the drivers above consensus, so the diagnosis's premise was
   not the ruler's. D711's H4 is corrected to four unsupported increments. D721's findings are recorded, not worked on.
 - The citation line stays stopped (D719).
-- judging-v12 and poc-v121 stay in the working tree, uncommitted and unused.
+- judging-v12 and poc-v121 are committed locally (3ba40d8f) and unused: the ordinary launchers refuse judging-v12 (D723).
 
 The record behind it (D718):
 - **The probe:** $0.274 of $0.50; registered verdict NOT READY (`research/2026-11-21-citation-lists/PROBE-RESULT.md`). One repeated

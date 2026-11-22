@@ -10,10 +10,11 @@ the cases judged, the cases refused and the reasons with examples:
   C. matching's code checks (matching.check) over every stored matching record, with the lists shown at the time
   D. every schema enum value appears verbatim in the prompt that asks for it
 
-It replays the answers of the versions the code builds (extraction v74i, judging-v7); a row of a retired version, or one whose
-configuration file is gone, is counted as not replayed and named. Usage: python3 scripts/preflight.py [--archive A] [--items I]
-[--views DB ...] (defaults: draw 1 of the frozen v108 run, poc/data/e2e-r9-frozen-v108-2026-11-03/d1, and the NVDA items database).
-Exit status 1 when a check judged no case.
+It replays the answers of the versions the code builds (extraction v74i; a judge answer against the format saved with its own
+request); a row of a retired version, or one whose configuration file is gone, is counted as not replayed and named. Usage:
+python3 scripts/preflight.py [--archive A] [--items I] [--views DB ...] (defaults: draw 1 of the frozen v108 run,
+poc/data/e2e-r9-frozen-v108-2026-11-03/d1, and the NVDA items database). Exit status 1 when a check judged no case, or when a
+refused judge row carries no saved answer format.
 """
 import argparse
 import collections
@@ -32,7 +33,7 @@ sys.path.insert(0, os.path.join(ROOT, 'src'))
 from hivemind import config, extraction, live_lock, model, testdb, universe, vocabulary  # noqa: E402
 from hivemind.views import judging, matching  # noqa: E402
 
-SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA, 'judge': judging.schema_for(judging.SUPPORTED_VERSIONS[0])}
+SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA}     # judge rows: the format saved with each request
 # the stored requests of both prompt languages (D163): Chinese headers up to extraction v5 / matching-v1, English from v6 / matching-v2
 ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
 MATCH_SHOWN = re.compile(r'^· (v\d+)\s?[（(]', re.M)
