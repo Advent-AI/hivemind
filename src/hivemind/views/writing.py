@@ -17,6 +17,7 @@ class Written:
     new_views: dict            # candidate id -> view_id
     evidence_ids: dict         # handover evidence id -> evidence_id
     notes: list
+    links: list = dataclasses.field(default_factory=list)      # D694: the reading links committed, with their final labels
 
 
 def _next_id(conn, table, column, prefix):
@@ -109,20 +110,53 @@ class WriteConflict(ValueError):
     """The checked plan no longer fits the writable ledger; no partial write is retained."""
 
 
-def write(conn, universe, seq, item, handover, checked, second_pass):
-    """Write atomically within the caller's transaction; the caller commits the completion marker with it."""
+def write(conn, universe, seq, item, handover, checked, second_pass, *, proposed_links=None):
+    """Write atomically within the caller's transaction; the caller commits the completion marker with it. proposed_links: the reading
+    links the link step chose (views/links.py, D694), written after the new views exist; None writes none."""
     if not conn.in_transaction:
         conn.execute('begin immediate')
     conn.execute('savepoint view_write')
     try:
         store.ensure_writable_columns(conn)
         result = _write(conn, universe, seq, item, handover, checked, second_pass)
+        if proposed_links:
+            result.links = _write_links(conn, seq, proposed_links, result)
     except Exception:
         conn.execute('rollback to view_write')
         conn.execute('release view_write')
         raise
     conn.execute('release view_write')
     return result
+
+
+def _write_links(conn, seq, proposed_links, written):
+    """D694, D695 (design §4): each proposed link resolved to stored ids, re-checked against the ledger as it stands inside this write
+    (both ends open, no circle, no other label on the same pair), labelled from the stored rungs, written with kind 'reads'. An existing
+    question that gains a link is judged in the day's round. Any mismatch refuses the whole write."""
+    from . import links as _links
+    committed = []
+    for link in proposed_links:
+        reader, read = (written.new_views.get(link[end], link[end]) for end in ('reader', 'read'))
+        for end in (reader, read):
+            if not store.view(conn, end):
+                raise WriteConflict(f'link {link["reader"]} -> {link["read"]}: {end} was not opened')
+            if not store.is_open(conn, end):
+                raise WriteConflict(f'link {reader} -> {read}: {end} is closed')
+        label = _links.label_for(store.rungs_of(conn, reader), store.rungs_of(conn, read), link['sign'])
+        if label is None:
+            raise WriteConflict(f'link {reader} -> {read}: no label can be computed from the stored rungs')
+        existing = {r['direction'] for r in conn.execute('select direction from dependencies where view_id=? and depends_on=?', (reader, read))}
+        if existing and existing != {label}:
+            raise WriteConflict(f'link {reader} -> {read}: the pair already carries another label {sorted(existing)}')
+        if existing:
+            continue
+        if store.would_cycle(conn, reader, read):
+            raise WriteConflict(f'link {reader} -> {read}: would close a circle')
+        store.insert(conn, 'dependencies', view_id=reader, depends_on=read, wait_chain_view_id='', wait_year='', direction=label, seq=seq, kind=_links.KIND)
+        if reader not in written.new_views.values():
+            written.changed_views.add(reader)
+        committed.append({'reader': reader, 'read': read, 'label': label, 'sign': link['sign'], 'direction': link['direction']})
+    return committed
 
 
 def _write(conn, universe, seq, item, handover, checked, second_pass):

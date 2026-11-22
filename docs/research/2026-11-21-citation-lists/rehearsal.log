@@ -1,0 +1,76 @@
+checks
+  [ok] equal on {}
+  [ok] equal on {"rung": 9}
+  [ok] equal on {"changed": false}
+  [ok] equal on {"reference": ""}
+  [ok] equal on {"cites": ["e9"]}
+  [ok] equal on {"theme_pushes": [{"view_id": "v2", "push": "none"}, {"view_id": "v2", "push": "none"}]}
+  [ok] equal on {"cites_views": ["v3"]}
+  [ok] equal with a previous conclusion, rung 2 changed false
+  [ok] equal with a previous conclusion, rung 3 changed false
+  [ok] every planned matched request's stored committed answer passes (linked-1 8834 included)
+  [ok] every planned refused request's stored answer is refused on its bad ids
+verdicts
+  [ok] clean set -> pass
+  [ok] 8938 85.4% unsupported in three draws -> inconclusive (unresolved)
+  [ok] 8807 $393B unsupported in three draws -> not ready
+  [ok] three misattributions -> not ready
+  [ok] 8807 two wrong, one omitted -> not ready
+  [ok] 8807 one unsupported, two missing -> inconclusive (incomplete)
+  [ok] A1 rejected -> not ready (format)
+  [ok] A1 timed out -> inconclusive (incomplete)
+  [ok] misattribution excess with Part C incomplete -> not ready
+  [ok] unresolved Part C difference, all else clean -> inconclusive (unresolved)
+  [ok] A2 skipped -> pass
+  [ok] A2 rejected -> pass
+  [ok] a refused v12 answer -> not ready
+  [ok] a ledger stop in the core run -> inconclusive (incomplete)
+  [ok] a Part C control with no content -> inconclusive (incomplete)
+  [ok] a Part C control answering {} -> inconclusive (incomplete)
+  [ok] a readable v7 control the request-time check refuses still counts -> pass
+  [ok] readings refused: "false" as a string
+  [ok] readings refused: omitted with valid support
+  [ok] readings refused: harms on a comparison not read
+  [ok] readings refused: a reading of a missing answer
+  [ok] readings refused: a reading of no planned target
+  [ok] readings refused: misattributed on a target frozen as ambiguous
+  [ok] readings refused: ambiguous on a target not frozen as ambiguous
+clean
+  [ok] no request problem
+  [ok] 2 + 48 + 72 + A2 answers
+  [ok] three fresh calls per planned request and format
+  [ok] every answer answered and passing the request-time check
+  [ok] records carry provider attempts and charges
+Part B: 51 target readings; Part C: 12 comparisons
+  [ok] the 8938 packet flags the one answer that drops 85.4
+  [ok] every packet quote carries its stored quote in full (300 checked)
+  [ok] old-2:6955 e4070, a multiline quote, is kept whole
+  [ok] the clean run verdict is pass
+format-invalid
+  [ok] the format-invalid answer takes the SchemaError path
+  [ok] verdict not ready
+a1-400
+  [ok] A1 recorded as a 400
+  [ok] nothing after A1 is sent
+  [ok] verdict not ready (format)
+a1-timeout
+  [ok] A1 a transport error without a status, after three attempts
+  [ok] nothing after A1 is sent
+  [ok] verdict inconclusive (incomplete)
+5xx-then-ok
+  [ok] A0 answered after a 503 retry, the failed attempt charged
+low-ceiling
+  [ok] the first Part C comparison is not started
+  [ok] verdict inconclusive (incomplete)
+retry-exhausts
+  [ok] the admitted comparison is interrupted by the refused retry reservation
+  [ok] verdict inconclusive (incomplete)
+a2-stop
+  [ok] the ledger stopped during A2, the core ledger did not
+  [ok] a stop during A2 leaves the core verdict pass
+mutant-open-b
+  [ok] the byte check catches mutant-open-b
+mutant-order
+  [ok] the byte check catches mutant-order
+REHEARSAL PASS
+exit 0

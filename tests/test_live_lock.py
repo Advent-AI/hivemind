@@ -205,7 +205,8 @@ def test_preflights_entry_point_hands_its_store_checks_only_its_locked_copies(tm
     covered by tests/test_preflight_replay.py, so here they only record what they were given."""
     path = wal_store(tmp_path)
     given = {}
-    for name in ('part_a', 'part_b', 'part_d'):
+    monkeypatch.setattr(preflight, 'part_a', lambda *arguments: (1, []))      # (answers judged, judge rows without a saved format; D713)
+    for name in ('part_b', 'part_d'):
         monkeypatch.setattr(preflight, name, lambda *arguments: 1)
     monkeypatch.setattr(preflight, 'part_c', lambda archive, paths, uni: given.setdefault('c', list(paths)) and 1)
     monkeypatch.setattr(preflight, 'part_e', lambda paths: given.setdefault('e', list(paths)))

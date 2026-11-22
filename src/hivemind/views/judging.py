@@ -3,8 +3,10 @@ once; a view whose conclusion changed adds its open dependants. The model reads 
 replaced predecessor), the dependencies' current conclusions and its own last conclusion (for comparison only).
 Code checks every citation and that a rung move or a first judgement says changed; one retry, then the item fails.
 
-The request is judging-v7 (D354, frozen with steps 3 and 4): no other version is built, and a configuration that names another is
-refused before any call. Every answer is stored in the canonical vocabulary.
+The request is judging-v7 (D354, frozen with steps 3 and 4), judging-v8 (D694: v7's text with the fuller dependency block) or
+judging-v12 (D713: v7's text and request; the answer's id fields take only the ids the request lists, and the check reads the same
+lists): no other version is built, and a configuration that names another is refused before any call. Every answer is stored in the
+canonical vocabulary.
 
 The theme block (D191, D195): an asset thesis is judged with every open, judged theme thesis in view and answers, in theme_pushes,
 which way each theme it weighed pushes it; theme theses are judged before asset theses in a round, and a theme judgement that says
@@ -25,7 +27,9 @@ from .. import config, model, vocabulary
 from . import store
 
 PUSHES = vocabulary.PUSHES
-SUPPORTED_VERSIONS = ('judging-v7',)   # D354: the frozen judging prompt
+SUPPORTED_VERSIONS = ('judging-v7', 'judging-v8', 'judging-v12')   # D354: the frozen judging prompt; D694: v8 = v7's text with the fuller dependency block; D712/D713: v12 = v7's text and request with closed id lists
+FULL_DEPENDENCY_BLOCK = ('judging-v8',)
+CLOSED_LISTS = ('judging-v12',)   # the answer's id fields take the ids the request lists (D713)
 READINGS = 5                      # a piece is shown in the thesis's first five judgements after it arrives
 BASIS = 10                        # and while one of the last ten judgements cited it
 THEME_REASONS_CHARS = 300
@@ -51,7 +55,38 @@ def evidence_in_view(conn, view_id):
     return shown, len(in_force) - len(shown)
 
 
-def schema_for(prompt_version):
+def schema_for(prompt_version, lists=None):
+    """The answer's format. Under judging-v12 (D713) its four id fields take the ids the request lists (`lists`, from
+    `request_parts`): one shared enum of the evidence ids for cites and push ids, the dependency ids for cites_views, the theme ids
+    for theme pushes; a field with no id allowed is an array with maxItems 0. Other versions ignore `lists`."""
+    schema = _open_format(prompt_version)
+    if prompt_version not in CLOSED_LISTS:
+        return schema
+    if lists is None:
+        raise ValueError(f'{prompt_version} builds its answer format from the ids its request lists')
+    properties = schema['properties']
+    evidence, dependencies, themes = (sorted(set(lists[key])) for key in ('evidence', 'dependencies', 'themes'))
+    if evidence:
+        schema['$defs'] = {'evidence_id': {'type': 'string', 'enum': evidence}}
+        properties['cites'] = {'type': 'array', 'items': {'$ref': '#/$defs/evidence_id'}}
+        push_item = properties['pushes']['items']
+        properties['pushes'] = {'type': 'array', 'items': dict(push_item, properties=dict(push_item['properties'], evidence_id={'$ref': '#/$defs/evidence_id'}))}
+    else:
+        properties['cites'] = dict(properties['cites'], maxItems=0)
+        properties['pushes'] = dict(properties['pushes'], maxItems=0)
+    if dependencies:
+        properties['cites_views'] = {'type': 'array', 'items': {'type': 'string', 'enum': dependencies}}
+    else:
+        properties['cites_views'] = dict(properties['cites_views'], maxItems=0)
+    theme_item = properties['theme_pushes']['items']
+    if themes:
+        properties['theme_pushes'] = {'type': 'array', 'items': dict(theme_item, properties=dict(theme_item['properties'], view_id={'type': 'string', 'enum': themes}))}
+    else:
+        properties['theme_pushes'] = dict(properties['theme_pushes'], maxItems=0)
+    return schema
+
+
+def _open_format(prompt_version):
     require_supported(prompt_version)
     pushes = PUSHES
     schema = {
@@ -118,8 +153,24 @@ def topological(conn, view_ids):
     return ordered
 
 
-def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidden=0):
-    """hidden: how many pieces in force are not shown."""
+def _indented(text, indent='        '):
+    """A stored value inside a block: every continuation line indented, so no physical line can read as a header or a listed id."""
+    return str(text).replace('\r\n', '\n').replace('\n', '\n' + indent)
+
+
+def _dependency_lines_full(conn, target, d, state, rung_label, tv, flag):
+    """judging-v8 (D694, design §3): the read judgement's comparison point and the system's forecast in full, labelled as ours, beside
+    the reasons excerpt; the read question not judged yet shows only that."""
+    if not state:
+        return [f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now not judged yet']
+    return [f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"]} {rung_label}, judged {state["publication_day"]}',
+            f'    Comparison point stated by that judgement: {_indented(state.get("reference") or "not stated")}',
+            f'    The system\'s forecast for it (our own judgement, not evidence): {_indented(state.get("implied_outcome") or "not stated")}',
+            f'    Reasons (excerpt): {_indented((state.get("reasons") or "")[:600])}']
+
+
+def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidden=0, full_dependencies=False):
+    """hidden: how many pieces in force are not shown. full_dependencies: the judging-v8 dependency block."""
     lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
              'Ladder: ' + ' / '.join(f'rung {r["position"]} {r["label"]}: {r["condition"]}' for r in rungs), '',
              f'[Evidence in view under this thesis, {len(pieces)} items]']
@@ -145,6 +196,9 @@ def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidde
             state = store.current_state(conn, target)
             flag = 'historical only' if d['resolution'] == 'history_only' else ('closed' if not store.is_open(conn, target) else 'open')
             rung_label = store.rungs_of(conn, target)[state['rung'] - 1]['label'] if state else 'not judged yet'
+            if full_dependencies:
+                lines.extend(_dependency_lines_full(conn, target, d, state, rung_label, tv, flag))
+                continue
             lines.append(f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"] if state else "-"} {rung_label}; reasons: {(state or {}).get("reasons", "")[:600]}')
     if themes:
         lines.append(f'\n[Themes in force, {len(themes)}]')
@@ -164,15 +218,26 @@ def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidde
 
 
 def build_prompt(conn, view_id, prompt_version):
+    system, user, _ = request_parts(conn, view_id, prompt_version)
+    return system, user
+
+
+def request_parts(conn, view_id, prompt_version):
+    """(system text, user text, the ids the request lists), all from the same rows at the same ledger state: the evidence pieces it
+    prints, the dependencies it gives an entry (resolved ones; a dependency still waiting has no id to cite) and the themes it prints."""
     require_supported(prompt_version)
     v = store.view(conn, view_id)
     rungs = store.rungs_of(conn, view_id)
     pieces, hidden = evidence_in_view(conn, view_id)
     deps = store.dependencies_of(conn, view_id)
     last = store.current_state(conn, view_id)
-    lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes_in_force(conn, view_id), hidden=hidden)
+    themes = themes_in_force(conn, view_id)
+    lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes, hidden=hidden,
+                           full_dependencies=prompt_version in FULL_DEPENDENCY_BLOCK)
+    lists = {'evidence': sorted({p['evidence_id'] for p in pieces}), 'dependencies': sorted({d['resolved_to'] for d in deps if d['resolved_to']}),
+             'themes': sorted({theme['view_id'] for theme in themes})}
     with open(config.prompt_path(prompt_version + '.txt'), encoding='utf-8') as handle:
-        return handle.read(), '\n'.join(lines)
+        return handle.read(), '\n'.join(lines), lists
 
 
 def retry_note(errors):
@@ -191,11 +256,15 @@ def evidence_shown_in(request_text):
     return set(re.findall(r'^- (e\d+) \[', block[1].split('\n\n[', 1)[0], re.M)) if len(block) == 2 else set()
 
 
-def check_answer(conn, view_id, data, request_text=None):
+def check_answer(conn, view_id, data, request_text=None, lists=None):
     """request_text: the user message that was sent, so theme and evidence ids are checked against what it carried (a theme may have
-    closed or opened since); without it, against what the ledger would show now."""
+    closed or opened since); without it, against what the ledger would show now. lists (judging-v12, D713): the ids the request
+    listed, from the rows that rendered it, the same lists its answer format closed; membership is checked against them."""
     errors = []
-    shown = themes_shown_in(request_text) if request_text is not None else {theme['view_id'] for theme in themes_in_force(conn, view_id)}
+    if lists is not None:
+        shown = set(lists['themes'])
+    else:
+        shown = themes_shown_in(request_text) if request_text is not None else {theme['view_id'] for theme in themes_in_force(conn, view_id)}
     named = []
     for entry in data.get('theme_pushes', []):
         if entry['view_id'] in named:
@@ -204,10 +273,13 @@ def check_answer(conn, view_id, data, request_text=None):
             errors.append(f'{entry["view_id"]} is not a theme in force shown to {view_id}')
         named.append(entry['view_id'])
     # the closed set is what the request showed (D198), read from the text that was sent, else computed from the ledger
-    allowed = evidence_shown_in(request_text) if request_text is not None else {p['evidence_id'] for p in evidence_in_view(conn, view_id)[0]}
+    if lists is not None:
+        allowed, deps = set(lists['evidence']), set(lists['dependencies'])
+    else:
+        allowed = evidence_shown_in(request_text) if request_text is not None else {p['evidence_id'] for p in evidence_in_view(conn, view_id)[0]}
+        deps = {d['resolved_to'] for d in store.dependencies_of(conn, view_id) if d['resolved_to']}
     not_allowed = lambda e: f'{e} is not among the evidence shown to {view_id}'
     bad_push = lambda e: f'push on {e} which was not shown to {view_id}'
-    deps = {d['resolved_to'] for d in store.dependencies_of(conn, view_id) if d['resolved_to']}
     rungs = store.rungs_of(conn, view_id)
     if not 1 <= data['rung'] <= len(rungs):
         errors.append(f'rung {data["rung"]} outside 1..{len(rungs)}')
@@ -295,7 +367,8 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
     import concurrent.futures
 
     version = cfg.rejudging.prompt_version
-    schema = schema_for(version)
+    closed = version in CLOSED_LISTS
+    open_schema = None if closed else schema_for(version)
 
     def eligible(view_id):
         return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.evidence_in_force(conn, view_id))
@@ -308,21 +381,29 @@ def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transpo
     while pending:
         ready = [v for v in pending if upstream(conn, v).isdisjoint(set(pending) - {v})] or pending[:1]
         level = [v for v in ready if is_theme(v)] or ready
-        prompts = {v: build_prompt(conn, v, version) for v in level}
+        if closed:                                         # D713: the format's lists and the check's lists come from the rows that render the text
+            parts = {v: request_parts(conn, v, version) for v in level}
+            prompts = {v: parts[v][:2] for v in level}
+            lists = {v: parts[v][2] for v in level}
+            schemas = {v: schema_for(version, lists[v]) for v in level}
+        else:                                              # judging-v7/v8: through build_prompt, which harnesses wrap
+            prompts = {v: build_prompt(conn, v, version) for v in level}
+            lists = {v: None for v in level}
+            schemas = {v: open_schema for v in level}
 
         def ask(view_id, note=''):
             system, user = prompts[view_id]
-            return model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
+            return model.call(archive, cfg, cfg.rejudging, system, user + note, schemas[view_id], 'judgement', 'judge', transport=transport)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=JUDGE_WORKERS) as pool_:
             answers = dict(zip(level, pool_.map(ask, level)))
         for view_id in level:
             answer = answers[view_id]
-            errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+            errors = check_answer(conn, view_id, answer.data, prompts[view_id][1], lists[view_id])
             if errors:
                 archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
                 answer = ask(view_id, retry_note(errors))
-                errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+                errors = check_answer(conn, view_id, answer.data, prompts[view_id][1], lists[view_id])
                 if errors:
                     archive.retire(answer.call_id)
                     raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))

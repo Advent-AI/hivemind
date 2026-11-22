@@ -1,0 +1,7 @@
+**NOT READY TO BUILD.**
+
+1. **T1 must check the actual IDs in all four outgoing lists.** I added an unlisted theme ID to 1,471 old-2 request formats. Every stored answer kept the same validation result. T1 checks where the format changed, so this bug could pass the replay. Compare each outgoing list with the IDs actually shown for that request. [T1](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/DESIGN.md:163) · [Old-2 archive](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/old-2/prod/archive.sqlite)
+
+2. **The v12 retry path still needs a test.** T1 substitutes away all four retries, and T1b tests the refused first answers. Drive one real v12 retry with a duplicate theme push and assert that the second request carries the same citation lists. This catches a retry that accidentally sends the old open format. [T1 and T1b](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/DESIGN.md:173) · [Retry path](/Users/lchingen/hivemind/src/hivemind/views/judging.py:334)
+
+3. **A missing saved judge format must fail preflight.** V3 requires a report, but preflight’s main function ignores Part A’s return value. A missing format could still end with `preflight done`. Specify and test a failing exit for that case. [Design](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/DESIGN.md:98) · [Preflight exit logic](/Users/lchingen/hivemind/scripts/preflight.py:339)

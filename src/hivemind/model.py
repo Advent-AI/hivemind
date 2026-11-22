@@ -183,7 +183,7 @@ def openai_transport(provider, request, timeout=180, max_attempts=3):   # the de
 
 def check_schema(value, schema, path='$', root=None):
     """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
-    array/items/minItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
+    array/items/minItems/maxItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
     root = root if root is not None else schema
     if '$ref' in schema:
         name = schema['$ref'].rsplit('/', 1)[1]
@@ -220,6 +220,8 @@ def check_schema(value, schema, path='$', root=None):
         errors = []
         if len(value) < schema.get('minItems', 0):
             errors.append(f'{path}: fewer than {schema["minItems"]} items')
+        if 'maxItems' in schema and len(value) > schema['maxItems']:
+            errors.append(f'{path}: more than {schema["maxItems"]} items')
         for index, item in enumerate(value):
             errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]', root))
         return errors

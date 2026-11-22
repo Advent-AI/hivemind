@@ -48,6 +48,27 @@ def refuse_seeded_ledger(path):
         raise SystemExit(f'cannot inspect existing ledger: {error}') from error
 
 
+def refuse_harness_ledger(path):
+    """A ledger marked harness-only (a `harness_only` table, D694's July test) is written by its harness alone; read-only inspection stays
+    open. Refused under any configuration, before any item is routed."""
+    ledger = Path(path)
+    if not ledger.exists():
+        return
+    try:
+        with sqlite3.connect(ledger.resolve().as_uri() + '?mode=ro', uri=True) as conn:
+            marked = conn.execute("select count(*) from sqlite_master where type='table' and name='harness_only'").fetchone()[0]
+    except sqlite3.Error as error:
+        raise SystemExit(f'cannot inspect existing ledger: {error}') from error
+    if marked:
+        raise SystemExit('this ledger is marked harness-only; an ordinary replay does not write it')
+
+
+def refuse_links_engine(cfg):
+    """D694: poc-v119's matching engine runs only in its July test harness in this version, not from an ordinary launcher."""
+    if cfg.matching.engine == 'jev-links':
+        raise SystemExit(f'config {cfg.version}: matching engine jev-links is not a product entry point in this version (D694)')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--from', dest='from_day', required=True)
@@ -77,7 +98,9 @@ def main():
     cfg = config.load(args.config)
     if cfg.baseline is not None:
         raise SystemExit(f'config {cfg.version} uses retired seeded-question baseline; select a configuration without it')
+    refuse_links_engine(cfg)
     refuse_seeded_ledger(args.views)
+    refuse_harness_ledger(args.views)
     uni = universe.load(args.universe)
     archive = model.Archive(args.archive)
     day_runner = None

@@ -10371,3 +10371,533 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
 - **Done:** the D681–D690 records are committed on `clean-arch`, and nothing is pushed.
 - **Asked next by Alex, in the same message:** a description of the end-to-end system (its components, how it runs, its current
   performance) and whether it is ready to go to production for testing. That answer is an assessment, recorded when it is given.
+
+## D691 · 2026-11-20 · Alex chooses A after council Q: no daily wrapper yet; link related questions first, a $0 check then a few cents
+
+- **Alex's words** (2026-11-20): on the half-hour read of poc-v118's 09-20 output, "dont' you take a look for me let the council tak
+  ea crack at it"; on the three options put to him after council Q, "A".
+- **Council Q** (`docs/research/2026-11-20-production-readiness/council-q/RESULT.md`, consensus, $0): an analyst would use the
+  library PARTLY: for sources and milestones, not for its number answers, because linked number questions contradict each other
+  in all three draws (old-2: Data Center Q4 about $146B against a total Q4 of about $127B); no question has a dependency and no
+  judgement cites another question.
+- **The options were:**
+  - **A**, recommended: no daily wrapper yet; link the related questions first, tested at $0 on the request text, then a few cents;
+  - **B**, build the daily wrapper and tell testers the number questions do not yet agree;
+  - **C**, stop here.
+- **Decided (Alex):** A. B and C are not taken. Council P's daily wrapper and rehearsal week wait.
+- **A correction of mine, made to Alex:** council Q called the dependencies "decided (D368 item 2) and not built". The dependency
+  stretch D533–D542 had already worked on them and closed with the `reads`/`supports` separation as a provisional candidate, not
+  sound for build (D542). A probe is not a build: it tests whether linking reconciles the answers before that design is reopened.
+  The census of that stretch (D537) found the useful pair to be Data Center revenue reading total revenue.
+- **Done ($0):** `dependency-probe/render_check.py` (the block production renders, cut at 600 characters, shows the total's decisive
+  figures in old-2, its FY figure but no Q4 in old-1, and cuts old-3's final figure while showing its band) and `probe.py check`
+  (each draw's scratch copy, rolled back to before the Data Center question's 09-20 judgement, rebuilds the stored request byte-equal
+  in all three draws; the changed request adds 682–764 characters).
+- **Next:** council round 3 on the probe's design (`dependency-probe/design.md`), then the send (18 requests, cap $0.40) on consensus.
+
+## D692 · 2026-11-20 · Under Alex's A (D691): the dependency probe passes its registered rule; the dependency design review reopens at $0
+
+- **Source of authority:** Alex's "A" (D691: link the related questions first, a $0 check then a few cents). The probe's design passed
+  the council in rounds 3–6 (`docs/research/2026-11-20-production-readiness/dependency-probe/`, Codex thread `01a1fba6…`; rounds 3–5
+  DISAGREE with changes, all taken: old-2 only, a stricter reading rule with Q3 and room for the rest of NVIDIA, one transport attempt,
+  reservations charged when usage is unknown; round 6 CONSENSUS).
+- **Result** (`dependency-probe/RESULT.md`, $0.0176): with v14's conclusion linked, 2 of 3 answers reconcile (Q4 Data Center sized
+  from v14's $127B and the reported mix); the unchanged request reconciles 0 of 3. Claude's marks and a fresh blind Codex reader agree
+  on every answer. PASS by the rule as written. Round 7 (CONSENSUS) on the result.
+- **Disclosed with it:** none of the six answers repeats the stored extreme (rung 2, Q4 $146B): council Q's headline example was
+  partly one unlucky sample; the recurring contradiction is milder. Coherence is not accuracy. Five of six answers still carry the
+  self-made $414B reference.
+- **Decided (council consensus under D691):** council Q's PARTLY and the deferral of the daily wrapper stand. The dependency design
+  review reopens at $0 (D542's five open items, the `reads`/`supports` separation, D538's seven filing changes), then goes to Alex
+  before any build or send. The self-made reference is traced apart on stored answers, at $0.
+
+## D693 · 2026-11-21 · Under Alex's A (D691): the design for linking related questions reaches council consensus at $0; three choices go to Alex before any build or send; the self-made reference is traced
+
+- **Source of authority:** Alex's "A" (D691) and D692's registered next step ("the dependency design review reopens at $0 ... then goes
+  to Alex before any build or send"); Alex, 2026-11-21: "好继续".
+- **Council R** (`docs/research/2026-11-20-production-readiness/dependency-design/RESULT.md`; Codex thread `01a1fcdb…`, rounds 1–3;
+  round 2 DISAGREE with five changes, round 3 DISAGREE on one, all taken; consensus): for the product (poc-v118, no seed edges) a
+  build-ready design is reachable after Alex's choices and a $0 proof. The matching step chooses links (D51, D368 item 2) through one
+  three-way matcher question that also covers an existing question reading a newly opened one (D191 point 2 at opening; old-2 opens
+  Data Center before total revenue); a link between two already open questions stays a separate slice. The matcher answers the
+  relation's sign and code maps the label from typed rung bounds. The reader is shown the read judgement's comparison point and its
+  forecast in full, labelled as the system's, beside a bounded reasons excerpt. A chosen link moves no statement (106 items linked to
+  both questions in old-2 are exposed to literal D265). D542's five items are settled for the product as written in the record.
+- **Withdrawn by Claude in round 1:** a link written by code from typed keys (a hand list over measure names, D167, AGENTS §2). Corrected
+  by Codex in round 2: July already holds an outside total-revenue estimate (Bloomberg-compiled $393B, e195), so July alone is the first
+  send. Corrected in round 3: both questions are judged fresh in every sequence.
+- **The self-made reference** (`docs/research/2026-11-20-production-readiness/self-reference/RESULT.md`, `reference_census.py`, $0): 44 of
+  2,375 number judgements (1.9%) present the system's own earlier figure as the reference, 33 of them on the FY2027 Data Center question
+  (old-1, old-2); mechanism traced on old-2 v9 07-06 to 09-20: the previous conclusion is shown as rung and reasons only, without the
+  source of its figures, and no sentence of judging-v7 covers "no market figure supplied"; the Wall Street estimate sits under total
+  revenue only. Its own fix (a sourced reference) returns to Alex separately, after the link is measured.
+- **Decided (council consensus; Alex's choices pending):** nothing is built or sent. To Alex: (a) a chosen reading link leaves filing
+  alone; (b) open new matching and judging versions for the shared mechanism, the first test accepting only the existing-reader /
+  new-target case; (c) after the $0 proof passes the council, the July comparison (old-2, 07-10 to 07-12, three linked and three
+  control sequences, both questions fresh, pass rule in `codex-r2.md` §7(b)), cap $0.15, estimate $0.06–0.07. Recommendation: all three.
+
+## D694 · 2026-11-21 · Alex chooses A: links leave filing alone; new matching and judging versions open for linking; the July test after the council passes the $0 proof
+
+- **Alex's words** (2026-11-21), replying to the three choices of D693: "A". The options were:
+  - **A**, recommended: (a) a chosen reading link leaves evidence filing alone (D265 applies only to a stated hierarchy); (b) open new
+    matching and judging versions for the shared mechanism (both opening orders; the first test accepts only the existing-reader /
+    new-target case); (c) after the $0 proof has passed the council, the July comparison (old-2, 07-10 to 07-12, three linked and three
+    control sequences, both questions fresh, pass rule `dependency-design/codex-r2.md` §7(b)), cap $0.15, estimate $0.06–0.07;
+  - **B**, the code and the $0 proof only, asking again before the paid test;
+  - **C**, not now.
+- **Decided (Alex):** A. poc-v118 stays the product and the control; the linking version is a new configuration. The sourced-reference
+  change is not opened (it returns after the July measurement, D693).
+- **Next:** the $0 work of D693 in order (tables and request audit; the July control rebuilt by request identity and filing replayed;
+  real checks and writer with fixed answers for both orders and the listed events; built requests inspected, rule frozen, cap set),
+  then the council on the proof, then the send.
+
+## D695 · 2026-11-21 · Alex narrows the first linking version to number questions, one of them newly opened
+
+- **The question** (after council R round 4, `docs/research/2026-11-20-production-readiness/dependency-design/codex-r4.md`, NOT READY: the
+  design's blanket exclusion of theme links narrowed the agreed lifecycle, and the full scope — themes shown once with the link's
+  direction, a theme reading an asset, closed events read as historical until a successor, two questions opened by one article — needs
+  more design rounds): "连题的第一版，范围要多大？" Options: only number questions (recommended): link two five-rung number questions
+  of the asset kind, one of them newly opened; themes already reach every asset question through the theme block (D191, D195);
+  yes/no event questions and two questions opened by the same article wait for a later version. Or the agreed design in full.
+- **Alex's answer** (2026-11-21): "只连数字题 (推荐)".
+- **Decided (Alex):** the first linking version links only a newly opened number question and an open number question it was shown,
+  in either reading direction (both five-rung asset ladders with typed bounds). No theme, event or same-article pair is linked in this
+  version; each is a later version Alex opens. D694 otherwise stands.
+
+## D696 · 2026-11-21 · Alex keeps the July test's $0.15 limit as a reservation stop priced from each request's size
+
+- **The question** (after council R round 11, `docs/research/2026-11-20-production-readiness/dependency-design/codex-r11.md`): the budget
+  transport reserves, before each model call, a worst case priced from the request's size (2 x its bytes + 4,096 input tokens, the full
+  output cap) and refuses a call that would pass $0.15. Over 6,853 stored calls the charge never passed 31% of that reservation, but
+  OpenAI publishes no bound tying a request's tokens to its size; its only published input bound (922,000 tokens) would reserve about
+  $0.12 a call and make the test impossible under $0.15. Expected total about $0.09. Options: reserve from the request's size
+  (recommended); or do not run.
+- **Alex's answer** (2026-11-21): "按请求长度预扣 (推荐)".
+- **Also fixed on council R's round-11 finding** (verified against the stored usage and the published pricing page, read 2026-11-21):
+  gpt-6-luna bills cache writes at $0.125 per million tokens (1.25x input); every stored judge response reports `cache_write_tokens`.
+  The July harness settles at the three published input rates (`july_test.settled_llm_cost`: the stored 07-10 Data Center call $0.002895,
+  not $0.002662) and reserves each Jev request at TypeSafe's published 64K per-request limit for each of its three attempts. The
+  product's own `model.call` cost records omit the cache-write premium too: a cost-reporting finding, recorded, not changed here.
+
+## D697 · 2026-11-21 · Council R passes the $0 proof of the linking version; the July comparison is sent (D694 (c), D696)
+
+- **The council** (`docs/research/2026-11-20-production-readiness/dependency-design/`, Codex thread `01a1fcdb…`): design rounds 4–8
+  (NOT READY four times, READY TO BUILD in round 8), proof rounds 9–12 (NOT READY three times: budget bounds, exact dry-run checks,
+  the latch, the send loop, the starting-state check, the selection record, cache-write settlement; READY TO SEND in round 12 under
+  D696). Every finding was taken; the record of each is `PROOF.md`.
+- **The proof** (`PROOF.md`, $0): suite 378 passed; 7 of 7 mutants caught; the July starting state equal to old-2; poc-v119 without
+  links reproduces the prefix; the archive test; the dry run's 42 checks; the stop paths; the latch race; historical settlements within
+  31.2% of their reservations; preflight; price about $0.085 for six sequences; the reading rule frozen (`reading-rule.md`).
+- **Sent:** `july_test.py send` into `poc/data/july-link-test-2026-11-21/`, ceiling $0.15, by Alex's A (D694) and D696.
+
+## D698 · 2026-11-21 · The July test of the linking version passes its frozen rule; next steps go to Alex
+
+- **Result** (`docs/research/2026-11-20-production-readiness/dependency-design/JULY-RESULT.md`, $0.0689 of $0.15): in all three linked
+  sequences the matcher chose and the writer committed "v9 reads v14" at seq 148 and nothing else. Linked sequences meeting A–D: 3 of 3
+  (Claude), 2 of 3 (blind Codex reader); controls meeting A–C: 1 of 3 (Claude), 0 of 3 (reader); no refusal, no grounding error. PASS by
+  both readers; their two disagreements (control-1's unsized uplift, linked-2's "stated bound") do not move it.
+- **Disclosed with it:** the stored annual contradiction did not recur in the fresh controls (the total rose to ~$411B on 07-12); the
+  controls' remaining contradictions are in the implied second half, which rule C cannot see; the verdict rests on B read as written
+  for two controls; coherence is not accuracy; one pair, three days.
+- **Open:** PRD 06 still says the default matcher is not asked for dependencies (true of poc-v118, the product); it changes with the
+  decision that makes a linking version the product. The sourced-reference change (D693) waits for a longer linked run.
+
+## D699 · 2026-11-21 · Alex continues with A: the whole-window measurement of the linking version, designed with the council at $0 first
+
+- **Alex's words** (2026-11-21), replying to the next-step question after D698 (A, recommended: run poc-v119 over 07-01..09-20 once,
+  about $9 as one poc-v118 run cost, its measurement designed with the council at $0 before any send: whether related number questions
+  still contradict each other, which links the matcher chose and whether any is wrong, whether the self-made market reference becomes
+  rarer, whether other questions get worse; then decide whether the new version replaces the product. B: stop, poc-v118 stays): "continue".
+- **Decided (Alex):** A. The $0 design and its council come first. The ~$9 was an estimate, not a ceiling: the paid send waits for the
+  council's pass and a ceiling Alex names. poc-v118 stays the product until a later decision.
+- **Next:** the design (`docs/research/2026-11-21-whole-window/`), its $0 proofs, council rounds, then the ceiling question to Alex.
+
+## D700 · 2026-11-21 · Alex approves a $0.10 ceiling for the census of the link decisions before the whole-window run
+
+- **The question** (after council R round 13 found the July link's direction close to a coin flip, `docs/research/2026-11-21-whole-window/DESIGN.md`
+  §3): "正式完整运行之前，我想先花几美分，单独测一下连题这一步本身 … 把整个期间会遇到的 105 对候选题，每对问 3 遍，看它连得稳不稳、有没有连错。这一步不付钱买任何判断，预计 2–7 美分。上限 10 美分可以吗？"
+  Options: 10 美分 (recommended; link questions only, three draws, stop above $0.10, the result goes to the council before the run is
+  decided); 先别花 (no census; the run discussed with the known coin-flip risk).
+- **Alex's answer** (2026-11-21): "10 美分 (推荐)".
+- **Decided (Alex):** the census may spend up to $0.10 (Jev link questions only, three draws, the writer handed no link), after the
+  council passes its harness. The whole-window run keeps its own ceiling question (D699).
+
+## D701 · 2026-11-21 · Council R passes the census harness (rounds 13–16); the census of link decisions is sent under D700
+
+- **The council** (`docs/research/2026-11-21-whole-window/`, Codex thread `01a1fcdb…`): round 13 NOT READY (no known positive in
+  the gate, July samples not reused, no completeness proof, launcher and ceiling gaps, preflight), round 14 NOT READY (the scorer could
+  pass with no draws and ignored the sign; the registration ruled out links the criterion permits; preflight covered only July),
+  round 15 NOT READY (a dry draw could be scored; the July reuse could fall through to a purchase; three W pairs too strong), round 16
+  READY FOR THE CENSUS SEND. Every finding was taken; each is answered in DESIGN.md §1 and §3.
+- **The $0 proof:** poc-v119 with every link answered "neither" equals old-2 over the whole window (1,884 articles, nine projections);
+  14 openings, 105 eligible pairs; the census pass with every pair answered "reads" and no link written equals old-2 (105 proposed,
+  0 written), its mutant with links written stops on 07-01; the July answers reused at seq 148 and refused when not pinned; the
+  completeness check and the scorer each catch their mutants; full-window preflight recorded; the registered reading of the 105 pairs
+  (R 1: v9 reads v14, together; W 38; O 66) written before any census answer.
+- **Sent:** `window_test.py census`, draws 1, 2, 3 one after another into `poc/data/link-census-2026-11-21/`, one ledger at Alex's
+  $0.10 (D700).
+- **Also recorded:** the July link's direction margins (0.05, 0.09, 0.03; JULY-RESULT.md, added section).
+
+## D702 · 2026-11-21 · The census of link decisions passes its registered gate; council R: probe a sharpened link question before buying judgements
+
+- **Result** (`docs/research/2026-11-21-whole-window/CENSUS-RESULT.md`, `census-pairs.md`; $0.0266 settled of Alex's $0.10, D700):
+  three counted draws over the whole window; the known positive (v9 Data Center reads v14 total revenue, together) right in 3 of 3,
+  margins 0.05, 0.09, 0.03; no link on any of the 38 pairs whose shown material names no connection (114 decisions). Gate PASS.
+- **Beside the score:** 8 pairs proposed in some draw; part-to-whole and whole-to-part both occur; v21–v9 flips direction; 4 of 8 vary
+  in presence or direction. Council R round 17 (`codex-r17.md`): v17 (FY2028 revenue growth) reads v16 (FY2027 CPU revenue), together,
+  in 3 of 3 draws is a likely sign error (a higher prior-year base lowers next-year growth at a fixed total; no next-year mechanism
+  shown). Claude's lean to measure the current wording was withdrawn.
+- **Consensus (council R, round 17):** before the paid judgement run, probe a sharpened READS/SIGN wording on the same 105 pairs at
+  cents (keep the known positive and the 38 negatives; remove unsupported links, including the base effect of a prior-year part on a
+  growth rate; no blanket ban on a whole reading its part). A wording change changes what the system does: it goes to Alex with the
+  options before its probe. If the wording keeps the useful links and drops the unsupported ones, it becomes the candidate for the paid
+  design; if it loses the known positive or adds wrong links, the current wording stays the candidate with its measured risks.
+
+## D703 · 2026-11-21 · Alex chooses to probe a sharpened link question before the paid run
+
+- **The question** (after D702): "连题统计通过了事先定的关 … 问题是它在'部分读整体'和'整体读部分'之间拿不定主意，而且有一条很可能连反了 … 下一步怎么走？"
+  Options: 先试新问法 (recommended: with Codex at $0, write the link question clearly, keeping Data Center reads total revenue and the
+  38 negatives, removing unsupported links including the base effect, no blanket ban on a whole reading its part; then ask the same
+  105 pairs three times, about 3 cents, from the 7 cents left of the approved 10; then decide the paid run); 直接正式运行 (the current
+  wording, about $7 estimated, ceiling later); 停在这里 (poc-v118 stays, the linking version paused).
+- **Alex's answer** (2026-11-21): "先试新问法 (推荐)".
+- **Decided (Alex):** a sharpened READS/SIGN wording is designed with the council at $0 and probed on the same 105 pairs, three draws,
+  within the remaining $0.073 of D700's ledger. Then the paid run is decided.
+
+## D704 · 2026-11-21 · Council R passes the version-2 link question for its probe (rounds 18–19); the probe is sent under D703
+
+- **The wording** (`docs/research/2026-11-21-whole-window/WORDING-V2.md`, harness-only, no product file changed): a tie-break (when
+  either question could read the other, the one less anchored by guidance, consensus or a reported figure for the quantity and full
+  period it asks about reads the other; no direction banned); a periods clause (quantities of different periods are linked only when
+  the supplied text states how one moves the other); a base-effect SIGN example. The tie-break and the periods clause are proposals
+  this probe tests under D703; D537 decided only the Data Center case.
+- **The council:** round 18 NOT READY (the gate could pass while keeping an unsupported cross-period link; the tie-break's period and
+  the periods example needed precision); round 19 READY FOR THE V2 PROBE. Registration for version 2, written before its answers: R 1,
+  W 40 (the census's 38 plus 321:v16 and 1238:v9, no bridge across periods), O 61, F 3 (a growth rate reading an earlier revenue amount
+  with the sign together). $0: the dry pass complete and equal to old-2 with every job carrying the version-2 texts; its mutant (texts
+  not patched) stops before any send; the stored census answers fail the version-2 gate, the round-18 counterexample fails it, a
+  control with both unsupported links removed passes.
+- **Sent:** `window_test.py probe-v2`, draws 1, 2, 3 one after another on D700's ledger ($0.0734 left); a ceiling stop before draw 3
+  is an incomplete probe with no verdict.
+
+## D705 · 2026-11-21 · The version-2 link question passes its registered gate; council R: version 2 goes to the paid design
+
+- **Result** (`docs/research/2026-11-21-whole-window/PROBE-V2-RESULT.md`, `probe-v2-pairs.md`; $0.0309 settled, $0.0575 of D700's
+  $0.10 in all): the known positive right in 3 of 3 (margins 0.03, 0.07, 0.13); no W link (120 decisions) and no F link (9). Gate PASS.
+  Against the current wording: both unsupported links across periods removed, the v21–v9 flip gone; two defensible links lost (v2 reads
+  v1, v35 reads v14); one weak link added in 3 of 3, v14 (total revenue) reads v8 (stand-alone CPU), against the tie-break's direction.
+- **Consensus (council R round 20, `codex-r20.md`):** version 2 becomes the candidate: built as a separately versioned, reviewed
+  product configuration, then the paid design (the whole chain kept and read step by step; paired fresh controls for v14 and v9; the
+  CPU link's effect on the total measured before any Data Center credit). No third wording chosen on the same 105 pairs. The paid send
+  waits for the design's pass and a ceiling Alex names (D699).
+
+## D706 · 2026-11-21 · poc-v120 (link questions version 2) passes council review as a product configuration; the paid design needs four changes
+
+- **Built (uncommitted):** `config.Setting.link_questions` (named only in matching under `jev-links`, one of `links-v1`, `links-v2`;
+  unnamed there means `links-v1`, so poc-v119 is unchanged: checksum aa577d68c3148864); `links.READS_V2`, `SIGN_V2`, `QUESTION_SETS`
+  and the version passed by `choose`, `_signed` and `_corrected`; `poc/config/poc-v120.json`; tests and the v2 pin
+  (`LINK_QUESTIONS_V2_SHA`). Evidence: suite 380 passed; 14 of 14 mutants caught (`whole-window/mutants.log`); poc-v120 over the whole
+  window with each probe draw's own answers meets all 17 link jobs of each draw by request hash and ends equal to old-2
+  (`v120-replay-{1,2,3}.log`). The ordinary launchers still refuse every `jev-links` configuration.
+- **Council R:** round 21 NOT READY (config accepted a null, the field under another engine or setting), round 22 part A READY.
+- **Paid design (round 22 part B, NOT READY):** fresh judgements delimited by date with every request checked against the latest
+  upstream conclusion it could see; the primary line on annual ranges (a definite contradiction only when the segment's low end exceeds
+  the company's high end; overlaps and unparsed days apart; coverage rule; all three pairs must improve; outcomes defined for every
+  case); harm checks reading every post-link total-revenue answer against the CPU conclusion it saw, sourcing traced outside the
+  dependency block, arithmetic errors with an effect on the verdict, refusals with a denominator; July's latch kept (one paid call at a
+  time per sequence, six sequences at once). Cost repriced by Codex: $0.872 per sequence of reader judgements, about 19 added days per
+  linked sequence.
+
+## D707 · 2026-11-21 · Council R passes the paid design (version 6, rounds 22–27) for building its harness
+
+- **The design** (`docs/research/2026-11-21-whole-window/PAID-DESIGN.md`): three linked sequences (poc-v120, links from probe draws
+  1–3, now written) paired with three fresh controls (poc-v118, the readers' old judgements retired by reader and day from each link's
+  day) on old-2's trajectory; readers v9, v14, v16, v21; July's latch, six sequences at once; the primary line P counts, over the 73
+  dates 07-10..09-20, the dates on which Data Center's FY2027 low end exceeds total revenue's high end, every distinct answer pair read
+  by hand (the parser `contradictions.py` orders the work; `parser-validation.md`), three outcomes per pair from two-sided bounds, one
+  credit rule for gains; harm lines H1–H5; verdict precedence; a pinned worksheet. The attainable verdict ($0): the stored v118 draws
+  show 11, 56 and 1 definite days.
+- **The council:** round 22 NOT READY (four changes), 23 (reading rule, freshness), 24 (three outcomes, product against infrastructure
+  failure, decisive gains, worksheet), 25 (one credit rule), 26 (unquantifiable gains together, coverage), 27 READY TO BUILD THE PAID
+  HARNESS. The harness, the worksheet builder, the dry runs and three $0 verdict checks return for review before any send; the send
+  waits for a ceiling Alex names (estimate about $5.8 before retries and reservations).
+
+## D708 · 2026-11-21 · Council R (reflection, round 31): a one-pair pilot before the full paid comparison
+
+- **The record** (`docs/research/2026-11-21-whole-window/`): rounds 28–30 reviewed the built harness (`PAID-BUILD.md`); round 28
+  NOT READY (the paid exit, freshness, snapshot, H2, typed stops, worksheet, verdict input), round 29 NOT READY (acceptance carried to the
+  verdict, reviews required, packets, H3 load), round 30 NOT READY (H3's selector misses cases; review records not validated; reading
+  estimate 18–30 reviewer-hours). Each finding was real; nearly all sat in the handoff from a run to a decision.
+- **Consensus (round 31, `codex-r31.md`, on `claude-r31.md`):** PILOT FIRST. One structural rule: buy the next pair only when the accepted
+  runs and completed readings of the current pair can justify that spend under a rule written before launch. Pair 1 (linked-1,
+  control-1; estimate $1.96) is registered as pair 1 of the full comparison and sent first; its P line is read by hand, with H1, H2 and
+  H4 (every post-link v14 answer against the CPU conclusion it saw); the gain review applies if the pair is provisionally improved.
+  Continue to pairs 2 and 3 and the full reading only if pair 1 improves after the gain review with H1 and H4 clear; "not improved" or
+  "undecided" stops with its reason; a linked double refusal fails; an invalid run, coverage short or a control under 2 definite dates is
+  inconclusive. Before the pilot: the completed calendar proven, the pilot readings bound to the accepted stores, the credit defects
+  fixed (explicit reliance on a material failure; a quantified CPU correction per gain date). H3's selector and H5's duplicate counting
+  wait for the full reading. The pilot's ceiling (about $2.50) is Alex's.
+
+## D709 · 2026-11-21 · Council R passes the pilot of the paid comparison (rounds 32–36); the send waits for Alex's ceiling
+
+- **Rounds:** 32 NOT READY (readings not bound to the regenerated rows; numbers not validated; coverage after harm), 33 (reading
+  records only present; the CPU correction on any answer), 34 (a disputed reading settled without a source; a transcribed correction; one
+  answer read with two ranges), 35 (float arithmetic; reliance per answer instead of per gain date), 36 READY TO SEND THE PILOT once Alex
+  names the ceiling. Every finding was taken (`PAID-BUILD.md`); `e2e-checks.log` holds 43 checks, the six dry sequences pass the gate
+  (`paid-dry-*.log`), the mutants and stop paths are caught.
+- **The pilot** (PAID-DESIGN.md §8, D708): linked-1 and control-1, registered as pair 1 of the full comparison; estimate $1.96; proposed
+  ceiling $2.50 (Alex's). Its decision (`verdict.py --pilot`) continues to pairs 2 and 3 only when pair 1 improves after the gain review
+  with H1 and H4 clear; it never gives the comparison's pass. H3's selector and H5's duplicate counting are fixed before the full reading.
+
+## D710 · 2026-11-21 · Alex approves a $2.50 ceiling for the pilot; pair 1 is sent
+
+- **The question:** "正式对比的程序和评法 Codex 都审完了，建议先跑一对试点 … 预计 1.96 美元、约 3 小时 … 只有新版本确实更少，才建议再跑剩下两对 … 试点上限 2.5 美元可以吗？"
+  Options: 2.5 美元 (recommended: pair 1 only, stop above $2.50; read by hand, then Codex, then stop or continue by the rule written
+  before; continuing asks Alex again for the remaining pairs' ceiling); 先别花 (no run; poc-v118 stays).
+- **Alex's answer** (2026-11-21): "2.5 美元 (推荐)".
+- **Sent:** `paid_run.py send` for linked-1 and control-1 at once into `poc/data/link-pilot-2026-11-21/`, one ledger at $2.50 (D708, D709).
+
+## D711 · 2026-11-21 · Pilot pair 1 is inconclusive (control double refusal); the comparison is closed; council round 37 recommends a citation-only judge version to Alex
+
+- **Alex's words** (2026-11-21, on the stopped control): "好你跑一次council 看trace 同意了就开始下一步".
+- **Registered verdict:** inconclusive. control-1 (poc-v118) stopped on 09-08 when v21's answer and its retry each cited an id outside
+  the listed evidence (`e362` for `e3620`; `e3111` beside `e3110`/`e3112`), PAID-DESIGN.md §4 (2). linked-1 completed with every
+  acceptance check true. control-1 equals old-2 on every H2 table through 09-07. Spend $1.70 of $2.50.
+- **Exploratory, one pair, one draw, beside the verdict** (`whole-window/PILOT-RESULT.md`):
+  - P: the parser counts 3 of 60 dates (linked-1) against 28 of 60 (control-1) on 07-10..09-07. All 12 flagged linked dates were read:
+    none has Data Center above total revenue (parser artefacts). The 5 sampled control dates are real.
+  - H4: four linked v14 answers (07-15..07-18) add v8's stand-alone CPU forecast to a total built from company guidance, read by Claude
+    and, shuffled, by Codex.
+  - H1: 5 linked against 1 control refusal on the 200 matched reader-days, at the harm line.
+  - Every refused judge answer seen is an id-membership error: 17 in 5,408 distinct attempts. 6 of linked-1's 7 fresh reader refusals
+    put an id in the wrong list, though the request's closing instruction forbids it.
+- **Council round 37** (`round37-brief.md`, `codex-r37.md`, `claude-r37.md`, `round37b-brief.md`, `codex-r37b.md`), consensus A:
+  - pair 1 is closed, with no redraw (B) and no resume (C);
+  - C would move H1 across its line through the refusals that invalidated the control, and its rule was proposed after the stop was
+    seen;
+  - Claude proposed C first and withdrew it on linked-1's H1 numbers;
+  - a resume-once rule may be registered only for a future comparison, before its send, in both arms, and proven on stored data.
+- **Recommendation to Alex (his to open, a new version of the frozen judge):**
+  - The version: a judge version that changes the citation format only. Every id field (cites, push ids, `cites_views`, theme
+    pushes) takes a closed list built from the exact request.
+  - The test, at $0, end to end: stored accepted answers fit; observed bad ids are excluded; an empty list is the only answer for a
+    field with no allowed id.
+  - A separate design, not part of this version: the link direction (a whole reading its own part). The keys label stand-alone CPU
+    `other`, and the direction is a judgement, which D704 left open on purpose.
+- **Not done:** no paid call after the pilot, no product file changed.
+
+## D712 · 2026-11-21 · Alex opens a citation-only judge version (closed per-request id lists), tested at $0 first
+
+- **The question:** "试点到此收尾（结论"说不准"，花了 1.70 美元）。发现了两个问题：一是模型常写出不在名单上的编号，回答因此被退回，这次对照组就是因为这个停下；二是新版本让"总收入"把 CPU 收入又加了一遍。下一步做哪个？"
+  Options: 开引用格式新版本 (recommended: every id field of the judge's answer takes a closed list built from the request; $0 check on
+  stored data that accepted answers still pass and the bad ids are excluded; asking again before any paid test); 先设计重复计算的修法;
+  先停在这里.
+- **Alex's answer** (2026-11-21): "开引用格式新版本 (推荐)".
+- **Scope:** a new judge version whose only change is the answer format's id fields (D711's recommendation). The link direction stays
+  a separate design. Design, then council review, then build with tests and mutants, then the $0 test; any paid test asks Alex again.
+
+## D713 · 2026-11-21 · Council R passes the citation-only judge design (round 38, four passes); build judging-v12 and poc-v121 with the $0 test
+
+- **Design:** `docs/research/2026-11-21-citation-lists/DESIGN.md` v3.
+  - `judging-v12` keeps judging-v7's text and request; its four id fields take closed lists built from the rows that render the
+    request (one shared `$defs` evidence enum, plain dependency and theme enums, `maxItems: 0` for an empty list).
+  - Under v12, `check_answer` uses the same lists.
+  - `model.check_schema` gains `maxItems`.
+  - Preflight checks judge rows against their saved format and fails on a judge row without one.
+  - `poc-v121` = poc-v118 with judging-v12. No v8-based version.
+  - No pre-send size rule: an HTTP 400 is the visible stop.
+- **Council** (`codex-r38.md` … `codex-r38d.md`, `claude-r38.md`), one round each:
+  - 38, NOT READY: the format-error path; preflight; the D358 sizes (the sealed run's 647-id request needs 1,323 plain enum values);
+    lists from the rows, not parsed text; the name `judging-v9` already used; T1's mechanics.
+  - 38b, NOT READY: two owners of membership (a footnote in a quote makes the text parser narrow the list); preflight for judge rows
+    only; the v7/v8 prompt hook; T1's assertions.
+  - 38c, NOT READY: T1 must compare the lists' ids; a real v12 retry test; preflight must fail on a missing format.
+  - 38d: READY TO BUILD.
+- **Also recorded:** the same id-membership class halted the sealed three-month run (D358, 2026-10-28). The v7/v8 text parser can
+  narrow its allowed set (a finding; frozen versions unchanged).
+- **Next:** the build, its tests and mutants, and the $0 test T1–T5 as registered in DESIGN.md §5. Any paid step (provider acceptance;
+  whether the judge picks the intended source) asks Alex again (D712).
+
+## D714 · 2026-11-21 · judging-v12 and poc-v121 built; every registered $0 check passes; the paid acceptance step is Alex's
+
+- **Built (uncommitted):**
+  - `judging.py`: v12, its closed format, `request_parts`, `check_answer`'s lists, and the round's per-view format;
+  - `model.check_schema`: `maxItems`;
+  - `prompts/judging-v12.txt`: a v7 copy;
+  - `poc/config/poc-v121.json`;
+  - preflight: part A on saved judge formats, and an exit on a missing one;
+  - tests: `tests/test_citation_lists.py` (7) and the frozen pins.
+- **Checks:** suite 388 passed (the frozen tests included); mutants 12 of 12 caught; `docs/check.py` OK.
+- **The $0 test** (`docs/research/2026-11-21-citation-lists/RESULT.md`):
+  - **T1:** old-2 replayed under poc-v121. 1,616 judge responses, 4 labelled substitutions, 0 request or list problems; the store
+    equals old-2's on all 36 shared tables, apart from the named columns.
+  - **T1b:** the four refused originals raise `SchemaError` on their bad ids.
+  - **T1c, T3, T3b, T5:** pass.
+  - **T2:** 5,408 distinct pairs; all 5,391 valid answers pass; all 17 refused fail on their bad id (e362, e3111 among them).
+  - **T4:** the largest request in the five archives is 464 enum values counted once (915 per reference); in the sealed D358 run, 676
+    (1,323 per reference).
+  - **Format tokens** (an o200k_base estimate): v7 315; v12 median 502, max 2,621.
+- **Deviations, disclosed in RESULT.md:**
+  - T1's first comparison crashed (FTS tables have no rowid). Three differences were named only after they were seen: a timestamp, an
+    empty new table, a new column on an empty table. T1 was rerun in full.
+  - Run 2's summary print failed after its passing results were saved; the print is fixed.
+  - Preflight's malformed-row ordering was found by council round 39 and fixed, with a mutant.
+  - A mistaken `t1_replay.py --help` started a stray replay into `./--help`. It was stopped, the folder was moved to the session
+    scratchpad, and the script now refuses an option as its folder.
+- **Council round 39** (`codex-r39.md`): the build matches DESIGN v3, no v7/v8 regression; its findings taken.
+- **Not shown** (DESIGN §6):
+  - provider acceptance of the format and its counting of a referenced enum;
+  - whether the judge, constrained, cites the intended source;
+  - whether forecasts move.
+
+  A paid step answers these, and it is Alex's (D712): acceptance on the largest and an empty-list request, then the 17 refused
+  requests and a matched set of accepted ones under v12, read beside their sources.
+
+## D715 · 2026-11-22 · Alex approves $0.50 for the paid acceptance step of judging-v12
+
+- **The question:** "引用格式的新版本已经做好，所有不花钱的验证都通过了。要不要花一点钱实测？实测这样做：先发最大的一次请求和一次名单为空的请求，确认服务商接受这个格式；再把当初被退回的 17 个请求和 17 个正常请求用新版本重发，人工对照原文看模型有没有选对证据。每个请求发一次，约 0.10 美元；各发三次看稳不稳，约 0.30 美元。发之前我会先和审查员定好怎么读、怎么判。"
+  Options: 0.5 美元 (recommended: three sends per request with a margin; a stop above $0.50; the reading rule agreed with the council
+  before the send; Claude reads the results); 0.15 美元 (one send per request); 先不花 (stop; poc-v118 stays the product).
+- **Alex's answer** (2026-11-22): "0.5 美元 (推荐)".
+- **Next:** the probe design and its reading rule through the council at $0, the harness dry-run at $0, then the send under a $0.50
+  reservation ledger.
+
+## D716 · 2026-11-22 · Council R passes the paid acceptance probe's design (round 40, six passes); the harness and its $0 rehearsal next
+
+- **Design:** `docs/research/2026-11-21-citation-lists/PROBE-DESIGN.md` v5, with `probe-plan.json` and `probe-targets.json`. The targets
+  were frozen before any send and amended twice before any send.
+  - **Sends:** A1 (the largest request), A0 (an empty theme list); Part B, 16 refused requests × 3 under v12; Part C, 12 matched
+    comparisons, 3 under v12 and 3 under v7, one comparison at a time, each starting only if its worst-case reservations fit; A2, the
+    sealed 647-id request, last and conditional.
+  - **Reading:** by claim, with required and optional details. Each draw's valid support is recorded apart from its class. All 72 Part C
+    answers are read in full.
+  - **Verdict:** format failure → confirmed failure (standing even when incomplete) → incomplete → unresolved → pass. Pass requires at
+    most 2 of 48 confirmed misattributions, no confirmed material loss (three draws received and read, none with valid support, where
+    the stored accepted v7 answer had it), and no confirmed material harm in Part C.
+  - **Expected spend:** $0.35. At 130% of stored costs, 10 of 12 comparisons start, giving inconclusive.
+- **Council** (`codex-r40.md` … `codex-r40f.md`): 40 to 40e NOT READY, each finding taken; 40f READY TO BUILD THE HARNESS.
+- **Found while freezing the targets:** most refused ids are real evidence ids. Two (e88, e2769) are unlisted ids that the frozen
+  request itself names in "same claim as …" notes, which is a latent invitation. e393 is the $393 billion reference written as an id.
+  Recorded as a finding; the frozen request is not changed.
+
+## D717 · 2026-11-22 · Council R passes the probe harness and its $0 rehearsal (round 41, five passes); the paid probe is sent at Alex's $0.50
+
+- **Harness:** `probe.py` (sender), `probe_read.py` (packets and the ordered verdict), `probe_rehearsal.py`; all harness-only, in
+  `docs/research/2026-11-21-citation-lists/`. The rehearsal (`rehearsal.log`, 61 checks, PASS) runs the real budget transport, the real
+  `model.openai_transport` and the real stop gate, with the network call stubbed. It covers:
+  - every HTTP body compared byte for byte with a request built independently, and three fresh calls per draw;
+  - the stops: A1 rejected or timed out, so nothing after it is sent; a blocked Part C start; a retry exhausting the headroom; a stop
+    during A2 that leaves the core verdict;
+  - 17 verdict cases and 7 refused readings files;
+  - packet quotes checked against the stores;
+  - two byte mutants caught.
+- **Council** (`codex-r41.md` … `codex-r41e.md`): 41 to 41d NOT READY. Their findings: spending continued after a format rejection;
+  A2 could change the verdict; unreadable answers and contradictory readings were counted; quotes were cut and multiline quotes lost;
+  the stub compared dicts, not wire bytes; frozen-ambiguous targets could count. All taken. 41e READY TO SEND.
+- **Sent:** `probe.py send poc/data/citation-probe-2026-11-22 0.5`, one ledger at $0.50; expected spend about $0.35.
+
+## D718 · 2026-11-22 · The paid acceptance probe of judging-v12: registered verdict NOT READY; Council B recommends keeping poc-v118
+
+- **Run:** `poc/data/citation-probe-2026-11-22/`, $0.274 of $0.50, 122 sends, all answered. A2 skipped by its headroom rule; the
+  647-id request size stays unverified.
+- **Verdict** (PROBE-DESIGN.md v5 §3, `probe_read.py`): NOT READY, from a confirmed material harm in Part C, linked-1:8776 (b). v12
+  answers #2 and #3 name Bloomberg for the $393 billion reference while citing only e669 (Wall Street's average via Yahoo Finance);
+  every v7 answer cites e195 (Bloomberg). The number and rung held.
+- **Reading:**
+  - Claude's first reading ("not a harm") was superseded.
+  - The blind Codex reader found harm (b).
+  - The registered two-family adjudication panel agreed: a fresh Codex session, and a fresh Claude subagent whose report (2026-11-22)
+    decided "confirmed (b)", omitted for the four Part B items, with the caveat that e577 might carry the figure. It does not: e577 is
+    FY2026 revenue.
+- **Beside the verdict:**
+  - Part B: 48 of 48 v12 answers valid on the 16 requests that had produced 17 refusals; 0 misattributions; every material target
+    supported in all draws; 24 of 24 placements correct.
+  - Part C: 0 refusals; 72 rungs identical across arms; v12 cites 12.7 entries per answer against 14.0.
+  - A screen for unsupported source names, hand-checked: Part C v12 2 of 36 against v7 1 of 36, all from one request; Part B v12 1 of
+    48. The slip exists in both formats, and the counts cannot tell whether v12 raises it. A first screen mis-flagged linked-1:8768
+    (the dependency v14 carries the figure) and was corrected.
+- **Council B** (`codex-r42.md`): verdict reproduced; recommendation A, keep poc-v118 and do not adopt judging-v12. A follow-up would
+  need fresh requests with one figure attributed to different sources, paired sends, blind source checks, a pre-agreed acceptable
+  increase, a size set by distinct requests, and dropped claims counted.
+- **Lesson:** a reading that relaxes a registered rule to the author's favour (an "uncited provenance label" distinction the rule does
+  not contain) is caught only by the blind reader and the adjudication; the first reader's class is never final.
+
+## D719 · 2026-11-22 · Alex stops the citation line: judging-v12 is not adopted; poc-v118 stays the product
+
+- **The question:** "新的引用格式（每栏只能从名单里选编号）实测的正式结果是"未就绪"。它确实消除了编号写错导致的退回：48 个回答 0 次退回，原来是 17 次。但有一组对照里，它两次写"彭博预测 3,930 亿"，引的却是雅虎汇总的同一数字。这种"机构名和引用对不上"的毛病旧格式也有，目前样本太小，分不清新格式是否让它变多。下一步怎么做？"
+  Options:
+  - 先停在这里 (recommended: poc-v118 stays; the new format's code is kept but not enabled; no further spend);
+  - 设计一个后续测试;
+  - 推翻结论、直接采用新格式 (not recommended).
+- **Alex's answer** (2026-11-22): "先停在这里 (推荐)".
+- **Effect:**
+  - poc-v118 remains the product configuration.
+  - judging-v12, poc-v121, the validator's `maxItems`, preflight's saved-format check and their tests stay in the working tree,
+    uncommitted and enabled by no product launcher.
+  - The link-direction design (D711) and the citation follow-up are not started. No further spend.
+
+## D720 · 2026-11-22 · Alex opens the double-count design; the diagnosis finds the class in the frozen product too
+
+- **The context:** Claude's report after D719 listed two items not started, each waiting for Alex: the design of the fix for the
+  total revenue adding the CPU forecast again (D711, H4), and a citation follow-up.
+- **Alex's words** (2026-11-22): "开".
+- **Claude's reading, not confirmed by Alex:** "开" opens the double-count design. The citation follow-up stays stopped, because
+  Alex declined it under D719 minutes earlier.
+- **Scope:** diagnosis and design at $0 with the council. Any paid step, and any new version of a frozen piece, asks Alex first.
+- **The diagnosis** (`docs/research/2026-11-22-whole-and-part/DIAGNOSIS.md`, $0):
+  - The class is a judge adding a component's target to a total whose company-wide basis already contains it.
+  - It occurs in the frozen product without any link. In old-1, 32 total-revenue answers add the $20B stand-alone CPU target, which
+    was filed under total revenue as evidence. The addition decides the rung on at least 4 days.
+  - In linked-1 it occurs through the link: 4 answers, plus 4 copied by Data Center.
+  - old-2, old-3 and control-1 do not add it into the figure.
+  - The request sentences behind it:
+    - the product-target sentence of judging-v7, applied to a whole;
+    - a consistency clause that covers only a part exceeding its whole.
+  - The fix's owner is the judge text, not the link question.
+- **Next:** council round 43 on the diagnosis, then one recommendation and one test to Alex.
+
+## D721 · 2026-11-22 · Council round 43/43b: the double-count premise is partly falsified by the frozen gold; recommend closing the design with nothing to build; D711's H4 reading corrected
+
+- **The rounds** (`docs/research/2026-11-22-whole-and-part/`):
+  - **Round 43** (`round43-brief.md`, `codex-r43.md`, `claude-r43.md`): DIAGNOSIS NEEDS CHANGES. old-1 has 26 explicit additions (not
+    32). Six of Claude's became unclear (`1569`, `1691`, `1782`, `2313`, `2907`, `3293`). Codex also found overlapping quarterly
+    adjustments, and argued that D263 supports keeping the target discount.
+  - **Round 43b** (`round43b-brief.md`, `codex-r43b.md`, `claude-r43b.md`): PARTLY.
+- **The check that changed the frame:** the frozen judgement gold (D262).
+  - **q01**, total revenue at 07-14, band $400–435B: the gold builds a second half above consensus. It lists management's "$20bn of
+    Vera CPU sales by fiscal year-end" among the supporting inputs, though not among the decisive items, and allocates it no dollar
+    amount.
+  - **q19**, stand-alone Vera: $8–18B.
+  - **What follows:** the diagnosis's premise ("a company-wide basis formed after the target was published already contains it") is
+    Claude's own view, not the ruler's. A judge sentence enforcing it, or the opposite, would have no source in the frozen standard
+    (AGENTS §6, §7.1).
+- **What survives, recorded as findings:**
+  - **old-1 `4163`:** about the full $20B is added without volume shown, taking $414B to $434B across $431.2B. That is unsupported by
+    the gold's discounting (q19).
+  - **old-1 `978`:** treats a repeat as new, while acknowledging "possible consensus inclusion".
+  - **The judge flips:** linked-1 `8752`, `8756` and `8770` change what the same $387B basis includes, with no explanation.
+  - **v9's unsupported "outside Data Center" claim** (`8758`, then `8761`): the estimate moves about $20B, the rung does not.
+  - **Overlapping quarterly adjustments in old-3:** 4 clear (`4298`, `4510`, `5195`, `5369`) and 6 related. No rung change is
+    attributable to the overlap alone.
+- **D711's exploratory H4, corrected:**
+  - linked-1 made "four unsupported increments, overlap unresolved", not four proved double counts.
+  - Against the paired control, only 07-15 differs in rung. The control reached about $417B without any CPU addition on 07-16..07-18
+    (`8751`, `8755`, `8757`).
+  - The pilot's registered verdict (inconclusive) is unchanged.
+- **Consensus (Claude and Codex):** close the double-count design with nothing built or sent. The findings above go to Alex as a
+  short list, not as a work order (AGENTS, Authority and scope).
+- **Lesson:** before calling a judge's choice a defect, read the frozen gold's own reasoning on that case. The pilot's harm line and
+  two readers' "double count" were written without it.
+
+## D722 · 2026-11-22 · Alex closes the double-count design with nothing changed
+
+- **The question** (after D721): "'总收入把 CPU 又加一遍'这件事，按冻结金标的推理不算错：金标自己就把 CPU 目标当成总收入超过共识的理由之一。我和 Codex 都建议把这个修法设计收尾，什么都不改。你怎么定？"
+  Options:
+  - 收尾，不改 (recommended: poc-v118 stays, the judge text unchanged, the findings recorded but not worked on, no spend);
+  - 改查 CPU 题估高 (stand-alone CPU near $19.5B against the gold's $8–18B, a $0 diagnosis);
+  - 改查季度叠加 (old-3's overlapping quarterly adjustments, a $0 count).
+- **Alex's answer** (2026-11-22): "收尾，不改 (推荐)".
+- **Effect:**
+  - poc-v118 remains the product and no judge version is opened.
+  - D721's findings stay a list, not a work order.
+  - Nothing is queued or being spent.

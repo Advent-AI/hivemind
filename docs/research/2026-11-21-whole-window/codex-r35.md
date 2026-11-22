@@ -1,0 +1,14 @@
+**NOT READY.** The three round-34 counterexamples are fixed, and the duplicate `gain_credit` definition is gone. Two remaining cases can reverse the pilot’s decision. [Rebuild record](PAID-BUILD.md:138) · [Credit calculation](verdict.py:259)
+
+### What holds
+
+- **Disputed readings require a source.** Boolean and whitespace placeholders are refused. P and pilot H4 quotes are tied to the regenerated rows. The full verdict also checks quotes against regenerated H rows and rejects duplicate keys. Gain reviews now require quoted inputs and a written explanation. [Reading validation](verdict.py:50) · [Pilot H4 check](verdict.py:361) · [Full H-row check](verdict.py:416) · [Gain review check](verdict.py:276)
+- **Transcribed CPU endpoints cannot change credit.** The round-34 case with a **$380.02B** segment forecast still stops when the computed total is **$380B** and the reader transcribes **$380.04B**. [Computed correction](verdict.py:299) · [Dry result](e2e-checks.log:590)
+- **One resolved range per judgement is enforced before counting dates.** I verified that the carried control answer is refused with **$400B** and **$390B**, even though both produce the same `clear` class. The logged test uses $370B on one date without changing the class, so it could pass on the class check alone. Use the same-class case to test the intended guard. [Range consistency](verdict.py:108) · [Existing fixture](e2e_checks.py:268)
+
+### What still blocks the pilot
+
+1. **Use decimal arithmetic for the corrected-range comparison.** On the dry pilot, a **$400.2B** total less a **$20.1B** increment should equal the **$380.1B** segment forecast. The subtraction produced `380.09999999999997`, so the judge counted three definite contradictions and stopped. The rule requires the segment to be strictly above the total. Compute and compare the endpoints in decimal, with a dry equality case. [Primary rule](PAID-DESIGN.md:77) · [Subtraction and comparison](verdict.py:302)
+2. **Record reliance per gain date.** A material Rule B failure belongs to an answer. Whether reconciliation depends on it can change with the other answer in force that day. I used the dry store’s carried company judgement `154` for July 18–19 with a synthetic **$410B** forecast that included an unsupported **$20B** uplift. Removing it leaves the **$380B** segment forecast clear on July 18 and makes the **$395B** segment forecast definite on July 19. The single reliance flag can preserve both gains or withdraw both. Preserving both returned `continue`. Withdrawing only July 19 produced the prescribed tie and stop. Keep the material-failure review once per judgement and require a reliance finding for each affected gain date. [Gain rule](PAID-DESIGN.md:93) · [Worksheet fields](worksheet.py:247) · [Reliance check](verdict.py:284)
+
+The proposed **$2.50** ceiling remains reasonable against the **$1.96 estimate** once those checks hold. [Pilot ceiling](PAID-DESIGN.md:210)

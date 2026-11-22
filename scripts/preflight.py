@@ -56,20 +56,37 @@ def tally(title, judged, refused, reasons, examples):
             print(f'          e.g. {example}')
 
 
+def saved_judge_format(request_json):
+    """The answer format a judge request was sent with (judging-v12's differs per request, D713), or None when the row has none."""
+    try:
+        return ((json.loads(request_json or '{}').get('response_format') or {}).get('json_schema') or {}).get('schema')
+    except (json.JSONDecodeError, AttributeError):
+        return None
+
+
 def part_a(archive_conn):
-    reasons, examples, judged = collections.Counter(), collections.defaultdict(list), 0
-    rows = archive_conn.execute("select purpose, request_sha256, answer_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%' or request_sha256 like '%:refused:%'")
-    for purpose, sha, answer_json in (tuple(r) for r in rows):
+    """(answers judged, judge rows without a saved format). Judge rows are checked against the format saved with their own request;
+    extraction and matching rows against their fixed schema."""
+    reasons, examples, judged, missing = collections.Counter(), collections.defaultdict(list), 0, []
+    rows = archive_conn.execute("select purpose, request_sha256, answer_json, request_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%' or request_sha256 like '%:refused:%'")
+    for purpose, sha, answer_json, request_json in (tuple(r) for r in rows):
         judged += 1
+        schema = SCHEMAS.get(purpose, {})
+        if purpose == 'judge':                     # a missing format is reported whatever the answer holds, a malformed one included
+            schema = saved_judge_format(request_json)
+            if schema is None:
+                missing.append(sha)
+                reasons['judge: no saved answer format'] += 1
+                continue
         if ':malformed:' in sha or not answer_json:
             reasons[f'{purpose}: not JSON'] += 1
             continue
-        for error in model.check_schema(json.loads(answer_json), SCHEMAS.get(purpose, {})):
+        for error in model.check_schema(json.loads(answer_json), schema):
             key = f'{purpose}: {normalise_reason(error)}'
             reasons[key] += 1
             examples[key].append(error[:140])
     tally('A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side)', judged, judged, reasons, examples)
-    return judged
+    return judged, missing
 
 
 class Unverifiable(Exception):
@@ -337,10 +354,14 @@ def main():
     items_conn = testdb.open_db(args.items)
     uni = universe.load(args.universe)
     print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
-    part_a(archive_conn)
+    _, missing_formats = part_a(archive_conn)
     copies = store_copies(views_paths)
     counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, copies, uni), part_d()]
     part_e(copies)          # informational for unkeyed ledgers; judged counts are reported per ledger
+    if missing_formats:
+        print(f'\nFAILED: {len(missing_formats)} refused judge rows carry no saved answer format, so part A could not check them: '
+              + ', '.join(sha[:24] for sha in missing_formats[:10]))
+        sys.exit(1)
     if min(counts) == 0:
         print('\nUNEXERCISED: a check judged no case')
         sys.exit(1)

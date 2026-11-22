@@ -353,7 +353,9 @@ def main():
     spec = importlib.util.spec_from_file_location('scripts_replay', ROOT / 'scripts/replay.py')
     scripts_replay = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(scripts_replay)
-    scripts_replay.refuse_seeded_ledger(args.views)          # the same refusal scripts/replay.py makes
+    scripts_replay.refuse_links_engine(cfg)                   # the same refusals scripts/replay.py makes
+    scripts_replay.refuse_seeded_ledger(args.views)
+    scripts_replay.refuse_harness_ledger(args.views)
     uni = universe.load(args.universe)
     archive = model.Archive(args.archive)
     ledger = SharedLedger(args.ledger)

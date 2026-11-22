@@ -445,9 +445,70 @@ $2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
 - **Not shown:** that the merge answers better. The old answers were already supported, and the capex band was set by 09-06 history.
 - **Next:** superseded by D681, below.
 
-**The one next task: none open (D689, D690, 2026-11-20).** poc-v118 is the product (Alex chose A, D690), and the research line
-rests until his new direction. The hybrid's release line is paused, and the judge and c8 lines are closed for now. A line reopens only
-on its condition below. No paid send is open, and D439 has $0 available without Alex's word.
+**The one next task: none queued; waiting for Alex's direction.**
+- Alex closed the double-count design with nothing changed (D722, 2026-11-22; his words are in the decision log). poc-v118 stays
+  the product.
+- Why (D721): the frozen gold's q01 lists the Vera CPU target among the drivers above consensus, so the diagnosis's premise was
+  not the ruler's. D711's H4 is corrected to four unsupported increments. D721's findings are recorded, not worked on.
+- The citation line stays stopped (D719).
+- judging-v12 and poc-v121 stay in the working tree, uncommitted and unused.
+
+The record behind it (D718):
+- **The probe:** $0.274 of $0.50; registered verdict NOT READY (`research/2026-11-21-citation-lists/PROBE-RESULT.md`). One repeated
+  Part C harm decides it: v12 named Bloomberg for $393 billion while citing Yahoo's Wall Street average. The blind reader and both
+  adjudicators agreed; Claude's first reading was superseded.
+- **Beside the verdict:**
+  - v12 removed every refusal: 48 of 48 valid on the requests that had produced 17 refusals; 0 misattributions; rungs identical across
+    72 matched answers.
+  - The unsupported-source-name slip appears in both formats: v12 2 of 36, v7 1 of 36.
+- **Before the probe:**
+  - Alex opened judging-v12 (D712); its design passed council round 38 (D713).
+  - It was built with poc-v121 (uncommitted) and passed every $0 check (D714).
+  - The probe's design, harness and rehearsal passed rounds 40–41 (D716, D717).
+
+Before it, the pilot of the paid whole-window comparison (D711, `research/2026-11-21-whole-window/PILOT-RESULT.md`) closed:
+- **Verdict:** inconclusive (D711). control-1 stopped on 09-08 on a double refusal: two one-character evidence-id copy errors. linked-1
+  completed and was accepted. $1.70 of Alex's $2.50 spent (D710).
+- **Exploratory, one pair, one draw:**
+  - Data Center is never above total revenue in linked-1. control-1 has 28 of 60 dates by the parser, and the sampled dates are real.
+  - Four linked total-revenue answers double count the stand-alone CPU forecast (H4).
+  - Linked refusals are at the H1 line (5 against 1).
+- **Council round 37 consensus:**
+  - no redraw or resume;
+  - the citation-only version is the recommendation;
+  - the link direction (a whole reading its own part) is a separate design.
+
+Before the pilot: the census and the version-2 probe passed their gates (D702, D705); poc-v120 was built (D706); the paid design and
+the pilot passed review (D707–D709).
+- **Open defects found by the pilot:**
+  - every refused judge answer seen is an id outside the field's list (17 in 5,408 attempts; poc-v118 and poc-v120);
+  - poc-v120's whole-reads-part link (total revenue reads stand-alone CPU) double counts.
+- **Production readiness (council P, consensus, $0; [RESULT.md](research/2026-11-20-production-readiness/RESULT.md)):** not ready for
+  a daily production test (no daily feed and start, no publishing of a finished day, no alerts), and no person has read poc-v118's own
+  output. Recommended to Alex: a $0 half-hour read of old-2's finished 09-20 store served locally; only on his yes, the daily wrapper
+  and a rehearsal week over 09-21..09-27. Alex said go (2026-11-20; his word in RESULT.md): step 1 is served on the host at http://127.0.0.1:8792
+  (API 8790, MCP 8791; `poc/data/review-v118-old2-0920-2026-11-20/README.md`, $0). Alex handed the read to the council (his words in
+  RESULT.md). Council Q (consensus, $0; [council-q/RESULT.md](research/2026-11-20-production-readiness/council-q/RESULT.md)): PARTLY.
+  An analyst would use it for sources and milestones, not for its number answers: linked number questions contradict each other in
+  all three draws (old-2: Data Center Q4 about $146B against a total Q4 of about $127B) because each question is judged alone; the
+  dependencies that link them are decided (D368 item 2) and not built. Recommended to Alex: no daily wrapper yet; open a judging
+  version with the decided dependencies, tested at $0 on the request text, then a few cents. Alex chose A (D691). The probe passed
+  its registered rule (D692, [RESULT.md](research/2026-11-20-production-readiness/dependency-probe/RESULT.md), $0.0176): linked to
+  total revenue, 2 of 3 Data Center answers reconcile, unchanged 0 of 3; none of the six repeats the stored extreme, so the headline
+  example was partly one unlucky sample. Council R (D693, consensus, $0;
+  [dependency-design/RESULT.md](research/2026-11-20-production-readiness/dependency-design/RESULT.md)): a build-ready design for
+  linking is reachable after Alex's choices; the matching step chooses links through one three-way question covering both opening
+  orders, code maps the label, the reader is shown the read judgement's comparison point and forecast, and a chosen link moves no
+  statement. The self-made reference ([self-reference/RESULT.md](research/2026-11-20-production-readiness/self-reference/RESULT.md)):
+  44 of 2,375 number judgements, 33 on the Data Center question; its own fix returns later. Alex chose A (D694) and narrowed the first
+  version to number questions (D695). Built in the working tree, not committed: `views/links.py`, the link step in `round.run`,
+  `dependencies.kind` (a chosen link moves no statement), judging-v8 (judging-v7's text, the fuller dependency block), `poc-v119.json`
+  (runs only in its July harness; the ordinary launchers refuse it). Council R passed the $0 proof after 12 rounds (D697; suite 378,
+  mutants 7/7). Alex kept the $0.15 limit as a reservation stop (D696). The July test passed its frozen rule (D698,
+  [JULY-RESULT.md](research/2026-11-20-production-readiness/dependency-design/JULY-RESULT.md), $0.0689). Alex chose A (D699): the
+  whole-window measurement, designed with the council at $0 first. The link census passed its gate (D702); Alex chose to probe a
+  sharpened wording (D703), which passed (D705); poc-v120 built (D706); the paid design (D707) and its one-pair pilot (D708, D709)
+  passed review; the pilot ran at $1.70 and is inconclusive (D710, D711).
 - **D689 (Alex chose option 1; council N closed both lines; record:
   [council-n-codex.md](research/2026-11-20-hybrid/council-n-codex.md), [council-n2-codex.md](research/2026-11-20-hybrid/council-n2-codex.md)).**
   - **Judge.** The carried previous conclusion holds rejected forecasts: on full evidence, 0 of 13 move with it and 8 of 13 without it,

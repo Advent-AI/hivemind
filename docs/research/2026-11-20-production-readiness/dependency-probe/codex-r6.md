@@ -1,0 +1,3 @@
+**Yes. The six-sample diagnostic is ready.** The first attempts reserve about $0.093 under the $0.15 cap, and an incomplete run is inconclusive. I verified that all 1,620 archived old-2 judge replies reported usage. If a new reply omits usage, count its full reservation too. The shared helper otherwise records zero. [Usage accounting](/Users/lchingen/hivemind/src/hivemind/model.py:273)
+
+**CONSENSUS**

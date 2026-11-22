@@ -1,0 +1,3 @@
+**NOT READY.** Part B can mistake missing draws for a confirmed loss. If `8807` returns one unsupported answer and the budget stops the other two, there are zero supported draws. Under v5, that can trigger **not ready** before the incomplete rule runs. [Verdict order](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/PROBE-DESIGN.md:144) · [Material-loss rule](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/PROBE-DESIGN.md:167)
+
+Require all three draws for that target to be received and read before declaring material loss. Rehearse one unsupported draw plus two missing draws as **inconclusive**, alongside the existing three-draw failure case.
