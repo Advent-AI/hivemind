@@ -1,0 +1,64 @@
+PASS  clean: 36 first attempts, no retry  36 attempts
+PASS  clean: every body byte-equal to the planned request  []
+PASS  clean: every unit publishes  
+PASS  clean: the separate arm reconciles in all 9 pairs  
+PASS  clean: spend settled under the ceiling  spent 0.1156
+PASS  packets: 27 packets; no arm word or member prefix in the text  27 packets
+PASS  packets: the key is bound to the run, and the readers' text commits to the key  
+PASS  packets: the scoring text holds final answers only (no attempt, code decision or check code)  
+PASS  packets: a second packets run is refused, the key unchanged  /private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b600
+PASS  verdict: both arms usable everywhere: STOP (gain under 3)  
+PASS  verdict: a run takes one verdict; replay reproduces it from the sealed readings, and fails once they are edited  /private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b600
+PASS  verdict: joint 9, separate 5: PASS  5
+PASS  verdict: one published singleton defect: STOP  
+PASS  verdict: a defect in the separate arm alone does not stop  
+PASS  verdict: missing packet: INCOMPLETE  P01: not read
+PASS  verdict: invented card: INCOMPLETE  P01: cards ['K2', 'v999'] are not the unit's ['K1', 'K2']
+PASS  verdict: missing ground: INCOMPLETE  P01 K1 usable: reader A gave no yes/no with a ground from this packet
+PASS  verdict: disagreement, no third: INCOMPLETE  P01 K1 usable: the readers disagree and no third reading decides
+PASS  verdict: a disagreement decided by the third reader is complete  
+PASS  verdict: null ground: INCOMPLETE  P01 K1 usable: reader A gave no yes/no with a ground from this packet
+PASS  verdict: ground naming nothing in the packet: INCOMPLETE  P01 K1 usable: reader A gave no yes/no with a ground from this packet
+PASS  verdict: readings made on other packets: INCOMPLETE  the readings were not made on the frozen packets
+PASS  verdict: a run changed after the packets were frozen: INCOMPLETE  the packet key does not belong to this run
+PASS  card view: own figures only, renumbered; the assumption record mapped, the other card's left out  [{"figures": [{"id": "F1", "kind": "source", "evidence": "e7", "rests_on": []}, {"id": "F2", "kind": "computed", "inputs": ["F1", "F1"], "rests_on": []}], "answ
+PASS  separate-agree: equal shared Q3 forecasts are unified, and the pair reconciles  []
+PASS  separate-disagree: different shared Q3 forecasts are refused (C4)  
+PASS  div-zero: recorded and refused (C2), then retried  ['refused', 'publish']
+PASS  reservation: a refused reservation never reaches the provider and is recorded  0 provider calls
+PASS  send refuses no ceiling named  the approved ceiling is None (Alex names it); refused
+PASS  send refuses a changed plan  the plan is not the reviewed one (sha256 differs); refused
+PASS  send refuses a used authorization  /private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b600
+PASS  retry: a refused calculation is retried once with its errors and then publishes  ['refused', 'publish']
+PASS  unresolved: two refusals make the unit unresolved  
+PASS  format: a schema-invalid answer is refused, then retried  ['format invalid', 'answered']
+PASS  format: the scoring packet carries the neutral label; the returned text is in the unscored attempts file (with the retry)  P24
+PASS  separate: two answers that each pass alone are refused when reconciled (C3)  refused
+PASS  ledger-stop: after the ledger stops, nothing more is sent  5 attempts, 31 not sent
+PASS  separate-agree-float: Q3 forecasts equal within floating-point error are unified, and the pair reconciles  []
+PASS  packets: a reconciled card is shown with its own original derivation, not the unified copy  P02
+PASS  packets: the scoring packet shows the first answer (scored); the retry is only in the unscored attempts file, unlinked  P05
+PASS  one-transport: a request that fails in transport is final as transport, not published  
+PASS  verdict: a unit failed in transport makes the verdict INCOMPLETE  single-E|single|1: transport; P18 K1 usable: reader A gave no yes/no with a ground from this packet
+PASS  interrupt during a scored attempt: results written; that attempt interrupted, later ones not sent, no retry yet; INCOMPLETE  pair-old-1|joint|3: not sent; pair-old-1|separate-v4|3: not sent
+PASS  interrupt during a diagnostic retry: all 36 scored attempts are recorded and the verdict is complete  
+PASS  a diagnostic retry that fails in transport leaves the scored test complete  
+PASS  every scored first attempt is sent before any retry (the provider's own call order)  36
+PASS  a provider refusal with null content: packets are made, and its text is in the attempts file  INCOMPLETE
+PASS  a long malformed answer is kept whole: the passage it names at its end is shown in the attempts file  e5404
+PASS  packets are written only after both files render: a failed render leaves nothing, and a second call then succeeds  
+PASS  separate-within-dup: two equal forecasts inside one answer are kept, so the reconciled pair is refused as the joint one is (C3)  refused / joint unresolved
+PASS  separate-within-dup-shared: two equal shared forecasts within one call are not unified with each other, so C4 refuses as within one call  refused ["('NVIDIA', 'revenue', 'company', 'FY2027 Q3') base: 3 forecast nodes (v14.q3_two_a, v14.q3_two_b, v9.q3_one_v9); exactly one per scenario is required"]
+PASS  separate-within-dup-second: the second call's two equal shared forecasts are not both unified to the first call's one (C4 refuses)  refused ["('NVIDIA', 'revenue', 'company', 'FY2027 Q3') base: 3 forecast nodes (v14.q3_one_v14, v9.q3_two_a, v9.q3_two_b); exactly one per scenario is required"]
+PASS  abstain: an unresolved singleton is published and can be read with its card as the ground  
+PASS  verdict: a swap of two packets with identical text: INCOMPLETE (the key is not the committed one)  the key is not the one packets.md committed to
+PASS  verdict: decisions written into the key: INCOMPLETE (the key is not the committed one)  INCOMPLETE
+PASS  torn journal: recover keeps the committed entries, marks the torn attempt interrupted and the line damaged, sends nothing  single-E|single|3: interrupted
+PASS  torn journal: the interrupted card's packet says the request was started and no answer recorded  P19
+PASS  verdict: a damaged journal line makes the verdict INCOMPLETE  answers.jsonl line 72 is damaged
+PASS  joint-retry-fix: the joint pair is final-published after its retry but scored on its refused first attempt, like the separate pair  joint 6, separate 6
+PASS  separate-unit: the same number in another unit is not unified (C4 refuses)  refused
+PASS  a damaged retry record is reported and the retry is interrupted, but the scored test stays complete  
+PASS  Unicode line separators inside an answer are kept in one record: the unit publishes and the verdict is complete  
+PASS  a refused first answer whose retry was never sent is incomplete, not refused or not sent  
+63 of 63 checks pass

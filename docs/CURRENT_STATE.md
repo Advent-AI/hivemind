@@ -445,7 +445,327 @@ $2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
 - **Not shown:** that the merge answers better. The old answers were already supported, and the capex band was set by 09-06 history.
 - **Next:** superseded by D681, below.
 
-**The one next task: none queued; waiting for Alex's direction.**
+**The one next task: Alex decides how the "Forecast unavailable" release ships (D760).** Both slices are built and accepted at $0, and
+only Alex can launch what remains. Nothing is committed, published or deployed, and the POC is unchanged.
+- **Waiting on Alex:**
+  1. commit the release work. It is uncommitted on `clean-arch`; the exact set, prepared and not committed:
+     - code: `src/hivemind/release.py`, `scripts/release_build.py`, `tests/test_release.py`;
+     - documents: `README.md` (section "Build the 'Forecast unavailable' release"), `docs/CURRENT_STATE.md`, `docs/DECISIONS.md`,
+       `docs/DECISIONS-log.md` (D725–D760 since the last commit `a70bada9`);
+     - research: `docs/research/2026-11-22-number-answers/`, 46 MB, 31 MB of it council stream files, kept as the earlier commit
+       `3ba40d8f` kept its streams. `__pycache__` is ignored, and the run outputs under `poc/data/` are ignored by `.gitignore`;
+  2. where the release page is served: it is one static `index.html` per package and needs no service;
+  3. whether it replaces the page colleagues use;
+  4. whether to open the idea path in the release. It needs a running service and a paid model; council 74 deferred it.
+- **Slice 1 (D759):** the allow-listed exporter and the checked package. A number question carries its question, its evidence in
+  force and "Forecast unavailable"; an event or Yes/No question carries its question, evidence and answer labels.
+- **Slice 2 (D760):** the reader's page, a pure function of the package data (format `hivemind-release/2`), with a strict CSP, no
+  links and no idea input. D756's screen check passes in headless Chrome: `old-1/v8` shows only its question, its sources and
+  "Forecast unavailable", and eight negative pages are each caught. Code `src/hivemind/release.py`; result
+  `research/2026-11-22-number-answers/RELEASE-PAGE-RESULT.md`.
+- **Build a release:**
+  - `python3 scripts/release_build.py build --ledger <views.sqlite> --items <items.sqlite> --out <new folder>`;
+  - re-check later with `release_build.py check <folder> --ledger … --items …`.
+- **Proof:** 40 release tests, full suite 429, 37 of 38 mutants (the miss is equivalent on Python 3.10); the four-store check
+  `poc/data/release-check-2026-11-23i/`; the screen run `poc/data/release-screen-2026-11-23c/` (labels, D761; `-23b` before them).
+- **The evidence-summary disagreement is settled (D761, councils 78/78b).** The page labels each entry "Hivemind summary" and "Source
+  quote"; "amounts as quoted" applies to the quote. The page was re-certified (`poc/data/release-screen-2026-11-23c`).
+
+The record of the D759 step:
+
+**Earlier next task (done, D760): slice 2, the reader's screen.**
+
+The record of the D758 step:
+
+**Earlier next task (done, D759): build slice 1 once its design passes council 74 (D758).**
+
+The record of the D757 step:
+
+**Earlier next task (done, D758): Alex chooses whether to open release work, and what non-number questions show (D757).** Decided by
+council 73 under D439 (D758): open, and (a).
+
+The record of the D756 step:
+
+**Earlier next task (done, D757): when release work opens, a $0 check of the reader's screen for number questions (D756).** On a
+stored number question that has a forecast and history, the reader must see only the question, its sources and "Forecast
+unavailable".
+
+- **Alex closed the v13s judge line at its STOP** (D756: end the line, release with "Forecast unavailable"). Nothing from it enters the
+  product, and poc-v118 stays the product.
+- **No release work is open yet.** No other task is queued on the number-answer line.
+
+The record of the D755 step:
+
+**Earlier next task (done, D756): Alex reads the paid re-send's STOP (D755) and confirms the council's recommendation.** The
+recommendation: close the v13s judge line, and carry D726 into the first release, so number questions show sources and "Forecast
+unavailable". When release work opens, the first step is a $0 check of the reader's screen.
+
+- **Result** (`research/2026-11-22-number-answers/PAID-V13S-RESULT.md`): STOP, complete.
+  - Joint usable 3 of 9 against the registered 8; separate 0 of 9.
+  - Five published singleton answers rested on unsized adjustments.
+  - The checker refused 22 of 36 first attempts: 21 luna format errors, 1 request/checker mismatch.
+  - Spend $0.3339 of the $0.50 cap.
+- **The design point.** Separate answers contradicted each other in 8 of 9 pairs, joint answers in none (D725's consistency claim).
+- **Open checker defects:** a displayed period with a parenthesis, a change over time read as a range, a table number split by a line
+  break. Recorded, not fixed.
+- **Nothing is running.** Nothing was committed.
+
+The record of the D754 step:
+
+**Earlier next task (done, D755): the paid re-send is running (D754); read it when it ends.**
+
+- **Alex's decisions (D753):**
+  - the E-type default is "can't tell yet";
+  - a one-time paid exception, 36 requests to luna, ≤ $0.50.
+- **Run:** `poc/data/judging-v13s-paid-2026-11-23/` (pid in `poc/data/judging-v13s-paid-2026-11-23.pid`, log beside it). Do not open
+  its stores while it runs.
+- **Then:**
+  1. `paid_gate.py packets`;
+  2. two blind readers per packet on the exact file (`assemble_readings.py split-exact`, brief `reader-brief-v13s.md`);
+  3. `third-exact` for disagreements;
+  4. `assemble`, then one `verdict`;
+  5. read every trace, then council B.
+
+The record of the D752 step:
+
+**Earlier next task (done, D753): Alex answers two questions (D752).**
+
+1. **The E-type default.** A company repeats a target near a band line and, after weighing it with the other evidence, neither band
+   is more likely. Should readers see "can't tell yet", naming the deciding fact, or the target's band by default? The council
+   agreed on "can't tell yet". It needs no request change.
+2. **The paid re-send.** Keep it on hold under his clean-pass condition (Codex's recommendation), or make a one-time exception: 36
+   requests to luna, ≤ $0.50 including retries, the only way to measure joint against separate calculation (Claude's
+   recommendation). The council split, and both positions are in D752.
+
+- **Why.** The last free writer test (D751) failed on E's Claude writer, so the wording loop ended under its exit rule
+  (`research/2026-11-22-number-answers/BLIND7-RESULT.md`).
+- **Across five runs:**
+  - P-v8 was always supported;
+  - the controls were caught 6 of 6;
+  - E's Codex writer gave a justified "can't tell" three times;
+  - E's Claude writer's five forecasts never earned settled support.
+- Nothing is running. Nothing was paid or committed.
+
+The record of the D751 step:
+
+**Earlier next task (done, D752): the last $0 writer test of the wording loop (D751), now running in
+`poc/data/judging-v13s-blind7-2026-11-23/`.**
+
+- **Why.** D750 failed on E's Claude writer (`research/2026-11-22-number-answers/BLIND6-RESULT.md`). Council 67–68 made one
+  structural change to line 9: weigh the plausible alternatives for an unknown fact that decides the band, then say whether the
+  evidence as a whole favours one band, before adjusting.
+- **The paper check** on all eight stored E replies was verified first (`PAPER-CHECK-D751.md`).
+- **Exit rule:**
+  - a clean pass goes to Alex for the paid authorization;
+  - a settled failure or split ends the wording loop, and the E publication choice returns to Alex.
+
+The record of the D750 step:
+
+**Earlier next task (done, D751): the second $0 writer test (D750), after council round 66 reviews it.** Alex is asleep and handed
+decisions to Claude and the council (D439: reversible, $0, nothing committed).
+
+- **The D749 test was INCONCLUSIVE, with no failed line** (`research/2026-11-22-number-answers/BLIND5-RESULT.md`).
+  - E's Codex writer now withholds with a specific gap.
+  - S Codex and both P-v8 replies are supported.
+  - Both controls were caught.
+  - Two splits: E Claude takes a not-yet-shipping target in full without evidence of volume in hand; S Claude's readers disagree on a
+    floor above its own outcome.
+- **The change** (council 65), at bullet 2: a target "remains a forecast when reaffirmed, and is taken in full only when you show what
+  evidence puts the required volume in hand for the period".
+- **The test.** The same design on S, E and P-v8 (`blind6.py`; `SMALL-DESIGN.md` §5 [D750]).
+- **Held.** The paid re-send, until a clean pass. Then Alex authorizes.
+
+The record of the D749 step:
+
+**Earlier next task (done, D750): the $0 writer test of the E writer repair (D749), after council round 64 reviews the request
+change.** Alex authorized the repair: "approve the writer repair, then the small test".
+
+- **The repair** (`research/2026-11-22-number-answers/judging-v13s.txt` line 9; the D745 text is kept in `judging-v13s-d745.txt`).
+  When a share, deduction, discount or pace could put the outcome on either side of a rung line, the writer decides which side the
+  evidence favours before it sizes it. If it can say only that the outcome might fall short or overshoot, it answers unresolved and
+  names what is unknown.
+- **Size and checks.** 4,540 → 4,816 characters. Cases 111 of 111, rehearsal 19 of 19, pinned v13 plan unchanged.
+- **The test** is registered in `SMALL-DESIGN.md` §5 [D749] and built by `blind5.py`:
+  - S, E and P-v8, each written by fresh Claude and Codex writers;
+  - two reader controls (an invented cut, an impossible floor);
+  - every fresh E and S answer must earn agreement.
+
+The record of the D748 step:
+
+**Earlier next task (done, D749): Alex chooses whether to authorize the E writer repair (D748).**
+
+- **Why.** The re-read under his comparison ruling (D747) failed on a stop (`research/2026-11-22-number-answers/BLIND4-RESULT.md` §6).
+  - One S answer calls "more than $730B" a floor for data-center spending above its own $720B total. Both adjudicators upheld
+    part-above-whole. The code cannot see a floor claimed only in prose.
+  - Three of the four earlier splits settled, all controls read as expected, and three boundary answers still split.
+- **The repair** (council 63): the writer decides whether the evidence favours one side of the line before it chooses a discount. If
+  it can explain only why sales might fall short, it says what remains unknown. The changed request goes to the council before any
+  send.
+- **Then one $0 writer test** on E, S and P-v8, with the saved invented-cut and impossible-floor answers as controls. Every fresh E
+  and S answer must earn agreement.
+- **Held.** The paid re-send, and any change to the calculation format.
+
+The record of the D747 step:
+
+**Earlier next task (done, D748): the $0 blinded re-read under Alex's comparison ruling (D747), after council round 62 reviews it.** Alex ruled
+(D747: publish, with the reason explained) that a forecast may rest on a related figure when the passages do not give the asked quantity. It is
+supported only when the answer explains why the comparison applies to the companies, the period and the quantity asked, and why, under
+its own stated assumptions, that side of the line is more likely.
+
+- The ruling is in the shared reader definitions (`research/2026-11-22-number-answers/blind_rules.py`).
+- The re-read is registered in `SMALL-DESIGN.md` §5 [D747]: nine stored answers, four fixed readings and five that must settle.
+- It is built by `blind4.py reread`.
+
+The record of the D746 step (Alex answered its question in D747):
+
+**Earlier next task (done, D747): Alex answers one general question (D746).** "When the passages do not give the asked number, and
+a related number makes one side of the line more likely while the other side stays possible, may the system publish the forecast, or
+must it wait until the passages settle which side?" The council leaned toward allowing it when the answer explains why the comparison
+applies to the companies, the period and the quantity asked, and why, under its own assumptions, that side is more likely.
+
+- **Why.** The targeted $0 test failed (`research/2026-11-22-number-answers/BLIND4-RESULT.md`).
+  - E's Codex reply cut the $40B guided reference by an unsized 10%, and both readers marked it not supported.
+  - Every other S and E disagreement split along model family, over how far a related figure can support a forecast.
+  - P-v8 passed 2 of 2.
+  - No writer withheld.
+- **After his answer, one $0 test.** A blinded re-read of nine stored answers under his words, with fresh readers of both families
+  and expectations recorded first. It moves on to an E writer repair only if both families apply his words alike.
+- **Held.** The paid re-send stays on hold until an E writer repair passes a clean $0 test. That repair goes to council before any
+  send.
+
+The record of the D745 step:
+
+**Earlier next task (done, D746): Alex chooses whether to authorize a targeted $0 test (D745).** The test covered:
+
+- the qualifier list adds "estimated", and readers see the allowed values;
+- one clarification: a band-deciding deduction or cut must show evidence for its size or a supported bound, else unresolved;
+- the test runs on S and on one case the passages do support;
+- before it, Alex rules whether a justified unresolved answer counts as usable.
+
+The second re-read (`research/2026-11-22-number-answers/BLIND3-RESULT.md` §5):
+
+- **The readers are calibrated:** 5 of 5 controls pass.
+- **It stopped on two lines:**
+  - the qualifier-list gap;
+  - S has zero usable replies, because neither writer supports the data-center share that decides its band.
+- **E's Codex reply** shows the same weakness (a 15% cut).
+
+The record of the D744 step:
+
+**Earlier next task (done, D745): Alex chooses whether to authorize one more bounded blinded re-read (D744).**
+
+- **Why it is needed.** The D743 re-read fixed the range rule, but stopped as written on Q10: both readers marked the permitted "plus or
+  minus 2%" midpoint, and both adjudicators rejected the mark.
+- **Council 58** recommends readers get the same rule text as adjudicators (system text, schema descriptions, definitions; one shared
+  source), plus five clean controls (midpoint, 108.5 misread, overlap, disjoint, unsupported decisive assumption).
+- **Reported beside the verdict:** both S replies' support votes, because the 90% share reply flipped between reader sets.
+
+The record of the D743 re-read's setup:
+
+**Earlier next task (done, D744): Alex chooses how to proceed after the third blind run's STOP (D743). Council 57 recommends a blinded
+re-read of the same 12 replies with the reader brief corrected to the schema's range rule, plus overlap and disjoint-band controls.**
+
+- **The third run** (`research/2026-11-22-number-answers/BLIND3-RESULT.md`):
+  - The writer side is clean: 12 of 12 accepted, 0 refusals, and D742's rule followed by all six P-family writers.
+  - The run stopped as written because both readers marked R01's range across a rung edge.
+  - Both adjudicators rejected that mark under the schema's range clause, which the reader brief lacks (Claude's error).
+- **Disclosed:**
+  - R07's unsupported 90% share (accepted, rung 3 against passages near 100%);
+  - O's $18B reading, split in three runs;
+  - R01's total-capex reference for a data-center question;
+  - R11's prose example missing its edge.
+
+The record of the third run's setup (D742):
+
+**Earlier next task (done, D743): run the third v13s blind test (12 fresh writers, then readers, reviewers and adjudicators) on the
+request D742 fixed, and score it on the registered lines (`research/2026-11-22-number-answers/SMALL-DESIGN.md` §5 [D742]).**
+
+- **The re-run stopped on one line** (D742, `research/2026-11-22-number-answers/BLIND2-RESULT.md`).
+  - S4 refused a sound answer that computed a guidance growth rate straight into Q4.
+  - 12 of 12 were schema-valid and 11 of 12 accepted. Every case was usable. No defect was settled.
+- **The cause was the request.** The system text invited carrying the guided growth forward directly, while the schema and S4 allow a
+  guidance rate only as an estimate's benchmark (Alex's ruling 1 as written).
+- **Council 56–56c.** A blanket exemption and a narrowed exemption each let a reset to guidance publish. So S4 stays, and the request
+  states one rule in three places: guidance informs the pace; the pace is an estimate naming its benchmark; the quarter's dollar value
+  is the one forecast figure.
+- **Checks:** cases 109 of 109, mutants 42 of 42, rehearsal 19 of 19. The v13 plan hash is unchanged. `s4_replay.py` refuses the saved
+  reply and both council resets, and passes the stated-estimate form.
+- **Two reader splits are disclosed, not stops:**
+  - O's "$18 billion committed for the remainder of its fiscal year" reading, which decides O's rung;
+  - wrong numbers in prose that no figure carries.
+- **Run folder:** `poc/data/judging-v13s-blind3-2026-11-22/`.
+- **What each outcome sends where:**
+  - a fresh sound refusal, or an accepted reply confirmed to carry two values of a quarter, goes back to council;
+  - a run meeting every line goes to Alex as the paid re-send request.
+
+The record before D742:
+
+**Earlier next task (done, D742): re-run the v13s blind test once with fresh writers and readers, after the reader calibration on
+Alex's rulings (D740, D741).**
+
+- **The first blind test stopped** (D740, `research/2026-11-22-number-answers/BLIND-RESULT.md`):
+  - 12 of 12 first answers were schema-valid, and 11 of 12 passed every check.
+  - **Stop 1:** S1 read "from $35 billion to $170 billion" as a range. This was Claude's change, now fixed: an "X to Y" after "from" is a
+    change between two values.
+  - **Stop 2:** the readers marked a guidance-implied growth benchmark as "two forecasts of one quarter".
+- **Alex ruled the readers' boundary questions** (D741):
+  - a guidance-implied growth benchmark is not a defect;
+  - consensus total × a past quarter's share is not the market's reference, and S5 now refuses it;
+  - a total used for a narrower quantity must state its deduction or a supported bound.
+- **Checks:** cases 104 of 104, mutants 40 of 40, rehearsal 19 of 19, and the old harness unchanged.
+- **The reader calibration on six stored boundary replies** (`calibration-D741/`) runs before the re-run.
+- **A clean re-run** goes to Alex as the paid re-send request.
+
+The record before D740:
+
+- **The format shrank** (D737). Alex chose to shrink it after round 51 (D736) found the full restatement unbounded.
+- **What code refuses** (D738): only the five named defects, where the calculation's own structure decides them, plus broken
+  structure. Indirect forms are recorded for readers.
+- **The small format is built and rehearsed at $0** (D739):
+  - `calc_small.py`, the v13s schema and header, and format selection in `paid_gate.py`;
+  - cases 100 of 100, mutants 38 of 38, rehearsal 19 of 19;
+  - the old harness unchanged.
+- **The blind test** (`SMALL-DESIGN.md` §5): six registered requests, each written by a fresh Claude subagent and a fresh read-only
+  Codex session, in `poc/data/judging-v13s-blind-2026-11-22/`. Two readers then grade every reply. A clean result goes to Alex as the
+  request for the paid re-send. Nothing paid is sent before that.
+
+The record before D737 (superseded as the next task):
+
+**Earlier next task: finish judging-v13's repair to the council's line, then run the $0 blind test (D734, D735).**
+
+- **Alex chose the repair** (D734; his words are in the decision log).
+- **Round 51 (D736)** found as many serious issues in design v2 as round 49 found in v1. Codex would fix them and use the last
+  round; Claude would go back to Alex now. The choice is with Alex.
+- **The finish line (council rounds 49–50, D735):**
+  - at most two more review rounds: round 51 on the exact wording and cases (`REPAIR-DESIGN.md` v2), then one on the request the
+    harness actually sends and its checks;
+  - then the blind test once, as `REPAIR-DESIGN.md` §5 registers it;
+  - a serious issue left after the second round goes back to Alex.
+- **A clean blind test** returns to Alex as a request for the paid re-send.
+- **Nothing paid is sent before that.**
+
+The record before D734:
+
+- **The paid gate stopped.** It was sent once at Alex's $0.50 ceiling (D732), and $0.3677 was spent. All 72 answers were refused by
+  the code checks, the 36 scored ones and the 36 diagnostic retries alike, so the joint arm is usable in 0 of 9 pairs.
+- **The cause is the format, not the judging.** The format's rules lived in `calc_check.py`, not in the request: the sent schema had
+  7 field descriptions. 0 of 90 member answers named a figure as the outcome. Under that layer, some checks refuse right answers.
+  The result does not answer D725's question.
+- **Council round 48 recommends** a bounded repair:
+  - each field's rule goes beside the field, with enums;
+  - the demonstrated check failures are fixed;
+  - then a registered $0 blind conformance test, after which a re-send of the same 36 requests is asked for.
+- **The alternative** is to close judging-v13; poc-v118 stays the product.
+- **Record:** `research/2026-11-22-number-answers/PAID-GATE-RESULT.md`. Nothing has been changed or sent since.
+
+Earlier in this line:
+- the $0 gate passed (council round 46ad);
+- the harness was passed by council round 47h;
+- Alex opened the version (D726), chose that it does not see earlier forecasts (D728), and agreed to the "Forecast unavailable"
+  interim.
+- Council round 45/45b (`research/2026-11-22-number-answers/RESULT.md`): the numbers fail because related questions have no shared,
+  checked calculation. Recommended: one judge version judging related families in one call, with labelled figures and code checks of
+  identity and arithmetic; a $0 gate, then a 36-call paid gate; meanwhile show number questions as "Forecast unavailable".
 - Alex closed the double-count design with nothing changed (D722, 2026-11-22; his words are in the decision log). poc-v118 stays
   the product.
 - Why (D721): the frozen gold's q01 lists the Vera CPU target among the drivers above consensus, so the diagnosis's premise was

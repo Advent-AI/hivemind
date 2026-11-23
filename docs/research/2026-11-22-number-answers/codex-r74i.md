@@ -1,0 +1,9 @@
+**Not ready to build.** Both 74h findings are closed. One case remains undefined for `check`: a valid package in a readable directory where the command cannot write its report.
+
+1. **Cleanup after publication is closed.** Once the link succeeds, the report is published. If removing the temporary file then fails, the command exits 0 and names the leftover file. Test 20 forces that exact failure and verifies the published report’s contents. [RELEASE-BUILD.md:197](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-BUILD.md:197) · [RELEASE-BUILD.md:381](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-BUILD.md:381)
+
+2. **The end-to-end exit statuses are closed.** Test 11 requires `check` to print a pass and exit 2 while the build’s report exists, then exit 0 and create a fresh report after the test removes it. Test 19 requires exit 2 and verifies that the file which took the report name survives unchanged. [RELEASE-BUILD.md:351](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-BUILD.md:351) · [RELEASE-BUILD.md:378](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-BUILD.md:378)
+
+3. **Remaining blocker: `check` has no specified exit status for other report-write failures.** Suppose the package passes, the report name is free, and creating the temporary file fails with `EACCES`. None of the three listed outcomes fits. `build` already assigns exit 2 to every report failure before the link succeeds. Apply that same rule to `check`. The decisive test forces the temporary-file creation to fail after validation and requires a printed pass, the write error, and exit 2. [RELEASE-BUILD.md:206](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-BUILD.md:206) · [RELEASE-BUILD.md:211](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-BUILD.md:211)
+
+I found no other serious blocker in slice 1.

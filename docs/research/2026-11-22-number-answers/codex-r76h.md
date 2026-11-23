@@ -1,0 +1,6 @@
+**Ready to build.** Revision 7 closes both 76g findings in the design. Browser acceptance remains ahead.
+
+1. **Contrast lookup — closed.** The check starts at the element holding the text and walks upward only if its background is transparent. The decisive test requires “Forecast unavailable” to fail when its dark text sits on its own dark background inside a light card. [RELEASE-PAGE.md:237](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-PAGE.md:237) · [RELEASE-PAGE.md:274](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-PAGE.md:274)
+2. **Whole-page template pin — closed.** The renderer inserts escaped data into the complete template’s single placeholder. After browser certification, the test records the SHA-256 of that template with the placeholder intact. Changing only the fallback sentence therefore fails the test. [RELEASE-PAGE.md:8](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-PAGE.md:8) · [RELEASE-PAGE.md:176](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/RELEASE-PAGE.md:176)
+
+**Optional.** Further tests for hypothetical CSS changes remain optional because those edits already change the complete template’s hash. [codex-r76g.md:7](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/codex-r76g.md:7)

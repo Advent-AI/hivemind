@@ -1,0 +1,5 @@
+GATE FAIL
+
+**A — Blocking.** The checker still accepts operands that the arithmetic ignores. A G24 replay passed with a two-input sum that returned the $554B FY2028 consensus alone. The calculation based on q01 was dropped when `signs` had one entry and contributed zero when its sign was `0`. C9 counted it in both cases. A one-input `apply_growth` also raised `IndexError` after C7 flagged it, instead of returning a refusal. Validate operand counts and require one valid sign per term before evaluation, then give arithmetic and C9 the same validated operands. [Structural check](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/calc_check.py:202) · [Arithmetic](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/calc_check.py:111) · [C9 dependencies](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/calc_check.py:554)
+
+**B — Non-blocking.** No relabelling findings.

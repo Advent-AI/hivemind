@@ -1,0 +1,29 @@
+--- render_v13.py	2026-11-22 19:42:05
++++ /private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/s4tree/render_v13.py	2026-11-22 20:11:54
+@@ -6,7 +6,7 @@
+ from pathlib import Path
+ 
+ HERE = Path(__file__).resolve().parent
+ sys.path.insert(0, str(HERE))
+ sys.path.insert(0, str(REPO / 'src'))
+ import calc_check as cc  # noqa: E402
+@@ -151,7 +151,8 @@
+     })
+     return obj({'figures': {'type': 'array', 'items': figure, 'description': 'The family\'s calculation. Use one forecast figure for each '
+                             'quantity and period, as a point or a range, wherever that quantity is needed (outside figures beneath it, or a '
+-                            'point a final range rests on, are fine). A growth rate computed from guidance may serve as a stated benchmark for an estimate. '
++                            'point a final range rests on, are fine). A growth rate computed from guidance may serve as a stated benchmark for an estimate, '
++                            'or be applied with apply_growth to a base built on your forecast figure. '
+                             'To turn a total into a narrower quantity (data-center spending out of total capital expenditure), write the '
+                             'deduction or share as its own figure, or give a supported bound; never relabel a total as the narrower quantity. '
+                             'Figures name each other by id; no figure may depend on itself.'},
+@@ -174,7 +175,8 @@
+                      'never adds the part into the whole for the same period; a difference may take the part from the whole of the same '
+                      'period only to give the rest.')
+     shared = '; '.join(f'{w["population"]}, {w["measure"]}, {w["scope"]}, {w["period"]}' for w in family.get('shared', [])) or 'none'
+-    lines.append(f'Shared quantities, one forecast figure each, through which every figure an outcome uses for that quantity goes: {shared}.')
++    lines.append(f'Shared quantities, one forecast figure each, through which every figure an outcome uses for that quantity goes '
++                 f'(a growth rate applied with apply_growth to a base built on that forecast is the one exception): {shared}.')
+     keys = '; '.join(f'{v} = {m["what"]["population"]} | {m["what"]["measure"]} | {m["what"]["scope"]} | {m["what"]["period"]}'
+                      + (f' ({m["key_note"]})' if m.get('key_note') else '') for v, m in family.get('members', {}).items() if v in shown)
+     lines.append(f'Outcome keys (population | measure | scope | period), in USD bn, to be used exactly: {keys}.')

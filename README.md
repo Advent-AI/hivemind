@@ -170,6 +170,34 @@ python3 "$repo/scripts/replay.py" --from 2026-07-01 --until 2026-07-14 --only NV
 `--cap` is checked after each item: parallel calls already sent and the day's judging round can exceed it, so it is not a hard whole-run limit. The default is `poc-v118`; the default input database is `poc/data/items-nvda-2026-07-01-10-27.sqlite`. A ledger containing the retired seeded questions is refused. Earnings releases still enter as actual source items; a report is not appended as background to other items. The new replay default is not accepted end to end. The historical seeded judgement scorer requires its frozen seeds and therefore is not a valid scorer for the new no-seed run. The [pipeline guide](docs/poc/pipeline-plan.md) describes the stages.
 
 
+## Build the "Forecast unavailable" release
+
+The first release shows each number question with its question, its sources and "Forecast unavailable"; the band, forecast text and
+history are withheld (D726, D756). Event and Yes/No questions show their question, sources and answer label, with no explanation text
+(D758). The release is one folder: the data, a manifest, and a static page made from the data. The page needs no service, makes no
+network request and has no links (D759, D760).
+
+```sh
+python3 "$repo/scripts/release_build.py" build --ledger /absolute/path/to/views.sqlite \
+  --items /absolute/path/to/items.sqlite --out /absolute/path/to/new-release-folder [--as-of YYYY-MM-DD]
+python3 "$repo/scripts/release_build.py" check /absolute/path/to/release-folder \
+  --ledger /absolute/path/to/views.sqlite --items /absolute/path/to/items.sqlite
+```
+
+Give the build a snapshot, never a live run's store. Before the folder appears, the build checks every field of the package against
+the store at the bound, and checks that the page is the one made from the data. Publication never replaces an existing path.
+
+Exit statuses:
+- 0: done;
+- 1: refused, with the reason printed and nothing published;
+- 2: the package is published (build) or passes (check), but its report could not be written. Run `check` once the report name is
+  free.
+
+Open `index.html` in any browser to read the release. The $0 screen check that certified the page template is
+`docs/research/2026-11-22-number-answers/release_screen.mjs`, which runs headless Chrome. A change to the template fails test 29 until
+the screen check is run again and a new format version is opened. The design and results are in that folder: `RELEASE-BUILD.md`,
+`RELEASE-PAGE.md`, `RELEASE-CHECK-RESULT.md` and `RELEASE-PAGE-RESULT.md`.
+
 ## Build and check
 
 From the checkout root:

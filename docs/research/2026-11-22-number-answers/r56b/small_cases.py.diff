@@ -1,0 +1,57 @@
+--- small_cases.py	2026-11-22 19:43:03
++++ /private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/s4tree/small_cases.py	2026-11-22 20:11:04
+@@ -9,7 +9,7 @@
+ from pathlib import Path
+ 
+ HERE = Path(__file__).resolve().parent
+ sys.path.insert(0, str(HERE))
+ sys.path.insert(0, str(REPO / 'src'))
+ if os.environ.get('CALC_SMALL_DIR'):                     # small_mutants.py: a mutated calc_small.py on a scratch copy
+@@ -356,6 +356,26 @@
+ def _():
+     a = base_pair()
+     a['figures'].append(F('REST', W('other', 'FY2027'), 'computed', 'forecast', 'USD bn', value=30.375, inputs=['F6', 'F12'], operation='difference'))
++    return a, PAIR
++
++
++@case('A1', 'a guidance-implied growth rate applied to the Q3 forecast for Q4 (D741 ruling 1) [D742]', 'pass')
++def _():
++    a = base_pair()
++    a['figures'].append(F('G', W('company', 'FY2027 Q3', measure='revenue sequential growth'), 'computed', 'guidance', '%', value=12.27, inputs=['F2', 'F3'], operation='growth'))
++    fig(a, 'F5').update(kind='computed', basis_text=None, rests_on=None, inputs=['F4', 'G'], operation='apply_growth', value=123.49)
++    fig(a, 'F6').update(value=411.29)
++    fig(a, 'F11').update(value=114.23)
++    fig(a, 'F12').update(value=380.28)
++    return a, PAIR
++
++
++@case('A1', 'the Data Center Q3 forecast grown at the guided company rate for Q4 (D741 ruling 1) [D742]', 'pass')
++def _():
++    a = base_pair()
++    a['figures'].append(F('G', W('company', 'FY2027 Q3', measure='revenue sequential growth'), 'computed', 'guidance', '%', value=12.27, inputs=['F2', 'F3'], operation='growth'))
++    fig(a, 'F11').update(inputs=['F10', 'G'], operation='apply_growth', value=114.23)
++    fig(a, 'F12').update(value=380.28)
+     return a, PAIR
+ 
+ 
+@@ -391,6 +411,20 @@
+ defect('an unused second forecast of a quarter is not counted (passes)', 'pass', lambda a: a['figures'].append(F(
+     'ALT', W('company', 'FY2027 Q3'), 'estimate', 'forecast', 'USD bn', value=112.0, basis_text='an alternative not used')))
+ defect('Q3 guidance used directly beside the Q3 forecast (S4)', 'S4', lambda a: fig(a, 'F10').update(inputs=['F3', 'F9'], value=99.9))
++defect('the guided Q2-to-Q3 rate applied to Q2 rebuilds a Q3 value beside the forecast (S4) [D742]', 'S4', lambda a: (a['figures'].extend([
++    F('G', W('company', 'FY2027 Q3', measure='revenue sequential growth'), 'computed', 'guidance', '%', value=12.27, inputs=['F2', 'F3'], operation='growth'),
++    F('Q3B', W('company', 'FY2027 Q3'), 'computed', 'guidance', 'USD bn', value=108.0, inputs=['F2', 'G'], operation='apply_growth')]),
++    fig(a, 'F10').update(inputs=['Q3B', 'F9'], value=99.9), fig(a, 'F12').update(value=370.575)))
++MESSAGES['the guided Q2-to-Q3 rate applied to Q2 rebuilds a Q3 value beside the forecast (S4) [D742]'] = 'Q3B for NVIDIA | revenue | company | FY2027 Q3'
++defect('Q4 built on the guided Q3 through the guided multiple applied twice to Q2 (S4) [D742]', 'S4', lambda a: (a['figures'].append(
++    F('X', W('company', 'FY2027 Q3', measure='revenue sequential multiple'), 'computed', 'guidance', 'x', value=1.1227, inputs=['F3', 'F2'], operation='ratio')),
++    fig(a, 'F5').update(kind='computed', basis_text=None, rests_on=None, inputs=['F2', 'X', 'X'], operation='product', value=121.25),
++    fig(a, 'F6').update(value=409.05), fig(a, 'F11').update(value=112.16), fig(a, 'F12').update(value=378.21)))
++defect('Q4 grown from a run-rate rebuilt from Q2 at the guided rate, not from the Q3 forecast (S4) [D742]', 'S4', lambda a: (a['figures'].extend([
++    F('G', W('company', 'FY2027 Q3', measure='revenue sequential growth'), 'computed', 'guidance', '%', value=12.27, inputs=['F2', 'F3'], operation='growth'),
++    F('T', W('company', 'FY2027 Q3', measure='revenue run-rate'), 'computed', 'guidance', 'USD bn', value=108.0, inputs=['F2', 'G'], operation='apply_growth')]),
++    fig(a, 'F5').update(kind='computed', basis_text=None, rests_on=None, inputs=['T', 'G'], operation='apply_growth', value=121.25),
++    fig(a, 'F6').update(value=409.05), fig(a, 'F11').update(value=112.16), fig(a, 'F12').update(value=378.21)))
+ defect('two Data Center Q4 forecasts, both used (S4)', 'S4', lambda a: (a['figures'].append(F(
+     'BAD', W('Data Center', 'FY2027 Q4'), 'estimate', 'forecast', 'USD bn', value=104.0, basis_text='another view')),
+     fig(a, 'F12').update(outcome_for=[]), a['figures'].append(F('X', W('Data Center', 'FY2027'), 'estimate', 'forecast', 'USD bn', value=372.0,
