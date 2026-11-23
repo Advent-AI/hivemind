@@ -1,0 +1,1059 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1eaac-47ac-72b3-9fee-bc04dcb93e7a
+--------
+user
+# Blind audit (version 5.3, after Alex's ruling D654) of one inserted passage in the ladder step's request (read-only, $0)
+
+**What changes:**
+- **The step:** it writes one judged question, its answer choices and its due day for each opened topic, or declines with a reason.
+- **The edit:** one passage, inserted into the system text after the sentence ending "in not_judged, each with one sentence on why it is not the one
+  tracked."
+- **The two texts:** `frozen-system.txt` (unchanged) and `edited-system.txt` (with the passage). Diff them yourself.
+- **The passage and its stated sources:** `edit.json`.
+- **The rest of the request, unchanged:** `/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-closing.txt` (the closing check) and
+  `candidate-schema.json` (field descriptions, including `no_ladder`).
+
+**The decisions it must agree with** (search `/Users/lchingen/hivemind/docs/DECISIONS-log.md` for "## D436 ", "## D397 ", "## D403 ", "## D414 ",
+"## D417 ", "## D631 ", "## D635 "):
+- **D436 (Alex):** one bet seen from two sides is one question; "the shortage beside the shipments, the AI-chip share beside the chip total, the capacity
+  keeping pace beside the demand"; the second side stays as context, shown as not judged.
+- **D397:** judge the one the topic's outcome names as tracked; list every other part.
+- **D631 and D635:** no rule decides which part is the question when an outcome names several things; a description-priority rule was refused. Six
+  boundary cases are Alex's, and the edit must not decide them.
+
+**Also open:** `/Users/lchingen/hivemind/AGENTS.md` §6 (the prompt principles: carry the standard and decisions, add no new rule, examples from other
+industries and never from a test article, a classification as a closed set with examples). The topics to test the passage on are in `audit-topics.json`.
+
+**Alex's ruling since (D654, search "## D654 " in the decision log):** a general rule for the three shapes. When the outcome tracks a figure and also
+names one kind's share of it, whether supply stays short of demand, or whether capacity keeps pace with demand, the figure is the question and the
+second side is not judged. When the outcome tracks the share itself, the share is the question. Judge the passage against D654 first. Whether a
+shape-based choice is licensed is settled by D654 and is not a finding. Whether the passage says exactly D654 and nothing wider is a finding.
+
+## Answer, citing the sentence
+
+1. **Clause by clause, in both directions:** for each clause of the passage, consistent, contradicts, keeps wider, keeps narrower, or no source, against
+   D436, D397, the decline cases (system line 6), the closing check and the `no_ladder` description. Name any other sentence of the request it collides
+   with.
+2. **The targets:** for each of the 4 targets, what a careful model following the edited request would write: the question about which figure, and what is
+   listed. Is that what D436 rules?
+3. **The controls:** for each of the 6 decline controls (the two topics listed as entangled are not controls), does the edited request still lead to a decline? If not, is the decline still justified under the
+   decisions, so the control is wrong to keep?
+4. **The boundary cases:** for each of D631's 6, does the edited request now decide which part is the question where the frozen request did not? Any case
+   it decides is a finding.
+5. **The examples:**
+   - Do any of the examples come from, or mirror, the 44 test topics (`/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/cases.json`)?
+   - Does each read the same for a bank, a drug maker, a retailer or a chip maker?
+   - Does each example's orientation agree with D436? D436's third example puts demand as the figure and "capacity keeping pace" as the side.
+6. **Growth:** the passage adds characters and removes none; `edit.json` gives the reason. Is the reason, with the line-by-line `cut_review` in `edit.json`, sufficient under AGENTS §6, read with the council-loop trap it cites (`/Users/lchingen/hivemind/.claude/skills/council-loop/SKILL.md`, "Cuts made to keep a prompt length-neutral are levers too")?
+
+7. **The share-centred counterexample** in `audit-topics.json`: would the edited request still ask the share it tracks, and not switch to the total?
+8. **The trigger's same-bet clause:** under D654 the closed list of second sides decides; does each shape stay tied to the figure the outcome tracks, so that two things merely mentioned together do not trigger it? Are the
+   counter-case sentence and the main sentence consistent with each other?
+
+Check the controls against the listed themes (`audit-topics.json`, "themes listed in every request").
+
+**End with one line:** `SOUND`, or `NOT SOUND: <the smallest change that would make it sound>`. You are read-only: edit nothing, and make no model call.
+
+codex
+我会逐句对照 D654、原请求和每个测试案例，重点检查是否把规则用得过宽或改掉应当拒绝的情况。全程只读，不调用模型。
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D436|D397|D403|D414|D417|D631|D635|D654|ladder' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ exited 1 in 0ms:
+exec
+/opt/homebrew/bin/zsh -lc 'cat edit.json audit-topics.json' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-closing.txt /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-schema.json' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}
+
+ succeeded in 0ms:
+{
+ "version": "5.3",
+ "anchor": "in not_judged, each with one sentence on why it is not the one tracked.",
+ "insert": " When the outcome tracks a figure and also names one of these second sides of the same bet, the two are one bet seen from two sides, not several things with none the main one: ask the figure, and list that second side in not_judged. The second sides are: the share of the figure that one kind makes up (a bank's total lending for the year with the share that is commercial lending; a drug maker's total sales for the year with the part its largest medicine makes up); whether supply stays short of demand, or whether a shortage eases, beside a figure that measures that supply or its growth (a steel mill's tonnes shipped in the year with whether supply stays short of demand; a fertilizer maker's tonnes produced in the year with whether the fertilizer shortage eases); and whether capacity keeps pace with the demand that figure measures (a utility's power demand for the year with whether its generating capacity keeps pace; a port's container volume for the year with whether its berths keep pace). In each example the first is the question. When the outcome tracks the share itself, with the total only as its base, the share is the question: a bank's commercial share of its lending for the year, or a carmaker's electric share of the cars it sells in the year, is asked as that share.",
+ "sources": [
+  "D654 (Alex, 2026-11-17: '立通用规则'): for a total with one kind's share, a volume with whether supply stays short, or demand with whether capacity keeps pace, the figure is the question and the other side is not judged; a share the outcome tracks itself is asked as the share. This is the governing source of the three shapes and the counter-case; D436 is its origin.",
+  "D436. Alex's own reply ('算一个题，第三处不改') chose the option '第二件事作为同一题的背景留着（后面判断时显示为不判）… 理由：都是同一个押注的不同侧面', asked on the HBM shipments-and-shortage example only: shape (b) rests on his own words. The record's Decided line ('the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand') is the recorder's statement of the ruling's scope, in force but not his verbatim words: shapes (a) and (c) and their orientation rest on it. D436's scope line names clean Step 1; its '(D397)' clause, the ladder step's not-judged display, carries it here.",
+  "D397: judge the one the outcome names as tracked; list every other part (the trigger requires the outcome to track the figure)",
+  "the frozen decline case 'naming several with none of them the main one' (system line 6), excepted only for D436's three shapes bound to the tracked figure",
+  "the six two-bet theses put to Alex before D436 (clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md): u3/clean-10 (main: HBM capacity added in 2027; second: whether the shortage eases), acc/clean-8, acc/clean-9, acc/clean-10, u1/clean-5, u3/clean-7; Alex: one question",
+  "'or whether a shortage eases' in shape (b): the same condition as whether supply stays short, stated from the other side; u3/clean-10, one of the six theses put to Alex in D436 (PREREAD-RESULT.md: main 'HBM capacity added', second the shortage easing), carries it in that form."
+ ],
+ "not_taken": [
+  "Codex audit v3: 'require the outcome to identify the figure as the main tracked part before applying the D436 examples'. Not taken: the targets' outcomes name both sides without a stated priority, which is exactly why astra declines (its own account, account-output.json); D436 rules which side is the second side for these shapes; requiring an explicit priority would leave D436 unapplied on the cases it was decided on. Taken to the deep council (round 4)."
+ ],
+ "chars_before": 9545,
+ "chars_after": 10836,
+ "tokens_o200k_before_after": [
+  2031,
+  2302
+ ],
+ "growth_reason": "D654 rules a general behaviour the frozen request (D426, 2026-11-10) never carried; no frozen sentence states it. AGENTS §6 asks a classification as a closed set with two or three examples per class; the examples are merged into the closed list beside their class, and the conclusion is stated once ('In each example the first is the question'), so no shape is stated twice. The whole-request cut and merge review is in cut_review: no frozen line duplicates another or the passage, so nothing is cut; a cut beside the change would be its own lever (council-loop trap 'Cuts made to keep a prompt length-neutral are levers too').",
+ "cut_review": {
+  "line 1 (role, what to write, written once, English)": "keeps the task and the never-rewritten rule (D426); nothing overlaps the passage.",
+  "line 4 (one figure for a named period or one event; question, not assertion; settles on the due date; names period and material)": "the definition the passage relies on (\"tracks a figure\"); not duplicated.",
+  "line 5 (D397: judge the one the outcome names, list every other part; two 'never fold' examples)": "the passage's anchor. Its two examples (a drug's approval with a patient count; a fuel bill with a strike) are two different things, the contrast to the passage's same-bet shapes; cutting them would leave the exception without its rule's examples. Kept.",
+  "line 6 (seven decline cases, each from a decision: none/several with none main, no date, quarter or half, rolling period D417, ended year, beyond next year, another company or no theme)": "each case carries its own decision; the passage narrows only the first case for the three shapes (D654). Rewording 'several with none of them the main one' to name the exception would duplicate the passage; left as is.",
+  "line 9 (whose question: company vs theme, regulator decisions, another company)": "object rules (D426 and later decisions); no overlap.",
+  "line 12 (concrete, non-overlapping conditions)": "general ladder rule; no overlap.",
+  "line 13 (an event in at most three outcomes; ruled_out; two worked examples)": "event contract (D409 and later); no overlap.",
+  "line 14 (a figure: unit, one year, five ranges, bounds)": "figure contract; no overlap.",
+  "line 15 (exactly one of event and figure)": "shape rule also enforced by code; one line, kept for the model.",
+  "line 16 (reference: expected or last_reported, 'not a part of it')": "the 'not a part of it' clause works with shape (a): a share's amount cannot be the total's reference; kept.",
+  "line 17 (favourable_end)": "direction rule (D-sourced); no overlap.",
+  "lines 20 to 23 (due day: general, figure, event, binding obligation)": "due-day contract (D403, D414); no overlap."
+ },
+ "changes_from_v52": [
+  "vaccine maker's capacity added with whether it comes soon enough to ease a shortage -> a fertilizer maker's tonnes produced with whether the fertilizer shortage eases (Codex audit v5.2: it mirrored u3/clean-10's capacity-and-timing structure)",
+  "examples merged into the closed list beside their class, conclusion stated once (Codex audit v5.2: AGENTS §6 'the abstract clause they replace is cut'); 11,119 -> shorter",
+  "cut_review added: the frozen request read line by line for a cut or merge (Codex audit v5.2)"
+ ]
+}{
+ "targets (D436 class, declined unjustifiably)": {
+  "acc/clean-8": {
+   "description": "Will global high-bandwidth memory (HBM) shipments grow by approximately 50%-60% in calendar 2027, still falling short of demand, as the item projects?",
+   "outcome": "Global HBM shipment growth and whether HBM supply remains short of demand in calendar 2027.",
+   "period": "Calendar 2027; checked against HBM shipment data and memory manufacturers' 2027 reports.",
+   "opens_as": "shared_quantity"
+  },
+  "acc/clean-9": {
+   "description": "Will global semiconductor revenue reach roughly $975 billion in calendar 2026, including about $500 billion from AI chip sales, as Deloitte estimates?",
+   "outcome": "Calendar 2026 global semiconductor industry revenue and the AI-chip portion of it, the aggregate that underpins demand for Nvidia's data center products.",
+   "period": "Calendar 2026; checked against full-year 2026 semiconductor industry revenue data (e.g., SIA/WSTS annual statistics or Gartner/IDC 2026 revenue releases) published in early 2027. The item gives the 2026 period.",
+   "opens_as": "shared_quantity"
+  },
+  "u3/clean-10": {
+   "description": "How much new high-bandwidth memory (HBM) production capacity will SK Hynix, Micron and Samsung bring online in calendar 2027, and will it arrive early enough to ease the current HBM shortage and record prices that gate NVIDIA's GPU output?",
+   "outcome": "The combined new HBM capacity the three producers add in 2027 and whether any of it arrives before late 2027, easing the shortage; measured against the item's forecast that no new HBM supply arrives before late 2027.",
+   "period": "Calendar 2027 — set by the item's forecast that 'None of that supply, though, arrives before late 2027,' which places the supply-easing question in 2027.",
+   "opens_as": "shared_quantity"
+  },
+  "pool-17": {
+   "description": "How many AI accelerators (total units) will be shipped in China in calendar 2026, and how does the GPU versus non-GPU split evolve?",
+   "outcome": "China's total AI accelerator unit shipments for calendar 2026, and the GPU versus non-GPU composition, measured against IDC's forecast of 19% total shipment growth and a 9% decline in GPU shipments for 2026.",
+   "period": "Calendar 2026, settled by IDC's full-year China AI accelerator shipment data released after year-end 2026; the Oct. 13, 2026 item gives H1 2026 shipments of about 2.008 million units and IDC's 2026 growth forecast.",
+   "opens_as": "shared_quantity"
+  }
+ },
+ "decline controls (should stay declined)": {
+  "week-10-06:c1/clean-4": {
+   "description": "How much combined capital expenditure will the five largest hyperscalers — Amazon, Alphabet, Microsoft, Meta Platforms and Oracle — spend in calendar 2026 and calendar 2027?",
+   "outcome": "The big five hyperscalers' combined capex for calendar 2026 and calendar 2027, versus the approximately $800 billion for 2026 and roughly $1.3 trillion for 2027 the article reports they plan to spend.",
+   "period": "Calendar 2026 and calendar 2027 (the two years the Oct. 6, 2026 article gives), settled at the hyperscalers' quarterly earnings releases reporting capex through the fourth quarter of 2027.",
+   "opens_as": "shared_quantity"
+  },
+  "week-10-06:c1/clean-12": {
+   "description": "How much will global AI capital spending total in calendar 2026 and calendar 2027?",
+   "outcome": "Global AI capex for calendar 2026 and calendar 2027, measured against Goldman Sachs' forecast of $1 trillion of global AI spend this year and AI spend equal to 1.8% of U.S. GDP in 2026, 2.5% in 2027 (and 2.8% in 2028).",
+   "period": "Calendar 2026 and calendar 2027 (with 2028 also given), the years Goldman Sachs' forecast in the Oct. 11, 2026 article covers.",
+   "opens_as": "shared_quantity"
+  },
+  "fortnight:c1/clean-8": {
+   "description": "How much venture funding will physical AI (robotics) companies raise globally in calendar 2026?",
+   "outcome": "Total global venture capital raised by physical AI/robotics startups in calendar 2026, versus the $28.7 billion raised in all of 2025 and the $33.4 billion already raised in the first half of 2026, per PitchBook data.",
+   "period": "Calendar year 2026, checked at PitchBook's full-year 2026 venture funding release (expected early 2027); the item gives H1 2026 and full-year 2025 figures only.",
+   "opens_as": "shared_quantity"
+  },
+  "pool-19": {
+   "description": "Will the U.S. Congress enact federal legislation to ban superintelligent AI systems and pause advanced AI development until federal safety rules are established, as introduced by Sen. Bernie Sanders and Rep. Greg Casar?",
+   "outcome": "Enactment or failure of the Sanders–Casar bill (or an equivalent federal measure) that would ban superintelligent systems, pause advanced AI development pending federal safety rules, and create a Cabinet-level Department of Artificial Intelligence.",
+   "period": "Nvidia's fiscal year ending late January 2027 — the current fiscal year-end that fixes the check date for a pending regulatory decision.",
+   "opens_as": "policy_stage"
+  },
+  "u1/clean-9": {
+   "description": "What share of Chinese enterprises' AI accelerator budget will be allocated to domestic (Chinese-made) products versus Nvidia over the 12 months following the July 2026 survey, and will it rise toward the 46% executives indicated from 30% today?",
+   "outcome": "The share of surveyed Chinese enterprise AI accelerator budget going to domestic products — and by implication Nvidia's remaining share — over the 12 months after the July 2026 survey.",
+   "period": "The 12 months from the Jul 7 2026 Bloomberg Intelligence survey (roughly H2 2026 – H1 2027); set by the survey's 'next 12 months' horizon, checked against a follow-up survey.",
+   "opens_as": "shared_quantity"
+  },
+  "u2/clean-10": {
+   "description": "How much new high-bandwidth memory (HBM) capacity will the three main producers (SK Hynix, Micron, Samsung) bring online, and will the HBM shortage keep memory prices at record highs through late 2027 — a supply and input-cost constraint on NVIDIA's GPU shipments?",
+   "outcome": "The state of HBM supply and pricing through late 2027: whether any meaningful new HBM capacity comes online before then, and whether record-high HBM/memory prices persist.",
+   "period": "Late 2027 (the item, published 2026-07-10, says no new HBM supply arrives before late 2027, keeping the shortage and record prices into 2027); set by the item's forecast, settled by memory-market research and producers' capacity disclosures for 2027.",
+   "opens_as": "shared_quantity"
+  }
+ },
+ "D631's six boundary cases (Alex's, must stay undecided by the edit)": {
+  "optical-switch shipments (fortnight:c1/clean-13)": {
+   "description": "Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts?",
+   "outcome": "Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.",
+   "period": "Calendar 2027, with the item's stated checkpoints at Q4 2026, early 2027 and mid-2027, checked against Nvidia's quarterly results and supplier disclosures. The item gives no confirmation date, so the forecast periods it states fix the check dates.",
+   "opens_as": "product_node"
+  },
+  "chip sales into China (fortnight:c1/clean-3)": {
+   "description": "Will Nvidia be permitted to sell its current Blackwell-generation AI chips into China — through U.S. export approval and Chinese acceptance of shipments — by the end of fiscal 2027?",
+   "outcome": "Whether U.S. authorities extend export approval beyond the older H200 to Nvidia's current Blackwell-generation chips for approved Chinese customers, and whether Chinese authorities stop restricting Nvidia chip shipments, so that China data-center revenue can resume; the item reports H200 shipments are already U.S.-permitted while Chinese authorities still restrict them.",
+   "period": "NVIDIA fiscal year ending late January 2027 — the current fiscal year-end, used as the check date for a pending regulatory decision per section 3 (item gives no date of its own).",
+   "opens_as": "policy_stage"
+  },
+  "an acquisition (week-10-06:c1/clean-11)": {
+   "description": "Will Nvidia sign and complete an acquisition of Reflection AI — and at what consideration and terms — by the check date?",
+   "outcome": "A definitive agreement to acquire Reflection AI, its closing (or the talks' collapse), and the final consideration paid and any regulatory conditions imposed.",
+   "period": "Check date: April 2028, the outer limit of a date within 18 months of the Oct. 10, 2026 item for an acquisition not yet signed.",
+   "opens_as": "binding_obligation"
+  },
+  "investment commitments (week-10-06:c1/clean-13)": {
+   "description": "How much of Nvidia's $25 billion of equity-investment commitments outstanding at July 26, 2026 will be funded or remain outstanding at its next annual report?",
+   "outcome": "The remaining balance of Nvidia's equity-investment commitments, the cash paid to fund them, and any change in the committed amounts, as disclosed in Nvidia's next annual report.",
+   "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken.",
+   "opens_as": "binding_obligation"
+  },
+  "memory prices (week-10-06:c1/clean-3)": {
+   "description": "By how much will contract prices for AI-server memory (HBM/DRAM) — the memory input cost embedded in Nvidia's GPUs — rise or fall in calendar 2027?",
+   "outcome": "The change in HBM/DRAM contract prices over calendar 2027, and the memory makers' reported average selling prices and memory gross margins for the periods covering 2027.",
+   "period": "Calendar 2027 (overlapping Micron's fiscal 2027, roughly September 2026–August 2027), as supported by Micron management's fiscal 2027 price guidance in the October 6, 2026 article.",
+   "opens_as": "shared_quantity"
+  },
+  "a chip export licence (week-10-06:c1/clean-6)": {
+   "description": "Will the U.S. licence requirement on Nvidia's data center chips still bar it from China's data center compute market at Nvidia's fiscal 2027 year-end, or will it be lifted before then?",
+   "outcome": "Whether the U.S. export-licence requirement on Nvidia's H20-class data center products remains in force or is lifted, and whether Nvidia resumes recognizing data center compute revenue from China.",
+   "period": "Nvidia's fiscal year ending late January 2027 (current fiscal year-end, the date fixed for the pending export-control status).",
+   "opens_as": "policy_stage"
+  }
+ },
+ "not used as controls: entangled with D436 (u1/clean-5 is one of the six theses put to Alex; pool-9 is the same matter)": {
+  "pool-9": {
+   "description": "How much will DRAM, NAND and high-bandwidth memory contract prices rise in calendar 2026, and what will the memory content of NVIDIA's Vera Rubin VR200 rack cost, now that memory is reported to be 25-30% of the rack bill of materials?",
+   "outcome": "The direction and size of 2026 memory contract price increases and the memory cost per NVIDIA Vera Rubin rack (Morgan Stanley currently puts memory content at about $2 million per rack, up 435%), which bears on NVIDIA's per-rack cost/ASP economics and on hyperscaler AI-infrastructure spending.",
+   "period": "Calendar year 2026 — checked against memory contract price releases and NVIDIA/partner disclosures of rack bill-of-materials as Vera Rubin ramps during H2 2026.",
+   "opens_as": "shared_quantity"
+  },
+  "u1/clean-5": {
+   "description": "What will contract prices for AI memory (LPDDR5X, HBM, 3D NAND/DRAM) be through calendar 2026-2027 — the input that now makes up roughly 25-30% of Nvidia's Vera Rubin rack cost?",
+   "outcome": "The level and direction of contract memory (DRAM, NAND, HBM) prices in 2026-2027 and the resulting per-rack memory content cost (about $2 million on the VR200).",
+   "period": "Calendar 2026-2027 memory contract cycles; set by the item's forward cost period (second half of 2026 and beyond).",
+   "opens_as": "shared_quantity"
+  }
+ },
+ "share-centred counterexample (the outcome tracks the share itself; must stay asked as the share)": {
+  "u3/clean-11": {
+   "description": "Will custom ASIC AI accelerators designed by Broadcom and Marvell take a growing share of the big four hyperscalers' AI accelerator spending in calendar 2027, at Nvidia's expense, given their lower cost per gigawatt?",
+   "outcome": "The split of big-four hyperscaler 2027 AI accelerator spending (and of the 19.5 GW of incremental compute capacity projected for 2027) between custom ASIC racks and Nvidia GPU racks, measured against the item's cost-per-gigawatt estimates of $6–11 billion for Broadcom/Marvell ASIC racks versus roughly $19 billion for Nvidia GB300-based racks and $25 billion under Vera Rubin.",
+   "period": "Calendar 2027 — set by the item: Morgan Stanley forecasts the big four will spend over $1 trillion on AI infrastructure 'next year' and add 19.5 GW of capacity, the period in which the ASIC-versus-GPU mix plays out.",
+   "opens_as": "shared_quantity"
+  }
+ },
+ "themes listed in every request": [
+  "chip-export-controls (Chip export controls)",
+  "ai-capex (AI capital spending)",
+  "custom-silicon (Custom silicon at cloud providers)",
+  "semiconductor-cycle (Semiconductor cycle)",
+  "fed-policy-rate (Fed policy rate)",
+  "us-inflation (US inflation)",
+  "us-recession-risk (US recession risk)",
+  "us-china-tariffs (US–China tariffs)",
+  "taiwan-strait (Taiwan Strait)",
+  "middle-east-conflict (Middle East conflict and oil prices)",
+  "russia-ukraine-war (Russia–Ukraine war)",
+  "supply-chain-shift (Supply-chain shift and shipping)"
+ ]
+}
+exec
+/opt/homebrew/bin/zsh -lc 'diff -u frozen-system.txt edited-system.txt; cat -n edited-system.txt' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+--- frozen-system.txt	2026-11-17 09:23:49
++++ edited-system.txt	2026-11-17 10:01:46
+@@ -2,7 +2,7 @@
+ 
+ What the question asks
+ - A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+-- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
++- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. When the outcome tracks a figure and also names one of these second sides of the same bet, the two are one bet seen from two sides, not several things with none the main one: ask the figure, and list that second side in not_judged. The second sides are: the share of the figure that one kind makes up (a bank's total lending for the year with the share that is commercial lending; a drug maker's total sales for the year with the part its largest medicine makes up); whether supply stays short of demand, or whether a shortage eases, beside a figure that measures that supply or its growth (a steel mill's tonnes shipped in the year with whether supply stays short of demand; a fertilizer maker's tonnes produced in the year with whether the fertilizer shortage eases); and whether capacity keeps pace with the demand that figure measures (a utility's power demand for the year with whether its generating capacity keeps pace; a port's container volume for the year with whether its berths keep pace). In each example the first is the question. When the outcome tracks the share itself, with the total only as its base, the share is the question: a bank's commercial share of its lending for the year, or a carmaker's electric share of the cars it sells in the year, is asked as that share. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+ - Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+ 
+ Whose question it is
+     1	You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+     2	
+     3	What the question asks
+     4	- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+     5	- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. When the outcome tracks a figure and also names one of these second sides of the same bet, the two are one bet seen from two sides, not several things with none the main one: ask the figure, and list that second side in not_judged. The second sides are: the share of the figure that one kind makes up (a bank's total lending for the year with the share that is commercial lending; a drug maker's total sales for the year with the part its largest medicine makes up); whether supply stays short of demand, or whether a shortage eases, beside a figure that measures that supply or its growth (a steel mill's tonnes shipped in the year with whether supply stays short of demand; a fertilizer maker's tonnes produced in the year with whether the fertilizer shortage eases); and whether capacity keeps pace with the demand that figure measures (a utility's power demand for the year with whether its generating capacity keeps pace; a port's container volume for the year with whether its berths keep pace). In each example the first is the question. When the outcome tracks the share itself, with the total only as its base, the share is the question: a bank's commercial share of its lending for the year, or a carmaker's electric share of the cars it sells in the year, is asked as that share. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+     6	- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+     7	
+     8	Whose question it is
+     9	- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+    10	
+    11	The ladder
+    12	- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+    13	- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+    14	- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+    15	- Fill exactly one of event and figure; the other is null.
+    16	- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+    17	- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+    18	
+    19	The due day
+    20	- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+    21	- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+    22	- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+    23	- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D(436|397|403|414|417|631|635|654) '"' /Users/lchingen/hivemind/docs/DECISIONS-log.md; rg -n 'Cuts made to keep a prompt length-neutral' /Users/lchingen/hivemind/.claude/skills/council-loop/SKILL.md; rg -n '"'^## 6'"\\.' /Users/lchingen/hivemind/AGENTS.md" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4414:## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+4606:## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+8527:## D631 · 2026-11-16 · Sol's refusal pattern traced; the description-priority sentence is refused as an unconfirmed rule
+8618:## D635 · 2026-11-16 · The narrower main-part rule closes; astra's 51 written questions get a source-backed review at $0
+9093:## D654 · 2026-11-17 · Alex: a general rule for the answer-choice step — a total with its share, a volume with its shortage, demand with capacity keeping pace: ask the total, the volume or the demand
+158:- **Cuts made to keep a prompt length-neutral are levers too.** In the unfiled round, u1 cut two sentences beside its one change; the
+194:## 6. Writing prompts
+
+exec
+/opt/homebrew/bin/zsh -lc "cat -n frozen-system.txt | head -n 10; sed -n '194,225p' /Users/lchingen/hivemind/AGENTS.md; sed -n '150,166p' /Users/lchingen/hivemind/.claude/skills/council-loop/SKILL.md" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+     1	You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+     2	
+     3	What the question asks
+     4	- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+     5	- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+     6	- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+     7	
+     8	Whose question it is
+     9	- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+    10	
+## 6. Writing prompts
+
+- **The prompt carries the standard, not new rules.** Every sentence about what to keep, reject, weigh or open traces to a line of the
+  step's standard (§7.1) or a decision; a sentence with no such line is a proposal for Alex, not an edit. A reject sentence must not
+  remove what the standard keeps: a missing amount, date or scale is never on its own a reason to drop a statement an analyst would note;
+  its weight is judged apart and may be lower (D240, Alex: "我不是和你说过不要这么死板吗？这个证据显然是有意义的，不一定什么条件数据时间都要满足，你应该把它记录下来，只是可能档位低一点").
+- **The prompt audit runs after every measurement and before any prompt change** (`.claude/skills/prompt-audit/SKILL.md`). The whole
+  request (system, every category block, the fixed user sentences, every schema description and example) is read against the standard
+  clause by clause, in both directions, with a blind read-only second reader: each clause is consistent, contradicts, keeps wider, keeps
+  narrower or has no source. The procedure is audited too: a rule that decides by another test than the standard's, or an exception
+  written wider than the standard scopes it, contradicts the standard even when every sentence quotes it. Each failure class of the last
+  measurement gets one row (the request sentence, the standard's line, a verdict: contradiction, missing, abstract, misread, not the
+  prompt) in the arm's design document before a fix is written; a fix that answers a bench miss rather than a sentence is not written.
+  Alex, 2026-10-30: "你需要同时仔细检查prompt和判法准则矛盾的问题，出现很多次了，你应该要做很细的检查"; 2026-11-02: "这个就是prompt的问题，你有没有深度的看promt 然后映射问题找矛盾
+  … 你应该看着prompt，然后对比失败的trace，然后仔细的根据尺子做对比，并且我们prompt的principle 也要带入，是尝试教他general hedge fund
+  analyst skill, 不是要hardcode或是benchmark farming；你把这个写成一个skill 以后固定跑，不然你每次都没有检讨到".
+- **A test the model must apply to each statement is a check at the very end of the same prompt.** In one pass the model keeps what
+  looks like evidence and cites a rule afterwards; asked afterwards it judges correctly. So a closing check reads the list back and
+  returns only what passes, in the same call: the standard's own test, then its not-kept rows, each with its own boundary and the
+  standard's own examples, audited like any prompt text; a lost entry is judged by a blind reader. Alex, 2026-10-30: "这个完全就是再prompt 的最后面要求做完一遍基于'你刚才说的复核条件'再跑一次；写在同一个提示词里面".
+- **A prompt serves every company, never the bench.** Every analyst prompt is a general hedge-fund brain: each rule and example reads the
+  same for a bank, a drug maker, a retailer or a chip maker. Examples teach from varied domains; none names the covered company, its
+  products or its numbers, and none is taken from a test article. A fix is written from the standard and from the request read as the
+  model reads it, not from the bench's misses, and a prompt is scrubbed for one-company or one-industry wording before any measurement.
+  Alex, 2026-10-29 (D237): "It needs to be general purpose as a hedge fund brain. I keep on telling you this, and you keep on cherry
+  picking the results just to meet the metrics or the benchmarks".
+- **Never grow a prompt to fix quality.** Read the whole request (system, schema, payload) as the model reads it, and list every
+  contradiction, rule written for another case, instruction that forces the defect, reference the model cannot read, payload field the
+  answer does not need, and call doing several jobs. Cut, merge or split. Add an instruction only when the audit shows one is missing,
+  and remove at least as much elsewhere. Report characters and prompt tokens before and after; growth needs a written reason.
+- **Trace a miss to the raw answer first.** Class it as not written, refused (by which check) or split. Check that the request shows what
+  the answer needs and the schema can express it before changing any wording.
+- **A stale bytecode cache makes a mutant pass** when the mutated line has the same length and the same mtime second.
+- **Low reasoning effort mis-applies judgment rules** (it over-suppressed big matters). Test an effort arm before blaming a rule.
+- **Pair-level accuracy is the wrong unit when records bundle facts.** Step 2's pair agreement was 82%, yet per incoming record, on
+  a forward simulation, detection was close. Score the decision the product takes per record on the library it would really see; a
+  fixed-history replay assumes every earlier merge was right.
+- **Model readers over-flag materiality.** Two readers flagged 66 of 102 merges as losing a material fact, but a hand-read of a random
+  12 found only 3 clearly material. A materiality gate shown to the model (Jev's stricter repeat) behaves the same way. Hand-read a
+  random sample before quoting the readers' count.
+- **Cuts made to keep a prompt length-neutral are levers too.** In the unfiled round, u1 cut two sentences beside its one change; the
+  cuts, not the change, moved filing and noise. Make each cut its own arm, or let the prompt grow with a written reason.
+- **Calibrate the readers before trusting a per-item count.** Two reader families judged the same 48 control answers as 15 against 6
+  should-be-filed items. Run the source-backed adjudication of disagreements (step 6) before reading arm differences smaller than the
+  readers' own gap.
+- **Model readers carry their family's threshold.** Two adjudicators given the same rubric sided with their own families (17 of 52
+  agreed). When the families split on "how big is big", take a balanced set of boundary cases to Alex; his rulings are the ruler.
+- **Signed text copied piecemeal into another contract can contradict it.** Audit the whole request, closing check included, before
+  proposing a sourced restoration.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; d=json.load(open(\"audit-topics.json\")); print(json.dumps({k:v for k,v in d.items() if \"theme\" in k.lower() or \"share\" in k.lower()},indent=2))'; head -c 3500 /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/cases.json" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+{
+  "share-centred counterexample (the outcome tracks the share itself; must stay asked as the share)": {
+    "u3/clean-11": {
+      "description": "Will custom ASIC AI accelerators designed by Broadcom and Marvell take a growing share of the big four hyperscalers' AI accelerator spending in calendar 2027, at Nvidia's expense, given their lower cost per gigawatt?",
+      "outcome": "The split of big-four hyperscaler 2027 AI accelerator spending (and of the 19.5 GW of incremental compute capacity projected for 2027) between custom ASIC racks and Nvidia GPU racks, measured against the item's cost-per-gigawatt estimates of $6\u201311 billion for Broadcom/Marvell ASIC racks versus roughly $19 billion for Nvidia GB300-based racks and $25 billion under Vera Rubin.",
+      "period": "Calendar 2027 \u2014 set by the item: Morgan Stanley forecasts the big four will spend over $1 trillion on AI infrastructure 'next year' and add 19.5 GW of capacity, the period in which the ASIC-versus-GPU mix plays out.",
+      "opens_as": "shared_quantity"
+    }
+  },
+  "themes listed in every request": [
+    "chip-export-controls (Chip export controls)",
+    "ai-capex (AI capital spending)",
+    "custom-silicon (Custom silicon at cloud providers)",
+    "semiconductor-cycle (Semiconductor cycle)",
+    "fed-policy-rate (Fed policy rate)",
+    "us-inflation (US inflation)",
+    "us-recession-risk (US recession risk)",
+    "us-china-tariffs (US\u2013China tariffs)",
+    "taiwan-strait (Taiwan Strait)",
+    "middle-east-conflict (Middle East conflict and oil prices)",
+    "russia-ukraine-war (Russia\u2013Ukraine war)",
+    "supply-chain-shift (Supply-chain shift and shipping)"
+  ]
+}
+[
+ {
+  "case": "u1/clean-1",
+  "thesis": {
+   "id": "clean-1",
+   "description": "How much credit support will NVIDIA have committed to AI cloud partners for their NVIDIA-powered compute infrastructure, and how large is the resulting guarantee/credit exposure?",
+   "outcome": "The outstanding amount of credit support, guarantees or backstop NVIDIA has extended to AI cloud partners under its new revenue-sharing and credit-support model, disclosed at its next annual report.",
+   "period": "Next annual report (Form 10-K for the fiscal year ending late January 2027, likely filed early 2027): the outstanding amount of credit support/guarantees; set by the reason (obligation already undertaken, tracked at the next annual report).",
+   "opens_as": "binding_obligation",
+   "settled_by": "NVIDIA's next annual report (Form 10-K), including its guarantees and credit-support commitment disclosures."
+  },
+  "item": {
+   "publication_date": "2026-07-01",
+   "publisher": "NVIDIA Corporation",
+   "title": "NVIDIA Unlocks AI Compute at Scale, Inviting Partners to Power the AI Infrastructure Buildout | NVIDIA Blog",
+   "text": "NVIDIA is partnering with AI clouds to deploy large‑scale, multi‑tenant AI factories, aligning economics through a revenue-sharing and credit-support model.\nAs AI moves from model development to production inference, compute demand is accelerating and shifting toward continuously operating AI factories that generate tokens at scale. This shift requires access to large‑scale, multi‑tenant accelerated computing that can come online quickly, stay highly utilized and support the economics of token‑scale AI services.\nEmerging AI companies historically have had limited access to capital-intensive infrastructure, with even long-term commitments insufficient to unlock financing for compute.\nTo address this, NVIDIA is introducing a new business model that opens up compute access to the fast‑growing AI ecosystem of startups, model builders, enterprises, research organizations and regional AI players.\nThis new model enables AI clouds to procure NVIDIA infrastructure for AI-native, enterprise and ISV customers through economic alignment with a revenue-sharing and credit-support model. Through the partnership, AI clouds will sell NVIDIA-powered cloud services, with NVIDIA earning both standard product revenue and a share of the cloud revenue on the supported capacity. This structure accelerates adoption of NVIDIA platforms among the high-growth, high-conviction AI native sector, and provides NVIDIA with a recurring, usage-linked earnings stream.\nFor model builders, inference providers, agent platforms and enterprises scaling AI, it can mean faster access to full-stack accelerated computing without waiting through site selection, power procurement, construction and hardware bring-up.\nThe initiative is already taking shape, with AI cloud companies building DSX AI factories designed to serve customers and workloads across regions.\n“This strategic collaboration with NVIDIA marks a pivotal moment in Sharon AI’s mission to deliver sovereign, large-scale AI compute infrastructure,” said James Manning, cofounder and CEO of Sharon AI.\nFirmus is building a DSX AI factory campus in Batam, Indonesia. The campus is expected to scale to 360 megawatts and up to 170,000 NVIDIA GPUs.\n“AI-native companies need access to scalable, energy- and cost-efficient compute infrastructure to compete globally,” said Tim Rosenfield, co-CEO of
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import re,pathlib; s=pathlib.Path(\"/Users/lchingen/hivemind/docs/DECISIONS-log.md\").read_text(); ids=[397,403,414,417,436,631,635,654]; [(print(re.search(r\"(?ms)"'^## D"+str(i)+r" .*?(?=''^## D'"\\d+ |\\Z)\",s).group(0))) for i in ids]'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+
+## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+
+- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+    three sends of one thesis may set three days.
+  - Alex: "保持更严 (Recommended)".
+- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+  a date". This is narrower than v74i line 26 by his decision.
+- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+
+
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+
+## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+
+- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+  - Alex: "确认：这类题不出题 (Recommended)".
+- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+- **Scope:** the clean path's ladder step; mark N of the readers' form.
+
+
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+
+## D631 · 2026-11-16 · Sol's refusal pattern traced; the description-priority sentence is refused as an unconfirmed rule
+
+**The trace** (`reflection-6/model/REFUSAL-TRACE.md`):
+- 4 agreed-unjustified, 12 disputed and 8 agreed-justified refusals.
+- The unjustified and disputed ones decline as "several, none the main one" where the outcome lists several parts. The stated reasons
+  differ: a span of checkpoints, two price series, two authorities.
+
+Council round 11 (`reflection-6/codex-challenge-11.md`): "CONSENSUS: no, because the sentence introduces an unconfirmed priority rule
+and the proposed paid test does not establish sound recovery; audit the rule and request first at $0."
+
+- D397 makes the judged part the one the outcome names. D436 keeps two sides of an identified bet together. Neither makes the
+  description decide the main part.
+- **Next:** an independent $0 audit of the whole request and of the candidate rule against D397, D436 and the stored cases, including
+  true no-main topics and descriptions that conflict with their outcomes.
+
+
+## D635 · 2026-11-16 · The narrower main-part rule closes; astra's 51 written questions get a source-backed review at $0
+
+**The rule review** (`reflection-6/main-part/RESULT.md`): two independent readers agree in 24 of 26 topics. But the rule:
+- turns Hugging Face's sourced unjustified decline into "none" (its description asks completion "and at what final cost and regulatory
+  conditions");
+- recovers only H20 and memory, both marked as overriding the outcome;
+- would add declines on Vera Rubin and Groq.
+
+It closes. The readers' agreed main-part verdicts follow judgement about which part is the bet, not a text rule. With the sources
+silent (D631), it stays Alex's ruling.
+
+Council round 18 (`reflection-6/codex-challenge-18.md`): "CONSENSUS: no, because the 51 accepted Astra questions still need a
+source-backed product review before the council can state what the candidate has achieved."
+- Astra is the leading unaccepted candidate: 4 failures of 78, and no agreed hard-line mark on 51 questions. That is not a claim
+  that the questions are fault-free.
+- **Next ($0):** one reviewer checks every question against its topic and article (period, measure, conditions, answer choices,
+  usefulness). A second reader checks the material findings and sound counterexamples.
+- **Moves:** a recurring consequential defect gives a concrete candidate to diagnose; or none is found, which strengthens astra as a
+  limited candidate.
+- **Closes:** the findings are unsupported or scattered.
+
+D426 stands.
+
+
+## D654 · 2026-11-17 · Alex: a general rule for the answer-choice step — a total with its share, a volume with its shortage, demand with capacity keeping pace: ask the total, the volume or the demand
+
+- **Asked** (deep council round 5's wording):
+  - "写题那一步，遇到'结果'里同时写着两样、又没说哪个是主的话题，要不要立一条通用规则？" It named the three shapes with examples: a total and one kind's share
+    of it (world chip revenue and its AI-chip part); shipments and whether supply stays short (HBM); demand and whether capacity keeps pace.
+  - The facts given: astra declines all of them as "分不出主次", and they are all 7 of its gate-1 misses. His own D436 words covered only the HBM
+    shipments-and-shortage pair; the other two orientations are the record's.
+  - The cost given: a topic that really tracks the share could be asked as the total; mitigated by "题目追的就是份额本身时，就问份额".
+  - **Options:**
+    - the general rule (recommended);
+    - only the theses he ruled on;
+    - no rule.
+- **Alex:** "立通用规则 (Recommended)".
+- **Decided:** for the three shapes, when the outcome tracks a figure and also names one of these second sides of the same bet, the figure is the question
+  and the second side is listed as not judged. These are not "several things with none the main one". When the outcome tracks the share itself, with the
+  total only as its base, the share is the question.
+  - This settles the scope question four Codex-family auditors raised (D653 rounds 3 to 5).
+- **Next:**
+  - an independent audit of the exact passage (narrow-d436 v5.1) against this ruling and the request;
+  - the paired exposed verification, tightened per council round 5: a material defect marked by either reviewer blocks a pass; u3/clean-11 checks only
+    that the total is not asked; u2/clean-10 is reported, not deciding; the scoring and spending paths are exercised at $0 before the send.
+- **Scope:** the clean path's ladder step (Step 4a); the frozen request is unchanged until a measured version is adopted.
+
+
+codex
+D654 已经明确允许这三种情况选出主问题；我正在核对例子是否真正落在这条规则内，以及原有拒绝条件是否仍然适用。
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; a=json.load(open(\"/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/cases.json\")); print(\"count\",len(a)); [(print(x[\"case\"],\"|\",x[\"thesis\"][\"description\"],\"|\",x[\"thesis\"][\"outcome\"])) for x in a]'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436
+ succeeded in 0ms:
+count 44
+u1/clean-1 | How much credit support will NVIDIA have committed to AI cloud partners for their NVIDIA-powered compute infrastructure, and how large is the resulting guarantee/credit exposure? | The outstanding amount of credit support, guarantees or backstop NVIDIA has extended to AI cloud partners under its new revenue-sharing and credit-support model, disclosed at its next annual report.
+u1/clean-2 | Will NVIDIA sign a financial guarantee/backstop for OpenAI's lease of a large data center in Ohio — and at what amount — large enough to change NVIDIA's credit risk? | Whether NVIDIA executes (signs) a guarantee or capacity/lease backstop for OpenAI's Ohio data-center lease, and the resulting amount, by the check date.
+u1/clean-3 | Will NVIDIA's next-generation Vera Rubin AI chip platform begin first shipments — the step that brings revenue — before the end of calendar 2026? | Whether Vera Rubin reaches first shipments (start of revenue) by the end of 2026.
+u1/clean-4 | Will the combined data center capital expenditure of the big four AI hyperscalers reach $1 trillion in calendar 2027, the aggregate AI-infrastructure spend Nvidia projects and on which its GPU demand depends? | The big four AI hyperscalers' combined data center capital expenditure for calendar 2027, as disclosed in their full-year results.
+u1/clean-5 | What will contract prices for AI memory (LPDDR5X, HBM, 3D NAND/DRAM) be through calendar 2026-2027 — the input that now makes up roughly 25-30% of Nvidia's Vera Rubin rack cost? | The level and direction of contract memory (DRAM, NAND, HBM) prices in 2026-2027 and the resulting per-rack memory content cost (about $2 million on the VR200).
+u1/clean-6 | Will NVIDIA's Rubin Ultra rack-scale platform — the Kyber NVL144 architecture that houses 144 Rubin Ultra GPUs — reach first shipments in 2027 as originally planned, or slip to 2028 as SemiAnalysis reports? | Whether NVIDIA's Kyber NVL144 / Rubin Ultra rack platform reaches first shipments (the step that brings revenue) in 2027 or is delayed to 2028.
+u1/clean-7 | What will the outstanding amount of NVIDIA's supply (purchase) commitments to suppliers be at its next annual report — the obligations that lock it into buying capacity and services for its AI systems? | The outstanding supply/purchase commitments disclosed in NVIDIA's next annual report, compared with the $119 billion cited in this item.
+u1/clean-8 | How much revenue will the big four hyperscalers' in-house AI accelerators (Amazon Trainium, Google TPU, Microsoft Maia, Meta MTIA) generate in calendar 2026 — the combined custom-silicon quantity competing with NVIDIA GPUs, whose customers also fund NVIDIA's data center segment? | The combined calendar-2026 revenue (or disclosed shipment volume) of the four hyperscalers' in-house AI accelerator programmes, as disclosed in their full-year 2026 results and earnings calls.
+u1/clean-9 | What share of Chinese enterprises' AI accelerator budget will be allocated to domestic (Chinese-made) products versus Nvidia over the 12 months following the July 2026 survey, and will it rise toward the 46% executives indicated from 30% today? | The share of surveyed Chinese enterprise AI accelerator budget going to domestic products — and by implication Nvidia's remaining share — over the 12 months after the July 2026 survey.
+u1/clean-10 | Will the U.S. government (Congress and/or the FCC) enact legislation or regulation to ban or phase out Chinese-made lidar sensors in U.S. autonomous/robotics systems, which would change the sensor options and cost competitiveness available to NVIDIA's DRIVE Hyperion autonomous-vehicle platform? | Whether proposed U.S. legislation/regulation to phase out Chinese-made lidar technology in the United States is enacted (and its scope and timing).
+u1/clean-11 | Will China's government approve imports of Nvidia's H200 AI chips into China — and roughly how many — enabling Nvidia to begin generating H200 revenue in the country? | Whether Chinese authorities grant approval for Alibaba, ByteDance, DeepSeek and other firms to import Nvidia H200 chips (potentially a total below 200,000), as reflected in official Chinese government decisions and in Nvidia's disclosed China H200 revenue.
+u1/clean-12 | Will France's competition authority (Autorité de la concurrence) conclude its antitrust investigation into Nvidia's cloud-AI and GPU-market practices by the check date, and will it impose remedies or fines? | The French competition authority's conclusion of its antitrust investigation into alleged anti-competitive practices in the cloud-AI and GPU markets, and any remedies or fines imposed.
+u2/clean-1 | How much credit support will NVIDIA have extended to AI cloud partners for NVIDIA-powered capacity, large enough to affect its credit risk, by the 2027-12-31 check date? | The amount of guarantees, credit support or similar contingent exposure NVIDIA discloses for AI cloud partners; zero if none.
+u2/clean-2 | Will NVIDIA's Vera Rubin next-generation AI chip platform, the product line carrying its data-center value, begin shipping by the end of 2026? | First shipments of NVIDIA's Vera Rubin platform, confirmed by NVIDIA disclosure or an official shipment announcement.
+u2/clean-3 | Will China's government allow NVIDIA to sell its H200 AI chips into mainland China, the world's second-largest chip market, by the check date — i.e. will Beijing lift the block that currently keeps NVIDIA's China share at zero despite U.S. clearance? | An official Chinese government/regulator decision permitting (or continuing to bar) H200 sales in China, confirmed by an official Chinese announcement or by NVIDIA disclosing H200 China revenue/shipments.
+u2/clean-4 | How much will the big four AI hyperscalers spend on data-center capital expenditures in calendar 2026, and does their combined spend approach the ~$1 trillion level NVIDIA projects for 2027? | Combined calendar-2026 data-center capital expenditure of the big four AI hyperscalers, measured against the ~$650 billion plan reported in the item and NVIDIA's ~$1 trillion projection for 2027.
+u2/clean-5 | Will NVIDIA's Kyber NVL144 rack-scale architecture — the rack system designed to house its 2027 Rubin Ultra chips — begin shipping by end-2027 as originally scheduled, or has it slipped to 2028 as SemiAnalysis reports? | First shipments of the Kyber NVL144 rack-scale system (paired with Rubin Ultra), confirmed by NVIDIA disclosure or an official shipment announcement, occurring in 2027 versus slipping to 2028.
+u2/clean-6 | How much will NVIDIA's own supply purchase commitments total at its next annual report — the item cites $119 billion in supply commitments, a purchase obligation large enough to bear on its cash and credit risk? | The dollar amount of NVIDIA's supply purchase commitments disclosed at its next annual report, measured against the $119 billion figure reported in this item.
+u2/clean-7 | How much will Amazon, Google, Microsoft and Meta spend in calendar 2026 on custom AI accelerators (such as Trainium, TPU, Maia and MTIA), a measure of how much AI compute demand bypasses NVIDIA's GPUs? | Combined calendar-2026 spending by the big four hyperscalers on custom AI accelerators.
+u2/clean-8 | What share of Chinese companies' AI-accelerator spending will go to domestic suppliers (e.g. Huawei Ascend and DeepSeek's in-house chips) over the next 12 months, and how much will that displace NVIDIA's China demand? | The share of Chinese AI-accelerator budgets allocated to domestic suppliers, versus roughly 30% today, as reported in industry surveys/market research and reflected in NVIDIA's disclosed China revenue.
+u2/clean-9 | Will France's competition authority reach a conclusion/decision — a fine, behavioral remedies or closure — in its antitrust investigation into NVIDIA's alleged anti-competitive practices in the cloud-AI and GPU markets by NVIDIA's FY2027 year-end (late January 2027)? | The French competition authority's decision concluding its antitrust investigation into NVIDIA, including any fine or behavioral remedies imposed.
+u2/clean-10 | How much new high-bandwidth memory (HBM) capacity will the three main producers (SK Hynix, Micron, Samsung) bring online, and will the HBM shortage keep memory prices at record highs through late 2027 — a supply and input-cost constraint on NVIDIA's GPU shipments? | The state of HBM supply and pricing through late 2027: whether any meaningful new HBM capacity comes online before then, and whether record-high HBM/memory prices persist.
+u3/clean-1 | How much credit support will NVIDIA have extended to AI cloud partners under its new revenue-sharing / credit-support model, and does it materially raise NVIDIA's contingent obligations and credit risk? | The amount of credit support / backstop commitments NVIDIA reports backing AI cloud partners' compute procurement and the resulting credit-risk exposure.
+u3/clean-2 | What will the CPU-to-GPU attach ratio in AI inference workloads be in 2026, as Intel CEO Lip-Bu Tan says it is beginning to shift from 1 CPU to 8 GPUs toward 1 CPU to 1 GPU? | The reported CPU:GPU ratio for AI inference workloads in 2026, and whether it has moved materially from 1:8 toward 1:1.
+u3/clean-3 | Will NVIDIA's Vera Rubin next-generation AI chip platform, the product line that carries its data center value, begin shipping by a check date (end of calendar 2026)? | Confirmation that first Vera Rubin shipments have begun, versus slipping into 2027 or later.
+u3/clean-4 | How many advanced AI accelerators will Huawei, together with its chipmaking partner SMIC, produce in calendar 2026 (combined Huawei-designed Ascend output: 910B, 910C and the new 950PR line)? | The combined 2026 output of Huawei-designed AI chips manufactured at SMIC, in units, measured against the contested estimates in circulation (Nvidia's report: SMIC above 700,000 Ascend 910C by end-2026 at a 50,000-per-month run rate and several million 910B in 2027; Commerce Secretary Lutnick: 200,000 advanced chips for 2025; Chris McGuire: 800,000 910C in 2025, 2 million in 2026 and 4 million in 2027 as stress cases).
+u3/clean-5 | Will Nvidia actually resume selling H200 AI chips into China by Nvidia's FY2027 year-end — i.e., will Beijing permit Chinese commercial users to buy the chips the U.S. cleared for export in December 2025? | Whether H200 sales to Chinese customers take place (China data-center revenue returning above zero) versus Beijing keeping Nvidia locked out despite the U.S. approval.
+u3/clean-6 | What will the big four AI hyperscalers' combined data center capital expenditures be in calendar 2027, and will they approach the roughly $1 trillion level Nvidia projects for next year? | The combined 2027 data center capex of the big four AI hyperscalers, measured against Nvidia's ~$1 trillion projection and the 2026 level of ~$650 billion.
+u3/clean-7 | Will Nvidia's Kyber NVL144 rack-scale architecture — the rack system that houses its Rubin Ultra generation, the generation after Vera Rubin — reach first shipments in 2028, after SemiAnalysis reported the program has slipped more than 12 months from a planned 2027 debut? | First shipments of the Kyber NVL144 rack system (Rubin Ultra generation) in 2028 versus the original 2027 schedule, and whether the larger NVL576 multi-rack system ships in volume at all.
+u3/clean-8 | How large will NVIDIA's supply/purchase commitments (its obligations to buy components and locked-in capacity) be at its next annual report, and is the ~$119 billion level cited in this item growing faster than the revenue those commitments support? | The dollar amount of NVIDIA's supply/purchase commitments disclosed at its next annual report, measured against the ~$119 billion cited in this item.
+u3/clean-9 | Will the French competition authority conclude its antitrust investigation into Nvidia's cloud-AI and GPU practices with an adverse decision, fine or remedy, and by when? | The French competition authority's conclusion of its antitrust probe into Nvidia's alleged anti-competitive conduct in cloud-AI and GPU markets, including the decision date, finding and any fine or remedy imposed.
+u3/clean-10 | How much new high-bandwidth memory (HBM) production capacity will SK Hynix, Micron and Samsung bring online in calendar 2027, and will it arrive early enough to ease the current HBM shortage and record prices that gate NVIDIA's GPU output? | The combined new HBM capacity the three producers add in 2027 and whether any of it arrives before late 2027, easing the shortage; measured against the item's forecast that no new HBM supply arrives before late 2027.
+u3/clean-11 | Will custom ASIC AI accelerators designed by Broadcom and Marvell take a growing share of the big four hyperscalers' AI accelerator spending in calendar 2027, at Nvidia's expense, given their lower cost per gigawatt? | The split of big-four hyperscaler 2027 AI accelerator spending (and of the 19.5 GW of incremental compute capacity projected for 2027) between custom ASIC racks and Nvidia GPU racks, measured against the item's cost-per-gigawatt estimates of $6–11 billion for Broadcom/Marvell ASIC racks versus roughly $19 billion for Nvidia GB300-based racks and $25 billion under Vera Rubin.
+u3/clean-12 | How far will the US crackdown on advanced AI-chip exports to third countries escalate — will the US Commerce Department go beyond its May 2026 guidance and impose formal licensing requirements or other escalated restrictions on AI-chip shipments to third countries such as Malaysia, Singapore and Japan by Nvidia's FY2027 year-end? | Whether the US Commerce Department / Bureau of Industry and Security moves beyond its May 2026 guidance to a binding export-licensing rule or other escalated restriction on AI-chip shipments to third countries, and the resulting constraint on Nvidia's sales to those markets.
+acc/clean-1 | How much will Nvidia's commitments to suppliers (purchase obligations, primarily memory procurement) be at its next annual report, after rising to $279 billion in the second quarter from $119 billion the prior quarter? | The reported amount of Nvidia's commitments to suppliers / purchase obligations disclosed at its next annual report.
+acc/clean-2 | Will Nvidia complete its announced $12.9 billion acquisition of Hugging Face, the open-source AI model repository, by a check date within 18 months of the September 2026 announcement? | Whether Nvidia closes (or abandons/restructures) the announced $12.9 billion purchase of Hugging Face, an acquisition that would absorb cash and add a developer-platform asset.
+acc/clean-3 | How much will Nvidia have guaranteed or committed in credit support for AI infrastructure projects at its next annual report, after agreeing in August 2026 to provide guarantees of up to $105 billion for a data center project in Ohio? | The reported amount of Nvidia's guarantees / credit support for AI infrastructure projects, including the Ohio data center project, disclosed at its next annual report.
+acc/clean-4 | Will the combined capital expenditures of the top five hyperscalers approach $1.3 trillion in calendar 2027, as Nvidia expects? | The top five hyperscalers' combined reported capital expenditures for calendar 2027.
+acc/clean-5 | Will Nvidia's Vera Rubin platform, the next-generation system now in production and receiving purchase orders from hyperscalers, account for about 20% of the data center segment's revenue in fiscal Q3 2027, as management guided? | Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027 (the quarter management guided to roughly 20%).
+acc/clean-6 | Will server DRAM prices jump another 260% in calendar 2026, after rising 64% in the second half of 2025, as the item projects? | The change in server DRAM prices for calendar 2026 versus the prior period, as measured by industry server DRAM price data.
+acc/clean-7 | How much will Nvidia's commitments for future equity investments in AI and infrastructure companies be at its next annual report, after reporting $25 billion of such commitments at the end of fiscal Q2 2027? | The reported amount of Nvidia's commitments for future investments at its next annual report.
+acc/clean-8 | Will global high-bandwidth memory (HBM) shipments grow by approximately 50%-60% in calendar 2027, still falling short of demand, as the item projects? | Global HBM shipment growth and whether HBM supply remains short of demand in calendar 2027.
+acc/clean-9 | Will global semiconductor revenue reach roughly $975 billion in calendar 2026, including about $500 billion from AI chip sales, as Deloitte estimates? | Calendar 2026 global semiconductor industry revenue and the AI-chip portion of it, the aggregate that underpins demand for Nvidia's data center products.
+acc/clean-10 | Will NAND demand generated by Nvidia's CMX (Context Memory Storage) architecture, the storage tier built around its BlueField-4 DPU for long-context and agentic inference, exceed 100 million TB in calendar 2027, up from a projected 35 million TB in 2026? | The volume of NAND demand attributable to Nvidia's CMX architecture in calendar 2027, against the item's projection of more than 100 million TB (from 35 million TB in 2026), and whether memory makers' capacity additions keep pace with it.
+
+codex
+**NOT SOUND:** the passage generally follows D654, but it extends the shortage rule to whether a shortage *eases*, and the unchanged request still tells the model to decline cases D654 says to answer.
+
+For example, a shortage can ease while supply remains short. Those are different questions. D654 settles the latter alongside a supply figure; it does not establish a general rule for every question about easing.
+
+I compared [the two system texts](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt:5), [the stated sources and cut review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json), the [closing check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-closing.txt), [schema](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-schema.json), [cases](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json), and the cited [decisions](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9093). These are predictions from reading the request, not model results.
+
+### 1. Passage, clause by clause
+
+| Passage | Verdict and reason |
+|---|---|
+| “When the outcome tracks a figure and also names one of these second sides of the same bet … ask the figure, and list that second side in not_judged.” | **Consistent with D654.** It also implements D397’s requirement to list the parts left out. The phrase “not several things with none the main one” is an express exception to the system’s decline sentence on line 6. But the schema’s `no_ladder` description still independently says to decline “several with none the main one,” without that exception. The closing check likewise asks for “the one the topic’s outcome names” without explaining D654’s choice when the outcome names both sides without priority. These are request-level collisions. |
+| “The share of the figure that one kind makes up” | **Consistent with D654**, provided that the figure is the tracked total and the share is its side. |
+| “Whether supply stays short of demand … beside a figure that measures that supply or its growth” | **Consistent with D654** for the volume and shortage relationship. The same-bet and linked-supply wording matters: mere co-mention is insufficient. |
+| “Or whether a shortage eases” | **Keeps wider than D654.** Easing and remaining short are not equivalent: a shortage can narrow without disappearing. D436 supports the specific capacity-and-shortage case presented to Alex, but the cited record does not establish a general easing rule for every supply figure. |
+| “Whether capacity keeps pace with the demand that figure measures” | **Consistent with D654 and D436.** Demand is the figure; capacity is the side. |
+| “In each example the first is the question.” | **Consistent** for the orientations given. It does not itself waive the other decline conditions: the question must still have an allowed period and object. |
+| “When the outcome tracks the share itself, with the total only as its base, the share is the question” | **Consistent with D654.** It is the explicit counter-case to asking the total. |
+
+The demand example also agrees with the earlier system sentence “Never fold two things into one ladder”: the passage asks one figure and lists the other side, rather than putting both in the answer choices. The unresolved conflict is the unqualified *decline* wording in the system and schema, plus the closing check’s lack of the D654 exception.
+
+### 2. Four targets
+
+| Topic | Question a careful reading points to; listed alongside it | D436 |
+|---|---|---|
+| **acc/clean-8** | 2027 global HBM shipment growth; list whether HBM supply remains short of demand. | **Yes.** This is the named shipments-and-shortage shape. |
+| **acc/clean-9** | 2026 global semiconductor revenue; list the AI-chip portion. | **Yes.** This is the named total-and-share shape. |
+| **u3/clean-10** | 2027 combined new HBM capacity; list whether it arrives before late 2027 and eases the shortage, including the associated price condition. | **Yes for this specific case**, which was among those put to Alex. The passage’s general wording about shortage *easing* goes further than this case. |
+| **pool-17** | 2026 China AI-accelerator shipments in total; list the GPU versus non-GPU composition and the GPU decline comparison. | **Yes**, as total and composition. |
+
+For each, the schema and line 6 leave a competing literal instruction to decline when the outcome names both without saying which is main. Thus the table states the result **under the inserted D654 instruction**, not a guarantee that the complete request produces it.
+
+### 3. Six decline controls
+
+| Control | Result under the edited request | Is decline justified? |
+|---|---|---|
+| **week-10-06:c1/clean-4** | Decline: 2026 and 2027 are two annual figures with neither selected as main. | **Yes.** D654 does not choose between two years. |
+| **week-10-06:c1/clean-12** | Decline: the outcome names multiple years and comparisons without selecting one annual figure. | **Yes.** The share-of-GDP comparisons do not make the 2026 and 2027 spending totals one figure. |
+| **fortnight:c1/clean-8** | Decline because the listed themes do not cover global venture funding for robotics startups. | **Yes**, under the request’s object rule. The annual period itself is allowable; the missing theme is the reason. |
+| **pool-19** | Decline because the listed themes do not cover a broad federal AI-development ban and safety legislation. | **Yes**, under the object rule. `chip-export-controls` is not a general AI legislation theme. Its pending regulatory date alone would not require a decline. |
+| **u1/clean-9** | Decline: the tracked share covers a rolling 12 months and no follow-up publication day is given. | **Yes**, explicitly under D417, even though the share is the main question. |
+| **u2/clean-10** | The outcome asks whether capacity comes online and whether record prices persist; it does not track an annual supply figure with the shortage as its side. The edit does not settle which is main. | **A no-main decline remains justified** on that reading. It is a less clean control than the others because the description asks “how much” capacity, while the outcome frames capacity as whether it comes online. The passage does not authorize using the description to override that outcome. |
+
+The two entangled topics were not counted as controls.
+
+### 4. D631’s six boundary cases
+
+The passage does **not** choose a main part in any of these cases:
+
+| Case | Why D654’s shapes do not choose |
+|---|---|
+| Optical-switch shipments | Several shipment checkpoints and periods; no total-and-share, supply-and-shortage, or demand-and-capacity pair. |
+| Chip sales into China | Two authorities’ decisions and a revenue consequence; not one of the three shapes. |
+| Acquisition | Agreement, closing, consideration and conditions; not one of the three shapes. |
+| Investment commitments | Remaining balance, cash funded and changes in commitments; no specified total with a kind’s share of it. |
+| Memory prices | Price changes, selling prices and margins; related figures, but not a D654 pair. |
+| Chip export licence | Licence status and resumed revenue; neither is a D654 pair. |
+
+The edit therefore does not introduce a description-priority rule for these six.
+
+### 5. Examples
+
+- **Against the 44 test topics:** the steel-mill shipments and shortage example has the same structure as **acc/clean-8**. The drug maker’s total sales and largest medicine’s portion has the same structure as **acc/clean-9**. The utility’s demand and capacity example has the same structure as **acc/clean-10**. The industries, products and numbers are different, and I found no example copied from a test article. Sharing the general structure is expected when teaching the very shapes D654 names; it should not be described as an absence of structural mirroring.
+- **Across industries:** the rule is expressed in terms of totals, shares, supply, demand and capacity, and can apply to a bank, drug maker, retailer or chip maker where those quantities exist. The individual examples use industry-specific nouns but do not make those nouns a condition of the rule.
+- **Orientation:** both total/share examples ask the total; both supply examples ask the supply figure; both capacity examples ask demand or demand volume. That agrees with D436’s orientation. The fertilizer example nonetheless teaches the wider **easing** proposition identified above.
+
+### 6. Growth
+
+The recorded figures are **9,545 → 10,836 characters** and **2,031 → 2,302 tokens**. A written reason is supplied: D654 adds a previously absent rule, the classes need examples, and cuts can themselves change behavior. The cited [council-loop warning](/Users/lchingen/hivemind/.claude/skills/council-loop/SKILL.md:158) supports allowing justified growth instead of making an untested cut merely to meet a length target.
+
+The review is **not yet sufficient as the whole-request review** required by [AGENTS §6](/Users/lchingen/hivemind/AGENTS.md:194). It examines system lines, but does not address the unchanged schema’s conflicting decline description or the closing check’s ambiguous restatement. It also does not show a review of the fixed user text and payload for contradictions, unnecessary fields or possible merges. A system-line review alone cannot establish that there is nowhere else to cut, merge or reconcile. This is a deficiency in the justification, not a demand for an arbitrary length-neutral cut.
+
+### 7. Share-centred counterexample
+
+For **u3/clean-11**, the inserted counter-case directs the model to ask the custom-ASIC share of hyperscaler accelerator spending, rather than total spending. It should list the separate capacity split and cost comparisons left out.
+
+There is still a separate question about which of the multiple splits the outcome makes main; D654 does not resolve all of that topic’s possible choices. The counterexample establishes that **switching to total spending is not authorized**.
+
+### 8. Same-bet trigger and counter-case
+
+The three listed relationships are tied to the tracked figure: the share is **of the figure**, the shortage is beside a figure measuring **that supply or its growth**, and capacity keeps pace with **the demand that figure measures**. “Second sides of the same bet” further restricts the trigger. Two unrelated things merely mentioned together do not satisfy it.
+
+The main sentence and the share counter-case are consistent: when the tracked figure is the total, ask the total; when the outcome tracks the share and the total is only its base, ask the share. The problem is not that distinction. It is the additional general “shortage eases” clause, and the unchanged decline and closing instructions that do not carry the D654 exception.
+
+**NOT SOUND: remove the general “shortage eases” extension, reconcile the decline and closing instructions with D654, and complete the whole-request cut review.**
+tokens used
+54,295
+**NOT SOUND:** the passage generally follows D654, but it extends the shortage rule to whether a shortage *eases*, and the unchanged request still tells the model to decline cases D654 says to answer.
+
+For example, a shortage can ease while supply remains short. Those are different questions. D654 settles the latter alongside a supply figure; it does not establish a general rule for every question about easing.
+
+I compared [the two system texts](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt:5), [the stated sources and cut review](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json), the [closing check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-closing.txt), [schema](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-schema.json), [cases](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json), and the cited [decisions](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9093). These are predictions from reading the request, not model results.
+
+### 1. Passage, clause by clause
+
+| Passage | Verdict and reason |
+|---|---|
+| “When the outcome tracks a figure and also names one of these second sides of the same bet … ask the figure, and list that second side in not_judged.” | **Consistent with D654.** It also implements D397’s requirement to list the parts left out. The phrase “not several things with none the main one” is an express exception to the system’s decline sentence on line 6. But the schema’s `no_ladder` description still independently says to decline “several with none the main one,” without that exception. The closing check likewise asks for “the one the topic’s outcome names” without explaining D654’s choice when the outcome names both sides without priority. These are request-level collisions. |
+| “The share of the figure that one kind makes up” | **Consistent with D654**, provided that the figure is the tracked total and the share is its side. |
+| “Whether supply stays short of demand … beside a figure that measures that supply or its growth” | **Consistent with D654** for the volume and shortage relationship. The same-bet and linked-supply wording matters: mere co-mention is insufficient. |
+| “Or whether a shortage eases” | **Keeps wider than D654.** Easing and remaining short are not equivalent: a shortage can narrow without disappearing. D436 supports the specific capacity-and-shortage case presented to Alex, but the cited record does not establish a general easing rule for every supply figure. |
+| “Whether capacity keeps pace with the demand that figure measures” | **Consistent with D654 and D436.** Demand is the figure; capacity is the side. |
+| “In each example the first is the question.” | **Consistent** for the orientations given. It does not itself waive the other decline conditions: the question must still have an allowed period and object. |
+| “When the outcome tracks the share itself, with the total only as its base, the share is the question” | **Consistent with D654.** It is the explicit counter-case to asking the total. |
+
+The demand example also agrees with the earlier system sentence “Never fold two things into one ladder”: the passage asks one figure and lists the other side, rather than putting both in the answer choices. The unresolved conflict is the unqualified *decline* wording in the system and schema, plus the closing check’s lack of the D654 exception.
+
+### 2. Four targets
+
+| Topic | Question a careful reading points to; listed alongside it | D436 |
+|---|---|---|
+| **acc/clean-8** | 2027 global HBM shipment growth; list whether HBM supply remains short of demand. | **Yes.** This is the named shipments-and-shortage shape. |
+| **acc/clean-9** | 2026 global semiconductor revenue; list the AI-chip portion. | **Yes.** This is the named total-and-share shape. |
+| **u3/clean-10** | 2027 combined new HBM capacity; list whether it arrives before late 2027 and eases the shortage, including the associated price condition. | **Yes for this specific case**, which was among those put to Alex. The passage’s general wording about shortage *easing* goes further than this case. |
+| **pool-17** | 2026 China AI-accelerator shipments in total; list the GPU versus non-GPU composition and the GPU decline comparison. | **Yes**, as total and composition. |
+
+For each, the schema and line 6 leave a competing literal instruction to decline when the outcome names both without saying which is main. Thus the table states the result **under the inserted D654 instruction**, not a guarantee that the complete request produces it.
+
+### 3. Six decline controls
+
+| Control | Result under the edited request | Is decline justified? |
+|---|---|---|
+| **week-10-06:c1/clean-4** | Decline: 2026 and 2027 are two annual figures with neither selected as main. | **Yes.** D654 does not choose between two years. |
+| **week-10-06:c1/clean-12** | Decline: the outcome names multiple years and comparisons without selecting one annual figure. | **Yes.** The share-of-GDP comparisons do not make the 2026 and 2027 spending totals one figure. |
+| **fortnight:c1/clean-8** | Decline because the listed themes do not cover global venture funding for robotics startups. | **Yes**, under the request’s object rule. The annual period itself is allowable; the missing theme is the reason. |
+| **pool-19** | Decline because the listed themes do not cover a broad federal AI-development ban and safety legislation. | **Yes**, under the object rule. `chip-export-controls` is not a general AI legislation theme. Its pending regulatory date alone would not require a decline. |
+| **u1/clean-9** | Decline: the tracked share covers a rolling 12 months and no follow-up publication day is given. | **Yes**, explicitly under D417, even though the share is the main question. |
+| **u2/clean-10** | The outcome asks whether capacity comes online and whether record prices persist; it does not track an annual supply figure with the shortage as its side. The edit does not settle which is main. | **A no-main decline remains justified** on that reading. It is a less clean control than the others because the description asks “how much” capacity, while the outcome frames capacity as whether it comes online. The passage does not authorize using the description to override that outcome. |
+
+The two entangled topics were not counted as controls.
+
+### 4. D631’s six boundary cases
+
+The passage does **not** choose a main part in any of these cases:
+
+| Case | Why D654’s shapes do not choose |
+|---|---|
+| Optical-switch shipments | Several shipment checkpoints and periods; no total-and-share, supply-and-shortage, or demand-and-capacity pair. |
+| Chip sales into China | Two authorities’ decisions and a revenue consequence; not one of the three shapes. |
+| Acquisition | Agreement, closing, consideration and conditions; not one of the three shapes. |
+| Investment commitments | Remaining balance, cash funded and changes in commitments; no specified total with a kind’s share of it. |
+| Memory prices | Price changes, selling prices and margins; related figures, but not a D654 pair. |
+| Chip export licence | Licence status and resumed revenue; neither is a D654 pair. |
+
+The edit therefore does not introduce a description-priority rule for these six.
+
+### 5. Examples
+
+- **Against the 44 test topics:** the steel-mill shipments and shortage example has the same structure as **acc/clean-8**. The drug maker’s total sales and largest medicine’s portion has the same structure as **acc/clean-9**. The utility’s demand and capacity example has the same structure as **acc/clean-10**. The industries, products and numbers are different, and I found no example copied from a test article. Sharing the general structure is expected when teaching the very shapes D654 names; it should not be described as an absence of structural mirroring.
+- **Across industries:** the rule is expressed in terms of totals, shares, supply, demand and capacity, and can apply to a bank, drug maker, retailer or chip maker where those quantities exist. The individual examples use industry-specific nouns but do not make those nouns a condition of the rule.
+- **Orientation:** both total/share examples ask the total; both supply examples ask the supply figure; both capacity examples ask demand or demand volume. That agrees with D436’s orientation. The fertilizer example nonetheless teaches the wider **easing** proposition identified above.
+
+### 6. Growth
+
+The recorded figures are **9,545 → 10,836 characters** and **2,031 → 2,302 tokens**. A written reason is supplied: D654 adds a previously absent rule, the classes need examples, and cuts can themselves change behavior. The cited [council-loop warning](/Users/lchingen/hivemind/.claude/skills/council-loop/SKILL.md:158) supports allowing justified growth instead of making an untested cut merely to meet a length target.
+
+The review is **not yet sufficient as the whole-request review** required by [AGENTS §6](/Users/lchingen/hivemind/AGENTS.md:194). It examines system lines, but does not address the unchanged schema’s conflicting decline description or the closing check’s ambiguous restatement. It also does not show a review of the fixed user text and payload for contradictions, unnecessary fields or possible merges. A system-line review alone cannot establish that there is nowhere else to cut, merge or reconcile. This is a deficiency in the justification, not a demand for an arbitrary length-neutral cut.
+
+### 7. Share-centred counterexample
+
+For **u3/clean-11**, the inserted counter-case directs the model to ask the custom-ASIC share of hyperscaler accelerator spending, rather than total spending. It should list the separate capacity split and cost comparisons left out.
+
+There is still a separate question about which of the multiple splits the outcome makes main; D654 does not resolve all of that topic’s possible choices. The counterexample establishes that **switching to total spending is not authorized**.
+
+### 8. Same-bet trigger and counter-case
+
+The three listed relationships are tied to the tracked figure: the share is **of the figure**, the shortage is beside a figure measuring **that supply or its growth**, and capacity keeps pace with **the demand that figure measures**. “Second sides of the same bet” further restricts the trigger. Two unrelated things merely mentioned together do not satisfy it.
+
+The main sentence and the share counter-case are consistent: when the tracked figure is the total, ask the total; when the outcome tracks the share and the total is only its base, ask the share. The problem is not that distinction. It is the additional general “shortage eases” clause, and the unchanged decline and closing instructions that do not carry the D654 exception.
+
+**NOT SOUND: remove the general “shortage eases” extension, reconcile the decline and closing instructions with D654, and complete the whole-request cut review.**

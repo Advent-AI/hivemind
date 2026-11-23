@@ -1,0 +1,437 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 22, confirmation only (read-only, $0)
+
+Round 21 (`tools-review-codex-21.md`) found no verdict or report change from edited derived files. It found one gap: the import path
+was not restored after a failure during setup.
+
+The fix is in `git log -1` and D675's last entry. `score` in `stage0/score_comparison.py` and `scored` in `stage0/rebuild.py` now:
+- save the path before their first import;
+- restore it on every exit.
+
+The dry run (`stage0/chain-dry-run.txt`) adds a failed setup, a missing confirmation record, and shows the path restored after it.
+
+Check, citing file and line:
+1. Is the import path restored on every exit, including a failure before or during setup?
+2. Has anything you confirmed in round 21 changed?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 150 words. Report only a case of kind 1 or 2.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check that both entry points restore the import path when an import or setup step fails, and compare the changes with round 21.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba rebuild.py | sed -n '41,142p'
+nl -ba score_comparison.py | tail -35
+nl -ba chain-dry-run.txt
+nl -ba ../../../DECISIONS-log.md | tail -26
+nl -ba chain_dry_run.py | tail -72" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+    41	    return confirmed
+    42	
+    43	
+    44	def without_paths(readings):
+    45	    """The readings with the input file paths left out (the fingerprints stay): the rebuilt snapshot lives in a temporary folder."""
+    46	    inputs = {k: v for k, v in readings.get('inputs', {}).items() if not k.endswith('_path')}
+    47	    return json.dumps(dict(readings, inputs=inputs), sort_keys=True, ensure_ascii=False)
+    48	
+    49	
+    50	def scored(run_root, mapping_out, deck_folder, key_folder, score):
+    51	    """Rebuilds the chain from the primary data in a temporary folder, refuses any stored derived file (and the readings record) that
+    52	    differs, and returns `score(readings)` on the readings built from the rebuilt snapshot, never on the stored files, while the snapshot
+    53	    still exists. Progress printed by the rebuilding code goes to stderr; module attributes and the import path are restored."""
+    54	    saved_path = list(sys.path)
+    55	    try:
+    56	        return scored_in(run_root, Path(mapping_out), Path(deck_folder), Path(key_folder), score)
+    57	    finally:
+    58	        sys.path[:] = saved_path                                # restored on every exit, a failure during setup included
+    59	
+    60	
+    61	def scored_in(run_root, mapping_out, deck_folder, key_folder, score):
+    62	    import census_readers
+    63	    import eligibility
+    64	    import mapping
+    65	    import mark_cards
+    66	    saved = (mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run)
+    67	
+    68	    def no_reader(family, prompt):
+    69	        raise SystemExit('refused: a rebuild never calls a reader')
+    70	    with tempfile.TemporaryDirectory() as scratch:
+    71	        scratch = Path(scratch)
+    72	        keys, out, deck = scratch / 'keys', scratch / 'mapping-out', scratch / 'deck'
+    73	        try:
+    74	            confirmed = replay(key_folder / 'control-confirmations.jsonl')
+    75	            mapping.KEY_FOLDER = keys                               # mark_cards reads the same module's KEY_FOLDER
+    76	            mark_cards.KEY = keys / 'deck-key.json'
+    77	            census_readers.run = no_reader
+    78	            mark_cards.confirmed_by_reader = confirmed
+    79	            with contextlib.redirect_stdout(sys.stderr):
+    80	                eligibility.write(eligibility.check(run_root), scratch / 'eligibility.json')
+    81	                mapping.export(run_root, out, scratch / 'eligibility.json')
+    82	                for answer in mapping_out.glob('map-L*-*.txt'):
+    83	                    shutil.copy2(answer, out / answer.name)
+    84	                if (mapping_out / 'third').is_dir():
+    85	                    shutil.copytree(mapping_out / 'third', out / 'third')
+    86	                mapping.result(out)
+    87	                mark_cards.deck(out, deck)
+    88	                if confirmed.remaining():
+    89	                    raise SystemExit('refused: the recorded control confirmations hold more than the deck the inputs rebuild asks for')
+    90	                for marks in deck_folder.glob('round-*'):           # the readers' card marks, rounds 0-2, and their completion markers
+    91	                    (shutil.copytree if marks.is_dir() else shutil.copy2)(marks, deck / marks.name)
+    92	                readings = mark_cards.build_readings(out, deck)
+    93	            differ = []
+    94	            json_pairs = [(out / 'eligibility.json', mapping_out / 'eligibility.json'), (out / 'mapping.json', mapping_out / 'mapping.json'),
+    95	                          (keys / 'mapping-key.json', key_folder / 'mapping-key.json'), (keys / 'deck-key.json', key_folder / 'deck-key.json')]
+    96	            json_pairs += [(p, mapping_out / p.name) for p in sorted(out.glob('library-L*.json'))]
+    97	            for rebuilt, stored in json_pairs:
+    98	                if not stored.exists() or canonical(rebuilt) != canonical(stored):
+    99	                    differ.append(str(stored))
+   100	            if {p.name for p in mapping_out.glob('library-L*.json')} != {p.name for p in out.glob('library-L*.json')}:
+   101	                differ.append(f'{mapping_out}/library-L*.json (a different set of libraries)')
+   102	            rebuilt_cards = {p.name: p.read_bytes() for p in deck.glob('C*.txt')}
+   103	            stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}
+   104	            differ += [str(deck_folder / name) for name in sorted(set(rebuilt_cards) | set(stored_cards))
+   105	                       if rebuilt_cards.get(name) != stored_cards.get(name)]
+   106	            record = deck_folder / 'readings.json'
+   107	            if not record.exists() or without_paths(json.loads(record.read_text())) != without_paths(readings):
+   108	                differ.append(str(record))
+   109	            if differ:
+   110	                raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
+   111	            return score(readings)
+   112	        finally:
+   113	            mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
+   512	            flags.append(f'countings: {type(error).__name__}: {error}')
+   513	        if flags:
+   514	            report['diagnostics not computed'] = '; '.join(flags)
+   515	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   516	    per_counting = countings()
+   517	    shown = beside(readings, per_counting)
+   518	    shown.update(printed_beside(readings, per_counting))
+   519	    report['margin'] = margin
+   520	    report['countings'] = per_counting
+   521	    report['beside'] = shown
+   522	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   523	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   524	    if lead and all_exercised_pass:
+   525	        return dict(report, verdict='practical lead')
+   526	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   527	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   528	    if loss_count or breaches:
+   529	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   530	    return dict(report, verdict='no practical winner')
+   531	
+   532	
+   533	def score(run_root, mapping_out, folder):
+   534	    """The scorer's entry: the reading chain is rebuilt from the primary data, any stored derived file or readings record that differs
+   535	    is refused, and the verdict is computed on the readings built from the rebuilt snapshot (`rebuild.scored`)."""
+   536	    saved_path = list(sys.path)                               # restored on every exit, before the first import
+   537	    try:
+   538	        import mapping
+   539	        import rebuild
+   540	        return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
+   541	    finally:
+   542	        sys.path[:] = saved_path
+   543	
+   544	
+   545	if __name__ == '__main__':
+   546	    print(json.dumps(score(sys.argv[1], sys.argv[2], sys.argv[3]), indent=1, ensure_ascii=False, default=str))
+     1	VERDICT too small ['new-1: (4, 4) distinct bets', 'new-2: (4, 4) distinct bets', 'new-3: (4, 4) distinct bets', 'old-1: (2, 2) distinct bets', 'old-2: (2, 2) distinct bets', 'old-3: (2, 2) distinct bets']
+     2	EDIT REFUSED mapping.json True True
+     3	EDIT REFUSED deck-key.json True True
+     4	EDIT REFUSED C001.txt True True
+     5	EDIT REFUSED readings.json True
+     6	SCORED FROM SNAPSHOT True
+     7	REBUILD STDOUT EMPTY True
+     8	IMPORT PATH RESTORED True
+     9	IMPORT PATH RESTORED AFTER A FAILED SETUP True
+    10	sessions {'read': 12, 'third': 12, 'mark': 62, 'debate': 20, 'other': 0}
+    11	D400 code check not measured
+  9976	  - **Checks:** the chain dry run now runs in process and restores what it replaces. It scores the unedited chain, and refuses an
+  9977	    edited mapping, deck key or card text, each with the readings record rewritten as Codex did.
+  9978	  - **A test leak, fixed:** `seal` had left the scorer pointing at a test matter list. An autouse fixture now restores it.
+  9979	  - **Totals:** 101 tests; 71 mutants, all as predicted.
+  9980	- **Round 20 (Codex, `tools-review-codex-20.md`).** The round-19 rebuild still read the stored files after comparing them. Codex
+  9981	  reported three problems:
+  9982	  - a file changed between the check and the scoring could still flip a verdict, and stored key order could reorder the printed reasons;
+  9983	  - fresh imports left additions to the import path;
+  9984	  - rebuild progress went to stdout, so the command line printed more than the verdict.
+  9985	
+  9986	  Fixes:
+  9987	  - `rebuild.scored` now computes the verdict on the readings built from the rebuilt snapshot, while the snapshot still exists, and never
+  9988	    reads the stored files for it. The stored derived files, including the readings record, are records only: one that differs is
+  9989	    refused.
+  9990	  - Progress goes to stderr, and the import path is restored.
+  9991	
+  9992	  Checks:
+  9993	  - The dry run edits each derived file twice: once with the record rewritten from the edit, once without. Both are refused.
+  9994	  - It shows the verdict reads only the snapshot, that stdout carries no progress, and that the import path is unchanged.
+  9995	  - 101 tests and 74 mutants, all as predicted.
+  9996	- **Round 21 (Codex, `tools-review-codex-21.md`):**
+  9997	  - **No change to a verdict or a printed value remains** from edits to stored derived files.
+  9998	  - **A gap remained in restoring the import path.** The scorer imported before saving the path, and a failure during setup (a missing
+  9999	    confirmation record) left six entries on it.
+ 10000	  - **Fix:** both `score` and `rebuild.scored` now save the path before their first import and restore it on every exit.
+ 10001	  - **The dry run now also checks a failed setup.** Results: 101 tests and 75 mutants, all as predicted.
+   129	        19), and with the record left as it was (so only the file's own comparison can see the edit). Records whether the scorer refused
+   130	        each, and restores both files."""
+   131	        original, readings_record = path.read_bytes(), (deck / 'readings.json').read_bytes()
+   132	        refused = []
+   133	        for rewrite_record in (True, False):
+   134	            change(path)
+   135	            if rewrite_record:
+   136	                mark_cards.readings(out, deck)
+   137	            try:
+   138	                score_comparison.score(root, out, deck)
+   139	                refused.append('scored')
+   140	            except SystemExit as refusal:
+   141	                refused.append(str('derived files differ' in str(refusal)))
+   142	            finally:
+   143	                path.write_bytes(original)
+   144	                (deck / 'readings.json').write_bytes(readings_record)
+   145	        lines.append(f"EDIT {'REFUSED' if 'scored' not in refused else 'SCORED'} {path.name} {' '.join(refused)}")
+   146	
+   147	    def bump_distinct(path):
+   148	        data = json.loads(path.read_text())
+   149	        data['distinct']['new-1']['ids'] += 1
+   150	        path.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
+   151	
+   152	    def move_opened(path):
+   153	        data = json.loads(path.read_text())
+   154	        cid = next(c for c, k in data.items() if k['role'] == 'product')
+   155	        data[cid]['opened'] = '2026-09-19'
+   156	        path.write_text(json.dumps(data, indent=1) + '\n')
+   157	
+   158	    edited(out / 'mapping.json', bump_distinct)                 # Codex round 19
+   159	    edited(mark_cards.KEY, move_opened)
+   160	    edited(deck / 'C001.txt', lambda p: p.write_text(p.read_text() + ' edited'))
+   161	    record, original = deck / 'readings.json', (deck / 'readings.json').read_bytes()
+   162	    data = json.loads(original)
+   163	    data['distinct']['new-1']['ids'] += 1                      # the record alone, not rewritten by its writer
+   164	    record.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
+   165	    try:
+   166	        score_comparison.score(root, out, deck)
+   167	        lines.append('EDIT SCORED readings.json')
+   168	    except SystemExit as refusal:
+   169	        lines.append(f"EDIT REFUSED readings.json {'derived files differ' in str(refusal)}")
+   170	    finally:
+   171	        record.write_bytes(original)
+   172	    import contextlib
+   173	    import io
+   174	    import rebuild
+   175	    path_before, printed = list(sys.path), io.StringIO()
+   176	    with contextlib.redirect_stdout(printed):
+   177	        scored_from = rebuild.scored(root, out, deck, mapping.KEY_FOLDER, lambda readings: readings['inputs']['mapping_path'])
+   178	    lines.append(f'SCORED FROM SNAPSHOT {not scored_from.startswith(str(out))}')   # the verdict reads the rebuilt files, never the stored
+   179	    lines.append(f'REBUILD STDOUT EMPTY {printed.getvalue() == ""}')                # progress goes to stderr; stdout carries only the verdict
+   180	    lines.append(f'IMPORT PATH RESTORED {sys.path == path_before}')
+   181	    confirmations = mapping.KEY_FOLDER / 'control-confirmations.jsonl'
+   182	    kept = confirmations.read_bytes()
+   183	    confirmations.unlink()                                      # a failure during setup (Codex round 21)
+   184	    try:
+   185	        score_comparison.score(root, out, deck)
+   186	    except (SystemExit, OSError):
+   187	        pass
+   188	    finally:
+   189	        confirmations.write_bytes(kept)
+   190	    lines.append(f'IMPORT PATH RESTORED AFTER A FAILED SETUP {sys.path == path_before}')
+   191	    lines.append(f'sessions {calls}')
+   192	    result, status = d400_code_check.check(root, eligible)
+   193	    lines.append(f'D400 code check {status}')
+   194	    return lines
+   195	
+   196	
+   197	if __name__ == '__main__':
+   198	    if len(sys.argv) != 2:
+   199	        raise SystemExit('usage: python3 chain_dry_run.py <scratch folder outside the repository>')
+   200	    print('\n'.join(run(sys.argv[1])))
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/rebuild.py docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py" in /Users/lchingen/hivemind
+ succeeded in 2779ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-iC638jAK' (errno=Operation not permitted)
+2026-11-18 13:58:35.920 xcodebuild[60155:60209633]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:58:36.090 xcodebuild[60155:60209632] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-aMJPUWG7' (errno=Operation not permitted)
+2026-11-18 13:58:36.450 xcodebuild[60157:60209646]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:58:36.566 xcodebuild[60157:60209645] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+01f821ff Import path saved before the first import and restored on every exit of the scorer and the rebuild (D675, Codex round 21)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-kzKAKRyV' (errno=Operation not permitted)
+2026-11-18 13:58:37.336 xcodebuild[60163:60209683]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:58:37.453 xcodebuild[60163:60209682] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-OBv7jHOb' (errno=Operation not permitted)
+2026-11-18 13:58:37.800 xcodebuild[60165:60209776]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:58:37.921 xcodebuild[60165:60209775] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 01f821ff4af4733b8451aef2d8577889f6a9dd2e
+Author: Alex Lee <alex@adventai.io>
+
+    Import path saved before the first import and restored on every exit of the scorer and the rebuild (D675, Codex round 21)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py b/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
+index d78ff3be..92dd0b78 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
+@@ -178,6 +178,16 @@ def chain(scratch):
+     lines.append(f'SCORED FROM SNAPSHOT {not scored_from.startswith(str(out))}')   # the verdict reads the rebuilt files, never the stored
+     lines.append(f'REBUILD STDOUT EMPTY {printed.getvalue() == ""}')                # progress goes to stderr; stdout carries only the verdict
+     lines.append(f'IMPORT PATH RESTORED {sys.path == path_before}')
++    confirmations = mapping.KEY_FOLDER / 'control-confirmations.jsonl'
++    kept = confirmations.read_bytes()
++    confirmations.unlink()                                      # a failure during setup (Codex round 21)
++    try:
++        score_comparison.score(root, out, deck)
++    except (SystemExit, OSError):
++        pass
++    finally:
++        confirmations.write_bytes(kept)
++    lines.append(f'IMPORT PATH RESTORED AFTER A FAILED SETUP {sys.path == path_before}')
+     lines.append(f'sessions {calls}')
+     result, status = d400_code_check.check(root, eligible)
+     lines.append(f'D400 code check {status}')
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/rebuild.py b/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
+index 187f58ca..8823ec4e 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
+@@ -52,11 +52,17 @@ def scored(run_root, mapping_out, deck_folder, key_folder, score):
+     differs, and returns `score(readings)` on the readings built from the rebuilt snapshot, never on the stored files, while the snapshot
+     still exists. Progress printed by the rebuilding code goes to stderr; module attributes and the import path are restored."""
+     saved_path = list(sys.path)
++    try:
++        return scored_in(run_root, Path(mapping_out), Path(deck_folder), Path(key_folder), score)
++    finally:
++        sys.path[:] = saved_path                                # restored on every exit, a failure during setup included
++
++
++def scored_in(run_root, mapping_out, deck_folder, key_folder, score):
+     import census_readers
+     import eligibility
+     import mapping
+     import mark_cards
+-    mapping_out, deck_folder, key_folder = Path(mapping_out), Path(deck_folder), Path(key_folder)
+     saved = (mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run)
+ 
+     def no_reader(family, prompt):
+@@ -64,8 +70,8 @@ def scored(run_root, mapping_out, deck_folder, key_folder, score):
+     with tempfile.TemporaryDirectory() as scratch:
+         scratch = Path(scratch)
+         keys, out, deck = scratch / 'keys', scratch / 'mapping-out', scratch / 'deck'
+-        confirmed = replay(key_folder / 'control-confirmations.jsonl')
+         try:
++            confirmed = replay(key_folder / 'control-confirmations.jsonl')
+             mapping.KEY_FOLDER = keys                               # mark_cards reads the same module's KEY_FOLDER
+             mark_cards.KEY = keys / 'deck-key.json'
+             census_readers.run = no_reader
+@@ -105,4 +111,3 @@ def scored(run_root, mapping_out, deck_folder, key_folder, score):
+             return score(readings)
+         finally:
+             mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
+-            sys.path[:] = saved_path
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index 7158b151..e0509c50 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -533,9 +533,13 @@ def verdict(readings):
+ def score(run_root, mapping_out, folder):
+     """The scorer's entry: the reading chain is rebuilt from the primary data, any stored derived file or readings record that differs
+     is refused, and the verdict is computed on the readings built from the rebuilt snapshot (`rebuild.scored`)."""
+-    import mapping
+-    import rebuild
+-    return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
++    saved_path = list(sys.path)                               # restored on every exit, before the first import
++    try:
++        import mapping
++        import rebuild
++        return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
++    finally:
++        sys.path[:] = saved_path
+ 
+ 
+ if __name__ == '__main__':
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import builtins, contextlib, sys
+import rebuild, score_comparison as scorer
+
+def assert_exit(entry, exc, label):
+    before=sys.path.copy()
+    try:
+        entry()
+    except exc:
+        pass
+    else:
+        raise AssertionError(\"expected failure did not occur\")
+    assert sys.path==before
+    print(label, \"restored sys.path\")
+
+def assert_import_failure(entry, fail_on):
+    original_import=builtins.__import__
+    def fail_import(name, *args, **kwargs):
+        if name == fail_on:
+            sys.path.append(\"/synthetic/import-in-progress\")
+            raise ImportError(\"injected first import failure\")
+        return original_import(name, *args, **kwargs)
+    builtins.__import__=fail_import
+    try:
+        assert_exit(entry, ImportError, fail_on + \" import failure\")
+    finally:
+        builtins.__import__=original_import
+
+scorer_call=lambda:scorer.score(\"/synthetic/run\",\"/synthetic/map\",\"/synthetic/deck\")
+rebuild_call=lambda:rebuild.scored(\"/synthetic/run\",\"/synthetic/map\",\"/synthetic/deck\",\"/synthetic/keys\",lambda r:r)
+assert_import_failure(scorer_call,\"mapping\")
+assert_import_failure(rebuild_call,\"census_readers\")
+rebuild.tempfile.TemporaryDirectory=lambda:contextlib.nullcontext(\"/in-memory\")
+class MemoryPath:
+    def __init__(self,path): self.path=str(path)
+    def __truediv__(self,part): return MemoryPath(self.path+\"/\"+part)
+    def read_text(self): raise FileNotFoundError(self.path)
+rebuild.Path=MemoryPath
+assert_exit(scorer_call, FileNotFoundError, \"Cold scoring with a missing confirmation record\")
+assert_exit(rebuild_call, FileNotFoundError, \"Direct rebuild with a missing confirmation record\")
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 1311ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-QSmvJdRz' (errno=Operation not permitted)
+2026-11-18 13:59:03.324 xcodebuild[60217:60210550]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:59:03.441 xcodebuild[60217:60210549] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-q1VmC7hw' (errno=Operation not permitted)
+2026-11-18 13:59:03.782 xcodebuild[60219:60210573]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:59:03.899 xcodebuild[60219:60210571] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+mapping import failure restored sys.path
+census_readers import failure restored sys.path
+Cold scoring with a missing confirmation record restored sys.path
+Direct rebuild with a missing confirmation record restored sys.path
+
+codex
+1. Both entry points now restore `sys.path` on return or exception. I verified this in memory by forcing the first import to fail in each entry point and by repeating the missing-confirmation case from a fresh process. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533) · [Rebuild](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:50)
+2. The round‑21 confirmations still hold. Scoring uses the rebuilt snapshot, edited records are refused, and rebuild progress stays off stdout. The dry run reports the same `too small` verdict and counts. [Dry-run record](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1)
+
+READY
+tokens used
+4,509,314
+1. Both entry points now restore `sys.path` on return or exception. I verified this in memory by forcing the first import to fail in each entry point and by repeating the missing-confirmation case from a fresh process. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533) · [Rebuild](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:50)
+2. The round‑21 confirmations still hold. Scoring uses the rebuilt snapshot, edited records are refused, and rebuild progress stays off stdout. The dry run reports the same `too small` verdict and counts. [Dry-run record](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1)
+
+READY

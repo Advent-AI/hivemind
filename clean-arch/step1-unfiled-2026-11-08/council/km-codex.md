@@ -1,0 +1,35 @@
+The baseline is useful as a description of these stored judgments, but it does not yet support treating 3%, 8% and 100% as precise quality targets for the paid test.
+
+1. The counts in [count.txt](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/result/count.txt) match the verdict rows: 147 supported, 4 unsupported, 7 insufficient and 1 unresolved. I checked these keyed judgments:
+
+   - **Financing, draw 1, fifth judgment (item 41):** both readers call it unsupported. The answer counts NVIDIA’s $30 billion participation as outstanding; its source describes money already spent. The readers differ on whether the remaining material points to rung 1 or no rung, but agree on the verdict.
+   - **Custom silicon, draw 2, first judgment (item 11):** the first readers split between insufficient and unsupported; both third readers rule unsupported because absence of a quantified total was used to choose the lowest rung.
+   - **Custom silicon, draw 2, fourth judgment (item 33):** the first and third readers split. The report correctly leaves it unresolved. I share the concern that the same Broadcom figures were used to justify a higher rung without a clear bridge.
+   - **Rubin shipments, draw 2, first judgment (item 2):** both support Yes, citing full production and the stated outlook for shipping that year. That verdict follows the form’s forecast test.
+   - **Kyber, draw 2, tenth judgment (item 4):** both support No, relying on the specific reported delay while considering NVIDIA’s roadmap as a counterweight. One reader separately faults the reference; that does not automatically invalidate the rung under this form.
+
+   One further boundary matters: on **custom silicon’s second judgment, item 77**, the first readers split, but both third readers support the $40–60 billion forecast. The discount from Broadcom’s broader AI revenue is not quantified. The verdict is recorded correctly, yet “sound on figures once a sized comparable is in view” in [RESULT.md](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/RESULT.md) is stronger than that evidence. A number being available does not itself establish the rung.
+
+2. Both changes are disclosed in [BASELINE.md](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/BASELINE.md). Re-reading all 40 packets with Opus avoids mixing the six Fable readings into the second family’s count. The Fable trial does not validate Opus’s interpretation, but Opus caught all six plants in the actual reading. The record says the switch occurred before verdicts were examined; the session log alone cannot prove that.
+
+   Relaxing the rung check was substantively justified for test 2: for item 11, removing the prohibited step leaves no defensible rung. The revised check allows null when a first reader marks a rung-changing flaw; it does not independently prove the reader applied test 2 correctly. The seven previously refused rows can now enter the count, so the change was necessary to obtain the result; it was not a change to their verdicts. The third-reader check is broader still—it permits null without a flaw field—so reasons remain essential to review.
+
+3. **155 of 159 agreement establishes agreement, not calibration.** The six planted errors show both families catch those particular errors; there is no known-sound control. Item 2’s Yes and item 12’s repeated Kyber No have identifiable evidence and counterevidence, so their supported verdicts are defensible. Item 4 repeats the earlier No and gives reasons why later coverage adds no independent weight; that is also defensible, though the reference itself is disputed. Repeating a previous conclusion is not automatically wrong.
+
+   The figure boundary is less settled. Item 77 is supported by the third readers despite an unspecified discount, and item 33 divides both families over whether the same evidence justifies a move. Shared agreement elsewhere cannot establish that both readers would catch a subtle unsupported estimate. The single changed verdict among three repeats is too small to estimate reliability.
+
+4. I would **not yet recommend the paid send with the proposed lines as if their operating characteristics were known**. Stage A’s missed lines are explicitly waived for preparation under D426, not passed. More importantly, the baseline is on hand-written ruler ladders, while Stage B will use system-written questions and a different mix. A figure-only comparison is more informative than the overall 3%, but 8% is **4 of 52 correlated daily judgments from six figure trajectories**, not a stable rate for reference-free figures. Not every figure is reference-free, and the proposed line pools them.
+
+   The last-judgment line is also coarse. With ten decided theses, one unsupported last judgment yields 90%; with nine, one yields about 89%. The denominator excludes insufficient judgments, so a high supported share can coexist with many undecided last judgments. The overall 8% line has a similar sensitivity to the number and clustering of daily judgments. The record does not quantify how often a good unchanged system would cross either line by chance.
+
+   The cheaper next test is **at no pipeline-call cost**: use the stored judgments to measure the proposed reader and line sensitivity by question, including repeat readings and additional pre-specified borderline examples with independently justified expected verdicts. In particular, test a carried-forward conclusion, an unsized estimate, and a comparable whose relevant share is unknown. Report coverage and insufficient verdicts alongside the shares. This cannot prove how the new ladders perform; it can show whether the proposed measurement distinguishes meaningful changes before Alex sets the paid gate.
+
+5. Alex should be told plainly:
+
+   - The goal is to judge useful questions the system opens itself. This baseline reads the old judge on **hand-written** ladders; it does not show the new ladder step or the integrated product works.
+   - Stage A missed three of his lines. He allowed preparation to continue with those faults; no paid Stage B run is authorized yet.
+   - The headline 4 of 151 and 16 of 16 are reader verdicts on a small set of repeated question paths, with no known-sound control. They are not measured production accuracy.
+   - The second look was rejected. The ladder is currently held fixed on these 44 theses; the proposed next work is to establish how reliably the downstream test reads judgments, not another ladder fix.
+   - After that remain Alex’s Stage B lines and decision, the paid judgment measurement, the unseeded opening and capital-spending gaps, the real search/save path, integration and end-to-end acceptance. The record cannot give a credible production date.
+
+**Consensus:** we differ on sending Stage B next; I recommend asking Alex to approve a no-cost calibration of the judgment reading and proposed lines first, using stored judgments and independently specified borderline controls, then reporting that result before requesting the paid send.

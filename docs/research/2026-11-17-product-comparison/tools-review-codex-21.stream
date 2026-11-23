@@ -1,0 +1,1032 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 21, confirmation only (read-only, $0)
+
+Round 20 (`tools-review-codex-20.md`) is fixed (`git log -1`, D675's last entry):
+- `stage0/rebuild.py` `scored` computes the verdict on the readings built from the rebuilt snapshot, inside the temporary folder;
+- a stored derived file that differs from the rebuild is refused, and that includes `readings.json`;
+- rebuild progress goes to stderr;
+- the import path is restored.
+
+The dry run (`stage0/chain_dry_run.py`, `stage0/chain-dry-run.txt`) shows:
+- each derived file edited twice, once with the readings record rewritten from the edit and once without, and both refused;
+- the verdict reads only the snapshot;
+- stdout carries no progress;
+- the import path is unchanged.
+
+Check, citing file and line:
+1. Is there still a change to anything other than the primary data that changes a verdict or a printed value through `score`? Give it.
+2. Does the rebuild call a reader, write outside its temporary folder, or leave a module attribute or the import path changed?
+3. Is any value or verdict changed for an unedited chain?
+
+End with `READY` or `NOT READY: <the smallest changes>`. Keep it under about 200 words. Report only a case of kind 1, 2 or 3.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check which files the verdict reads after the rebuild and verify that temporary state and stdout are restored.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba rebuild.py
+nl -ba score_comparison.py | tail -53
+nl -ba chain-dry-run.txt
+nl -ba ../../../DECISIONS-log.md | tail -29' in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+     1	"""Rebuilds every derived file of the reading chain from its primary data, and lists the stored derived files that differ (D675, Codex
+     2	round 19). The verdict is a function of the primary data only:
+     3	- the run stores (the draws under the run root);
+     4	- the readers' own answers: the mapping readers' answers (`map-*.txt`), the third readers' marks (`third/`), the deck's control
+     5	  confirmations (`control-confirmations.jsonl`, its last attempt) and the card marks (rounds 0-2, read by `mark_cards.build_readings`);
+     6	- the frozen inputs (the matter list, the verdict rule, the census).
+     7	
+     8	Everything else is derived, and is rebuilt here in a temporary folder by the same code that wrote it:
+     9	- the eligibility check;
+    10	- the libraries and the mapping key;
+    11	- the mapping (`mapping.json`);
+    12	- the deck key and the card texts.
+    13	
+    14	The deck's reader confirmations are replayed from their record, in the order the deck asks for them. No reader is called: a call that
+    15	escapes the replay is refused. The stored files are compared by canonical JSON (sorted keys, so 1 is not true) or by bytes for card
+    16	texts. The verdict is computed on the rebuilt snapshot, so a stored file changed after the comparison is never read."""
+    17	import contextlib
+    18	import json
+    19	import shutil
+    20	import sys
+    21	import tempfile
+    22	from pathlib import Path
+    23	
+    24	
+    25	def canonical(path):
+    26	    return json.dumps(json.loads(Path(path).read_text()), sort_keys=True, ensure_ascii=False)
+    27	
+    28	
+    29	def replay(record_path):
+    30	    """The deck's confirmation step, answered from the last recorded attempt in the order the deck asks."""
+    31	    lines = [line for line in Path(record_path).read_text().splitlines() if line.strip()]
+    32	    recorded = iter(json.loads(lines[-1])['attempt']) if lines else iter(())
+    33	
+    34	    def confirmed(card_text, supported):
+    35	        entry = next(recorded, None)
+    36	        role = 'supported control' if supported else 'plant'
+    37	        if entry is None or entry.get('role') != role:
+    38	            raise SystemExit('refused: the recorded control confirmations do not match the deck the inputs rebuild')
+    39	        return entry['admitted'], entry['mark']
+    40	    confirmed.remaining = lambda: sum(1 for _ in recorded)
+    41	    return confirmed
+    42	
+    43	
+    44	def without_paths(readings):
+    45	    """The readings with the input file paths left out (the fingerprints stay): the rebuilt snapshot lives in a temporary folder."""
+    46	    inputs = {k: v for k, v in readings.get('inputs', {}).items() if not k.endswith('_path')}
+    47	    return json.dumps(dict(readings, inputs=inputs), sort_keys=True, ensure_ascii=False)
+    48	
+    49	
+    50	def scored(run_root, mapping_out, deck_folder, key_folder, score):
+    51	    """Rebuilds the chain from the primary data in a temporary folder, refuses any stored derived file (and the readings record) that
+    52	    differs, and returns `score(readings)` on the readings built from the rebuilt snapshot, never on the stored files, while the snapshot
+    53	    still exists. Progress printed by the rebuilding code goes to stderr; module attributes and the import path are restored."""
+    54	    saved_path = list(sys.path)
+    55	    import census_readers
+    56	    import eligibility
+    57	    import mapping
+    58	    import mark_cards
+    59	    mapping_out, deck_folder, key_folder = Path(mapping_out), Path(deck_folder), Path(key_folder)
+    60	    saved = (mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run)
+    61	
+    62	    def no_reader(family, prompt):
+    63	        raise SystemExit('refused: a rebuild never calls a reader')
+    64	    with tempfile.TemporaryDirectory() as scratch:
+    65	        scratch = Path(scratch)
+    66	        keys, out, deck = scratch / 'keys', scratch / 'mapping-out', scratch / 'deck'
+    67	        confirmed = replay(key_folder / 'control-confirmations.jsonl')
+    68	        try:
+    69	            mapping.KEY_FOLDER = keys                               # mark_cards reads the same module's KEY_FOLDER
+    70	            mark_cards.KEY = keys / 'deck-key.json'
+    71	            census_readers.run = no_reader
+    72	            mark_cards.confirmed_by_reader = confirmed
+    73	            with contextlib.redirect_stdout(sys.stderr):
+    74	                eligibility.write(eligibility.check(run_root), scratch / 'eligibility.json')
+    75	                mapping.export(run_root, out, scratch / 'eligibility.json')
+    76	                for answer in mapping_out.glob('map-L*-*.txt'):
+    77	                    shutil.copy2(answer, out / answer.name)
+    78	                if (mapping_out / 'third').is_dir():
+    79	                    shutil.copytree(mapping_out / 'third', out / 'third')
+    80	                mapping.result(out)
+    81	                mark_cards.deck(out, deck)
+    82	                if confirmed.remaining():
+    83	                    raise SystemExit('refused: the recorded control confirmations hold more than the deck the inputs rebuild asks for')
+    84	                for marks in deck_folder.glob('round-*'):           # the readers' card marks, rounds 0-2, and their completion markers
+    85	                    (shutil.copytree if marks.is_dir() else shutil.copy2)(marks, deck / marks.name)
+    86	                readings = mark_cards.build_readings(out, deck)
+    87	            differ = []
+    88	            json_pairs = [(out / 'eligibility.json', mapping_out / 'eligibility.json'), (out / 'mapping.json', mapping_out / 'mapping.json'),
+    89	                          (keys / 'mapping-key.json', key_folder / 'mapping-key.json'), (keys / 'deck-key.json', key_folder / 'deck-key.json')]
+    90	            json_pairs += [(p, mapping_out / p.name) for p in sorted(out.glob('library-L*.json'))]
+    91	            for rebuilt, stored in json_pairs:
+    92	                if not stored.exists() or canonical(rebuilt) != canonical(stored):
+    93	                    differ.append(str(stored))
+    94	            if {p.name for p in mapping_out.glob('library-L*.json')} != {p.name for p in out.glob('library-L*.json')}:
+    95	                differ.append(f'{mapping_out}/library-L*.json (a different set of libraries)')
+    96	            rebuilt_cards = {p.name: p.read_bytes() for p in deck.glob('C*.txt')}
+    97	            stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}
+    98	            differ += [str(deck_folder / name) for name in sorted(set(rebuilt_cards) | set(stored_cards))
+    99	                       if rebuilt_cards.get(name) != stored_cards.get(name)]
+   100	            record = deck_folder / 'readings.json'
+   101	            if not record.exists() or without_paths(json.loads(record.read_text())) != without_paths(readings):
+   102	                differ.append(str(record))
+   103	            if differ:
+   104	                raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
+   105	            return score(readings)
+   106	        finally:
+   107	            mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
+   108	            sys.path[:] = saved_path
+   490	            if min(both_ways) < 30:
+   491	                small.append(f'{draw}: {both_ways} distinct bets')
+   492	    margin = max(3, math.ceil(0.15 * n))
+   493	
+   494	    def countings():
+   495	        per_counting = {}
+   496	        for counting in ('1', '2'):
+   497	            served = served_by(readings, counting)
+   498	            a = len(served['new'] - served['old'])
+   499	            b = len(served['old'] - served['new'])
+   500	            per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   501	                                      'guardrails': guardrails(readings, counting)}
+   502	        return per_counting
+   503	
+   504	    if invalid or small:
+   505	        # The verdict is decided first; each diagnostic is printed when it can be computed and flagged when it cannot, keeping the rest.
+   506	        flags = []
+   507	        try:
+   508	            per_counting = countings()
+   509	            report.update(margin=margin, countings=per_counting)
+   510	            report['beside'], flags = printed_items_tolerant(readings, per_counting)
+   511	        except Exception as error:
+   512	            flags.append(f'countings: {type(error).__name__}: {error}')
+   513	        if flags:
+   514	            report['diagnostics not computed'] = '; '.join(flags)
+   515	        return dict(report, verdict='invalid', why=invalid) if invalid else dict(report, verdict='too small', why=small)
+   516	    per_counting = countings()
+   517	    shown = beside(readings, per_counting)
+   518	    shown.update(printed_beside(readings, per_counting))
+   519	    report['margin'] = margin
+   520	    report['countings'] = per_counting
+   521	    report['beside'] = shown
+   522	    lead = all(c['a'] - c['b'] >= margin and c['a'] >= 2 * c['b'] for c in per_counting.values())
+   523	    all_exercised_pass = all(g['exercised'] and not g['breach'] for c in per_counting.values() for g in c['guardrails'].values())
+   524	    if lead and all_exercised_pass:
+   525	        return dict(report, verdict='practical lead')
+   526	    loss_count = all(c['b'] - c['a'] >= margin and c['b'] >= 2 * c['a'] for c in per_counting.values())
+   527	    breaches = {k for k in ('figure', 'yes/no', 'worth') if all(c['guardrails'][k]['breach'] for c in per_counting.values())}
+   528	    if loss_count or breaches:
+   529	        return dict(report, verdict='practical loss', why=(['served matters'] if loss_count else []) + [f'guardrail {k}' for k in sorted(breaches)])
+   530	    return dict(report, verdict='no practical winner')
+   531	
+   532	
+   533	def score(run_root, mapping_out, folder):
+   534	    """The scorer's entry: the reading chain is rebuilt from the primary data, any stored derived file or readings record that differs
+   535	    is refused, and the verdict is computed on the readings built from the rebuilt snapshot (`rebuild.scored`)."""
+   536	    import mapping
+   537	    import rebuild
+   538	    return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
+   539	
+   540	
+   541	if __name__ == '__main__':
+   542	    print(json.dumps(score(sys.argv[1], sys.argv[2], sys.argv[3]), indent=1, ensure_ascii=False, default=str))
+     1	VERDICT too small ['new-1: (4, 4) distinct bets', 'new-2: (4, 4) distinct bets', 'new-3: (4, 4) distinct bets', 'old-1: (2, 2) distinct bets', 'old-2: (2, 2) distinct bets', 'old-3: (2, 2) distinct bets']
+     2	EDIT REFUSED mapping.json True True
+     3	EDIT REFUSED deck-key.json True True
+     4	EDIT REFUSED C001.txt True True
+     5	EDIT REFUSED readings.json True
+     6	SCORED FROM SNAPSHOT True
+     7	REBUILD STDOUT EMPTY True
+     8	IMPORT PATH RESTORED True
+     9	sessions {'read': 12, 'third': 12, 'mark': 62, 'debate': 20, 'other': 0}
+    10	D400 code check not measured
+  9967	  - **The rebuild:** before scoring, `score_comparison.score(run root, mapping out, marks folder)` rebuilds every derived file in a
+  9968	    temporary folder with the same code that wrote it (`rebuild.differences`):
+  9969	    - the eligibility check, through one writer `eligibility.write`;
+  9970	    - the libraries and the mapping key;
+  9971	    - `mapping.json`;
+  9972	    - the deck key and the card texts.
+  9973	
+  9974	    The rebuild replays the deck's reader confirmations from their record and calls no reader. The scorer refuses if any stored
+  9975	    derived file differs.
+  9976	  - **Checks:** the chain dry run now runs in process and restores what it replaces. It scores the unedited chain, and refuses an
+  9977	    edited mapping, deck key or card text, each with the readings record rewritten as Codex did.
+  9978	  - **A test leak, fixed:** `seal` had left the scorer pointing at a test matter list. An autouse fixture now restores it.
+  9979	  - **Totals:** 101 tests; 71 mutants, all as predicted.
+  9980	- **Round 20 (Codex, `tools-review-codex-20.md`).** The round-19 rebuild still read the stored files after comparing them. Codex
+  9981	  reported three problems:
+  9982	  - a file changed between the check and the scoring could still flip a verdict, and stored key order could reorder the printed reasons;
+  9983	  - fresh imports left additions to the import path;
+  9984	  - rebuild progress went to stdout, so the command line printed more than the verdict.
+  9985	
+  9986	  Fixes:
+  9987	  - `rebuild.scored` now computes the verdict on the readings built from the rebuilt snapshot, while the snapshot still exists, and never
+  9988	    reads the stored files for it. The stored derived files, including the readings record, are records only: one that differs is
+  9989	    refused.
+  9990	  - Progress goes to stderr, and the import path is restored.
+  9991	
+  9992	  Checks:
+  9993	  - The dry run edits each derived file twice: once with the record rewritten from the edit, once without. Both are refused.
+  9994	  - It shows the verdict reads only the snapshot, that stdout carries no progress, and that the import path is unchanged.
+  9995	  - 101 tests and 74 mutants, all as predicted.
+
+exec
+/opt/homebrew/bin/zsh -lc "git --no-pager log -1 --format='%h %s'
+git --no-pager show --no-ext-diff --format=short HEAD -- docs/research/2026-11-17-product-comparison/stage0/rebuild.py docs/research/2026-11-17-product-comparison/stage0/score_comparison.py docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py" in /Users/lchingen/hivemind
+ succeeded in 2720ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-i17WHePi' (errno=Operation not permitted)
+2026-11-18 13:55:25.912 xcodebuild[58968:60200632]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:55:26.082 xcodebuild[58968:60200630] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-rF8Owk0k' (errno=Operation not permitted)
+2026-11-18 13:55:26.448 xcodebuild[58973:60200700]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:55:26.569 xcodebuild[58973:60200699] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+683dc201 Verdict computed on the rebuilt snapshot; rebuild progress to stderr; import path restored (D675, Codex round 20)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-j81iA2ND' (errno=Operation not permitted)
+2026-11-18 13:55:27.315 xcodebuild[58977:60200718]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:55:27.428 xcodebuild[58977:60200717] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-TWmEAj9f' (errno=Operation not permitted)
+2026-11-18 13:55:27.772 xcodebuild[58979:60200730]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:55:27.887 xcodebuild[58979:60200729] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 683dc201b7aae6fb40a35dbc1acb39739b9de7b2
+Author: Alex Lee <alex@adventai.io>
+
+    Verdict computed on the rebuilt snapshot; rebuild progress to stderr; import path restored (D675, Codex round 20)
+
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py b/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
+index de1a0915..d78ff3be 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/chain_dry_run.py
+@@ -125,19 +125,24 @@ def chain(scratch):
+         lines.append(f'SCORER REFUSED {refusal}')
+ 
+     def edited(path, change):
+-        """Scores once with one derived file edited and the readings record rewritten from it by its writer (as Codex did in round 19),
+-        records whether the scorer refused it, and restores both."""
++        """Scores with one derived file edited, twice: with the readings record rewritten from it by its writer (as Codex did in round
++        19), and with the record left as it was (so only the file's own comparison can see the edit). Records whether the scorer refused
++        each, and restores both files."""
+         original, readings_record = path.read_bytes(), (deck / 'readings.json').read_bytes()
+-        change(path)
+-        mark_cards.readings(out, deck)
+-        try:
+-            score_comparison.score(root, out, deck)
+-            lines.append(f'EDIT SCORED {path.name}')
+-        except SystemExit as refusal:
+-            lines.append(f"EDIT REFUSED {path.name} {'derived files differ' in str(refusal)}")
+-        finally:
+-            path.write_bytes(original)
+-            (deck / 'readings.json').write_bytes(readings_record)
++        refused = []
++        for rewrite_record in (True, False):
++            change(path)
++            if rewrite_record:
++                mark_cards.readings(out, deck)
++            try:
++                score_comparison.score(root, out, deck)
++                refused.append('scored')
++            except SystemExit as refusal:
++                refused.append(str('derived files differ' in str(refusal)))
++            finally:
++                path.write_bytes(original)
++                (deck / 'readings.json').write_bytes(readings_record)
++        lines.append(f"EDIT {'REFUSED' if 'scored' not in refused else 'SCORED'} {path.name} {' '.join(refused)}")
+ 
+     def bump_distinct(path):
+         data = json.loads(path.read_text())
+@@ -153,6 +158,26 @@ def chain(scratch):
+     edited(out / 'mapping.json', bump_distinct)                 # Codex round 19
+     edited(mark_cards.KEY, move_opened)
+     edited(deck / 'C001.txt', lambda p: p.write_text(p.read_text() + ' edited'))
++    record, original = deck / 'readings.json', (deck / 'readings.json').read_bytes()
++    data = json.loads(original)
++    data['distinct']['new-1']['ids'] += 1                      # the record alone, not rewritten by its writer
++    record.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
++    try:
++        score_comparison.score(root, out, deck)
++        lines.append('EDIT SCORED readings.json')
++    except SystemExit as refusal:
++        lines.append(f"EDIT REFUSED readings.json {'derived files differ' in str(refusal)}")
++    finally:
++        record.write_bytes(original)
++    import contextlib
++    import io
++    import rebuild
++    path_before, printed = list(sys.path), io.StringIO()
++    with contextlib.redirect_stdout(printed):
++        scored_from = rebuild.scored(root, out, deck, mapping.KEY_FOLDER, lambda readings: readings['inputs']['mapping_path'])
++    lines.append(f'SCORED FROM SNAPSHOT {not scored_from.startswith(str(out))}')   # the verdict reads the rebuilt files, never the stored
++    lines.append(f'REBUILD STDOUT EMPTY {printed.getvalue() == ""}')                # progress goes to stderr; stdout carries only the verdict
++    lines.append(f'IMPORT PATH RESTORED {sys.path == path_before}')
+     lines.append(f'sessions {calls}')
+     result, status = d400_code_check.check(root, eligible)
+     lines.append(f'D400 code check {status}')
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/rebuild.py b/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
+index 290c4be7..187f58ca 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/rebuild.py
+@@ -13,9 +13,11 @@ Everything else is derived, and is rebuilt here in a temporary folder by the sam
+ 
+ The deck's reader confirmations are replayed from their record, in the order the deck asks for them. No reader is called: a call that
+ escapes the replay is refused. The stored files are compared by canonical JSON (sorted keys, so 1 is not true) or by bytes for card
+-texts."""
++texts. The verdict is computed on the rebuilt snapshot, so a stored file changed after the comparison is never read."""
++import contextlib
+ import json
+ import shutil
++import sys
+ import tempfile
+ from pathlib import Path
+ 
+@@ -39,8 +41,17 @@ def replay(record_path):
+     return confirmed
+ 
+ 
+-def differences(run_root, mapping_out, deck_folder, key_folder):
+-    """The derived files whose stored content differs from what the primary data rebuild (an empty list when every one matches)."""
++def without_paths(readings):
++    """The readings with the input file paths left out (the fingerprints stay): the rebuilt snapshot lives in a temporary folder."""
++    inputs = {k: v for k, v in readings.get('inputs', {}).items() if not k.endswith('_path')}
++    return json.dumps(dict(readings, inputs=inputs), sort_keys=True, ensure_ascii=False)
++
++
++def scored(run_root, mapping_out, deck_folder, key_folder, score):
++    """Rebuilds the chain from the primary data in a temporary folder, refuses any stored derived file (and the readings record) that
++    differs, and returns `score(readings)` on the readings built from the rebuilt snapshot, never on the stored files, while the snapshot
++    still exists. Progress printed by the rebuilding code goes to stderr; module attributes and the import path are restored."""
++    saved_path = list(sys.path)
+     import census_readers
+     import eligibility
+     import mapping
+@@ -59,29 +70,39 @@ def differences(run_root, mapping_out, deck_folder, key_folder):
+             mark_cards.KEY = keys / 'deck-key.json'
+             census_readers.run = no_reader
+             mark_cards.confirmed_by_reader = confirmed
+-            eligibility.write(eligibility.check(run_root), scratch / 'eligibility.json')
+-            mapping.export(run_root, out, scratch / 'eligibility.json')
+-            for answer in mapping_out.glob('map-L*-*.txt'):
+-                shutil.copy2(answer, out / answer.name)
+-            if (mapping_out / 'third').is_dir():
+-                shutil.copytree(mapping_out / 'third', out / 'third')
+-            mapping.result(out)
+-            mark_cards.deck(out, deck)
+-            if confirmed.remaining():
+-                raise SystemExit('refused: the recorded control confirmations hold more than the deck the inputs rebuild asks for')
++            with contextlib.redirect_stdout(sys.stderr):
++                eligibility.write(eligibility.check(run_root), scratch / 'eligibility.json')
++                mapping.export(run_root, out, scratch / 'eligibility.json')
++                for answer in mapping_out.glob('map-L*-*.txt'):
++                    shutil.copy2(answer, out / answer.name)
++                if (mapping_out / 'third').is_dir():
++                    shutil.copytree(mapping_out / 'third', out / 'third')
++                mapping.result(out)
++                mark_cards.deck(out, deck)
++                if confirmed.remaining():
++                    raise SystemExit('refused: the recorded control confirmations hold more than the deck the inputs rebuild asks for')
++                for marks in deck_folder.glob('round-*'):           # the readers' card marks, rounds 0-2, and their completion markers
++                    (shutil.copytree if marks.is_dir() else shutil.copy2)(marks, deck / marks.name)
++                readings = mark_cards.build_readings(out, deck)
++            differ = []
++            json_pairs = [(out / 'eligibility.json', mapping_out / 'eligibility.json'), (out / 'mapping.json', mapping_out / 'mapping.json'),
++                          (keys / 'mapping-key.json', key_folder / 'mapping-key.json'), (keys / 'deck-key.json', key_folder / 'deck-key.json')]
++            json_pairs += [(p, mapping_out / p.name) for p in sorted(out.glob('library-L*.json'))]
++            for rebuilt, stored in json_pairs:
++                if not stored.exists() or canonical(rebuilt) != canonical(stored):
++                    differ.append(str(stored))
++            if {p.name for p in mapping_out.glob('library-L*.json')} != {p.name for p in out.glob('library-L*.json')}:
++                differ.append(f'{mapping_out}/library-L*.json (a different set of libraries)')
++            rebuilt_cards = {p.name: p.read_bytes() for p in deck.glob('C*.txt')}
++            stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}
++            differ += [str(deck_folder / name) for name in sorted(set(rebuilt_cards) | set(stored_cards))
++                       if rebuilt_cards.get(name) != stored_cards.get(name)]
++            record = deck_folder / 'readings.json'
++            if not record.exists() or without_paths(json.loads(record.read_text())) != without_paths(readings):
++                differ.append(str(record))
++            if differ:
++                raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
++            return score(readings)
+         finally:
+             mapping.KEY_FOLDER, mark_cards.KEY, mark_cards.confirmed_by_reader, census_readers.run = saved
+-        differ = []
+-        json_pairs = [(out / 'eligibility.json', mapping_out / 'eligibility.json'), (out / 'mapping.json', mapping_out / 'mapping.json'),
+-                      (keys / 'mapping-key.json', key_folder / 'mapping-key.json'), (keys / 'deck-key.json', key_folder / 'deck-key.json')]
+-        json_pairs += [(p, mapping_out / p.name) for p in sorted(out.glob('library-L*.json'))]
+-        for rebuilt, stored in json_pairs:
+-            if not stored.exists() or canonical(rebuilt) != canonical(stored):
+-                differ.append(str(stored))
+-        if {p.name for p in mapping_out.glob('library-L*.json')} != {p.name for p in out.glob('library-L*.json')}:
+-            differ.append(f'{mapping_out}/library-L*.json (a different set of libraries)')
+-        rebuilt_cards = {p.name: p.read_bytes() for p in deck.glob('C*.txt')}
+-        stored_cards = {p.name: p.read_bytes() for p in deck_folder.glob('C*.txt')}
+-        differ += [str(deck_folder / name) for name in sorted(set(rebuilt_cards) | set(stored_cards))
+-                   if rebuilt_cards.get(name) != stored_cards.get(name)]
+-        return differ
++            sys.path[:] = saved_path
+diff --git a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+index 8d88d4f1..7158b151 100644
+--- a/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
++++ b/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py
+@@ -531,25 +531,11 @@ def verdict(readings):
+ 
+ 
+ def score(run_root, mapping_out, folder):
+-    """The scorer's entry. Every derived file of the reading chain is first rebuilt from the primary data (`rebuild.differences`); a
+-    stored derived file that differs is refused. Then the readings are built by their one writer and scored."""
++    """The scorer's entry: the reading chain is rebuilt from the primary data, any stored derived file or readings record that differs
++    is refused, and the verdict is computed on the readings built from the rebuilt snapshot (`rebuild.scored`)."""
+     import mapping
+     import rebuild
+-    differ = rebuild.differences(run_root, mapping_out, folder, mapping.KEY_FOLDER)
+-    if differ:
+-        raise SystemExit('refused: these derived files differ from what the primary data rebuild: ' + '; '.join(differ))
+-    return score_readings(mapping_out, folder)
+-
+-
+-def score_readings(mapping_out, folder):
+-    """The readings built here by their one writer (`mark_cards.build_readings`) from the mapping output and the marks folder, and
+-    what is built is scored. The readings.json record beside the marks must equal what is built."""
+-    import mark_cards
+-    built = mark_cards.build_readings(mapping_out, folder)
+-    recorded = Path(folder) / 'readings.json'
+-    if not recorded.exists() or json.loads(recorded.read_text()) != json.loads(json.dumps(built)):
+-        raise SystemExit('refused: readings.json is missing or differs from the readings its writer builds from the named inputs')
+-    return verdict(built)
++    return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
+ 
+ 
+ if __name__ == '__main__':
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import contextlib, sys
+import rebuild, score_comparison as score
+rebuild.tempfile.TemporaryDirectory=lambda:contextlib.nullcontext(\"/in-memory\")
+class Mem:
+    def __init__(self,p): self.p=str(p)
+    def __truediv__(self,p): return Mem(self.p+\"/\"+p)
+    def read_text(self): raise FileNotFoundError(self.p)
+rebuild.Path=Mem
+before=sys.path.copy()
+try:
+    score.score(\"/synthetic/run\",\"/synthetic/map\",\"/synthetic/deck\")
+except FileNotFoundError:
+    print(\"Cold score, missing confirmation record:\",len(sys.path)-len(before),\"import-path entries leaked\")
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import contextlib, fnmatch, hashlib, io, json, posixpath, subprocess, sys, types
+import score_comparison as score
+import mapping, rebuild, mark_cards as writer, eligibility, census_readers, build_cards
+parent=types.ModuleType(\"previous_score\")
+parent.__file__=score.__file__
+p=\"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\",\"--no-pager\",\"show\",\"683dc201"'^:"+p],text=True),p,"exec"),parent.__dict__)
+class Mem:
+    files={}
+    dirs=set()
+    writes=[]
+    def __init__(self,path): self.path=posixpath.normpath(str(path))
+    def __truediv__(self,child): return Mem(self.path+"/"+child)
+    def __str__(self): return self.path
+    def __lt__(self,other): return self.path<other.path
+    @property
+    def name(self): return posixpath.basename(self.path)
+    @property
+    def parent(self): return Mem(posixpath.dirname(self.path))
+    def resolve(self): return self
+    def exists(self): return self.path in self.files or self.path in self.dirs
+    def is_dir(self): return self.path in self.dirs
+    def mkdir(self,parents=False,exist_ok=False):
+        if self.is_dir() and not exist_ok: raise FileExistsError(self.path)
+        self.dirs.add(self.path); self.writes.append(self.path)
+    def read_bytes(self): return self.files[self.path]
+    def read_text(self): return self.read_bytes().decode()
+    def write_text(self,text):
+        self.files[self.path]=text.encode(); self.writes.append(self.path)
+    def glob(self,pattern):
+        return [Mem(p) for p in list(self.files)+list(self.dirs) if posixpath.dirname(p)==self.path and fnmatch.fnmatch(posixpath.basename(p),pattern)]
+def put(p,v): Mem(p).write_text(json.dumps(v))
+def get(p): return json.loads(Mem(p).read_text())
+def no_calls(*args): raise AssertionError("reader called")
+def copy2(src,dst): dst.write_text(src.read_text())
+def copytree(src,dst):
+    dst.mkdir()
+    for p in list(Mem.files):
+        if p.startswith(str(src)+"/"): (dst / p[len(str(src))+1:]).write_text(Mem(p).read_text())
+@contextlib.contextmanager
+def scratch():
+    Mem("/scratch").mkdir()
+    try: yield "/scratch"
+    finally:
+        for p in list(Mem.files):
+            if p.startswith("/scratch/"): del Mem.files[p]
+        Mem.dirs={p for p in Mem.dirs if not (p=="/scratch" or p.startswith("/scratch/"))}
+@contextlib.contextmanager
+def mem_open(path,mode):
+    assert mode=="a"
+    buffer=io.StringIO()
+    try: yield buffer
+    finally:
+        f=Mem(path)
+        f.write_text((f.read_text() if f.exists() else "")+buffer.getvalue())
+for m in (score,parent,mapping,writer,eligibility,rebuild): m.Path=Mem
+score.MATTERS=parent.MATTERS=mapping.MATTERS=Mem("/original/matters.json")
+writer.open=mem_open
+rebuild.tempfile=types.SimpleNamespace(TemporaryDirectory=scratch)
+rebuild.shutil=types.SimpleNamespace(copy2=copy2,copytree=copytree)
+mapping.KEY_FOLDER=Mem("/original/keys")
+writer.KEY=mapping.KEY_FOLDER/"deck-key.json"
+census_readers.run=no_calls
+def make(n=20,shorts=("new-1",),new=5,old=1,invalid=False):
+    Mem.files.clear(); Mem.dirs.clear(); Mem.writes.clear()
+    matters=[{"matter":f"M{i:02d}","company_figure":False} for i in range(1,n+1)]
+    put(score.MATTERS,{"matters":matters})
+    writer.matter_first_days=lambda:{m["matter"]:"2026-09-07" for m in matters}
+    lib={}
+    for d in mapping.DRAWS:
+        count=29 if d in shorts else 30
+        lib[d]=[dict(question_id=f"v{i}",question=f"Question {i}",opened="2026-09-09",due="2026-09-20",
+                     type="figure" if i<=15 else "yes/no",answer="Yes",answer_index=0,possible_answers=["Yes","No"],
+                     reasons="Evidence",material=[]) for i in range(1,count+1)]
+    mapping.store_paths=lambda root,d:(Mem(f"/primary/{d}/views.sqlite"),Mem(f"/primary/{d}/archive.sqlite"))
+    build_cards.library=lambda views,archive,items:lib[views.parent.name]
+    eligibility.sha256=lambda file:hashlib.sha256(str(file).encode()).hexdigest()
+    eligible={"eligible":True,"problems":[],"draws":{d:{"stores":{p.name:{"sha256":eligibility.sha256(p)} for p in mapping.store_paths("/primary",d)}} for d in mapping.DRAWS}}
+    eligibility.check=lambda root:eligible
+    writer.confirmed_by_reader=lambda text,supported:(True,{"supported":supported,"why":"fixture"})
+    eligibility.write(eligible,Mem("/original/eligibility.json"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        mapping.export("/primary","/original/map","/original/eligibility.json")
+        key=get(mapping.KEY_FOLDER/"mapping-key.json")
+        for d,label in key.items():
+            a,b=(1,new) if d.startswith("new") else (new+1,new+old)
+            rows=[{"matter":f"M{i:02d}","status":"opened","ids":[f"Q{i}"]} for i in range(a,b+1)]
+            for family in ("codex","claude"):
+                Mem(f"/original/map/map-{label}-{family}.txt").write_text("'"\\n\".join(map(json.dumps,rows)))
+        mapping.result(\"/original/map\")
+        writer.deck(\"/original/map\",\"/original/deck\")
+        key=get(writer.KEY)
+        Mem(\"/original/deck/round-0\").mkdir()
+        for cid,k in key.items():
+            answer=\"unsupported\" if k[\"role\"]==\"plant\" and not invalid else \"supported\"
+            for f in (\"codex\",\"claude\"):
+                put(f\"/original/deck/round-0/{cid}-{f}.json\",{\"worth\":\"worth\",\"answer\":answer})
+        for n in range(3): Mem(f\"/original/deck/round-{n}.done\").write_text(\"done\")
+        writer.readings(\"/original/map\",\"/original/deck\")
+    writer.confirmed_by_reader=no_calls
+def read_score():
+    with contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()) as err:
+        result=score.score(\"/primary\",\"/original/map\",\"/original/deck\")
+    return result,out.getvalue(),err.getvalue()
+make(shorts=(\"new-1\",\"old-3\"))
+attrs=(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+before=sys.path.copy()
+Mem.writes.clear()
+orig,stdout,stderr=read_score()
+assert orig[\"verdict\"]==\"too small\"
+assert stdout==\"\" and \"mapping.json written\" in stderr
+assert all(p.startswith(\"/scratch\") for p in Mem.writes)
+assert attrs==(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+assert sys.path==before
+print(\"Warm success: stdout empty, stderr has progress, all writes in scratch and patched state restored\")
+f=\"/original/map/mapping.json\"
+mapped=get(f)
+mapped[\"distinct\"]=dict(reversed(list(mapped[\"distinct\"].items())))
+put(f,mapped)
+with contextlib.redirect_stdout(io.StringIO()):
+    writer.readings(\"/original/map\",\"/original/deck\")
+assert read_score()[0]==orig
+print(\"Stored key reorder leaves every report field unchanged\")
+make()
+callback=score.verdict
+def after_comparison(readings):
+    f=\"/original/map/mapping.json\"
+    mapped=get(f)
+    mapped[\"distinct\"][\"new-1\"][\"ids\"]=30
+    put(f,mapped)
+    return callback(readings)
+score.verdict=after_comparison
+assert read_score()[0][\"verdict\"]==\"too small\"
+score.verdict=callback
+print(\"Stored mutation at scoring boundary cannot flip verdict\")
+for n,shorts,a,b,invalid in ((32,(),10,2,False),(32,(),2,10,False),(32,(),5,4,False),(19,(),5,1,False),(32,(),5,1,True)):
+    make(n,shorts,a,b,invalid)
+    new,_,_=read_score()
+    with contextlib.redirect_stdout(io.StringIO()):
+        old=parent.score(\"/primary\",\"/original/map\",\"/original/deck\")
+    assert json.dumps(new,default=str)==json.dumps(old,default=str)
+    print(new[\"verdict\"],\"report matches parent\")
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 1403ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-N2B5GBFV' (errno=Operation not permitted)
+2026-11-18 13:56:22.380 xcodebuild[59072:60201940]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:22.510 xcodebuild[59072:60201936] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-4yWJqApw' (errno=Operation not permitted)
+2026-11-18 13:56:22.872 xcodebuild[59075:60201976]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:22.995 xcodebuild[59075:60201975] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Cold score, missing confirmation record: 6 import-path entries leaked
+
+ exited 1 in 2738ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-682v8pgT' (errno=Operation not permitted)
+2026-11-18 13:56:22.380 xcodebuild[59071:60201938]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:22.510 xcodebuild[59071:60201937] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-OzokrM0H' (errno=Operation not permitted)
+2026-11-18 13:56:22.872 xcodebuild[59076:60201977]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:22.995 xcodebuild[59076:60201974] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-3AdeLJE6' (errno=Operation not permitted)
+2026-11-18 13:56:23.831 xcodebuild[59083:60202012]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:23.944 xcodebuild[59083:60202011] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-odsqacbv' (errno=Operation not permitted)
+2026-11-18 13:56:24.262 xcodebuild[59085:60202023]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:24.373 xcodebuild[59085:60202022] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+refused: these derived files differ from what the primary data rebuild: /original/deck/readings.json
+Warm success: stdout empty, stderr has progress, all writes in scratch and patched state restored
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import contextlib, fnmatch, hashlib, io, json, posixpath, subprocess, sys, types
+import score_comparison as score
+import mapping, rebuild, mark_cards as writer, eligibility, census_readers, build_cards
+parent=types.ModuleType(\"previous_score\")
+parent.__file__=score.__file__
+p=\"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\",\"--no-pager\",\"show\",\"683dc201"'^:"+p],text=True),p,"exec"),parent.__dict__)
+class Mem:
+    files={}
+    dirs=set()
+    writes=[]
+    def __init__(self,path): self.path=posixpath.normpath(str(path))
+    def __truediv__(self,child): return Mem(self.path+"/"+child)
+    def __str__(self): return self.path
+    def __lt__(self,other): return self.path<other.path
+    @property
+    def name(self): return posixpath.basename(self.path)
+    @property
+    def parent(self): return Mem(posixpath.dirname(self.path))
+    def resolve(self): return self
+    def exists(self): return self.path in self.files or self.path in self.dirs
+    def is_dir(self): return self.path in self.dirs
+    def mkdir(self,parents=False,exist_ok=False):
+        if self.is_dir() and not exist_ok: raise FileExistsError(self.path)
+        self.dirs.add(self.path); self.writes.append(self.path)
+    def read_bytes(self): return self.files[self.path]
+    def read_text(self): return self.read_bytes().decode()
+    def write_text(self,text):
+        self.files[self.path]=text.encode(); self.writes.append(self.path)
+    def glob(self,pattern):
+        return [Mem(p) for p in list(self.files)+list(self.dirs) if posixpath.dirname(p)==self.path and fnmatch.fnmatch(posixpath.basename(p),pattern)]
+def put(p,v): Mem(p).write_text(json.dumps(v))
+def get(p): return json.loads(Mem(p).read_text())
+def no_calls(*args): raise AssertionError("reader called")
+def copy2(src,dst): dst.write_text(src.read_text())
+def copytree(src,dst):
+    dst.mkdir()
+    for p in list(Mem.files):
+        if p.startswith(str(src)+"/"): (dst / p[len(str(src))+1:]).write_text(Mem(p).read_text())
+@contextlib.contextmanager
+def scratch():
+    Mem("/scratch").mkdir()
+    try: yield "/scratch"
+    finally:
+        for p in list(Mem.files):
+            if p.startswith("/scratch/"): del Mem.files[p]
+        Mem.dirs={p for p in Mem.dirs if not (p=="/scratch" or p.startswith("/scratch/"))}
+@contextlib.contextmanager
+def mem_open(path,mode):
+    assert mode=="a"
+    buffer=io.StringIO()
+    try: yield buffer
+    finally:
+        f=Mem(path)
+        f.write_text((f.read_text() if f.exists() else "")+buffer.getvalue())
+for m in (score,parent,mapping,writer,eligibility,rebuild): m.Path=Mem
+score.MATTERS=parent.MATTERS=mapping.MATTERS=Mem("/original/matters.json")
+writer.open=mem_open
+rebuild.tempfile=types.SimpleNamespace(TemporaryDirectory=scratch)
+rebuild.shutil=types.SimpleNamespace(copy2=copy2,copytree=copytree)
+mapping.KEY_FOLDER=Mem("/original/keys")
+writer.KEY=mapping.KEY_FOLDER/"deck-key.json"
+census_readers.run=no_calls
+def make(n=20,shorts=("new-1",),new=5,old=1,invalid=False):
+    Mem.files.clear(); Mem.dirs.clear(); Mem.writes.clear()
+    matters=[{"matter":f"M{i:02d}","company_figure":False} for i in range(1,n+1)]
+    put(score.MATTERS,{"matters":matters})
+    writer.matter_first_days=lambda:{m["matter"]:"2026-09-07" for m in matters}
+    lib={}
+    for d in mapping.DRAWS:
+        count=29 if d in shorts else 30
+        lib[d]=[dict(question_id=f"v{i}",question=f"Question {i}",opened="2026-09-09",due="2026-09-20",
+                     type="figure" if i<=15 else "yes/no",answer="Yes",answer_index=0,possible_answers=["Yes","No"],
+                     reasons="Evidence",material=[]) for i in range(1,count+1)]
+    mapping.store_paths=lambda root,d:(Mem(f"/primary/{d}/views.sqlite"),Mem(f"/primary/{d}/archive.sqlite"))
+    build_cards.library=lambda views,archive,items:lib[views.parent.name]
+    eligibility.sha256=lambda file:hashlib.sha256(str(file).encode()).hexdigest()
+    eligible={"eligible":True,"problems":[],"draws":{d:{"stores":{p.name:{"sha256":eligibility.sha256(p)} for p in mapping.store_paths("/primary",d)}} for d in mapping.DRAWS}}
+    eligibility.check=lambda root:eligible
+    writer.confirmed_by_reader=lambda text,supported:(True,{"supported":supported,"why":"fixture"})
+    eligibility.write(eligible,Mem("/original/eligibility.json"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        mapping.export("/primary","/original/map","/original/eligibility.json")
+        key=get(mapping.KEY_FOLDER/"mapping-key.json")
+        for d,label in key.items():
+            a,b=(1,new) if d.startswith("new") else (new+1,new+old)
+            rows=[{"matter":f"M{i:02d}","status":"opened","ids":[f"Q{i}"]} for i in range(a,b+1)]
+            for family in ("codex","claude"):
+                Mem(f"/original/map/map-{label}-{family}.txt").write_text("'"\\n\".join(map(json.dumps,rows)))
+        mapping.result(\"/original/map\")
+        writer.deck(\"/original/map\",\"/original/deck\")
+        key=get(writer.KEY)
+        Mem(\"/original/deck/round-0\").mkdir()
+        for cid,k in key.items():
+            answer=\"unsupported\" if k[\"role\"]==\"plant\" and not invalid else \"supported\"
+            for f in (\"codex\",\"claude\"):
+                put(f\"/original/deck/round-0/{cid}-{f}.json\",{\"worth\":\"worth\",\"answer\":answer})
+        for n in range(3): Mem(f\"/original/deck/round-{n}.done\").write_text(\"done\")
+        writer.readings(\"/original/map\",\"/original/deck\")
+    writer.confirmed_by_reader=no_calls
+def read_score():
+    with contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()) as err:
+        result=score.score(\"/primary\",\"/original/map\",\"/original/deck\")
+    return result,out.getvalue(),err.getvalue()
+make(shorts=(\"new-1\",\"old-3\"))
+attrs=(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+before=sys.path.copy()
+Mem.writes.clear()
+orig,stdout,stderr=read_score()
+assert orig[\"verdict\"]==\"too small\"
+assert stdout==\"\" and \"mapping.json written\" in stderr
+assert all(p.startswith(\"/scratch\") for p in Mem.writes)
+assert attrs==(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+assert sys.path==before
+print(\"Warm success: stdout empty, stderr has progress, all writes in scratch and patched state restored\")
+f=\"/original/map/mapping.json\"
+mapped=get(f)
+mapped[\"distinct\"]=dict(reversed(list(mapped[\"distinct\"].items())))
+put(f,mapped)
+with contextlib.redirect_stdout(io.StringIO()):
+    writer.readings(\"/original/map\",\"/original/deck\")
+try:
+    assert read_score()[0]==orig
+    print(\"Stored key reorder leaves every report field unchanged\")
+except SystemExit as e:
+    assert \"derived files differ\" in str(e)
+    print(\"Stored key reorder refused via the recorded mapping fingerprint\")
+make()
+callback=score.verdict
+def after_comparison(readings):
+    f=\"/original/map/mapping.json\"
+    mapped=get(f)
+    mapped[\"distinct\"][\"new-1\"][\"ids\"]=30
+    put(f,mapped)
+    return callback(readings)
+score.verdict=after_comparison
+assert read_score()[0][\"verdict\"]==\"too small\"
+score.verdict=callback
+print(\"Stored mutation at scoring boundary cannot flip verdict\")
+for n,shorts,a,b,invalid in ((32,(),10,2,False),(32,(),2,10,False),(32,(),5,4,False),(19,(),5,1,False),(32,(),5,1,True)):
+    make(n,shorts,a,b,invalid)
+    new,_,_=read_score()
+    with contextlib.redirect_stdout(io.StringIO()):
+        old=parent.score(\"/primary\",\"/original/map\",\"/original/deck\")
+    assert json.dumps(new,default=str)==json.dumps(old,default=str)
+    print(new[\"verdict\"],\"report matches parent\")
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ exited 1 in 2718ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-mGNWyGFr' (errno=Operation not permitted)
+2026-11-18 13:56:34.184 xcodebuild[59117:60202433]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:34.301 xcodebuild[59117:60202431] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-f3I6Pulk' (errno=Operation not permitted)
+2026-11-18 13:56:34.632 xcodebuild[59119:60202449]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:34.741 xcodebuild[59119:60202448] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-Zq0n11FV' (errno=Operation not permitted)
+2026-11-18 13:56:35.525 xcodebuild[59128:60202489]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:35.652 xcodebuild[59128:60202488] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-uc7Kn1sy' (errno=Operation not permitted)
+2026-11-18 13:56:35.982 xcodebuild[59133:60202534]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:36.091 xcodebuild[59133:60202533] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Traceback (most recent call last):
+  File "<string>", line 145, in <module>
+  File "docs/research/2026-11-17-product-comparison/stage0/score_comparison.py", line 538, in score
+    return rebuild.scored(run_root, mapping_out, folder, mapping.KEY_FOLDER, verdict)
+AttributeError: module 'rebuild' has no attribute 'differences'
+Warm success: stdout empty, stderr has progress, all writes in scratch and patched state restored
+Stored key reorder refused via the recorded mapping fingerprint
+Stored mutation at scoring boundary cannot flip verdict
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import contextlib, fnmatch, hashlib, io, json, posixpath, subprocess, sys, types
+import score_comparison as score
+import mapping, rebuild, mark_cards as writer, eligibility, census_readers, build_cards
+parent=types.ModuleType(\"previous_score\")
+parent.__file__=score.__file__
+p=\"docs/research/2026-11-17-product-comparison/stage0/score_comparison.py\"
+exec(compile(subprocess.check_output([\"git\",\"--no-pager\",\"show\",\"683dc201"'^:"+p],text=True),p,"exec"),parent.__dict__)
+class Mem:
+    files={}
+    dirs=set()
+    writes=[]
+    def __init__(self,path): self.path=posixpath.normpath(str(path))
+    def __truediv__(self,child): return Mem(self.path+"/"+child)
+    def __str__(self): return self.path
+    def __lt__(self,other): return self.path<other.path
+    @property
+    def name(self): return posixpath.basename(self.path)
+    @property
+    def parent(self): return Mem(posixpath.dirname(self.path))
+    def resolve(self): return self
+    def exists(self): return self.path in self.files or self.path in self.dirs
+    def is_dir(self): return self.path in self.dirs
+    def mkdir(self,parents=False,exist_ok=False):
+        if self.is_dir() and not exist_ok: raise FileExistsError(self.path)
+        self.dirs.add(self.path); self.writes.append(self.path)
+    def read_bytes(self): return self.files[self.path]
+    def read_text(self): return self.read_bytes().decode()
+    def write_text(self,text):
+        self.files[self.path]=text.encode(); self.writes.append(self.path)
+    def glob(self,pattern):
+        return [Mem(p) for p in list(self.files)+list(self.dirs) if posixpath.dirname(p)==self.path and fnmatch.fnmatch(posixpath.basename(p),pattern)]
+def put(p,v): Mem(p).write_text(json.dumps(v))
+def get(p): return json.loads(Mem(p).read_text())
+def no_calls(*args): raise AssertionError("reader called")
+def copy2(src,dst): dst.write_text(src.read_text())
+def copytree(src,dst):
+    dst.mkdir()
+    for p in list(Mem.files):
+        if p.startswith(str(src)+"/"): (dst / p[len(str(src))+1:]).write_text(Mem(p).read_text())
+@contextlib.contextmanager
+def scratch():
+    Mem("/scratch").mkdir()
+    try: yield "/scratch"
+    finally:
+        for p in list(Mem.files):
+            if p.startswith("/scratch/"): del Mem.files[p]
+        Mem.dirs={p for p in Mem.dirs if not (p=="/scratch" or p.startswith("/scratch/"))}
+@contextlib.contextmanager
+def mem_open(path,mode):
+    assert mode=="a"
+    buffer=io.StringIO()
+    try: yield buffer
+    finally:
+        f=Mem(path)
+        f.write_text((f.read_text() if f.exists() else "")+buffer.getvalue())
+for m in (score,parent,mapping,writer,eligibility,rebuild): m.Path=Mem
+score.MATTERS=parent.MATTERS=mapping.MATTERS=Mem("/original/matters.json")
+writer.open=mem_open
+rebuild.tempfile=types.SimpleNamespace(TemporaryDirectory=scratch)
+rebuild.shutil=types.SimpleNamespace(copy2=copy2,copytree=copytree)
+mapping.KEY_FOLDER=Mem("/original/keys")
+writer.KEY=mapping.KEY_FOLDER/"deck-key.json"
+census_readers.run=no_calls
+def make(n=20,shorts=("new-1",),new=5,old=1,invalid=False):
+    Mem.files.clear(); Mem.dirs.clear(); Mem.writes.clear()
+    matters=[{"matter":f"M{i:02d}","company_figure":False} for i in range(1,n+1)]
+    put(score.MATTERS,{"matters":matters})
+    writer.matter_first_days=lambda:{m["matter"]:"2026-09-07" for m in matters}
+    lib={}
+    for d in mapping.DRAWS:
+        count=29 if d in shorts else 30
+        lib[d]=[dict(question_id=f"v{i}",question=f"Question {i}",opened="2026-09-09",due="2026-09-20",
+                     type="figure" if i<=15 else "yes/no",answer="Yes",answer_index=0,possible_answers=["Yes","No"],
+                     reasons="Evidence",material=[]) for i in range(1,count+1)]
+    mapping.store_paths=lambda root,d:(Mem(f"/primary/{d}/views.sqlite"),Mem(f"/primary/{d}/archive.sqlite"))
+    build_cards.library=lambda views,archive,items:lib[views.parent.name]
+    eligibility.sha256=lambda file:hashlib.sha256(str(file).encode()).hexdigest()
+    eligible={"eligible":True,"problems":[],"draws":{d:{"stores":{p.name:{"sha256":eligibility.sha256(p)} for p in mapping.store_paths("/primary",d)}} for d in mapping.DRAWS}}
+    eligibility.check=lambda root:eligible
+    writer.confirmed_by_reader=lambda text,supported:(True,{"supported":supported,"why":"fixture"})
+    eligibility.write(eligible,Mem("/original/eligibility.json"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        mapping.export("/primary","/original/map","/original/eligibility.json")
+        key=get(mapping.KEY_FOLDER/"mapping-key.json")
+        for d,label in key.items():
+            a,b=(1,new) if d.startswith("new") else (new+1,new+old)
+            rows=[{"matter":f"M{i:02d}","status":"opened","ids":[f"Q{i}"]} for i in range(a,b+1)]
+            for family in ("codex","claude"):
+                Mem(f"/original/map/map-{label}-{family}.txt").write_text("'"\\n\".join(map(json.dumps,rows)))
+        mapping.result(\"/original/map\")
+        writer.deck(\"/original/map\",\"/original/deck\")
+        key=get(writer.KEY)
+        Mem(\"/original/deck/round-0\").mkdir()
+        for cid,k in key.items():
+            answer=\"unsupported\" if k[\"role\"]==\"plant\" and not invalid else \"supported\"
+            for f in (\"codex\",\"claude\"):
+                put(f\"/original/deck/round-0/{cid}-{f}.json\",{\"worth\":\"worth\",\"answer\":answer})
+        for n in range(3): Mem(f\"/original/deck/round-{n}.done\").write_text(\"done\")
+        writer.readings(\"/original/map\",\"/original/deck\")
+    writer.confirmed_by_reader=no_calls
+def read_score():
+    with contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()) as err:
+        result=score.score(\"/primary\",\"/original/map\",\"/original/deck\")
+    return result,out.getvalue(),err.getvalue()
+make(shorts=(\"new-1\",\"old-3\"))
+attrs=(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+before=sys.path.copy()
+Mem.writes.clear()
+orig,stdout,stderr=read_score()
+assert orig[\"verdict\"]==\"too small\"
+assert stdout==\"\" and \"mapping.json written\" in stderr
+assert all(p.startswith(\"/scratch\") for p in Mem.writes)
+assert attrs==(mapping.KEY_FOLDER,writer.KEY,writer.confirmed_by_reader,census_readers.run)
+assert sys.path==before
+print(\"Warm success: stdout empty, stderr has progress, all writes in scratch and patched state restored\")
+f=\"/original/map/mapping.json\"
+mapped=get(f)
+mapped[\"distinct\"]=dict(reversed(list(mapped[\"distinct\"].items())))
+put(f,mapped)
+with contextlib.redirect_stdout(io.StringIO()):
+    writer.readings(\"/original/map\",\"/original/deck\")
+try:
+    assert read_score()[0]==orig
+except SystemExit as e:
+    assert \"derived files differ\" in str(e)
+    print(\"Stored key reorder refused via the recorded mapping fingerprint\")
+make()
+callback=score.verdict
+def after_comparison(readings):
+    f=\"/original/map/mapping.json\"
+    mapped=get(f)
+    mapped[\"distinct\"][\"new-1\"][\"ids\"]=30
+    put(f,mapped)
+    return callback(readings)
+score.verdict=after_comparison
+assert read_score()[0][\"verdict\"]==\"too small\"
+score.verdict=callback
+print(\"Stored mutation at scoring boundary cannot flip verdict\")
+for n,shorts,a,b,invalid in ((32,(),10,2,False),(32,(),2,10,False),(32,(),5,4,False),(19,(),5,1,False),(32,(),5,1,True)):
+    make(n,shorts,a,b,invalid)
+    new,_,_=read_score()
+    with contextlib.redirect_stdout(io.StringIO()):
+        old=parent.verdict(get(\"/original/deck/readings.json\"))
+    assert json.dumps(new,default=str)==json.dumps(old,default=str)
+    print(new[\"verdict\"],\"report matches parent\")
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 2827ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-VqZWUSo4' (errno=Operation not permitted)
+2026-11-18 13:56:43.098 xcodebuild[59158:60202706]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:43.211 xcodebuild[59158:60202705] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-gs7fwi2Q' (errno=Operation not permitted)
+2026-11-18 13:56:43.548 xcodebuild[59163:60202725]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:43.662 xcodebuild[59163:60202723] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-pGrasnKC' (errno=Operation not permitted)
+2026-11-18 13:56:44.436 xcodebuild[59171:60202806]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:44.548 xcodebuild[59171:60202805] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-syQc5bKQ' (errno=Operation not permitted)
+2026-11-18 13:56:44.866 xcodebuild[59173:60202816]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 13:56:44.988 xcodebuild[59173:60202815] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+Warm success: stdout empty, stderr has progress, all writes in scratch and patched state restored
+Stored key reorder refused via the recorded mapping fingerprint
+Stored mutation at scoring boundary cannot flip verdict
+practical lead report matches parent
+practical loss report matches parent
+no practical winner report matches parent
+too small report matches parent
+invalid report matches parent
+
+codex
+1. I found no remaining verdict or report change from edits to stored derived files. In memory, replacing `mapping.json` at the scoring boundary left the verdict unchanged. The rebuild uses its own snapshot. [Snapshot scoring](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:84)
+2. The rebuild called no reader, kept explicit file writes in scratch, and restored its four overrides. Import-path restoration still has two gaps. `score` imports `mapping` before the path is saved, and the confirmation record is read before the `finally` guard. A first call with a missing confirmation record left six entries in `sys.path`. [Scorer entry](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533) · [Rebuild setup](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:54)
+3. Unedited fixture reports matched the parent across all five verdicts. Rebuild progress went to stderr and stdout stayed empty until the CLI printed the verdict. [Dry-run record](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1)
+
+NOT READY: Save and restore `sys.path` around the entire scoring entry, starting before the first import and covering failures during setup.
+tokens used
+4,498,189
+1. I found no remaining verdict or report change from edits to stored derived files. In memory, replacing `mapping.json` at the scoring boundary left the verdict unchanged. The rebuild uses its own snapshot. [Snapshot scoring](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:84)
+2. The rebuild called no reader, kept explicit file writes in scratch, and restored its four overrides. Import-path restoration still has two gaps. `score` imports `mapping` before the path is saved, and the confirmation record is read before the `finally` guard. A first call with a missing confirmation record left six entries in `sys.path`. [Scorer entry](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533) · [Rebuild setup](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:54)
+3. Unedited fixture reports matched the parent across all five verdicts. Rebuild progress went to stderr and stdout stayed empty until the CLI printed the verdict. [Dry-run record](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1)
+
+NOT READY: Save and restore `sys.path` around the entire scoring entry, starting before the first import and covering failures during setup.

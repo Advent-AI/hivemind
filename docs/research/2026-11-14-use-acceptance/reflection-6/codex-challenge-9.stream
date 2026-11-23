@@ -1,0 +1,249 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 9: your round-8 corrections are applied (`reflection-6/model/`)
+
+1. **The first sol request runs alone.**
+   - `run_arm(..., first_alone=True)` for sol d1 sends the population's first topic alone. It keeps its outcome as part of sol d1,
+     uninspected, then runs the other 25 at 4 workers.
+   - If the first request writes no outcome, the limit stops and the send ends "sol d1 STOPPED".
+   - The test `test_the_first_sol_request_runs_alone_and_a_refusal_there_stops_the_run` gives the transport a 400 (not retried) on the
+     first sol request. Exactly one sol request is made, every luna d1 request is made, and the send stops.
+   - Tests 9 of 9.
+2. **The check output is regenerated:** caps luna $0.25 and sol $4.50, check passed, the digest matching the launcher.
+3. **The design:** the request-equality line now says `model`. A "Round 8 changes" section records the first request alone.
+4. **The preflight:**
+   - the ladder replay of D625 stands, because the step's check code (`ladder_step.py`, the candidate request files, `stage_a.py`) is
+     unchanged since it ran: 83 stored answers, 5 refusals, each as in the stored runs (`model/ladder-preflight-from-d625.txt`);
+   - `scripts/preflight.py` covers extraction and matching only, and reports "unexercised" on ladder archives, as recorded in D625.
+
+**Asked:** send now (six interleaved arm-draws, the first sol request alone, caps $0.25 and $4.50), or name what must change first.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the first-request stop, the regenerated checks and the scope of the stored preflight before giving the send decision.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/DESIGN.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/ladder-preflight-from-d625.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/check-output.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+stored answers of the 26 topics, 3 passes, every attempt: 83 judged; refused by the current checks 5
+  4 x the reference's words are not in the item: copy one unbroken passage f
+  1 x The question or a condition refers to the item or the article ("this i
+   e.g. ('fortnight', 'c1/clean-13', 1, ["the reference's words are not in the item: copy one unbroken passage from the item exactly, not reworded, not reordered, and not taken from the topic"])
+   e.g. ('fortnight', 'c1/clean-13', 2, ["the reference's words are not in the item: copy one unbroken passage from the item exactly, not reworded, not reordered, and not taken from the topic"])
+   e.g. ('fortnight', 'c1/clean-9', 3, ["the reference's words are not in the item: copy one unbroken passage from the item exactly, not reworded, not reordered, and not taken from the topic"])
+   e.g. ('fortnight', 'c1/clean-13', 3, ["the reference's words are not in the item: copy one unbroken passage from the item exactly, not reworded, not reordered, and not taken from the topic"])
+   e.g. ('week-10-06', 'c1/clean-7', 2, ['The question or a condition refers to the item or the article ("this item", "in the item"). Replace that reference with the specific information needed to understand it without the item.'])
+
+ succeeded in 0ms:
+# Matched model comparison of the answer-choice step, gpt-6-luna against gpt-6.1-sol (D628), fixed before any send
+
+**Hypothesis.** The frozen step's model, `gpt-6-luna` (the provider's "most efficient model for focused, high-volume tasks"), leaves
+parts of a topic's outcome unlisted (L) and fuses decisions (Q) in about 1 of 6 sends on these topics (D626). A stronger model on the
+same provider and the same request, `gpt-6.1-sol` ("near-Astra performance for complex work at a lower cost"), makes fewer of these
+faults. The careful Claude writer's 0 of 26 is a lead, not a ranking.
+
+**Same provider, same credential, same transport.** The model was found by a read-only listing (`model-list.txt`). Its published
+rates are $2 and $10 per million input and output tokens (developers.openai.com/api/docs/models, read 2026-11-16), added to
+`model.PRICES` with that source. No credential or provider cap changes.
+
+## Arms and population
+
+- **The arms:** `luna` (the frozen step as it is) and `sol` (identical except `model='gpt-6.1-sol'`). Both run at medium effort. Three fresh draws each, on
+  the 26 topics outside the 44 used by the reference control (the fortnight's and the week of 10-06's, all 13 of each).
+- **Interleaving:** luna d1, sol d1, luna d2, sol d2, luna d3, sol d3, each a separate run with its own archive.
+- **Request equality:** every request is the frozen request byte for byte (system, user, schema, output cap, transport, retries),
+  except `model`. This is checked at $0 on the bytes as sent.
+
+## Reading
+
+- **What is read:** all six arm-draws' written ladders and refusals (156 items), mixed blind and shuffled, plus six controls:
+  - the reference control's four: two sound, a rung gap (R) and another question (Q);
+  - two new ones:
+    - an unlisted part (L): a stored ladder with one listed part its outcome names removed from not_judged;
+    - an unjustified refusal (N): a "no main figure" refusal put on a topic with a stated main figure.
+- **Who reads:** both families with `stage-a-reader-brief.md` (the full gate form).
+- **Disputes:** counted both ways.
+- **Validity:** a missed planted-wrong control voids the reading.
+- **Review:** every agreed hard-line fault in the sol arm, and every one that differs between the arms on a topic, is reviewed
+  against its source.
+
+## What is counted
+
+- Per arm, over 78 sends: items with an agreed fault on Q, L, R or N; refusals (the model's, and code's refused-twice); answers that
+  could not be read (a truncation signal).
+- Per topic: faulted sends in each arm.
+
+## Outcomes, fixed now
+
+- **Moves the candidate:** both of these, on agreed marks:
+  - **a material paired improvement:** the sol arm has at most half the luna arm's faulted items, and at least 3 fewer;
+  - **no new harm:** no topic faulted in 2 or more sol draws while faulted in no luna draw; sol refusals and unreadable answers no
+    more than 2 above luna.
+
+  The direction must not reverse when unresolved points count against.
+- **Closes it:** the sol arm's failed sends at least the luna arm's minus 1.
+- **Otherwise inconclusive.**
+
+**Round 3 changes:**
+- **Failed sends** are agreed hard-line faults plus sends refused twice by code. A lost answer cannot improve an arm. Each arm must
+  hold all 78 sends.
+- **Too little signal:** the result is inconclusive, never a close, when the luna arm fails fewer than 3 sends.
+- **Sound controls:** both families failing a hard line on a sound control voids the reading as too harsh.
+- **Request check:** the check compares the request bytes as built and sent. Effort is the only difference.
+
+## Spend
+
+- Caps: luna $0.25, sol $4.50, reserved per attempt at the worst cost (sol about $0.20 an attempt), with sol at 4 workers.
+- Expected: about $0.08 (luna), and about $2.2 (sol, today's luna token counts at sol's rates, no cache discount). About $9.7 is left of D439's $40.
+- A separate council decision is needed before the send.
+
+**Limits:**
+- 26 topics, chosen as all of two stored weeks;
+- one model;
+- the same readers as before.
+
+**Round 8 changes:**
+- The first sol request, for the population's first topic, runs alone as a compatibility check. Its answer is kept as part of sol d1
+  and is not inspected. If it writes no outcome, the run stops and is reported.
+- The check output is regenerated for the launcher as reviewed.
+
+ succeeded in 0ms:
+26 topics: each luna request equals its stored first request and each sol request differs only in its model: True; controls 6; most attempts an arm 468; the sum of worst-case reserves if every attempt were at its worst {luna: $4.90, sol: $98.06}; caps {'luna': 0.25, 'sol': 4.5}
+check passed
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'preflight|ladder' scripts/preflight.py | head -45" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 7 'first_alone|first_sol|def send\\(' docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+14:configuration file is gone, is counted as not replayed and named. Usage: python3 scripts/preflight.py [--archive A] [--items I]
+80:def _preflight_extract_inputs(request, item, cfg):
+143:            version, shown_ids = _preflight_extract_inputs(request, item, cfg)
+184:    """A store copied for preflight (live-service/OPERATING-CONTRACT.md, row 7): its writer lock taken without waiting, so a store being
+228:        shutil.copy(path, scratch)                  # `path` is already preflight's own locked copy (`store_copies`), never a live store
+339:    print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
+347:    print('\npreflight done')
+
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-15-USAGE = {'prompt_tokens': 5000, 'completion_tokens': 1500}
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-16-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-17-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-18-def transport():
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-19-    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-20-    seen = []
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-21-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py:22:    def send(provider, request):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-23-        seen.append(request.get('model'))
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-24-        user = request['messages'][1]['content']
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-25-        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-26-        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-27-    send.seen = seen
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-28-    return send
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-29-
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-153-    monkeypatch.setattr(effort_probe, 'built', built)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-154-    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-155-    with pytest.raises(SystemExit, match='CHECK FAILED'):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-156-        effort_probe.check()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-157-    assert not (tmp_path / 'check-passed.json').exists()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-158-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-159-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py:160:def test_the_first_sol_request_runs_alone_and_a_refusal_there_stops_the_run(tmp_path, monkeypatch):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-161-    monkeypatch.setattr(effort_probe, 'RECORD', tmp_path / 'check-passed.json')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-162-    effort_probe.check()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-163-    calls = []
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-164-    good = transport()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-165-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-166-    def refusing(provider, request):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/test_model_probe.py-167-        calls.append(request['model'])
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-94-          f'reserves if every attempt were at its worst {{{", ".join(f"{a}: ${w:.2f}" for a, w in worst.items())}}}; caps {CAPS}')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-95-    if failures:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-96-        raise SystemExit(f'CHECK FAILED: {failures}')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-97-    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-98-    print('check passed')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-99-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-100-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py:101:def run_arm(cases, folder, cap_usd, setting, rl, transport=None, workers=8, first_alone=False):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-102-    """One arm-draw: Stage A's runner with the setting given (its model, effort and cap)."""
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-103-    folder = Path(folder)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-104-    folder.mkdir(parents=True, exist_ok=False)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-105-    limit = stage_a.StageALimit(cap_usd, folder / 'spend.jsonl', attempt=transport)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-106-    texts = stage_a.request_texts()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-107-    checksum = hashlib.sha256(json.dumps([setting.model, setting.reasoning_effort, setting.max_output_tokens]).encode()).hexdigest()[:16]
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-108-    call_config = SimpleNamespace(provider='openai', version=f'clean-ladder-model-{setting.model}', checksum=checksum)
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-132-                    handle.flush()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-133-                    os.fsync(handle.fileno())
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-134-                written.append(case['case'])
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-135-        except (stage_a.Stopped, budget.OverBudget):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-136-            return
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-137-        except Exception as error:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-138-            limit.stop(f"{case['case']}: {type(error).__name__}: {error}")
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py:139:    if first_alone:                       # a compatibility check: the first request alone, kept as part of the draw and not inspected
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-140-        work(cases[0])
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-141-        if not written:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-142-            limit.stop(limit.stop_reason or 'the first request alone wrote no outcome')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-143-            return written, limit
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-144-        cases = cases[1:]
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-145-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-146-        list(pool.map(work, cases))
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-147-    return written, limit
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-148-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-149-
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py:150:def send(folder, *, transport=None):
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-151-    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-152-    if record is None or record['code_sha256'] != code_digest():
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-153-        raise SystemExit('no check record for these files: run `check` first')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-154-    rl = refcontrol.research_list()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-155-    population = refcontrol.population()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-156-    for arm in SETTINGS:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-157-        now = {f'{source}:{name}': model.request_identity(built(case, SETTINGS[arm], rl))[1] for source, name, case, _ in population}
+--
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-159-            raise SystemExit('REFUSED: the requests differ from the checked record')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-160-    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-161-    spent = collections.Counter()
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-162-    for arm, draw in ORDER:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-163-        cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in population]
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-164-        cap = CAPS[arm] - spent[arm]
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-165-        written, limit = run_arm(cases, folder / f'{arm}-d{draw}', cap, SETTINGS[arm], rl, transport=guard, workers=WORKERS[arm],
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py:166:                                 first_alone=(arm, draw) == (CANDIDATE, 1))
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-167-        known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-168-        spent[arm] += known + in_full
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-169-        over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-170-        print(f'{arm} d{draw}: {len(written)} of 26 written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-171-        if over or guard.breaches or limit.stopped or len(written) != 26:
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-172-            raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py-173-    print(f'spent {dict(spent)}')
+
+codex
+**Send the matched comparison under the stated $4.75 combined cap.** The first Sol topic runs alone and its outcome remains in the draw; a request-level failure stops the run before the other Sol topics. The regenerated check reports the reviewed caps, and the stored ladder preflight records **83 answers checked and five refusals**. [Launcher](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py), [preflight record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/ladder-preflight-from-d625.txt)
+
+One wording correction can accompany the result: the design still has an inherited sentence saying *effort* is the only request difference; it should say *model*. The actual check compares the two new requests by model. Also, the first **topic** runs alone, but the ladder runner may make a second request for that topic if its first answer is refused by a check. Neither point changes the send decision.
+
+A stopped draw remains **not measured**. A completed comparison is a diagnostic on exposed topics, not a gate pass. I have not started the run.
+
+**CONSENSUS: Send the six matched draws with the first Sol topic alone, within the stated caps and stop rules.**
+tokens used
+805,202
+**Send the matched comparison under the stated $4.75 combined cap.** The first Sol topic runs alone and its outcome remains in the draw; a request-level failure stops the run before the other Sol topics. The regenerated check reports the reviewed caps, and the stored ladder preflight records **83 answers checked and five refusals**. [Launcher](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py), [preflight record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/ladder-preflight-from-d625.txt)
+
+One wording correction can accompany the result: the design still has an inherited sentence saying *effort* is the only request difference; it should say *model*. The actual check compares the two new requests by model. Also, the first **topic** runs alone, but the ladder runner may make a second request for that topic if its first answer is refused by a check. Neither point changes the send decision.
+
+A stopped draw remains **not measured**. A completed comparison is a diagnostic on exposed topics, not a gate pass. I have not started the run.
+
+**CONSENSUS: Send the six matched draws with the first Sol topic alone, within the stated caps and stop rules.**

@@ -1,0 +1,15 @@
+D0 control (unmutated): 17 passed in 0.30s
+D1 the raw day read instead of the stored one: 2 failed, 15 passed in 0.34s | failed: ['test_a_fixed_completion_with_every_control_kept_and_sound_reviews_moves', 'test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive'] | first: ["E       AssertionError: assert 'closes' == 'moves'"]
+D2 the frozen mechanism not required: 1 failed, 16 passed in 0.33s | failed: ['test_no_annual_filing_date_in_the_frozen_arm_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D3 new declines not reviewed: 1 failed, 16 passed in 0.35s | failed: ['test_an_unjustified_new_decline_closes_even_where_the_frozen_ladder_was_flagged'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D4 completion questions not reviewed: 1 failed, 16 passed in 0.33s | failed: ['test_a_flagged_fixed_completion_question_closes_even_when_the_frozen_ones_are_flagged_too'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D5 a reviewer disagreement not made inconclusive: 1 failed, 16 passed in 0.33s | failed: ['test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D6 the v2 arm sends the frozen text: 2 failed, 15 passed in 0.32s | failed: ['test_each_arm_sends_its_own_system_text_and_nothing_else_differs', 'test_an_answer_code_refuses_twice_is_lost_kept_out_of_the_review_and_closes'] | first: ['E       AssertionError: assert (36 >= 18 and 0 >= 18)']
+D7 per-topic comparison dropped: 1 failed, 16 passed in 0.34s | failed: ['test_a_new_material_fault_on_another_topic_closes'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+V1 one reviewer accepted: 1 failed, 16 passed in 0.35s | failed: ['test_one_reviewer_alone_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V2 controls not checked: 1 failed, 16 passed in 0.36s | failed: ['test_a_reviewer_who_misses_a_planted_defect_voids_the_reading'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V3 missing rows accepted: 1 failed, 16 passed in 0.36s | failed: ['test_a_reviewer_missing_a_row_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V4 malformed rows accepted: 1 failed, 16 passed in 0.35s | failed: ['test_a_malformed_verdict_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+L1 a lost answer sent to the review: 1 failed, 16 passed in 0.33s | failed: ['test_an_answer_code_refuses_twice_is_lost_kept_out_of_the_review_and_closes'] | first: ["E       TypeError: 'NoneType' object is not subscriptable"]
+L2 a lost answer read as a decline: 17 passed in 0.31s
+(L2 survives as an equivalent mutant on the verdict: a lost v2 answer fails `fixed` or `kept` whether it is called lost or a decline, since no topic lists either for v2 except week c1/clean-11's decline, where a lost answer is also outside ALLOWED. It changes the report's wording only.)

@@ -1,0 +1,13 @@
+I cannot agree to send the slice yet. The revised design is much clearer, and I reproduced the reported **69 matching scorer outcomes** and **711 positive / 11,134 negative visibility checks**. Three issues still affect whether the result and spending limit mean what they claim.
+
+1. **The $12.25 maximum is an estimate, not an enforced maximum.** Doubling the largest stored input does not limit a new request’s size. The 60-view condition is observed in a log **after** day-end judging, so it cannot prevent spending beyond the assumed bound. The calculation also assumes two attempts while [the production transport allows three](/Users/lchingen/hivemind/src/hivemind/model.py:126). Use a tested budget that reserves for requests and retries before sending, or establish and enforce every assumption used by a conservative numeric bound. Label the present figures as estimates until then.
+
+2. **A missing judgment can still be assigned the wrong cause.** In [procedure 7](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/DESIGN.md:55), “not judged” comes *after* extraction, linking and visibility in a first-applicable list. A question with no judgment and a missing fact will therefore be counted under the earlier cause. Put “not judged” before those causes, and list missing facts as observations rather than a proven cause of a nonexistent judgment.
+
+3. **The visibility validation does not call the function it claims to validate.** [validate_shown](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/prod_records.py:123) independently applies the same regular expression to individual requests; it never invokes `shown_evidence()`. It therefore does not test that function’s view selection, date cutoff, archive lookup, or union across requests. Validate the actual function against independently assembled expected sets, including a different view, a request after the cutoff, and a missing archive call. The reported cases are useful checks of the expression, but they do not establish the whole reader.
+
+Also clarify the matching outcome when candidates include both **NOT SAME** and **unresolved**, with none confirmed SAME: that is unresolved, not evidence that the question was not opened. Define the empty-candidate case separately.
+
+The preflight records and the scorer comparison are useful evidence. Their seeded-data limit remains correctly disclosed. The clean-side packet rebuild establishes reproducibility of the saved reading; it does not independently verify all original request construction.
+
+Council position: not ready; enforce the spending bound, correct the missing-judgment precedence, and validate the actual visibility reader.

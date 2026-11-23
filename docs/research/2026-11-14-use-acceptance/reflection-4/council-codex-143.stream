@@ -1,0 +1,436 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 143: proof 2f passed (D602); the contract's proofs not yet fully covered
+
+## Proof 2f (`live-service/PROOF2F-RESULT.md`)
+
+- **A:** with the live read successful, the Idea and its bundles are asked as of the served 2026-08-15 and the chosen questions are
+  drawn.
+- **B:** after a failed live read, the Idea is sent as of the embedded 2026-08-28 and refused with the API's 409.
+  - The error is shown, with no bundles asked.
+  - The library is unchanged (its count and first page).
+  - A second sentence is sent again.
+  - No page error.
+- **The mutant** with no `as_of` is caught in both cases. Lint, format and the UI's 70 tests pass. No product code changed.
+- **My errors:** headless Chrome delivered no animation frames, so the checks wait on timers. The library pages 24 cards, so the
+  check uses its count. The card's composite questions are not in the sealed store, so the card's own ledger is used.
+
+## The proof list against what is built, my census
+
+| Proof | Status |
+|---|---|
+| 1, 2a to 2f, 3, 4, 8a to 8d′, 9, 10 | Built and passing (D594 to D602). |
+| 5: free-space stop; a reader held across three days | Built (4a). |
+| 5: a database-full error mid-day with `max_page_count` | **Not built.** The filesystem-full proof (real full disk, SQLite "database or disk is full") covers the same error code on a real disk. |
+| 5: after a long read ends, a checkpoint completes and a reset brings the `-wal` within the limit | **Not built.** |
+| 6: a reader opening a store whose side files are absent, in a read-only directory, fails loudly; a busy read is retried within the timeout | **Not built.** The readers set no busy timeout, so Python's default wait of 5 s applies. |
+| 7: crash; every route at every allowed bound equals a backup at the last completed day | **Partly.** 4a compares five routes at the default bound, and 4b's `SIGKILL` proves the lock and preflight's copy, not every route at every bound. |
+| 8: a crashed store's copy through a symlink equals one through its own path | **Not built** as stated. 4b proves symlink aliasing of the lock, and the `SIGKILL` copy through the own path. |
+
+**Proposed, one slice of tests at $0, with no product change expected:**
+
+- **5a.** `max_page_count` on a writer's store mid-day: the writer exits as a crash, readers serve the last completed day.
+- **5b.** A real reader held for one day, then released: the next truncating checkpoint returns `done`, and the `-wal` is at most
+  64 MB. That bound is trivial on u1, so the check is that a `-wal` grown during the held read is truncated to zero bytes after it.
+- **6a.** A WAL store whose side files are absent, in a read-only directory: `service.open_ledger` plus a read raises
+  `OperationalError` (loud). Through the API, the route answers an error status and never a 200.
+- **6b.** A store in rollback mode, after the writer's orderly end, held by a `BEGIN EXCLUSIVE` connection for 0.5 s: a reader's read
+  waits and succeeds within Python's 5 s default. With the holder kept past the timeout, the read fails with "database is locked",
+  loudly.
+- **7′.** After the 4b `SIGKILL`: every service, bundle and idea function the bound-resolver baseline calls (`tests/bound_cases.py`),
+  at omitted, past and the last completed bound, on the crashed store equals the same on preflight's copy. The copy is the backup at
+  the last completed day, since the partial day is invisible. This reuses the baseline's call list.
+- **8′.** On the same crashed store, the snapshot through a symlink and through the own path decode to equal tables, ordered row by
+  row.
+
+**Asked of you:** are these the right closures for 5, 6, 7 and 8? Should any be dropped as already covered (5a by the
+filesystem-full proof)? Does 6a's API status need to be specified (today an `OperationalError` is not in `REQUEST_ERRORS`)?
+
+End with `CONSENSUS: yes` (build these tests) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the saved 2f result, the existing crash and disk proofs, and the API’s SQLite error path before assessing the proposed test slice.
+exec
+/opt/homebrew/bin/zsh -lc "cat docs/research/2026-11-14-use-acceptance/live-service/PROOF2F-RESULT.md
+nl -ba scripts/hivemind_api.py | sed -n '35,60p;65,95p;115,155p'
+nl -ba tests/bound_cases.py | sed -n '1,180p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py | sed -n '185,245p'
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '30,44p;230,255p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Proof 2f: the page's day reaches the Idea call (D602), 2026-11-16, $0
+
+`poc/ui/verify-live-day.mjs` builds two check pages from the demo page `poc/mock/index.html`, whose embedded snapshot is dated
+2026-08-28. `proof2f_run.py` serves them and loads each in headless Chrome, where the checks run on load (`proof2f-output.txt`).
+`fetch` is stubbed in the existing verifiers' pattern. The library and bundles are real: they come from the ledger the stored card
+was made from (`english-v23-jev-2026-10-25`, last completed day 2026-08-15, the card's own day), through the product's `bundle`
+functions.
+
+- **A, the live read succeeds** (`/library` answers that ledger's library, as of 2026-08-15):
+  - the library counts the served 90 questions;
+  - the Idea is sent as of 2026-08-15;
+  - the question bundles are asked as of 2026-08-15, which exercises `readBundles`;
+  - the three chosen questions are drawn;
+  - no page error.
+- **B, the live read fails** (`/library` answers 503):
+  - the page keeps 2026-08-28 and sends the Idea as of that day;
+  - the stub answers as the real API does for a day after the store's last completed day: 409 `{"error": "day not completed",
+    "requested": ..., "last_completed_day": ...}`, JSON;
+  - the Idea error is shown;
+  - no bundles are asked;
+  - the library is unchanged (68 questions; the same 24 cards on its first page);
+  - a second sentence is sent again, as of the same day, and its error is shown;
+  - no page error.
+- **Scope of "nothing else breaks":** exactly the checks above, not every behaviour of the page.
+- **Mutant M1** (the built page sends no `as_of`): both cases fail, so it is caught.
+- **Also run:** `npm --prefix poc/ui run lint` and `format:check` pass, and the UI's own tests pass (70).
+- **No product code changed.**
+
+## My errors, each caught by a failing check and traced before the fix
+
+- The checks first waited on animation frames, which headless Chrome did not deliver; they wait on timers now.
+- I asserted the library's 94 views as cards, but the library pages its cards 24 at a time. It now checks the library's own count.
+- I first served the sealed run's store, which does not hold the card's composite questions. The page's composite then threw, and the
+  Idea showed as failed. Traced in Node: `prepareIdeaComposite` raises "Composite entries must identify unique connected theses"
+  with those bundles, and works with the card's own ledger.
+  - **Observation, not a defect claim:** a composite error other than `CompositeUnavailable` marks the whole Idea failed, as the code
+    is written (`bootstrap.js`).
+    35	from hivemind.views import store  # noqa: E402
+    36	
+    37	PATHS = {}
+    38	ALIASES = {}
+    39	CFG = None
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, live_lock.LockRefused, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    """(status, body) for a request's error. The store's date refusals carry their days (OPERATING-CONTRACT.md, row 3)."""
+    46	    if isinstance(error, service.FirstDayNotCompleted):
+    47	        return 503, {'error': str(error)}
+    48	    if isinstance(error, service.BoundNotCompleted):
+    49	        return 409, {'error': 'day not completed', 'requested': error.requested, 'last_completed_day': error.last_completed_day}
+    50	    if isinstance(error, service.RangeNotOrdered):
+    51	        return 409, {'error': 'range start after its end', 'start': error.start, 'end': error.end}
+    52	    if isinstance(error, KeyError):
+    53	        return 404, {'error': f'not found: {error}'}
+    54	    if isinstance(error, (service.LedgerError, live_lock.LockRefused)):     # the store cannot be served as configured (row 7)
+    55	        return 500, {'error': str(error)}
+    56	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    57	        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    58	    return 400, {'error': str(error)}
+    59	
+    60	
+    65	
+    66	    def __init__(self, read_only=False):
+    67	        self.read_only = read_only
+    68	
+    69	    def __enter__(self):
+    70	        self.ledger = self.index = self.items = self.archive = None
+    71	        try:
+    72	            self.ledger = service.open_ledger(PATHS['views'])
+    73	            self.ledger.execute('begin')
+    74	            self.ledger.execute('select 1 from sqlite_master limit 1').fetchone()
+    75	            self.index = None if self.read_only else search.open_index(PATHS['index'])
+    76	            self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+    77	            self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+    78	        except BaseException:
+    79	            self._close()
+    80	            raise
+    81	        return self
+    82	
+    83	    def _close(self):
+    84	        if self.ledger is not None and self.ledger.in_transaction:
+    85	            self.ledger.rollback()
+    86	        for conn in (self.ledger, self.index, self.items):
+    87	            if conn is not None:
+    88	                conn.close()
+    89	
+    90	    def __exit__(self, *exc):
+    91	        self._close()
+    92	
+    93	
+    94	class Handler(http.server.BaseHTTPRequestHandler):
+    95	    def log_message(self, fmt, *args):   # one line per request, no query text or body (an idea can carry anything)
+   115	        self.end_headers()
+   116	
+   117	    def _answer(self, work, read_only=False):
+   118	        try:
+   119	            with Connections(read_only) as db:
+   120	                self._send(200, work(db))
+   121	        except REQUEST_ERRORS as error:
+   122	            status, body = error_response(error)
+   123	            self._send(status, body)
+   124	
+   125	    def _stream_answer(self, work, prepare):
+   126	        """The streamed Idea answer, in one read transaction: `prepare` checks the request (its date resolved, the first day refused)
+   127	        before any header, so a refusal is a normal status and body; then the 200 headers and the work, in the same transaction."""
+   128	        headers_sent = False
+   129	
+   130	        def emit(event):
+   131	            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+   132	            self.wfile.flush()
+   133	
+   134	        try:
+   135	            with Connections() as db:
+   136	                prepare(db)
+   137	                self.send_response(200)
+   138	                self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+   139	                self.send_header('Cache-Control', 'no-store')
+   140	                self._cors()
+   141	                self.end_headers()
+   142	                headers_sent = True
+   143	                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+   144	                emit({'type': 'result', 'data': card})
+   145	        except (BrokenPipeError, ConnectionResetError):
+   146	            return
+   147	        except REQUEST_ERRORS as error:
+   148	            status, body = error_response(error)
+   149	            if not headers_sent:
+   150	                self._send(status, body)
+   151	                return
+   152	            try:
+   153	                emit({'type': 'error', 'status': status, 'message': body['error'], **{k: v for k, v in body.items() if k != 'error'}})
+   154	            except (BrokenPipeError, ConnectionResetError):
+   155	                pass
+     1	"""The store states and calls the bound resolver is checked on (live-service/OPERATING-CONTRACT.md, row 3 and its product-facing
+     2	contract; proofs 2c and 2d). Shared by the recorder of today's outputs (`record_bound_baseline.py`, run once before the change) and
+     3	`test_bound_resolver.py`, so both run exactly the same calls.
+     4	
+     5	Four states: a finished store (the sealed run through 2026-08-15: nothing after its last completed day), a store with work after its
+     6	last completed day (the running product's served store: 2026-08-29's steps after 2026-08-28), a first-day store (steps, no completed
+     7	day) and an empty store (the tables, no steps, no completed day). The two real stores are opened read-only."""
+     8	import hashlib
+     9	import json
+    10	import os
+    11	import shutil
+    12	
+    13	from hivemind import bundle, dispatch, search, service
+    14	from hivemind.views import store
+    15	
+    16	ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    17	FINISHED = os.path.join(ROOT, 'poc', 'data', 'sealed-2026-10-24-run3-through-0815', 'views.sqlite')
+    18	PARTIAL = os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite')
+    19	STATES = {'finished': {'past': '2026-08-01', 'future': '2026-09-30', 'since': '2026-07-01'},
+    20	          'partial': {'past': '2026-08-20', 'future': '2026-09-30', 'since': '2026-08-01'},
+    21	          'first_day': {'past': '2026-09-01', 'future': '2026-09-30', 'since': '2026-08-01'},
+    22	          'empty': {'past': '2026-09-01', 'future': '2026-09-30', 'since': '2026-08-01'}}
+    23	
+    24	
+    25	def open_state(name, folder):
+    26	    """A connection to the state's store; the real stores are copied to `folder` first (by the backup API) so nothing writes beside
+    27	    them, then opened read-only."""
+    28	    if name in ('finished', 'partial'):
+    29	        source = service.open_ledger(FINISHED if name == 'finished' else PARTIAL)
+    30	        target_path = os.path.join(folder, f'{name}.sqlite')
+    31	        import sqlite3
+    32	        target = sqlite3.connect(target_path)
+    33	        source.backup(target)
+    34	        target.close()
+    35	        source.close()
+    36	        return service.open_ledger(target_path)
+    37	    path = os.path.join(folder, f'{name}.sqlite')
+    38	    conn = store.open_db(path)
+    39	    if name == 'first_day':
+    40	        dispatch.mark(conn, {'input_id': 'gnews:first', 'publication_day': '2026-09-01'}, 1, 'handed_over')
+    41	    conn.commit()
+    42	    conn.close()
+    43	    return service.open_ledger(path)
+    44	
+    45	
+    46	def first_view(conn):
+    47	    row = conn.execute('select view_id, created_seq from views order by created_seq limit 1').fetchone()
+    48	    return (row['view_id'], row['created_seq']) if row else ('v1', 0)
+    49	
+    50	
+    51	def calls(conn, state):
+    52	    """(name, bound kind, a function of no arguments) for every public function that takes a date, with an omitted, a past and a
+    53	    future upper bound; and the ranges."""
+    54	    days = STATES[state]
+    55	    view_id, created_seq = first_view(conn)
+    56	    item_of = bundle.item_lookup(None)
+    57	    out = []
+    58	    for kind, bound in (('omitted', None), ('past', days['past']), ('future', days['future'])):
+    59	        out += [
+    60	            ('service.summaries', kind, lambda b=bound: service.summaries(conn, b, include_closed=True)),
+    61	            ('service.views', kind, lambda b=bound: service.views(conn, None, b, include_closed=True)),
+    62	            ('service.view', kind, lambda b=bound: service.view(conn, view_id, b)),
+    63	            ('service.evidence', kind, lambda b=bound: service.evidence(conn, view_id, b)),
+    64	            ('service.record', kind, lambda b=bound: service.record(conn, view_id, b)),
+    65	            ('service.evaluate', kind, lambda b=bound: service.evaluate(conn, view_id, '>=', 1.0, b)),
+    66	            ('service.history', kind, lambda b=bound: service.history(conn, view_id, days['since'], b)),
+    67	            ('service.changes', kind, lambda b=bound: service.changes(conn, days['since'], b)),
+    68	            ('bundle.days', kind, lambda b=bound: bundle.days(conn, b)),
+    69	            ('bundle.not_judged', kind, lambda b=bound: bundle.not_judged(conn, view_id, created_seq, b)),
+    70	            ('bundle.view_bundle', kind, lambda b=bound: bundle.view_bundle(conn, item_of, view_id, b)),
+    71	            ('bundle.thesis_bundles', kind, lambda b=bound: bundle.thesis_bundles(conn, None, [view_id], b)),
+    72	            ('bundle.library', kind, lambda b=bound: bundle.library(conn, None, b)),
+    73	            ('search.search', kind, lambda b=bound: search.search(conn, None, 'revenue data center', 10, b, semantic=False)),
+    74	        ]
+    75	    out += [('service.changes', 'since equal to end', lambda: service.changes(conn, days['past'], days['past'])),
+    76	            ('service.history', 'from equal to to', lambda: service.history(conn, view_id, days['past'], days['past']))]
+    77	    return out
+    78	
+    79	
+    80	def range_after_end_calls(conn, state):
+    81	    """A start after an explicit, completed end: refused for both ranges (council round 124). Not in the recorded baseline."""
+    82	    days = STATES[state]
+    83	    view_id, _ = first_view(conn)
+    84	    out = [('service.changes', 'since after end', lambda: service.changes(conn, days['future'], days['past'])),
+    85	           ('service.history', 'from after to', lambda: service.history(conn, view_id, days['future'], days['past']))]
+    86	    return out
+    87	
+    88	
+    89	def outcome(call):
+    90	    """('ok', sha256 of the canonical JSON) or ('error', the exception's type and message)."""
+    91	    try:
+    92	        value = call()
+    93	    except Exception as error:                                   # noqa: BLE001 - the recorded outcome is the error itself
+    94	        return ['error', f'{type(error).__name__}: {error}']
+    95	    return ['ok', hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()]
+   185	    record = run_stage_b.send(tmp_path, transport=fake_judge, sleep=lambda seconds: None)
+   186	    assert record['u1']['state'] == 'incomplete' and not (tmp_path / 'draw-u1-redo').exists()
+   187	    assert record['stopped'].startswith('u1 incomplete: ') and reason in record['stopped'] and f'before {days[0]}' not in record['stopped'], record['u1']['attempts'][0].get('traceback')
+   188	    assert len(days) == 1
+   189	
+   190	
+   191	KILLED_WRITER = '''
+   192	import sys, time
+   193	from pathlib import Path
+   194	here, out, marker, locks = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4]
+   195	sys.path[:0] = [str(here), str(here.parents[0] / 'e2e-2026-11-09'), str(here.parents[2] / 'src')]
+   196	import ladder_adapter
+   197	from hivemind import jev, live_lock, model
+   198	live_lock.LOCK_FOLDER = locks
+   199	def refuse(*arguments):
+   200	    raise SystemExit('a credential was read')
+   201	model._key = jev._key = refuse
+   202	from test_ladder_adapter import fake_judge
+   203	real, done = ladder_adapter.LadderAdapter.close_and_complete, []
+   204	def close(self, day):
+   205	    if len(done) == 2:                       # the third day's articles are committed; its completion never comes
+   206	        marker.write_text(day)
+   207	        time.sleep(600)
+   208	    done.append(day)
+   209	    return real(self, day)
+   210	ladder_adapter.LadderAdapter.close_and_complete = close
+   211	ladder_adapter.replay('u1', out, transport=fake_judge, cap_usd=5.0)
+   212	'''
+   213	
+   214	
+   215	def test_a_killed_writer_process_leaves_its_lock_released_and_preflights_copy_answers_as_its_last_completed_day(tmp_path):
+   216	    (tmp_path / 'writer.py').write_text(KILLED_WRITER)
+   217	    out, marker = tmp_path / 'out', tmp_path / 'third-day'
+   218	    writer = subprocess.Popen([sys.executable, str(tmp_path / 'writer.py'), str(HERE), str(out), str(marker), live_lock.LOCK_FOLDER])
+   219	    deadline = time.monotonic() + 120
+   220	    while not marker.exists() and writer.poll() is None and time.monotonic() < deadline:
+   221	        time.sleep(0.1)
+   222	    assert marker.exists(), 'the writer never reached its third day'
+   223	    with pytest.raises(live_lock.LockRefused):                                 # held while it runs
+   224	        live_lock.acquire(out / 'views.sqlite')
+   225	    os.kill(writer.pid, signal.SIGKILL)
+   226	    writer.wait()
+   227	    [copy] = preflight.store_copies([str(out / 'views.sqlite')])
+   228	    with service.open_ledger(copy) as conn:
+   229	        days = [r[0] for r in conn.execute('select day from days_completed order by id')]
+   230	        assert len(days) == 2 and service.resolve_bound(conn, None) == days[-1]
+   231	        assert conn.execute('select count(*) from processing_steps where publication_day = ?', (marker.read_text(),)).fetchone()[0] > 0
+   232	
+   233	
+   234	def test_a_snapshot_taken_beside_the_writer_holding_uncheckpointed_commits_is_whole_and_read_only_readable(tmp_path, monkeypatch):
+   235	    real, days, taken = ladder_adapter.LadderAdapter.close_and_complete, [], {}
+   236	
+   237	    def snapshot_before_completing_the_second_day(self, day):
+   238	        if len(days) == 1:
+   239	            taken['run'] = subprocess.run([sys.executable, str(SNAPSHOT), self.lock.real_path, str(tmp_path / 'snap.sqlite')],
+   240	                                          capture_output=True, text=True)
+   241	            taken['day'] = day
+   242	        days.append(day)
+   243	        return real(self, day)
+   244	    monkeypatch.setattr(ladder_adapter.LadderAdapter, 'close_and_complete', snapshot_before_completing_the_second_day)
+   245	    monkeypatch.setattr(ladder_adapter, 'truncate_checkpoint', lambda conn: 'done')   # the second day's commits stay in the -wal
+    30	## The contract
+    31	
+    32	1. **Journal mode, side files, opening.**
+    33	   - The live store is in WAL mode, set by the writer when it creates the store. Production's stores stay as they are.
+    34	   - The `-wal` and `-shm` files sit beside the store on a local disk. **No reader reaches a live store through a container bind mount
+    35	     or a network share.**
+    36	   - **Opening precondition:** every reader runs as the writer's user, and the store's directory is writable by it. SQLite needs the
+    37	     `-wal` and `-shm` files readable, or permission to create them, to open a WAL store with `mode=ro`.
+    38	   - Readers open with `mode=ro`, never `immutable=1`.
+    39	   - A reader that cannot open the store, or cannot begin a read transaction, fails loudly with the store's path. It never serves an
+    40	     empty or stale answer in its place.
+    41	   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+    42	     example while the WAL index is being rebuilt.
+    43	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+    44	2. **One committed state per request, one connection per concurrent request** (detailed in council rounds 125 and 126).
+   230	3. **One state per request:** an API request, its state pinned by its first read, held between its first and last read while the writer commits a judgement and
+   231	   completes a day returns the state at its start, and the writer's commits succeed. Run on a first-day store and a store with one
+   232	   completed day.
+   233	4. **Start-up and MCP concurrency:**
+   234	   - two overlapping MCP calls across a writer's commit each return their own transaction's state, two overlapping **search**
+   235	     calls included (each with its own index connection, both writing the query cache);
+   236	   - after a later day completes, a tool call on the actual MCP entry point sees that day's views; the instructions still name their
+   237	     start day;
+   238	   - an error while opening connections leaves none open;
+   239	   - a call that fails mid-read leaves no open transaction and no open connection;
+   240	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   241	   - MCP's object list after a later day includes that day's objects;
+   242	   - no transaction is open between MCP calls.
+   243	5. **Checkpoint and disk:**
+   244	   - below the free-space minimum, the writer stops before the day with its reason, and readers serve the last completed day;
+   245	   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+   246	   - a filesystem-full error mid-day: the store on a small disk image (`hdiutil`, a few MB), filled while the `-wal` grows. The
+   247	     writer exits non-zero, and readers serve the last completed day. Whether its reason was recorded is reported, not required;
+   248	   - with a long read held, the writer commits;
+   249	   - after the read ends, a checkpoint completes, and a reset brings the `-wal` within the limit;
+   250	   - with a reader held across three completed days, the writer stops before the fourth with its reason recorded, and readers serve
+   251	     the last completed day.
+   252	6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+   253	   within the timeout.
+   254	7. **A crash:** the writer is killed after committed writes mid-day.
+   255	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+
+codex
+**Not yet.** The proposed tests are close, but 7′ does not have an independent reference, and 6a exposes a product change that needs to be designed before calling this a test-only slice.
+
+1. **7′: compare with a backup taken before the partial day.** Preflight’s copy after `SIGKILL` contains the same committed partial-day rows as the crashed store. If both readers leak those rows, their answers can still agree. Take the reference after the last completed day and before the next day’s writes, then compare the crashed store and its post-crash copy against it. [Killed-writer test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py:191).
+
+   Also narrow the coverage claim: `bound_cases.calls` includes service, bundle and lexical search calls; it does **not** include Idea functions or every API/MCP route. Either add those explicitly or report the list actually exercised, including which dates were tested. [Baseline calls](/Users/lchingen/hivemind/tests/bound_cases.py:51).
+
+2. **6a: specify the API error before building.** `sqlite3.OperationalError` is not in `REQUEST_ERRORS`, so today the handler can terminate the request without a structured error response. If the desired behavior is a 500 JSON body naming the failure, that is a product-code change, with a test through the real HTTP entry point. The same distinction matters before streaming headers. [API error handling](/Users/lchingen/hivemind/scripts/hivemind_api.py:41).
+
+3. **6b does not prove the stated WAL busy-read case.** A rollback-mode exclusive lock can exercise Python/SQLite’s default busy timeout, but it is a different condition from a WAL reader encountering `SQLITE_BUSY`. It also proves waiting within SQLite’s timeout, not an application-level retry. Either design the named WAL case or amend the contract and report the narrower rollback-mode test. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:32).
+
+The real filesystem-full proof is strong evidence for the observed `SQLITE_FULL` path, but it is not the registered `max_page_count` test. Either keep 5a or explicitly replace that proof in the contract with the real-disk result and its limits. The checkpoint-after-release test and the crashed-store symlink comparison are useful as proposed.
+
+I checked the saved 2f result; it supports the stated page checks and their limited scope. I did not rerun it. [Proof 2f](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/PROOF2F-RESULT.md).
+
+CONSENSUS: no, because the crash comparison needs an independent pre-partial-day reference and the reader-error and busy-wait behaviors need a reviewed contract.
+tokens used
+3,621,598
+**Not yet.** The proposed tests are close, but 7′ does not have an independent reference, and 6a exposes a product change that needs to be designed before calling this a test-only slice.
+
+1. **7′: compare with a backup taken before the partial day.** Preflight’s copy after `SIGKILL` contains the same committed partial-day rows as the crashed store. If both readers leak those rows, their answers can still agree. Take the reference after the last completed day and before the next day’s writes, then compare the crashed store and its post-crash copy against it. [Killed-writer test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py:191).
+
+   Also narrow the coverage claim: `bound_cases.calls` includes service, bundle and lexical search calls; it does **not** include Idea functions or every API/MCP route. Either add those explicitly or report the list actually exercised, including which dates were tested. [Baseline calls](/Users/lchingen/hivemind/tests/bound_cases.py:51).
+
+2. **6a: specify the API error before building.** `sqlite3.OperationalError` is not in `REQUEST_ERRORS`, so today the handler can terminate the request without a structured error response. If the desired behavior is a 500 JSON body naming the failure, that is a product-code change, with a test through the real HTTP entry point. The same distinction matters before streaming headers. [API error handling](/Users/lchingen/hivemind/scripts/hivemind_api.py:41).
+
+3. **6b does not prove the stated WAL busy-read case.** A rollback-mode exclusive lock can exercise Python/SQLite’s default busy timeout, but it is a different condition from a WAL reader encountering `SQLITE_BUSY`. It also proves waiting within SQLite’s timeout, not an application-level retry. Either design the named WAL case or amend the contract and report the narrower rollback-mode test. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:32).
+
+The real filesystem-full proof is strong evidence for the observed `SQLITE_FULL` path, but it is not the registered `max_page_count` test. Either keep 5a or explicitly replace that proof in the contract with the real-disk result and its limits. The checkpoint-after-release test and the crashed-store symlink comparison are useful as proposed.
+
+I checked the saved 2f result; it supports the stated page checks and their limited scope. I did not rerun it. [Proof 2f](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/PROOF2F-RESULT.md).
+
+CONSENSUS: no, because the crash comparison needs an independent pre-partial-day reference and the reader-error and busy-wait behaviors need a reviewed contract.

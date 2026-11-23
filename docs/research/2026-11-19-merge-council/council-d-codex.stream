@@ -1,0 +1,1457 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f606-eda2-75b3-bce7-0b9ff6bb7c71
+--------
+user
+# Round d (read-only, $0). The plan is revised with your round-c changes (`EXECUTION-PLAN.md`, `articles.json`: 70 articles). The numbering error was mine.
+
+**One point I take differently: the open list per article, against your "day-start list".** I propose the list open when the article
+was read, at its old sequence number, including a question that article itself opened.
+- In the merge, the old opener runs in dispatch order, so a question opened by an earlier article that day is open for a later one.
+- A day-start list would hide v40 and v47 from article 189 (`gnews:4dca50e2…`), which opened them, and from every later 09-14 article.
+  No real wiring of the merge does that.
+- The control arm gives old's own evidence the same per-article timing.
+
+**Also check `merge_test.py`.** It holds:
+- `open_views_at` and `thesis_of`;
+- `judging_copy` and `restore_view`;
+- the queue restriction in `judge`.
+
+Read them against the frozen judging code (`src/hivemind/views/judging.py`, `store.py`). The control arm is not written yet; say what
+it must copy (evidence, sources, `same_claims`, `revisions`) so that its requests match the archived old requests' material as closely
+as the 09-06 copy allows.
+
+Under 250 words. End `CONSENSUS: EXECUTE` or `CONSENSUS: CHANGE <smallest change>`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check when a question can first appear to c8, using article 189 as the test case, and trace what the judge reads from the replay copy.
+exec
+/opt/homebrew/bin/zsh -lc "cat EXECUTION-PLAN.md && nl -ba merge_test.py | sed -n '1,260p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba ../../../src/hivemind/views/judging.py | sed -n '23,106p;164,179p;231,340p'
+nl -ba ../../../src/hivemind/views/store.py | sed -n '145,166p;187,261p;276,301p;345,446p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+    23	
+    24	from .. import config, model, vocabulary
+    25	from . import store
+    26	
+    27	PUSHES = vocabulary.PUSHES
+    28	SUPPORTED_VERSIONS = ('judging-v7',)   # D354: the frozen judging prompt
+    29	READINGS = 5                      # a piece is shown in the thesis's first five judgements after it arrives
+    30	BASIS = 10                        # and while one of the last ten judgements cited it
+    31	THEME_REASONS_CHARS = 300
+    32	UPDATED_MARK = 'updated since this thesis was last judged'
+    33	
+    34	
+    35	def require_supported(prompt_version):
+    36	    """Refuses a judging prompt version this code does not build, before any request is made."""
+    37	    if prompt_version not in SUPPORTED_VERSIONS:
+    38	        raise ValueError(f'judging {prompt_version!r} is not built; this code builds only {", ".join(SUPPORTED_VERSIONS)} (D354)')
+    39	
+    40	
+    41	def evidence_in_view(conn, view_id):
+    42	    """(the pieces a judgement of this thesis reads, how many pieces in force are not shown): the arrivals (linked after the
+    43	    READINGS-th most recent judgement, or all when there are fewer) and the basis (cited by one of the last BASIS judgements),
+    44	    both among the evidence in force."""
+    45	    in_force = store.evidence_in_force(conn, view_id)
+    46	    recent = store.recent_judgements(conn, view_id, BASIS)
+    47	    arrivals_after = recent[READINGS - 1]['seq'] if len(recent) >= READINGS else -1
+    48	    basis = {evidence_id for j in recent for evidence_id in j['cites']}
+    49	    linked_at = {r['evidence_id']: r['seq'] for r in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,))}
+    50	    shown = [p for p in in_force if linked_at.get(p['evidence_id'], -1) > arrivals_after or p['evidence_id'] in basis]
+    51	    return shown, len(in_force) - len(shown)
+    52	
+    53	
+    54	def schema_for(prompt_version):
+    55	    require_supported(prompt_version)
+    56	    pushes = PUSHES
+    57	    schema = {
+    58	        'type': 'object', 'additionalProperties': False,
+    59	        'required': ['rung', 'reasons', 'cites', 'cites_views', 'pushes', 'changed', 'why_changed'],
+    60	        'properties': {
+    61	            'rung': {'type': 'integer'}, 'reasons': {'type': 'string'},
+    62	            'cites': {'type': 'array', 'items': {'type': 'string'}}, 'cites_views': {'type': 'array', 'items': {'type': 'string'}},
+    63	            'pushes': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['evidence_id', 'push'],
+    64	                                                  'properties': {'evidence_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}},
+    65	            'changed': {'type': 'boolean'}, 'why_changed': {'type': 'string'},
+    66	        },
+    67	    }
+    68	    schema['required'].append('theme_pushes')
+    69	    schema['properties']['theme_pushes'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['view_id', 'push'],
+    70	                                                                       'properties': {'view_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}}
+    71	    schema['required'][1:1] = STANCE_FIELDS           # after rung: the reference and the implied outcome are written before the reasons
+    72	    schema['properties'].update({field: {'type': 'string'} for field in STANCE_FIELDS})
+    73	    return schema
+    74	
+    75	
+    76	def themes_in_force(conn, view_id):
+    77	    """The theme block of an asset thesis: every open theme thesis with a current state, with its rung label and whether a
+    78	    changed conclusion was recorded after this thesis's last judgement. Empty for a theme thesis."""
+    79	    if store.view(conn, view_id)['object_kind'] == 'theme':
+    80	        return []
+    81	    last = store.current_state(conn, view_id)
+    82	    out = []
+    83	    for row in conn.execute("select view_id from views where object_kind='theme' order by view_id"):
+    84	        theme_id = row['view_id']
+    85	        state = store.current_state(conn, theme_id)
+    86	        if not state or not store.is_open(conn, theme_id):
+    87	            continue
+    88	        updated = bool(last) and bool(conn.execute('select 1 from judgements where view_id=? and changed=1 and judgement_id>? limit 1',
+    89	                                                   (theme_id, last['judgement_id'])).fetchone())
+    90	        rung = store.rungs_of(conn, theme_id)[state['rung'] - 1]
+    91	        out.append({'view_id': theme_id, 'view': store.view(conn, theme_id), 'state': state, 'rung_label': rung['label'], 'updated': updated})
+    92	    return out
+    93	
+    94	
+    95	STANCE_FIELDS = ['reference', 'implied_outcome']   # D260: what the market expects, and the figure or date the evidence implies
+    96	
+    97	
+    98	class JudgementRefused(Exception):
+    99	    pass
+   100	
+   101	
+   102	def topological(conn, view_ids):
+   103	    """Dependencies first: a view comes after every view it depends on that is also in the set."""
+   104	    remaining = list(dict.fromkeys(view_ids))
+   105	    ordered, placed = [], set()
+   106	    while remaining:
+   164	
+   165	
+   166	def build_prompt(conn, view_id, prompt_version):
+   167	    require_supported(prompt_version)
+   168	    v = store.view(conn, view_id)
+   169	    rungs = store.rungs_of(conn, view_id)
+   170	    pieces, hidden = evidence_in_view(conn, view_id)
+   171	    deps = store.dependencies_of(conn, view_id)
+   172	    last = store.current_state(conn, view_id)
+   173	    lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes_in_force(conn, view_id), hidden=hidden)
+   174	    with open(config.prompt_path(prompt_version + '.txt'), encoding='utf-8') as handle:
+   175	        return handle.read(), '\n'.join(lines)
+   176	
+   177	
+   178	def retry_note(errors):
+   179	    return '\n\nThe code returned the previous answer because: ' + '; '.join(errors) + '\nCorrect it and answer again, citing only the listed ids.'
+   231	    return errors
+   232	
+   233	
+   234	def _record(conn, cfg, view_id, seq, item, answer):
+   235	    data = vocabulary.judgement_answer(answer.data)
+   236	    judgement_id = store.insert(conn, 'judgements', view_id=view_id, seq=seq, input_id=item['input_id'], rung=data['rung'],
+   237	                                reasons=data['reasons'], cited_evidence_json=json.dumps(data['cites']), cited_views_json=json.dumps(data['cites_views']),
+   238	                                pushes_json=json.dumps(data['pushes'], ensure_ascii=False), changed=1 if data['changed'] else 0,
+   239	                                theme_pushes_json=json.dumps(data.get('theme_pushes', []), ensure_ascii=False),
+   240	                                reference=data.get('reference'), implied_outcome=data.get('implied_outcome'),
+   241	                                why_changed=data['why_changed'], config_checksum=cfg.checksum, call_id=answer.call_id,
+   242	                                request_sha256=answer.request_sha256, publication_day=item['publication_day'])
+   243	    conn.commit()
+   244	    return {'view_id': view_id, 'judgement_id': judgement_id, 'rung': data['rung'], 'changed': data['changed'], 'cost': answer.cost_usd, 'cached': answer.cached}
+   245	
+   246	
+   247	JUDGE_WORKERS = 32     # a day's round is up to 40 judgements of about 16 s each in two dependency levels (themes, then assets); 32 at a time makes a round about two calls long (2026-11-02)
+   248	
+   249	
+   250	def upstream(conn, view_id):
+   251	    """Every view this one depends on, directly or through its dependencies."""
+   252	    seen, stack = set(), [view_id]
+   253	    while stack:
+   254	        for dep in store.dependencies_of(conn, stack.pop()):
+   255	            target = dep['resolved_to']
+   256	            if target and target not in seen:
+   257	                seen.add(target)
+   258	                stack.append(target)
+   259	    return seen
+   260	
+   261	
+   262	def open_asset_views(conn):
+   263	    return [v for v in store.open_views(conn) if store.view(conn, v)['object_kind'] != 'theme']
+   264	
+   265	
+   266	def queued_by_change(conn, view_id):
+   267	    """What a changed conclusion of this view queues: its dependants and, for a theme thesis, every open asset thesis. The one rule,
+   268	    read for a live judgement and for the judgements a resumed round finds committed."""
+   269	    queued = store.dependants_of(conn, view_id)
+   270	    if store.view(conn, view_id)['object_kind'] == 'theme':
+   271	        queued = queued + open_asset_views(conn)
+   272	    return queued
+   273	
+   274	
+   275	def queued_by_ledger(conn, seq):
+   276	    """What the judgements already committed at this sequence number queued; a fresh round finds nothing here, a resumed round
+   277	    finds what the interrupted one had queued in memory."""
+   278	    queued = []
+   279	    for row in conn.execute('select view_id from judgements where seq=? and changed=1 order by judgement_id', (seq,)):
+   280	        queued.extend(queued_by_change(conn, row['view_id']))
+   281	    return queued
+   282	
+   283	
+   284	def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transport=None):
+   285	    """Judge the open views in changed_views, dependencies first; a changed conclusion queues open dependants.
+   286	
+   287	    Views that do not depend on each other are judged at the same time: each level of the dependency order is sent
+   288	    to the model concurrently (the prompts are built and the answers checked and written in this thread, so the
+   289	    database connection never crosses threads). A view waits while anything upstream of it is still pending, so a
+   290	    dependant always reads this round's conclusion of its dependency. A view with no evidence in force stays
+   291	    unjudged (D59), and a view already judged at this sequence number (a resumed round) is not judged twice.
+   292	
+   293	    Among the views ready to be judged, theme theses go first, so an asset thesis reads this round's theme conclusions; a theme judgement that says changed queues every open asset thesis with
+   294	    evidence in force. The starting queue adds what the ledger says earlier commits at this sequence number queued."""
+   295	    import concurrent.futures
+   296	
+   297	    version = cfg.rejudging.prompt_version
+   298	    schema = schema_for(version)
+   299	
+   300	    def eligible(view_id):
+   301	        return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.evidence_in_force(conn, view_id))
+   302	
+   303	    def is_theme(view_id):
+   304	        return store.view(conn, view_id)['object_kind'] == 'theme'
+   305	
+   306	    pending = [v for v in topological(conn, list(changed_views) + queued_by_ledger(conn, seq)) if eligible(v)]
+   307	    done, results = set(), []
+   308	    while pending:
+   309	        ready = [v for v in pending if upstream(conn, v).isdisjoint(set(pending) - {v})] or pending[:1]
+   310	        level = [v for v in ready if is_theme(v)] or ready
+   311	        prompts = {v: build_prompt(conn, v, version) for v in level}
+   312	
+   313	        def ask(view_id, note=''):
+   314	            system, user = prompts[view_id]
+   315	            return model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
+   316	
+   317	        with concurrent.futures.ThreadPoolExecutor(max_workers=JUDGE_WORKERS) as pool_:
+   318	            answers = dict(zip(level, pool_.map(ask, level)))
+   319	        for view_id in level:
+   320	            answer = answers[view_id]
+   321	            errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+   322	            if errors:
+   323	                archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
+   324	                answer = ask(view_id, retry_note(errors))
+   325	                errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+   326	                if errors:
+   327	                    archive.retire(answer.call_id)
+   328	                    raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
+   329	            result = _record(conn, cfg, view_id, seq, item, answer)
+   330	            done.add(view_id)
+   331	            results.append(result)
+   332	            if result['changed']:
+   333	                for dependant in queued_by_change(conn, view_id):
+   334	                    if dependant not in done and dependant not in pending and eligible(dependant):
+   335	                        pending.append(dependant)
+   336	        pending = [v for v in topological(conn, pending) if v not in done and eligible(v)]
+   337	    return results
+   145	        if field not in columns:
+   146	            conn.execute(f'alter table rungs add column {field} real')
+   147	    judgement_columns = {r[1] for r in conn.execute('pragma table_info(judgements)')}
+   148	    if 'theme_pushes_json' not in judgement_columns:
+   149	        conn.execute('alter table judgements add column theme_pushes_json text')     # D195: judgements written before the theme block read as []
+   150	    for field in ('reference', 'implied_outcome'):
+   151	        if field not in judgement_columns:
+   152	            conn.execute(f'alter table judgements add column {field} text')        # D260: judgements written before the stance fields read as null
+   153	
+   154	
+   155	def view_key(conn, view_id):
+   156	    if not conn.execute('pragma table_info(view_keys)').fetchone():
+   157	        return None
+   158	    row = conn.execute('select * from view_keys where view_id=?', (view_id,)).fetchone()
+   159	    if not row:
+   160	        return None
+   161	    key = dict(row)
+   162	    if not key.get('scope_source'):
+   163	        key['scope_source'] = 'none' if not key['scope'] else 'model'
+   164	    return key
+   165	
+   166	
+   187	    rows = conn.execute('''select k.*, v.object_id from view_keys k join views v on v.view_id=k.view_id
+   188	                           where v.object_id=? and k.measure=?''', (candidate['object'], candidate['measure']))
+   189	    return [r['view_id'] for r in rows if automatic_key(dict(r), r['object_id']) == target and is_open(conn, r['view_id'])]
+   190	
+   191	
+   192	def is_open(conn, view_id):
+   193	    row = conn.execute('select open from view_switches where view_id=? order by id desc limit 1', (view_id,)).fetchone()
+   194	    return bool(row and row['open'])
+   195	
+   196	
+   197	def close_view(conn, view_id, reason, by_whom, seq):
+   198	    insert(conn, 'view_switches', view_id=view_id, open=0, reason=reason, by_whom=by_whom, after_seq=seq)
+   199	
+   200	
+   201	def open_views(conn):
+   202	    rows = conn.execute('select view_id from views').fetchall()
+   203	    return [r['view_id'] for r in rows if is_open(conn, r['view_id'])]
+   204	
+   205	
+   206	def views_of_object(conn, object_id, only_open=True):
+   207	    rows = conn.execute('select view_id from views where object_id=? order by created_seq', (object_id,)).fetchall()
+   208	    ids = [r['view_id'] for r in rows]
+   209	    return [v for v in ids if is_open(conn, v)] if only_open else ids
+   210	
+   211	
+   212	def has_judgement(conn, view_id, seq):
+   213	    return conn.execute('select 1 from judgements where view_id=? and seq=?', (view_id, seq)).fetchone() is not None
+   214	
+   215	
+   216	READ_BUSY_TIMEOUT_SECONDS = 5.0     # a reader's busy timeout: SQLite's busy handler retries SQLITE_BUSY within it (live-service row 1)
+   217	
+   218	
+   219	def open_read_only(path):
+   220	    """The views database for a reader (the agent layer, reports): no schema creation, no writes. Opened by its own path: a symlink
+   221	    resolved, a store with another hard link refused (`live_lock.LockRefused`; live-service/OPERATING-CONTRACT.md, row 7), since
+   222	    SQLite finds a WAL store's side files by the opened path."""
+   223	    from hivemind import live_lock
+   224	    real, _ = live_lock.own_path(path)
+   225	    conn = sqlite3.connect(f'file:{real}?mode=ro', uri=True, timeout=READ_BUSY_TIMEOUT_SECONDS)
+   226	    conn.row_factory = sqlite3.Row
+   227	    return conn
+   228	
+   229	
+   230	def current_state(conn, view_id):
+   231	    row = conn.execute('select judgement_id, rung, reasons, changed, seq, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+   232	    return dict(row) if row else None
+   233	
+   234	
+   235	def dependencies_of(conn, view_id):
+   236	    """Each dependency with its current target: the resolved view, or the waiting chain and year."""
+   237	    out = []
+   238	    for dep in conn.execute('select * from dependencies where view_id=? order by dependency_id', (view_id,)):
+   239	        dep = dict(dep)
+   240	        resolution = conn.execute('select resolved_to, reason from dependency_resolutions where dependency_id=? order by id desc limit 1', (dep['dependency_id'],)).fetchone()
+   241	        if resolution:
+   242	            dep['resolved_to'], dep['resolution'] = resolution['resolved_to'], resolution['reason']
+   243	        else:
+   244	            dep['resolved_to'], dep['resolution'] = dep['depends_on'], ('direct' if dep['depends_on'] else 'waiting')
+   245	        out.append(dep)
+   246	    return out
+   247	
+   248	
+   249	def direct_parents(conn, view_id, seq=None):
+   250	    """The views this view depends on directly (a driver's root, D208; the seeds' depends_on), written at or before `seq` when given.
+   251	    The filing reads it to keep a statement under the narrower of two linked questions (D207's narrowest rule, extraction.file_reading)."""
+   252	    rows = conn.execute("select depends_on from dependencies where view_id=? and depends_on != '' and (? is null or seq <= ?) order by dependency_id", (view_id, seq, seq))
+   253	    return list(dict.fromkeys(r[0] for r in rows))
+   254	
+   255	
+   256	def dependants_of(conn, view_id):
+   257	    direct = [r['view_id'] for r in conn.execute('select view_id from dependencies where depends_on=?', (view_id,))]
+   258	    resolved = [r['view_id'] for r in conn.execute(
+   259	        'select d.view_id from dependency_resolutions r join dependencies d on d.dependency_id=r.dependency_id where r.resolved_to=?', (view_id,))]
+   260	    return sorted(set(direct + resolved))
+   261	
+   276	    return False
+   277	
+   278	
+   279	def day_start_seq(conn, day):
+   280	    """D251: the sequence number the start of `day` stands at: the seq of the last completed day before it, or 0 before the first
+   281	    completed day, where the seed questions live (D253: seeds are created at seq 0, before any item)."""
+   282	    row = conn.execute('select max(seq) from days_completed where day < ?', (day,)).fetchone()
+   283	    return row[0] if row is not None and row[0] is not None else 0
+   284	
+   285	
+   286	def views_open_at_day_start(conn, object_ids, day):
+   287	    """D251: the questions open at the start of `day`, as every item of that day sees them: views created at or before the day's start
+   288	    seq (day_start_seq) whose last switch at that seq is open, the objects' own and every theme, in creation order; before the first
+   289	    completed day that is the seeds. Each row carries `snapshot_seq`, the seq its groups and aliases are read at (groups_of_view_at),
+   290	    so the list is the same for every item of the day whatever the day's items write. Question, looks_at, kind, object and due day only."""
+   291	    seq = day_start_seq(conn, day)
+   292	    out = []
+   293	    for v in conn.execute('select view_id, object_id, object_kind, kind, looks_at, question, due_day, year, created_seq from views where created_seq <= ? order by created_seq', (seq,)):
+   294	        if v['kind'] != 'theme' and v['object_id'] not in object_ids:
+   295	            continue
+   296	        switch = conn.execute('select open from view_switches where view_id=? and after_seq <= ? order by id desc limit 1', (v['view_id'], seq)).fetchone()
+   297	        if switch and switch['open']:
+   298	            out.append(dict(v, snapshot_seq=seq))
+   299	    return out
+   300	
+   301	
+   345	# ---------- evidence ----------
+   346	
+   347	def add_evidence(conn, *, evidence_id, quote, one_line, speaker, original_who, original_day, tier, event_time, seq, input_id):
+   348	    insert(conn, 'evidence', evidence_id=evidence_id, quote=quote, one_line=one_line, speaker=speaker, original_who=original_who,
+   349	           original_day=original_day, tier=tier, event_time=event_time, created_seq=seq, created_from_input=input_id)
+   350	
+   351	
+   352	def add_source(conn, evidence_id, input_id, category, publication_day, location, seq):
+   353	    insert(conn, 'evidence_sources', evidence_id=evidence_id, input_id=input_id, category=category, publication_day=publication_day, location=location, seq=seq)
+   354	
+   355	
+   356	def link(conn, evidence_id, view_id, seq):
+   357	    exists = conn.execute('select 1 from evidence_links where evidence_id=? and view_id=?', (evidence_id, view_id)).fetchone()
+   358	    if not exists:
+   359	        insert(conn, 'evidence_links', evidence_id=evidence_id, view_id=view_id, seq=seq)
+   360	        return True
+   361	    return False
+   362	
+   363	
+   364	def replace(conn, old_id, new_id, said_day, seq):
+   365	    """Retires old_id (history before D202; kept for the readers and tests of stored ledgers, no longer called by the writer)."""
+   366	    insert(conn, 'replacements', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+   367	
+   368	
+   369	def revise(conn, old_id, new_id, said_day, seq):
+   370	    """D202: new_id is the matcher's later version of old_id; both stay in force, the judge sees the path."""
+   371	    insert(conn, 'revisions', old_evidence_id=old_id, new_evidence_id=new_id, said_day=said_day, seq=seq)
+   372	
+   373	
+   374	def relate_same(conn, old_id, new_id, seq):
+   375	    """D204: the matcher's opinion that new_id restates old_id; a labelled relation, never a merge."""
+   376	    insert(conn, 'same_claims', old_evidence_id=old_id, new_evidence_id=new_id, seq=seq)
+   377	
+   378	
+   379	def same_claim_group(conn, evidence_id):
+   380	    """The other pieces related to this one as the same claim, in either direction (empty on a ledger without the table)."""
+   381	    if not conn.execute("select 1 from sqlite_master where type='table' and name='same_claims'").fetchone():
+   382	        return []
+   383	    rows = conn.execute('select old_evidence_id, new_evidence_id from same_claims where old_evidence_id=? or new_evidence_id=?', (evidence_id, evidence_id)).fetchall()
+   384	    return sorted(({r['old_evidence_id'] for r in rows} | {r['new_evidence_id'] for r in rows}) - {evidence_id}, key=lambda x: int(x[1:]) if x[1:].isdigit() else x)
+   385	
+   386	
+   387	def revision_of(conn, evidence_id):
+   388	    """None on a ledger written before D202 (no revisions table), which read-only openers cannot extend."""
+   389	    if not conn.execute("select 1 from sqlite_master where type='table' and name='revisions'").fetchone():
+   390	        return None
+   391	    row = conn.execute('select old_evidence_id from revisions where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+   392	    return row['old_evidence_id'] if row else None
+   393	
+   394	
+   395	def recent_judgements(conn, view_id, n):
+   396	    """The thesis's last n judgements, newest first: (seq, cited evidence ids)."""
+   397	    rows = conn.execute('select seq, cited_evidence_json from judgements where view_id=? order by judgement_id desc limit ?', (view_id, n)).fetchall()
+   398	    return [{'seq': r['seq'], 'cites': json.loads(r['cited_evidence_json'] or '[]')} for r in rows]
+   399	
+   400	
+   401	def is_replaced(conn, evidence_id):
+   402	    return bool(conn.execute('select 1 from replacements where old_evidence_id=?', (evidence_id,)).fetchone())
+   403	
+   404	
+   405	def predecessor_of(conn, evidence_id):
+   406	    row = conn.execute('select old_evidence_id from replacements where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+   407	    return row['old_evidence_id'] if row else None
+   408	
+   409	
+   410	def evidence(conn, evidence_id):
+   411	    row = conn.execute('select * from evidence where evidence_id=?', (evidence_id,)).fetchone()
+   412	    if not row:
+   413	        return None
+   414	    record = dict(row)
+   415	    record['sources'] = [dict(s) for s in conn.execute('select input_id, category, publication_day, location from evidence_sources where evidence_id=? order by id', (evidence_id,))]
+   416	    return record
+   417	
+   418	
+   419	def evidence_in_force(conn, view_id):
+   420	    """Evidence linked to the view and not replaced (history), each with its replaced predecessor when there is one and, since D202,
+   421	    the piece it revises (both in force)."""
+   422	    out = []
+   423	    for row in conn.execute('select evidence_id from evidence_links where view_id=? order by id', (view_id,)):
+   424	        evidence_id = row['evidence_id']
+   425	        if is_replaced(conn, evidence_id):
+   426	            continue
+   427	        record = evidence(conn, evidence_id)
+   428	        previous = predecessor_of(conn, evidence_id)
+   429	        record['replaced'] = evidence(conn, previous) if previous else None
+   430	        revised = revision_of(conn, evidence_id)
+   431	        record['revises'] = evidence(conn, revised) if revised else None
+   432	        record['same_as'] = [x for x in same_claim_group(conn, evidence_id) if not is_replaced(conn, x)]
+   433	        out.append(record)
+   434	    return out
+   435	
+   436	
+   437	def views_linked_to(conn, evidence_id):
+   438	    return [r['view_id'] for r in conn.execute('select view_id from evidence_links where evidence_id=? order by id', (evidence_id,))]
+   439	
+   440	
+   441	def evidence_ids_under(conn, view_id):
+   442	    return [r['evidence_id'] for r in conn.execute('select evidence_id from evidence_links where view_id=?', (view_id,))]
+   443	
+   444	
+   445	# ---------- processing record and pool ----------
+   446	
+
+ succeeded in 0ms:
+# Merge test: execution plan (written before any send, 2026-11-19)
+
+**Alex, 2026-11-19 (the goal):** "write the plan, execute the plan, and don't do full blown runs, validate it works based on metrics we
+meassure for quality". This plan carries out D678's test. D677 stopped paid sends; this goal lifts that stop for this test only (D679).
+
+## What is tested
+This is the merge's one new piece of wiring.
+- Clean Step 1 (c8, unchanged) reads each article with the **old system's open questions** as its open theses.
+- The evidence it files under an old question reaches the **frozen production judge** with that question's old answer choices.
+- The judge then answers.
+
+| | Old draw (as stored) | Hybrid (this test) |
+|---|---|---|
+| Questions and choices | Old opening and ladder | **The same rows**, unchanged |
+| History to 09-06 | Old evidence and judgements | **The same rows** |
+| Window evidence, 09-07..09-20 | Old extraction and filing | **c8's filing** under the old questions |
+| Judge | Frozen judging (poc-v118) | **The same code and configuration**, on the target questions only |
+
+## The article set (revised after council round c, `council-c-codex.md`)
+**My first count was wrong.** I read the census article numbers as positions in `kept-articles.json`. They are numbers in
+`census/numbering.json`.
+- With the right numbering, 8 of the 11 census articles reached the old target questions in at least one old draw.
+- Control 223 is `gnews:5adb2372…`, which old filed under v5 and v6.
+
+The plan's first set (126 articles) also drew in the new draws' custom-chip and DRAM theses: adjacent matters, not these two.
+
+**The set is now 70 articles** (65 for capex and 8 for Anthropic, with some overlap), in `articles.json` with each article's source:
+- the census articles and the control: 12;
+- the window sources of the five old target questions: 32 for capex and 5 for Anthropic;
+- the window links of the new draws' directly corresponding theses:
+  - new-2: clean-5 (big-four capex 2026–27) and clean-43 (Anthropic);
+  - new-3: clean-4 (capex), clean-34 and clean-58 (Anthropic).
+
+## The questions (stored rows)
+| Draw | Matter | Question | Old answer at 09-20 |
+|---|---|---|---|
+| old-2 | M04 | v5: four largest hyperscalers' data-center capex, calendar 2026 (5 rungs) | rung 4, $700–800B |
+| old-2 | M17 | v40: NVIDIA invests $10B to anchor Anthropic's IPO by 2026-09-20 (yes/no) | rung 2, No |
+| old-3 | M04 | v6: the same as v5 | rung 4 |
+| old-3 | M17 | v47 (by 2026-09-20) and v48 (by 2027-03-14) | v47 rung 2; v48 rung 1 |
+
+## Steps
+1. **$0. The open list per article.**
+   - For each draw and article, take the old views open at that article's old sequence number: created at or before it and not
+     switched off before it.
+   - Each becomes a Step 1 thesis (code-owned conversion):
+     - `id` is the view id;
+     - `description` is the question;
+     - `outcome` is the view's observable focus (`looks_at`);
+     - `period` gives the reporting period and the deadline as two labelled parts.
+   - The answer choices stay with the judge.
+   - c8's own new theses are recorded but **not opened**, because opening is the old system's job.
+2. **$0. Preflight.**
+   - One request is built per draw with the stored c8 settings. Its system text and closing check must equal new-2's stored request,
+     byte for byte.
+   - A synthetic answer linking to `v5` must pass Step 1's checks.
+3. **Paid, about $1.4.** 140 c8 sends: 70 articles × 2 draws.
+   - Each article is its own one-item Step 1 run, 8 at a time.
+   - They go on a new ledger with a $5 ceiling.
+4. **$0. Filing census.**
+   - For each target question: the c8 evidence linked to it, by article.
+   - c8's proposed new theses, checked for NVIDIA's own figures.
+5. **Paid, about $0.3. Judging, in two arms on the same 09-06 copy of each old store.**
+   - **The copy.** Every row written after 09-06 is cut: answers, links, sources, switches, repeat and revision relations. The other
+     views keep their 09-06 state. The target questions created later are put back on the day the old system created them.
+   - **The judge.** The frozen judge's own round judges the target questions only; its queue is restricted explicitly.
+   - **Hybrid arm:** c8's evidence for the target questions, written day by day.
+   - **Control arm:** the old system's own window evidence for the target questions (with its sources and its repeat and revision
+     relations), written day by day the same way. It isolates the evidence source from the reconstruction. The archived old answers
+     saw other questions updated through 09-20; the control did not.
+6. **Readers.**
+   - Each answer is turned into a card in the deck's format: question, choices, final answer, reasons and the material it was given.
+   - The hybrid cards are mixed with the five old cards for the same questions and with deck controls, under shuffled labels.
+   - Two blind readers read them, Claude and Codex, with the comparison's reader brief.
+7. **Score** against the lines below. Claude reads every trace behind a failed line.
+
+## Quality lines (written before any send)
+| # | Line | Pass when |
+|---|---|---|
+| P1 | Delivery, checked in the judge requests themselves | In both draws, a request of each primary question shows c8 evidence carrying the matter's decisive statement. For capex, that is the four companies' 2026 capex figures or an aggregate of them, such as article 181's $720–745B. For Anthropic, it is the reported $10B anchor-investment talks |
+| P2 | No meaning drift | No five-company or 2027 figure is presented as the answer to the four-company 2026 question. A total-capex figure used for "data-center" capex is named as a proxy. This is a higher bar than old met: old's capex answers did not label the proxy, and that is disclosed |
+| P3 | Talks stay talks | No Anthropic answer treats reported talks as a signed or completed investment |
+| P4 | Opening rule (diagnostic only) | The c8 theses proposed on NVIDIA's own figures are counted. Not a pass line: the open lists already hold old revenue and margin questions |
+| P5 | Supported answer | Both readers mark the four primary hybrid answers supported: old-2 v5, old-2 v40, old-3 v6, old-3 v47. old-3 v48, which the deck read as duplicate and unsupported, is a negative control |
+| V | Validity, before P5 is read | The readers pass the deck controls and mark the control arm's reconstructed old-evidence answers supported. Otherwise the reconstruction, not the merge, is in question |
+
+- **Pass** means V holds, and P1, P2, P3 and P5 hold in both draws.
+- **Also reported:**
+  - whether the hybrid's answer matches old's;
+  - the material's size;
+  - the share of material about the question, read by Claude: one draw each and descriptive. The PRD's old-system problem was 24–44%
+    of citations about other companies or the whole market.
+- **What this cannot show:** automatic opening, repeat grouping (Steps 2–3 are not run), the other 30 matters, or release readiness.
+     1	"""The merge test (D678, D679; EXECUTION-PLAN.md): clean Step 1 (c8, unchanged) reads each article with the old system's open
+     2	questions as its open theses, and the frozen production judge answers the target questions on the old history to 09-06 plus c8's
+     3	window evidence.
+     4	
+     5	  python3 merge_test.py lists                 # $0: the open list per draw and article, and the request preflight
+     6	  python3 merge_test.py send <ledger>         # paid: one single-item c8 run per draw and article, 8 at a time
+     7	  python3 merge_test.py census                # $0: what c8 filed under the target questions, and the theses it proposed
+     8	  python3 merge_test.py judge <ledger>        # paid: the frozen judge, day by day, on the target questions only
+     9	  python3 merge_test.py cards                 # $0: one card per answer, in the comparison deck's format
+    10	
+    11	Everything is written under OUT. The old stores are read through read-only connections or copied, never written."""
+    12	import concurrent.futures
+    13	import copy
+    14	import importlib.util
+    15	import json
+    16	import sqlite3
+    17	import sys
+    18	import traceback
+    19	from pathlib import Path
+    20	
+    21	ROOT = Path('/Users/lchingen/hivemind')
+    22	HERE = Path(__file__).resolve().parent
+    23	sys.dont_write_bytecode = True
+    24	sys.path[:0] = [str(ROOT / 'clean-arch/step1'), str(ROOT / 'src')]
+    25	RUN = ROOT / 'poc/data/comparison-2026-11-17/run'
+    26	ITEMS = ROOT / 'poc/data/comparison-2026-11-17/items-comparison.sqlite'
+    27	PRD = ROOT / 'clean-arch/PRD.md'
+    28	OUT = ROOT / 'poc/data/merge-test-2026-11-19'
+    29	STEP1 = RUN / 'new-2/step1'                        # the stored c8 configuration: settings, limits, manifest
+    30	PROD_CONFIG = ROOT / 'poc/config/poc-v118.json'    # the configuration the old draws ran (their judge)
+    31	TARGETS = {'old-2': {'v5': 'M04', 'v40': 'M17'}, 'old-3': {'v6': 'M04', 'v47': 'M17', 'v48': 'M17'}}
+    32	BOUNDARY_DAY = '2026-09-06'                        # the history kept from the old store ends with this day
+    33	LAST_DAY = '2026-09-20'
+    34	FIRST_NEW_EVIDENCE = 900001                        # c8 evidence ids e900001…, beyond every old id
+    35	
+    36	
+    37	def load(name, path):
+    38	    spec = importlib.util.spec_from_file_location(name, path)
+    39	    module = importlib.util.module_from_spec(spec)
+    40	    spec.loader.exec_module(module)
+    41	    return module
+    42	
+    43	
+    44	def old_store(draw):
+    45	    conn = sqlite3.connect(f'file:{RUN / draw / "prod/views.sqlite"}?mode=ro', uri=True)
+    46	    conn.row_factory = sqlite3.Row
+    47	    return conn
+    48	
+    49	
+    50	def articles():
+    51	    """Every test article once, in the old draws' processing order: (old seq, input id, publication day). Both old draws processed the
+    52	    same items in the same order (checked)."""
+    53	    chosen = json.loads((HERE / 'articles.json').read_text())
+    54	    wanted = set(chosen['capex']) | set(chosen['anthropic'])
+    55	    found = {}
+    56	    for draw in TARGETS:
+    57	        conn = old_store(draw)
+    58	        for input_id in wanted:
+    59	            row = conn.execute('select min(sequence_no), publication_day from processing_steps where input_id=?', (input_id,)).fetchone()
+    60	            if row[0] is None:
+    61	                raise SystemExit(f'{input_id} was not processed by {draw}')
+    62	            if found.setdefault(input_id, tuple(row)) != tuple(row):
+    63	                raise SystemExit(f'{input_id} has a different sequence in {draw}')
+    64	    return sorted((seq, input_id, day) for input_id, (seq, day) in found.items())
+    65	
+    66	
+    67	def open_views_at(conn, seq):
+    68	    """The old views open when the article with this sequence number was read: created at or before it, and not switched off at or
+    69	    before it. The views an article opened are included, since opening runs before filing in the merge."""
+    70	    out = []
+    71	    for view in conn.execute('select view_id from views where created_seq<=? order by created_seq, view_id', (seq,)):
+    72	        switch = conn.execute('select open from view_switches where view_id=? and after_seq<=? order by id desc limit 1',
+    73	                              (view['view_id'], seq)).fetchone()
+    74	        if switch is None or switch['open']:
+    75	            out.append(view['view_id'])
+    76	    return out
+    77	
+    78	
+    79	def thesis_of(conn, view_id):
+    80	    """An old view as a Step 1 open thesis (code-owned conversion): its id, its question, its observable focus as the outcome, and
+    81	    the reporting period and the deadline as two labelled parts. The answer choices stay with the judge."""
+    82	    view = conn.execute('select * from views where view_id=?', (view_id,)).fetchone()
+    83	    key = conn.execute('select * from view_keys where view_id=?', (view_id,)).fetchone()
+    84	    reporting = f"reporting period {key['period_start']} to {key['period_end']}; " if key and key['period_start'] else ''
+    85	    return {'id': view_id, 'entity': 'NVDA', 'description': view['question'], 'outcome': view['looks_at'],
+    86	            'period': f"{reporting}resolved by {view['due_day']}"}
+    87	
+    88	
+    89	def c8_configuration():
+    90	    settings = json.loads((STEP1 / 'settings.json').read_text())
+    91	    limits = json.loads((STEP1 / 'limits.json').read_text())
+    92	    manifest = json.loads((STEP1 / 'manifest.json').read_text())
+    93	    return settings, limits, manifest
+    94	
+    95	
+    96	def lists():
+    97	    """$0. Writes OUT/lists.json and checks that the request this test sends is the stored c8 request's bytes for the same state."""
+    98	    import runner
+    99	    from hivemind import config, model
+   100	    OUT.mkdir(parents=True, exist_ok=True)
+   101	    work = articles()
+   102	    plan = {}
+   103	    for draw in TARGETS:
+   104	        conn = old_store(draw)
+   105	        plan[draw] = [{'seq': seq, 'input_id': input_id, 'day': day,
+   106	                       'open': [thesis_of(conn, v) for v in open_views_at(conn, seq)]} for seq, input_id, day in work]
+   107	    (OUT / 'lists.json').write_text(json.dumps(plan, indent=1, ensure_ascii=False))
+   108	    # Preflight: rebuild new-2's stored request for one of these articles from its stored state with the code this test runs.
+   109	    settings, _, manifest = c8_configuration()
+   110	    stored = sqlite3.connect(f'file:{STEP1 / "trace.sqlite"}?mode=ro', uri=True)
+   111	    input_id = work[0][1]
+   112	    before, request = stored.execute('select before_state, request from trace where input_id=?', (input_id,)).fetchone()
+   113	    prompt, schema = runner.draft(PRD)
+   114	    closing = runner.closing_check(PRD)
+   115	    item = runner.selected_items(str(ITEMS), dict(manifest, item_ids=[input_id], item_limit=1))[0]
+   116	    shown = [{k: t[k] for k in ('id', 'description', 'outcome', 'period')} for t in json.loads(before)]
+   117	    tags = [x['value'] for x in item['object_identifiers'] if x.get('kind') == 'ticker']
+   118	    payload = {'current_entity': manifest['entity'], 'company_tags': tags, 'open_theses': shown, 'source_item': {
+   119	        'id': item['input_id'], 'publisher': item['publisher'], 'publication_date': item['publication_day'],
+   120	        'published_at': item['published_at'], 'publisher_type': item.get('publisher_type'), 'authors': item.get('authors'),
+   121	        'category': item.get('category'), 'source_uri': item['source_uri'], 'title': item['title'], 'text': item['text']}}
+   122	    setting = config.Setting('clean-step1', settings['model'], 'clean-step1', settings['reasoning_effort'], settings['max_output_tokens'])
+   123	    rebuilt = model.build_request(setting, prompt, json.dumps(payload, ensure_ascii=False) + f'\n\n{closing}', schema, 'clean_step1',
+   124	                                  settings['provider'])
+   125	    same = json.dumps(rebuilt) == request
+   126	    print(json.dumps({'articles': len(work), 'draws': list(plan),
+   127	                      'open theses per article (old-2 min/max)': [min(len(a['open']) for a in plan['old-2']),
+   128	                                                                  max(len(a['open']) for a in plan['old-2'])],
+   129	                      'preflight: rebuilt request equals the stored c8 request': same, 'preflight article': input_id}, indent=1))
+   130	    if not same:
+   131	        raise SystemExit('the request this test would send is not the stored c8 request: stop')
+   132	
+   133	
+   134	def send(ledger_path):
+   135	    """Paid. One single-item c8 run per draw and article, 8 at a time, each in its own folder; the ledger caps the total."""
+   136	    import runner
+   137	    from live import LiveTransport
+   138	    budget_replay = load('budget_replay', ROOT / 'clean-arch/e2e-comparison-2026-11-13/budget_replay.py')
+   139	    ledger = budget_replay.SharedLedger(ledger_path)
+   140	    budget_replay.install_stop_gate(ledger)
+   141	    settings, limits, manifest = c8_configuration()
+   142	    settings = dict(settings, live_limits=limits)
+   143	    plan = json.loads((OUT / 'lists.json').read_text())
+   144	    jobs = [(draw, entry) for draw in plan for entry in plan[draw]]
+   145	
+   146	    def one(job):
+   147	        draw, entry = job
+   148	        folder = OUT / 'c8' / draw / f"{entry['seq']:05d}"
+   149	        if (folder / 'outcome.json').exists():
+   150	            return draw, entry['seq'], json.loads((folder / 'outcome.json').read_text())
+   151	        folder.mkdir(parents=True, exist_ok=False)
+   152	        try:
+   153	            outcome = runner.run(str(ITEMS), folder / 'trace.sqlite', dict(manifest, item_ids=[entry['input_id']], item_limit=1),
+   154	                                 copy.deepcopy(entry['open']), settings, LiveTransport(limits, ledger=ledger), PRD)
+   155	        except Exception as error:
+   156	            outcome = {'status': 'crashed', 'error': f'{type(error).__name__}: {error}', 'trace': traceback.format_exc()[-1500:]}
+   157	        (folder / 'outcome.json').write_text(json.dumps(outcome, indent=1))
+   158	        return draw, entry['seq'], outcome
+   159	
+   160	    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+   161	        for draw, seq, outcome in pool.map(one, jobs):
+   162	            print(json.dumps({'draw': draw, 'seq': seq, 'status': outcome.get('status'), 'error': (outcome.get('error') or '')[:200]}),
+   163	                  flush=True)
+   164	    print('ledger', json.dumps(json.loads(Path(ledger_path).read_text())))
+   165	
+   166	
+   167	def records(draw):
+   168	    """c8's kept records of every completed article of a draw, with the old sequence number of their article."""
+   169	    run_forward = load('run_forward', ROOT / 'clean-arch/step2/run_forward.py')
+   170	    out = []
+   171	    for folder in sorted((OUT / 'c8' / draw).iterdir()):
+   172	        trace = folder / 'trace.sqlite'
+   173	        if not trace.exists():
+   174	            continue
+   175	        found, _, _ = run_forward.step1_records(str(trace))
+   176	        conn = sqlite3.connect(f'file:{trace}?mode=ro', uri=True)
+   177	        status, result = conn.execute('select status, result from trace').fetchone()
+   178	        proposed = (json.loads(result) or {}).get('new_theses', []) if result else []
+   179	        out.append({'seq': int(folder.name), 'status': status, 'records': [r for article in found for r in article],
+   180	                    'proposed': proposed})
+   181	    return out
+   182	
+   183	
+   184	def census():
+   185	    """$0. Per draw and target question: the c8 records filed under it, by article; and every thesis c8 proposed (none is opened)."""
+   186	    summary = {}
+   187	    for draw, targets in TARGETS.items():
+   188	        rows = records(draw)
+   189	        filed = {v: [] for v in targets}
+   190	        for row in rows:
+   191	            for record in row['records']:
+   192	                for view_id in set(record['thesis_ids']) & set(targets):
+   193	                    filed[view_id].append({'seq': row['seq'], 'day': record['publication_date'], 'summary': record['summary'],
+   194	                                           'verified': [p for p in (record['verified_passages'] or []) if p]})
+   195	        summary[draw] = {'articles read': len(rows), 'not complete': [r['seq'] for r in rows if r['status'] != 'complete'],
+   196	                         'records': sum(len(r['records']) for r in rows),
+   197	                         'filed under target': {v: len(x) for v, x in filed.items()},
+   198	                         'filed': filed,
+   199	                         'proposed theses': [{'seq': r['seq'], 'description': t['description'], 'outcome': t['outcome']}
+   200	                                             for r in rows for t in r['proposed']]}
+   201	    (OUT / 'census.json').write_text(json.dumps(summary, indent=1, ensure_ascii=False))
+   202	    print(json.dumps({d: {k: v for k, v in s.items() if k not in ('filed', 'proposed theses')} | {'proposed': len(s['proposed theses'])}
+   203	                      for d, s in summary.items()}, indent=1))
+   204	
+   205	
+   206	def judging_copy(draw, path):
+   207	    """A copy of the old store holding only what existed at the end of BOUNDARY_DAY: every row written after it is removed, so no later
+   208	    state leaks into a judgement. The target questions created later are put back on the day they were created (`restore_view`)."""
+   209	    source = sqlite3.connect(f'file:{RUN / draw / "prod/views.sqlite"}?mode=ro', uri=True)
+   210	    target = sqlite3.connect(path)
+   211	    source.backup(target)
+   212	    source.close()
+   213	    boundary = target.execute('select seq from days_completed where day=?', (BOUNDARY_DAY,)).fetchone()[0]
+   214	    later_views = [r[0] for r in target.execute('select view_id from views where created_seq>?', (boundary,))]
+   215	    for table, column in (('judgements', 'seq'), ('evidence_links', 'seq'), ('evidence_sources', 'seq'), ('same_claims', 'seq'),
+   216	                          ('revisions', 'seq'), ('replacements', 'seq'), ('view_switches', 'after_seq'), ('successions', 'seq'),
+   217	                          ('days_completed', 'seq')):
+   218	        target.execute(f'delete from {table} where {column}>?', (boundary,))
+   219	    target.execute('delete from evidence where evidence_id not in (select evidence_id from evidence_sources)')
+   220	    for table in ('views', 'rungs', 'view_keys'):
+   221	        target.execute(f"delete from {table} where view_id in ({','.join('?' * len(later_views))})", later_views)
+   222	    target.commit()
+   223	    target.close()
+   224	    return boundary
+   225	
+   226	
+   227	def restore_view(conn, draw, view_id):
+   228	    """Put a target question back as the old system created it: its row, choices, key and opening switch."""
+   229	    source = old_store(draw)
+   230	    for table in ('views', 'rungs', 'view_keys'):
+   231	        for row in source.execute(f'select * from {table} where view_id=?', (view_id,)):
+   232	            conn.execute(f"insert into {table} ({','.join(row.keys())}) values ({','.join('?' * len(row))})", tuple(row))
+   233	    row = source.execute('select * from view_switches where view_id=? and open=1 order by id limit 1', (view_id,)).fetchone()
+   234	    conn.execute('insert into view_switches (view_id, open, reason, by_whom, after_seq) values (?,?,?,?,?)',
+   235	                 (view_id, 1, row['reason'], row['by_whom'], row['after_seq']))
+   236	
+   237	
+   238	def judge(ledger_path):
+   239	    """Paid. Per draw: the judging copy, then day by day the c8 records filed under the target questions are written (the clean
+   240	    adapter's field mapping) at their article's old sequence number, and the frozen judge's own round judges the target questions
+   241	    that got a link that day, with that day's old closing sequence number. No other view is judged."""
+   242	    from hivemind import config, model
+   243	    from hivemind.views import judging, store
+   244	    budget_replay = load('budget_replay', ROOT / 'clean-arch/e2e-comparison-2026-11-13/budget_replay.py')
+   245	    adapter = load('clean_adapter', ROOT / 'clean-arch/e2e-2026-11-09/adapter.py')
+   246	    ledger = budget_replay.SharedLedger(ledger_path)
+   247	    budget_replay.install_stop_gate(ledger)
+   248	    transport = budget_replay.BudgetTransport(ledger)
+   249	    cfg = config.load(PROD_CONFIG)
+   250	    judging.queued_by_change = lambda conn, view_id: []        # judge the target questions only
+   251	    judging.queued_by_ledger = lambda conn, seq: []
+   252	    results = {}
+   253	    for draw, targets in TARGETS.items():
+   254	        folder = OUT / 'judge' / draw
+   255	        folder.mkdir(parents=True, exist_ok=False)
+   256	        boundary = judging_copy(draw, folder / 'views.sqlite')
+   257	        conn = store.open_db(str(folder / 'views.sqlite'))
+   258	        archive = model.Archive(str(folder / 'archive.sqlite'))
+   259	        old = old_store(draw)
+   260	        day_seq = dict(old.execute('select day, seq from days_completed').fetchall())
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import json; a=json.load(open(\"articles.json\"));print({k:len(set(v)) for k,v in a.items()},len(set.union(*(set(v) for v in a.values()))))'
+ls -l" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+{'capex': 65, 'anthropic': 8, 'sources': 3} 73
+total 1656
+-rw-r--r--@ 1 lchingen  staff    6999 Nov 19 16:20 EXECUTION-PLAN.md
+-rw-r--r--@ 1 lchingen  staff    2994 Nov 19 15:02 MERGE-PLAN.md
+-rw-r--r--@ 1 lchingen  staff    7043 Nov 19 16:20 articles.json
+-rw-r--r--@ 1 lchingen  staff    2715 Nov 19 14:56 claude-proposal.md
+-rw-r--r--@ 1 lchingen  staff    2096 Nov 19 14:56 council-a-brief.md
+-rw-r--r--@ 1 lchingen  staff    3444 Nov 19 14:59 council-a-codex.md
+-rw-r--r--@ 1 lchingen  staff  565664 Nov 19 14:59 council-a-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1838 Nov 19 15:00 council-b-brief.md
+-rw-r--r--@ 1 lchingen  staff    1894 Nov 19 15:01 council-b-codex.md
+-rw-r--r--@ 1 lchingen  staff   61314 Nov 19 15:01 council-b-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1295 Nov 19 16:16 council-c-brief.md
+-rw-r--r--@ 1 lchingen  staff    1888 Nov 19 16:18 council-c-codex.md
+-rw-r--r--@ 1 lchingen  staff   68898 Nov 19 16:18 council-c-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1291 Nov 19 16:20 council-d-brief.md
+-rw-r--r--@ 1 lchingen  staff       0 Nov 19 16:20 council-d-codex.md
+-rw-r--r--@ 1 lchingen  staff   53638 Nov 19 16:21 council-d-codex.stream
+-rw-r--r--@ 1 lchingen  staff   22403 Nov 19 16:20 merge_test.py
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba merge_test.py | sed -n '203,465p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+   203	                      for d, s in summary.items()}, indent=1))
+   204	
+   205	
+   206	def judging_copy(draw, path):
+   207	    """A copy of the old store holding only what existed at the end of BOUNDARY_DAY: every row written after it is removed, so no later
+   208	    state leaks into a judgement. The target questions created later are put back on the day they were created (`restore_view`)."""
+   209	    source = sqlite3.connect(f'file:{RUN / draw / "prod/views.sqlite"}?mode=ro', uri=True)
+   210	    target = sqlite3.connect(path)
+   211	    source.backup(target)
+   212	    source.close()
+   213	    boundary = target.execute('select seq from days_completed where day=?', (BOUNDARY_DAY,)).fetchone()[0]
+   214	    later_views = [r[0] for r in target.execute('select view_id from views where created_seq>?', (boundary,))]
+   215	    for table, column in (('judgements', 'seq'), ('evidence_links', 'seq'), ('evidence_sources', 'seq'), ('same_claims', 'seq'),
+   216	                          ('revisions', 'seq'), ('replacements', 'seq'), ('view_switches', 'after_seq'), ('successions', 'seq'),
+   217	                          ('days_completed', 'seq')):
+   218	        target.execute(f'delete from {table} where {column}>?', (boundary,))
+   219	    target.execute('delete from evidence where evidence_id not in (select evidence_id from evidence_sources)')
+   220	    for table in ('views', 'rungs', 'view_keys'):
+   221	        target.execute(f"delete from {table} where view_id in ({','.join('?' * len(later_views))})", later_views)
+   222	    target.commit()
+   223	    target.close()
+   224	    return boundary
+   225	
+   226	
+   227	def restore_view(conn, draw, view_id):
+   228	    """Put a target question back as the old system created it: its row, choices, key and opening switch."""
+   229	    source = old_store(draw)
+   230	    for table in ('views', 'rungs', 'view_keys'):
+   231	        for row in source.execute(f'select * from {table} where view_id=?', (view_id,)):
+   232	            conn.execute(f"insert into {table} ({','.join(row.keys())}) values ({','.join('?' * len(row))})", tuple(row))
+   233	    row = source.execute('select * from view_switches where view_id=? and open=1 order by id limit 1', (view_id,)).fetchone()
+   234	    conn.execute('insert into view_switches (view_id, open, reason, by_whom, after_seq) values (?,?,?,?,?)',
+   235	                 (view_id, 1, row['reason'], row['by_whom'], row['after_seq']))
+   236	
+   237	
+   238	def judge(ledger_path):
+   239	    """Paid. Per draw: the judging copy, then day by day the c8 records filed under the target questions are written (the clean
+   240	    adapter's field mapping) at their article's old sequence number, and the frozen judge's own round judges the target questions
+   241	    that got a link that day, with that day's old closing sequence number. No other view is judged."""
+   242	    from hivemind import config, model
+   243	    from hivemind.views import judging, store
+   244	    budget_replay = load('budget_replay', ROOT / 'clean-arch/e2e-comparison-2026-11-13/budget_replay.py')
+   245	    adapter = load('clean_adapter', ROOT / 'clean-arch/e2e-2026-11-09/adapter.py')
+   246	    ledger = budget_replay.SharedLedger(ledger_path)
+   247	    budget_replay.install_stop_gate(ledger)
+   248	    transport = budget_replay.BudgetTransport(ledger)
+   249	    cfg = config.load(PROD_CONFIG)
+   250	    judging.queued_by_change = lambda conn, view_id: []        # judge the target questions only
+   251	    judging.queued_by_ledger = lambda conn, seq: []
+   252	    results = {}
+   253	    for draw, targets in TARGETS.items():
+   254	        folder = OUT / 'judge' / draw
+   255	        folder.mkdir(parents=True, exist_ok=False)
+   256	        boundary = judging_copy(draw, folder / 'views.sqlite')
+   257	        conn = store.open_db(str(folder / 'views.sqlite'))
+   258	        archive = model.Archive(str(folder / 'archive.sqlite'))
+   259	        old = old_store(draw)
+   260	        day_seq = dict(old.execute('select day, seq from days_completed').fetchall())
+   261	        created = {v: old.execute('select created_seq from views where view_id=?', (v,)).fetchone()[0] for v in targets}
+   262	        pending = {v for v, s in created.items() if s > boundary}
+   263	        by_day = {}
+   264	        for row in records(draw):
+   265	            for record in row['records']:
+   266	                if set(record['thesis_ids']) & set(targets):
+   267	                    by_day.setdefault(record['publication_date'], []).append((row['seq'], record))
+   268	        number = FIRST_NEW_EVIDENCE
+   269	        log = []
+   270	        for day in sorted(d for d in day_seq if BOUNDARY_DAY < d <= LAST_DAY):
+   271	            seq = day_seq[day]
+   272	            for view_id in sorted(pending):
+   273	                if created[view_id] <= seq:
+   274	                    restore_view(conn, draw, view_id)
+   275	                    pending.discard(view_id)
+   276	            changed = set()
+   277	            for article_seq, record in sorted(by_day.get(day, []), key=lambda x: (x[0], x[1]['id'])):
+   278	                quote = adapter.quote_of(record)
+   279	                if not quote:
+   280	                    log.append({'day': day, 'dropped': record['id'], 'reason': 'no verified passage'})
+   281	                    continue
+   282	                evidence_id = f'e{number}'
+   283	                number += 1
+   284	                store.add_evidence(conn, evidence_id=evidence_id, quote=quote, one_line=record['summary'],
+   285	                                   speaker=record.get('reporting_speaker') or record.get('original_party') or '',
+   286	                                   original_who=record.get('original_party') or '', original_day=record.get('statement_date') or '',
+   287	                                   tier=record['tier'], event_time=None, seq=article_seq, input_id=record['input_id'])
+   288	                store.add_source(conn, evidence_id, record['input_id'], 'news', record['publication_date'], None, article_seq)
+   289	                for view_id in set(record['thesis_ids']) & set(targets):
+   290	                    if view_id in pending:
+   291	                        log.append({'day': day, 'record': record['id'], 'reason': f'{view_id} not yet created'})
+   292	                        continue
+   293	                    if store.link(conn, evidence_id, view_id, article_seq):
+   294	                        changed.add(view_id)
+   295	            conn.commit()
+   296	            if changed:
+   297	                judged = judging.round_of_judgements(archive, cfg, conn, sorted(changed), seq, {'input_id': f'day:{day}', 'publication_day': day},
+   298	                                                     transport=transport)
+   299	                conn.commit()
+   300	                for j in judged:
+   301	                    log.append({'day': day, 'view': j['view_id'], 'rung': j['rung'], 'changed': j['changed']})
+   302	                    print(json.dumps({'draw': draw, 'day': day, 'view': j['view_id'], 'rung': j['rung']}), flush=True)
+   303	        results[draw] = log
+   304	        (folder / 'log.json').write_text(json.dumps(log, indent=1, ensure_ascii=False))
+   305	    print('ledger', json.dumps(json.loads(Path(ledger_path).read_text())))
+   306	
+   307	
+   308	def card(conn, view_id, cutoff_seq):
+   309	    """The deck's card text for a view: question, choices, the last answer at or before the cutoff, its reasons and the material that
+   310	    judgement was shown (the frozen selection rebuilt at that judgement)."""
+   311	    view = conn.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   312	    rungs = conn.execute('select label, condition from rungs where view_id=? order by position', (view_id,)).fetchall()
+   313	    last = conn.execute('select * from judgements where view_id=? and seq<=? order by seq desc, judgement_id desc limit 1',
+   314	                        (view_id, cutoff_seq)).fetchone()
+   315	    return view, rungs, last
+   316	
+   317	
+   318	def cards():
+   319	    """$0. Writes OUT/cards/<draw>-<view>-{old,hybrid}.json: the question, the choices, the last answer at the cutoff, its reasons, and
+   320	    every piece of evidence the request of that answer listed, read back from the archived request."""
+   321	    from hivemind.views import judging
+   322	    out = OUT / 'cards'
+   323	    out.mkdir(parents=True, exist_ok=True)
+   324	    for draw, targets in TARGETS.items():
+   325	        for arm, views_path, archive_path in (('old', RUN / draw / 'prod/views.sqlite', RUN / draw / 'prod/archive.sqlite'),
+   326	                                              ('hybrid', OUT / 'judge' / draw / 'views.sqlite', OUT / 'judge' / draw / 'archive.sqlite')):
+   327	            conn = sqlite3.connect(f'file:{views_path}?mode=ro', uri=True)
+   328	            conn.row_factory = sqlite3.Row
+   329	            archive = sqlite3.connect(f'file:{archive_path}?mode=ro', uri=True)
+   330	            cutoff = conn.execute('select max(seq) from judgements').fetchone()[0]
+   331	            for view_id in targets:
+   332	                view, rungs, last = card(conn, view_id, cutoff)
+   333	                if last is None:
+   334	                    (out / f'{draw}-{view_id}-{arm}.json').write_text(json.dumps({'draw': draw, 'view': view_id, 'arm': arm, 'answer': None}))
+   335	                    continue
+   336	                request = archive.execute('select request_json from model_calls where call_id=?', (last['call_id'],)).fetchone()
+   337	                text = json.loads(request[0])['messages'][-1]['content'] if request else ''
+   338	                shown = judging.evidence_shown_in(text) if text else set()
+   339	                pieces = []
+   340	                for evidence_id in sorted(shown, key=lambda e: int(e[1:])):
+   341	                    row = conn.execute('select * from evidence where evidence_id=?', (evidence_id,)).fetchone()
+   342	                    source = conn.execute('select * from evidence_sources where evidence_id=? order by seq limit 1', (evidence_id,)).fetchone()
+   343	                    pieces.append({'evidence_id': evidence_id, 'tier': row['tier'], 'speaker': row['speaker'], 'original_who': row['original_who'],
+   344	                                   'original_day': row['original_day'], 'published': source['publication_day'] if source else None,
+   345	                                   'input_id': source['input_id'] if source else None, 'one_line': row['one_line'], 'quote': row['quote']})
+   346	                (out / f'{draw}-{view_id}-{arm}.json').write_text(json.dumps(
+   347	                    {'draw': draw, 'view': view_id, 'arm': arm, 'question': view['question'], 'opened': view['created_at'][:10],
+   348	                     'due': view['due_day'], 'choices': [r['condition'] for r in rungs], 'answer_rung': last['rung'],
+   349	                     'answer': rungs[last['rung'] - 1]['condition'], 'reasons': last['reasons'], 'judged_day': last['publication_day'],
+   350	                     'judgements': conn.execute('select count(*) from judgements where view_id=?', (view_id,)).fetchone()[0],
+   351	                     'material': pieces}, indent=1, ensure_ascii=False))
+   352	                print(draw, view_id, arm, 'rung', last['rung'], 'material', len(pieces))
+   353	
+   354	
+   355	if __name__ == '__main__':
+   356	    command = sys.argv[1]
+   357	    {'lists': lambda: lists(), 'send': lambda: send(sys.argv[2]), 'census': lambda: census(),
+   358	     'judge': lambda: judge(sys.argv[2]), 'cards': lambda: cards()}[command]()
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'def .*close|close_due|close_view\\(' ../../../src/hivemind/{replay.py,parallel_day.py,views} | head -55
+rg -n 'switch|close|finish_day|round_of_judgements' ../../../src/hivemind/replay.py" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+../../../src/hivemind/views/store.py:197:def close_view(conn, view_id, reason, by_whom, seq):
+68:              'evidence': 0, 'new_views': 0, 'judged': 0, 'changed': 0, 'closed': 0}
+115:            if hasattr(results, 'close'):
+116:                results.close()
+127:        closed = pull.end_of_day(conn, day, seq)
+128:        day_stats['closed'] = len(closed)
+139:            f'changed {day_stats["changed"]:3d} closed {len(closed)} | open views {open_count} | day ${day_cost:.2f} total ${cost - cost_before:.2f} calls {calls - calls_before}')
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba ../../../src/hivemind/replay.py | sed -n '72,138p'; rg -n 'def end_of_day|def .*close' ../../../src/hivemind/pull.py; rg -n 'def step1_records|initial_theses|thesis_ids' ../../../clean-arch/{step2/run_forward.py,step1/runner.py} | head -40; rg -n 'def quote_of' ../../../clean-arch/e2e-2026-11-09/adapter.py" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+    72	        day_cost_before = archive.totals()[1]
+    73	        processed = 0
+    74	        to_run = []
+    75	        for item in testdb.feed(items_db, day, day):
+    76	            if item['publication_day'] > day:
+    77	                raise LookAheadError(f'{item["input_id"]} is dated {item["publication_day"]}, after replay day {day}')
+    78	            if only_objects and not any(o['value'] in only_objects for o in item['object_identifiers']):
+    79	                continue
+    80	            if max_items_per_day and processed >= max_items_per_day:
+    81	                break
+    82	            day_stats['items'] += 1
+    83	            route = dispatch.route(conn, item, universe)
+    84	            if route.kind != 'extract':
+    85	                day_stats[route.kind] += 1
+    86	                if route.kind == 'skipped':
+    87	                    processed += 1      # written by an earlier run of this day: a restart keeps the day's item limit
+    88	                if route.kind == 'merged':
+    89	                    dispatch.mark(conn, item, 0, 'merged', 'ok', route.reason)
+    90	                    conn.commit()
+    91	                continue
+    92	            processed += 1
+    93	            to_run.append((item, route))
+    94	        results = (day_runner(conn, archive, cfg, universe, to_run, day=day, transport=transport, log=log) if day_runner else
+    95	                   (round_module.run(conn, archive, cfg, universe, item, route.sequence_no, resume_from=route.resume_from, transport=transport, log=log)
+    96	                    for item, route in to_run))
+    97	        finished = 0
+    98	        try:
+    99	            for index, result in enumerate(results):
+   100	                if index >= len(to_run) or result.input_id != to_run[index][0]['input_id']:
+   101	                    raise RuntimeError('day runner returned results out of input order')
+   102	                finished += 1
+   103	                day_stats['extracted'] += 1
+   104	                day_stats['evidence'] += result.evidence
+   105	                day_stats['new_views'] += result.new_views
+   106	                day_stats['judged'] += result.judged
+   107	                day_stats['changed'] += result.changed
+   108	                if result.failed:
+   109	                    day_stats['failed'] += 1
+   110	                    log(f'  ! {result.input_id[:60]}: {result.failed}')
+   111	                    raise RuntimeError(f'item failed; day {day} remains resumable: {result.failed}')
+   112	                if spend_cap_usd is not None and archive.totals()[1] - cost_before > spend_cap_usd:
+   113	                    raise RuntimeError(f'spend cap {spend_cap_usd} reached on {day}')
+   114	        finally:
+   115	            if hasattr(results, 'close'):
+   116	                results.close()
+   117	        if finished != len(to_run):
+   118	            raise RuntimeError('day runner did not complete every routed item')
+   119	        seq = store.next_sequence(conn) - 1
+   120	        judged = round_module.judge_day(conn, archive, cfg, day, seq, transport=transport, log=log)
+   121	        day_stats['judged'] += judged.judged
+   122	        day_stats['changed'] += judged.changed
+   123	        if judged.failed:
+   124	            day_stats['failed'] += 1
+   125	            log(f'  ! day judging: {judged.failed}')
+   126	            raise RuntimeError(f'judging failed; day {day} remains resumable: {judged.failed}')
+   127	        closed = pull.end_of_day(conn, day, seq)
+   128	        day_stats['closed'] = len(closed)
+   129	        # The day ends at the last sequence it wrote, a closing's own sequence on a day without items included, so the next day starts after it.
+   130	        store.complete_day(conn, day, store.next_sequence(conn) - 1, time.strftime('%Y-%m-%dT%H:%M:%S'))
+   131	        conn.commit()
+   132	        for key in totals:
+   133	            totals[key] += day_stats[key]
+   134	        calls, cost, _, _ = archive.totals()
+   135	        day_cost = cost - day_cost_before  # Includes discarded speculative calls and repaired refusals.
+   136	        open_count = len(store.open_views(conn))
+   137	        log(f'{day} | items {day_stats["items"]:3d} extracted {day_stats["extracted"]:3d} merged {day_stats["merged"]:2d} skipped {day_stats["not_processed"]:2d} '
+   138	            f'failed {day_stats["failed"]:2d} | evidence {day_stats["evidence"]:3d} new views {day_stats["new_views"]:2d} judged {day_stats["judged"]:3d} '
+30:def end_of_day(conn, day, seq):
+../../../clean-arch/step2/run_forward.py:31:def step1_records(trace):
+../../../clean-arch/step2/run_forward.py:37:    stays out of `thesis_ids` and is listed in `unresolved_thesis_ids` as '<type>:<id>'."""
+../../../clean-arch/step2/run_forward.py:57:        local = answer.get('new_thesis_ids', {})
+../../../clean-arch/step2/run_forward.py:74:                          'thesis_ids': targets(ev, True), 'unresolved_thesis_ids': targets(ev, False)}
+../../../clean-arch/step2/run_forward.py:91:    texts = sorted({compare.doc_text(r) for r in records} | {compare.query_text(r, questions[t]) for r in records for t in r['thesis_ids']})
+../../../clean-arch/step2/run_forward.py:101:                for t in r['thesis_ids']:
+../../../clean-arch/step2/run_forward.py:132:    unresolved = sum(len(r['unresolved_thesis_ids']) for r in records)
+../../../clean-arch/step1/runner.py:116:    thesis_ids = [x['local_id'] for x in answer['new_theses']]
+../../../clean-arch/step1/runner.py:118:    for name, ids in [('thesis', thesis_ids), ('evidence', evidence_ids)]:
+../../../clean-arch/step1/runner.py:179:                if target not in thesis_ids:
+../../../clean-arch/step1/runner.py:205:    interpreted['unlinked_new_thesis_ids'] = [x for x in thesis_ids if x not in linked_new]
+../../../clean-arch/step1/runner.py:215:def run(source_path, output_path, manifest, initial_theses, settings, transport, prd_path, texts=None, schema=None):
+../../../clean-arch/step1/runner.py:242:    ids = [t['id'] for t in initial_theses]
+../../../clean-arch/step1/runner.py:245:    for t in initial_theses:
+../../../clean-arch/step1/runner.py:259:          create table run (manifest text not null, settings text not null, source_items text not null, initial_theses text not null);
+../../../clean-arch/step1/runner.py:265:        conn.execute('insert into run values (?, ?, ?, ?)', (dump(manifest), dump(settings), dump(items), dump(initial_theses)))
+../../../clean-arch/step1/runner.py:271:        theses = copy.deepcopy(initial_theses)
+../../../clean-arch/step1/runner.py:348:                    if proposed['local_id'] in result['unlinked_new_thesis_ids']:
+../../../clean-arch/step1/runner.py:357:                result['new_thesis_ids'] = allocated
+126:def quote_of(record):
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import importlib.util,sqlite3,json
+from pathlib import Path
+spec=importlib.util.spec_from_file_location(\"review\",Path(\"merge_test.py\"))
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+a=m.articles()
+print(\"articles\",len(a))
+for draw,targets in m.TARGETS.items():
+ c=m.old_store(draw)
+ s=next(s for s,i,d in a if i.startswith(\"gnews:4dca50e2\"))
+ b=1474
+ for cut in (s-1,s):
+  print(draw,cut,[(q,m.thesis_of(c,q)) for q in set(m.open_views_at(c,cut)).intersection(targets) if q.startswith(\"v4\")])
+ clashes=[]
+ for seq,i,d in a:
+  stops=c.execute(\"select view_id,reason from view_switches where after_seq=? and open=0\",(seq,)).fetchall()
+  if stops: clashes.append((seq,d,[(v,r) for v,r in stops]))
+ print(\"same-seq closes at selected articles\",clashes)
+ print(\"late dependency rows\",c.execute(\"select count(*) from dependencies where seq>?\",(b,)).fetchone()[0],c.execute(\"select count(*) from dependency_resolutions where seq>?\",(b,)).fetchone()[0])
+ print(\"all late target switches\",[(v,n,r,s) for v,n,r,s in c.execute(\"select view_id,open,reason,after_seq from view_switches where after_seq>?\",(b,)) if v in targets])
+ for v in targets:
+  new_links={r[0] for r in c.execute(\"select distinct s.publication_day from evidence_links l join evidence_sources s using (evidence_id) where l.view_id=? and l.seq>? and s.seq=l.seq\",(v,b))}
+  jdays={r[0] for r in c.execute(\"select publication_day from judgements where view_id=? and seq>?\",(v,b))}
+  print(v,\"archived judge days without same-day link\",sorted(jdays-new_links))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+articles 70
+old-2 1663 []
+old-2 1664 [('v40', {'id': 'v40', 'entity': 'NVDA', 'description': "Will NVIDIA invest $10 billion to anchor Anthropic's IPO by 2026-09-20?", 'outcome': "NVIDIA's potential equity investment in Anthropic through its proposed IPO", 'period': 'reporting period 2026-01-01 to 2026-09-20; resolved by 2026-09-20'})]
+same-seq closes at selected articles []
+late dependency rows 0 0
+all late target switches [('v40', 1, 'created', 1664), ('v40', 0, 'due 2026-09-20, frozen on 2026-09-20 at rung 2 No', 1884)]
+v5 archived judge days without same-day link []
+v40 archived judge days without same-day link ['2026-09-16', '2026-09-18', '2026-09-19', '2026-09-20']
+old-3 1663 []
+old-3 1664 [('v47', {'id': 'v47', 'entity': 'NVDA', 'description': 'Will NVIDIA agree to anchor Anthropic’s IPO with an investment of $10 billion by September 20, 2026?', 'outcome': 'NVIDIA investment in Anthropic', 'period': 'reporting period 2026-01-01 to 2026-09-20; resolved by 2026-09-20'})]
+same-seq closes at selected articles []
+late dependency rows 0 0
+all late target switches [('v47', 1, 'created', 1664), ('v48', 1, 'created', 1668), ('v47', 0, 'due 2026-09-20, frozen on 2026-09-20 at rung 2 No', 1884)]
+v6 archived judge days without same-day link []
+v47 archived judge days without same-day link ['2026-09-16', '2026-09-18', '2026-09-19', '2026-09-20']
+v48 archived judge days without same-day link ['2026-09-16', '2026-09-18', '2026-09-19', '2026-09-20']
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba ../../../src/hivemind/pull.py | sed -n '1,98p'
+nl -ba ../../../clean-arch/step1/runner.py | sed -n '236,250p'
+nl -ba ../../../clean-arch/step2/run_forward.py | sed -n '30,79p'
+nl -ba ../../../src/hivemind/views/judging.py | sed -n '24,54p;119,174p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+     1	"""Pull mode (D54, D356): at the end of a day (the day passed in, never read from a clock), every open view whose due day has come
+     2	is frozen where its state stands and closed. The closing record names the rung it froze at; a view that was never judged closes
+     3	with "no data to verify" (AGENTS §8: missing data is neither a pass nor a fail). Nothing waits for the day's items, there is no
+     4	separate final review, and no other question is re-judged here."""
+     5	from . import dispatch
+     6	from .views import store
+     7	
+     8	NO_DATA = 'no data to verify'
+     9	
+    10	
+    11	def closing_reason(conn, view_id, due_day, day):
+    12	    last = conn.execute('select rung from judgements where view_id=? order by seq desc, judgement_id desc limit 1', (view_id,)).fetchone()
+    13	    if last is None:
+    14	        return f'due {due_day}, closed on {day} with no judgement: {NO_DATA}'
+    15	    label = conn.execute('select label from rungs where view_id=? and position=?', (view_id, last['rung'])).fetchone()
+    16	    return f'due {due_day}, frozen on {day} at rung {last["rung"]} {label["label"] if label else ""}'.rstrip()
+    17	
+    18	
+    19	def closing_sequence(conn, day, seq):
+    20	    """The sequence number the day's closings are written under, so that they are dated on that day: the day's last number when
+    21	    the day wrote it, else a new one recorded as the day's own step (a day with no items would otherwise date them on the day before)."""
+    22	    row = conn.execute('select min(publication_day) from processing_steps where sequence_no=?', (seq,)).fetchone()
+    23	    if seq > 0 and row[0] == day:
+    24	        return seq
+    25	    own = max(store.next_sequence(conn), seq + 1)
+    26	    dispatch.mark(conn, {'input_id': f'day:{day}', 'publication_day': day}, own, 'closed', 'ok', 'due questions closed at the end of the day')
+    27	    return own
+    28	
+    29	
+    30	def end_of_day(conn, day, seq):
+    31	    due = [row for row in conn.execute('select view_id, due_day from views where due_day <= ? order by created_seq', (day,)).fetchall()
+    32	           if store.is_open(conn, row['view_id'])]
+    33	    if due:
+    34	        seq = closing_sequence(conn, day, seq)
+    35	    for row in due:
+    36	        store.close_view(conn, row['view_id'], closing_reason(conn, row['view_id'], row['due_day'], day), 'pull', seq)
+    37	    conn.commit()
+    38	    return [row['view_id'] for row in due]
+   236	    if texts is not None:
+   237	        prompt, closing = texts
+   238	        if not prompt.strip() or not closing.strip():
+   239	            raise ContractError('a candidate needs a system prompt and a closing check')
+   240	    items = selected_items(source_path, manifest)
+   241	    entity = manifest['entity']
+   242	    ids = [t['id'] for t in initial_theses]
+   243	    if len(ids) != len(set(ids)) or any(not isinstance(x, str) or not x.strip() for x in ids):
+   244	        raise ContractError('initial thesis IDs must be unique and nonempty')
+   245	    for t in initial_theses:
+   246	        if (t['entity'] != entity or not isinstance(t['description'], str) or not t['description'].strip()
+   247	                or not isinstance(t['outcome'], str) or not t['outcome'].strip() or 'period' not in t):
+   248	            raise ContractError('initial thesis requires entity, question, outcome and period')
+   249	    # The caller chooses limits for an exploratory run; never guess a paid-run budget.
+   250	    if len(items) > manifest['item_limit']:
+    30	
+    31	def step1_records(trace):
+    32	    """Kept evidence of a completed Step 1 run (unlinked statements included), as Step 3 records grouped by article, with every thesis
+    33	    question and, per article, the thesis ids it opened. `trace` may join continuation segments with '+'. An article is numbered by its
+    34	    position in the first segment's manifest, so a failed item never shifts the numbers of the articles after it. A record keeps Step 1's
+    35	    verified passages beside the model's (None marks a passage not found in the source). A link resolves as the runner resolves it,
+    36	    by its type: an existing target must be among the theses shown open, a new one among the theses the answer opened; any other link
+    37	    stays out of `thesis_ids` and is listed in `unresolved_thesis_ids` as '<type>:<id>'."""
+    38	    questions = {}
+    39	    articles = []
+    40	    opened = []
+    41	    rows = []
+    42	    position = None
+    43	    for part in trace.split('+'):
+    44	        conn = sqlite3.connect(f'file:{part}?mode=ro', uri=True)
+    45	        try:
+    46	            if position is None:
+    47	                position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+    48	            done = conn.execute("select input_id, request, result, before_state, after_state from trace where status='complete' order by sequence").fetchall()
+    49	        finally:
+    50	            conn.close()
+    51	        rows += [(position[row[0]], *row[1:]) for row in done]
+    52	    for seq, request, result, before, after in rows:
+    53	        source = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']
+    54	        questions.update({t['id']: t['description'] for t in json.loads(after)})
+    55	        opened.append(sorted({t['id'] for t in json.loads(after)} - {t['id'] for t in json.loads(before)}))
+    56	        answer = json.loads(result)
+    57	        local = answer.get('new_thesis_ids', {})
+    58	        open_before = {t['id'] for t in json.loads(before)}
+    59	        def resolve(link):   # the runner's own rule: an existing target must have been shown open; a new one must have been opened
+    60	            if link['target_type'] == 'existing':
+    61	                return link['target_id'] if link['target_id'] in open_before else None
+    62	            return local.get(link['target_id'])
+    63	        def targets(ev, resolved):
+    64	            if resolved:
+    65	                return sorted({resolve(l) for l in ev['links'] if resolve(l)})
+    66	            return sorted({f"{l['target_type']}:{l['target_id']}" for l in ev['links'] if not resolve(l)})
+    67	        articles.append([{'id': f"{seq}:{ev['local_id']}", 'article': seq, 'input_id': source['id'], 'title': source.get('title'),
+    68	                          'publisher': source['publisher'], 'publication_date': source['publication_date'], 'summary': ev['summary'],
+    69	                          'passages': ev['source_passages'], 'verified_passages': ev.get('verified_source_passages'),
+    70	                          'original_party': ev['original_party'],
+    71	                          'reporting_speaker': ev['reporting_speaker'], 'tier': ev['tier'], 'statement_date': ev['statement_date'],
+    72	                          'statement_date_text': ev['statement_date_text'], 'evidence_period': ev['evidence_period'],
+    73	                          'figures': ev.get('figures') or [],
+    74	                          'thesis_ids': targets(ev, True), 'unresolved_thesis_ids': targets(ev, False)}
+    75	                         for ev in answer['evidence']])
+    76	    kept = [i for i, a in enumerate(articles) if a]
+    77	    return [articles[i] for i in kept], questions, [opened[i] for i in kept]
+    78	
+    79	
+    24	from .. import config, model, vocabulary
+    25	from . import store
+    26	
+    27	PUSHES = vocabulary.PUSHES
+    28	SUPPORTED_VERSIONS = ('judging-v7',)   # D354: the frozen judging prompt
+    29	READINGS = 5                      # a piece is shown in the thesis's first five judgements after it arrives
+    30	BASIS = 10                        # and while one of the last ten judgements cited it
+    31	THEME_REASONS_CHARS = 300
+    32	UPDATED_MARK = 'updated since this thesis was last judged'
+    33	
+    34	
+    35	def require_supported(prompt_version):
+    36	    """Refuses a judging prompt version this code does not build, before any request is made."""
+    37	    if prompt_version not in SUPPORTED_VERSIONS:
+    38	        raise ValueError(f'judging {prompt_version!r} is not built; this code builds only {", ".join(SUPPORTED_VERSIONS)} (D354)')
+    39	
+    40	
+    41	def evidence_in_view(conn, view_id):
+    42	    """(the pieces a judgement of this thesis reads, how many pieces in force are not shown): the arrivals (linked after the
+    43	    READINGS-th most recent judgement, or all when there are fewer) and the basis (cited by one of the last BASIS judgements),
+    44	    both among the evidence in force."""
+    45	    in_force = store.evidence_in_force(conn, view_id)
+    46	    recent = store.recent_judgements(conn, view_id, BASIS)
+    47	    arrivals_after = recent[READINGS - 1]['seq'] if len(recent) >= READINGS else -1
+    48	    basis = {evidence_id for j in recent for evidence_id in j['cites']}
+    49	    linked_at = {r['evidence_id']: r['seq'] for r in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,))}
+    50	    shown = [p for p in in_force if linked_at.get(p['evidence_id'], -1) > arrivals_after or p['evidence_id'] in basis]
+    51	    return shown, len(in_force) - len(shown)
+    52	
+    53	
+    54	def schema_for(prompt_version):
+   119	
+   120	
+   121	def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidden=0):
+   122	    """hidden: how many pieces in force are not shown."""
+   123	    lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
+   124	             'Ladder: ' + ' / '.join(f'rung {r["position"]} {r["label"]}: {r["condition"]}' for r in rungs), '',
+   125	             f'[Evidence in view under this thesis, {len(pieces)} items]']
+   126	    if hidden:
+   127	        lines.append(f'[Not shown: {hidden} more pieces in force, read in earlier judgements; the previous conclusion carries them]')
+   128	    for p in pieces:
+   129	        src = p['sources'][0] if p['sources'] else {}
+   130	        lines.append(f'- {p["evidence_id"]} [{p["tier"]}; {p["speaker"]}; original source {p["original_who"]} {p["original_day"]}; from {src.get("input_id")} {src.get("publication_day")}] {p["one_line"]}\n    Quote: {p["quote"][:400]}')
+   131	        if p.get('replaced'):
+   132	            lines.append(f'    It replaces {p["replaced"]["evidence_id"]} ({p["replaced"]["original_day"]}): {p["replaced"]["one_line"]}')
+   133	        if p.get('same_as'):
+   134	            lines.append(f'    Opinion, not verified: the matcher read this as the same claim as {", ".join(p["same_as"])}; the argument counts one claim, one more outlet.')
+   135	        if p.get('revises'):
+   136	            lines.append(f'    Opinion, not verified: the matcher read it as a later version of {p["revises"]["evidence_id"]} ({p["revises"]["original_day"]}); both are in force: {p["revises"]["one_line"]}')
+   137	    if deps:
+   138	        lines.append('\n[Current conclusions of the theses it depends on]')
+   139	        for d in deps:
+   140	            target = d['resolved_to']
+   141	            if not target:
+   142	                lines.append(f'- the {d["wait_year"]} thesis on chain {d["wait_chain_view_id"]}: not yet created ({d["direction"]})')
+   143	                continue
+   144	            tv = store.view(conn, target)
+   145	            state = store.current_state(conn, target)
+   146	            flag = 'historical only' if d['resolution'] == 'history_only' else ('closed' if not store.is_open(conn, target) else 'open')
+   147	            rung_label = store.rungs_of(conn, target)[state['rung'] - 1]['label'] if state else 'not judged yet'
+   148	            lines.append(f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"] if state else "-"} {rung_label}; reasons: {(state or {}).get("reasons", "")[:600]}')
+   149	    if themes:
+   150	        lines.append(f'\n[Themes in force, {len(themes)}]')
+   151	        for theme in themes:
+   152	            tv, state = theme['view'], theme['state']
+   153	            mark = f'; {UPDATED_MARK}' if theme['updated'] else ''
+   154	            lines.append(f'- {theme["view_id"]} ({tv["object_id"]}, due {tv["due_day"]}) {tv["question"]}: now rung {state["rung"]} {theme["rung_label"]}; '
+   155	                         f'judged {state["publication_day"]}{mark}; reasons: {(state["reasons"] or "")[:THEME_REASONS_CHARS]}')
+   156	    if last:
+   157	        lines.append(f'\n[Previous conclusion, for comparison only] rung {last["rung"]}; reasons: {last["reasons"][:800]}')
+   158	    else:
+   159	        lines.append('\n[Previous conclusion] none: this is the first judgement, so changed must be true.')
+   160	    lines.append('\nAnswer per the JSON schema. cites may name only the evidence ids listed above; '
+   161	                 + ('cites_views only the dependency thesis ids listed above' if deps else 'cites_views must be empty: this thesis depends on no other thesis')
+   162	                 + ('; theme_pushes only the theme ids listed above; a theme id goes only in theme_pushes, never in cites or cites_views' if themes else '') + '.')
+   163	    return lines
+   164	
+   165	
+   166	def build_prompt(conn, view_id, prompt_version):
+   167	    require_supported(prompt_version)
+   168	    v = store.view(conn, view_id)
+   169	    rungs = store.rungs_of(conn, view_id)
+   170	    pieces, hidden = evidence_in_view(conn, view_id)
+   171	    deps = store.dependencies_of(conn, view_id)
+   172	    last = store.current_state(conn, view_id)
+   173	    lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes_in_force(conn, view_id), hidden=hidden)
+   174	    with open(config.prompt_path(prompt_version + '.txt'), encoding='utf-8') as handle:
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import sqlite3
+from pathlib import Path
+p=Path(\"../../../poc/data/comparison-2026-11-17/run\")
+for d,vs in [(\"old-2\",(\"v5\",\"v40\")),(\"old-3\",(\"v6\",\"v47\",\"v48\"))]:
+ c=sqlite3.connect(f\"file:{p}/{d}/prod/views.sqlite?mode=ro&immutable=1\",uri=True)
+ m=sqlite3.connect(\":memory:\");c.backup(m); b=1474
+ m.execute(\"delete from evidence_sources where seq>?\",(b,))
+ m.execute(\"delete from evidence where evidence_id not in (select evidence_id from evidence_sources)\")
+ print(d,\"remaining post-boundary evidence\",m.execute(\"select count(*) from evidence where created_seq>?\",(b,)).fetchone()[0], \"earlier evidence dropped\",c.execute(\"select count(*) from evidence where created_seq<=? and evidence_id not in (select evidence_id from evidence_sources where seq<=?)\",(b,b)).fetchone()[0])
+ qs=\",\".join(\"?\" for q in vs)
+ direct={i for i, in c.execute(f\"select distinct evidence_id from evidence_links where view_id in ({qs})\",vs)}
+ print(\"direct\",len(direct))
+ for t in (\"same_claims\",\"revisions\",\"replacements\"):
+  links=[(a,z) for a,z in c.execute(f\"select old_evidence_id, new_evidence_id from {t} where seq>?\",(b,)) if a in direct or z in direct]
+  print(t,len(links),len({i for x in links for i in x}-direct))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ exited 1 in 0ms:
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+sqlite3.IntegrityError: append-only
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import importlib.util,sqlite3
+spec=importlib.util.spec_from_file_location(\"review\",\"merge_test.py\")
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+for d in m.TARGETS:
+ c=m.old_store(d)
+ print(d,[(n,t) for n,t in c.execute(\"select name,tbl_name from sqlite_master where type=\\\"trigger\\\" and tbl_name in (\\\"judgements\\\",\\\"evidence\\\",\\\"evidence_links\\\",\\\"evidence_sources\\\")\")],flush=True)
+ try: print(m.judging_copy(d,\":memory:\"))
+ except Exception:
+  import traceback
+  traceback.print_exc()
+ b=1474
+ keys=tuple(m.TARGETS[d]);qs=\",\".join(\"?\" for k in keys)
+ direct={i for i, in c.execute(f\"select distinct evidence_id from evidence_links where view_id in ({qs})\",keys)}
+ for t in (\"same_claims\",\"revisions\",\"replacements\"):
+  edges=[(a,z) for a,z in c.execute(f\"select old_evidence_id, new_evidence_id from {t} where seq>?\",(b,)) if a in direct or z in direct]
+  print(\"relation\",t,len(edges),\"unlinked counterparts\",len({i for edge in edges for i in edge}-direct))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+old-2 [('judgements_no_update', 'judgements'), ('judgements_no_delete', 'judgements'), ('evidence_no_update', 'evidence'), ('evidence_no_delete', 'evidence'), ('evidence_sources_no_update', 'evidence_sources'), ('evidence_sources_no_delete', 'evidence_sources'), ('evidence_links_no_update', 'evidence_links'), ('evidence_links_no_delete', 'evidence_links')]
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+  File "/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/merge_test.py", line 218, in judging_copy
+    target.execute(f'delete from {table} where {column}>?', (boundary,))
+sqlite3.IntegrityError: append-only
+relation same_claims 25 unlinked counterparts 6
+relation revisions 0 unlinked counterparts 0
+relation replacements 0 unlinked counterparts 0
+old-3 [('judgements_no_update', 'judgements'), ('judgements_no_delete', 'judgements'), ('evidence_no_update', 'evidence'), ('evidence_no_delete', 'evidence'), ('evidence_sources_no_update', 'evidence_sources'), ('evidence_sources_no_delete', 'evidence_sources'), ('evidence_links_no_update', 'evidence_links'), ('evidence_links_no_delete', 'evidence_links')]
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+  File "/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/merge_test.py", line 218, in judging_copy
+    target.execute(f'delete from {table} where {column}>?', (boundary,))
+sqlite3.IntegrityError: append-only
+relation same_claims 24 unlinked counterparts 7
+relation revisions 0 unlinked counterparts 0
+relation replacements 0 unlinked counterparts 0
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import importlib.util
+s=importlib.util.spec_from_file_location(\"review\",\"merge_test.py\");m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+for d in m.TARGETS:
+ c=m.old_store(d);seen=set(v for q,i,x in m.articles() for v in m.open_views_at(c,q))
+ rows={v:m.thesis_of(c,v) for v in seen}
+ missing=[v for v,r in rows.items() if not r[\"description\"].strip() or not r[\"outcome\"].strip() or not r[\"period\"].strip()]
+ print(d,len(rows),\"bad c8 fields\",missing,\"objects\",[(a,b) for a,b in c.execute(\"select distinct object_id,object_kind from views\")])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+old-2 42 bad c8 fields [] objects [('NVDA', 'company'), ('ai-capex', 'theme'), ('chip-export-controls', 'theme'), ('fed-policy-rate', 'theme')]
+old-3 48 bad c8 fields [] objects [('NVDA', 'company'), ('ai-capex', 'theme'), ('chip-export-controls', 'theme'), ('fed-policy-rate', 'theme'), ('semiconductor-cycle', 'theme')]
+
+codex
+**Keep per-article timing, but fix the judging copy before sending.** I checked all 70 articles. Article 189 sees v40 and v47 at sequence 1664, and neither is visible at 1663. The converted questions satisfy c8’s input requirements. Include same-item openings and apply end-of-day closures after filing. No selected article shares a sequence with a closure.
+
+**The copy currently fails.** I ran `judging_copy` in memory against both stores. The first deletion raises `append-only` because the backup carries the original triggers. Build a fresh snapshot by inserting only rows through September 6. `restore_view` restores openings and choices. The replay still needs to close targets after judging. Both queue overrides limit judging to the supplied targets. [Merge harness](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/merge_test.py:206)
+
+**Control.** Preserve old evidence IDs, target links, source order and original sequences. Replay `same_claims`, `revisions` and any `replacements` when written, including their evidence and source records even when those records lack target links. I found six such counterparts in old-2 and seven in old-3. Use a common judging schedule that includes September 20. The archived Anthropic answers were judged that day despite receiving no direct link.
+
+Build both arms’ cards from the actual requests, including the truncated quotes, relationship notes and theme context. The current card builder substitutes full ledger quotes and omits that context.
+
+CONSENSUS: CHANGE build an insert-only cutoff snapshot and verify the matched control’s judge requests before sending.
+tokens used
+378,316
+**Keep per-article timing, but fix the judging copy before sending.** I checked all 70 articles. Article 189 sees v40 and v47 at sequence 1664, and neither is visible at 1663. The converted questions satisfy c8’s input requirements. Include same-item openings and apply end-of-day closures after filing. No selected article shares a sequence with a closure.
+
+**The copy currently fails.** I ran `judging_copy` in memory against both stores. The first deletion raises `append-only` because the backup carries the original triggers. Build a fresh snapshot by inserting only rows through September 6. `restore_view` restores openings and choices. The replay still needs to close targets after judging. Both queue overrides limit judging to the supplied targets. [Merge harness](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/merge_test.py:206)
+
+**Control.** Preserve old evidence IDs, target links, source order and original sequences. Replay `same_claims`, `revisions` and any `replacements` when written, including their evidence and source records even when those records lack target links. I found six such counterparts in old-2 and seven in old-3. Use a common judging schedule that includes September 20. The archived Anthropic answers were judged that day despite receiving no direct link.
+
+Build both arms’ cards from the actual requests, including the truncated quotes, relationship notes and theme context. The current card builder substitutes full ledger quotes and omits that context.
+
+CONSENSUS: CHANGE build an insert-only cutoff snapshot and verify the matched control’s judge requests before sending.

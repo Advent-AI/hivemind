@@ -1,0 +1,13 @@
+**NOT READY.** Version 5 fixes both round-25 counterexamples. One ambiguity remains in how the credit rule handles multiple unquantifiable CPU gains. Two readers can still reach **pass** and **inconclusive** from the same answers. [Credit rule](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:89)
+
+### Round-25 findings
+
+Both fixes hold. Every gain in a provisionally improved pair now gets Rule B review of both supplying judgements. If the control has two definite dates and both linked gains lose credit, the result is a tie. Only gain dates can be adjusted, so a material error shared by both arms on a clear date leaves P unchanged. H4 double counting and the H5 sample retain their separate harm checks. Both verdict checks are specified in §7. [Credit rule](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:89) · [H4 and H5](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:119) · [Verdict checks](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:178)
+
+H1 now explicitly tolerates three excess refusals and fails at four. The worksheet counts the two reads separately and includes H3 and the full gain review. Those findings are closed. [H1](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:100) · [Reading load](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:131)
+
+### Exact remaining change
+
+Remove the per-gain condition **“and could decide the pair.”** Suppose a control has two definite dates and the linked arm has none, with both gains resting on unquantifiable unsupported CPU increments. Marking either gain unresolved by itself still leaves an improvement, since **1 < 2**. Marking both unresolved makes the pair **undecided**, since **2 < 2** is false. Mark **every** such gain unresolved, then recompute the bounds once across the pair. [Bounds](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:80) · [CPU credit rule](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:93)
+
+State that the **60-date coverage check uses the original hand-read classes**, while the bounds use the credit-adjusted classes. A readable forecast with unsupported arithmetic still counts as readable, and its uncertainty still affects P. Add the two-unquantifiable-gains case to the $0 verdict checks. [Coverage rule](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:86) · [Verdict precedence](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/PAID-DESIGN.md:126)

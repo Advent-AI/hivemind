@@ -1,0 +1,15 @@
+the unbroken run: 235 articles; cut after article 120; mutant: wrong-library
+  ok    the proof's cut row is empty in the same columns as the real run's cut row | ['raw_response', 'result', 'after_state', 'error', 'retry_reason']
+  ok    the second part holds the remaining articles in order, the cut one first | 115 articles
+  FAIL  it starts from the library as it stood after the last complete article | 6 topics
+  ok    its limits are the run's less what the first part used | 178 calls, 25200 seconds
+  FAIL  the second part completes | {"status": "failed", "input_id": "gnews:4c4c114117f5c7acb7be91f7", "error": "UnknownRequest: a request the unbroken run never sent", "reserved_usd": 0.118819, "calls": 1}
+  FAIL  every request it sent is byte-identical to the stored request of the same article, in order, and none is unknown | 0 sent, 1 unknown
+  FAIL  every send was reserved and settled on the shared ledger | 1 attempts, spent 0.1188
+  FAIL  article by article, the second part equals the unbroken run: identity, library before, request, answer, result, library after | 1 articles, first differences [(1, 'before_state'), (1, 'request'), (1, 'raw_response')]
+  ok    the merge refuses a second part that is truncated (its last ten articles missing) | the second part did not start from the library after the first part's last complete article
+  ok    the merge refuses a second part that is stopped on a failure at its last article | the second part did not start from the library after the first part's last complete article
+  ok    the merge refuses a second part that is out of order (two articles exchanged) | the second part did not start from the library after the first part's last complete article
+  FAIL  the two parts merge | the second part did not start from the library after the first part's last complete article
+  ok    with a ledger below one reservation nothing is sent, the run stops on the ledger and the ledger is stopped | {"status": "failed", "input_id": "gnews:4c4c114117f5c7acb7be91f7", "error": "ValueError: live run limit reached before send: the shared ledger refused", "reserv
+13 expectations, 6 failed

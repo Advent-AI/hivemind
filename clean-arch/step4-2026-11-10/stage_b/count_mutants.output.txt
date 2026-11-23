@@ -1,0 +1,15 @@
+control (unmutated): exit 0; 21 of 21 cases as expected
+control: no packet comparison: caught by 'controls: a control packet changed'; failing cases 1
+control: a ruling where the readers agree is accepted: caught by 'controls: a ruling where the readers agree'; failing cases 1
+control: a missing ruling is not refused: caught by 'controls: a disagreement with no ruling'; failing cases 1
+count: planted-in-use.json not checked against the trial: caught by 'count: planted-in-use.json not the trial's result'; failing cases 1
+trial: a test left uncovered is accepted: caught by 'count: a test left without a planted answer'; failing cases 1
+trial: an incomplete row is accepted (the trial path): caught by 'count: a trial row with a field missing'; failing cases 2
+trial: an incomplete row is accepted (the reading path): caught by 'count: a reading row with a field missing'; failing cases 2
+trial: a rung that is text is accepted: caught by 'count: a rung that is text on a SUPPORTED row'; failing cases 1
+control: a ruling with no reason is accepted: caught by 'controls: a ruling with no reason'; failing cases 1
+builder: no trial gate (the trial is not derived): caught by 'the builder built the reading packets although the trial did not pass'; failing cases 0
+trial: no session record required: caught by 'count: a trial without its session record'; failing cases 1
+control: an unresolved item hides a confirmed missing one: caught by 'controls: a missing item beside a disputed one'; failing cases 1
+count: no void on a zero denominator: caught by 'count: every yes/no judgement INSUFFICIENT'; failing cases 1
+Two catches are by a crash, traceback read: 'a missing ruling is not refused' fails at decided() reading a ruling that is not there (KeyError); 'no void on a zero denominator' fails at the yes/no share (ZeroDivisionError). The builder mutant is caught by the check stopping with its named message (the builder built the reading packets for a trial that did not pass). The others fail by the case's own refusal or words. A first version of the builder mutant removed only one of its two guards and was not caught, because the second guard (planted-in-use.json against the trial's result) refuses too; the mutant now removes the trial gate whole.

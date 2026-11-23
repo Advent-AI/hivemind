@@ -1,0 +1,3 @@
+**NOT READY.** The open-question handling fixes the earlier blocker, but the field still permits figures beyond the item if marked as estimates. That conflicts with “Use only this item’s information.”
+
+For example, the model could estimate the company’s size from memory to judge a guarantee. Labeling that figure as an estimate does not establish that the item supports it. The added probe checks may catch this after a send, but the request itself still permits it.

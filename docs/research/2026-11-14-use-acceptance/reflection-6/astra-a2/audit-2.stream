@@ -1,0 +1,1031 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e7ae-535d-78b0-b988-802c90dd9490
+--------
+user
+You are an independent, read-only auditor of a model request. No conclusion is preferred. Do not edit files or start runs.
+
+**The request.**
+- **Frozen:** `clean-arch/step4-2026-11-10/ladder/candidate-system.txt`, `candidate-closing.txt` and `candidate-schema.json`.
+- **Proposed (arm A2):** `docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/` (system.txt, closing.txt, schema.json). It differs from the frozen request in
+  "the topic's wording" read as "the topic's description and outcome", and in two added sentences: a second side of the same bet
+  stays in the question as context, and is not by itself a reason to decline.
+
+**The standard.** Read D436, D397 and D403 in `docs/DECISIONS-log.md` (search "## D436 ", "## D397 ", "## D403 "), and
+`docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md`, the earlier finding that the sources are silent on which
+part is main.
+
+**Audit the whole proposed request**, every sentence that decides what is asked, what is listed as not judged, or when to decline. Give
+each a verdict against the standard: consistent, contradicts, keeps wider, keeps narrower, or no source. In particular:
+1. Does A2 add a rule for choosing the main part that the sources do not hold (the description-priority rule the council refused)?
+   Or does it only keep D436's second sides from being a reason to decline?
+2. Could A2 make the step answer a topic that should be declined: two years each asked, another company's figure, or no listed
+   theme?
+3. Could it make the step list as "not judged" things the answer choices already decide? Earlier, A2 on another model listed an
+   event's own alternatives.
+
+Be concise. End with one line: SOUND TO PROBE, or NOT SOUND: <the reason>.
+
+This is the second audit. The first (`docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md`) found the closing check
+wider than the system text and schema. The closing now reads "is every other part of the topic's description and outcome that the
+question leaves out listed in not_judged?". Audit the whole revised request again, closing included, and say whether the closing
+alignment is consistent and adds nothing.
+
+codex
+I’ll compare the revised request sentence by sentence with the three decisions and the earlier audit, including the closing check and the three boundary cases.
+exec
+/opt/homebrew/bin/zsh -lc 'cat clean-arch/step4-2026-11-10/ladder/{candidate-system.txt,candidate-closing.txt,candidate-schema.json}' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D436|D397|D403|reflection-6|astra-a2' /Users/lchingen/.codex/memories/MEMORY.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/{system.txt,closing.txt,schema.json} docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+ succeeded in 0ms:
+You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+
+What the question asks
+- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+Whose question it is
+- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+
+The ladder
+- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+- Fill exactly one of event and figure; the other is null.
+- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}
+
+ succeeded in 0ms:
+You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+
+What the question asks
+- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+- A topic's description and outcome together may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's description and outcome that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part itself meets a case below. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+Whose question it is
+- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+
+The ladder
+- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's description or outcome names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+- Fill exactly one of event and figure; the other is null.
+- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's description and outcome that the question leaves out listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's description and outcome that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of either out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}**The sources do not give a general rule for finding the main part when several parts are named.** They support judging one part and showing the rest, but they do not say when the topic’s description, a first-mentioned part, a later milestone, or a closely related second figure makes one part primary.
+
+For example, the CPO topic asks about **2027 shipments** in its description, but its outcome names shipments from **Q4 2026 through 2027**. Treating the full-year figure as primary is reasonable; treating the whole named span as the tracked figure is also consistent with the sources.
+
+1. **What the decisions say**
+
+   - [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) records Alex’s choice: “只判主要那件.” It says to judge “the part its `outcome` names,” show the other parts as not judged, and give no question when there is “no main part.” It does not explain how to choose when the outcome names several candidates.
+   - [D436]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4847) says “a second side of the same bet” stays as context and is “shown as not judged.” Its examples include shortage beside shipments. It does not say how to identify the main side in every multi-part topic.
+   - [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606) declines a figure covering “a period which is not one fiscal or calendar year” when neither text gives a publication day. It does not say which period to select when the topic names several.
+
+   The [reader form]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:95) checks that the question asks what the outcome names, omitted parts are shown, and a refusal’s stated reason applies. It supplies no further selection rule.
+
+2. **The 24 declines**, grouped where all draws have the same source-level verdict. “Silent” means the available standard does not settle the disputed selection; it is not a finding that the decline is wrong.
+
+| Topic and sol draws | Main part and verdict |
+|---|---|
+| Fortnight **13**, d1–d3 | **Silent.** Full-year 2027 shipments may be main, with earlier checkpoints left out; alternatively the outcome tracks the Q4 2026–2027 span. D417 applies only if that span is the selected figure and has no publication day. |
+| Fortnight **3**, d1–d3 | **Silent.** US authorization may be main, with Chinese restrictions as another condition; alternatively both authorities’ actions are separately tracked with neither main. |
+| Fortnight **8**, d2–d3 | **Justified on the recorded theme finding.** The main figure is 2026 physical-AI venture funding; the refusal is about no matching theme, not multiple parts. Both readers held it. The case file itself does not contain the request’s theme list, so that finding rests on the recorded trace. |
+| Week **11**, d1–d3 | **Silent.** Signing may be main, with closing and terms left out; alternatively signing and closing are distinct tracked events with neither selected. |
+| Week **12**, d1–d3 | **Justified.** 2026 and 2027 global AI spending are presented together, with neither singled out. They are separate annual figures; choosing one would require an additional rule. |
+| Week **13**, d1–d3 | **Silent.** Remaining commitments may be main, with cash paid and changes left out; alternatively these are separately tracked figures with none selected. |
+| Week **3**, d1–d3 | **Silent.** Contract-price change may be main, with selling prices and margins left out; alternatively the named measures compete. Even if price change is main, the separate HBM-versus-DRAM series question remains. |
+| Week **4**, d1–d3 | **Justified.** 2026 and 2027 hyperscaler spending are presented together, with neither singled out; they are separate annual figures. |
+| Week **5**, d2 | **Unjustified.** Closing the already signed acquisition is the named event; termination is an alternative outcome, while consideration and regulatory conditions are other parts to show. Both readers rejected the refusal. |
+
+The reader disagreements and matched answers are in the [refusal trace]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt:1). These verdicts are about the stated refusal reasons; they do not certify that a proposed answer would meet every other requirement.
+
+3. **Wording and boundary cases**
+
+The strongest sourced wording is already in the [request]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:5): “Judge the one the topic’s outcome names as what is tracked,” and list every other part. D436 adds “a second side of the same bet” as context. Applied to all nine topics above, that wording supports the week 5 correction, preserves the two two-year refusals and the separate theme refusal, and leaves the other five topics unresolved. It does **not** tell the model how to resolve those five; the stored trace also cannot establish that repeating it would change any model response.
+
+A ruling would need these boundaries, with both readings shown:
+
+- **CPO shipments:** description’s full-year figure is main / the outcome’s multi-period span is tracked.
+- **China restrictions:** US approval is main and Chinese acceptance is a condition / the two authorities’ decisions are separate candidates.
+- **Reflection acquisition:** signing is main and closing follows / signing and closing are separate candidates.
+- **Commitments:** remaining balance is main and funding/change are context / all are separate candidate figures.
+- **Memory:** contract-price change is main and company prices/margins are context / the figures compete; separately, whether HBM/DRAM denotes one usable figure or requires a series choice.
+
+These are the same unresolved distinctions identified by the [earlier rule review]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md:1). Neither “use the description” nor “use the first part” is sourced as a general tie-breaker.
+
+SOURCES SILENT: OWNER RULING NEEDED**A2 does not add the refused rule that the description takes priority, but its closing check is too broad: it can label an event’s own answer choices as “not judged.”**
+
+For example, if the question asks whether an acquisition closes, the answer can already distinguish closing, withdrawal and neither by the due date. A check that demands *every other part* be listed as not judged can nevertheless list withdrawal there.
+
+| Request instruction | Verdict against the cited standard |
+|---|---|
+| Ask one figure for a period or one event; judge what the outcome names as tracked. | **Consistent** with D397. It does not say the description wins when the outcome names several candidates. |
+| Read the description and outcome together; list other parts **the question leaves out**. The schema repeats this. | **Consistent** with D397’s instruction to show the remaining wording as not judged. This does not resolve which part is main. |
+| Keep a second side of the same bet as context and list it as not judged; that side alone does not require a decline. | **Consistent** with D436, while preserving D397’s decline when no part is main. D436’s own scope is clean Step 1, and it does not supply a general main-part selection rule. |
+| Decline when no part is main, or the main part meets a listed decline case. | **Consistent** with D397 on no main part. The instruction does not itself choose a main part. |
+| Decline an undated event without a named period, except the stated regulatory-decision exception. | **Consistent** with D403. |
+| Decline another company’s figure or a matter without a listed theme; the remaining figure-period and year decline cases. | **No source in the three cited decisions.** These are retained from the frozen request; this audit does not establish their separate authority. |
+| List a difference *within* an event outcome, such as approval with versus without conditions, as not judged. | **Consistent** with D397 when that distinction is genuinely left unresolved by the answer choices. It does not justify listing alternatives that the choices do resolve. |
+| Closing check: list **every other part** of the description and outcome as not judged. | **Keeps wider** than the system text and schema’s “the question leaves out.” It lacks their limitation and can include the event’s own resolved alternatives. |
+
+On the requested boundaries: two years presented equally still meet the explicit “none the main one” decline; another company’s figure and a matter with no listed theme still have explicit decline instructions. The added “second side” sentence could be misapplied to those cases, but it does not expressly override their decline rules. The sources remain silent on disputed cases where it is unclear which part is main, as the [earlier audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md:1) found. These are readings of the request, not results from a new run.
+
+NOT SOUND: The closing check can list already judged event alternatives as not judged.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 32 '"'^## D(436|397|403) '"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4326:## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+4327-
+4328-- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+4329-  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+4330-  - Options:
+4331-    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+4332-      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+4333-      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+4334-    - split into two questions, each judged, as D38 says;
+4335-    - do not judge such a topic until Step 1 opens it as one thing.
+4336-  - Alex: "只判主要那件 (Recommended)".
+4337-- **Decided:**
+4338-  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+4339-    its wording is listed and shown beside the answer as not judged.
+4340-  - A thesis with no main part gets no judged question, with the reason recorded.
+4341-  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+4342-    test: readers mark each part left out as a bet an analyst would hold or not.
+4343-- **Scope:** the clean path's ladder step only. D38 stands for production.
+4344-
+4345-## D398 · 2026-11-10 · The clean ladder step carries D186: ranges against the reference, the favourable end registered, labels by code
+4346-
+4347-- **Asked**, with the census of production's own ladders (one request, the same in three draws, gave three different ladders, one
+4348-  with its direction reversed): "你 10 月 26 日定过、11 月 5 日说“我们要做”的那条规矩还没实现：答案分段要对着市场预期或公司指引写成“高于／接近／低于”，并且每道题登记“数字越高对公司是好还是坏”。新做的“定档”这一步要不要直接带上它？"
+4349-  - Options:
+4350-    - both halves here (recommended). The option stated its costs: 7 to 9 of 18 number questions have no reference figure in their
+4351-      opening article, so their ranges are the model's estimate and are marked "no reference"; a direction can still be registered
+4352-      wrong, which the first test measures;
+4353-    - the direction half only;
+4354-    - not here: write ladders as production does, and leave D186 to a later version.
+4355-  - Alex: "两半都带上 (Recommended)".
+4356-- **Decided:**
+4357-  - The clean ladder step builds D186 in full. The model states the reference the opening article gives and, for a company's figure,
+4358-    which end is good for the business, with one sentence why. Code orders and labels the rungs from that end, writes each range's
+--
+4414:## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+4415-
+4416-- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+4417-  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+4418-    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+4419-    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+4420-    three sends of one thesis may set three days.
+4421-  - Alex: "保持更严 (Recommended)".
+4422-- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+4423-  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+4424-  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+4425-  a date". This is narrower than v74i line 26 by his decision.
+4426-- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+4427-
+4428-## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+4429-
+4430-- **Asked:** "试发读完了：提示词主干管用，但有三类问题（1. 引用文章原话时会改词或抄错来源；2. 问题里写“本文提到的……”，离开文章就看不懂；3. 世界大事类的题被贴了看涨看跌标签，程序检查拦不住）。下一步怎么走？"
+4431-  - Options: change and send once more (recommended): "我针对这三类问题改提示词（各一句）和一条程序检查，先花 2 美分问模型“你当时是依据哪句话这么做的”来定位原因，然后把同样 6 道题再发一次（约 1 美分）看是否改好。改好了就按原授权动手写程序。"; build at once, with the three classes changed in the request and the check, and see in Stage A whether they are fixed; stop and let him read the answers.
+4432-  - Alex: "改完再试发一次 (Recommended)".
+4433-- **Decided:** (1) the model is asked, on the stored conversations of the probe, which instruction led it to each fault (about two
+4434-  cents); (2) the request gets one change for each of the three classes, and the check on a theme's state names refuses the
+4435-  company's labels; (3) the same six theses are sent once more (about one cent) and read as the first six were; (4) when the three
+4436-  classes are gone from those answers, the ladder step is built and Stage A sent on D401's terms (capped at $3; a missed line
+4437-  stops and goes to him; Stage B needs his word), with no further round of design review before the build. If they are not gone,
+4438-  the result goes to him before anything else (D355).
+4439-- **Scope:** the clean path's ladder step. The reviews' open corner cases become tests of the build.
+4440-
+4441-## D405 · 2026-11-10 · A reference's words must be the article's own, in one unbroken passage; otherwise the answer is sent back once
+4442-
+4443-- **Asked:** "模型引用文章时挪了词（意思没变，但不是一字不差），程序该怎么处理？这决定系统的行为，所以问你。"
+4444-  - Options: strict (recommended): the quote must be an unbroken passage of the article; otherwise the model is told what is
+4445-    wrong and writes again once; wrong twice, no question is written; no quote with a word left out is ever taken for the
+4446-    article's; the cost is more second requests. Or lenient: production's repair rule finds the article's sentence for a quote
+--
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+4848-
+4849-- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+4850-  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+4851-  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+4852-  - Alex: "算一个题，第三处不改 (Recommended)".
+4853-- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+4854-- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+4855-- **Scope:** clean Step 1; c8 stays in force.
+4856-
+4857-## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+4858-
+4859-- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+4860-  - Options: carry both changes to gate 2 (recommended by Claude): "分年虽然没达线，但从 0 次升到大约四分之三，而且'两年塞一题'完全消失，没发现带坏别的东西。第二关在存档上查它会不会弄坏周边情况（重复文章、同一量的另一种口径、延期的事等，约 1.5 美元，线先给你看）。代价：等于在看到结果后放宽了我自己定的线。"; stop the year change and carry only the customer sentence (the reviewer, `council/lx-codex.md`, recommended stopping the year change and keeping c8); stop both and keep c8.
+4861-  - Alex: "带着两处改动进第二关 (Recommended)".
+4862-- **Decided:** the candidate for gate 2 is c15yc (c8 with the year boundary and the scoped capacity counterexample). The year line's failure stays recorded as a failure (5 of 9 against 8 of 9); it is not presented as a pass. Gate 2's lines are written, reviewed and shown to Alex before any send. c8 stays in force.
+4863-- **Scope:** clean Step 1.
+4864-
+4865-## D438 · 2026-11-13 · Send gate 2
+4866-
+4867-- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` (version 11, reviewed clean in `council/mi-codex.md`): "第二关审完了，要发吗？…新版做错的次数比旧版多 3 次以上（9 次里），就停下报给你。共 126 次发送，约 1.8 美元，上限 2.2 美元。" Options: send (recommended): "先跑完 126 次。我和一位盲读者各自逐条读，有分歧的一律算新版错。任何一条停止线被触发就停下报给你；全过的话再设计第三关（在新文章上新旧版对比），也先给你看。"; do not send.
+4868-- Alex: "发 (Recommended)".
+4869-- **Decided:** gate 2 is sent as written; a fired stop or an unexercised control goes to Alex; a pass leads to gate 3's design, shown to him before any send. c8 stays in force.
+4870-
+4871-## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+4872-
+4873-- **Alex, 2026-11-13** (unprompted, after a recap of the goal): "把这个goal 改成更多的要求council in the loop 来自行的根据数据和目标做决策。我接下来不会active,需要你有问题的时候就fire council 然后和claude 掰扯直到你们能达到共识为止再下去执行，并仔细的测量，自己看trace 然后把每一轮log 做学习总结，不要饭一样的错，词学迭代完成我们的PRD生产目标".
+4874-- **Decided (his words):** while he is not active, every choice or next step that would have gone to him goes to the council: an independent read-only Codex review and Claude argue it on the data, the PRD and its quantified goals until they reach a consensus; the consensus is recorded as a decision citing D439, executed, measured, every trace read by Claude itself, and every round logged with a learning summary so the same mistake is not made twice; the loop iterates until the PRD's production goals are met.
+4875-- **Settled by Claude (wording and limits, not confirmed by Alex):** the standing limits of AGENTS.md stay (the frozen ruler never changes; nothing pushed, deployed, published or committed unasked; credentials and provider caps untouched). Opening a new version of a piece frozen for "a new version only Alex opens" is a council decision under D439; the frozen ruler is not. A disagreement the council cannot settle is recorded with both positions and the cheaper, reversible course is taken. **Spending ceiling:** paid model calls in this period stay within $40 at published rates in total, each paid step with its own ceiling in its council-agreed design; this figure is Claude's setting, not Alex's, and is reported in every status update.
+4876-- **Where written:** AGENTS.md, "Authority and scope" (the D439 bullet) and §7.3 "Own the loop"; `docs/CURRENT_STATE.md`; the memory file `feedback-council-decides-while-alex-away.md`. The session goal itself is set by Alex's `/goal` command; the replacement text is given to him in the reply.
+4877-- **Scope:** all modules Alex has taken up; the current work is clean Step 1 (gates 2 and 3 of `clean-arch/step1-diagnosis-2026-11-12/COMBINED-PLAN.md`), then the Step 4 judgement faults that kept Stage B from passing.
+4878-
+4879-## D440 · 2026-11-13 · Gate 2 failed; a memory diagnostic decides whether c15yc goes on (council consensus under D439)
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+**The sources do not give a general rule for finding the main part when several parts are named.** They support judging one part and showing the rest, but they do not say when the topic’s description, a first-mentioned part, a later milestone, or a closely related second figure makes one part primary.
+
+For example, the CPO topic asks about **2027 shipments** in its description, but its outcome names shipments from **Q4 2026 through 2027**. Treating the full-year figure as primary is reasonable; treating the whole named span as the tracked figure is also consistent with the sources.
+
+1. **What the decisions say**
+
+   - [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) records Alex’s choice: “只判主要那件.” It says to judge “the part its `outcome` names,” show the other parts as not judged, and give no question when there is “no main part.” It does not explain how to choose when the outcome names several candidates.
+   - [D436]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4847) says “a second side of the same bet” stays as context and is “shown as not judged.” Its examples include shortage beside shipments. It does not say how to identify the main side in every multi-part topic.
+   - [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606) declines a figure covering “a period which is not one fiscal or calendar year” when neither text gives a publication day. It does not say which period to select when the topic names several.
+
+   The [reader form]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:95) checks that the question asks what the outcome names, omitted parts are shown, and a refusal’s stated reason applies. It supplies no further selection rule.
+
+2. **The 24 declines**, grouped where all draws have the same source-level verdict. “Silent” means the available standard does not settle the disputed selection; it is not a finding that the decline is wrong.
+
+| Topic and sol draws | Main part and verdict |
+|---|---|
+| Fortnight **13**, d1–d3 | **Silent.** Full-year 2027 shipments may be main, with earlier checkpoints left out; alternatively the outcome tracks the Q4 2026–2027 span. D417 applies only if that span is the selected figure and has no publication day. |
+| Fortnight **3**, d1–d3 | **Silent.** US authorization may be main, with Chinese restrictions as another condition; alternatively both authorities’ actions are separately tracked with neither main. |
+| Fortnight **8**, d2–d3 | **Justified on the recorded theme finding.** The main figure is 2026 physical-AI venture funding; the refusal is about no matching theme, not multiple parts. Both readers held it. The case file itself does not contain the request’s theme list, so that finding rests on the recorded trace. |
+| Week **11**, d1–d3 | **Silent.** Signing may be main, with closing and terms left out; alternatively signing and closing are distinct tracked events with neither selected. |
+| Week **12**, d1–d3 | **Justified.** 2026 and 2027 global AI spending are presented together, with neither singled out. They are separate annual figures; choosing one would require an additional rule. |
+| Week **13**, d1–d3 | **Silent.** Remaining commitments may be main, with cash paid and changes left out; alternatively these are separately tracked figures with none selected. |
+| Week **3**, d1–d3 | **Silent.** Contract-price change may be main, with selling prices and margins left out; alternatively the named measures compete. Even if price change is main, the separate HBM-versus-DRAM series question remains. |
+| Week **4**, d1–d3 | **Justified.** 2026 and 2027 hyperscaler spending are presented together, with neither singled out; they are separate annual figures. |
+| Week **5**, d2 | **Unjustified.** Closing the already signed acquisition is the named event; termination is an alternative outcome, while consideration and regulatory conditions are other parts to show. Both readers rejected the refusal. |
+
+The reader disagreements and matched answers are in the [refusal trace]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt:1). These verdicts are about the stated refusal reasons; they do not certify that a proposed answer would meet every other requirement.
+
+3. **Wording and boundary cases**
+
+The strongest sourced wording is already in the [request]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:5): “Judge the one the topic’s outcome names as what is tracked,” and list every other part. D436 adds “a second side of the same bet” as context. Applied to all nine topics above, that wording supports the week 5 correction, preserves the two two-year refusals and the separate theme refusal, and leaves the other five topics unresolved. It does **not** tell the model how to resolve those five; the stored trace also cannot establish that repeating it would change any model response.
+
+A ruling would need these boundaries, with both readings shown:
+
+- **CPO shipments:** description’s full-year figure is main / the outcome’s multi-period span is tracked.
+- **China restrictions:** US approval is main and Chinese acceptance is a condition / the two authorities’ decisions are separate candidates.
+- **Reflection acquisition:** signing is main and closing follows / signing and closing are separate candidates.
+- **Commitments:** remaining balance is main and funding/change are context / all are separate candidate figures.
+- **Memory:** contract-price change is main and company prices/margins are context / the figures compete; separately, whether HBM/DRAM denotes one usable figure or requires a series choice.
+
+These are the same unresolved distinctions identified by the [earlier rule review]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md:1). Neither “use the description” nor “use the first part” is sourced as a general tie-breaker.
+
+SOURCES SILENT: OWNER RULING NEEDED**A2 does not add the refused rule that the description takes priority, but its closing check is too broad: it can label an event’s own answer choices as “not judged.”**
+
+For example, if the question asks whether an acquisition closes, the answer can already distinguish closing, withdrawal and neither by the due date. A check that demands *every other part* be listed as not judged can nevertheless list withdrawal there.
+
+| Request instruction | Verdict against the cited standard |
+|---|---|
+| Ask one figure for a period or one event; judge what the outcome names as tracked. | **Consistent** with D397. It does not say the description wins when the outcome names several candidates. |
+| Read the description and outcome together; list other parts **the question leaves out**. The schema repeats this. | **Consistent** with D397’s instruction to show the remaining wording as not judged. This does not resolve which part is main. |
+| Keep a second side of the same bet as context and list it as not judged; that side alone does not require a decline. | **Consistent** with D436, while preserving D397’s decline when no part is main. D436’s own scope is clean Step 1, and it does not supply a general main-part selection rule. |
+| Decline when no part is main, or the main part meets a listed decline case. | **Consistent** with D397 on no main part. The instruction does not itself choose a main part. |
+| Decline an undated event without a named period, except the stated regulatory-decision exception. | **Consistent** with D403. |
+| Decline another company’s figure or a matter without a listed theme; the remaining figure-period and year decline cases. | **No source in the three cited decisions.** These are retained from the frozen request; this audit does not establish their separate authority. |
+| List a difference *within* an event outcome, such as approval with versus without conditions, as not judged. | **Consistent** with D397 when that distinction is genuinely left unresolved by the answer choices. It does not justify listing alternatives that the choices do resolve. |
+| Closing check: list **every other part** of the description and outcome as not judged. | **Keeps wider** than the system text and schema’s “the question leaves out.” It lacks their limitation and can include the event’s own resolved alternatives. |
+
+On the requested boundaries: two years presented equally still meet the explicit “none the main one” decline; another company’s figure and a matter with no listed theme still have explicit decline instructions. The added “second side” sentence could be misapplied to those cases, but it does not expressly override their decline rules. The sources remain silent on disputed cases where it is unclear which part is main, as the [earlier audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md:1) found. These are readings of the request, not results from a new run.
+
+NOT SOUND: The closing check can list already judged event alternatives as not judged.
+exec
+/opt/homebrew/bin/zsh -lc 'diff -u clean-arch/step4-2026-11-10/ladder/candidate-system.txt docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/system.txt; diff -u clean-arch/step4-2026-11-10/ladder/candidate-closing.txt docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/closing.txt; diff -u clean-arch/step4-2026-11-10/ladder/candidate-schema.json docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/schema.json' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+--- clean-arch/step4-2026-11-10/ladder/candidate-system.txt	2026-11-10 10:31:37
++++ docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/system.txt	2026-11-16 20:05:23
+@@ -2,7 +2,7 @@
+ 
+ What the question asks
+ - A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+-- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
++- A topic's description and outcome together may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's description and outcome that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part itself meets a case below. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+ - Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+ 
+ Whose question it is
+@@ -10,7 +10,7 @@
+ 
+ The ladder
+ - Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+-- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
++- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's description or outcome names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+ - A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+ - Fill exactly one of event and figure; the other is null.
+ - reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+--- clean-arch/step4-2026-11-10/ladder/candidate-closing.txt	2026-11-10 10:31:37
++++ docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/closing.txt	2026-11-16 20:05:23
+@@ -1 +1 @@
+-Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
++Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's description and outcome that the question leaves out listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+\ No newline at end of file
+--- clean-arch/step4-2026-11-10/ladder/candidate-schema.json	2026-11-10 10:31:37
++++ docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/schema.json	2026-11-16 20:05:23
+@@ -49,7 +49,7 @@
+       },
+       "not_judged": {
+        "type": "array",
+-       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
++       "description": "Every other part of the topic's description and outcome that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of either out.",
+        "items": {
+         "type": "object",
+         "additionalProperties": false,
+@@ -280,4 +280,4 @@
+    ]
+   }
+  }
+-}
++}
+\ No newline at end of file
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import re,pathlib; s=pathlib.Path(\"docs/DECISIONS-log.md\").read_text(); print(\"\\n\\n\".join(re.search(r\"(?ms)"'^## D"+n+r" .*?(?=''^## D'"\\d+ |\\Z)\",s).group() for n in (\"397\",\"403\",\"436\")))'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+
+
+## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+
+- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+    three sends of one thesis may set three days.
+  - Alex: "保持更严 (Recommended)".
+- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+  a date". This is narrower than v74i line 26 by his decision.
+- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+
+
+
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+
+
+codex
+**The revised closing matches the system text and schema, but all three can still ask for an answer choice to be listed as “not judged.”** For example, “Will the acquisition close?” leaves withdrawal out of the question’s wording, even though the answer choices can already decide whether the parties withdrew.
+
+| Instruction | Verdict against the cited decisions |
+|---|---|
+| Ask one figure for a named period or one event; judge what the topic’s outcome names as tracked. | **Consistent** with D397. It adds no rule giving the description priority. |
+| Read the description and outcome together; list every other part **the question leaves out**. The schema repeats this. | **Keeps wider** than D397’s purpose when “leaves out” is read literally: an answer choice can decide something that the question itself does not name. |
+| Keep a second side of the same bet as context and list it as not judged. | **Consistent** with D436. Its examples do not establish which side is main in every case. |
+| A second side alone is no reason to decline; decline if no part is main or the main part meets a decline case. | **Consistent** with D436 and D397. It does not introduce the refused description-priority rule. |
+| Do not combine two things into one set of answer choices; list the omitted part in the examples. | **Consistent** with D397, provided the omitted part is not already decided by the answer choices. |
+| Decline when nothing can be checked on a date, including an undated event with no named period, subject to the regulatory exception. | **Consistent** with D403. |
+| Decline when there is no main part; decline another company’s figure or a matter no listed theme covers. | **Consistent** with D397 on no main part. **No source** for the company and theme boundaries in the three cited decisions; they are retained from the frozen request. |
+| The other period and year decline cases, and the rule against rewriting a distant-year figure as an event. | **No source** in the three cited decisions; retained from the frozen request. |
+| List a difference within an event outcome, such as approval with versus without conditions. | **Consistent** with D397 when the answer choices do not decide that difference. |
+| Revised closing: check every other part **the question leaves out**. | **Consistent with the system text and schema; it adds nothing beyond them.** It also repeats their ambiguity about parts the answer choices already decide. |
+
+Two equally presented years with no main one still meet the explicit decline instruction. Another company’s figure and a matter without a listed theme also still have explicit decline instructions. A model could misapply “second side” to any of these, but the text does not expressly override those boundaries. As the earlier audit found, the sources do not settle how to choose a main part when several candidates are named.
+
+NOT SOUND: “The question leaves out” can include event alternatives already decided by the answer choices.
+tokens used
+27,060
+**The revised closing matches the system text and schema, but all three can still ask for an answer choice to be listed as “not judged.”** For example, “Will the acquisition close?” leaves withdrawal out of the question’s wording, even though the answer choices can already decide whether the parties withdrew.
+
+| Instruction | Verdict against the cited decisions |
+|---|---|
+| Ask one figure for a named period or one event; judge what the topic’s outcome names as tracked. | **Consistent** with D397. It adds no rule giving the description priority. |
+| Read the description and outcome together; list every other part **the question leaves out**. The schema repeats this. | **Keeps wider** than D397’s purpose when “leaves out” is read literally: an answer choice can decide something that the question itself does not name. |
+| Keep a second side of the same bet as context and list it as not judged. | **Consistent** with D436. Its examples do not establish which side is main in every case. |
+| A second side alone is no reason to decline; decline if no part is main or the main part meets a decline case. | **Consistent** with D436 and D397. It does not introduce the refused description-priority rule. |
+| Do not combine two things into one set of answer choices; list the omitted part in the examples. | **Consistent** with D397, provided the omitted part is not already decided by the answer choices. |
+| Decline when nothing can be checked on a date, including an undated event with no named period, subject to the regulatory exception. | **Consistent** with D403. |
+| Decline when there is no main part; decline another company’s figure or a matter no listed theme covers. | **Consistent** with D397 on no main part. **No source** for the company and theme boundaries in the three cited decisions; they are retained from the frozen request. |
+| The other period and year decline cases, and the rule against rewriting a distant-year figure as an event. | **No source** in the three cited decisions; retained from the frozen request. |
+| List a difference within an event outcome, such as approval with versus without conditions. | **Consistent** with D397 when the answer choices do not decide that difference. |
+| Revised closing: check every other part **the question leaves out**. | **Consistent with the system text and schema; it adds nothing beyond them.** It also repeats their ambiguity about parts the answer choices already decide. |
+
+Two equally presented years with no main one still meet the explicit decline instruction. Another company’s figure and a matter without a listed theme also still have explicit decline instructions. A model could misapply “second side” to any of these, but the text does not expressly override those boundaries. As the earlier audit found, the sources do not settle how to choose a main part when several candidates are named.
+
+NOT SOUND: “The question leaves out” can include event alternatives already decided by the answer choices.

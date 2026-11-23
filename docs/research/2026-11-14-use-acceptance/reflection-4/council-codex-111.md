@@ -1,0 +1,15 @@
+**No-go on the proof build yet.** The contract is a useful starting point, but it does not yet cover every path that can expose an unfinished day, and two WAL guarantees are stronger than SQLite provides.
+
+- **History and changes can request future data without `as_of`.** The API and MCP expose `history(..., to_day)` and `changes(..., to_day)`. Both service functions accept that upper date and iterate judgements through it, so guarding only `as_of` leaves a route to an in-progress day. Enumerate and test every date-bearing entry point, including omitted end dates and start-of-service indexing. [API routes](</Users/lchingen/hivemind/scripts/hivemind_api.py>), [history and changes](</Users/lchingen/hivemind/src/hivemind/service.py:199>)
+
+- **WAL does not promise that the file shrinks after a reader ends.** SQLite normally recycles the WAL rather than truncating it, and long readers can prevent checkpoints from completing. The proof should check checkpoint progress and bounded resource behavior under an explicit policy, rather than require immediate file shrinkage or leave disk space outside the operating contract. [SQLite WAL documentation](https://sqlite.org/wal.html)
+
+- **Read-only opening needs an operating precondition.** `mode=ro` is not sufficient by itself: SQLite requires readable `-wal` and `-shm` files, or permission to create them. Define and test startup and reopen behavior when those files are absent or the directory is not writable. WAL improves concurrency, but SQLite also documents cases where WAL reads can return `SQLITE_BUSY`; “writer never waits” is too absolute. [SQLite WAL documentation](https://sqlite.org/wal.html)
+
+- **Crash recovery does not remove already committed partial-day writes.** The writer commits within the day, so WAL rolls back only the unfinished *transaction*, not the whole day. The contract must say whether the writer resumes or replaces that partial store, and prove readers remain bounded to the last completed day throughout recovery. [Contract](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md>)
+
+- **The live-reader exception is not currently in force.** AGENTS §9 says “Never open a live run’s databases.” Row 7 presents an exception while postponing the decision to change the rule. Frame the exception as a proposed decision to resolve before any live-service operation; it cannot be assumed by the proof. [AGENTS §9](</Users/lchingen/hivemind/AGENTS.md:431>)
+
+The reader inventory also needs to account for the API’s startup search-index build and existing copy paths such as preflight’s `shutil.copy`; the named `snapshot.sh` is a per-run artifact, not a repository-wide script established by the table. Prove which paths may touch the live store and which must use a snapshot. [API startup](</Users/lchingen/hivemind/scripts/hivemind_api.py>), [preflight](</Users/lchingen/hivemind/scripts/preflight.py:191>)
+
+CONSENSUS: no, because future-dated history can bypass the proposed boundary, and the WAL, recovery and authorization rows need a complete operating contract before the proof is built.

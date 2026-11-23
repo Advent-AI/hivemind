@@ -106,6 +106,7 @@ def prompts(setting):
 def object_list(ledger, as_of, aliases=None):
     """What the library covers, in one line: each object with open views as of the day and its count, then the
     universe's objects with no view yet. About 250 characters on the sealed ledger against 5,095 for a full catalog."""
+    as_of = service.resolve_bound(ledger, as_of)
     counts, kinds = {}, {}
     for record in service.views(ledger, None, as_of):
         counts[record['object']] = counts.get(record['object'], 0) + 1
@@ -129,6 +130,7 @@ def judged(ledger, view_id, as_of, detailed=False):
 
 def brief(ledger, results, as_of, detailed=False):
     """Candidate state at the requested date; analyst context is explicit and versioned by the caller."""
+    as_of = service.resolve_bound(ledger, as_of)
     records = []
     for result in results:
         record = {'view_id': result['view_id'], 'object': result['object'], 'looks_at': result['looks_at'],
@@ -144,6 +146,7 @@ def related_views(ledger, view_ids, as_of, exclude=()):
     and what depends on it (downstream), with the judged position; `exclude` are views already on the card.
     Deterministic and free; the model is not asked. The card follows the graph only from the views of the first
     part, the thing the idea is about: from every mapped view it fanned out to 12 cards on a one-line idea."""
+    as_of = service.resolve_bound(ledger, as_of)
     out, seen = [], set(view_ids) | set(exclude)
     for view_id in view_ids:
         for dep in service.dependencies(ledger, view_id, as_of):
@@ -219,7 +222,7 @@ def read_idea(ledger, index, items, archive, cfg, text, as_of=None, k=10, aliase
     text = (text or '').strip()
     if not text:
         raise ValueError('an idea needs text')
-    as_of = as_of or service.default_as_of(ledger)
+    as_of = service.resolve_bound(ledger, as_of)
     report = on_progress or (lambda stage: None)
     report('search')
     found = search.search(ledger, index, text, k, as_of, aliases=aliases, semantic=semantic, embed=embed)

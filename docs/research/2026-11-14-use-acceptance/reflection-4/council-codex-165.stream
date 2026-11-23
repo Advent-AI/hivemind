@@ -1,0 +1,118 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 165: duplicate packet items refused
+
+`load_reading` now reads the packet items as a list before keying them, and voids the reading unless the total equals the number of
+distinct ids and the number of keyed items.
+
+- **Test:** `test_a_packet_item_given_twice_voids_the_reading` appends an unchanged copy of an item to a packet, and the reading is
+  void.
+- **Mutant:** removing the check is caught (S13, `all-mutants.txt`).
+- **Checks:** 22 probe tests pass.
+
+**Asked:** send the probe now (12 topics outside the 44, both arms, three sends each, same day, caps $0.15 + $0.25), or name what must
+change first. The limits to report with the result stand: M is not exercised; yearly items reveal their arm; the spend projection is
+an estimate, with the per-attempt reserve as the guard.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the duplicate check and its test, then give the send decision against the agreed limits.
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '121,150p' docs/research/2026-11-14-use-acceptance/splitting/score_split.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+def load_reading(probe_folder, reading, key_path, plants_path):
+    """Everything the verdict reads; raises SystemExit('VOID: …') for an incomplete or invalid reading or a missed plant. The reading
+    must hold exactly the items its sends give (reading_split.reading_rows), each once, and the key exactly those items."""
+    derived_rows, derived_cases = reading_split.reading_rows(probe_folder)
+    derived = sorted((row['case'], row['pass']) for row in derived_rows)
+    held = sorted((row['case'], row['pass']) for row in collector.outcomes_of(reading))
+    key = json.loads(Path(key_path).read_text())
+    keyed = sorted(tuple(send) for send in key.values())
+    if held != derived or keyed != derived:
+        raise SystemExit(f'VOID: the reading holds {len(held)} items and the key {len(keyed)}, not exactly the {len(derived)} its sends give')
+    same = lambda value: json.loads(json.dumps(value, ensure_ascii=False))
+    rebuilt = {(row['case'], row['pass']): same(row) for row in derived_rows}
+    if any(rebuilt[(row['case'], row['pass'])] != same(row) for row in collector.outcomes_of(reading)):
+        raise SystemExit('VOID: an item of the reading differs in content from the send it was built from')
+    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+    shown_list = [item for packet in sorted((Path(reading) / 'readers').glob('packet-*.json')) for item in json.loads(packet.read_text())]
+    if len(shown_list) != len({item['item'] for item in shown_list}) or len(shown_list) != len(key):
+        raise SystemExit(f'VOID: the packets hold {len(shown_list)} items, {len({item["item"] for item in shown_list})} distinct, '
+                         f'not each of the {len(key)} keyed items once')
+    shown = {item['item']: item for item in shown_list}
+    expected_items = {int(number): same({'item': int(number), **build_reader_packets.item_of(rebuilt[tuple(send)], derived_cases[send[0]], research_list),
+                                         'split': rebuilt[tuple(send)]['split']}) for number, send in key.items()}
+    if set(shown) != set(expected_items) or any(same(shown[number]) != item for number, item in expected_items.items()):
+        raise SystemExit('VOID: a packet item differs from the item its send gives, or the packets do not hold every item once')
+    if json.loads(Path(plants_path).read_text()) != reading_split.plants()[2]:
+        raise SystemExit('VOID: the plants\' expected marks are not the ones reading_split.py builds')
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading, key_path)
+    for reader in collector.FAMILIES:
+        for send in outcomes:
+            row = readers[reader].get(send)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'S13|control:' docs/research/2026-11-14-use-acceptance/splitting/all-mutants.txt" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 12 'def send\\(' docs/research/2026-11-14-use-acceptance/splitting/probe_split.py | tail -15" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 13 'test_a_packet_item_given_twice' docs/research/2026-11-14-use-acceptance/splitting/test_split_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+1:control: 69 passed in 1.97s
+42:S13 a packet item given twice not refused: CAUGHT (test_a_packet_item_given_twice_voids_the_reading)
+
+ succeeded in 0ms:
+368:def send(folder, *, transport=None):
+369-    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+370-    if record is None or record['code_sha256'] != code_digest():
+371-        raise SystemExit('no check record for these files: run `check` first')
+372-    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+373-    topics = load_topics()
+374-    if requests_of(topics, research_list) != record['requests']:
+375-        raise SystemExit('REFUSED: the requests differ from the checked record')
+376-    folder, guard = Path(folder), BreachGuard(transport)
+377-    for arm in ARMS:
+378-        cases, texts = arm_cases(topics, arm), texts_of(arm)
+379-        runner = stage_a.run if arm == 'frozen' else run_split
+380-        written, limit, job_count = runner(cases, PASSES, folder / arm, CAPS[arm], research_list=research_list, texts=texts, transport=guard)
+
+ succeeded in 0ms:
+244:def test_a_packet_item_given_twice_voids_the_reading(reading):
+245-    probe, keys = reading
+246-    write_rows(probe, keys)
+247-    packet_path = probe / 'reading' / 'readers' / 'packet-1.json'
+248-    packet = json.loads(packet_path.read_text())
+249-    packet_path.write_text(json.dumps(packet + [packet[0]], ensure_ascii=False))
+250-    assert score_split.verdict(probe, keys)[0] == 'void'
+251-
+252-
+253-@pytest.mark.parametrize('where', ['reading row', 'packet item', 'plant mark'])
+254-def test_an_item_changed_in_content_but_not_in_its_name_voids_the_reading(reading, where):
+255-    """For the plant mark, the expected file is changed before the rows are written, so the readers agree with it and only the
+256-    comparison with the plants reading_split.py builds can find it."""
+257-    probe, keys = reading
+
+codex
+The duplicate check now catches the case identified in round 164, and the test and mutant exercise it. I agree to the send under the registered design.
+
+Run both arms on the 12 topics with the stated caps. A stopped arm is **not measured**. Report M as unexercised, the yearly items’ inferable arm, and the conditional nature of the spend bound alongside the result.
+
+CONSENSUS: send the probe, read and score it as designed, then return with the result.
+tokens used
+4,267,479
+The duplicate check now catches the case identified in round 164, and the test and mutant exercise it. I agree to the send under the registered design.
+
+Run both arms on the 12 topics with the stated caps. A stopped arm is **not measured**. Report M as unexercised, the yearly items’ inferable arm, and the conditional nature of the spend bound alongside the result.
+
+CONSENSUS: send the probe, read and score it as designed, then return with the result.

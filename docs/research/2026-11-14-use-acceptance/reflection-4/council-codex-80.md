@@ -1,0 +1,13 @@
+**No-go on A3 v1 as written.** The new control comparison shows that the old `+1` rule can reject an unchanged request. It does not yet provide a reliable replacement bar, and the proposed sentence can remove parts that the answer choices do not actually settle.
+
+- **“One of the choices already decides” is too loose.** An answer choice may group several events. For example, “Ruled out” can cover either a withdrawal or a regulator’s rejection; selecting it does not necessarily say which happened. The existing H brief uses a tighter test: holding the choice must say whether the part happened. The design should use that distinction and test both grouped choices and finer differences such as conditions on an approval. [H brief](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/h-brief.md:15>), [D409](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4502>)
+
+- **The added controls are not yet assured.** The disclosure case is conditional on finding a stored request, and reading item 126 by hand does not establish how the changed model handles a mixed entry. Make both required controls, with expected outcomes and a stop or inconclusive condition written before the send. [A3 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md>)
+
+- **The recalibrated rule is exploratory, not a measured error bound.** One control-versus-control comparison combines draw and reader differences; its observed spread can underestimate future variation. The special motivating-H bar of `+1` is also exceeded by that same control comparison: 2 versus 0. A2’s 5 versus 0 is concerning evidence of over-listing, but exceeding one observed control difference does not prove its cause or establish a general threshold. [Control comparison](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/control-vs-control.txt>)
+
+- **Keep the disputed comparison visible in the outcome.** Reporting it apart is sensible; excluding it from both harm and gain must not conceal a loss of context Alex asked to retain. Report each such change and the readers’ disagreement alongside any lead. [D436](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4847>)
+
+I would revise the $0 design and checks around those points, then return for review. A further probe on these same topics would remain a diagnostic; a favorable result would need independent material before claiming a repair. [Working rules §7.3](</Users/lchingen/hivemind/AGENTS.md:326>)
+
+CONSENSUS: no, because the proposed removal test can discard a distinction the choices leave unresolved, and the diagnostic’s control and stopping rules need to reflect the observed variation.

@@ -1,0 +1,167 @@
+judging-v13 $0 gate (DESIGN.md v5 §6)
+
+PASS  R1a    C3 on Q4
+        C5: v9: the reference prior414 rests on the system's own forecast or an estimate
+        C3: FY2027 Q4 base: v9 dcq4 (146.0, True, 146.0, True) exceeds v14 q4f (127.1, True, 127.1, True)
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): v9 reaches g3 without passing a forecast node (q3f)
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1b    C4 on the Q3 bypass, no C3
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): v9 reaches g3 without passing a forecast node (q3f)
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1c    passes
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R2     overlap recorded; ~35 definitely crosses 50
+        recorded: {"type": "overlap", "figure": "end", "outcome": "v29", "value": [53.0, 53.0], "alternate": [35.0, 35.0], "alternate_bound": null, "boundaries_crossed": [50], "certainty": "definite"}
+PASS  R3a    C1 on both stripped qualifiers
+        C1: a730: "$730 billion" is not a complete numeric expression of e1786
+        C1: b800: "$800 billion" is not a complete numeric expression of e2535
+        C8: share45: converts a730, b800 to four largest AI hyperscalers combined CY2026 share of top-five capex with no bridge naming those operands
+        C8: cap27: converts c1300 to four largest AI hyperscalers combined CY2027 data-center capex with no bridge naming those operands
+PASS  R3b    passes C1, C8 without bridges
+        C8: share45: converts a730, b800 to four largest AI hyperscalers combined CY2026 share of top-five capex with no bridge naming those operands
+        C8: cap27: converts c1300 to four largest AI hyperscalers combined CY2027 data-center capex with no bridge naming those operands
+PASS  R3c    bridges recorded, undetermined
+        recorded: {"type": "bridge", "figure": "share45", "bridge": "br1", "alternate": "undetermined"}
+        recorded: {"type": "bridge", "figure": "cap27", "bridge": "br2", "alternate": "undetermined"}
+PASS  R4     trim definitely crosses 40
+        recorded: {"type": "adjustment", "figure": "vera28", "outcome": "v41", "value": [38.0, 39.0], "alternate": [40.0, null], "alternate_bound": ">", "boundaries_crossed": [40, 50], "certainty": "definite"}
+PASS  G1     passes, estimates visible
+PASS  G2     passes, estimates visible
+PASS  G3     passes, estimates visible
+        recorded: {"type": "adjustment", "figure": "gvera", "outcome": "v19", "value": [8.0, 18.0], "alternate": [20.0, 20.0], "alternate_bound": null, "boundaries_crossed": [20, 12], "certainty": "definite"}
+PASS  G4     passes, estimates visible
+PASS  P1     C1 only, on gq1
+        C1: gq1: value 81.9 USD bn bound None does not equal "$81.6 billion" as component value
+PASS  P2     C2 only, on gfy
+        C2: gfy: declared 450.0–480.0 but sum of ['gh1', 'gh2'] gives 400.60–434.60
+PASS  P3a    C5 only
+        C5: v1: the reference pri rests on the system's own forecast or an estimate
+PASS  G2x    C4: scenarios crossed
+        C4: gdclo (low) rests on estimates of another scenario (high)
+        C4: gdchi (high) rests on estimates of another scenario (low)
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027'): gdclo (low) depends on gfyhi of another scenario
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027'): gdchi (high) depends on gfylo of another scenario
+PASS  R1bx   C4: the base reads an alternate scenario
+        C4: dcq3 (base) rests on estimates of another scenario (alt)
+        C4: dcfy (base) rests on estimates of another scenario (alt)
+        C4: v9 covers scenarios ['alt', 'base'] but v14 covers ['base']; related members cover the same
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcq3 (base) depends on altq3 of another scenario
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcfy (base) depends on altq3 of another scenario
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1bx2  C4: borrowed through an intermediate
+        C4: dcq3 (base) rests on estimates of another scenario (alt)
+        C4: dcfy (base) rests on estimates of another scenario (alt)
+        C4: v9 covers scenarios ['alt', 'base'] but v14 covers ['base']; related members cover the same
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcq3 (base) depends on altq3 of another scenario
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcfy (base) depends on altq3 of another scenario
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1bx4  C4: the base reads a source-only alternate forecast
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcq3 (base) depends on altq3 of another scenario
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcfy (base) depends on altq3 of another scenario
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1bx3  C4: a point labelled range
+        C4: altq3: a range summary must be an estimate with low and high that is an answer's outcome and feeds no figure (read by dcq3)
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcq3 (base) depends on altq3 of another scenario
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): dcfy (base) depends on altq3 of another scenario
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  P3e2   C10: an earlier forecast relabelled
+        C10: pri: an earlier forecast must be kind prior with basis prior_forecast
+        C10: pri: an earlier forecast cannot be the current outcome of v1
+PASS  R1sc   C4: part and whole in different scenarios
+        C4: v9 covers scenarios ['alt'] but v14 covers ['base']; related members cover the same
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3'): v9 reaches g3 without passing a forecast node (q3f)
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  G2x2   C4: share estimates crossed
+        C4: gdclo (low) rests on estimates of another scenario (high)
+        C4: gdchi (high) rests on estimates of another scenario (low)
+PASS  G24    passes: q22 per scenario on q01's range
+PASS  CH1    unchanged: unchanged
+PASS  CH2    changed: rung 3 to 2; outcome 387.0–387.0 to 418.4–418.4
+PASS  CH3    sibling-only change: unchanged
+PASS  CH4    wider range, same midpoint: outcome 390.0–445.0 to 400.0–435.0
+PASS  G24m   C9: the high path skips q01
+        C9: g28hi (high) of v22 is not computed from v1's high forecast
+PASS  G24d   C9: the high path missing
+        C9: v22 covers scenarios ['low'] but v1 covers ['high', 'low']
+PASS  G24c   C9: q01 only cited, not computed
+        C9: g28hi (high) of v22 is not computed from v1's high forecast
+PASS  G24c3  C7: an operand the arithmetic ignores
+        C7: g28hi: apply_growth takes 2 operands, not 3
+PASS  G24s1  C7: a short signs list
+        C7: g28hi: signs must give one +1 or -1 per operand of a sum or roll_forward
+PASS  G24s0  C7: a zero sign
+        C7: g28hi: signs must give one +1 or -1 per operand of a sum or roll_forward
+PASS  G24a1  C7: one operand, no crash
+        C7: g28hi: apply_growth takes 2 operands, not 1
+PASS  G24x   C9: a base that cancels
+        C8: g28hi: sum of different quantities or periods (gfyhi, gfyhi) states no relation
+        C9: g28hi (high) of v22 does not change when v1's forecast gfyhi changes
+PASS  G24nv  C7: no number, no crash
+        C7: g28hi: a figure needs either a value or a complete range with low at most high
+PASS  G4x    C9: a range base that cancels, no C8 mask
+        C9: g28cancel (base) of v22 does not change when v1's forecast gfy changes
+PASS  R1rneg  C6: no such rung
+        C6: v9: rung -2 is not one of 1..5
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1r6   C6: no such rung
+        C6: v9: rung 6 is not one of 1..5
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1rnone  C6: no such rung
+        C6: v9: rung None is not one of 1..5
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R4b2   C6: below 40 is not on the 40-50 rung
+        C6: v41: rung 2 ([40, 50]) contains no part of its outcome (-inf, False, 40.0, False)
+        recorded: {"type": "adjustment", "figure": "vera28", "outcome": "v41", "value": [null, 40.0], "alternate": [40.0, null], "alternate_bound": ">", "boundaries_crossed": [40, 20, 30, 50], "certainty": "definite"}
+PASS  R4b3   below 40 sits on the 30-40 rung; the trim from above 40 definitely crosses 40
+        recorded: {"type": "adjustment", "figure": "vera28", "outcome": "v41", "value": [null, 40.0], "alternate": [40.0, null], "alternate_bound": ">", "boundaries_crossed": [40, 20, 30, 50], "certainty": "definite"}
+PASS  R1qb   C3: strictly above an exact whole
+        C3: FY2027 Q4 base: v9 dcq4 (127.1, False, inf, False) exceeds v14 q4f (127.1, True, 127.1, True)
+        C3: FY2027 base: v9 dcfy (396.1, False, inf, False) exceeds v14 fy14 (418.4, True, 418.4, True)
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  G4c    C9: a citation for a calculation
+        C9: v22 has no calculation from v1's forecast, only a range resting on it
+PASS  P3e    C10: a prior as the outcome
+        C10: pri: an earlier forecast cannot be the current outcome of v1
+PASS  P3d    C5: both a figure and unavailable
+        C5: v1: the reference must name exactly one of a figure or unavailable
+PASS  P3c    C10: a prior figure the earlier answer does not state
+        C5: v1: the reference pri rests on the system's own forecast or an estimate
+        C10: pri: no earlier answer of v1 on 2026-07-13 shown in the request states 431.0
+PASS  P3b    C5 only
+        C5: v1: the reference wrap rests on the system's own forecast or an estimate
+PASS  P4     C8 only, on gunits: the per-unit identity needs one scope
+        C8: gunits: converts gt20, gasp to NVIDIA Vera CPU FY2027 units with no bridge naming those operands
+        recorded: {"type": "adjustment", "figure": "gvera", "outcome": "v19", "value": [8.0, 18.0], "alternate": [20.0, 20.0], "alternate_bound": null, "boundaries_crossed": [20, 12], "certainty": "definite"}
+PASS  G3inv  the per-unit inverse gives $20B
+        recorded: {"type": "adjustment", "figure": "gvera", "outcome": "v19", "value": [8.0, 18.0], "alternate": [20.0, 20.0], "alternate_bound": null, "boundaries_crossed": [20, 12], "certainty": "definite"}
+PASS  G4m    C9: FY2028 rests on consensus, not q01's forecast
+        C9: gfy28c (base) of v22 is not computed from v1's base forecast
+        C9: v22 does not rest on v1's forecast (gfy)
+        C9: v22 reaches gc392 for ('NVIDIA', 'revenue', 'company', 'FY2027') without v1's forecast
+PASS  R4m    C2: the bound direction reversed
+        C2: cpu28: its inputs make it a lower bound, but it is declared <
+        recorded: {"type": "adjustment", "figure": "vera28", "outcome": "v41", "value": [38.0, 39.0], "alternate": [null, 40.0], "alternate_bound": "<", "boundaries_crossed": [20, 30, 40], "certainty": "possible"}
+PASS  T1     accepted
+PASS  T2     accepted
+PASS  T3a    accepted
+PASS  T3b    accepted
+PASS  T4     accepted
+PASS  T5a    refused
+        C1: t: "$730 billion" is not a complete numeric expression of e1786
+PASS  T5b    refused
+        C1: t: "$800 billion" is not a complete numeric expression of e2535
+PASS  T6     refused
+        C1: t: "double" is not a complete numeric expression of e3660
+PASS  T7     refused
+        C1: t: value 108.5 USD bn bound None does not equal "$108.0 billion, plus or minus 2%" as component midpoint
+PASS  T8     refused
+        C1: t: value 730.0 USD bn bound None does not equal "more than $730 billion" as component value
+PASS  T9     refused
+        C1: t: "$800 billion" is not a complete numeric expression of e2535
+PASS  U1     decision held
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  U2     two refusals give unresolved
+        C2: gfy: declared 450.0–480.0 but sum of ['gh1', 'gh2'] gives 400.60–434.60
+
+66 items, 66 pass, misses: none
+GATE PASS

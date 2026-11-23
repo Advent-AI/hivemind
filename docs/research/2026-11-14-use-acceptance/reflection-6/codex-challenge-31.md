@@ -1,0 +1,9 @@
+**Do not send yet.** The listing control and duplicate-review checks address the issues I raised. Two material checks remain:
+
+1. **The second audit is not a whole-request audit.** Its [instructions](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2-prompt.md>) restrict review to what is asked, listed or declined, and cite only three decisions. The [result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md>) leaves decline rules unsourced and does not cover the full ladder, reference, due-day and schema instructions. Complete the audit or explicitly carry forward a prior whole-request audit for unchanged clauses, including the known D210/D403 conflict. The shared listing ambiguity can remain a measured risk; it should not be called sound.
+
+2. **The byte check uses a different serialization from transport.** [The check](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py>) uses `ensure_ascii=False`; [production transport](</Users/lchingen/hivemind/src/hivemind/model.py:129>) uses the default `json.dumps`. Compare the actual transport serialization. Also fix M10: its reported `StopIteration` is an error, not an assertion demonstrating that the missing control is caught.
+
+The revised closing itself is consistent with the surrounding text. The probe remains a diagnostic on exposed topics, with its harm bound and spending cap intact.
+
+CONSENSUS: no send until the full request audit and actual-byte check are complete and the control mutant is caught by an assertion.

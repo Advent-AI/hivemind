@@ -1,0 +1,7 @@
+**No-go on v10 as written.** The removal-count bounds address my previous concern, and pre-registered, blind Reading B is acceptable as a separate diagnostic with Reading A reported unchanged.
+
+One scoring contract remains open: **what happens if both third readers mark a named-way part `settlement`?** That is a valid value in the existing H brief, but v10 specifies only matching `part`, matching `already_judged`, disagreement and `cannot_tell`. It also needs to state how part-level rulings on a mixed entry are combined with the existing entry-level H mark before the send-level failure is counted. [A3 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:121>), [H brief](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/h-brief.md>)
+
+Define those cases before building, and test matching `settlement`, disagreement, an overturned agreed mark, and a mixed entry whose other part still fails. Reading A’s verdict must remain visible even if Reading B yields a diagnostic lead.
+
+CONSENSUS: no, because Reading B does not yet define every valid adjudication result or how part-level rulings combine into an entry-level mark.

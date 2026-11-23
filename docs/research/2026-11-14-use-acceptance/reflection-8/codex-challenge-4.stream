@@ -1,0 +1,1024 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e8ee-437f-74a3-ad0a-8edcbde0e3b3
+--------
+user
+# Deep council, round 4: the audited passage is ready for your decision on the paired test
+
+## The audit history
+Two blind auditors per round, fresh each round, one Codex and one Claude-family. Files: `narrow-d436/audit-v1..v3-*.md` and `edit-v1..v3.json`.
+
+| Version | Codex auditor | Claude-family auditor |
+|---|---|---|
+| v1 | Not sound: an automatic whole-over-part rule; the airline example inverts D436 | Not sound: "a condition" is too wide (it collides with the drug example and with H20); narrow to D436's shapes |
+| v2 | Not sound: shape-based selection | Not sound but close: bind the trigger to the tracked figure and the same quantity; no boundary case decided; all targets and controls behave |
+| v3 | Not sound: "tracks" is ambiguous, so require the outcome to identify the figure as main first; the growth-rate wording; the examples mirror test structures; growth not offset | Not sound only on the retailer's holiday (part-year) example and the attribution; everything else consistent |
+
+## v4 (`narrow-d436/edit.json`, `edited-system.txt`)
+- **Fixes:** the examples name full years; shape (b) reads "beside a figure that measures that supply or its growth"; the examples are joined into one
+  sentence; the attribution is corrected.
+- **Size:** +741 characters; tokens (o200k) 2,031 to 2,182.
+- **The passage:**
+  > "When the outcome tracks a figure and also names the share of that same figure that one kind makes up, whether supply stays short of demand beside a
+  > figure that measures that supply or its growth, or whether capacity keeps pace with the demand that figure measures, the two are one bet seen from two
+  > sides, not several things with none the main one: ask the figure, and list that second side in not_judged. So a bank's total lending for the year
+  > named with the share that is commercial lending is asked as the total lending, a retailer's sales for the year named with whether its shelves run short
+  > are asked as the sales, and a utility's power demand for the year named with whether its generating capacity keeps pace is asked as the demand."
+
+## A fact the audit surfaced: attribution
+- **Alex's own words:** "算一个题，第三处不改". He gave them in reply to an option shown with the HBM shipments-and-shortage example only. Its rationale was
+  "都是同一个押注的不同侧面".
+- **The other two pairs and their orientation** (the AI-chip share beside the chip total, capacity keeping pace beside demand) come from D436's Decided
+  line. That line is in force, but it is the recorder's statement of the ruling's scope, not his verbatim words.
+- **So:**
+  - shape (b) rests on his words;
+  - shapes (a) and (c) rest on the decision as recorded.
+- I will tell Alex this plainly.
+
+## The disputed point
+- **The Codex auditor's position (v3):** apply the shapes only when the outcome already identifies the figure as the main tracked part.
+- **My position:**
+  - The targets' outcomes name both sides with no stated priority. That is exactly why astra declines; its own account says "the outcome does not
+    establish" a priority.
+  - D436 settles which side is the second side for these shapes. Requiring an explicit priority would leave D436 unapplied on the very cases it was
+    decided on.
+  - The binding ("tracks a figure and also names … that same figure") already prevents inversion when the share itself is the tracked thing.
+- **The Claude-family auditors (v2 and v3):** the binding is sourced, a generalisation of D436's own examples, and it decides none of D631's six cases.
+
+## Questions
+1. Is v4 fit to send in the paired test? The test is a measurement; nothing is adopted. Sending it does not settle the disputed point, but it will show
+   whether the targets flip and the controls hold.
+2. If the dispute is unsettled, AGENTS says: record both positions and take the cheaper, reversible course. The paired test is that course: $2.1, not
+   adopted, and any later adoption goes to Alex with the attribution fact.
+3. Anything in the paired rule (`paired_probe.py`'s docstring) to change before the send?
+
+CONSENSUS or DISAGREE.
+
+codex
+I’ll read the v4 passage, the audit findings, and the paired test’s actual rule before deciding whether this is ready to send.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/docs/DECISIONS-log.md | sed -n '4326,4343p;4847,4855p;8527,8548p;8991,9037p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+  4326	## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+  4327	
+  4328	- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  4329	  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  4330	  - Options:
+  4331	    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+  4332	      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+  4333	      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+  4334	    - split into two questions, each judged, as D38 says;
+  4335	    - do not judge such a topic until Step 1 opens it as one thing.
+  4336	  - Alex: "只判主要那件 (Recommended)".
+  4337	- **Decided:**
+  4338	  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+  4339	    its wording is listed and shown beside the answer as not judged.
+  4340	  - A thesis with no main part gets no judged question, with the reason recorded.
+  4341	  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+  4342	    test: readers mark each part left out as a bet an analyst would hold or not.
+  4343	- **Scope:** the clean path's ladder step only. D38 stands for production.
+  4847	## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+  4848	
+  4849	- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  4850	  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  4851	  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  4852	  - Alex: "算一个题，第三处不改 (Recommended)".
+  4853	- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+  4854	- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+  4855	- **Scope:** clean Step 1; c8 stays in force.
+  8527	## D631 · 2026-11-16 · Sol's refusal pattern traced; the description-priority sentence is refused as an unconfirmed rule
+  8528	
+  8529	**The trace** (`reflection-6/model/REFUSAL-TRACE.md`):
+  8530	- 4 agreed-unjustified, 12 disputed and 8 agreed-justified refusals.
+  8531	- The unjustified and disputed ones decline as "several, none the main one" where the outcome lists several parts. The stated reasons
+  8532	  differ: a span of checkpoints, two price series, two authorities.
+  8533	
+  8534	Council round 11 (`reflection-6/codex-challenge-11.md`): "CONSENSUS: no, because the sentence introduces an unconfirmed priority rule
+  8535	and the proposed paid test does not establish sound recovery; audit the rule and request first at $0."
+  8536	
+  8537	- D397 makes the judged part the one the outcome names. D436 keeps two sides of an identified bet together. Neither makes the
+  8538	  description decide the main part.
+  8539	- **Next:** an independent $0 audit of the whole request and of the candidate rule against D397, D436 and the stored cases, including
+  8540	  true no-main topics and descriptions that conflict with their outcomes.
+  8541	
+  8542	## D632 · 2026-11-16 · The Astra screen is sent: gpt-6-astra against a fresh gpt-6.1-sol arm on 12 seeded topics, under $6.70
+  8543	
+  8544	**The audit** (`reflection-6/model/rule-audit.md`, a fresh read-only Codex session) ends "SOURCES SILENT: OWNER RULING NEEDED".
+  8545	- D397, D436 and D417 do not say how to pick the main part when a topic's outcome names several.
+  8546	- The five boundary topics (CPO, Blackwell into China, Reflection AI, equity commitments, memory prices) go on Alex's page with both
+  8547	  readings, marked unresolved.
+  8548	- Sol is recorded as the leading unaccepted candidate (D630).
+  8991	## D651 · 2026-11-17 · Council rounds 40 to 42: test D436's two sentences on astra outside the 44 first; rerun gate 1 only if they pass
+  8992	
+  8993	- **Alex, 2026-11-17:** "你测试吧，但是你跑一下council 稍微整一下下面一步该怎么做".
+  8994	- **The council** (`reflection-7/challenge-40.md` to `-42.md`, Codex thread rounds 40 to 42) **agreed:**
+  8995	  - **The edit:** D436's two sentences, verbatim and with no examples, after the frozen "List every other part … not the one tracked."
+  8996	    sentence. Nothing else changes.
+  8997	    - A2's examples were dropped: two of them mirror the two failing 44 topics (AGENTS §6).
+  8998	    - A2's "description and outcome" changes were dropped too: audit-2 found them not sound.
+  8999	  - **The topics:** 11 outside the 44, from the 48 stored topics outside both the 44 and the 26.
+  9000	    - Two blind source readers (one Codex, one Claude) classified them before any answer.
+  9001	    - They agree on 6 targets (a main figure or event with a second side): pool-7, -17, -20, -32, -35, -38.
+  9002	    - They agree on 5 decline controls: pool-9, pool-19, week-10-06 clean-4 and clean-12, fortnight clean-8.
+  9003	  - **The sends:** astra, frozen against edited, 2 fresh draws each, interleaved. 44 sends; caps $2.60 an arm; expected about $1.6.
+  9004	  - **The rule** (in `reflection-7/second_side_probe.py`):
+  9005	    - **Exercised:** a counted target the frozen arm declines in a draw. Fewer than 3 exercised reads INCONCLUSIVE.
+  9006	    - **Recovered:** both edited sends are questions with no hard-line fault marked by either family.
+  9007	    - **PASS** when all of these hold:
+  9008	      - at least 80% of the exercised targets recover;
+  9009	      - every control is declined in both edited sends, unmarked by both families;
+  9010	      - on no counted topic does the edited arm fail more sends than the frozen arm, under either counting.
+  9011	    - **Otherwise FAIL.** A stopped draw or a missed planted control reads NOT MEASURED.
+  9012	- **If it passes:** gate 1 on the 44 with the edited request.
+  9013	  - It is reported as a reused, exposed set: the 44 informed the change.
+  9014	  - Both countings are reported, and the due-day rule stays Alex's.
+  9015	  - The diagnostic plus the rerun is about $6.30 to $8.20 before retries. Alex is told before the gate send.
+  9016	- **Checked at $0:**
+  9017	  - each edited request is the frozen astra request with only the two sentences inserted;
+  9018	  - a dry run through the real runner writes 11 of 11 in every arm-draw and builds 50 reading items.
+  9019	
+  9020	## D652 · 2026-11-17 · The second-side diagnostic reads INCONCLUSIVE: the two sentences fix "a main figure plus a condition", not "a total plus its part"; no gate rerun
+  9021	
+  9022	- **The run:** `poc/data/clean-second-side-probe-2026-11-17/run-1`, 44 of 44 sends, $1.49.
+  9023	  - Read blind by both families: all rows valid, every planted control caught.
+  9024	  - Score: `reflection-7/score-output.txt`.
+  9025	- **Per topic:**
+  9026	  - **pool-7** (DRAM prices plus whether the shortage persists): frozen declined twice, both unjustified under both countings. Edited wrote two
+  9027	    questions with no fault from either family. Recovered.
+  9028	  - **pool-17** (total accelerator units plus the GPU split): declined in all four sends, unjustified. Not recovered.
+  9029	  - **pool-20, -32, -35 and -38:** questions with no fault in both arms.
+  9030	  - **The 5 controls:** justified declines in both arms.
+  9031	- **The verdict is INCONCLUSIVE:** 2 targets were exercised, below 3. Per D651, there is no gate rerun.
+  9032	- **Prediction for the 44,** which is why no rerun is spent: the edited request should clear acc/clean-8's shape but not acc/clean-9's, so line 4 would
+  9033	  still miss by about 3 or 4.
+  9034	- **Council round 44 consensus:** "audit a general part-of-total example, then test it outside the 44".
+  9035	  - D436 already identifies a chip total and its AI share as one bet.
+  9036	  - The frozen request stays in force.
+  9037	- **Spending:** today's tests stand at $1.49 of Alex's ~$6. The plan's caps and estimates are in D651.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8 | rg 'paired_probe|narrow-d436|paired' " in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-claude.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system-v1.txt
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v1-codex.stream
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system-v3.txt
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system-v2.txt
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v1-codex.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v2-claude.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-brief.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit-v1.json
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v1-claude.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v2-codex.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit-v2.json
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/frozen-system.txt
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit-v3.json
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v2-codex.stream
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.stream
+/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/check-passed.json
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls narrow-d436; for f in narrow-d436/edit.json narrow-d436/edited-system.txt narrow-d436/audit-v{1,2,3}-*.md; do echo "FILE $f"; nl -ba "$f"; done' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+audit-brief.md
+audit-topics.json
+audit-v1-claude.md
+audit-v1-codex.md
+audit-v1-codex.stream
+audit-v2-claude.md
+audit-v2-codex.md
+audit-v2-codex.stream
+audit-v3-claude.md
+audit-v3-codex.md
+audit-v3-codex.stream
+check-passed.json
+edit-v1.json
+edit-v2.json
+edit-v3.json
+edit.json
+edited-system-v1.txt
+edited-system-v2.txt
+edited-system-v3.txt
+edited-system.txt
+frozen-system.txt
+paired_probe.py
+FILE narrow-d436/edit.json
+     1	{
+     2	 "version": 4,
+     3	 "anchor": "in not_judged, each with one sentence on why it is not the one tracked.",
+     4	 "insert": " When the outcome tracks a figure and also names the share of that same figure that one kind makes up, whether supply stays short of demand beside a figure that measures that supply or its growth, or whether capacity keeps pace with the demand that figure measures, the two are one bet seen from two sides, not several things with none the main one: ask the figure, and list that second side in not_judged. So a bank's total lending for the year named with the share that is commercial lending is asked as the total lending, a retailer's sales for the year named with whether its shelves run short are asked as the sales, and a utility's power demand for the year named with whether its generating capacity keeps pace is asked as the demand.",
+     5	 "sources": [
+     6	  "D436. Alex's own reply ('\u7b97\u4e00\u4e2a\u9898\uff0c\u7b2c\u4e09\u5904\u4e0d\u6539') chose the option '\u7b2c\u4e8c\u4ef6\u4e8b\u4f5c\u4e3a\u540c\u4e00\u9898\u7684\u80cc\u666f\u7559\u7740\uff08\u540e\u9762\u5224\u65ad\u65f6\u663e\u793a\u4e3a\u4e0d\u5224\uff09\u2026 \u7406\u7531\uff1a\u90fd\u662f\u540c\u4e00\u4e2a\u62bc\u6ce8\u7684\u4e0d\u540c\u4fa7\u9762', asked on the HBM shipments-and-shortage example only: shape (b) rests on his own words. The record's Decided line ('the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand') is the recorder's statement of the ruling's scope, in force but not his verbatim words: shapes (a) and (c) and their orientation rest on it. D436's scope line names clean Step 1; its '(D397)' clause, the ladder step's not-judged display, carries it here.",
+     7	  "D397: judge the one the outcome names as tracked; list every other part (the trigger requires the outcome to track the figure)",
+     8	  "the frozen decline case 'naming several with none of them the main one' (system line 6), excepted only for D436's three shapes bound to the tracked figure"
+     9	 ],
+    10	 "changes_from_v3": [
+    11	  "retailer example: 'holiday sales' (a part-year figure line 6 declines) -> 'sales for the year'; each example names a year (Claude-family audit v3)",
+    12	  "shape (b): 'whether the supply that figure measures stays short of demand' -> 'whether supply stays short of demand beside a figure that measures that supply or its growth' (Codex audit v3: a shipment growth rate)",
+    13	  "examples joined into one sentence, trimming the repeated restatement (Claude-family audit v3, growth)",
+    14	  "edit.json's attribution corrected (Claude-family audit v3)"
+    15	 ],
+    16	 "not_taken": [
+    17	  "Codex audit v3: 'require the outcome to identify the figure as the main tracked part before applying the D436 examples'. Not taken: the targets' outcomes name both sides without a stated priority, which is exactly why astra declines (its own account, account-output.json); D436 rules which side is the second side for these shapes; requiring an explicit priority would leave D436 unapplied on the cases it was decided on. Taken to the deep council (round 4)."
+    18	 ],
+    19	 "chars_before": 9545,
+    20	 "chars_after": 10286,
+    21	 "tokens_o200k_before_after": [
+    22	  2031,
+    23	  2182
+    24	 ],
+    25	 "growth_reason": "D436 (2026-11-13) was never carried into the ladder request (frozen 2026-11-10, D426); no sentence states its relation; three audit rounds by both families found no sentence covering the same case or one to cut without changing behaviour."
+    26	}FILE narrow-d436/edited-system.txt
+     1	You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+     2	
+     3	What the question asks
+     4	- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+     5	- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. When the outcome tracks a figure and also names the share of that same figure that one kind makes up, whether supply stays short of demand beside a figure that measures that supply or its growth, or whether capacity keeps pace with the demand that figure measures, the two are one bet seen from two sides, not several things with none the main one: ask the figure, and list that second side in not_judged. So a bank's total lending for the year named with the share that is commercial lending is asked as the total lending, a retailer's sales for the year named with whether its shelves run short are asked as the sales, and a utility's power demand for the year named with whether its generating capacity keeps pace is asked as the demand. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+     6	- Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+     7	
+     8	Whose question it is
+     9	- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+    10	
+    11	The ladder
+    12	- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+    13	- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+    14	- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+    15	- Fill exactly one of event and figure; the other is null.
+    16	- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+    17	- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+    18	
+    19	The due day
+    20	- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+    21	- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+    22	- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+    23	- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+FILE narrow-d436/audit-v1-claude.md
+     1	(The Claude-family blind auditor's report on version 1, received as its final message on 2026-11-17 and stored by Claude; condensed to its findings and verdict.)
+     2	
+     3	1. "a part of that same figure": consistent with D436's AI-chip share beside the chip total; keeps wider (sub-periods such as CPO checkpoints, funded portions of commitments).
+     4	   "or with a condition on it": keeps wider, no source; D436's second sides are all a supply/demand state of the same quantity. Collides with the frozen drug example on line 5 (the approval is a condition on the patient count, so the passage says ask the patient count; the example says judge the approval when the outcome names it), with line 13's "conditions" for an event's terms, and with line 9's company/theme split.
+     5	   "not several things with none the main one": narrows the decline case; consistent for D436's three shapes, removes declines D635 leaves to Alex beyond them.
+     6	   "ask the figure": sourced inside D436's three examples; beyond them the priority rule D631 refused and D635 cuts against.
+     7	   Closing check and no_ladder description consistent. AGENTS §6: +710 characters, none removed.
+     8	2. Targets: acc/clean-8 and acc/clean-9 are D436 exactly; pool-17 matches the share-beside-total shape; u3/clean-10's orientation is the reverse of D436's third example and is settled mechanically.
+     9	3. Controls: no control loses a justified decline outright; u2/clean-10 at moderate risk (its description matches the trigger literally); u1/clean-9 a small risk.
+    10	4. Boundary cases: findings on CPO, Reflection AI (moderate), commitments (strong), memory prices, H20 (moderate); China sales not decided.
+    11	5. Examples: none from a test article; each a one-to-one translation of a target via D436's examples; all teach only the merge side; the rule (not the examples) does not read the same for a drug maker (approval as a condition) or a chip maker (export licence).
+    12	6. The last sentence restates the request (line 4, line 14, line 5's "a second figure or event"), fences the wide trigger, adds pressure on the CPO and memory cases.
+    13	Verdict: NOT SOUND: replace "a part of that same figure, or with a condition on it" with D436's own shapes ("the share of it that one kind makes up, or with whether supply falls short of it or keeps pace with it") and "the part or the condition" with "the share or the shortage"; this keeps the four targets and examples and leaves the drug example, H20, Reflection AI, the commitments and CPO to judgement as before.
+FILE narrow-d436/audit-v1-codex.md
+     1	The passage is **not sound**: it turns “two sides of one bet” into a rule that always chooses the whole figure. That choice is not in D436, and it can settle cases that D631 and D635 leave open.
+     2	
+     3	For example, the passage would choose total passenger numbers over whether planes stay full. But D436 also gives the opposite orientation: demand is the figure, while capacity keeping pace is the side left as context. This is a read-only assessment of the text and supplied cases; no model was called.
+     4	
+     5	1. **Clause by clause**
+     6	
+     7	| Inserted clause | Verdict | Reason and collision |
+     8	|---|---|---|
+     9	| “a figure together with a part of that same figure … [is] one bet seen from two sides” | **Keeps wider** | [D436](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4847>) recognizes the AI-chip share beside the chip total as one bet. It does not say every whole-and-part pair is necessarily one bet. |
+    10	| “or with a condition on it” | **Keeps wider** | D436 identifies particular second sides; it does not make every condition on every figure a second side of the same bet. A condition can itself be a separately tracked outcome. |
+    11	| “not several things with none the main one” | **Contradicts / keeps wider** | This declares a main part whenever the broad whole-and-part or figure-and-condition pattern matches. [D397](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4326>) says a topic with no main part gets no question; [D631](</Users/lchingen/hivemind/docs/DECISIONS-log.md:8527>) and [D635](</Users/lchingen/hivemind/docs/DECISIONS-log.md:8618>) leave the choice open when several parts are named. It collides with the decline case in [system line 6](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/frozen-system.txt:6>) and the same case in the [schema’s `no_ladder` description](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-schema.json:19>). |
+    12	| “ask the figure, and list the part or the condition in `not_judged`” | **No source for the selection rule; contradicts D436’s demand example** | Listing the unjudged side is consistent with D436 and D397. Automatically choosing the whole figure is not. It also collides with “Judge the one the topic’s outcome names as what is tracked” in [system line 5](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/frozen-system.txt:5>) and the [closing check](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-closing.txt:1>) when the outcome names several without selecting the whole. |
+    13	| The four examples | **Keep wider; one reverses D436’s orientation** | Each teaches the same automatic choice. The airline example selects passenger count over capacity utilization, whereas D436’s capacity-and-demand example makes demand the figure and capacity keeping pace the side. See item 5. |
+    14	| “Two separate figures, or one figure for two years, are still several things” | **No source as a general rule; ambiguous against D436** | The request already requires one figure for a named period. Two equally tracked annual figures can support a decline. But D436’s demand and capacity example can contain two separate figures as sides of one bet, and a previous year can be a comparison rather than another tracked question. See item 6. |
+    15	
+    16	The passage does not explicitly cancel the other decline cases, such as a rolling period without a publication day. But its categorical “not several things with none the main one” conflicts with the existing no-main decline when its broad pattern applies.
+    17	
+    18	2. **The four targets**
+    19	
+    20	These are predictions from reading the request, not observed model answers.
+    21	
+    22	| Target | Likely question and listed side | D436? |
+    23	|---|---|---|
+    24	| `acc/clean-8` | Ask 2027 HBM shipment growth; list whether supply remains short of demand. | **Yes.** This is D436’s shipment-and-shortage example. |
+    25	| `acc/clean-9` | Ask total 2026 semiconductor revenue; list the AI-chip portion. | **Yes.** This matches D436’s chip-total and AI-chip-share example. |
+    26	| `u3/clean-10` | Ask how much new HBM capacity is added in 2027; list whether it arrives early enough to ease the shortage and prices. | The passage pushes this answer, but **D436 does not establish this orientation**. Its capacity example puts demand as the figure and capacity keeping pace as the side. This topic names capacity and its timing, rather than a demand figure, so the cited example does not itself settle the choice. |
+    27	| `pool-17` | Ask total 2026 China accelerator shipments; list the GPU/non-GPU composition. | **Consistent by analogy** with total chips and their AI-chip portion, provided the total is indeed the tracked bet. D436 does not establish a universal whole-over-part priority. |
+    28	
+    29	3. **The eight decline controls**
+    30	
+    31	| Control | Edited-request assessment | Is a decline justified? |
+    32	|---|---|---|
+    33	| `week-10-06:c1/clean-4` | **Decline:** two annual capex figures, with neither selected. The final sentence reinforces that they are several things. | **Yes**, under D397’s no-main case. |
+    34	| `week-10-06:c1/clean-12` | **Decline:** 2026 and 2027 spending are both tracked. | **Yes**, for the same reason. The GDP percentages are additional comparisons. |
+    35	| `fortnight:c1/clean-8` | **Decline if the request has no matching theme.** Its 2026 funding figure is the main figure; the earlier figures are comparisons. | **Yes on the recorded theme finding**, not because it names several main figures. The supplied topic alone does not include the theme list; the [stored review](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md:19>) reports that no theme covers it. |
+    36	| `pool-9` | **Likely decline:** memory-price series and rack memory cost are distinct figures, with no clear main one. | **Plausibly yes** under D397, though the broad “condition on it” wording could invite a model to force a relationship. |
+    37	| `pool-19` | **Not necessarily a decline.** The outcome names one event: enactment or failure of a bill. Its provisions describe that event. | **The control is wrong to require decline merely for multiple provisions.** D397 permits one event, and [D403](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4414>) supplies the stated regulatory-date rule. A decline could still be warranted if no listed theme covers the matter; the supplied topic does not show the theme list. |
+    38	| `u1/clean-5` | **Likely decline:** multiple memory-price series, rack cost, and a 2026–2027 period are named. | **Yes on the supplied wording**, since no single tracked figure is selected. The new sentence reinforces the multi-year concern, though it does not resolve every interpretation of the period. |
+    39	| `u1/clean-9` | **Decline:** the survey covers a rolling twelve months and gives no publication day. | **Yes**, independently of the edit, under [D417](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4606>) and system line 6. Choosing the domestic share does not remove that date problem. |
+    40	| `u2/clean-10` | **Likely decline, but not assured:** capacity coming online and persistent prices are both named. A broad reading of “condition on it” could instead select capacity and list prices. | The text does not establish that price persistence is merely a condition on capacity. A no-main decline is **plausible**, but the supplied decisions do not resolve this particular selection. It should not be treated as a certain control without that qualification. |
+    41	
+    42	4. **The six boundary cases**
+    43	
+    44	The first two cases below are the clearest places where the new text can decide, or push a decision, that the frozen request leaves open. The wording does not guarantee every model will make that interpretation.
+    45	
+    46	| Case | Effect of the edit |
+    47	|---|---|
+    48	| Optical-switch shipments | **Finding:** the full-year total can be read as the figure and the interim cumulative shipments as parts of it. “Ask the figure” then favors the full-year number and lists checkpoints. The final sentence may also encourage treating Q4 2026 and 2027 as separate things. Neither settles how to handle the outcome’s span of checkpoints. |
+    49	| Investment commitments | **Finding / application risk:** funded cash can be read as a part of the original commitments, while the remaining balance and changes are other figures. The inserted rule pushes whichever amount the model treats as the whole over the part, although the outcome names all three and does not specify that priority. It does not reliably identify a single whole, so the particular winner remains ambiguous. |
+    50	| Memory prices | **Not clearly decided.** Contract-price changes, makers’ selling prices, and gross margins are distinct measures. The last sentence calls separate figures “several things,” but does not say which is main. If a model treats a reported price as a part or condition of the general price figure, the broad clause creates a risk of an unsupported choice; that relationship is not explicit. |
+    51	| Chip sales into China | **Not decided by the literal figure rule.** US approval and Chinese acceptance are events or authorities’ decisions, not a figure and its part. |
+    52	| Acquisition | **Not decided by the literal figure rule.** Signing and closing are events; consideration and conditions accompany them. The edit gives no event-selection rule. |
+    53	| Chip export licence | **Not decided by the literal figure rule.** Licence status and resumed revenue are different kinds of outcome; the edit does not say which is main. |
+    54	
+    55	The boundary is consequently not protected: the optical case at least is exposed to an automatic choice, and commitments are exposed to the same broad reading. [D631](</Users/lchingen/hivemind/docs/DECISIONS-log.md:8534>) says D436 keeps the sides of an **identified** bet together; it does not give a general rule for identifying the main part.
+    56	
+    57	5. **The examples**
+    58	
+    59	- **Bank loans / commercial share:** Mirrors the total-versus-portion structure of `acc/clean-9` in the [44 test topics](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/cases.json>). It also resembles `pool-17`, though that target is outside those 44. It uses a banking measure, but the whole-and-share idea transfers to all four industries. Its orientation matches D436’s chip-total example when the total is the tracked bet.
+    60	- **Carmaker deliveries / electric share:** Also mirrors `acc/clean-9`’s total-and-portion structure, and closely mirrors `pool-17`’s shipments and composition. It transfers across industries as a total and product mix. Its orientation matches D436’s chip-total example in that setting.
+    61	- **Airline passengers / planes staying full:** Mirrors the supply-versus-demand relationship in `acc/clean-8` and the capacity-keeping-pace relationship in `acc/clean-10`, both among the 44. The concepts transfer, though “planes stay full” is airline-specific. **Its orientation conflicts with D436’s third example:** it chooses demand over a capacity-utilization side only if passenger count is treated as demand; the wording “planes stay full” instead measures demand relative to capacity. It is an imperfect analogy and does not teach the distinct D436 case where **capacity keeps pace with demand**. It cannot support a general rule that capacity or the first named figure always wins.
+    62	- **Retail sales / shelves running short:** Mirrors `acc/clean-8`’s shipments-and-shortage structure in the 44. The supply-shortage relationship transfers to the other industries, although shelves are retail-specific. Its orientation is consistent with D436’s shipment-and-shortage example.
+    63	
+    64	These are changed-industry examples rather than copied company names or numbers. Nevertheless, they mirror the test topics’ structures closely, and the two total-and-share examples repeat essentially the same classification. They do not establish a closed, sourced boundary for when related measures are one bet. The example and generality requirements are in [AGENTS.md §6](</Users/lchingen/hivemind/AGENTS.md:194>).
+    65	
+    66	6. **The last sentence**
+    67	
+    68	“Two separate figures, or one figure for two years, are still several things” is **a new general rule as written**. The existing request supports one figure for one named period, and D397 supports declining when several things are tracked with no main one. Neither says every pair of separate figures is necessarily a separate bet: D436 explicitly keeps capacity keeping pace beside demand as context. Nor does a comparison with an earlier year by itself establish two competing tracked annual outcomes.
+    69	
+    70	The smallest sound change is to remove the automatic whole-over-part selection and the broad classification, keep only the sourced instruction that an **identified** second side stays as context and is listed as not judged, and remove the final general sentence. The examples would also need to demonstrate only that sourced rule, without resolving an otherwise open choice.
+    71	
+    72	NOT SOUND: Replace the passage with a narrowly sourced statement that an identified second side of the same bet remains context and is listed as not judged, without choosing the main part or declaring all separate figures or years to be separate things.FILE narrow-d436/audit-v2-claude.md
+     1	(The Claude-family blind auditor's report on version 2, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Verdict line: NOT SOUND (close). All four targets flip as D436 rules, all eight controls still decline, none of D631's six boundary cases is decided.
+     3	Defects: (1a) the share clause never requires the outcome to track the figure itself (u3/clean-11's outcome tracks an ASIC/GPU split whose total is only the base; "ask the figure" would move it to total spending, against D397); (1b) "whether supply stays short of demand" leaves "a figure" unbound (a revenue named beside a component shortage would become one bet, a shape D436 never named). (1c) capacity clause consistent. (1d) a sourced exception to line 6; D436's scope line names clean Step 1, carried here by its "(D397)" clause; the record should say so. (1e) "the share or the shortage" omits the capacity side (the utility example covers it). The no_ladder description does not carry the exception (not a contradiction).
+     4	Targets: acc/clean-8, acc/clean-9, pool-17 as D436 rules; u3/clean-10 D436's first orientation, with a risk of an invented measure (D636's class), not the passage's fault.
+     5	Controls: all decline; small risk on the two-year controls now that v1's fence sentence is gone; u2/clean-10's outcome names no figure, so the trigger is not met.
+     6	Boundary: none decided; equity commitments the closest call (funded vs outstanding is a status, not "one kind"; the outcome names three things).
+     7	Examples: three; none from a test article (searched); each mirrors one of D436's shapes (from acc/clean-9, acc/clean-8, acc/clean-10), sourced as Alex's words, should be disclosed; one per class against §6's two or three, noted, not a soundness defect.
+     8	Growth: +610 (+6.4%), no prompt-token count; the reason meets "add only when missing" and "a written reason"; the cut search should be recorded.
+     9	Smallest change: "When the outcome tracks a figure and also names the share of that same figure one kind makes up, whether the supply that figure measures stays short of demand, or whether capacity keeps pace with the demand that figure measures" and "list that second side".
+FILE narrow-d436/audit-v2-codex.md
+     1	**NOT SOUND.** The passage correctly points toward judging shipments, the total, or demand in the examples Alex named. But it turns a resemblance in wording into an automatic decision about which figure is the main question. For example, it can treat any figure mentioned beside a supply shortage as the main figure, even when the outcome does not establish that relationship.
+     2	
+     3	This is a read-only assessment of what the text instructs; it is not a model test. The inserted passage is in [edited-system.txt](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt:5).
+     4	
+     5	### 1. Clause by clause
+     6	
+     7	| Passage | Finding |
+     8	|---|---|
+     9	| “When the outcome names a figure together with the share of it that one kind makes up” | **Keeps wider.** D436 identifies the AI-chip share beside the chip total as two sides of one bet. This sentence makes *every* total-and-share pairing one bet and selects the total, without first establishing that it is the same bet. D397 says to judge the main part named by the outcome; D631 and D635 do not establish a general way to choose between several parts. |
+    10	| “or with whether supply stays short of demand or capacity keeps pace with it” | **Keeps wider.** D436 names shortage beside shipments and capacity keeping pace beside demand. The passage attaches either condition to an unspecified “figure.” The grammar does not require that the figure be shipments or demand, or even that it be the quantity to which the condition relates. |
+    11	| “the two are one bet seen from two sides, not several things with none the main one” | **Keeps wider and conflicts with the refusal rule.** D436 describes an identified bet; this sentence declares the named shapes to be one bet. It overrides [system line 6](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt:6) and the schema’s `no_ladder` description where the outcome genuinely has several parts and no main one. |
+    12	| “ask the figure” | **Keeps wider.** It selects the figure even when the outcome does not establish that it is the tracked part. That can conflict with “Judge the one the topic’s outcome names as what is tracked” and with the closing check’s “the one the topic’s outcome names.” It also does not distinguish demand from capacity when the latter is the figure. |
+    13	| “list the share or the shortage in not_judged” | **Consistent but incomplete.** Showing the other side as not judged agrees with D436 and D397. The sentence does not explicitly name capacity keeping pace as something to list, although the preceding general instruction and the closing check require every omitted part to be listed. D436 also says the second side stays as context; the insertion only says to list it. |
+    14	| Bank, retailer and utility examples | **The stated orientations match the three D436 examples**, but the examples repeat the broad automatic selection above. The utility example correctly asks demand and leaves capacity as the other side. |
+    15	
+    16	The `no_ladder` description and closing check remain unchanged, so the request now has competing instructions in cases where a surface match does not establish a main part. Other refusal grounds, such as an unavailable publication date, remain in force; the added sentence does not expressly cancel them.
+    17	
+    18	### 2. The four targets
+    19	
+    20	These are the likely readings of the edited text, not guaranteed outputs.
+    21	
+    22	| Target | Likely question and omitted part | D436 |
+    23	|---|---|---|
+    24	| **acc/clean-8** | Ask 2027 HBM shipment growth; list whether supply remains short of demand. | Yes: shipments and shortage are Alex’s example. |
+    25	| **acc/clean-9** | Ask 2026 total semiconductor revenue; list the AI-chip portion. | Yes: total and AI-chip share are Alex’s example. The outcome gives an amount rather than a percentage, but it is still a portion of the total. |
+    26	| **u3/clean-10** | A model may ask how much capacity is added in 2027 and list whether it arrives early enough to ease shortage. But the trigger says “supply stays short of demand,” while this outcome speaks of arrival timing and easing a shortage. A careful literal reading does not clearly trigger it. | **Not established by the stated examples.** D436’s capacity example asks demand and leaves whether capacity keeps pace as context; it does not decide that capacity additions are the main figure here. |
+    27	| **pool-17** | Ask total 2026 accelerator shipments in China; list the GPU/non-GPU composition. | Consistent with D436’s total-and-share example, assuming the composition is the second side of that same bet. |
+    28	
+    29	### 3. The eight decline controls
+    30	
+    31	| Control | Effect of the edit | Is a decline justified? |
+    32	|---|---|---|
+    33	| **week-10-06:c1/clean-4** | Does not match the new passage. Two years remain. | The edit leaves the existing no-main refusal available; the decisions cited do not select a year. |
+    34	| **week-10-06:c1/clean-12** | Does not clearly match: the GDP percentage is a reference alongside spending in two years, not a share of the spending total made up by one kind. | No-main refusal remains available. |
+    35	| **fortnight:c1/clean-8** | Does not match: 2025 and first-half 2026 are comparisons with the explicitly tracked full-year 2026 funding figure. | **No.** The outcome identifies one annual figure. The prior comparisons should be listed; this is a wrong decline control on the supplied text. |
+    36	| **pool-9** | Does not clearly match the share trigger: memory’s share of rack cost is in the description, but the outcome names price changes and per-rack cost. | A no-main decline remains available; the edit does not resolve which of those outcomes is main. |
+    37	| **pool-19** | Does not match: it asks whether one bill or equivalent measure is enacted, with provisions describing that measure. | **No, on the supplied wording.** The tracked event is enactment; the provisions do not by themselves make it several unrelated main events. A themed object must still be available. |
+    38	| **u1/clean-5** | The share appears in the description, not as the outcome’s “figure together with the share.” A loose reading might nevertheless apply the new sentence. | The outcome names multiple price series, years and rack cost; a no-main decline remains available. The description’s 25–30% is not a sound reason to select rack cost. |
+    39	| **u1/clean-9** | The outcome names a share and its implied remainder, but not a total figure paired with a share. | **Yes:** the rolling 12-month figure has no stated publication day, so D417 independently requires decline. |
+    40	| **u2/clean-10** | A model could stretch “supply stays short” to the shortage and select capacity, despite the outcome also tracking persistent prices. The wording does not expressly say supply is short of demand. | A no-main decline remains available. Applying the new sentence automatically here would be an unsupported selection. |
+    41	
+    42	For the cases marked “available,” the supplied decisions do not themselves settle every disputed main-part judgment. That is different from proving a particular refusal is mandatory.
+    43	
+    44	### 4. D631’s six boundary cases
+    45	
+    46	None is an explicit match for the new passage, so **none is clearly decided by it on a literal reading**:
+    47	
+    48	| Case | Why the insertion does not decide it |
+    49	|---|---|
+    50	| Optical-switch shipments | Shipment checkpoints across periods, with no share or supply/demand condition. |
+    51	| Chip sales into China | Two authorities’ decisions, not a figure and share or shortage. |
+    52	| Acquisition | Agreement, closing, consideration and conditions; no matching shape. |
+    53	| Investment commitments | Balance, cash funded and changed commitments; none is stated as a share of the total. |
+    54	| Memory prices | Price changes, average selling prices and margins; no matching shape. |
+    55	| Chip export licence | Licence status and revenue resumption; no matching shape. |
+    56	
+    57	The concern remains that the passage decides **other** multi-part outcomes by surface shape. These six do not demonstrate that particular failure.
+    58	
+    59	### 5. Examples
+    60	
+    61	The insertion contains **three explicit examples**, not four. The general sentence also describes three shapes but is a rule, not a fourth worked example.
+    62	
+    63	- **Bank lending and commercial share:** mirrors the total-and-component structure of **acc/clean-9**. It does not use its company, product or numbers.
+    64	- **Retail sales and shelves running short:** mirrors the shipments-and-shortage structure of **acc/clean-8**, though sales and shelf availability are not necessarily the same bet merely because they appear together.
+    65	- **Utility demand and capacity keeping pace:** closely mirrors **acc/clean-10**, which asks NAND demand and whether capacity additions keep pace. Its orientation agrees with D436: demand is judged and capacity is the side.
+    66	
+    67	Thus, the examples are from other industries and do not copy the test articles’ names or figures, but they **mirror test-topic structures**, especially the utility example. The wording does not read identically across industries: lending, shelves and generating capacity are industry-specific illustrations. Their relationships can be translated across industries, but the reader still has to decide whether each pair represents one bet; the passage currently assumes it does.
+    68	
+    69	The examples provide one illustration for each of three shapes, not two or three per class as AGENTS §6 requests for a classification. More examples alone would not fix the unsupported selection rule.
+    70	
+    71	### 6. Growth
+    72	
+    73	The edit adds **610 characters** and removes none, according to [edit.json](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:15). The reason identifies a potentially missing decision, but it does **not** establish that the required whole-request audit found no material to cut or merge. Nor does it report prompt tokens before and after. Saying no existing sentence covers precisely the same case is not, by itself, enough to satisfy §6’s requirement to remove at least as much elsewhere or give a supported reason for growth.
+    74	
+    75	NOT SOUND: Replace the automatic shape-based selection with D436’s identified same-bet rule and its stated orientations, without deciding other multi-part outcomes; use non-test-derived examples and complete the required growth audit.FILE narrow-d436/audit-v3-claude.md
+     1	(The Claude-family blind auditor's report on version 3, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Verdict line: NOT SOUND: replace "a retailer's holiday sales" with a full-year figure, so no example asks a figure for part of a year that line 6 declines; also correct edit.json's "Alex's words" attribution.
+     3	Otherwise: clauses a, b, c consistent with D436 (a keeps somewhat wider: a loose reading could invert a share-tracked outcome such as u3/clean-11; "also" guards it); the carve-out from line 6 is explicit; no_ladder's description does not repeat it (a tension, not a contradiction). Targets: acc/clean-8, acc/clean-9, pool-17 as D436 rules; u3/clean-10 by extension of clause b (capacity as the supply figure), the most interpretive. Controls: the passage fires on none of the eight on a careful reading; u2/clean-10 fragile (watch it). Boundary cases: none decided; investment commitments the only share-like wording, does not fire on a careful reading (keep as a control). Examples: none from the 44 (searched); structurally mirror acc/clean-9, -8, -10 one for one (inherent in carrying D436's shapes), so acc/clean-8 and -9 are fitted cases and only pool-17 and u3/clean-10 test generalisation. Attribution: D436's parenthetical is the recorder's Decided line; Alex's own words are "算一个题，第三处不改" in reply to an option with the HBM example only. Growth: the reason suffices for the content; the cut search and a $0 token count should be recorded; the passage repeats itself and could be trimmed.
+FILE narrow-d436/audit-v3-codex.md
+     1	**The passage is not sound as written.** It gives a model a reason to select a figure even when the outcome names several things without identifying a main one—the choice D631 and D635 leave unresolved. It also misses one of the four proposed targets and adds 672 characters without the completed token comparison or compensating cut required by §6.
+     2	
+     3	For example, “the outcome tracks a figure” can mean either “the outcome identifies this figure as the main one” or simply “the outcome mentions this figure.” In the second reading, the passage’s instruction to “ask the figure” makes the choice itself.
+     4	
+     5	## 1. Clause-by-clause audit
+     6	
+     7	The inserted text is in [edited-system.txt](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt). Its sources are in [edit.json](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json).
+     8	
+     9	| Passage | Verdict | Reason and collisions |
+    10	|---|---|---|
+    11	| “When the outcome tracks a figure” | **Consistent if “tracks” means the outcome already identifies the main figure; ambiguous otherwise.** | D397 says to judge the part named as the main one. D631 says neither D397 nor D436 supplies a way to choose when the outcome names several. The passage does not say how the model knows that the figure is already the main one. |
+    12	| “the share of that same figure that one kind makes up” | **Consistent with D436’s total-and-component example, but potentially wider in application.** | D436 treats the AI-chip portion beside the chip total as one bet. A part being mathematically included in a total does not, by itself, establish that every such pair is one bet or that the total is the main part. |
+    13	| “whether the supply that figure measures stays short of demand” | **Narrower than, and imprecise against, D436.** | It captures a supply quantity beside shortage, but a shipment *growth rate* measures a change in supply, not supply itself. D436 expressly covers shipment growth beside shortage. |
+    14	| “whether capacity keeps pace with the demand that figure measures” | **Consistent with D436’s orientation.** | D436 names demand as the figure and capacity keeping pace as its other side. |
+    15	| “the two are one bet seen from two sides, not several things with none the main one” | **Contradicts D397/D631 when mainness has not already been established.** | It turns the listed shapes into an exception to the frozen system’s line 6: “naming several with none of them the main one.” The same conflict appears in the schema’s `no_ladder` description. D436 identifies sides of a bet; it does not establish a general shape-based method for choosing the main part. |
+    16	| “ask the figure, and list that second side in not_judged” | **Consistent when the figure is already the main tracked part; otherwise contradicts the unresolved boundary.** | It agrees with D397’s display and the closing check’s “the one the topic’s outcome names,” but can override both when the outcome names multiple things without selecting one. Listing only the second side would also be incomplete if the wording contains further omitted parts: line 5 and the schema require **every** other part. |
+    17	| The three example sentences | **Their orientations are consistent with the three D436 examples, subject to the same mainness problem.** | Each says “named with,” not “identified by the outcome as the main figure.” They can therefore teach selection from the shape alone. The retailer example also equates sales with supply available to meet demand, which is less exact than shipments beside shortage. |
+    18	
+    19	D436’s stated scope is clean Step 1, although it expressly says the second side is shown as not judged under D397. That supports carrying the display into the ladder step; it does not itself settle every choice of main figure in that step. See [D397, D436, D631 and D635](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326).
+    20	
+    21	## 2. Four targets
+    22	
+    23	These are predictions from reading the request, not model results. Actual answers could differ because the trigger is ambiguous.
+    24	
+    25	| Target | Likely question and listing | D436? |
+    26	|---|---|---|
+    27	| **acc/clean-8** | Ask 2027 HBM **shipment growth**; list whether supply remains short of demand. | **Yes**, this is Alex’s shipment/shortage example. But “supply that figure measures” may fail to match a growth rate, so the edit does not reliably express it. |
+    28	| **acc/clean-9** | Ask 2026 **total semiconductor revenue**; list the AI-chip portion. | **Yes**, this is the total-and-portion example. |
+    29	| **u3/clean-10** | The request does **not clearly direct** a question. It might ask **new capacity added** and list early arrival/easing the shortage, but the new text covers *supply short of demand* or *capacity keeping pace with a demand figure*. This topic instead names capacity additions, arrival timing and shortage relief. | D436’s cited capacity example is **demand as the figure**, with capacity keeping pace as the side. It does not expressly decide this different orientation. Treating this target as automatically settled goes beyond the stated decision. |
+    30	| **pool-17** | Ask 2026 **total accelerator shipments**; list the GPU/non-GPU composition and any other omitted comparison. | The total-and-part structure follows D436. The trigger still leaves room for disagreement over whether the outcome already identifies the total as the main part. |
+    31	
+    32	## 3. Eight decline controls
+    33	
+    34	“Still declines” below means the edit supplies no clear reason to reverse the decline; it is not a promise of what a model will do. The input does not include the complete themes and article context for every control, so object and publication-date reasons cannot all be verified here.
+    35	
+    36	| Control | Effect of edit and whether decline is justified |
+    37	|---|---|
+    38	| **week-10-06:c1/clean-4** | Still liable to decline: two annual capex figures, 2026 and 2027, with no selected main year. The added shapes do not apply. |
+    39	| **week-10-06:c1/clean-12** | Still liable to decline: multiple years and measures. The added shapes do not choose one. |
+    40	| **fortnight:c1/clean-8** | **The control is questionable.** It asks one 2026 annual venture-funding total; prior-year and half-year figures are comparisons. Nothing in the supplied topic establishes a line-6 decline. The edit does not change this; a missing matching theme, if confirmed from the full request, could independently justify decline. |
+    41	| **pool-9** | Still liable to decline: several memory price series and a separate per-rack cost. A memory share of rack cost is mentioned, but the outcome does not clearly track a total rack-cost figure and its component as the added clause requires. |
+    42	| **pool-19** | **The control is questionable.** Enactment of the bill or equivalent measure can be one event; its provisions can describe that event. D403 permits the stated period/current fiscal-year end for a pending regulatory decision. No decline follows solely from the bill having several provisions. |
+    43	| **u1/clean-5** | Still liable to decline: multiple price series, two years and resulting rack cost. The share wording does not clearly make the tracked price series a total whose component is named. |
+    44	| **u1/clean-9** | **Decline remains justified under D417** if the item, as the supplied period says, gives no follow-up survey publication day. A share and its complement do not remove the rolling-period date rule. |
+    45	| **u2/clean-10** | Still liable to decline on no established main part: capacity coming online and persistent record prices are distinct things. It does not clearly fit demand as the figure with capacity keeping pace. |
+    46	
+    47	## 4. D631’s six boundary cases
+    48	
+    49	On the supplied wording, **none is clearly decided by the new passage**. That is a finding about these six inputs, not proof that the general wording cannot decide another unresolved case.
+    50	
+    51	| Boundary case | Effect |
+    52	|---|---|
+    53	| Optical-switch shipments | Several checkpoints and a full-year volume; neither a part/share, shortage nor capacity-versus-demand pair. No new selection. |
+    54	| Chip sales into China | Two authorities’ decisions and resulting revenue; not one of the three shapes. No new selection. |
+    55	| Acquisition | Agreement, closing, consideration and conditions; not one of the three shapes. No new selection. |
+    56	| Investment commitments | Remaining balance, cash funded and changes in commitments. The edit does not expressly say that a stock balance and a cash flow are a total and its share. A model could stretch the example to choose a balance, but the wording does not clearly require it. |
+    57	| Memory prices | Contract prices, producers’ selling prices and margins are different measures, not a total and its share. No new selection. |
+    58	| Chip export licence | Licence status and resumed revenue are distinct events/measures. No new selection. |
+    59	
+    60	The general risk remains: “tracks a figure” plus “ask the figure” can select a figure in an unresolved total-and-component outcome, even though none of these six unambiguously triggers it.
+    61	
+    62	## 5. Examples
+    63	
+    64	The passage contains **three written examples**, not four: bank lending, retailer sales and utility demand. It also names three abstract shapes.
+    65	
+    66	- **Mirroring the 44 test topics:** Yes, structurally. The bank example mirrors **acc/clean-9**’s total plus component; the retailer example mirrors **acc/clean-8**’s shipment/supply plus shortage; and the utility example mirrors **acc/clean-10**’s demand plus capacity keeping pace. The examples do not copy those topics’ named companies, products or numbers. Nevertheless, §6 says no example is taken from a test article and requires examples that teach a general rule; substituting industries does not erase the close structural mirroring. [Test topics](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/cases.json)
+    67	- **Across industries:** The relationships can be understood in banking, drugs, retail and chips, but the wording itself names three specific industries rather than presenting portable examples in each. The retailer example’s sales-versus-empty-shelves relationship is also less precise: sales can be constrained by availability, while shortage depends on demand as well.
+    68	- **Orientation:** The examples consistently choose **total lending**, **sales**, and **demand**, respectively. The third agrees with D436: demand is the figure and capacity keeping pace is the side. This does not make capacity the main figure in the different u3/clean-10 target.
+    69	
+    70	## 6. Growth
+    71	
+    72	**No.** The recorded reason identifies a potentially missing instruction and says two audits found no obvious sentence to cut. That is a useful explanation, but it does not complete §6’s requirement to remove at least as much elsewhere when adding an instruction, or to report prompt tokens before and after. The token comparison is deferred to a paid send, so it has not yet been reported. The passage grows from **9,545 to 10,217 characters**, an increase of **672**. [AGENTS.md §6](/Users/lchingen/hivemind/AGENTS.md:194)
+    73	
+    74	NOT SOUND: Require the outcome to identify the figure as the main tracked part before applying the D436 examples; express shipment growth accurately, avoid test-topic mirrors, and make the required compensating cut and token comparison.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba narrow-d436/check-passed.json' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba narrow-d436/paired_probe.py | sed -n '1,270p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+     1	{
+     2	 "code_sha256": "3163a5d67985c54a6e9e79f6b8831c9fd570fc2a0b4d534c51092bd393c4aaff",
+     3	 "requests": {
+     4	  "frozen": {
+     5	   "acc/clean-8": "6b1f27892ec2a325594abad996494b9e3f9ec967d2c8fbef567e5fc6b85f19cf",
+     6	   "acc/clean-9": "14a236c1f27cb064ba1864aa5fb1f59f11cfc78b7296d87a62456f380bc5b026",
+     7	   "u3/clean-10": "bb6781cad6581dfa4e97ab46f414290929ac1ec3352552c2d7d1bbc7cbb14220",
+     8	   "pool-17": "63c5c57d0000db64e7f367d6b81c931bef25afadd51054c290e9db37cc11ea7c",
+     9	   "week-10-06:c1/clean-4": "b7be4f82d5c5f1f7a5f6c2d3d2e91681d84671c005ed6cd81e4a307322f0ac73",
+    10	   "week-10-06:c1/clean-12": "b6ad3997a97c8e5d80a9dae6ceb66330340eb68d544df731d2be954edbd3255a",
+    11	   "fortnight:c1/clean-8": "1460f331a400f860af5a7033510afa36403a9a0b1461e79cc8093c421c81939c",
+    12	   "pool-9": "a27a08e7022e5868d61924ba4b5f25481bef57a2aa62c2d42a1cc45a7e215f17",
+    13	   "pool-19": "040d0909df0c3f069ba4a9db20ca1ee401469173f656e44787c88f103e00e6de",
+    14	   "u1/clean-5": "d595ae2121e54394daf3f97640da22ade0642b81123b42c51ece44060a65138f",
+    15	   "u1/clean-9": "c7ddec41487d3b2e6fba30557f830e9310a2a607916a8cae94526c94532dafa7",
+    16	   "u2/clean-10": "fbe4a15aea80e14ff7c8db3b8e9d102fbf79d81a81e7773e49c87a4a065adfc2"
+    17	  },
+    18	  "edited": {
+    19	   "acc/clean-8": "07e316123ec5176fac20abfce175c43d64e3efd7152435e82a505e37d95d61f5",
+    20	   "acc/clean-9": "53dbd818978f1cd10c08b3691dff5e5158dd18e79b3772c8d7e189a8b9bc5ee6",
+    21	   "u3/clean-10": "b13f4792505548986f3182e1a94f2cde4bd50bea8a565767e2b2c554ce9d8da6",
+    22	   "pool-17": "d736443619a73a8d89011ed52220a105dfa8aa5898af64eb561364f329188637",
+    23	   "week-10-06:c1/clean-4": "884b45cf03a93c12fc057f3a67cdd4014c476af4b66c24826582a8cf9f443f98",
+    24	   "week-10-06:c1/clean-12": "bdca182697c6b5b5e700931de2bfcc5f8356c05d936a0db63f4c5cb00a0298a9",
+    25	   "fortnight:c1/clean-8": "aad48a9656ce18facef38444c137ba32334920a29189042dc16c47cb61dba627",
+    26	   "pool-9": "0cd99f6d98b7b310c9e307b5ffe747fe591d98f0c4e7e5e58151b0ca6f80ff11",
+    27	   "pool-19": "0fd6490f3bd285b68549f477d3160c3d604a3291b643e162b68a93326744b74b",
+    28	   "u1/clean-5": "612bf0edd220c09bcea49ef1427d038665cda6a008dd84eb463a33a9caa33e3c",
+    29	   "u1/clean-9": "19c051563334cea2fd5eb7a1225bef4a3bbde2640cf7a85a40dae7cc12ee178f",
+    30	   "u2/clean-10": "b2b5143560edb49aa82d9893d9d80ce4c17e73f022a1cc5bf85d6eb3c016d2b5"
+    31	  }
+    32	 }
+    33	}
+
+ succeeded in 0ms:
+     1	"""The paired exposed verification of the narrow D436 passage (deep council D653, rounds 1 to 3): astra on the frozen ladder request against
+     2	astra on the request with the audited passage (`edit.json`), on the four targets astra declined against D436 (acc/clean-8, acc/clean-9,
+     3	u3/clean-10 from the 44, and pool-17) and eight decline controls, read blind by both families with planted controls. Exposed: three of the
+     4	targets are among the 44 and D436 was decided on them; this verifies that the step carries Alex's ruling, not general performance.
+     5	
+     6	  python3 paired_probe.py check                         # $0: the requests, the one inserted passage, the caps; writes check-passed.json
+     7	  python3 paired_probe.py send <new run folder>         # frozen and edited interleaved: d1, d2 on all 12 topics; d3 on the 4 targets
+     8	  python3 paired_probe.py reading <run folder> <key folder>
+     9	  python3 paired_probe.py score <run folder> <key folder>
+    10	
+    11	The rule, fixed before the send (D653 round 2):
+    12	- exercised: the frozen arm declines at least 6 of its 12 target sends; otherwise INCONCLUSIVE;
+    13	- PASS when every edited target send (12) is a question with no hard-line fault marked by either family, every edited control send (16) is a
+    14	  decline that neither family marks unjustified, and no edited send is lost (refused twice by code); otherwise FAIL;
+    15	- a stopped draw or a missed planted control reads NOT MEASURED.
+    16	"""
+    17	import collections
+    18	import dataclasses
+    19	import hashlib
+    20	import json
+    21	import random
+    22	import sys
+    23	from pathlib import Path
+    24	
+    25	HERE = Path(__file__).resolve().parent
+    26	ROOT = HERE.parents[4]
+    27	sys.path[:0] = [str(HERE.parents[1] / 'reflection-6' / 'opus')]
+    28	import opus_probe as base  # noqa: E402   (the trial harness: run_arm, the planted controls, Stage A, the ladder step, the readers' tools)
+    29	from opus_probe import (accounting, budget, build_reader_packets, collector, ladder_step, model, probe_split, refcontrol,  # noqa: E402
+    30	                        stage_a)
+    31	
+    32	ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+    33	EDIT = json.loads((HERE / 'edit.json').read_text())
+    34	ANCHOR, INSERTED = EDIT['anchor'], EDIT['insert']
+    35	ARMS = ('frozen', 'edited')
+    36	ORDER = [('frozen', 1), ('edited', 1), ('frozen', 2), ('edited', 2), ('frozen', 3), ('edited', 3)]
+    37	TARGETS = ('acc/clean-8', 'acc/clean-9', 'u3/clean-10', 'pool-17')
+    38	CONTROLS = ('week-10-06:c1/clean-4', 'week-10-06:c1/clean-12', 'fortnight:c1/clean-8', 'pool-9', 'pool-19', 'u1/clean-5', 'u1/clean-9', 'u2/clean-10')
+    39	WORKERS = 1
+    40	EXPECTED_SPEND = 1.40            # 28 sends an arm at up to $0.05 a send (astra measured $0.033 to $0.047; D633-D649)
+    41	CAPS = {'frozen': 2.70, 'edited': 2.70}
+    42	RECORD = HERE / 'check-passed.json'
+    43	SELECTION = HERE.parents[1] / 'reflection-7' / 'fresh-selection.json'
+    44	HARD = refcontrol.HARD
+    45	SHUFFLE_SEED = 20261136
+    46	CODE_FILES = [Path(__file__), Path(base.__file__), SELECTION, HERE / 'edit.json', refcontrol.LADDER / 'ladder_step.py', refcontrol.LADDER / 'candidate-system.txt',
+    47	              refcontrol.LADDER / 'candidate-closing.txt', refcontrol.LADDER / 'candidate-schema.json', refcontrol.STAGE_A / 'stage_a.py']
+    48	
+    49	
+    50	FROZEN_TEXTS = stage_a.request_texts          # held here: `send` re-points stage_a.request_texts at an arm's texts during its draws
+    51	
+    52	
+    53	def frozen_texts():
+    54	    return FROZEN_TEXTS()
+    55	
+    56	
+    57	def edited_texts():
+    58	    texts = frozen_texts()
+    59	    if texts['system'].count(ANCHOR) != 1:
+    60	        raise SystemExit('the anchor sentence is not found once in the frozen system text')
+    61	    return dict(texts, system=texts['system'].replace(ANCHOR, ANCHOR + INSERTED))
+    62	
+    63	
+    64	TEXTS = {'frozen': frozen_texts, 'edited': edited_texts}
+    65	
+    66	
+    67	def population():
+    68	    """{name: case} for the 4 targets and 8 controls."""
+    69	    pool = json.loads(SELECTION.read_text())['pool']
+    70	    the_26 = {f'{source}:{name}': case for source, name, case, _ in refcontrol.population()}
+    71	    the_44 = {case['case']: case for case in json.loads((refcontrol.STAGE_A / 'cases.json').read_text())}
+    72	    out = {}
+    73	    for name in TARGETS + CONTROLS:
+    74	        out[name] = pool[int(name.split('-')[1])]['case'] if name.startswith('pool-') else the_26.get(name) or the_44[name]
+    75	    if len(out) != 12:
+    76	        raise SystemExit(f'{len(out)} topics, not 12')
+    77	    return out
+    78	
+    79	
+    80	def topics_of(draw):
+    81	    return TARGETS + CONTROLS if draw in (1, 2) else TARGETS
+    82	
+    83	
+    84	def built(case, arm, rl):
+    85	    texts = TEXTS[arm]()
+    86	    user = ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    87	    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+    88	
+    89	
+    90	def code_digest():
+    91	    return hashlib.sha256(b''.join(path.read_bytes() for path in CODE_FILES)).hexdigest()
+    92	
+    93	
+    94	def check():
+    95	    rl = refcontrol.research_list()
+    96	    failures, shas = [], {arm: {} for arm in ARMS}
+    97	    for name, case in population().items():
+    98	        frozen, edited = built(case, 'frozen', rl), built(case, 'edited', rl)
+    99	        sent_frozen, sent_edited = json.dumps(frozen), json.dumps(edited)      # the transport's serialization
+   100	        anchor = json.dumps(ANCHOR)[1:-1]
+   101	        only_insert = sent_frozen.count(anchor) == 1 and sent_edited == sent_frozen.replace(anchor, anchor + json.dumps(INSERTED)[1:-1])
+   102	        if not only_insert or frozen['model'] != 'gpt-6-astra':
+   103	            failures.append(name)
+   104	        for arm, request in (('frozen', frozen), ('edited', edited)):
+   105	            shas[arm][name] = model.request_identity(request)[1]
+   106	    room = WORKERS * max(budget.worst_cost(built(case, 'edited', rl)) for case in population().values())
+   107	    print(f'12 topics: each edited request is the frozen astra request with only the audited passage inserted: {not failures}')
+   108	    for arm in ARMS:
+   109	        print(f'{arm}: cap ${CAPS[arm]:.2f}; in-flight room ${room:.3f}; expected spend ${EXPECTED_SPEND:.2f}')
+   110	        if CAPS[arm] < room + EXPECTED_SPEND:
+   111	            failures.append(f'{arm} cap below room plus expected spend')
+   112	    if failures:
+   113	        raise SystemExit(f'CHECK FAILED: {failures}')
+   114	    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+   115	    print('check passed')
+   116	
+   117	
+   118	def send(folder, *, transport=None):
+   119	    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+   120	    if record is None or record['code_sha256'] != code_digest():
+   121	        raise SystemExit('no check record for these files: run `check` first')
+   122	    rl = refcontrol.research_list()
+   123	    topics = population()
+   124	    for arm in ARMS:
+   125	        if {name: model.request_identity(built(case, arm, rl))[1] for name, case in topics.items()} != record['requests'][arm]:
+   126	            raise SystemExit('REFUSED: the requests differ from the checked record')
+   127	    folder = Path(folder)
+   128	    guard = probe_split.BreachGuard(transport or (lambda provider, request: model.openai_transport(provider, request, max_attempts=1)))
+   129	    room = WORKERS * max(budget.worst_cost(built(case, 'edited', rl)) for case in topics.values())
+   130	    spent = collections.Counter()
+   131	    original = stage_a.request_texts
+   132	    try:
+   133	        for arm, draw in ORDER:
+   134	            stage_a.request_texts = TEXTS[arm]          # base.run_arm reads the step's texts from Stage A for every call
+   135	            cases = [dict(topics[name], case=f'{arm}-d{draw}|{name}') for name in topics_of(draw)]
+   136	            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', CAPS[arm] - spent[arm], ASTRA, rl, transport=guard,
+   137	                                          workers=WORKERS, first_alone=(arm, draw) == ('edited', 1), room=room)
+   138	            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+   139	            spent[arm] += known + in_full
+   140	            print(f'{arm} d{draw}: {len(written)} of {len(cases)} written; spent ${known + in_full:.4f}', flush=True)
+   141	            if guard.breaches or limit.stopped or len(written) != len(cases):
+   142	                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or guard.breaches}. NOT MEASURED.')
+   143	    finally:
+   144	        stage_a.request_texts = original
+   145	    print(f'spent {dict(spent)}')
+   146	
+   147	
+   148	def reading(run_folder, key_folder):
+   149	    run_folder, key_folder = Path(run_folder), Path(key_folder)
+   150	    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+   151	        raise SystemExit('the key folder must sit outside the repository')
+   152	    rl = refcontrol.research_list()
+   153	    topics = population()
+   154	    rows, cases, expected = [], {}, {}
+   155	    for arm, draw in ORDER:
+   156	        for row in map(json.loads, (run_folder / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+   157	            if row['status'] in ('ladder', 'no ladder'):
+   158	                rows.append(row)
+   159	                cases[row['case']] = dict(topics[row['case'].split('|', 1)[1]], case=row['case'])
+   160	    for row, case, marks in base.controls():
+   161	        rows.append(row)
+   162	        cases[row['case']] = dict(case, case=row['case'])
+   163	        expected[row['case']] = marks
+   164	    folder = run_folder / 'reading'
+   165	    (folder / 'readers').mkdir(parents=True)
+   166	    order = sorted(rows, key=lambda row: row['case'])
+   167	    random.Random(SHUFFLE_SEED).shuffle(order)
+   168	    key, packets = {}, []
+   169	    for number, row in enumerate(order, start=1):
+   170	        key[str(number)] = [row['case'], 1]
+   171	        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+   172	            packets.append([])
+   173	        packets[-1].append({'item': number, **build_reader_packets.item_of(row, cases[row['case']], rl)})
+   174	    (folder / 'send-1').mkdir()
+   175	    (folder / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(row, ensure_ascii=False) + '\n' for row in rows))
+   176	    for number, packet in enumerate(packets, start=1):
+   177	        (folder / 'readers' / f'packet-{number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+   178	    key_folder.mkdir(parents=True, exist_ok=True)
+   179	    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+   180	    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+   181	    print(f'{len(rows)} items in {len(packets)} packets')
+   182	
+   183	
+   184	def score(run_folder, key_folder):
+   185	    folder = Path(run_folder) / 'reading'
+   186	    key, item_of, outcomes, readers, problems = collector.read_rows(folder, Path(key_folder) / 'key.json')
+   187	    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+   188	        raise SystemExit(f'NOT MEASURED: rows missing or not valid: {problems}')
+   189	    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+   190	        for mark, value in marks.items():
+   191	            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+   192	                raise SystemExit(f'NOT MEASURED: a family missed the planted {control} ({mark})')
+   193	    sends = {}
+   194	    for arm, draw in ORDER:
+   195	        for row in map(json.loads, (Path(run_folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()):
+   196	            sends[row['case']] = row
+   197	    def faults(send_name, row):
+   198	        if row['status'] == 'no ladder: refused':
+   199	            return {'agreed': True, 'strict': True, 'marks': ['refused twice']}
+   200	        marks = [readers[reader][(send_name, 1)] for reader in collector.FAMILIES]
+   201	        applying = [mark for mark in accounting.marks_that_apply(accounting.kind_of(outcomes[(send_name, 1)])) if mark in HARD]
+   202	        failing = sorted({mark for mark in applying for m in marks if m.get(mark) == 'fails'})
+   203	        return {'agreed': any(all(m.get(mark) == 'fails' for m in marks) for mark in applying), 'strict': bool(failing), 'marks': failing}
+   204	    table = collections.defaultdict(dict)
+   205	    for send_name, row in sends.items():
+   206	        arm_draw, topic = send_name.split('|', 1)
+   207	        table[topic][arm_draw] = (row['status'], faults(send_name, row))
+   208	    frozen_target_declines = sum(table[t][f'frozen-d{d}'][0] != 'ladder' for t in TARGETS for d in (1, 2, 3))
+   209	    edited_targets_ok = {t: [table[t][f'edited-d{d}'][0] == 'ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2, 3)] for t in TARGETS}
+   210	    edited_controls_ok = {t: [table[t][f'edited-d{d}'][0] == 'no ladder' and not table[t][f'edited-d{d}'][1]['strict'] for d in (1, 2)] for t in CONTROLS}
+   211	    print(json.dumps({'frozen target declines (of 12)': frozen_target_declines, 'edited targets sound': edited_targets_ok,
+   212	                      'edited controls held': edited_controls_ok,
+   213	                      'per topic [status, agreed, strict, marks]': {t: {ad: [st, f['agreed'], f['strict'], f['marks']] for ad, (st, f) in sorted(v.items())}
+   214	                                                                    for t, v in sorted(table.items())}}, indent=1))
+   215	    if frozen_target_declines < 6:
+   216	        verdict = f'INCONCLUSIVE: the frozen arm declines {frozen_target_declines} of 12 target sends, fewer than 6'
+   217	    elif all(all(v) for v in edited_targets_ok.values()) and all(all(v) for v in edited_controls_ok.values()):
+   218	        verdict = 'PASS'
+   219	    else:
+   220	        verdict = 'FAIL'
+   221	    print(f'VERDICT: {verdict}')
+   222	    return verdict
+   223	
+   224	
+   225	if __name__ == '__main__':
+   226	    command = sys.argv[1] if len(sys.argv) > 1 else ''
+   227	    if command == 'check':
+   228	        check()
+   229	    elif command == 'send':
+   230	        send(sys.argv[2])
+   231	    elif command == 'reading':
+   232	        reading(*sys.argv[2:4])
+   233	    elif command == 'score':
+   234	        score(*sys.argv[2:4])
+   235	    else:
+   236	        sys.exit(__doc__)
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba narrow-d436/audit-topics.json | head -100' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba narrow-d436/audit-v3-codex.md | sed -n '1,74p'; nl -ba narrow-d436/audit-v3-claude.md" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8
+ succeeded in 0ms:
+     1	{
+     2	 "targets (D436 class, declined unjustifiably)": {
+     3	  "acc/clean-8": {
+     4	   "description": "Will global high-bandwidth memory (HBM) shipments grow by approximately 50%-60% in calendar 2027, still falling short of demand, as the item projects?",
+     5	   "outcome": "Global HBM shipment growth and whether HBM supply remains short of demand in calendar 2027.",
+     6	   "period": "Calendar 2027; checked against HBM shipment data and memory manufacturers' 2027 reports.",
+     7	   "opens_as": "shared_quantity"
+     8	  },
+     9	  "acc/clean-9": {
+    10	   "description": "Will global semiconductor revenue reach roughly $975 billion in calendar 2026, including about $500 billion from AI chip sales, as Deloitte estimates?",
+    11	   "outcome": "Calendar 2026 global semiconductor industry revenue and the AI-chip portion of it, the aggregate that underpins demand for Nvidia's data center products.",
+    12	   "period": "Calendar 2026; checked against full-year 2026 semiconductor industry revenue data (e.g., SIA/WSTS annual statistics or Gartner/IDC 2026 revenue releases) published in early 2027. The item gives the 2026 period.",
+    13	   "opens_as": "shared_quantity"
+    14	  },
+    15	  "u3/clean-10": {
+    16	   "description": "How much new high-bandwidth memory (HBM) production capacity will SK Hynix, Micron and Samsung bring online in calendar 2027, and will it arrive early enough to ease the current HBM shortage and record prices that gate NVIDIA's GPU output?",
+    17	   "outcome": "The combined new HBM capacity the three producers add in 2027 and whether any of it arrives before late 2027, easing the shortage; measured against the item's forecast that no new HBM supply arrives before late 2027.",
+    18	   "period": "Calendar 2027 — set by the item's forecast that 'None of that supply, though, arrives before late 2027,' which places the supply-easing question in 2027.",
+    19	   "opens_as": "shared_quantity"
+    20	  },
+    21	  "pool-17": {
+    22	   "description": "How many AI accelerators (total units) will be shipped in China in calendar 2026, and how does the GPU versus non-GPU split evolve?",
+    23	   "outcome": "China's total AI accelerator unit shipments for calendar 2026, and the GPU versus non-GPU composition, measured against IDC's forecast of 19% total shipment growth and a 9% decline in GPU shipments for 2026.",
+    24	   "period": "Calendar 2026, settled by IDC's full-year China AI accelerator shipment data released after year-end 2026; the Oct. 13, 2026 item gives H1 2026 shipments of about 2.008 million units and IDC's 2026 growth forecast.",
+    25	   "opens_as": "shared_quantity"
+    26	  }
+    27	 },
+    28	 "decline controls (should stay declined)": {
+    29	  "week-10-06:c1/clean-4": {
+    30	   "description": "How much combined capital expenditure will the five largest hyperscalers — Amazon, Alphabet, Microsoft, Meta Platforms and Oracle — spend in calendar 2026 and calendar 2027?",
+    31	   "outcome": "The big five hyperscalers' combined capex for calendar 2026 and calendar 2027, versus the approximately $800 billion for 2026 and roughly $1.3 trillion for 2027 the article reports they plan to spend.",
+    32	   "period": "Calendar 2026 and calendar 2027 (the two years the Oct. 6, 2026 article gives), settled at the hyperscalers' quarterly earnings releases reporting capex through the fourth quarter of 2027.",
+    33	   "opens_as": "shared_quantity"
+    34	  },
+    35	  "week-10-06:c1/clean-12": {
+    36	   "description": "How much will global AI capital spending total in calendar 2026 and calendar 2027?",
+    37	   "outcome": "Global AI capex for calendar 2026 and calendar 2027, measured against Goldman Sachs' forecast of $1 trillion of global AI spend this year and AI spend equal to 1.8% of U.S. GDP in 2026, 2.5% in 2027 (and 2.8% in 2028).",
+    38	   "period": "Calendar 2026 and calendar 2027 (with 2028 also given), the years Goldman Sachs' forecast in the Oct. 11, 2026 article covers.",
+    39	   "opens_as": "shared_quantity"
+    40	  },
+    41	  "fortnight:c1/clean-8": {
+    42	   "description": "How much venture funding will physical AI (robotics) companies raise globally in calendar 2026?",
+    43	   "outcome": "Total global venture capital raised by physical AI/robotics startups in calendar 2026, versus the $28.7 billion raised in all of 2025 and the $33.4 billion already raised in the first half of 2026, per PitchBook data.",
+    44	   "period": "Calendar year 2026, checked at PitchBook's full-year 2026 venture funding release (expected early 2027); the item gives H1 2026 and full-year 2025 figures only.",
+    45	   "opens_as": "shared_quantity"
+    46	  },
+    47	  "pool-9": {
+    48	   "description": "How much will DRAM, NAND and high-bandwidth memory contract prices rise in calendar 2026, and what will the memory content of NVIDIA's Vera Rubin VR200 rack cost, now that memory is reported to be 25-30% of the rack bill of materials?",
+    49	   "outcome": "The direction and size of 2026 memory contract price increases and the memory cost per NVIDIA Vera Rubin rack (Morgan Stanley currently puts memory content at about $2 million per rack, up 435%), which bears on NVIDIA's per-rack cost/ASP economics and on hyperscaler AI-infrastructure spending.",
+    50	   "period": "Calendar year 2026 — checked against memory contract price releases and NVIDIA/partner disclosures of rack bill-of-materials as Vera Rubin ramps during H2 2026.",
+    51	   "opens_as": "shared_quantity"
+    52	  },
+    53	  "pool-19": {
+    54	   "description": "Will the U.S. Congress enact federal legislation to ban superintelligent AI systems and pause advanced AI development until federal safety rules are established, as introduced by Sen. Bernie Sanders and Rep. Greg Casar?",
+    55	   "outcome": "Enactment or failure of the Sanders–Casar bill (or an equivalent federal measure) that would ban superintelligent systems, pause advanced AI development pending federal safety rules, and create a Cabinet-level Department of Artificial Intelligence.",
+    56	   "period": "Nvidia's fiscal year ending late January 2027 — the current fiscal year-end that fixes the check date for a pending regulatory decision.",
+    57	   "opens_as": "policy_stage"
+    58	  },
+    59	  "u1/clean-5": {
+    60	   "description": "What will contract prices for AI memory (LPDDR5X, HBM, 3D NAND/DRAM) be through calendar 2026-2027 — the input that now makes up roughly 25-30% of Nvidia's Vera Rubin rack cost?",
+    61	   "outcome": "The level and direction of contract memory (DRAM, NAND, HBM) prices in 2026-2027 and the resulting per-rack memory content cost (about $2 million on the VR200).",
+    62	   "period": "Calendar 2026-2027 memory contract cycles; set by the item's forward cost period (second half of 2026 and beyond).",
+    63	   "opens_as": "shared_quantity"
+    64	  },
+    65	  "u1/clean-9": {
+    66	   "description": "What share of Chinese enterprises' AI accelerator budget will be allocated to domestic (Chinese-made) products versus Nvidia over the 12 months following the July 2026 survey, and will it rise toward the 46% executives indicated from 30% today?",
+    67	   "outcome": "The share of surveyed Chinese enterprise AI accelerator budget going to domestic products — and by implication Nvidia's remaining share — over the 12 months after the July 2026 survey.",
+    68	   "period": "The 12 months from the Jul 7 2026 Bloomberg Intelligence survey (roughly H2 2026 – H1 2027); set by the survey's 'next 12 months' horizon, checked against a follow-up survey.",
+    69	   "opens_as": "shared_quantity"
+    70	  },
+    71	  "u2/clean-10": {
+    72	   "description": "How much new high-bandwidth memory (HBM) capacity will the three main producers (SK Hynix, Micron, Samsung) bring online, and will the HBM shortage keep memory prices at record highs through late 2027 — a supply and input-cost constraint on NVIDIA's GPU shipments?",
+    73	   "outcome": "The state of HBM supply and pricing through late 2027: whether any meaningful new HBM capacity comes online before then, and whether record-high HBM/memory prices persist.",
+    74	   "period": "Late 2027 (the item, published 2026-07-10, says no new HBM supply arrives before late 2027, keeping the shortage and record prices into 2027); set by the item's forecast, settled by memory-market research and producers' capacity disclosures for 2027.",
+    75	   "opens_as": "shared_quantity"
+    76	  }
+    77	 },
+    78	 "D631's six boundary cases (Alex's, must stay undecided by the edit)": {
+    79	  "optical-switch shipments (fortnight:c1/clean-13)": {
+    80	   "description": "Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts?",
+    81	   "outcome": "Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.",
+    82	   "period": "Calendar 2027, with the item's stated checkpoints at Q4 2026, early 2027 and mid-2027, checked against Nvidia's quarterly results and supplier disclosures. The item gives no confirmation date, so the forecast periods it states fix the check dates.",
+    83	   "opens_as": "product_node"
+    84	  },
+    85	  "chip sales into China (fortnight:c1/clean-3)": {
+    86	   "description": "Will Nvidia be permitted to sell its current Blackwell-generation AI chips into China — through U.S. export approval and Chinese acceptance of shipments — by the end of fiscal 2027?",
+    87	   "outcome": "Whether U.S. authorities extend export approval beyond the older H200 to Nvidia's current Blackwell-generation chips for approved Chinese customers, and whether Chinese authorities stop restricting Nvidia chip shipments, so that China data-center revenue can resume; the item reports H200 shipments are already U.S.-permitted while Chinese authorities still restrict them.",
+    88	   "period": "NVIDIA fiscal year ending late January 2027 — the current fiscal year-end, used as the check date for a pending regulatory decision per section 3 (item gives no date of its own).",
+    89	   "opens_as": "policy_stage"
+    90	  },
+    91	  "an acquisition (week-10-06:c1/clean-11)": {
+    92	   "description": "Will Nvidia sign and complete an acquisition of Reflection AI — and at what consideration and terms — by the check date?",
+    93	   "outcome": "A definitive agreement to acquire Reflection AI, its closing (or the talks' collapse), and the final consideration paid and any regulatory conditions imposed.",
+    94	   "period": "Check date: April 2028, the outer limit of a date within 18 months of the Oct. 10, 2026 item for an acquisition not yet signed.",
+    95	   "opens_as": "binding_obligation"
+    96	  },
+    97	  "investment commitments (week-10-06:c1/clean-13)": {
+    98	   "description": "How much of Nvidia's $25 billion of equity-investment commitments outstanding at July 26, 2026 will be funded or remain outstanding at its next annual report?",
+    99	   "outcome": "The remaining balance of Nvidia's equity-investment commitments, the cash paid to fund them, and any change in the committed amounts, as disclosed in Nvidia's next annual report.",
+   100	   "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken.",
+
+ succeeded in 0ms:
+     1	**The passage is not sound as written.** It gives a model a reason to select a figure even when the outcome names several things without identifying a main one—the choice D631 and D635 leave unresolved. It also misses one of the four proposed targets and adds 672 characters without the completed token comparison or compensating cut required by §6.
+     2	
+     3	For example, “the outcome tracks a figure” can mean either “the outcome identifies this figure as the main one” or simply “the outcome mentions this figure.” In the second reading, the passage’s instruction to “ask the figure” makes the choice itself.
+     4	
+     5	## 1. Clause-by-clause audit
+     6	
+     7	The inserted text is in [edited-system.txt](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edited-system.txt). Its sources are in [edit.json](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json).
+     8	
+     9	| Passage | Verdict | Reason and collisions |
+    10	|---|---|---|
+    11	| “When the outcome tracks a figure” | **Consistent if “tracks” means the outcome already identifies the main figure; ambiguous otherwise.** | D397 says to judge the part named as the main one. D631 says neither D397 nor D436 supplies a way to choose when the outcome names several. The passage does not say how the model knows that the figure is already the main one. |
+    12	| “the share of that same figure that one kind makes up” | **Consistent with D436’s total-and-component example, but potentially wider in application.** | D436 treats the AI-chip portion beside the chip total as one bet. A part being mathematically included in a total does not, by itself, establish that every such pair is one bet or that the total is the main part. |
+    13	| “whether the supply that figure measures stays short of demand” | **Narrower than, and imprecise against, D436.** | It captures a supply quantity beside shortage, but a shipment *growth rate* measures a change in supply, not supply itself. D436 expressly covers shipment growth beside shortage. |
+    14	| “whether capacity keeps pace with the demand that figure measures” | **Consistent with D436’s orientation.** | D436 names demand as the figure and capacity keeping pace as its other side. |
+    15	| “the two are one bet seen from two sides, not several things with none the main one” | **Contradicts D397/D631 when mainness has not already been established.** | It turns the listed shapes into an exception to the frozen system’s line 6: “naming several with none of them the main one.” The same conflict appears in the schema’s `no_ladder` description. D436 identifies sides of a bet; it does not establish a general shape-based method for choosing the main part. |
+    16	| “ask the figure, and list that second side in not_judged” | **Consistent when the figure is already the main tracked part; otherwise contradicts the unresolved boundary.** | It agrees with D397’s display and the closing check’s “the one the topic’s outcome names,” but can override both when the outcome names multiple things without selecting one. Listing only the second side would also be incomplete if the wording contains further omitted parts: line 5 and the schema require **every** other part. |
+    17	| The three example sentences | **Their orientations are consistent with the three D436 examples, subject to the same mainness problem.** | Each says “named with,” not “identified by the outcome as the main figure.” They can therefore teach selection from the shape alone. The retailer example also equates sales with supply available to meet demand, which is less exact than shipments beside shortage. |
+    18	
+    19	D436’s stated scope is clean Step 1, although it expressly says the second side is shown as not judged under D397. That supports carrying the display into the ladder step; it does not itself settle every choice of main figure in that step. See [D397, D436, D631 and D635](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326).
+    20	
+    21	## 2. Four targets
+    22	
+    23	These are predictions from reading the request, not model results. Actual answers could differ because the trigger is ambiguous.
+    24	
+    25	| Target | Likely question and listing | D436? |
+    26	|---|---|---|
+    27	| **acc/clean-8** | Ask 2027 HBM **shipment growth**; list whether supply remains short of demand. | **Yes**, this is Alex’s shipment/shortage example. But “supply that figure measures” may fail to match a growth rate, so the edit does not reliably express it. |
+    28	| **acc/clean-9** | Ask 2026 **total semiconductor revenue**; list the AI-chip portion. | **Yes**, this is the total-and-portion example. |
+    29	| **u3/clean-10** | The request does **not clearly direct** a question. It might ask **new capacity added** and list early arrival/easing the shortage, but the new text covers *supply short of demand* or *capacity keeping pace with a demand figure*. This topic instead names capacity additions, arrival timing and shortage relief. | D436’s cited capacity example is **demand as the figure**, with capacity keeping pace as the side. It does not expressly decide this different orientation. Treating this target as automatically settled goes beyond the stated decision. |
+    30	| **pool-17** | Ask 2026 **total accelerator shipments**; list the GPU/non-GPU composition and any other omitted comparison. | The total-and-part structure follows D436. The trigger still leaves room for disagreement over whether the outcome already identifies the total as the main part. |
+    31	
+    32	## 3. Eight decline controls
+    33	
+    34	“Still declines” below means the edit supplies no clear reason to reverse the decline; it is not a promise of what a model will do. The input does not include the complete themes and article context for every control, so object and publication-date reasons cannot all be verified here.
+    35	
+    36	| Control | Effect of edit and whether decline is justified |
+    37	|---|---|
+    38	| **week-10-06:c1/clean-4** | Still liable to decline: two annual capex figures, 2026 and 2027, with no selected main year. The added shapes do not apply. |
+    39	| **week-10-06:c1/clean-12** | Still liable to decline: multiple years and measures. The added shapes do not choose one. |
+    40	| **fortnight:c1/clean-8** | **The control is questionable.** It asks one 2026 annual venture-funding total; prior-year and half-year figures are comparisons. Nothing in the supplied topic establishes a line-6 decline. The edit does not change this; a missing matching theme, if confirmed from the full request, could independently justify decline. |
+    41	| **pool-9** | Still liable to decline: several memory price series and a separate per-rack cost. A memory share of rack cost is mentioned, but the outcome does not clearly track a total rack-cost figure and its component as the added clause requires. |
+    42	| **pool-19** | **The control is questionable.** Enactment of the bill or equivalent measure can be one event; its provisions can describe that event. D403 permits the stated period/current fiscal-year end for a pending regulatory decision. No decline follows solely from the bill having several provisions. |
+    43	| **u1/clean-5** | Still liable to decline: multiple price series, two years and resulting rack cost. The share wording does not clearly make the tracked price series a total whose component is named. |
+    44	| **u1/clean-9** | **Decline remains justified under D417** if the item, as the supplied period says, gives no follow-up survey publication day. A share and its complement do not remove the rolling-period date rule. |
+    45	| **u2/clean-10** | Still liable to decline on no established main part: capacity coming online and persistent record prices are distinct things. It does not clearly fit demand as the figure with capacity keeping pace. |
+    46	
+    47	## 4. D631’s six boundary cases
+    48	
+    49	On the supplied wording, **none is clearly decided by the new passage**. That is a finding about these six inputs, not proof that the general wording cannot decide another unresolved case.
+    50	
+    51	| Boundary case | Effect |
+    52	|---|---|
+    53	| Optical-switch shipments | Several checkpoints and a full-year volume; neither a part/share, shortage nor capacity-versus-demand pair. No new selection. |
+    54	| Chip sales into China | Two authorities’ decisions and resulting revenue; not one of the three shapes. No new selection. |
+    55	| Acquisition | Agreement, closing, consideration and conditions; not one of the three shapes. No new selection. |
+    56	| Investment commitments | Remaining balance, cash funded and changes in commitments. The edit does not expressly say that a stock balance and a cash flow are a total and its share. A model could stretch the example to choose a balance, but the wording does not clearly require it. |
+    57	| Memory prices | Contract prices, producers’ selling prices and margins are different measures, not a total and its share. No new selection. |
+    58	| Chip export licence | Licence status and resumed revenue are distinct events/measures. No new selection. |
+    59	
+    60	The general risk remains: “tracks a figure” plus “ask the figure” can select a figure in an unresolved total-and-component outcome, even though none of these six unambiguously triggers it.
+    61	
+    62	## 5. Examples
+    63	
+    64	The passage contains **three written examples**, not four: bank lending, retailer sales and utility demand. It also names three abstract shapes.
+    65	
+    66	- **Mirroring the 44 test topics:** Yes, structurally. The bank example mirrors **acc/clean-9**’s total plus component; the retailer example mirrors **acc/clean-8**’s shipment/supply plus shortage; and the utility example mirrors **acc/clean-10**’s demand plus capacity keeping pace. The examples do not copy those topics’ named companies, products or numbers. Nevertheless, §6 says no example is taken from a test article and requires examples that teach a general rule; substituting industries does not erase the close structural mirroring. [Test topics](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/cases.json)
+    67	- **Across industries:** The relationships can be understood in banking, drugs, retail and chips, but the wording itself names three specific industries rather than presenting portable examples in each. The retailer example’s sales-versus-empty-shelves relationship is also less precise: sales can be constrained by availability, while shortage depends on demand as well.
+    68	- **Orientation:** The examples consistently choose **total lending**, **sales**, and **demand**, respectively. The third agrees with D436: demand is the figure and capacity keeping pace is the side. This does not make capacity the main figure in the different u3/clean-10 target.
+    69	
+    70	## 6. Growth
+    71	
+    72	**No.** The recorded reason identifies a potentially missing instruction and says two audits found no obvious sentence to cut. That is a useful explanation, but it does not complete §6’s requirement to remove at least as much elsewhere when adding an instruction, or to report prompt tokens before and after. The token comparison is deferred to a paid send, so it has not yet been reported. The passage grows from **9,545 to 10,217 characters**, an increase of **672**. [AGENTS.md §6](/Users/lchingen/hivemind/AGENTS.md:194)
+    73	
+    74	NOT SOUND: Require the outcome to identify the figure as the main tracked part before applying the D436 examples; express shipment growth accurately, avoid test-topic mirrors, and make the required compensating cut and token comparison.     1	(The Claude-family blind auditor's report on version 3, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Verdict line: NOT SOUND: replace "a retailer's holiday sales" with a full-year figure, so no example asks a figure for part of a year that line 6 declines; also correct edit.json's "Alex's words" attribution.
+     3	Otherwise: clauses a, b, c consistent with D436 (a keeps somewhat wider: a loose reading could invert a share-tracked outcome such as u3/clean-11; "also" guards it); the carve-out from line 6 is explicit; no_ladder's description does not repeat it (a tension, not a contradiction). Targets: acc/clean-8, acc/clean-9, pool-17 as D436 rules; u3/clean-10 by extension of clause b (capacity as the supply figure), the most interpretive. Controls: the passage fires on none of the eight on a careful reading; u2/clean-10 fragile (watch it). Boundary cases: none decided; investment commitments the only share-like wording, does not fire on a careful reading (keep as a control). Examples: none from the 44 (searched); structurally mirror acc/clean-9, -8, -10 one for one (inherent in carrying D436's shapes), so acc/clean-8 and -9 are fitted cases and only pool-17 and u3/clean-10 test generalisation. Attribution: D436's parenthetical is the recorder's Decided line; Alex's own words are "算一个题，第三处不改" in reply to an option with the HBM example only. Growth: the reason suffices for the content; the cut search and a $0 token count should be recorded; the passage repeats itself and could be trimmed.
+
+codex
+**DISAGREE: do not send v4 yet.** It makes an untested general choice about which question matters, and the test as implemented can pass without checking all the harms we agreed to check.
+
+For example, an outcome can track both a bank’s total lending and its commercial-lending share. The passage says to ask the total whenever that shape appears. That may be right for a topic about the total; it may discard the central question when the topic is about the share. The word “tracks” does not resolve that distinction. [v4 passage](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:4)
+
+1. **Is v4 fit for the paired test? No.** D436 supports the named examples and keeping a second side of the same bet as context. V4 goes further: it declares every matching total-and-share or supply-and-shortage shape to be one bet and selects the figure. The v3 Codex auditor identified that exact risk; v4 changes the growth-rate wording but does not resolve it. [D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4847), [v3 Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md:9)
+
+   I also would **not** require an explicit “main figure” label in every outcome: that could reproduce the refusal we are trying to address. The unresolved issue is how to express the *same bet* relationship without making the shape alone decide importance. Test that distinction at $0 with source-backed counterexamples, including a share-centred topic, before sending.
+
+   The proposed `u3/clean-10` target needs separate treatment: it asks about **capacity additions and their timing**, whereas D436’s recorded third example is **demand with capacity keeping pace**. Do not count that target as a directly settled orientation without a source-backed determination. [Target](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json:15), [v3 audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md:21)
+
+2. **The cheaper reversible course is the $0 audit, not this send.** The paid test can measure behaviour on its cases; it cannot decide whether a broad rule is supported or safe on cases absent from the test. V4 is also a new version: the auditors’ verdicts were on v3, not this exact passage. Record both positions and have independent readers check v4’s changed wording, the share-centred counterexample, and the capacity target before deciding on a send.
+
+   The size report is now complete: **+741 characters and +151 tokens**, with a written reason. The request still needs the required cut/merge search considered against that reason; the reported growth alone is not evidence that the passage works. [Edit record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:19)
+
+3. **The paired rule and implementation need correction before any send.**
+
+   - **Require the source review to affect the verdict.** The code passes targets on the four hard-line marks alone. A question can clear those marks yet use an invented measure or an unsuitable deadline. Our agreed plan required every replacement to be reviewed against its source and material harm to stop progress; the current `score()` does not incorporate that review. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:197)
+   - **Do not count a lost unchanged answer as an exercised refusal.** The code counts every status other than `ladder` toward the six, including an answer refused twice by code. Exercise should require an actual model decline of a source-confirmed target. Also report exercise by topic: six declines on only two topics do not demonstrate the other two failure shapes. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:208)
+   - **Verify the eight controls against their full inputs and theme list.** The v3 audit could not establish every control from the supplied topic alone. A correct question should not be penalized merely because a control was presumed to require a refusal. [v3 audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md:32)
+   - **Correct the budget before launch.** The code sets **$2.70 per arm**, or **$5.40 total**, and estimates **$1.40 per arm**, or **$2.80 total**. Those differ from the proposed $3.20 combined cap and ~$2.10 estimate. With $1.49 and $0.17 already spent, the code’s full caps would exceed the approximately $6 discussed. [Caps](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:39)
+
+Keep the strict zero-fault target rule. Fix the candidate’s boundary and the test’s verdict and budget first; then the council can decide whether the exposed comparison is informative enough to send. **DISAGREE.**
+tokens used
+545,688
+**DISAGREE: do not send v4 yet.** It makes an untested general choice about which question matters, and the test as implemented can pass without checking all the harms we agreed to check.
+
+For example, an outcome can track both a bank’s total lending and its commercial-lending share. The passage says to ask the total whenever that shape appears. That may be right for a topic about the total; it may discard the central question when the topic is about the share. The word “tracks” does not resolve that distinction. [v4 passage](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:4)
+
+1. **Is v4 fit for the paired test? No.** D436 supports the named examples and keeping a second side of the same bet as context. V4 goes further: it declares every matching total-and-share or supply-and-shortage shape to be one bet and selects the figure. The v3 Codex auditor identified that exact risk; v4 changes the growth-rate wording but does not resolve it. [D436](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4847), [v3 Codex audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md:9)
+
+   I also would **not** require an explicit “main figure” label in every outcome: that could reproduce the refusal we are trying to address. The unresolved issue is how to express the *same bet* relationship without making the shape alone decide importance. Test that distinction at $0 with source-backed counterexamples, including a share-centred topic, before sending.
+
+   The proposed `u3/clean-10` target needs separate treatment: it asks about **capacity additions and their timing**, whereas D436’s recorded third example is **demand with capacity keeping pace**. Do not count that target as a directly settled orientation without a source-backed determination. [Target](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-topics.json:15), [v3 audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md:21)
+
+2. **The cheaper reversible course is the $0 audit, not this send.** The paid test can measure behaviour on its cases; it cannot decide whether a broad rule is supported or safe on cases absent from the test. V4 is also a new version: the auditors’ verdicts were on v3, not this exact passage. Record both positions and have independent readers check v4’s changed wording, the share-centred counterexample, and the capacity target before deciding on a send.
+
+   The size report is now complete: **+741 characters and +151 tokens**, with a written reason. The request still needs the required cut/merge search considered against that reason; the reported growth alone is not evidence that the passage works. [Edit record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:19)
+
+3. **The paired rule and implementation need correction before any send.**
+
+   - **Require the source review to affect the verdict.** The code passes targets on the four hard-line marks alone. A question can clear those marks yet use an invented measure or an unsuitable deadline. Our agreed plan required every replacement to be reviewed against its source and material harm to stop progress; the current `score()` does not incorporate that review. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:197)
+   - **Do not count a lost unchanged answer as an exercised refusal.** The code counts every status other than `ladder` toward the six, including an answer refused twice by code. Exercise should require an actual model decline of a source-confirmed target. Also report exercise by topic: six declines on only two topics do not demonstrate the other two failure shapes. [Scoring code](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:208)
+   - **Verify the eight controls against their full inputs and theme list.** The v3 audit could not establish every control from the supplied topic alone. A correct question should not be penalized merely because a control was presumed to require a refusal. [v3 audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/audit-v3-codex.md:32)
+   - **Correct the budget before launch.** The code sets **$2.70 per arm**, or **$5.40 total**, and estimates **$1.40 per arm**, or **$2.80 total**. Those differ from the proposed $3.20 combined cap and ~$2.10 estimate. With $1.49 and $0.17 already spent, the code’s full caps would exceed the approximately $6 discussed. [Caps](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:39)
+
+Keep the strict zero-fault target rule. Fix the candidate’s boundary and the test’s verdict and budget first; then the council can decide whether the exposed comparison is informative enough to send. **DISAGREE.**

@@ -1,0 +1,637 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f606-eda2-75b3-bce7-0b9ff6bb7c71
+--------
+user
+# Council B on the result (read-only, $0). Read `RESULT.md`.
+
+**The data:**
+- `poc/data/merge-test-2026-11-19/`: `census.json`, `judge-hybrid/<draw>/`, `judge-control/<draw>/`, `deck/` (cards C001–C020, rounds) and
+  `marks.json`.
+- The key is outside the repository; `RESULT.md` gives its mapping.
+
+**Challenge:**
+1. Is the pass real?
+   - Did c8's filing reach the judge, or did old's pre-09-06 history carry the answers?
+   - In the hybrid's final capex requests, count how many shown items are c8's (ids ≥ e900001) against history.
+2. Is the V exception's tracing sound? Can it be called noise, given that the control's 09-16 request gave 2, 1, 2 on re-sends?
+3. What would a reader of RESULT.md wrongly conclude?
+4. The one next step, if any, under "don't do full blown runs".
+
+Under 300 words. End `CONSENSUS: <verdict in one line>` or `DISAGREE: <point>`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check what the final judge requests contained and whether the control exception changes what this test can claim.
+exec
+/opt/homebrew/bin/zsh -lc 'pwd && ls -l RESULT.md && cat RESULT.md' in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+-rw-r--r--@ 1 lchingen  staff  6358 Nov 19 16:57 RESULT.md
+# Merge test result (D679), 2026-11-19
+
+**Verdict.** The merge's new wiring works on the tested questions: clean Step 1 (c8, unchanged) reading articles against the old system's
+open questions, with the frozen judge answering on c8's filing.
+- **The lines:**
+  - P1 (delivery), P2 (no meaning drift), P3 (talks stay talks) and P5 (both readers support) hold on all 4 primary questions, in both
+    old draws.
+  - P4 (diagnostic): 0 standalone NVIDIA-figure questions proposed.
+  - V (validity) holds with one traced exception, below.
+- **What it does not show:** the merge does not answer better than the old system here. The old answers to these questions were
+  already supported, and the hybrid matches them.
+- **Spend:** $2.13 of the $5 ledger.
+  - 140 c8 sends: about $1.75.
+  - Judging two arms × 2 draws, 98 calls: about $0.34.
+  - 15 noise re-sends: about $0.04.
+
+## Answers at 09-20
+| Draw / question | Old (archived) | Control (old evidence, rebuilt) | **Hybrid (c8 filing)** |
+|---|---|---|---|
+| old-2 v5: four hyperscalers' 2026 data-center capex | rung 4 ($700–800B), supported | rung 4, supported | **rung 4, supported** |
+| old-2 v40: NVIDIA $10B Anthropic IPO anchor by 09-20 | No, supported | No, supported | **No, supported** |
+| old-3 v6: same as v5 | rung 4, supported | rung 4, supported | **rung 4, supported** |
+| old-3 v47: anchor agreed by 09-20 | No, supported | **Yes, unsupported** (both readers) | **No, supported** |
+| old-3 v48: anchor agreed by 2027-03-14 (negative control) | rung 1, unsupported; worth split | rung 1, unsupported; worth split | rung 1; answer split (Codex unsupported, Claude supported) |
+
+- **Readers:** Codex and Claude, blind under shuffled labels, with the comparison's card form and brief.
+- **Their controls:** the 3 plants were marked unsupported and the 2 supported controls supported, by both readers. A repeated card
+  (diagnostic C016 is the old v6 card) was marked the same.
+- **All primary marks settled in round 0.** Two debate marks, both on v48's worth, stayed void: Codex's reasons went over the
+  instrument's 40-word limit, which was left unchanged.
+
+## The lines, read by Claude in the traces
+| Line | Result | Evidence |
+|---|---|---|
+| P1 Delivery | 4/4 | The final requests of hybrid v5 and v6 carry c8's 09-14 Zacks item: "the four top hyperscalers … roughly $720 billion to $745 billion … 2026". Hybrid v40 and v47 carry c8's Reuters items: considering, or in advanced talks, on the $10B anchor (c8 tiered them `rumour`) |
+| P2 No meaning drift | 2/2 capex | Both hybrid capex reasons: "the nearly $800 billion … figures cover five companies, including Oracle, so they cannot be assigned in full to the four-company total". Old's capex answers did not label total capex as a proxy for data-center capex, and neither do the hybrid's: disclosed, the same as old |
+| P3 Talks stay talks | 2/2 | v40: "reports of talks, not a signed or completed investment". v47: "consideration, negotiations, or discussions—not a signed agreement … NVIDIA's separate existing investment agreement … does not establish an IPO anchor commitment" (c8 had filed that older filing item, and the judge did not take it) |
+| P4 Opening rule (diagnostic) | 0 of 7 proposals | c8 proposed 7 theses on the 140 sends: DRAM ×3, H100 rental rate, AI-lab revenue run rate, Anthropic anchor ×2. None is a standalone NVIDIA financial figure. None was opened |
+| P5 Supported answer | 4/4 | Both readers, round 0 |
+| V Validity | 3/4 control cards supported; controls pass | The control's v47 flipped to "Yes" on 09-16 and stayed there (below) |
+
+## The V exception, traced ($0.04 of re-sends)
+- **The final requests are stable.** Each arm's final v47 request, re-sent 3 times unchanged, gives its own answer 3/3: old No, control
+  Yes, hybrid No.
+- **The fork is 09-16.**
+  - The control's 09-16 request, re-sent 3 times, gives rungs 2, 1, 2.
+  - Old's 09-16 request gives 2, 2, 2.
+  - The two requests differ only in the theme block (other questions held at 09-06 in the copy) and in the wording of the previous
+    conclusion. Their evidence is identical.
+- **So the control's "Yes" is a judge coin flip** on a knife-edge question, with roughly a 1 in 3 chance on that request. The previous
+  conclusion then locked it in. It does not show a bias in the reconstruction.
+- **It does show that v47 is sampler-sensitive:** one draw of the hybrid's "No" is not proof that the hybrid is more stable there.
+
+## Evidence cleanliness (descriptive, one draw: old-2 v5's window material, read by Claude)
+| Window material, 09-07..09-20 | Old (23 items) | Hybrid (26 items) |
+|---|---|---|
+| Direct: the four companies, or one of them, on 2026 capex | 2 | 3–4 |
+| Adjacent and useful: leases, cloud backlog | 0 | 4 |
+| Five-company totals (context, other scope) | 8 | 8 |
+| Unclear period | 1 | 1 |
+| Off-question | 12 (4 on AI-lab safety) | 9 (Western Digital results, AI-lab revenue, PwC to 2050) |
+
+c8 also links loosely: the merge cleans this pile only slightly. Step 2–3 grouping was not run.
+
+## What this decides, and what it does not
+- **Decided:** wiring c8 under the old questions delivers the matters' decisive statements to the judge, without the scope drift the
+  council feared. The answers stay as good as the old system's on M04 and M17.
+- **Not decided:**
+  - whether the merge serves *more* matters: the new-only matters need the clean opener;
+  - Steps 2–3 grouping;
+  - the other 30 matters;
+  - cost.
+- **Cost, priced from tokens.** The merge pays the old pipeline plus c8 reading: about $0.0125 per article at $1.75 / 140. Over the
+  82-day window's 1,884 articles that is about $24 on top of old's about $9.
+- **The sampler-sensitive v47 question needs more than one draw** before stability is claimed.
+
+## Errors of mine in this test (logged)
+- **I read the census article numbers as positions in `kept-articles.json`.** They are numbers in `census/numbering.json`. Codex caught it
+  in round c. My first claim, that old filed none of the census articles, was wrong: 8 of 11 reached the old questions.
+- **The first article list included custom-chip and DRAM theses** as "capex" (the same misreading in PATH-TO-PASS's census C, to be
+  re-checked).
+- **The first judging copy failed.** The store's append-only triggers refused the cut; Codex found it in round d before any send.
+
+exec
+/opt/homebrew/bin/zsh -lc 'p=../../../poc/data/merge-test-2026-11-19
+ls -la "$p" && find "$p"/judge-{hybrid,control} "$p"/deck -maxdepth 2 -type f | sed -n '"'1,145p'
+python3 -B -c '
+import json
+from pathlib import Path
+p=Path(\"../../../poc/data/merge-test-2026-11-19\")
+for f in (\"marks.json\",\"census.json\"):
+ x=json.loads((p/f).read_text());print(f,list(x),str(x)[:1400])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+total 4056
+drwxr-xr-x@  19 lchingen  staff      608 Nov 19 16:56 .
+drwxr-xr-x@ 228 lchingen  staff     7296 Nov 19 16:21 ..
+drwxr-xr-x@   4 lchingen  staff      128 Nov 19 16:30 c8
+-rw-r--r--@   1 lchingen  staff    78792 Nov 19 16:38 census.json
+drwxr-xr-x@  27 lchingen  staff      864 Nov 19 16:55 deck
+drwxr-xr-x@   4 lchingen  staff      128 Nov 19 16:36 judge-control
+-rw-r--r--@   1 lchingen  staff     3331 Nov 19 16:48 judge-control.log
+drwxr-xr-x@   4 lchingen  staff      128 Nov 19 16:38 judge-hybrid
+-rw-r--r--@   1 lchingen  staff     1525 Nov 19 16:50 judge-hybrid-old-2.log
+-rw-r--r--@   1 lchingen  staff     1981 Nov 19 16:49 judge-hybrid-old-3.log
+-rw-r--r--@   1 lchingen  staff        0 Nov 19 16:38 judge-hybrid.log
+drwxr-xr-x@   4 lchingen  staff      128 Nov 19 16:23 judge-replaycheck
+drwxr-xr-x@   5 lchingen  staff      160 Nov 19 16:54 ledger
+-rw-r--r--@   1 lchingen  staff  1946788 Nov 19 16:21 lists.json
+-rw-r--r--@   1 lchingen  staff     5840 Nov 19 16:56 marks.json
+-rw-r--r--@   1 lchingen  staff      219 Nov 19 16:53 read-2.log
+-rw-r--r--@   1 lchingen  staff      118 Nov 19 16:52 read.log
+-rw-r--r--@   1 lchingen  staff     9415 Nov 19 16:37 send.log
+-rw-r--r--@   1 lchingen  staff        6 Nov 19 16:24 send.pid
+../../../poc/data/merge-test-2026-11-19/judge-hybrid/old-3/log.json
+../../../poc/data/merge-test-2026-11-19/judge-hybrid/old-3/archive.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-hybrid/old-3/views.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-hybrid/old-2/log.json
+../../../poc/data/merge-test-2026-11-19/judge-hybrid/old-2/archive.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-hybrid/old-2/views.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-control/old-3/log.json
+../../../poc/data/merge-test-2026-11-19/judge-control/old-3/archive.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-control/old-3/views.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-control/old-2/log.json
+../../../poc/data/merge-test-2026-11-19/judge-control/old-2/archive.sqlite
+../../../poc/data/merge-test-2026-11-19/judge-control/old-2/views.sqlite
+../../../poc/data/merge-test-2026-11-19/deck/round-1/C001-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-1/C014-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-1/C001-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-1/C016-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-1/C014-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-1/C016-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/C019.txt
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C012-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C018-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C020-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C004-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C015-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C009-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C007-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C010-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C002-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C017-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C001-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C006-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C008-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C014-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C001-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C017-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C020-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C004-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C012-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C018-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C003-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C011-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C011-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C016-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C003-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C006-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C019-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C005-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C014-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C008-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C013-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C010-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C013-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C002-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C019-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C005-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C007-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C015-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C016-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-0/C009-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/C018.txt
+../../../poc/data/merge-test-2026-11-19/deck/C008.txt
+../../../poc/data/merge-test-2026-11-19/deck/C020.txt
+../../../poc/data/merge-test-2026-11-19/deck/C009.txt
+../../../poc/data/merge-test-2026-11-19/deck/C007.txt
+../../../poc/data/merge-test-2026-11-19/deck/C013.txt
+../../../poc/data/merge-test-2026-11-19/deck/C012.txt
+../../../poc/data/merge-test-2026-11-19/deck/C006.txt
+../../../poc/data/merge-test-2026-11-19/deck/round-1.done
+../../../poc/data/merge-test-2026-11-19/deck/C010.txt
+../../../poc/data/merge-test-2026-11-19/deck/C004.txt
+../../../poc/data/merge-test-2026-11-19/deck/C005.txt
+../../../poc/data/merge-test-2026-11-19/deck/C011.txt
+../../../poc/data/merge-test-2026-11-19/deck/C015.txt
+../../../poc/data/merge-test-2026-11-19/deck/C001.txt
+../../../poc/data/merge-test-2026-11-19/deck/C014.txt
+../../../poc/data/merge-test-2026-11-19/deck/round-0.done
+../../../poc/data/merge-test-2026-11-19/deck/C002.txt
+../../../poc/data/merge-test-2026-11-19/deck/C016.txt
+../../../poc/data/merge-test-2026-11-19/deck/C017.txt
+../../../poc/data/merge-test-2026-11-19/deck/C003.txt
+../../../poc/data/merge-test-2026-11-19/deck/round-2/C001-codex.json
+../../../poc/data/merge-test-2026-11-19/deck/round-2/C014-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-2/C001-claude.json
+../../../poc/data/merge-test-2026-11-19/deck/round-2/C016-claude.json
+marks.json ['C001', 'C002', 'C003', 'C004', 'C005', 'C006', 'C007', 'C008', 'C009', 'C010', 'C011', 'C012', 'C013', 'C014', 'C015', 'C016', 'C017', 'C018', 'C019', 'C020'] {'C001': {'draw': 'old-3', 'view': 'v48', 'matter': 'M17', 'arm': 'hybrid', 'role': 'product', 'answered': True, 'answer': 'NVIDIA agrees to invest US$10 billion in Anthropic’s IPO by March 14, 2027.', 'material': 6, 'marks': {'worth': {'split': ['worth', 'duplicate']}, 'answer': {'split': ['unsupported', 'supported']}}}, 'C002': {'draw': 'old-2', 'view': 'v40', 'matter': 'M17', 'arm': 'old', 'role': 'product', 'answered': True, 'answer': "NVIDIA does not complete an investment of $10 billion to anchor Anthropic's IPO by 2026-09-20.", 'material': 9, 'marks': {'worth': 'worth', 'answer': 'supported'}}, 'C003': {'draw': 'old-2', 'view': 'Q29', 'matter': None, 'arm': 'diagnostic C140', 'role': 'plant', 'answered': True, 'marks': {'worth': 'worth', 'answer': 'unsupported'}}, 'C004': {'draw': 'old-2', 'view': 'v40', 'matter': 'M17', 'arm': 'control', 'role': 'product', 'answered': True, 'answer': "NVIDIA does not complete an investment of $10 billion to anchor Anthropic's IPO by 2026-09-20.", 'material': 9, 'marks': {'worth': 'worth', 'answer': 'supported'}}, 'C005': {'draw': 'old-2', 'view': 'Q23', 'matter': None, 'arm': 'diagnostic C038', 'role': 'supported control', 'answered': True, 'marks': {'worth': 'worth', 'answer': 'supported'}}, 'C006': {'draw': 'old-3', 'view': 'v6', 'matter': 'M04', 'arm': 'hybrid', 'role': 'product', 'answered': True, 'answer': 'Combined spending is at 
+census.json ['old-2', 'old-3'] {'old-2': {'articles read': 70, 'not complete': [], 'records': 302, 'filed under target': {'v5': 44, 'v40': 12}, 'filed': {'v5': [{'seq': 1476, 'day': '2026-09-07', 'summary': 'According to The Kobeissi Letter, the United States had approximately 90 operating data centers requiring more than 100 megawatts of power, a record, and that total could more than triple to 280 by 2030 if all planned projects are completed.', 'verified': ['The United States has approximately 90 operating data centers requiring more than 100 megawatts of power, a record, according to The Kobeissi Letter. If all planned projects are completed, that total could more than triple to 280 by 2030.']}, {'seq': 1476, 'day': '2026-09-07', 'summary': 'The article states that technology companies are expected to invest about $7 trillion in data centers through 2030, a cumulative industry forecast with no named forecaster.', 'verified': ['Technology companies are expected to invest about $7 trillion in data centers through 2030.']}, {'seq': 1476, 'day': '2026-09-07', 'summary': 'Amazon, Microsoft, Alphabet and Meta Platforms have signed more than $1.5 trillion of data-center leases since the AI boom began, including commitments not yet effective, according to the article.', 'verified': ['Amazon, Microsoft ( NASDAQ:MSFT ), Alphabet and Meta Platforms have signed more than $1.5 trillion of data-center leases since the
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'P1|P2|P3|P5|Validity|Pass|exception' EXECUTION-PLAN.md MERGE-PLAN.md ../../DECISIONS.md | tail -25
+ls -lt | head -35
+rg -n 'noise|09-16|2, 1, 2|v47' -g '*.py' -g '*.md' -g '*.json' -g '*.log' . | tail -40" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+MERGE-PLAN.md:18:  exception.
+MERGE-PLAN.md:19:- **Ceilings** on the stored results: 6 of 32 under D382/D505; 10 with the exception.
+MERGE-PLAN.md:31:- **Pass lines, written now:**
+EXECUTION-PLAN.md:78:| # | Line | Pass when |
+EXECUTION-PLAN.md:80:| P1 | Delivery, checked in the judge requests themselves | In both draws, a request of each primary question shows c8 evidence carrying the matter's decisive statement. For capex, that is the four companies' 2026 capex figures or an aggregate of them, such as article 181's $720–745B. For Anthropic, it is the reported $10B anchor-investment talks |
+EXECUTION-PLAN.md:81:| P2 | No meaning drift | No five-company or 2027 figure is presented as the answer to the four-company 2026 question. A total-capex figure used for "data-center" capex is named as a proxy. This is a higher bar than old met: old's capex answers did not label the proxy, and that is disclosed |
+EXECUTION-PLAN.md:82:| P3 | Talks stay talks | No Anthropic answer treats reported talks as a signed or completed investment |
+EXECUTION-PLAN.md:84:| P5 | Supported answer | Both readers mark the four primary hybrid answers supported: old-2 v5, old-2 v40, old-3 v6, old-3 v47. old-3 v48, which the deck read as duplicate and unsupported, is a negative control |
+EXECUTION-PLAN.md:85:| V | Validity, before P5 is read | The readers pass the deck controls and mark the control arm's reconstructed old-evidence answers supported. Otherwise the reconstruction, not the merge, is in question |
+EXECUTION-PLAN.md:87:- **Pass** means V holds, and P1, P2, P3 and P5 hold in both draws.
+../../DECISIONS.md:5:conditions, thresholds and exceptions where an entry is shorter. An entry may be shorter than its decisions; it never says otherwise. An entry marked *(Claude)* rests on a detail Claude settled
+../../DECISIONS.md:41:  the narrowest open question, plus the same answer's own candidates (D207, D259, D264, D265); the former coverage-start exception is retired (D370).
+../../DECISIONS.md:189:  exception to "equal values never establish identity", switched on only after its merge risk on the gold and the accuracy of the
+../../DECISIONS.md:732:| D388 | 2026-11-09 | A material unsigned obligation gets its own signing question beside an open total of its kind (confirms D248 boundary 1's exception) | in force | clean-arch PRD §12 |
+../../DECISIONS.md:744:| D400 | 2026-11-10 | Stage A of the clean ladder step is read against Alex's absolute lines with no paid control arm (an exception to AGENTS §7.3 for this first measurement); the lines are fixed; every report says it does not compare with production | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+../../DECISIONS.md:770:| D426 | 2026-11-10 | The ladder step is not tuned further on the 44 theses and no fifth Stage A is sent; Stage A has not passed (lines 1, 3, 4 missed by 1 to 3 answers of 131); by his word the preparation of Stage B opens on that step, its $0 baseline reading of the 159 stored judgements first; no paid Stage B send without his word again | in force (an exception to D401's stop at a missed line) | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+../../DECISIONS.md:816:| D472 | 2026-11-13 | Period probe budget exception: the nine never-sent jobs sent alone under a $0.50 ceiling before any answer is read; the timed-out send stays missing (council consensus, D439) | in force | `clean-arch/step1-unfiled-2026-11-08/council/mu-codex-14.md` |
+../../DECISIONS.md:937:| D593 | 2026-11-16 | The live-store operating contract v9 (WAL, one transaction and connection per request, one bound resolver, first day refused, search over the visible corpus and a published index day, checkpoint and disk limits, crash bounds, an inode-named writer lock, §9 kept with P1 proposed) agreed for its $0 proof build on test stores; live operation not authorized | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+../../DECISIONS.md:941:| D597 | 2026-11-16 | Slice 4a built and proven at $0 on isolated test stores: the writer's store in WAL mode (set before its schema) with a 64 MB size limit on its connection; a stop before a day on low space or three failed checkpoints, recorded with its reason and last completed day and never resent; a partial-day exception inside the writer's process (not a killed process; that proof is 4b's) leaving answers equal to a backup at the last completed day; an orderly end; 327 + 172 tests, 7 of 7 mutants; no writer lock yet | in force | `clean-arch/step4-2026-11-10/stage_b/test_writer_store.py` |
+../../DECISIONS.md:942:| D598 | 2026-11-16 | Slice 4b built and proven at $0: an operating-system lock per store (device and inode) taken by the writer before its first write and by preflight before its one locked copy; path checks before each day; the connection closed (after leaving WAL mode when no reader holds it) before the lock is released on every exit; a killed writer's lock released by the system; `scripts/snapshot_store.py` never replaces; filesystem-full proof run separately (A crash keeps nine days; B stops first); 339 + 186 tests, 17 of 17 mutants; P1 still only proposed | in force | `src/hivemind/live_lock.py`; `live-service/OPERATING-CONTRACT.md` |
+../../DECISIONS.md:950:| D606 | 2026-11-16 | Under D439 (council round 148), reversibly: next product test from a real earlier library (empty starts as diagnostics); Alex's six lines and accounting stay in force; postponement provisionally reads Still open (reversed by D607); D520/D571 running behaviour retained; P1 not taken; next a $0 audit of the postponed-event class (by topic and matter, full rungs, guards) | in force | `reflection-4/council-codex-148.md` |
+../../DECISIONS.md:1022:| D678 | 2026-11-19 | Merge design (council consensus): old opens questions, clean Steps 1–3 read and organise evidence, the frozen judge answers; figures by D382/D505 unless Alex's exception; a 12-article test ($0.33–0.42, 5 lines) awaits Alex's approval | in force | `docs/research/2026-11-19-merge-council/MERGE-PLAN.md` |
+../../DECISIONS.md:1023:| D679 | 2026-11-19 | Alex lifts D677's paid-send stop for the merge test only; 70 articles × old-2/old-3, c8 filing under the old questions, hybrid and control judging arms on a 09-06 cutoff copy; $5 ledger; lines P1–P3, P5 and V | in force | `docs/research/2026-11-19-merge-council/EXECUTION-PLAN.md` |
+total 1912
+-rw-r--r--@ 1 lchingen  staff    7202 Nov 19 16:57 RESULT.md
+-rw-r--r--@ 1 lchingen  staff   18923 Nov 19 16:57 council-e-codex.stream
+-rw-r--r--@ 1 lchingen  staff       0 Nov 19 16:57 council-e-codex.md
+-rw-r--r--@ 1 lchingen  staff     867 Nov 19 16:57 council-e-brief.md
+-rw-r--r--@ 1 lchingen  staff   36901 Nov 19 16:51 merge_test.py
+drwxr-xr-x@ 3 lchingen  staff      96 Nov 19 16:31 __pycache__
+-rw-r--r--@ 1 lchingen  staff  101164 Nov 19 16:22 council-d-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1636 Nov 19 16:22 council-d-codex.md
+-rw-r--r--@ 1 lchingen  staff    1291 Nov 19 16:20 council-d-brief.md
+-rw-r--r--@ 1 lchingen  staff    6999 Nov 19 16:20 EXECUTION-PLAN.md
+-rw-r--r--@ 1 lchingen  staff    7043 Nov 19 16:20 articles.json
+-rw-r--r--@ 1 lchingen  staff   68898 Nov 19 16:18 council-c-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1888 Nov 19 16:18 council-c-codex.md
+-rw-r--r--@ 1 lchingen  staff    1295 Nov 19 16:16 council-c-brief.md
+-rw-r--r--@ 1 lchingen  staff    2994 Nov 19 15:02 MERGE-PLAN.md
+-rw-r--r--@ 1 lchingen  staff   61314 Nov 19 15:01 council-b-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1894 Nov 19 15:01 council-b-codex.md
+-rw-r--r--@ 1 lchingen  staff    1838 Nov 19 15:00 council-b-brief.md
+-rw-r--r--@ 1 lchingen  staff    3444 Nov 19 14:59 council-a-codex.md
+-rw-r--r--@ 1 lchingen  staff  565664 Nov 19 14:59 council-a-codex.stream
+-rw-r--r--@ 1 lchingen  staff    2096 Nov 19 14:56 council-a-brief.md
+-rw-r--r--@ 1 lchingen  staff    2715 Nov 19 14:56 claude-proposal.md
+./council-d-codex.md:1:**Keep per-article timing, but fix the judging copy before sending.** I checked all 70 articles. Article 189 sees v40 and v47 at sequence 1664, and neither is visible at 1663. The converted questions satisfy c8’s input requirements. Include same-item openings and apply end-of-day closures after filing. No selected article shares a sequence with a closure.
+./RESULT.md:15:  - 15 noise re-sends: about $0.04.
+./RESULT.md:23:| old-3 v47: anchor agreed by 09-20 | No, supported | **Yes, unsupported** (both readers) | **No, supported** |
+./RESULT.md:35:| P1 Delivery | 4/4 | The final requests of hybrid v5 and v6 carry c8's 09-14 Zacks item: "the four top hyperscalers … roughly $720 billion to $745 billion … 2026". Hybrid v40 and v47 carry c8's Reuters items: considering, or in advanced talks, on the $10B anchor (c8 tiered them `rumour`) |
+./RESULT.md:37:| P3 Talks stay talks | 2/2 | v40: "reports of talks, not a signed or completed investment". v47: "consideration, negotiations, or discussions—not a signed agreement … NVIDIA's separate existing investment agreement … does not establish an IPO anchor commitment" (c8 had filed that older filing item, and the judge did not take it) |
+./RESULT.md:40:| V Validity | 3/4 control cards supported; controls pass | The control's v47 flipped to "Yes" on 09-16 and stayed there (below) |
+./RESULT.md:48:| old-3 v47 Anthropic | 7 | 7 | 0 | 0 | 7 | 7 |
+./RESULT.md:56:- **The final requests are stable.** Each arm's final v47 request, re-sent 3 times unchanged, gives its own answer 3/3: old No, control
+./RESULT.md:58:- **The fork is 09-16.**
+./RESULT.md:59:  - The control's 09-16 request, re-sent 3 times, gives rungs 2, 1, 2.
+./RESULT.md:60:  - Old's 09-16 request gives 2, 2, 2.
+./RESULT.md:65:- **It does show that v47 is sampler-sensitive:** one draw of the hybrid's "No" is not proof that the hybrid is more stable there.
+./RESULT.md:88:- **The sampler-sensitive v47 question needs more than one draw** before stability is claimed.
+./merge_test.py:31:TARGETS = {'old-2': {'v5': 'M04', 'v40': 'M17'}, 'old-3': {'v6': 'M04', 'v47': 'M17', 'v48': 'M17'}}
+./EXECUTION-PLAN.md:40:| old-3 | M17 | v47 (by 2026-09-20) and v48 (by 2027-03-14) | v47 rung 2; v48 rung 1 |
+./EXECUTION-PLAN.md:84:| P5 | Supported answer | Both readers mark the four primary hybrid answers supported: old-2 v5, old-2 v40, old-3 v6, old-3 v47. old-3 v48, which the deck read as duplicate and unsupported, is a negative control |
+./council-d-brief.md:6:- A day-start list would hide v40 and v47 from article 189 (`gnews:4dca50e2…`), which opened them, and from every later 09-14 article.
+./council-e-brief.md:12:2. Is the V exception's tracing sound? Can it be called noise, given that the control's 09-16 request gave 2, 1, 2 on re-sends?
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import sqlite3,json,re
+p=Path(\"../../../poc/data/merge-test-2026-11-19\")
+o=Path(\"../../../poc/data/comparison-2026-11-17/run\")
+def db(path):
+ c=sqlite3.connect(f\"file:{path}?mode=ro&immutable=1\",uri=True);c.row_factory=sqlite3.Row;return c
+def run(arm,d):
+ return o/d/\"prod\" if arm==\"old\" else p/f\"judge-{arm}\"/d
+def req(b, j):
+ return json.loads(db(b/\"archive.sqlite\").execute(\"select request_json from model_calls where call_id=?\",(j[\"call_id\"],)).fetchone()[0])
+def sections(data):
+ out={};active=\"\"
+ for line in data.splitlines():
+  if line.startswith(\"[\") or line.startswith(\"Answer per the\"): active=line.split(\",\")[0].split(\"]\")[0];out[active]=[]
+  out.setdefault(active,[]).append(line)
+ return out
+for d,vs in [(\"old-2\",(\"v5\",\"v40\")),(\"old-3\",(\"v6\",\"v47\"))]:
+ b=run(\"hybrid\",d);c=db(b/\"views.sqlite\")
+ for v in vs:
+  j=c.execute(\"select * from judgements where view_id=? order by seq desc limit 1\",(v,)).fetchone()
+  t=req(b,j)[\"messages\"][-1][\"content\"]
+  rows=[(int(num),line) for line in t.splitlines() if (m:=re.match(r\"- e(\\d+) \\[\",line)) for num in [m[1]]]
+  cites=[int(x[1:]) for x in json.loads(j[\"cited_evidence_json\"])]
+  print(d,v,j[\"publication_day\"],\"shown\",len(rows),\"c8\",sum(n>=900001 for n,_ in rows),\"history\",sum(n<900001 for n,_ in rows),\"cited c8/history\",sum(n>=900001 for n in cites),sum(n<900001 for n in cites))
+  print(\"c8 anchor(s)\",[(n,l[:300]) for n,l in rows if n>=900001 and (\"Zacks\" in l and \"745\" in l or \"Reuters\" in l and \"anchor\" in l)])
+  print(\"ref\",j[\"reference\"],\"implied\",j[\"implied_outcome\"],\"REASONS\",j[\"reasons\"])
+  print(\"previous\",next((l for l in t.splitlines() if l.startswith(\"[Previous\")), \"missing\"))
+  for n,l in rows:
+   if n<900001 and n in cites: print(\"old cited\",l[:390])
+res={}
+for arm in (\"old\",\"control\",\"hybrid\"):
+ b=run(arm,\"old-3\");c=db(b/\"views.sqlite\")
+ for date in (\"2026-09-16\",\"2026-09-20\"):
+  j=c.execute(\"select * from judgements where view_id=\\\"v47\\\" and publication_day=? order by seq desc limit 1\",(date,)).fetchone()
+  if j is None: continue
+  r=req(b,j); t=r[\"messages\"][-1][\"content\"];res[arm,date]=(r,sections(t))
+  print(arm,date,j[\"call_id\"],j[\"rung\"],j[\"reasons\"])
+r1,s1=res[\"old\",\"2026-09-16\"];r2,s2=res[\"control\",\"2026-09-16\"]
+print(\"same other req fields\",{k:v for k,v in r1.items() if k"'!="messages"}=={k:v for k,v in r2.items() if k!="messages"},"same system",r1["messages"][0]==r2["messages"][0])
+for k in s1.keys()|s2.keys():
+ if s1.get(k)!=s2.get(k): 
+  print("changed section",k,len(s1.get(k,[])),len(s2.get(k,[])))
+  if "Previous" in k:
+   print(s1.get(k),s2.get(k))
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+old-2 v5 2026-09-20 shown 46 c8 26 history 20 cited c8/history 7 13
+c8 anchor(s) []
+ref The market reference is roughly $720–$745 billion for Amazon, Alphabet, Microsoft, and Meta in calendar 2026 (e900031; also e1925), which is rung 4. implied About $750–$760 billion for the four companies. This takes the four-company tracking near $745 billion and the $760 billion plan estimate as the direct anchors, with the revised company guidance supporting an outcome near the upper end; top-five estimates are not assigned in full because they include Oracle. REASONS The market reference is roughly $720–$745 billion for the four hyperscalers, which sits in rung 4. The evidence implies about $750–$760 billion: the latest four-company estimate is $720–$745 billion, while separate tracking and plan estimates put the total near $745 billion and $760 billion; the upward revisions to Alphabet and Amazon and Meta’s higher guidance support the upper end. This remains below rung 5’s $800 billion threshold. The nearly $800 billion and $795 billion figures cover five companies, including Oracle, so they cannot be assigned in full to the four-company total. Project and power constraints are risks but do not quantify a reduction to these companies’ 2026 spending.
+previous [Previous conclusion, for comparison only] rung 4; reasons: The market reference is roughly $720–$745 billion for the four hyperscalers, which sits in rung 4. The evidence still implies about $750–$760 billion: four-company tracking was near $745 billion and a separate estimate put their combined 2026 capex plans at $760 billion. The later $720–$745 billion estimate also remains within rung 4. Revised company guidance and strong reported capex support spending near the upper end, while project cancellations and power constraints are risks but do not quantify a reduction in these four companies’ 2026 spending. The nearly $800 billion and $795 billion figures cover five companies, including Oracle, so they cannot be assigned in full to this question; the implied four-company figure remains below rung 5’s $800 billion threshold.
+old cited - e1091 [party_statement; fool.com (analyst); original source Alphabet 2026-07-22; from gnews:ac966c48ae5afea2a79acaf3 2026-07-27] Alphabet raised its 2026 capital expenditure guidance to $195 billion–$205 billion, from $180 billion–$190 billion previously.
+old cited - e1373 [party_statement; 247wallst.com (Joel South); original source Meta Platforms ; from gnews:c5ba7d4f41d0388a171eebcc 2026-08-01] Meta raised its FY26 capital expenditure guidance to $125 billion–$145 billion.
+old cited - e1490 [party_statement; fool.com (analyst); original source Amazon ; from gnews:275ccde6edc6d12657c32c3e 2026-08-06] Amazon raised its projected capital expenditures for calendar 2026 from $200 billion to $220 billion, with the increase mostly attributed to higher memory chip costs.
+old cited - e1703 [third_party_view; Gerelyn Terzo, 24/7 Wall St.; original source Gerelyn Terzo, 24/7 Wall St. 2026-08-11; from gnews:61ba718265df905f5dcc9dad 2026-08-11] Combined 2026 capital spending by the four largest hyperscalers was tracking near $745 billion.
+old cited - e1925 [third_party_view; uk.finance.yahoo.com; original source Microsoft, Amazon, Alphabet, Meta and other hyperscalers ; from gnews:1219126db2e6631aa1264142 2026-08-16] Microsoft, Amazon, Alphabet, Meta and other hyperscalers have guided to roughly $720 billion–$745 billion of capital spending in calendar 2026, about 77% above the prior year.
+old cited - e2082 [third_party_view; fool.com (analyst); original source fool.com (analyst) 2026-08-18; from gnews:d6efd802b62a436ca6e8f9be 2026-08-18] An estimate put Amazon, Microsoft, Alphabet and Meta's combined capital expenditures at around $700 billion in calendar 2026, with roughly two-thirds directed to AI infrastructure.
+old cited - e2269 [third_party_view; fool.com author; original source The four largest hyperscalers ; from gnews:c8ea23246edff9fbbc981992 2026-08-23] The four largest hyperscalers plan a combined $760 billion of capital expenditures in calendar 2026.
+old cited - e2535 [party_statement; Colette Kress; original source NVIDIA 2026-08-26; from truenorth:transcript:NVDA:2026-08-26 2026-08-26] NVIDIA said cloud-industry backlog exceeded $2 trillion and top-five hyperscaler capital expenditures were expected to approach $800 billion in 2026 and $1.3 trillion in 2027.
+old cited - e3229 [party_statement; fool.com, reporting Andy Jassy’s statement; original source Andy Jassy ; from gnews:6eec748064565c1339694577 2026-08-28] Amazon CEO Andy Jassy raised the company’s 2026 capital-expenditure estimate to about $220 billion on its July earnings call, citing higher memory costs.
+old cited - e3230 [fact; fool.com; original source Amazon ; from gnews:6eec748064565c1339694577 2026-08-28] Amazon reported net purchases of property and equipment of $169 billion over the 12 months through Q2 2026, up $66.1 billion year over year, primarily due to AI investments.
+old cited - e3347 [third_party_view; TechRadar, via Benedict Collins; original source TechRadar 2026-08-29; from gnews:295caa6e12f0b739d2e14ea6 2026-08-29] TechRadar reported that $130 billion of AI data-center projects were cancelled or delayed in Q1 2026 because of public opposition.
+old cited - e3645 [fact; gurufocus.com (analyst); original source Texas officials ; from gnews:b7a72f34e62112b669d71e36 2026-09-01] Texas has frozen new grid connections while officials audit developers.
+old cited - e3646 [third_party_view; gurufocus.com (analyst); original source Utilities in other markets ; from gnews:b7a72f34e62112b669d71e36 2026-09-01] Utilities in other markets are demanding upfront cash or proof that developers control proposed data-center sites.
+old-2 v40 2026-09-20 shown 12 c8 12 history 0 cited c8/history 12 0
+c8 anchor(s) [(900028, '- e900028 [rumour; Reuters, via fxleaders.com; original source NVIDIA ; from gnews:4dca50e22bd9f158d2a04186 2026-09-14] NVIDIA is reportedly considering anchoring a $10 billion Anthropic IPO in the week of the article, according to Reuters; the offering could sell up to $100 billion of shares at a v'), (900029, "- e900029 [rumour; Investing News Network (Giann Liguid), citing a Reuters exclusive; original source NVIDIA (potential anchor investment); Anthropic (IPO) ; from gnews:65814ac898f65c6b360be321 2026-09-14] NVIDIA is weighing a US$10 billion commitment to Anthropic's initial public offering as an anc"), (900032, '- e900032 [rumour; Reuters, cited by insidermonkey.com; original source Anthropic and NVIDIA (unnamed-source report) 2026-09-13; from gnews:a1af1bb8840fa4ec9e52bcb0 2026-09-15] Reuters reported on September 13, 2026 that Anthropic is in talks to bring NVIDIA in as an anchor investor in what could be'), (900042, "- e900042 [rumour; barchart.com (citing Reuters); original source NVIDIA / Anthropic (reported by Reuters) ; from gnews:df74df86a5a6cfd06fe7cbb3 2026-09-17] NVIDIA is in discussions to become an anchor investor in Anthropic's planned IPO, according to Reuters, and is reportedly considering an invest")]
+ref No supplied market consensus or company commitment sets an expectation for this investment; the observable status-quo reference is rung 2 (No completed $10 billion investment). implied Most likely, NVIDIA has not completed a $10 billion anchor investment by September 20. Reports describe consideration of up to $10 billion and advanced talks, but no final commitment or completion; the IPO is reportedly targeted before the November midterms, with no firm listing date reported. REASONS The reference is rung 2 (No): no market consensus or company commitment is supplied, and the status quo is no completed $10 billion investment. The reports of NVIDIA considering up to $10 billion and being in advanced talks move the forecast toward Yes, but remain reports of talks, not a signed or completed investment. The implied outcome remains no completed $10 billion investment by September 20; the reported IPO timetable is before the November midterms, and no firm listing date or public prospectus is reported. That forecast falls on rung 2, while the IPO timetable and lack of firm terms leave the outcome uncertain rather than proving the investment will not happen.
+previous [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market consensus or company commitment is supplied, and the status quo is no completed $10 billion investment. Reports that NVIDIA is weighing up to $10 billion and is in advanced talks move the forecast toward Yes, but they describe consideration or talks, not a signed or completed investment. By September 17, Anthropic still had no public prospectus or firm listing date, and the reported timetable was before the November midterms—not by September 20. The evidence therefore makes no completed $10 billion investment by the deadline more likely than completion; it does not establish that the investment will never happen.
+old-3 v6 2026-09-20 shown 43 c8 27 history 16 cited c8/history 5 8
+c8 anchor(s) [(900033, '- e900033 [third_party_view; zacks.com; original source Zacks.com ; from gnews:1d3bc1ba4c2df5e998884bdb 2026-09-14] Zacks reports that the four largest hyperscalers — Amazon, Alphabet, Microsoft and Meta Platforms — are expected to spend roughly $720 billion to $745 billion on capital expenditures i')]
+ref Market expectation: roughly $720–$745 billion for the four largest hyperscalers, which sits in rung 4. implied About $732.5 billion, the midpoint of the latest direct estimate of $720–$745 billion for the four largest hyperscalers. The separate near-$800 billion estimate covers five hyperscalers and is not assigned wholly to these four. REASONS The market reference is roughly $720–$745 billion for the four largest hyperscalers, which is rung 4. The latest direct four-company estimate implies about $732.5 billion at its midpoint—still within rung 4. Upward capex revisions and near-$800 billion estimates support spending near the upper part of the ladder, but those near-$800 billion figures are for five hyperscalers; the evidence does not quantify a four-company total at $800 billion. Delays and construction constraints temper the upside without establishing a reduction below $700 billion.
+previous [Previous conclusion, for comparison only] rung 4; reasons: The market reference is roughly $720–$745 billion for the four largest hyperscalers, which sits in rung 4. The newer four-company tracking near $745 billion and top-four estimate of $760 billion, alongside upward company capex revisions, imply about $750 billion, still below the $800 billion rung-5 boundary. The near-$800 billion estimates are for five hyperscalers and cannot be assigned wholly to these four; delayed projects and construction constraints temper the estimate but do not quantify a reduction sufficient to take it below $700 billion.
+old cited - e122 [third_party_view; Autonocion.com; original source Tom’s Hardware ; from gnews:417f6244f0aaa27123023deb 2026-07-06] Tom’s Hardware’s running tally said more than 75 U.S. data-center projects worth around $130 billion had been blocked or delayed so far in 2026.
+old cited - e922 [fact; 247wallst.com; original source Microsoft ; from gnews:ba97f512051bcb3ff34f5b05 2026-07-22] Microsoft reported Q3 FY2026 capital expenditures of $30.88 billion, up 84% year over year.
+old cited - e1254 [party_statement; fool.com (Harsh Chauhan); original source Alphabet 2026-07-22; from gnews:ac966c48ae5afea2a79acaf3 2026-07-27] Alphabet raised its 2026 capital expenditure guidance to $195 billion–$205 billion, from $180 billion–$190 billion previously.
+old cited - e1545 [party_statement; Larry Fink, as quoted by Preston Fore, Fortune; original source Larry Fink ; from gnews:79bbaae99cc8279528469e6e 2026-08-01] BlackRock CEO Larry Fink said the U.S. would run short of electricians needed to build AI data centers.
+old cited - e1549 [party_statement; 247wallst.com, as reported by Joel South; original source Meta Platforms ; from gnews:c5ba7d4f41d0388a171eebcc 2026-08-01] Meta raised its FY26 capital expenditure guidance to $125 billion–$145 billion.
+old cited - e1649 [party_statement; fool.com (analyst); original source Amazon ; from gnews:275ccde6edc6d12657c32c3e 2026-08-06] Amazon raised its capital expenditure projection from $200 billion to $220 billion; the article says the increase was mostly due to higher memory chip costs.
+old cited - e1856 [third_party_view; 247Wallst.com, by Gerelyn Terzo; original source 247Wallst.com, by Gerelyn Terzo ; from gnews:61ba718265df905f5dcc9dad 2026-08-11] Combined 2026 capital spending by the four largest hyperscalers was tracking near $745 billion.
+old cited - e2079 [party_statement; uk.finance.yahoo.com; original source Microsoft, Amazon, Alphabet, Meta and other hyperscalers ; from gnews:1219126db2e6631aa1264142 2026-08-16] Microsoft, Amazon, Alphabet, Meta and other hyperscalers guided combined 2026 capital spending of roughly $720 billion to $745 billion, about 77% above the prior year.
+old-3 v47 2026-09-20 shown 7 c8 7 history 0 cited c8/history 7 0
+c8 anchor(s) [(900031, "- e900031 [rumour; fxleaders.com; original source Reuters ; from gnews:4dca50e22bd9f158d2a04186 2026-09-14] NVIDIA is reportedly considering anchoring Anthropic's IPO with a $10 billion investment in the week of the article, according to Reuters as cited by the article; the offering could sell up to"), (900032, '- e900032 [rumour; investingnews.com, citing a Reuters exclusive; original source NVIDIA / Anthropic (reported via unnamed sources) ; from gnews:65814ac898f65c6b360be321 2026-09-14] Anthropic is negotiating to secure NVIDIA as an anchor investor in a record-breaking IPO that could value Anthropic at'), (900034, '- e900034 [rumour; Reuters, as reported by insidermonkey.com; original source Anthropic; NVIDIA Corporation 2026-09-13; from gnews:a1af1bb8840fa4ec9e52bcb0 2026-09-15] Reuters reported on September 13 [2026] that Anthropic is in talks to bring NVIDIA in as an anchor investor in a potential IPO that '), (900044, '- e900044 [rumour; barchart.com (citing Reuters); original source Reuters ; from gnews:df74df86a5a6cfd06fe7cbb3 2026-09-17] Reuters reported, as relayed by barchart.com, that Anthropic is preparing an IPO seeking to raise up to $100 billion at a valuation of about $2 trillion, and that NVIDIA is in ')]
+ref No consensus, company guidance, or confirmed plan is supplied. The status-quo reference—no agreement by the deadline—is rung 2. implied No agreement by September 20 is more likely: the latest reported status on September 17 is discussions, not a signed commitment. The reported investment is up to $10 billion, but no report says that amount has been agreed for the IPO. REASONS The reference is rung 2 (No): no market consensus, company guidance, or confirmed plan establishes an IPO anchor agreement by September 20. The Reuters-sourced reports make an agreement more plausible, but describe consideration, negotiations, or discussions—not a signed agreement. With the latest report still describing discussions on September 17, only three days before the deadline, No remains more likely. NVIDIA's separate existing investment agreement with Anthropic does not establish an IPO anchor commitment.
+previous [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market consensus, confirmed NVIDIA plan, or guidance establishes an agreement by September 20. Reuters-sourced reports make an investment more plausible, but describe consideration, negotiations, or discussions—not an agreement—and the latest reported status is still discussions just three days before the deadline. The separate existing investment agreement is not an IPO anchor commitment. The evidence therefore does not make an agreement by the deadline the more likely outcome.
+old 2026-09-16 8611 2 The reference is rung 2 (No): no market consensus or company commitment is supplied, so the baseline is that NVIDIA has not agreed to the specified investment by September 20. The reports raise the chance of Yes, but describe consideration or advanced talks for an investment of up to $10 billion—not an agreement to anchor the IPO with the full $10 billion. With the deadline close and no report of a commitment, No remains more likely.
+old 2026-09-20 9162 2 The reference is rung 2 (No): no market consensus, company guidance, or NVIDIA commitment is supplied. The reports of advanced talks and consideration of an investment of up to $10 billion this week raise the chance of Yes, but they do not report agreement to anchor the IPO for $10 billion. Given the short time to the deadline and the gap between considering an investment and agreeing to the exact commitment in the question, No remains the more likely outcome.
+control 2026-09-16 16 1 The reference is rung 2 (No): no market consensus, company guidance, or stated agreement plan is supplied, and no agreement is reported. But the new reporting makes an agreement by the deadline more likely than not: Reuters says NVIDIA is considering anchoring the IPO with a $10 billion investment “this week,” and a separate report describes advanced talks. The amount remains uncertain—the more qualified report says “up to” $10 billion—so this is not a confirmed $10 billion commitment. Still, the specific proposed amount and near-term timing, combined with the advanced-talks description and only days remaining, put the forecast on rung 1.
+control 2026-09-20 27 1 The reference is rung 2 (No): no market consensus, company guidance, or stated agreement plan is supplied. The evidence instead points to a near-term possible deal: reports describe NVIDIA considering an anchor investment this week and being in advanced talks. These reports are one claim, not independent confirmations, and “up to $10 billion” leaves the exact amount uncertain; nevertheless, their specificity and timing make agreement at the stated amount by the deadline the more likely outcome. The valuation comparison adds no evidence of NVIDIA’s commitment.
+hybrid 2026-09-16 15 2 The reference is rung 2: no separate market consensus, company guidance, or stated plan is supplied, so the status-quo reference is no agreement by September 20. The Reuters-sourced reports—including the description of advanced talks—raise the chance of an agreement, but report consideration or negotiations, not a signed commitment. With the deadline only days away, the implied outcome remains No and does not cross to rung 1. NVIDIA's existing investment agreement is explicitly distinct from an IPO anchor investment.
+hybrid 2026-09-20 27 2 The reference is rung 2 (No): no market consensus, company guidance, or confirmed plan establishes an IPO anchor agreement by September 20. The Reuters-sourced reports make an agreement more plausible, but describe consideration, negotiations, or discussions—not a signed agreement. With the latest report still describing discussions on September 17, only three days before the deadline, No remains more likely. NVIDIA's separate existing investment agreement with Anthropic does not establish an IPO anchor commitment.
+same other req fields True same system True
+changed section [Themes in force 12 11
+changed section [Previous conclusion 2 2
+['[Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): without a supplied market consensus or company plan, the baseline is that NVIDIA has not agreed by September 20. The reports materially raise the chance of Yes, particularly the report of advanced talks, but describe consideration or talks for an investment of up to $10 billion—not an agreement to invest $10 billion. Given the short time to the deadline and the exact amount and agreement requirements, No remains the more likely outcome.', ''] ['[Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market consensus, company guidance, or stated agreement plan is supplied, and no agreement has been reported. The new reports materially increase the prospect of a deal, but they describe NVIDIA as considering an anchor investment or being in advanced talks for up to $10 billion—not as having agreed to invest exactly $10 billion. With the deadline only days away and the reported amount still a ceiling rather than a commitment, the more likely outcome remains no qualifying agreement by September 20; the evidence does not move the forecast across the binary boundary.', '']
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat RESULT.md
+p=../../../poc/data/merge-test-2026-11-19
+find "$p" -maxdepth 3 -type f | rg '"'noise|resend|probe|ledger' | sort
+rg -n 'noise|resend|re-sends' merge_test.py
+cat \""'$p"/ledger/*.json | cut -c1-240' in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+# Merge test result (D679), 2026-11-19
+
+**Verdict.** The merge's new wiring works on the tested questions: clean Step 1 (c8, unchanged) reading articles against the old system's
+open questions, with the frozen judge answering on c8's filing.
+- **The lines:**
+  - P1 (delivery), P2 (no meaning drift), P3 (talks stay talks) and P5 (both readers support) hold on all 4 primary questions, in both
+    old draws.
+  - P4 (diagnostic): 0 standalone NVIDIA-figure questions proposed.
+  - V (validity) holds with one traced exception, below.
+- **What it does not show:** the merge does not answer better than the old system here. The old answers to these questions were
+  already supported, and the hybrid matches them.
+- **Spend:** $2.13 of the $5 ledger.
+  - 140 c8 sends: about $1.75.
+  - Judging two arms × 2 draws, 98 calls: about $0.34.
+  - 15 noise re-sends: about $0.04.
+
+## Answers at 09-20
+| Draw / question | Old (archived) | Control (old evidence, rebuilt) | **Hybrid (c8 filing)** |
+|---|---|---|---|
+| old-2 v5: four hyperscalers' 2026 data-center capex | rung 4 ($700–800B), supported | rung 4, supported | **rung 4, supported** |
+| old-2 v40: NVIDIA $10B Anthropic IPO anchor by 09-20 | No, supported | No, supported | **No, supported** |
+| old-3 v6: same as v5 | rung 4, supported | rung 4, supported | **rung 4, supported** |
+| old-3 v47: anchor agreed by 09-20 | No, supported | **Yes, unsupported** (both readers) | **No, supported** |
+| old-3 v48: anchor agreed by 2027-03-14 (negative control) | rung 1, unsupported; worth split | rung 1, unsupported; worth split | rung 1; answer split (Codex unsupported, Claude supported) |
+
+- **Readers:** Codex and Claude, blind under shuffled labels, with the comparison's card form and brief.
+- **Their controls:** the 3 plants were marked unsupported and the 2 supported controls supported, by both readers. A repeated card
+  (diagnostic C016 is the old v6 card) was marked the same.
+- **All primary marks settled in round 0.** Two debate marks, both on v48's worth, stayed void: Codex's reasons went over the
+  instrument's 40-word limit, which was left unchanged.
+
+## The lines, read by Claude in the traces
+| Line | Result | Evidence |
+|---|---|---|
+| P1 Delivery | 4/4 | The final requests of hybrid v5 and v6 carry c8's 09-14 Zacks item: "the four top hyperscalers … roughly $720 billion to $745 billion … 2026". Hybrid v40 and v47 carry c8's Reuters items: considering, or in advanced talks, on the $10B anchor (c8 tiered them `rumour`) |
+| P2 No meaning drift | 2/2 capex | Both hybrid capex reasons: "the nearly $800 billion … figures cover five companies, including Oracle, so they cannot be assigned in full to the four-company total". Old's capex answers did not label total capex as a proxy for data-center capex, and neither do the hybrid's: disclosed, the same as old |
+| P3 Talks stay talks | 2/2 | v40: "reports of talks, not a signed or completed investment". v47: "consideration, negotiations, or discussions—not a signed agreement … NVIDIA's separate existing investment agreement … does not establish an IPO anchor commitment" (c8 had filed that older filing item, and the judge did not take it) |
+| P4 Opening rule (diagnostic) | 0 of 7 proposals | c8 proposed 7 theses on the 140 sends: DRAM ×3, H100 rental rate, AI-lab revenue run rate, Anthropic anchor ×2. None is a standalone NVIDIA financial figure. None was opened |
+| P5 Supported answer | 4/4 | Both readers, round 0 |
+| V Validity | 3/4 control cards supported; controls pass | The control's v47 flipped to "Yes" on 09-16 and stayed there (below) |
+
+## How much of each final answer rests on c8's filing (counted from the hybrid's final requests)
+| Question | Items shown | From c8 (window) | From old history (to 09-06) | Older items in force not shown | Items cited | Cited from c8 |
+|---|---|---|---|---|---|---|
+| old-2 v5 capex | 46 | 26 | 20 | 123 | 20 | 7 |
+| old-3 v6 capex | 43 | 27 | 16 | 113 | 13 | 5 |
+| old-2 v40 Anthropic | 12 | 12 | 0 | 0 | 12 | 12 |
+| old-3 v47 Anthropic | 7 | 7 | 0 | 0 | 7 | 7 |
+
+- **The capex answers rest partly on old's history.** Rung 4 was reached before 09-06. On capex the test shows that c8's filing added the
+  latest four-company estimate without breaking the answer or drifting its scope.
+- **The two Anthropic questions opened in the window, and their answers rest wholly on c8's filing.** They are the cleanest evidence that
+  the wiring works.
+
+## The V exception, traced ($0.04 of re-sends)
+- **The final requests are stable.** Each arm's final v47 request, re-sent 3 times unchanged, gives its own answer 3/3: old No, control
+  Yes, hybrid No.
+- **The fork is 09-16.**
+  - The control's 09-16 request, re-sent 3 times, gives rungs 2, 1, 2.
+  - Old's 09-16 request gives 2, 2, 2.
+  - The two requests differ only in the theme block (other questions held at 09-06 in the copy) and in the wording of the previous
+    conclusion. Their evidence is identical.
+- **So the control's "Yes" is a judge coin flip** on a knife-edge question, with roughly a 1 in 3 chance on that request. The previous
+  conclusion then locked it in. It does not show a bias in the reconstruction.
+- **It does show that v47 is sampler-sensitive:** one draw of the hybrid's "No" is not proof that the hybrid is more stable there.
+
+## Evidence cleanliness (descriptive, one draw: old-2 v5's window material, read by Claude)
+| Window material, 09-07..09-20 | Old (23 items) | Hybrid (26 items) |
+|---|---|---|
+| Direct: the four companies, or one of them, on 2026 capex | 2 | 3–4 |
+| Adjacent and useful: leases, cloud backlog | 0 | 4 |
+| Five-company totals (context, other scope) | 8 | 8 |
+| Unclear period | 1 | 1 |
+| Off-question | 12 (4 on AI-lab safety) | 9 (Western Digital results, AI-lab revenue, PwC to 2050) |
+
+c8 also links loosely: the merge cleans this pile only slightly. Step 2–3 grouping was not run.
+
+## What this decides, and what it does not
+- **Decided:** wiring c8 under the old questions delivers the matters' decisive statements to the judge, without the scope drift the
+  council feared. The answers stay as good as the old system's on M04 and M17.
+- **Not decided:**
+  - whether the merge serves *more* matters: the new-only matters need the clean opener;
+  - Steps 2–3 grouping;
+  - the other 30 matters;
+  - cost.
+- **Cost, priced from tokens.** The merge pays the old pipeline plus c8 reading: about $0.0125 per article at $1.75 / 140. Over the
+  82-day window's 1,884 articles that is about $24 on top of old's about $9.
+- **The sampler-sensitive v47 question needs more than one draw** before stability is claimed.
+
+## Errors of mine in this test (logged)
+- **I read the census article numbers as positions in `kept-articles.json`.** They are numbers in `census/numbering.json`. Codex caught it
+  in round c. My first claim, that old filed none of the census articles, was wrong: 8 of 11 reached the old questions.
+- **The first article list included custom-chip and DRAM theses** as "capex" (the same misreading in PATH-TO-PASS's census C, to be
+  re-checked).
+- **The first judging copy failed.** The store's append-only triggers refused the cut; Codex found it in round d before any send.
+../../../poc/data/merge-test-2026-11-19/ledger/merge.attempts.jsonl
+../../../poc/data/merge-test-2026-11-19/ledger/merge.json
+../../../poc/data/merge-test-2026-11-19/ledger/merge.lock
+{
+ "ceiling": 5.0,
+ "spent": 2.112414179999998,
+ "reserved": 0.014583600000000113,
+ "overrun": false,
+ "refused": 0,
+ "attempts": 254,
+ "stopped": false,
+ "stop_reason": null
+}
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import json,sqlite3
+from pathlib import Path
+p=Path(\"../../../poc/data/merge-test-2026-11-19\");m=json.loads((p/\"marks.json\").read_text())
+for k,r in m.items():
+ if (r.get(\"matter\") in (\"M04\",\"M17\") or r.get(\"role\")"'!="product"): 
+  marks=tuple(json.loads((p/"deck/round-0"/f"{k}-{who}.json").read_text()) for who in ("codex","claude"))
+  print(k,r.get("arm"),r.get("view"),r.get("role"),r["marks"],[m.get("answer",m.get("answer_verdict")) for m in marks])
+for x in ("old-2","old-3"):
+ d=p/"judge-hybrid"/x
+ s=sqlite3.connect(f"file:{d}/views.sqlite?mode=ro&immutable=1",uri=True);a=sqlite3.connect(f"file:{d}/archive.sqlite?mode=ro&immutable=1",uri=True)
+ v={"old-2":"v5","old-3":"v6"}[x]
+ call,cites=s.execute("select call_id,cited_evidence_json from judgements where view_id=? order by seq desc limit 1",(v,)).fetchone()
+ txt=json.loads(a.execute("select request_json from model_calls where call_id=?",(call,)).fetchone()[0])["messages"][-1]["content"]
+ lines=txt.splitlines()
+ for i,l in enumerate(lines):
+  if l.startswith("- e900") and ("745 billion" in l or "5adb2372" in l):
+   print(x,call,l,lines[i+1],"cited",l.split()[1] in json.loads(cites))
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+C001 hybrid v48 product {'worth': {'split': ['worth', 'duplicate']}, 'answer': {'split': ['unsupported', 'supported']}} ['unsupported', 'supported']
+C002 old v40 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C003 diagnostic C140 Q29 plant {'worth': 'worth', 'answer': 'unsupported'} ['unsupported', 'unsupported']
+C004 control v40 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C005 diagnostic C038 Q23 supported control {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C006 hybrid v6 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C007 hybrid v47 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C008 control v5 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C009 control v47 product {'worth': 'worth', 'answer': 'unsupported'} ['unsupported', 'unsupported']
+C010 hybrid v5 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C011 diagnostic C016 Q6 supported control {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C012 hybrid v40 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C013 old v47 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C014 control v48 product {'answer': 'unsupported', 'worth': {'split': ['worth', 'duplicate']}} ['unsupported', 'unsupported']
+C015 control v6 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C016 old v48 product {'answer': 'unsupported', 'worth': {'split': ['worth', 'duplicate']}} ['unsupported', 'unsupported']
+C017 old v5 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C018 old v6 product {'worth': 'worth', 'answer': 'supported'} ['supported', 'supported']
+C019 diagnostic C117 Q16 plant {'worth': 'worth', 'answer': 'unsupported'} ['unsupported', 'unsupported']
+C020 diagnostic C081 Q9 plant {'worth': 'worth', 'answer': 'unsupported'} ['unsupported', 'unsupported']
+old-2 20 - e900031 [third_party_view; zacks.com; original source zacks.com ; from gnews:1d3bc1ba4c2df5e998884bdb 2026-09-14] The article states that the four top hyperscalers — Amazon, Alphabet, Microsoft and Meta Platforms — are expected to spend roughly $720 billion to $745 billion on capital expenditures in 2026, with a large portion directed toward AI infrastructure.     Quote: Four top hyperscalers — Amazon, Alphabet, Microsoft and Meta Platforms — alone are expected to spend roughly $720 billion to $745 billion on capital expenditures in 2026, with a large portion directed toward AI infrastructure. cited True
+old-2 20 - e900036 [party_statement; barchart.com; original source NVIDIA ; from gnews:5adb2372d28f9339f479435d 2026-09-15] NVIDIA said on its earnings call that the top five hyperscalers are expected to spend nearly $800 billion on capital expenditures in 2026 and $1.3 trillion in 2027.     Quote: Nvidia's own earnings call also highlighted the scale of the spending cycle. The company said the top five hyperscalers are expected to spend nearly $800 billion on capital expenditures in 2026 and $1.3 trillion in 2027. cited False
+old-3 26 - e900033 [third_party_view; zacks.com; original source Zacks.com ; from gnews:1d3bc1ba4c2df5e998884bdb 2026-09-14] Zacks reports that the four largest hyperscalers — Amazon, Alphabet, Microsoft and Meta Platforms — are expected to spend roughly $720 billion to $745 billion on capital expenditures in calendar 2026, with a large portion directed toward AI infrastructure.     Quote: Four top hyperscalers — Amazon, Alphabet, Microsoft and Meta Platforms — alone are expected to spend roughly $720 billion to $745 billion on capital expenditures in 2026, with a large portion directed toward AI infrastructure. cited True
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import sqlite3,json,hashlib
+p=Path(\"../../../poc/data/merge-test-2026-11-19\")
+old=Path(\"../../../poc/data/comparison-2026-11-17/run\")
+def db(path): return sqlite3.connect(f\"file:{path}?mode=ro&immutable=1\",uri=True)
+for a,b in [(\"old\",old/\"old-3/prod\"),(\"control\",p/\"judge-control/old-3\"),(\"hybrid\",p/\"judge-hybrid/old-3\")]:
+ c=db(b/\"views.sqlite\"); archive=db(b/\"archive.sqlite\")
+ for day,call in c.execute(\"select publication_day,call_id from judgements where view_id=\\\"v47\\\" and publication_day>=\\\"2026-09-16\\\" order by seq\"):
+  request,hash=archive.execute(\"select request_json,request_sha256 from model_calls where call_id=?\",(call,)).fetchone()
+  t=json.loads(request)[\"messages\"][-1][\"content\"]
+  print(a,day,hash[:10],archive.execute(\"select count(*) from model_calls where request_sha256=?\",(hash,)).fetchone()[0],next((l[:100] for l in t.splitlines() if l.startswith(\"[Previous\")),\"-\"),next((l for l in t.splitlines() if l.startswith(\"[Themes\")),\"-\"))
+for d,v in [(\"old-2\",\"v5\"),(\"old-3\",\"v6\")]:
+ c=db(p/f\"judge-hybrid/{d}/views.sqlite\")
+ print(d,v,\"cutoff state\",c.execute(\"select publication_day,rung,reasons from judgements where view_id=? and publication_day<=\\\"2026-09-06\\\" order by seq desc limit 1\",(v,)).fetchone())
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+old 2026-09-16 d2c769e505 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): without a  [Themes in force, 10]
+old 2026-09-17 8db2f7f884 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market  [Themes in force, 10]
+old 2026-09-18 19651328e4 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market  [Themes in force, 10]
+old 2026-09-19 873f132440 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market  [Themes in force, 10]
+old 2026-09-20 82b86834c4 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market  [Themes in force, 10]
+control 2026-09-16 f19037545b 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market  [Themes in force, 9]
+control 2026-09-17 3cc97097fe 1 [Previous conclusion, for comparison only] rung 1; reasons: The reference is rung 2 (No): no market  [Themes in force, 9]
+control 2026-09-18 e8bd56217d 1 [Previous conclusion, for comparison only] rung 1; reasons: The reference is rung 2 (No): no consens [Themes in force, 9]
+control 2026-09-19 78e18458d8 1 [Previous conclusion, for comparison only] rung 1; reasons: The reference is rung 2 (No): no market  [Themes in force, 9]
+control 2026-09-20 7ebf761175 1 [Previous conclusion, for comparison only] rung 1; reasons: The reference is rung 2 (No): no market  [Themes in force, 9]
+hybrid 2026-09-16 f1055b55b4 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is no agreement by the dea [Themes in force, 9]
+hybrid 2026-09-17 4ded42bfa8 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2: no separate mar [Themes in force, 9]
+hybrid 2026-09-18 eb6bd375cf 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no separat [Themes in force, 9]
+hybrid 2026-09-19 794dafac25 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no separat [Themes in force, 9]
+hybrid 2026-09-20 fd87a61497 1 [Previous conclusion, for comparison only] rung 2; reasons: The reference is rung 2 (No): no market  [Themes in force, 9]
+old-2 v5 cutoff state ('2026-09-06', 4, "The current four-company reference is a combined 2026 capex plan of about $760 billion, which is rung 4. The best directly comparable tracking estimate is near $745 billion; together with the $760 billion plan, that implies roughly $745–$760 billion, still within rung 4. Revised Amazon and Alphabet outlooks and Meta's guidance support a high total, while Microsoft's reported Q3 capex growth supports continued momentum but is not annualized flat. The nearly $800 billion estimates concern five hyperscalers or broader groups and cannot be assigned in full to these four. Reported project cancellations and grid constraints are downside risks, but the evidence does not quantify an impact sufficient to move the implied total below $700 billion; nor does it establish at least $800 billion for these four.")
+old-3 v6 cutoff state ('2026-09-06', 4, 'The market reference is roughly $745–$760 billion for the four largest hyperscalers, which sits in rung 4 ($700 billion to below $800 billion). The evidence still implies about $750–$760 billion: direct top-four tracking and plan estimates sit in that range, while the raised company outlooks and strong cloud demand support maintaining a high run-rate. NVIDIA’s nearly $800 billion estimate is for five hyperscalers, so it cannot be assigned in full to these four; the evidence does not imply the four reach rung 5. Delayed projects and construction constraints are risks, but do not quantify a reduction large enough to move below rung 4.')
+
+exec
+/opt/homebrew/bin/zsh -lc 'p=../../../poc/data/merge-test-2026-11-19
+rg --files --hidden --no-ignore "$p" | rg -i '"'noise|resend|probe'
+sed -n '1,23p' \""'$p/deck/round-0/C009-codex.json"
+sed -n '"'1,23p' \""'$p/deck/round-0/C009-claude.json"
+rg -n '"'"'^'"\\*\\*Verdict|"'^## The V|''^## How much|''^'"\\| P2' RESULT.md" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+{"worth": "worth", "answer": "unsupported", "why": "A $10 billion investment is material and distinct from the earlier aggregate commitments question. Advanced talks and consideration of up to $10 billion do not make an agreement for exactly $10 billion by the deadline more likely than no agreement."}
+{"worth": "worth", "answer": "unsupported", "why": "A $10B anchor stake is material to NVIDIA's cash. No earlier question covers it. At the deadline, no agreement is reported, only 'considering' and 'up to $10B' talks, unconfirmed by either company. That points to No."}
+3:**Verdict.** The merge's new wiring works on the tested questions: clean Step 1 (c8, unchanged) reading articles against the old system's
+36:| P2 No meaning drift | 2/2 capex | Both hybrid capex reasons: "the nearly $800 billion … figures cover five companies, including Oracle, so they cannot be assigned in full to the four-company total". Old's capex answers did not label total capex as a proxy for data-center capex, and neither do the hybrid's: disclosed, the same as old |
+42:## How much of each final answer rests on c8's filing (counted from the hybrid's final requests)
+55:## The V exception, traced ($0.04 of re-sends)
+
+codex
+**The evidence reached the judge on all four questions. The test missed two of its written pass conditions.** Both capex answers used total spending to answer a data-center spending question without labeling it as a proxy, so P2 missed. Both readers rejected the rebuilt control’s v47 answer, so V missed. Both readers supported all four hybrid answers. [Execution plan](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/EXECUTION-PLAN.md#L78)
+
+**What the judge actually saw.** The final capex requests contained **26 c8 items and 20 old items** for old-2 v5, and **27 c8 items and 16 old items** for old-3 v6. Both cited c8’s $720–745B estimate. Both were already in the $700–800B band on September 6, so c8’s contribution is visible and its effect on the selected band remains unmeasured. The two Anthropic answers cited 12 and seven c8 items respectively, with zero direct evidence from old history. [Stored requests](/Users/lchingen/hivemind/poc/data/merge-test-2026-11-19/judge-hybrid)
+
+**The v47 trace.** I confirmed that the September 16 evidence was identical. The theme context and previous-answer wording both differed. The reported `2, 1, 2` shows the rebuilt request can produce either answer. Three sends cannot establish the odds or rule out a reconstruction effect. Later requests carried forward the control’s Yes, so repeating the final request leaves that earlier difference in place.
+
+**Next step.** Correct `RESULT.md` at $0. Its headline could leave readers thinking the test passed, capex scope was preserved, and the control miss was explained away. Record the delivery success and both misses, then close this test. [Result](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/RESULT.md)
+
+CONSENSUS: Delivery verified on all four questions, but the registered test did not pass.
+tokens used
+411,411
+**The evidence reached the judge on all four questions. The test missed two of its written pass conditions.** Both capex answers used total spending to answer a data-center spending question without labeling it as a proxy, so P2 missed. Both readers rejected the rebuilt control’s v47 answer, so V missed. Both readers supported all four hybrid answers. [Execution plan](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/EXECUTION-PLAN.md#L78)
+
+**What the judge actually saw.** The final capex requests contained **26 c8 items and 20 old items** for old-2 v5, and **27 c8 items and 16 old items** for old-3 v6. Both cited c8’s $720–745B estimate. Both were already in the $700–800B band on September 6, so c8’s contribution is visible and its effect on the selected band remains unmeasured. The two Anthropic answers cited 12 and seven c8 items respectively, with zero direct evidence from old history. [Stored requests](/Users/lchingen/hivemind/poc/data/merge-test-2026-11-19/judge-hybrid)
+
+**The v47 trace.** I confirmed that the September 16 evidence was identical. The theme context and previous-answer wording both differed. The reported `2, 1, 2` shows the rebuilt request can produce either answer. Three sends cannot establish the odds or rule out a reconstruction effect. Later requests carried forward the control’s Yes, so repeating the final request leaves that earlier difference in place.
+
+**Next step.** Correct `RESULT.md` at $0. Its headline could leave readers thinking the test passed, capex scope was preserved, and the control miss was explained away. Record the delivery success and both misses, then close this test. [Result](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/RESULT.md)
+
+CONSENSUS: Delivery verified on all four questions, but the registered test did not pass.

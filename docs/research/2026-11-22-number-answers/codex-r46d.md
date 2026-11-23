@@ -1,0 +1,5 @@
+NOT READY
+
+**R2 still cannot pass as written.** The gate requires a `roll_forward` with `overlap_unknown`, but the format permits `relation` only on `sum`, and the overlap check also runs only on `sum`. A strict implementation would reject R2 at the format check or accept the calculation without recording the disputed $18B. [Design format and overlap check](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/DESIGN.md:38), [R2 gate](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/DESIGN.md:150)
+
+**Fix I’d accept:** allow a disputed addition on `roll_forward` and have the overlap check recompute that same calculation without the named addition. R2 must pass the format and arithmetic checks, record the $18B as disputed, and show the conditional result of about $35B.

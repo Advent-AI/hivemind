@@ -1,0 +1,212 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 164: your round-163 finding, fixed (`splitting/score_split.py`, `load_reading`)
+
+**The reading's content is now bound to the sends and the plants.** Before scoring, `load_reading` checks four things:
+
+- it rebuilds every reading item from the probe's sends with `reading_split.reading_rows`, and requires each saved row to equal its
+  rebuilt row, all fields;
+- it rebuilds every packet item with Stage A's `item_of` plus `split`, from the rebuilt row and its case. Every packet item must equal
+  it, and the packets must hold every keyed item once;
+- it requires the plants' expected marks to equal what `reading_split.plants()` builds;
+- it keeps the identifier checks (exactly the derived items, each once, and the key exactly those).
+
+Any difference voids the reading.
+
+**Tests:** three content tampers, each keeping its identifier, each voiding the reading:
+- a yearly row's question rewritten to the other year;
+- a packet item's year changed;
+- the plant's expected field changed, before the rows were written, so the readers agree with it and only the new comparison can find
+  it.
+
+**Mutants:** removing each of the three comparisons is caught. The plant one was caught only once the tamper came before the rows: my
+first test changed the file after the rows, and the missed-plant check caught it instead.
+
+**Checks:** 21 probe tests; the suite (346), the new system's folders (265) and the frozen checks pass.
+
+**The limits to report with the result:** M is not exercised; yearly items reveal their arm; the spend projection is an estimate, and
+the per-attempt reserve is the guard.
+
+**Asked:** send the probe now (12 topics, both arms, three sends each, same day, caps $0.15 + $0.25), or name what must change first.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check that the new comparisons bind the actual packet content and plant marks, and that the previous send conditions still hold.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/check-output.txt | tail -8' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '115,190p' docs/research/2026-11-14-use-acceptance/splitting/score_split.py" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/probe-mutants.txt | tail -20' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+C2  july:c3/clean-7    control equals stored: True; split differs only in no_ladder and the system decline list: True; yearly re-asks differ only by the line: True; stored ladder accepted
+C2  july:c2/clean-10   control equals stored: True; split differs only in no_ladder and the system decline list: True; yearly re-asks differ only by the line: True; stored send 'no ladder'
+C3  july:c1/clean-2    control equals stored: True; split differs only in no_ladder and the system decline list: True; yearly re-asks differ only by the line: True; stored send 'no ladder'
+C3  july:c1/clean-11   control equals stored: True; split differs only in no_ladder and the system decline list: True; yearly re-asks differ only by the line: True; stored send 'no ladder'
+T week-10-06:c1/clean-12: synthetic split accepted; mutants refused: ended year True, split again in a yearly re-ask True, stray periods True
+T week-10-06:c1/clean-4: synthetic split accepted; mutants refused: ended year True, split again in a yearly re-ask True, stray periods True
+topics 12; stored ladders judged 7; sends 36 an arm; most calls {'frozen': 72, 'split': 216}, most attempts with transport retries {'frozen': 216, 'split': 648}; the sum of worst-case reserves if every attempt were made at its worst (resends estimated with an answer of 16000 tokens at 4 bytes a token) {frozen: $2.94, split: $8.94}; caps {'frozen': 0.15, 'split': 0.25} ($0.40). Every attempt is reserved at its own worst cost before it is sent, so an arm stops at its cap (NOT MEASURED), and the caps hold while every charge stays within its reserve
+check passed; record check-passed.json
+
+ succeeded in 0ms:
+
+def field_points(outcomes, readers, item_of):
+    return [(send, field) for send in outcomes if not send[0].startswith('plant|') for field in FIELDS
+            if needs_ruling(readers['reader 1'][send][field], readers['reader 2'][send][field])]
+
+
+def load_reading(probe_folder, reading, key_path, plants_path):
+    """Everything the verdict reads; raises SystemExit('VOID: …') for an incomplete or invalid reading or a missed plant. The reading
+    must hold exactly the items its sends give (reading_split.reading_rows), each once, and the key exactly those items."""
+    derived_rows, derived_cases = reading_split.reading_rows(probe_folder)
+    derived = sorted((row['case'], row['pass']) for row in derived_rows)
+    held = sorted((row['case'], row['pass']) for row in collector.outcomes_of(reading))
+    key = json.loads(Path(key_path).read_text())
+    keyed = sorted(tuple(send) for send in key.values())
+    if held != derived or keyed != derived:
+        raise SystemExit(f'VOID: the reading holds {len(held)} items and the key {len(keyed)}, not exactly the {len(derived)} its sends give')
+    same = lambda value: json.loads(json.dumps(value, ensure_ascii=False))
+    rebuilt = {(row['case'], row['pass']): same(row) for row in derived_rows}
+    if any(rebuilt[(row['case'], row['pass'])] != same(row) for row in collector.outcomes_of(reading)):
+        raise SystemExit('VOID: an item of the reading differs in content from the send it was built from')
+    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+    shown = {item['item']: item for packet in sorted((Path(reading) / 'readers').glob('packet-*.json')) for item in json.loads(packet.read_text())}
+    expected_items = {int(number): same({'item': int(number), **build_reader_packets.item_of(rebuilt[tuple(send)], derived_cases[send[0]], research_list),
+                                         'split': rebuilt[tuple(send)]['split']}) for number, send in key.items()}
+    if set(shown) != set(expected_items) or any(same(shown[number]) != item for number, item in expected_items.items()):
+        raise SystemExit('VOID: a packet item differs from the item its send gives, or the packets do not hold every item once')
+    if json.loads(Path(plants_path).read_text()) != reading_split.plants()[2]:
+        raise SystemExit('VOID: the plants\' expected marks are not the ones reading_split.py builds')
+    key, item_of, outcomes, readers, problems = collector.read_rows(reading, key_path)
+    for reader in collector.FAMILIES:
+        for send in outcomes:
+            row = readers[reader].get(send)
+            if row is not None and any(row.get(field) not in FIELD_VALUES for field in FIELDS):
+                problems[reader]['rows'].append((item_of[send], send, f'BY and LQ are each one of {FIELD_VALUES}'))
+    bad = {reader: found['rows'] or found['unreadable lines'] for reader, found in problems.items() if found['rows'] or found['unreadable lines']}
+    if bad:
+        raise SystemExit(f'VOID: rows missing or not valid: {bad}')
+    expected = json.loads(Path(plants_path).read_text())
+    if set(expected) != set(reading_split.PLANTS) or any((plant, 1) not in outcomes for plant in expected):
+        raise SystemExit('VOID: the plants are not the ones reading_split.py builds')
+    missed = [(plant, reader) for plant, entry in expected.items() for reader in collector.FAMILIES
+              if readers[reader][(plant, 1)][entry['field']] != entry['expected']]
+    if missed:
+        raise SystemExit(f'VOID: a plant was missed: {missed}')
+    both = sorted(collector.FAMILIES.values())
+    families = collector.third_reader_families(reading)
+    if collector.disputes_of(outcomes, readers) and families != both:
+        raise SystemExit(f'VOID: differences need both third-reader families; found {families}')
+    read = {family: collector.read_rulings(reading, item_of, outcomes, readers, family) for family in families}
+    if any(found[1] for found in read.values()):
+        raise SystemExit(f'VOID: third-reader rulings missing: { {family: found[1] for family, found in read.items() if found[1]} }')
+    given = field_rulings(reading)
+    missing = [f'{item_of[send]}-{field}' for send, field in field_points(outcomes, readers, item_of)
+               if len(given.get(f'{item_of[send]}-{field}', {})) < 2]
+    if missing:
+        raise SystemExit(f'VOID: BY or LQ rulings missing for {missing}')
+    return outcomes, readers, item_of, {family: found[0] for family, found in read.items()}, families, given
+
+
+def settled_field(values, ruled, unresolved_as):
+    if len(set(values)) == 1 and values[0] != 'cannot_tell':
+        return values[0]
+    third = set(ruled.values())
+    if len(ruled) == 2 and len(third) == 1 and 'cannot_tell' not in third:
+        return next(iter(third))
+    return 'yes' if unresolved_as == 'fails' else 'no'
+
+
+def faults_of(send, outcome, readers, of_family, families, given, item, unresolved_as):
+    rows = [readers[reader][send] for reader in collector.FAMILIES]
+    empty = {'marks': {}, 'W': {}}
+    ruling, _ = accounting.rulings_of_two(of_family[families[0]].get(send, empty), of_family[families[-1]].get(send, empty), unresolved_as)
+    faults = set()
+    for mark in accounting.marks_that_apply(accounting.kind_of(outcome)):
+        value = rows[0][mark] if rows[0][mark] == rows[1][mark] else ruling['marks'].get(mark, unresolved_as)
+        if mark in HARD and value == 'fails':
+
+ succeeded in 0ms:
+control: 11 passed in 0.54s
+S1 a control naming the case is not seen: CAUGHT | 1 failed, 10 passed in 0.58s | ['test_a_control_naming_the_split_case_fails_the_counts']
+S2 the kind rule removed: CAUGHT | 1 failed, 10 passed in 0.60s | ['test_a_control_whose_kind_changes_in_two_of_three_sends_fails_the_counts']
+S3 a missed plant not voiding: CAUGHT | 1 failed, 10 passed in 0.61s | ['test_a_missed_plant_voids_the_reading']
+S4 unresolved points always counted for the answer: CAUGHT | 1 failed, 10 passed in 0.60s | ['test_a_split_point_without_its_third_rulings_voids_and_with_split_rulings_is_inc']
+S5 a C1 fault the frozen arm shares counted: CAUGHT | 1 failed, 10 passed in 0.60s | ['test_a_c1_fault_the_frozen_arm_shares_is_not_a_veto_but_a_new_one_is']
+S6 BY and LQ not vetoed on yearly items: CAUGHT | 2 failed, 9 passed in 0.59s | ['test_a_base_year_settled_by_both_families_on_a_yearly_item_is_negative', 'test_a_split_point_without_its_third_rulings_voids_and_with_split_rulings_is_inc']
+S7 T passes with one success: MISSED at first (no failing-T test); after test_a_t_topic_whose_second_year_is_declined_in_every_send_fails_the_counts was added: CAUGHT | 1 failed, 11 passed
+R1 yearly items lose their split note: CAUGHT | 3 failed, 8 passed in 0.58s | ['test_the_reading_holds_the_yearly_items_the_c1_ladders_of_both_arms_and_two_plan', 'test_a_base_year_settled_by_both_families_on_a_yearly_item_is_negative']
+R2 the frozen arm's C1 ladders not read: CAUGHT | 2 failed, 9 passed in 0.57s | ['test_the_reading_holds_the_yearly_items_the_c1_ladders_of_both_arms_and_two_plan', 'test_a_c1_fault_the_frozen_arm_shares_is_not_a_veto_but_a_new_one_is']
+C1 the split system text not applied: CAUGHT (traceback read: the check refuses, 'CHECK FAILED' naming every topic) | 11 errors in 0.50s | ['test_the_send_files_both_arms_and_the_t_topics_split_into_two_written_years', 'test_a_request_changed_after_the_check_is_refused_before_any_send']
+C2 the record not compared before the send: CAUGHT | 1 failed, 10 passed in 15.62s | ['test_a_request_changed_after_the_check_is_refused_before_any_send']
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 2 'tamper|packet.*year|plant.*expected|content|comparison' docs/research/2026-11-14-use-acceptance/splitting/test_split_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+54-
+55-    def transport(provider, request):
+56:        user = request['messages'][1]['content']
+57-        group, topic, name = next(value for description, value in topics.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+58-        split_arm = request['response_format']['json_schema']['schema']['properties']['no_ladder']['anyOf'][1].get('type') == 'object'
+--
+70-        else:
+71-            text = in_split_shape(stored[topic])
+72:        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+73-    return transport
+74-
+--
+196-    key = json.loads((keys / 'key.json').read_text())
+197-    outcomes = {(row['case'], row['pass']): row for row in reading_split.rows_of(probe / 'reading')}
+198:    plants = json.loads((keys / 'plants-expected.json').read_text())
+199-    answers = probe / 'reading' / 'readers-answers'
+200-    answers.mkdir(exist_ok=True)
+--
+243-
+244-@pytest.mark.parametrize('where', ['reading row', 'packet item', 'plant mark'])
+245:def test_an_item_changed_in_content_but_not_in_its_name_voids_the_reading(reading, where):
+246:    """For the plant mark, the expected file is changed before the rows are written, so the readers agree with it and only the
+247:    comparison with the plants reading_split.py builds can find it."""
+248-    probe, keys = reading
+249-    if where != 'plant mark':
+--
+258-        packet_path = probe / 'reading' / 'readers' / 'packet-1.json'
+259-        packet = json.loads(packet_path.read_text())
+260:        packet[0]['ladder_as_the_judge_is_shown_it']['year'] = '1999'
+261-        packet_path.write_text(json.dumps(packet, ensure_ascii=False))
+262-    else:
+263:        plants_path = keys / 'plants-expected.json'
+264-        plants = json.loads(plants_path.read_text())
+265-        plants['plant|1']['field'] = 'LQ'
+
+codex
+The content comparisons now bind the saved rows, packet items and plant expectations to their rebuilt versions. One part of the stated check still does not hold: **duplicate packet items can pass**.
+
+In [load_reading](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/score_split.py:133), packet items are put directly into a dictionary keyed by `item`. If the same item appears twice with identical content, one copy overwrites the other before the set and content checks. That can give a reader the same item twice while the scorer reports that every item appeared once.
+
+Check the packet item IDs as a list before making the dictionary: require the total count to equal the number of distinct IDs and the expected count. Add a test that duplicates an unchanged packet item and expects the reading to be void, plus a mutant that removes the duplicate check.
+
+The other limits should be reported as proposed: M is unexercised, yearly items reveal their arm, and the spend projection is an estimate with reservations as the guard.
+
+CONSENSUS: no, because duplicate packet items are not yet refused.
+tokens used
+4,264,542
+The content comparisons now bind the saved rows, packet items and plant expectations to their rebuilt versions. One part of the stated check still does not hold: **duplicate packet items can pass**.
+
+In [load_reading](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/splitting/score_split.py:133), packet items are put directly into a dictionary keyed by `item`. If the same item appears twice with identical content, one copy overwrites the other before the set and content checks. That can give a reader the same item twice while the scorer reports that every item appeared once.
+
+Check the packet item IDs as a list before making the dictionary: require the total count to equal the number of distinct IDs and the expected count. Add a test that duplicates an unchanged packet item and expects the reading to be void, plus a mutant that removes the duplicate check.
+
+The other limits should be reported as proposed: M is unexercised, yearly items reveal their arm, and the spend projection is an estimate with reservations as the guard.
+
+CONSENSUS: no, because duplicate packet items are not yet refused.

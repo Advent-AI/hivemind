@@ -1,0 +1,7 @@
+**Send the matched comparison under the stated $4.75 combined cap.** The first Sol topic runs alone and its outcome remains in the draw; a request-level failure stops the run before the other Sol topics. The regenerated check reports the reviewed caps, and the stored ladder preflight records **83 answers checked and five refusals**. [Launcher](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/model_probe.py), [preflight record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/ladder-preflight-from-d625.txt)
+
+One wording correction can accompany the result: the design still has an inherited sentence saying *effort* is the only request difference; it should say *model*. The actual check compares the two new requests by model. Also, the first **topic** runs alone, but the ladder runner may make a second request for that topic if its first answer is refused by a check. Neither point changes the send decision.
+
+A stopped draw remains **not measured**. A completed comparison is a diagnostic on exposed topics, not a gate pass. I have not started the run.
+
+**CONSENSUS: Send the six matched draws with the first Sol topic alone, within the stated caps and stop rules.**

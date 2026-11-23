@@ -1,0 +1,36 @@
+**The two new fields introduce several ways to lose or narrow a valid research question.** The biggest risk is treating “one figure” as one raw number, which can turn “next year compared with this year” into “next year’s number” and lose the comparison the analyst wanted to track.
+
+I ran the requested diffs. The system texts are identical, as are the closing checks. The schema diff adds the two required fields and their definitions; the only other difference is the final newline.
+
+### Sentence-by-sentence audit
+
+| New description | Verdict | Signed standard and assessment |
+|---|---|---|
+| **`settles_on`, sentence 1:** “The one figure for one period … or the one event with its check date, whose result on that date settles this thesis.” | **Keeps narrower** | §3 says: “一个问题只问一个量的一个期间，或一件事” and gives “2027 年 DRAM 合约价相对 2026 年的变化” as an example. A change from one year to another is one tracked quantity, but “the one figure for one period” can be read as requiring one year’s raw figure. It also blurs the distinction in §3: “量是它的发布日；事件是能判出结果的那天.” A stated date for a figure is not necessarily its period or publication date. |
+| **`settles_on`, sentence 2:** “A thesis is a question, a fixed set of outcomes and a due date, written once: if no date and public material can place the answer in fixed outcomes … rewrite the thesis or do not propose it, and its statements are evidence.” | **Contradicts**, in part | The first clause matches the standard’s “一个问题句、一组结果档、一个到期日，写下后不改.” §4 says: “有一个日期和一份公开材料能把答案放进事先固定的档吗？没有就重写问题.” But the unconditional “its statements are evidence” conflicts with §4’s “它的陈述留不留照第 5 节判.” Also, “several figures none of which leads” has **no source** as an automatic reason to rewrite or reject: §3 instead separates parts only when they can move apart **and** an analyst would bet on them separately. |
+| **`outcomes`, sentence 1:** “This thesis’s fixed outcomes, written now: five ranges of that one figure, or the states of that one event …; checkable, not overlapping and leaving no gap …” | **Keeps narrower** | The checks themselves match §3: “结果档可核对、不重叠、不留缝，到期恰好一档成立；中间一档写明和什么比.” The table supports five ranges for a quantity and two for an unsigned obligation. But “five ranges of that one figure” repeats the risk that a valid **change between two years** is reduced to one raw figure. For events, §3 permits “五档，或是非两档”; the description does not explicitly preserve the five-state option, although its wording does not prohibit it. |
+| **`outcomes`, sentence 2:** “A company thesis’s outcomes describe the business result; a shared quantity’s or policy’s describe only the result, not whether it is good.” | **Contradicts**, for policy | §3 says: “标的问题的档描述业务结果；主题问题的档只写结局，不写好坏.” A policy-driven question is not automatically a theme: the policy row says a question about “一家公司的收入、利润、份额或产品进度，算标的，即使由政策驱动.” The new sentence assigns **all** policy questions the theme treatment, including company questions. |
+
+D417 supports the particular refusal of a **non-annual rolling period with no publication day supplied by the topic or item**. It does not establish a general ban on every question mentioning multiple figures. Its recorded scope is the clean path’s later judging step, so applying its example here should not silently widen that decision.
+
+### Conflicts inside the request
+
+- **When to open:** “several figures none of which leads” can cause rejection or rewriting solely because several figures appear. The system instead asks whether the answer can change the business and whether the analyst would bet on it separately. It does not say a multi-figure question fails merely because no figure “leads.”
+- **Dates:** “whose result on that date” can suggest that the result itself must occur or be published on the check date. The system gives different rules by reason: next annual report for an undertaken obligation, a check within 18 months for an unsigned one, fiscal year-end for an undated pending regulatory decision, and a supported release or check date for shared quantities and product events. The new wording does not restate those distinctions and can pull the model toward a stricter reading.
+- **Evidence without a thesis:** “its statements are evidence” can be read as keeping every statement after a thesis is rejected. The system and closing check require each statement to pass the evidence test independently. A passing statement can link to an existing thesis or remain unlinked.
+- **Separate bets:** Rewriting a complex question to satisfy “one figure” or “one event” can create a smaller question that no longer merits a separate bet, even though the original question did. The system explicitly says to open only matters an analyst would bet on separately.
+
+These are conflicts or ambiguities in the wording; this read-only review does not establish how often a model would act on them.
+
+### Industry neutrality
+
+The new descriptions use generic concepts and name **no covered company, product or specific numerical business figure**. “Unsigned deal” and a rolling twelve-month survey are general examples. However, the policy sentence does **not** apply the same distinction across all cases: it treats policy questions as theme questions even when the standard classifies a policy-driven business outcome as a company question.
+
+### Concrete risks to valid questions
+
+- **Next year versus this year:** “one figure for one period” and “five ranges of that one figure” could change “How much will next year’s contract price rise or fall versus this year?” into “What will next year’s price be?” The first tracks a change; the second can lose it. The standard explicitly gives a next-year-versus-current-year comparison.
+- **Unsigned deal:** The example “whether an unsigned deal is signed” supports a yes/no question. But **“whose result on that date”** could be misread as requiring the signing to occur on the check date, instead of asking whether it was signed **by** that date. The standard allows an unsigned obligation to be checked within 18 months.
+- **Product shipment:** The same phrase could turn “Will shipments begin by the date?” into “Will shipments begin on that date?” or discourage a proposal when the article supports a check date but not the exact day shipments will begin. The standard tracks the main product reaching the revenue-producing step and checks it when the outcome can be determined.
+- **Several related figures:** “several figures none of which leads” could discard or narrow a single economically meaningful question before asking whether its parts can move apart and justify separate bets. Conversely, if they do justify separate bets, the standard calls for separate questions, each passing the opening tests.
+
+Sources: [signed extraction standard](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:272), [D417](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4606), and [candidate schema](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/arms/c19-schema.json:51).

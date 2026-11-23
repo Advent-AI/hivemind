@@ -1,4 +1,7 @@
-import { assessmentAt, score } from '../model/thesis.js';
+import { assessmentAt, score, undirected } from '../model/thesis.js';
+
+/** A composite that cannot be computed because a driver's ladder states no direction (page-contract/DESIGN.md). */
+export class CompositeUnavailable extends Error {}
 import { isCalendarDay } from '../model/dates.js';
 
 function shape(value, keys, name) {
@@ -103,6 +106,13 @@ export function prepareIdeaComposite(card, dataset) {
   }
   const selected = new Set((card.reading.chosen || []).map((entry) => entry.view_id));
   const byId = new Map(dataset.theses.map((thesis) => [thesis.id, thesis]));
+  for (const driver of plan.drivers) {
+    const thesis = byId.get(driver?.thesis_id);
+    if (thesis && undirected(thesis))
+      throw new CompositeUnavailable(
+        `No composite: ${thesis.id} states no direction for the company (${thesis.answerShape === 'event' ? 'an event' : thesis.answerShape === 'unrecorded' ? 'its answer shape is not recorded' : "a theme's range"})`,
+      );
+  }
   const used = new Set();
   const identify = (entry) => {
     const thesis = byId.get(entry.thesis_id);
@@ -207,6 +217,10 @@ export function prepareCompositeTrial(trials, card, dataset) {
       used.has(thesis.id)
     )
       throw new TypeError('A composite driver must identify one unique connected thesis');
+    if (undirected(thesis))
+      throw new CompositeUnavailable(
+        `No composite: ${thesis.id} states no direction for the company`,
+      );
     if (
       ![1, -1].includes(driver.direction) ||
       ![driver.label, driver.reason].every((text) => typeof text === 'string' && text.trim())

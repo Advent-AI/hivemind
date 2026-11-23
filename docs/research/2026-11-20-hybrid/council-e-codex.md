@@ -1,0 +1,1 @@
+CONSENSUS: send J2a and J2b (probe and gold, 3 repeats), score coverage and refusals, read the complete deck, then the production-path check under v7 and the passing arm.

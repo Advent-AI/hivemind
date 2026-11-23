@@ -1,0 +1,14 @@
+**Recheck the reference before declaring retrieval a pass.** The two examples show that some labels call related events the same statement; they do not establish that every “richer” repeat is wrong.
+
+**(a) Re-label, but keep two questions separate.** First ask whether the records contain the same statement, a revision, or different statements. Then, independently, ask what material information the later record adds and whether the proposed source-only merge would preserve it. A record can repeat one statement *and* contain a separate new fact. Forcing that into one of five exclusive labels would conceal the overlap.
+
+Preserve the original labels and reasons as historical results; create a separately versioned exploratory reference. Recheck all positives, **plus a blinded sample of negatives and insufficient cases**: the same shared bias could have missed true pairs too. Use full passages and context, and record the exact added or conflicting fact. Two new readers from the same model family do not by themselves fix the independence problem; the human review of 30 is a useful control, not proof of the remaining labels.
+
+**(b) R2’s advantage is an observation, not a reliable conclusion.** It found 388/424 labelled pairs versus 368/424 for R1, but those labels are under challenge and many pairs can come from the same recurring story. Compare the paired wins and losses by incoming item and story, including the 40 sample pairs. Three cross-thesis positives cannot support a cross-thesis conclusion. Also, R2 omits the thesis from its query, so it is a useful diagnostic but does not by itself test the agreed `{thesis, evidence}` query.
+
+**(c) Two checks could overturn the retrieval result even after re-labelling:**
+
+- The [scorer](</Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/adjudicate.py:75>) **unions results across an item’s thesis links** before scoring. That can count a match found in one association as available for another, and the union can exceed ten candidates. Score each association’s own top ten as well.
+- The search uses the raw Step 1 history, including records that a real deduplicating path might already have merged. A “found” earlier duplicate may therefore not exist as a separate candidate in the proposed library. Check retrieval against a simulated, correctly deduplicated history, while leaving conflicting-candidate behavior open.
+
+Finally, six generator misses among 40 labelled sample positives and the summary-first scan limit completeness. Report uncertainty and examine missed revisions and cross-thesis cases separately. Do not send Jev comparisons until the corrected reference and scoring unit are settled.

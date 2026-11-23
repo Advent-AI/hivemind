@@ -10,10 +10,11 @@ the cases judged, the cases refused and the reasons with examples:
   C. matching's code checks (matching.check) over every stored matching record, with the lists shown at the time
   D. every schema enum value appears verbatim in the prompt that asks for it
 
-It replays the answers of the versions the code builds (extraction v74i, judging-v7); a row of a retired version, or one whose
-configuration file is gone, is counted as not replayed and named. Usage: python3 scripts/preflight.py [--archive A] [--items I]
-[--views DB ...] (defaults: draw 1 of the frozen v108 run, poc/data/e2e-r9-frozen-v108-2026-11-03/d1, and the NVDA items database).
-Exit status 1 when a check judged no case.
+It replays the answers of the versions the code builds (extraction v74i; a judge answer against the format saved with its own
+request); a row of a retired version, or one whose configuration file is gone, is counted as not replayed and named. Usage:
+python3 scripts/preflight.py [--archive A] [--items I] [--views DB ...] (defaults: draw 1 of the frozen v108 run,
+poc/data/e2e-r9-frozen-v108-2026-11-03/d1, and the NVDA items database). Exit status 1 when a check judged no case, or when a
+refused judge row carries no saved answer format.
 """
 import argparse
 import collections
@@ -29,10 +30,10 @@ from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'src'))
-from hivemind import config, extraction, model, testdb, universe, vocabulary  # noqa: E402
+from hivemind import config, extraction, live_lock, model, testdb, universe, vocabulary  # noqa: E402
 from hivemind.views import judging, matching  # noqa: E402
 
-SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA, 'judge': judging.schema_for(judging.SUPPORTED_VERSIONS[0])}
+SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA}     # judge rows: the format saved with each request
 # the stored requests of both prompt languages (D163): Chinese headers up to extraction v5 / matching-v1, English from v6 / matching-v2
 ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
 MATCH_SHOWN = re.compile(r'^· (v\d+)\s?[（(]', re.M)
@@ -56,20 +57,37 @@ def tally(title, judged, refused, reasons, examples):
             print(f'          e.g. {example}')
 
 
+def saved_judge_format(request_json):
+    """The answer format a judge request was sent with (judging-v12's differs per request, D713), or None when the row has none."""
+    try:
+        return ((json.loads(request_json or '{}').get('response_format') or {}).get('json_schema') or {}).get('schema')
+    except (json.JSONDecodeError, AttributeError):
+        return None
+
+
 def part_a(archive_conn):
-    reasons, examples, judged = collections.Counter(), collections.defaultdict(list), 0
-    rows = archive_conn.execute("select purpose, request_sha256, answer_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%' or request_sha256 like '%:refused:%'")
-    for purpose, sha, answer_json in (tuple(r) for r in rows):
+    """(answers judged, judge rows without a saved format). Judge rows are checked against the format saved with their own request;
+    extraction and matching rows against their fixed schema."""
+    reasons, examples, judged, missing = collections.Counter(), collections.defaultdict(list), 0, []
+    rows = archive_conn.execute("select purpose, request_sha256, answer_json, request_json from model_calls where request_sha256 like '%:schema:%' or request_sha256 like '%:malformed:%' or request_sha256 like '%:refused:%'")
+    for purpose, sha, answer_json, request_json in (tuple(r) for r in rows):
         judged += 1
+        schema = SCHEMAS.get(purpose, {})
+        if purpose == 'judge':                     # a missing format is reported whatever the answer holds, a malformed one included
+            schema = saved_judge_format(request_json)
+            if schema is None:
+                missing.append(sha)
+                reasons['judge: no saved answer format'] += 1
+                continue
         if ':malformed:' in sha or not answer_json:
             reasons[f'{purpose}: not JSON'] += 1
             continue
-        for error in model.check_schema(json.loads(answer_json), SCHEMAS.get(purpose, {})):
+        for error in model.check_schema(json.loads(answer_json), schema):
             key = f'{purpose}: {normalise_reason(error)}'
             reasons[key] += 1
             examples[key].append(error[:140])
     tally('A. answers the schema refused (prompt/schema disagreements; empty when the provider enforces the schema server-side)', judged, judged, reasons, examples)
-    return judged
+    return judged, missing
 
 
 class Unverifiable(Exception):
@@ -180,6 +198,43 @@ def shown_for_record(archive_conn, rec, decisions):
     return None
 
 
+def locked_copy(path, scratch):
+    """A store copied for preflight (live-service/OPERATING-CONTRACT.md, row 7): its writer lock taken without waiting, so a store being
+    written is refused with the snapshot route named; the path checked on both sides of the open and after the copy; the copy made by
+    SQLite's backup API from a read-only source and taken out of WAL mode; the lock released."""
+    held = live_lock.acquire(path)
+    try:
+        source = sqlite3.connect(f'file:{held.real_path}?mode=ro', uri=True)
+        try:
+            live_lock.verify(held)
+            target = sqlite3.connect(scratch)
+            try:
+                source.backup(target)
+                live_lock.leave_wal_mode(target)
+            finally:
+                target.close()
+        finally:
+            source.close()
+        live_lock.verify(held)
+    except BaseException:
+        for leftover in (scratch, scratch + '-journal', scratch + '-wal', scratch + '-shm'):
+            if os.path.exists(leftover):
+                os.remove(leftover)                  # what was copied from a path that changed is discarded
+        raise
+    finally:
+        live_lock.release(held)
+
+
+def store_copies(views_paths):
+    """One locked copy of each store (`locked_copy`), made before any part reads it; parts C and E read these, never the stores."""
+    copies = []
+    for path in views_paths:
+        copy = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
+        locked_copy(path, copy)
+        copies.append(copy)
+    return copies
+
+
 def part_c(archive_conn, views_paths, uni):
     reasons, examples = collections.Counter(), collections.defaultdict(list)
     judged = refused_records = 0
@@ -188,7 +243,7 @@ def part_c(archive_conn, views_paths, uni):
         ledger_judged, skipped = 0, collections.Counter()
         # matching.check writes suggested themes to the review pool, so it runs on a scratch copy, never on the real file
         scratch = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
-        shutil.copy(path, scratch)
+        shutil.copy(path, scratch)                  # `path` is already preflight's own locked copy (`store_copies`), never a live store
         conn = sqlite3.connect(scratch)
         conn.row_factory = sqlite3.Row
         for rec in conn.execute('select input_id, call_no, shown_json, decisions_json, request_sha256 from match_records order by id'):
@@ -300,9 +355,14 @@ def main():
     items_conn = testdb.open_db(args.items)
     uni = universe.load(args.universe)
     print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
-    part_a(archive_conn)
-    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, views_paths, uni), part_d()]
-    part_e(views_paths)          # informational for unkeyed ledgers; judged counts are reported per ledger
+    _, missing_formats = part_a(archive_conn)
+    copies = store_copies(views_paths)
+    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, copies, uni), part_d()]
+    part_e(copies)          # informational for unkeyed ledgers; judged counts are reported per ledger
+    if missing_formats:
+        print(f'\nFAILED: {len(missing_formats)} refused judge rows carry no saved answer format, so part A could not check them: '
+              + ', '.join(sha[:24] for sha in missing_formats[:10]))
+        sys.exit(1)
     if min(counts) == 0:
         print('\nUNEXERCISED: a check judged no case')
         sys.exit(1)

@@ -1,0 +1,1518 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 9, confirmation (read-only, $0; D672's condition)
+
+Round 8 (`tools-review-codex-8.md` and a Claude reader) asked for changes. They are recorded in D675's last entries in
+`docs/DECISIONS-log.md` and made in:
+- `stage0/d400_reader_lines.py`, `stage0/step2_lines.py`, `stage0/d431_reading.py` and their tests;
+- `stage0/census/census_readers.py` (`run`: a timeout is now a void);
+- `DESIGN-1.6.md` v7.
+
+Check, citing file and line, only:
+1. Is each round-8 point fixed as recorded?
+2. Did a fix break anything that changes a pass or fail, or what a reader sees?
+
+End with `READY` (the §1.6 tools may read the run's outputs) or `NOT READY: <the smallest changes>`. Keep it under about 300 words.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`, except its six `<draw>/run.json` files.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check each recorded round-eight fix and look for regressions that could change a result or a reader’s packet.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '9810,9918p'
+nl -ba docs/research/2026-11-17-product-comparison/tools-review-codex-8.md
+rg -n 'audit|Line 3|unverified|unit|third|diagnostic|context|question' docs/research/2026-11-17-product-comparison/DESIGN-1.6.md | tail -43" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  9810	- **The §1.6 design, round 7** (v5): both readers asked for small changes only. All are made, and the design is now v6:
+  9811	  - **The support floor:**
+  9812	    - insufficient and unresolved latest answers are counted with no credit (Codex);
+  9813	    - the trivial and supported floors are counted on every random-sample card, covering cards included, because the frozen rule keeps
+  9814	      covering cards out of the guardrail shares only (Claude).
+  9815	  - **The opening report** is labelled "confirmed coverage only".
+  9816	  - **`cases.json` is fingerprinted.**
+  9817	  - **A diagnostic export** takes only the finished draws, marked DIAGNOSTIC and under its own key. The scorer refuses it.
+  9818	  - **Step 2 line 1** counts the first 100 labelled records in draw order.
+  9819	  - **`d400_code_check`'s release order** (a miss before "not measured") has its test.
+  9820	  - **Now:** 54 tests; 43 mutants and 6 controls, all as predicted.
+  9821	- **Round 8: the council's consensus on Step 2's line 3, a hard check** (Codex in `tools-review-codex-8.md`, and a Claude reader;
+  9822	  recorded before any output). The decision is that line 3 counts details of content only.
+  9823	  - **What was found:**
+  9824	    - v6's key counted a later report's tier, stated day, period and speaker, and the frozen `group_text` drops those fields;
+  9825	    - in stored runs, 78 of 79 (c1), 72 of 75 (c2) and 85 of 85 (c3) groups differ in them, so the line would fail whatever the merging
+  9826	      does.
+  9827	  - **The new definition:** a detail is what a later report's statement adds — "a figure, condition, party, date or qualification an
+  9828	    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+  9829	    condition"; the recorded test's "detail" category, in which attribution was a separate category outside the line).
+  9830	  - **How the key is made:** key readers do not see the four attribution fields. A party or period that changes the claim still counts
+  9831	    when the statement's text says it.
+  9832	  - **Printed beside:** the differences in the four fields are counted by code and printed beside the line.
+  9833	  - **The pass rule:** the line passes on the two families' pooled totals, as the recorded test summed both readers.
+  9834	  - **Disclosed with the result:** the line now checks that grouping loses no content against the readers' own noise; it is weaker
+  9835	    than the recorded unprompted questions.
+  9836	  - **The reason rests on** the recorded test and the PRD. It does not rest on the judge, which sees tier, speaker and stated day but no
+  9837	    period, and quotes cut at 400 characters (`judging.py:130`); the Claude reader corrected the lean's first reason on this.
+  9838	- **Round 8, also decided:**
+  9839	  - **D431 at 07-14:** identity matching uses two third readers, one per family, as the full run did (`READING-COMMITMENT.md`), and a
+  9840	    split stays unresolved. Numeric agreement is withheld when the units differ or cannot be established ("no comparison (unit)"), with
+  9841	    no conversion.
+  9842	  - **D400's reader lines** have no ask-again round; a missing session leaves them "not measured". They are printed beside only.
+  9843	  - **The shared launcher** (`census_readers.run`) now returns a void on a timeout instead of raising, so every tool's retry applies.
+  9844	  - **Codex's tool fixes,** sent to the three builders:
+  9845	    - packet validation as the collector reads it;
+  9846	    - strata by manifest position;
+  9847	    - unverified quotes flagged;
+  9848	    - the same surrounding dossier in both renderings;
+  9849	    - units in the eligibility packets.
+  9850	- **The three remaining §1.6 tools are built to design v7, with round 8's fixes in place:**
+  9851	  - `d400_reader_lines.py`: 10 tests, 16 mutants;
+  9852	  - `step2_lines.py`: 15 tests, 25 mutants;
+  9853	  - `d431_reading.py`: 9 tests, 22 mutants.
+  9854	- Each was built by a subagent with fake readers and no model call, and dry-run on stored draws. The mutants were run by each builder on
+  9855	  scratch copies, and each was caught by its own test.
+  9856	- In all: 88 stage0 tests, and the frozen-file tests green.
+  9857	- On c1, line 3's rendering prompts reach at most 29 KB, and 205 of 206 later reports differ in attribution fields (printed beside).
+     1	## Part A
+     2	
+     3	- **D400:** The verified copies, frozen briefs and D452 scaling fit the recorded outputs. Tighten packet validation. Duplicate item rows are silently collapsed, and a number such as `1.0` can pass the wrapper but be discarded by the collector. Reader timeouts also escape the retry loops because the shared launcher raises instead of returning a void. [Wrapper](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:167) · [Collector](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/collect_readings.py:43) · [Launcher](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_readers.py:122)
+     4	- **Step 2:** The neutral rewording, exact party match and two-family scan preserve v6’s intent. Line 1 forms strata after dropping articles with no records, which can change the first 100 labelled cases. Use manifest positions. Lines 1 and 2 also promise verbatim source passages, but the packet helper presents an unmatched model quotation as its own source context. Flag it as unverified. Line 3 sends isolated groups. Include the same surrounding dossier in both versions. [Sampling](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:300) · [Trace reader](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:67) · [Packet source](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/build_merge_packets.py:22) · [Renderings](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:659)
+     5	- **D431:** Both writers record the cutoff sequence the tool needs. The eligibility prompt requires the same unit, yet the packet omits the stored judged unit. Supply it and withhold numeric agreement when units differ or cannot be established. No conversion is needed. Two third readers match the eligibility precedent. Using two for **identity matching** changes D442’s tie-break and needs a recorded decision. [Old writer](/Users/lchingen/hivemind/src/hivemind/replay.py:130) · [New writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:425) · [Packet](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:422) · [D442](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/DESIGN.md:43) · [Eligibility precedent](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/full-eligibility/control-reader-brief.md:29)
+     6	
+     7	NOT READY: fix packet validation and timeout handling, preserve Step 2’s sampling and source context, and settle D431’s units and identity tie-break.
+     8	
+     9	## Part B
+    10	
+    11	**Agree with Claude’s reading.** Line 3 asks whether grouping preserves material facts a later report adds, such as a new guidance condition or a changed date. A party or period still counts when it changes the claim. Print omissions of attribution fields separately. The original test graded answers to frozen analyst questions, so keep the answer key from dossier readers to preserve that test. The judge receives each shown copy with its same-claim note, but its request does not expose all four attribution fields as separate values. The recorded dossier test is the basis for this decision. [PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:338) · [Detail definition](/Users/lchingen/hivemind/poc/data/step2-validation-2026-11-07/v2-prompt-1.md:15) · [Recorded test](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:238) · [Judge request](/Users/lchingen/hivemind/src/hivemind/views/judging.py:128)38:| Days from first source to opening | `score_comparison.beside` | For each matter and draw with a confirmed covering question (split covers not counted): the earliest publication day among the matter's `articles` (the census numbering), to the earliest opening day of a covering question. A question opened before 09-07 is printed "opened in the warm-up"; one opened in the window before that day, "opened before the first listed article" |
+49:  - A skipped ladder component (no question opened) is "not measured".
+71:- **Labels:** two readers, one per family, answer the neutral relation question of the Step 2 reference labelling
+72:  (`poc/data/step2-validation-2026-11-07/v2-prompt-*.md`, question 1: the relation of the later record to the earlier, with no claim that
+75:- **Generator-miss audit:** the Step 2 log's whole-history scan (`build_reader_packets.py scan`), run on a fixed subset of 12 sampled
+77:  - Each record the scan flags is a candidate, not a label. It goes through the same full-context labelling and adjudication as the
+79:  - The audit's yield is reported: the counterparts the routes missed.
+87:- **Reading:** the frozen Step 2 merge reading (`poc/data/clean-step2-forward-2026-11-08/merge-prompt-1.md`, and `merge-third-prompt.md`
+90:- **Pass:** the third reader's `wrong` count is at most 4 of 200. Fewer than 200 repeats: **not measured**.
+92:**Line 3, later details: the shipped renderer, as the Step 2 log §12 measured it.**
+101:    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+105:  - Two closed key readers, one per family, each list the details. A third session settles every detail they do not share.
+119:  report adds, against the readers' own noise. It is weaker than the recorded test's unprompted questions.
+127:the ruler's question, is not built (D442's precedent).
+129:  closed views included. Then `service.state_as_of` at 2026-07-14 is read for each one. New-system units are joined by
+131:- **Step 4, matching:** MATCHING-v2's SAME rule, two blind families, and two third readers, one per family, on each disagreement, as the
+132:  full run did (`READING-COMMITMENT.md`). A split stays unresolved. D442's rule for a ruler question's candidates applies.
+133:- **Step 5, eligibility:** question, period and quantity the ruler's, and due day the ruler's (D430). Decided by two blind readers with
+134:  a third on disagreement; the literal reading (the same due day) beside.
+137:  - A figure rung with no bound: "no comparison". A unit that differs from the ruler question's, or that cannot be established:
+138:    "no comparison (unit)". No conversion is made.
+141:- **Printed:** per ruler question and draw, its outcome; and per draw and system, the agreements on the seven graded questions.
+147:- **Covered:** at least 80% of important matters have a covering question.
+148:- **Trivial or duplicate:** at most 20% of the questions, counted as decided worth marks on every random-sample card, covering cards
+173:| A draw stopped or ineligible | No release verdict. `eligibility.py` still records every finished draw's fingerprints and names the draws that stop the aggregate. The tools run on what finished, as a diagnostic (plan §1.4 item 10) |
+
+exec
+/opt/homebrew/bin/zsh -lc 'p=docs/research/2026-11-17-product-comparison/stage0
+for f in d400_reader_lines.py step2_lines.py d431_reading.py test_d400_reader_lines.py test_step2_lines.py test_d431_reading.py; do echo "$f"; rg -n '"'def .*|original_party|SOURCE_CONTEXT|FIELDS_COUNT|KEY_PROMPT' \""'$p/$f"; done
+nl -ba "$p/census/census_readers.py" | sed -n '"'120,158p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+d400_reader_lines.py
+120:def sha256_of_bytes(data):
+124:def scaled_line_5(right, right_by_a_ladder, theses):
+136:def line_5_of(stored_line):
+144:def verdict_under_both(verdicts):
+151:def theme_list_text():
+159:    def __init__(self, key):
+163:    def __getitem__(self, item):
+169:def rows_problem(answer, family, packet_sends, key, outcomes):
+195:def rulings_problem(answer, mark_of_point):
+228:def session(draw_folder, name, family, prompt, problem_of):
+250:def load_manifest(out):
+257:def draws_to_read(out, manifest):
+269:def number_of(packet_file):
+273:def run_stage_a_tool(arguments, cwd):
+277:def verified_bytes(eligibility, run_root, draw, relative):
+285:def build_packets(run_root, eligibility, out, keys_folder=DEFAULT_KEYS):
+335:def read_packets(out):
+358:def read_disputes(out):
+385:def run_sessions(jobs):
+386:    def one(job):
+401:def missing_sessions(folder):
+410:def report(out):
+453:def print_report(result):
+480:def main(argv=None):
+step2_lines.py
+94:def between(text, start, end):
+101:def swap(text, old, new):
+124:KEY_PROMPT = ('You are an independent reader for a hedge-fund research system, building an answer key. Read-only task: do not edit files or '
+147:def component_file(run_root, eligibility_record, component, name):
+156:def article_texts(trace):
+171:def shown_passages(record):
+176:def source_context(text, passage):
+181:def packet_entries(trace):
+190:            entries[r['id']] = {'summary': r['summary'], 'original_party': r['original_party'],
+199:def fresh(folder):
+206:def fresh_key(path):
+212:def write_key(path, key):
+217:def sha256_text(text):
+221:def freeze(path, payload):
+230:def read_frozen(path):
+237:def sources():
+243:def inline(prompt, read_sentence, packet):
+250:def label_prompt(packet, adjudication=False):
+259:def rendering_prompt(rendering, details):
+263:def answer_rows(answer):
+280:def is_text_list(value):
+284:def rows_check(ids, fields):
+286:    def check(answer):
+299:def sessions(folder, jobs):
+306:    def one(job):
+328:def session_counts(folder):
+336:def packets(items, size):
+340:def drawn_family(seed, *parts):
+345:def wilson(successes, trials, z=1.96):
+355:def finish(out, line, folder, result):
+364:def strata_of(articles, manifest_length):
+375:def draw_order(strata, seed):
+387:def party_of(record):
+388:    return (record['original_party'] or '').strip().casefold()
+391:def day_of(record):
+398:def route_candidates(record, earlier, words):
+413:def scan(folder, tag, audited, earlier_of, entries):
+421:                       'earlier_items': [{'key': e['id'], 'summary': e['summary'], 'original_party': e['original_party']} for e in chunk]}]
+423:            def check(answer, record_id=record_id, keys=keys):
+441:def label(folder, tag, new_pairs, pairs, entries, packet_ids):
+481:def labelled_in_order(order, by_later, scan_missing):
+495:def line1(run_root, eligibility_record, out, keys=KEY_FOLDER):
+572:def line2(run_root, eligibility_record, out, keys=KEY_FOLDER):
+632:def key_entry(record):
+635:    return {'summary': record['summary'], 'passages': shown_passages(record), 'original_party': record['original_party'],
+639:def attribution_differences(groups):
+655:def surrounding_dossier(stored, group_id):
+664:def renderings_of(store, stored, group_id):
+677:def normal(detail):
+681:def line3(run_root, eligibility_record, out, keys=KEY_FOLDER):
+707:                  'prompt': inline(KEY_PROMPT, 'Read PACKET. ', [shown(entry) for entry in chunk]), 'check': key_check(ids)} for family in FAMILIES]
+798:def bootstrap_interval(values, seed):
+807:def report(out):
+823:def main(argv=None):
+d431_reading.py
+196:def sha256_text(text):
+200:def connect(path):
+208:def last_sequence(conn, day=DAY):
+217:def ladder_unit(conn, view_id):
+231:def listed_views(conn, system, day=DAY, last_seq=None):
+263:def read_store(entry, day=DAY):
+278:def frozen_inputs():
+293:def graded(frozen, question_id):
+301:def session_name(phase, family, prompt):
+306:def session(out, name, family, prompt, problem):
+333:def stored_answer(out, name, prompt):
+344:def run_sessions(out, jobs):
+352:def rows_problem(answer, key, expected, check):
+367:def draw_labels(draws):
+374:def opened_rows(run, views):
+380:def match_prompt(frozen, run, rows):
+386:def match_problem(rows, ruler_ids):
+387:    def check(r):
+398:def same_marks(answer):
+403:def pair_marks(answers):
+418:def match_third_prompt(frozen, disputes):
+426:def match_third_problem(count):
+427:    def check(r):
+432:def ruling(values):
+441:def ruler_unit(frozen, question_id):
+449:def same_unit(frozen, question_id, view):
+456:def control_item(number, frozen, question_id, view):
+464:def eligibility_problem(controls):
+465:    def check(r):
+472:def eligibility_third_problem(points):
+473:    def check(r):
+477:    def problem(answer):
+491:    def __init__(self, stores, out, key_path, diagnostic=False):
+515:    def answer(self, phase, family, prompt):
+521:    def match_jobs(self):
+530:    def first_marks(self):
+542:    def match_disputes(self, marks):
+551:    def match_third_jobs(self, disputes):
+558:    def pair_status(self):
+585:    def matched(self):
+613:    def controls(self, matched):
+620:    def packets(self, controls):
+624:    def eligibility_jobs(self, controls):
+632:    def first_eligibility(self, controls):
+644:    def eligibility_points(self, controls, rows):
+648:    def eligibility_third_prompt(self, controls, points):
+653:    def eligibility_third_jobs(self, controls):
+661:    def decided_eligibility(self, controls):
+686:    def answer_vs_reader_b(self, draw, question, view):
+710:    def result(self):
+767:def read(reading, run=True):
+781:def print_result(result):
+801:def stores_of_run(run_root, eligibility_path, diagnostic):
+test_d400_reader_lines.py
+29:def thesis_case(draw, thesis_id):
+39:def figure_outcome(draw, thesis_id, pass_number):
+50:def make_run_root(root, ladder_states):
+79:    def __init__(self, voids=None, void_reason='a tool use', bad_answers=None):
+86:    def __call__(self, family, prompt):
+113:def test_line_5_is_met_at_the_scaled_minimums():
+120:def test_line_5_below_a_scaled_minimum_is_missed():
+126:def test_line_5_with_no_thesis_is_not_measured():
+131:def test_a_file_not_fingerprinted_or_changed_is_refused_before_anything_is_written(tmp_path):
+146:def test_a_skipped_ladder_is_not_measured(tmp_path):
+156:def test_packets_read_third_report_end_to_end(tmp_path, monkeypatch):
+184:def one_draw_with_packets(tmp_path):
+191:def voids_logged(out):
+196:def test_a_session_still_void_after_one_retry_is_reported_missing(tmp_path, monkeypatch):
+212:def test_an_answer_the_collector_would_read_otherwise_is_void(tmp_path, monkeypatch):
+224:def test_a_ruling_answer_is_read_as_the_collector_reads_it():
+236:def test_a_reader_timeout_is_a_void_retried_once_then_reported_missing(tmp_path, monkeypatch):
+242:    def command_line(command, input, **options):
+test_step2_lines.py
+27:def step1_record(summary, party='Acme Corp', verified=True):
+29:    return {'summary': summary, 'passages': [f'{summary}, the company said.'], 'original_party': party, 'reporting_speaker': 'Reuters',
+33:def write_trace(path, articles):
+49:                     'original_party': r['original_party'], 'reporting_speaker': r['reporting_speaker'], 'tier': r['tier'],
+58:def make_draw(root, articles, decisions, stored_library):
+71:def anchor_corpus(repeats, misses=0):
+84:def library_record(record_id, article, summary, period=None, speaker='Reuters'):
+86:            'summary': summary, 'passages': [f'{summary}, the company said.'], 'original_party': f'Company {article}',
+90:def grouped_library(groups, period_in=(), speaker_in=(), thesis_of=None):
+108:def packet_of(prompt):
+112:def excerpt_of(prompt):
+116:def states(family, detail, excerpt):
+123:    def __init__(self, void=lambda family, prompt, attempt: False, render=states):
+126:    def __call__(self, family, prompt):
+152:def reader(monkeypatch):
+153:    def install(**options):
+160:def packet_entries_sent(fake, marker):
+168:def test_line1_passes_with_90_of_100_labelled_records_found_and_fails_with_89(tmp_path, reader):
+177:def test_line1_short_of_100_labelled_records_is_not_measured(tmp_path, reader):
+185:def test_line1_labels_are_frozen_before_step2_candidates_are_read(tmp_path, reader, monkeypatch):
+192:    def watching(record, run_root, draw, relative):
+202:def test_line1_candidates_are_records_of_earlier_articles_only(tmp_path, reader):
+217:def test_line1_strata_are_thirds_of_the_manifest_by_forward_position(tmp_path, reader):
+231:def test_line1_and_line2_packets_flag_an_unverified_quote_and_give_it_no_source_context(tmp_path, reader):
+248:def test_line1_prompts_name_only_their_chunk_and_no_folder(tmp_path, reader):
+261:def merge_corpus(repeats, wrong, refused=0):
+274:def test_line2_passes_at_4_clear_wrong_merges_of_200_fails_at_5_and_is_not_measured_below_200(tmp_path, reader):
+285:def test_a_session_void_twice_leaves_its_line_not_measured_and_one_void_attempt_is_retried(tmp_path, reader):
+297:def test_an_input_the_eligibility_check_did_not_fingerprint_is_refused(tmp_path, reader):
+309:def misses(family_and_rendering):
+311:    def render(family, detail, excerpt):
+317:def test_line3_passes_on_pooled_totals_no_fewer_grouped_and_is_not_measured_below_30(tmp_path, reader):
+336:def test_line3_key_readers_see_content_only_and_attribution_differences_are_counted_beside(tmp_path, reader):
+351:def test_line3_no_session_sees_both_renderings_of_a_group(tmp_path, reader):
+368:def test_line3_both_renderings_follow_the_same_surrounding_dossier(tmp_path, reader):
+392:def test_the_report_puts_a_failed_line_ahead_of_one_not_measured_and_clears_only_when_all_pass(tmp_path):
+test_d431_reading.py
+31:def make_store(path, system, views, judgements=(), closed=()):
+68:def fake_reader(script):
+73:    def run(family, prompt):
+92:def both(match, relation='same'):
+96:def read(tmp_path, monkeypatch, stores, script, prompts=None):
+100:    def recording(family, prompt):
+109:def test_the_0714_listing_keeps_a_view_closed_before_it_and_drops_one_created_after_it(tmp_path):
+121:def test_several_same_views_the_first_created_is_judged_and_the_others_listed(tmp_path, monkeypatch):
+132:def test_outcomes_take_the_first_that_applies_in_d442_order(tmp_path, monkeypatch):
+165:def test_a_still_open_answer_counts_no(tmp_path, monkeypatch):
+179:def last_packet(prompt):
+183:def test_a_figure_answer_is_withheld_when_the_units_differ_or_cannot_be_established(tmp_path, monkeypatch):
+212:def test_both_systems_no_unit_words_look_the_same_in_every_packet(tmp_path, monkeypatch):
+229:def strings_in(value):
+237:def test_no_packet_carries_a_view_or_thesis_id(tmp_path, monkeypatch):
+253:def test_the_command_reads_the_stores_the_run_records_name_and_refuses_a_changed_one(tmp_path, monkeypatch):
+295:def test_a_figure_rung_with_no_bound_is_no_comparison(tmp_path, monkeypatch):
+   120	
+   121	
+   122	def run(family, prompt):
+   123	    """One closed session; returns (answer text, void reason or None). The Deck 1 rule (council_mark.run)."""
+   124	    with tempfile.TemporaryDirectory(prefix='census-reader-') as empty:
+   125	        command = CODEX + ['-C', empty, '-'] if family == 'codex' else CLAUDE
+   126	        try:
+   127	            result = subprocess.run(command, input=prompt, text=True, capture_output=True, cwd=empty, timeout=3600)
+   128	        except subprocess.TimeoutExpired:                      # a void, so every caller's retry rule applies (D675)
+   129	            return None, 'no answer within 3600 s'
+   130	    events = [json.loads(line) for line in result.stdout.splitlines() if line.strip().startswith('{')]
+   131	    if family == 'codex':
+   132	        started = False
+   133	        for event in events:
+   134	            item = event.get('item', {})
+   135	            if event.get('type') == 'turn.started':
+   136	                started = True
+   137	            kind = item.get('type')
+   138	            if not kind or kind in ('agent_message', 'reasoning'):
+   139	                continue
+   140	            if kind == 'error' and not started and 'is deprecated' in item.get('message', ''):
+   141	                continue
+   142	            return None, f'a {kind} item in the log'
+   143	        texts = [e.get('item', {}).get('text', '') for e in events if e.get('item', {}).get('type') == 'agent_message']
+   144	        answer = texts[-1] if texts else None
+   145	    else:
+   146	        for event in events:
+   147	            if event.get('type') == 'system' and event.get('subtype') == 'init' and (event.get('tools') or event.get('mcp_servers')):
+   148	                return None, 'tools or MCP servers loaded'
+   149	            if event.get('type') == 'system' and event.get('subtype') not in ('init', 'thinking_tokens'):
+   150	                return None, f"system event {event.get('subtype')}"
+   151	            content = (event.get('message') or {}).get('content')
+   152	            if isinstance(content, list) and any(c.get('type') == 'tool_use' for c in content):
+   153	                return None, 'a tool use'
+   154	        results = [e.get('result') for e in events if e.get('type') == 'result']
+   155	        answer = results[-1] if results else None
+   156	    if result.returncode != 0 or not answer:
+   157	        return None, f'exit {result.returncode} or no answer'
+   158	    return answer, None
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/d431_reading.py | sed -n '217,262p;418,464p;545,582p;684,768p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/step2_lines.py | sed -n '89,198p;364,375p;490,516p;632,802p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   217	def ladder_unit(conn, view_id):
+   218	    """A new-system view's unit: its one `clean_ladders` row (a split child's row carries its year), and the checked answer's figure unit."""
+   219	    columns = {row[1] for row in conn.execute('pragma table_info(clean_ladders)')}
+   220	    if not columns:
+   221	        raise SystemExit('refused: a new-system store without clean_ladders')
+   222	    rows = conn.execute('select * from clean_ladders where view_id = ?', (view_id,)).fetchall()
+   223	    if len(rows) != 1:
+   224	        raise SystemExit(f'refused: view {view_id} has {len(rows)} clean_ladders rows, not one')
+   225	    row = dict(rows[0])
+   226	    checked = json.loads(row['checked_answer']) if row.get('checked_answer') else {}
+   227	    figure = (checked.get('ladder') or {}).get('figure')
+   228	    return {'thesis': row['thesis_id'], 'period': row.get('period') or '', 'unit': figure.get('unit') if figure else None}
+   229	
+   230	
+   231	def listed_views(conn, system, day=DAY, last_seq=None):
+   232	    """(the last sequence used, where it came from, the views created on or before the day in creation order, closed ones included,
+   233	    each with its rungs and its state as of the day). `last_seq` is given only for a stored store that records no completed day."""
+   234	    source = 'given' if last_seq is not None else 'days_completed'
+   235	    last = last_seq if last_seq is not None else last_sequence(conn, day)
+   236	    views = []
+   237	    for row in conn.execute('select rowid as created_order, * from views order by created_seq, rowid'):
+   238	        record = dict(row)
+   239	        if record['created_seq'] > last:
+   240	            continue
+   241	        state = service.state_as_of(conn, record['view_id'], day)
+   242	        rungs = [dict(r) for r in conn.execute('select position, label, condition, lo, hi from rungs where view_id = ? order by position',
+   243	                                               (record['view_id'],))]
+   244	        view = {key: record[key] for key in ('view_id', 'created_seq', 'created_order', 'created_from_input', 'question', 'looks_at',
+   245	                                             'due_day', 'year', 'kind')}
+   246	        view['rungs'] = rungs
+   247	        view['state'] = None if state is None else {'position': state['position'], 'judgement_day': state['judgement_day'],
+   248	                                                    'since_day': state['since_day'], 'rounds': state['rounds']}
+   249	        if system == 'new':
+   250	            view.update(ladder_unit(conn, record['view_id']))
+   251	        else:
+   252	            key = conn.execute('select unit from view_keys where view_id = ?', (record['view_id'],)).fetchone()
+   253	            view['unit'] = key['unit'] if key else None
+   254	        views.append(view)
+   255	    if conn.execute('select 1 from processing_steps limit 1').fetchone() is not None:
+   256	        by_product = {r['view_id'] for r in conn.execute('select * from views') if service.view_exists(conn, dict(r), day)}
+   257	        if by_product != {v['view_id'] for v in views}:
+   258	            raise SystemExit(f'refused: the listing by sequence differs from service.view_exists on {day}: '
+   259	                             f'{sorted(by_product ^ {v["view_id"] for v in views})}')
+   260	    return last, source, views
+   261	
+   262	
+   418	def match_third_prompt(frozen, disputes):
+   419	    pairs = [{'dispute': n, 'opened_question': {k: d['row'][k] for k in ('description', 'outcome', 'period')}, 'reference_question': d['question']}
+   420	             for n, d in enumerate(disputes, 1)]
+   421	    return MATCH_THIRD_BRIEF.format(count=len(pairs), rule=frozen['rule'], rulings=frozen['rulings'],
+   422	                                    questions=json.dumps(frozen['entries'], indent=1, ensure_ascii=False),
+   423	                                    pairs=json.dumps(pairs, indent=1, ensure_ascii=False))
+   424	
+   425	
+   426	def match_third_problem(count):
+   427	    def check(r):
+   428	        return None if isinstance(r.get('same'), bool) and isinstance(r.get('reason'), str) and r['reason'].strip() else 'same is true or false, with a reason'
+   429	    return lambda answer: rows_problem(answer, 'dispute', list(range(1, count + 1)), check)
+   430	
+   431	
+   432	def ruling(values):
+   433	    """Two third readers' rulings: agreed, or unresolved; a missing ruling is not measured."""
+   434	    if any(v is None for v in values):
+   435	        return 'not measured'
+   436	    return values[0] if values[0] == values[1] else 'unresolved'
+   437	
+   438	
+   439	# ---------- step 5: eligibility
+   440	
+   441	def ruler_unit(frozen, question_id):
+   442	    """The ruler question's unit in the systems' closed list, None when it cannot be established; an unknown text is refused."""
+   443	    text = frozen['questions'][question_id]['unit']
+   444	    if text not in RULER_UNITS:
+   445	        raise SystemExit(f'refused: {question_id} has the unit {text!r}, which RULER_UNITS does not read')
+   446	    return RULER_UNITS[text]
+   447	
+   448	
+   449	def same_unit(frozen, question_id, view):
+   450	    """Numeric agreement may be compared: the ruler's unit is established and equals the view's stored unit ("n/a", "other" or no
+   451	    stored unit never equal one)."""
+   452	    unit = ruler_unit(frozen, question_id)
+   453	    return unit is not None and view['unit'] == unit
+   454	
+   455	
+   456	def control_item(number, frozen, question_id, view):
+   457	    ruler = frozen['questions'][question_id]
+   458	    judged = {key: view[key] for key in ('question', 'looks_at', 'due_day', 'year', 'kind')}
+   459	    judged['unit'] = view['unit'] if view['unit'] not in (None, 'other') else 'n/a'     # both systems' "no unit" words look alike
+   460	    return {'control': number, 'ruler_question': {key: ruler[key] for key in ('question', 'unit', 'due_day', 'rungs')},
+   461	            'judged_question': judged, 'judged_rungs': view['rungs']}
+   462	
+   463	
+   464	def eligibility_problem(controls):
+   545	            rows = {row['id']: row for row in self.rows[draw]}
+   546	            for (neutral, question), by in sorted((marks.get(draw) or {}).items()):
+   547	                if len(set(by.values())) == 2:
+   548	                    disputes.append({'draw': draw, 'id': neutral, 'question': question, 'row': rows[neutral]})
+   549	        return disputes
+   550	
+   551	    def match_third_jobs(self, disputes):
+   552	        if not disputes:
+   553	            return []
+   554	        prompt = match_third_prompt(self.frozen, disputes)
+   555	        return [(session_name('match-third', family, prompt), family, prompt, match_third_problem(len(disputes)))
+   556	                for family in census_readers.FAMILIES]
+   557	
+   558	    def pair_status(self):
+   559	        """{draw: {(neutral id, question): 'same' | 'not same' | 'unresolved' | 'not measured'}}, or a draw's value None when its first
+   560	        matching is missing."""
+   561	        marks = self.first_marks()
+   562	        disputes = self.match_disputes(marks)
+   563	        rulings = {}
+   564	        if disputes:
+   565	            prompt = match_third_prompt(self.frozen, disputes)
+   566	            for family in census_readers.FAMILIES:
+   567	                answer = self.answer('match-third', family, prompt)
+   568	                by_number = {r['dispute']: r['same'] for r in json_lines(answer)} if answer is not None else {}
+   569	                for n, dispute in enumerate(disputes, 1):
+   570	                    rulings.setdefault((dispute['draw'], dispute['id'], dispute['question']), []).append(by_number.get(n))
+   571	        status = {}
+   572	        for draw, pairs in marks.items():
+   573	            if pairs is None:
+   574	                status[draw] = None
+   575	                continue
+   576	            status[draw] = {}
+   577	            for (neutral, question), by in pairs.items():
+   578	                if all(by.values()):
+   579	                    status[draw][(neutral, question)] = 'same'
+   580	                else:
+   581	                    decided = ruling(rulings[(draw, neutral, question)])
+   582	                    status[draw][(neutral, question)] = {True: 'same', False: 'not same'}.get(decided, decided)
+   684	
+   685	    # step 6
+   686	    def answer_vs_reader_b(self, draw, question, view):
+   687	        """(vii)–(ix) for the judged view, whatever its eligibility: 'no judgement', 'no comparison (unit)', 'no comparison', 'agree'
+   688	        or 'disagree'. The frozen rule is applied first (and the old system's two readings of it must agree); a figure answer is then
+   689	        withheld when the units are not the same."""
+   690	        system = self.draws[draw]['system']
+   691	        state = view['state']
+   692	        record = {'last_judgement': None if state is None else {'rung': state['position'], 'day': state['judgement_day']},
+   693	                  'gold_open': False, 'rungs': view['rungs'], 'gold_answer': self.frozen['gold'][question]['implied_outcome'],
+   694	                  'ruler': {'unit': self.frozen['questions'][question]['unit']}}
+   695	        if state is None:
+   696	            stage_b = 'no judgement'
+   697	        else:
+   698	            agreed = control_theses.agrees(record)
+   699	            stage_b = 'no comparison' if agreed is None else ('agree' if agreed else 'disagree')
+   700	        if system == 'old':
+   701	            scorer = prod_records.outcome(self.draws[draw]['views'], question, view['view_id'], DAY, self.frozen['gold'],
+   702	                                          self.frozen['questions'])['outcome']
+   703	            if scorer != stage_b:
+   704	                raise SystemExit(f'refused: {draw} {view["view_id"]} {question}: prod_records reads {scorer}, the state as of {DAY} reads {stage_b}')
+   705	        figure = self.frozen['questions'][question]['unit'] != 'yes/no'
+   706	        if stage_b != 'no judgement' and figure and not same_unit(self.frozen, question, view):
+   707	            return NO_UNIT
+   708	        return stage_b
+   709	
+   710	    def result(self):
+   711	        self.used = {}
+   712	        matched = self.matched()
+   713	        controls = self.controls(matched)
+   714	        decided = self.decided_eligibility(controls)
+   715	        control_of = {(draw, question): n for n, (draw, question, _) in enumerate(controls, 1)}
+   716	        outcomes = {}
+   717	        for question in self.ruler_ids:
+   718	            outcomes[question] = {}
+   719	            for draw in self.draws:
+   720	                entry = matched[draw][question]
+   721	                record = {'candidates': entry['candidates']}
+   722	                if not graded(self.frozen, question):
+   723	                    gold = self.frozen['gold'][question]
+   724	                    record.update(outcome='not graded', detail='reader B opens no view' if gold.get('no_view') else 'reader B gives no answer')
+   725	                elif entry['resolution'] != 'matched':
+   726	                    record.update(outcome=entry['resolution'], detail=entry.get('detail', ''))
+   727	                else:
+   728	                    view = entry['judged']
+   729	                    fields = decided[control_of[(draw, question)]]
+   730	                    literal = view['due_day'] == self.frozen['questions'][question]['due_day']
+   731	                    answer = self.answer_vs_reader_b(draw, question, view)
+   732	                    record.update(judged_view=view['view_id'], listed_views=entry['listed'], due_day=view['due_day'], state=view['state'],
+   733	                                  eligibility=dict(fields, literal_due_same=literal), answer_vs_reader_b=answer,
+   734	                                  unit=view['unit'], ruler_unit=self.frozen['questions'][question]['unit'])
+   735	                    if self.draws[draw]['system'] == 'new':
+   736	                        record.update(thesis=view['thesis'], period=view['period'])
+   737	                    values = [fields[f] for f in FIELDS]
+   738	                    noes = [f.split('_')[1] for f in FIELDS if fields[f] == 'no']
+   739	                    if 'not measured' in values:
+   740	                        record.update(outcome='not measured', detail='an eligibility session is missing')
+   741	                    elif 'unresolved' in values:
+   742	                        record.update(outcome='unresolved', detail='eligibility: the third readers split',
+   743	                                      decisive_reading=f"opened, not eligible ({' '.join(noes)})" if noes else 'unresolved')
+   744	                    elif noes:
+   745	                        record.update(outcome='opened, not eligible', detail=' '.join(noes))
+   746	                    else:
+   747	                        record.update(outcome=answer, detail='')
+   748	                    literal_eligible = fields['same_question'] if fields['same_question'] != 'yes' else ('yes' if literal else 'no')
+   749	                    record['literal_reading'] = answer if literal_eligible == 'yes' else f'eligible: {literal_eligible}'
+   750	                outcomes[question][draw] = record
+   751	        subset = self.frozen['graded_subset']
+   752	        agreements = {}
+   753	        for draw, store in self.draws.items():
+   754	            agreeing = [q for q in subset if outcomes[q][draw]['outcome'] == 'agree']
+   755	            literal = [q for q in subset if outcomes[q][draw].get('literal_reading') == 'agree']
+   756	            agreements[draw] = {'system': store['system'], 'agree': len(agreeing), 'of': len(subset), 'questions': agreeing,
+   757	                                'literal_reading_agree': len(literal), 'literal_reading_questions': literal}
+   758	        missing = sorted(name for name, answer in self.used.items() if answer is None)
+   759	        return {'reading': f"D431's frozen-reference reading at {DAY} (DESIGN-1.6.md §3; D442 steps 3 to 6); printed beside, not a gate",
+   760	                'diagnostic': self.diagnostic, 'day': DAY, 'graded_subset': subset, 'sources': self.frozen['sha256'],
+   761	                'draws': {draw: {k: v for k, v in store.items() if k != 'listed'} | {'views_listed': [
+   762	                    {k: view.get(k) for k in ('view_id', 'created_seq', 'due_day', 'question', 'thesis', 'period', 'unit') if k in view}
+   763	                    | {'state': view['state']} for view in store['listed']]} for draw, store in self.draws.items()},
+   764	                'outcomes': outcomes, 'agreements': agreements, 'missing_sessions': missing}
+   765	
+   766	
+   767	def read(reading, run=True):
+   768	    """Run every phase's sessions not yet answered (when `run`), then write and print the result."""
+
+ succeeded in 0ms:
+    89	MERGE_PROMPT = ROOT / 'poc/data/clean-step2-forward-2026-11-08/merge-prompt-1.md'
+    90	MERGE_THIRD_PROMPT = ROOT / 'poc/data/clean-step2-forward-2026-11-08/merge-third-prompt.md'
+    91	SOURCES = (V2_PROMPT, V2_ADJUDICATION, SCAN_PROMPT, MERGE_PROMPT, MERGE_THIRD_PROMPT, Path(library.__file__), Path(run_forward.__file__))
+    92	
+    93	
+    94	def between(text, start, end):
+    95	    """The part of `text` from `start` up to `end` (exclusive); each must occur exactly once."""
+    96	    if text.count(start) != 1 or text.count(end) != 1 or text.index(end) < text.index(start):
+    97	        raise SystemExit(f'refused: the prompt source does not hold {start!r} … {end!r} once, in order')
+    98	    return text[text.index(start):text.index(end)]
+    99	
+   100	
+   101	def swap(text, old, new):
+   102	    """`text` with `old`, which must occur exactly once, replaced by `new`."""
+   103	    if text.count(old) != 1:
+   104	        raise SystemExit(f'refused: the prompt source does not hold {old!r} exactly once')
+   105	    return text.replace(old, new)
+   106	
+   107	
+   108	V2_TEXT = V2_PROMPT.read_text()
+   109	V2_READ = f'Read {V2_PROMPT.parent}/v2-packet-1.json. '
+   110	LABEL_HEAD = swap(V2_TEXT[:V2_TEXT.index('Answer two separate questions')], ' Do not open any other file in that folder.', '')
+   111	QUESTION_1 = between(V2_TEXT, 'Question 1, the relation', 'Question 2, independently')
+   112	DETAIL_DEFINITION = between(V2_TEXT, 'list each material fact in LATER', ' Then say whether')
+   113	RELATIONS = tuple(re.findall(r'^- "([a-z_]+)":', QUESTION_1, re.M))
+   114	ADJUDICATION_SENTENCE = between(V2_ADJUDICATION.read_text(), 'Two earlier readers disagreed', 'Return only')
+   115	SCAN_TEXT = swap(swap(SCAN_PROMPT.read_text(),
+   116	                      'and the list of every evidence record stored before it from earlier articles (key, one-line summary, original party).',
+   117	                      'and one chunk of the evidence records stored before it from earlier articles (key, one-line summary, original party); '
+   118	                      'the other chunks are read in other sessions.'),
+   119	                 'Then read every earlier record and list', 'Then read every earlier record in the chunk and list')
+   120	MERGE_TEXT, MERGE_THIRD_TEXT = MERGE_PROMPT.read_text(), MERGE_THIRD_PROMPT.read_text()
+   121	MERGE_READ = f'Read {build_merge_packets.OLD_RUN}merge-packet-1.json. '
+   122	MERGE_THIRD_READ = f'Read {build_merge_packets.OLD_RUN}merge-third-packet.json. '
+   123	VERDICTS = tuple(re.findall(r'^- "([a-z]+)":', MERGE_THIRD_TEXT, re.M))
+   124	KEY_PROMPT = ('You are an independent reader for a hedge-fund research system, building an answer key. Read-only task: do not edit files or '
+   125	              'run model calls.\n\nRead PACKET. Each entry is one group of stored evidence records about NVIDIA: "earlier", the first record '
+   126	              'of a statement, and "later", the later records grouped with it, each with its summary, verbatim source passages, original '
+   127	              'party, publication date and publisher. Do not open any file.\n\n'
+   128	              'For each LATER record, independently: ' + DETAIL_DEFINITION + '\n\nReturn only a JSON array with one object per later record, '
+   129	              'in packet order: [{"id": "K..", "details": ["..."]}].\n')
+   130	KEY_THIRD_PROMPT = ('You are the third reader settling an answer key. Read-only task: do not edit files or run model calls.\n\nRead PACKET. '
+   131	                    'Each entry is one group of stored evidence records about NVIDIA: "earlier", the first record of a statement, and "later", '
+   132	                    'the later records grouped with it, each with its summary, verbatim source passages, original party, publication date and '
+   133	                    'publisher. Under "drafts", each later record carries two independent readers\' lists of its details, A and B. Do not '
+   134	                    'open any file.\n\nEach reader was asked, for each LATER record, to ' + DETAIL_DEFINITION + '\n\nFor every LATER record, '
+   135	                    'compare the two drafts against the records. Keep once each detail both drafts name, in either wording. Decide each '
+   136	                    'detail only one draft names from the records: keep it if it is such a fact, otherwise drop it.\n\nReturn only a JSON '
+   137	                    'array with one object per later record, in packet order: [{"id": "K..", "details": ["..."], "dropped": ["..."]}].\n')
+   138	RENDERING_HEAD = ('You are an independent reader for a hedge-fund research system. Read-only task: do not edit files or run model calls.\n\n'
+   139	                  'Below are an excerpt from an evidence dossier about NVIDIA, as a research library shows it to an analyst, and a numbered '
+   140	                  'list of details. Do not open any file.\n\nFor each detail, mark whether the excerpt states it, in any wording: true if a '
+   141	                  'reader of the excerpt learns that detail from it, false if not.\n\nThe excerpt:\n\n<<<\n')
+   142	RENDERING_TAIL = '\n>>>\n\nThe details:\n\n```json\n{details}\n```\n\nReturn only a JSON array in list order: [{{"id": "D..", "stated": true|false}}].\n'
+   143	
+   144	
+   145	# ---- inputs -------------------------------------------------------------------------------------------------------------------------
+   146	
+   147	def component_file(run_root, eligibility_record, component, name):
+   148	    """A file of new-1's `component`, in the folder its run record names, refused unless the eligibility check fingerprinted it."""
+   149	    record = json.loads((Path(run_root) / DRAW / 'run.json').read_text())
+   150	    entry = record['components'].get(component, {})
+   151	    if entry.get('state') != 'completed':
+   152	        raise SystemExit(f"refused: {DRAW}'s {component} is {entry.get('state')!r}, not completed")
+   153	    return eligibility.verified(eligibility_record, run_root, DRAW, f"{entry['folder']}/{name}")
+   154	
+   155	
+   156	def article_texts(trace):
+   157	    """Each article's source text by its manifest position (as run_forward.step1_records numbers articles), and the manifest's length."""
+   158	    texts, position = {}, None
+   159	    for part in trace.split('+'):
+   160	        conn = sqlite3.connect(f'file:{part}?mode=ro', uri=True)
+   161	        try:
+   162	            if position is None:
+   163	                position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+   164	            for iid, request in conn.execute("select input_id, request from trace where status='complete'"):
+   165	                texts[position[iid]] = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']['text']
+   166	        finally:
+   167	            conn.close()
+   168	    return texts, len(position)
+   169	
+   170	
+   171	def shown_passages(record):
+   172	    """Each passage as a reader sees it: the source text Step 1 found, or the model's text marked as an unverified quote."""
+   173	    return [text if kind == 'Quote' else f'Unverified quote: {text}' for kind, text in library.labelled_passages(record)]
+   174	
+   175	
+   176	def source_context(text, passage):
+   177	    at = text.find(passage)
+   178	    return text[max(0, at - CONTEXT_WIDTH):at + len(passage) + CONTEXT_WIDTH] if at >= 0 else None
+   179	
+   180	
+   181	def packet_entries(trace):
+   182	    """The run's records in forward order (step1_records), each record as a line 1 or line 2 packet shows it (the Step 2 merge packets'
+   183	    fields), and the manifest's length. Only passages Step 1 found in the source give source context."""
+   184	    articles, questions, _opened = run_forward.step1_records(trace)
+   185	    texts, manifest_length = article_texts(trace)
+   186	    entries = {}
+   187	    for article in articles:
+   188	        for r in article:
+   189	            found = [text for kind, text in library.labelled_passages(r) if kind == 'Quote']
+   190	            entries[r['id']] = {'summary': r['summary'], 'original_party': r['original_party'],
+   191	                                'statement_date': r['statement_date'] or r['statement_date_text'], 'period': r['evidence_period'],
+   192	                                'publication_date': r['publication_date'], 'tier': r['tier'], 'reporting_speaker': r['reporting_speaker'],
+   193	                                'publisher': r['publisher'], 'title': r['title'], 'passages': shown_passages(r),
+   194	                                'source_context': [c for c in (source_context(texts[r['article']], p) for p in found) if c],
+   195	                                'theses': [questions[t] for t in r['thesis_ids']]}
+   196	    return articles, entries, manifest_length
+   197	
+   198	
+   364	def strata_of(articles, manifest_length):
+   365	    """Record ids in three equal strata of the run's manifest by each article's forward position (articles holding no record count
+   366	    towards the strata); the records of the first article that holds any have no earlier record and are left out."""
+   367	    strata = [[] for _ in range(STRATA)]
+   368	    for index, records in enumerate(articles):
+   369	        if index:
+   370	            for record in records:
+   371	                strata[(record['article'] - 1) * STRATA // manifest_length].append(record['id'])
+   372	    return strata
+   373	
+   374	
+   375	def draw_order(strata, seed):
+   490	            if len(labelled) == LINE1_RECORDS:
+   491	                break
+   492	    return labelled, None
+   493	
+   494	
+   495	def line1(run_root, eligibility_record, out, keys=KEY_FOLDER):
+   496	    folder, key_file = fresh(Path(out) / 'line-1'), fresh_key(Path(keys) / 'step2-line1-key.json')
+   497	    trace = str(component_file(run_root, eligibility_record, 'step1', 'trace.sqlite'))
+   498	    articles, entries, manifest_length = packet_entries(trace)
+   499	    records = [record for article in articles for record in article]
+   500	    by_id = {record['id']: record for record in records}
+   501	    article_start, index = {}, 0
+   502	    for article_index, article in enumerate(articles):
+   503	        article_start[article_index] = index
+   504	        index += len(article)
+   505	    article_of = {record['id']: article_index for article_index, article in enumerate(articles) for record in article}
+   506	    forward = {record['id']: position for position, record in enumerate(records)}
+   507	    earlier_of = lambda record_id: records[:article_start[article_of[record_id]]]
+   508	    words = {record['id']: matching._words(record['summary'] + ' ' + ' '.join(record['passages'])) for record in records}
+   509	    order = draw_order(strata_of(articles, manifest_length), SEED + 1)
+   510	    pairs, packet_ids, by_later = {}, {}, collections.defaultdict(list)
+   511	    scan_flags, scan_missing = {}, set()
+   512	    done, wave, labelled, missing_at = 0, 0, [], None
+   513	    while done < len(order):
+   514	        size = FIRST_WAVE_ROUNDS * STRATA if not labelled else math.ceil((LINE1_RECORDS - len(labelled)) * done / len(labelled))
+   515	        batch, done, wave = order[done:done + max(1, size)], done + max(1, size), wave + 1
+   516	        flags, missing = scan(folder, f'w{wave}', [item['record'] for item in batch if item['audited']], earlier_of, entries)
+   632	def key_entry(record):
+   633	    """A record's statement as a key reader sees it: its summary, passages, party, publication date and publisher. The attribution
+   634	    fields the frozen dossier drops for a later report (tier, stated day, period, speaker) are left out, so the key holds content."""
+   635	    return {'summary': record['summary'], 'passages': shown_passages(record), 'original_party': record['original_party'],
+   636	            'publication_date': record['publication_date'], 'publisher': record['publisher']}
+   637	
+   638	
+   639	def attribution_differences(groups):
+   640	    """Later reports whose tier, stated day, period or speaker differ from their original's: the fields `group_text` does not print
+   641	    for a later report (printed beside line 3, never in its rule)."""
+   642	    by_field, reports, holding = collections.Counter(), 0, 0
+   643	    for group in groups:
+   644	        differing = 0
+   645	        for member in group['members']:
+   646	            fields = [f for f in ATTRIBUTION_FIELDS if member.get(f) != group['original'].get(f)]
+   647	            by_field.update(fields)
+   648	            differing += bool(fields)
+   649	        reports += differing
+   650	        holding += bool(differing)
+   651	    return {'later reports that differ': reports, 'later reports': sum(len(g['members']) for g in groups), 'groups holding one': holding,
+   652	            'groups': len(groups), 'by field': {f: by_field[f] for f in ATTRIBUTION_FIELDS}}
+   653	
+   654	
+   655	def surrounding_dossier(stored, group_id):
+   656	    """The other groups linked to the group's first thesis link, in library order (none when the group has no link)."""
+   657	    links = stored['groups'][group_id]['links']
+   658	    if not links:
+   659	        return []
+   660	    thesis = next(iter(links))
+   661	    return [g for g in stored['order'] if g != group_id and thesis in stored['groups'][g]['links']]
+   662	
+   663	
+   664	def renderings_of(store, stored, group_id):
+   665	    """The group's two renderings, each after the same surrounding dossier: its other groups' originals labelled E1..Ek, then the group
+   666	    from E(k+1), grouped (the frozen dossier entry) or apart (each record its own entry)."""
+   667	    others = surrounding_dossier(stored, group_id)
+   668	    labels = {g: f'E{n}' for n, g in enumerate(others, 1)}
+   669	    context = [library.record_text(stored['groups'][g]['original'], labels[g]) for g in others]
+   670	    start = len(others) + 1
+   671	    group = stored['groups'][group_id]
+   672	    grouped = library.group_text(store, group_id, f'E{start}', {**labels, group_id: f'E{start}'}, member_text=True)
+   673	    apart = [library.record_text(record, f'E{start + n}') for n, record in enumerate([group['original']] + group['members'])]
+   674	    return {'grouped': '\n\n'.join(context + [grouped]), 'apart': '\n\n'.join(context + apart)}, len(others)
+   675	
+   676	
+   677	def normal(detail):
+   678	    return ' '.join(detail.split()).casefold()
+   679	
+   680	
+   681	def line3(run_root, eligibility_record, out, keys=KEY_FOLDER):
+   682	    folder, key_file = fresh(Path(out) / 'line-3'), fresh_key(Path(keys) / 'step2-line3-key.json')
+   683	    stored = json.loads(component_file(run_root, eligibility_record, 'step2', 'library.json').read_text())
+   684	    eligible = [g for g in stored['order'] if stored['groups'][g]['members']]
+   685	    beside = {'groups with a later report': len(eligible),
+   686	              'attribution differences, all groups with a later report': attribution_differences([stored['groups'][g] for g in eligible])}
+   687	    if len(eligible) < LINE3_GROUPS:
+   688	        return finish(out, 3, folder, {'status': 'not measured', 'reason': f'{len(eligible)} groups with a later report, fewer than {LINE3_GROUPS}',
+   689	                                       **beside})
+   690	    sample = random.Random(SEED + 3).sample(eligible, LINE3_GROUPS)
+   691	    beside['attribution differences, sampled groups'] = attribution_differences([stored['groups'][g] for g in sample])
+   692	    member_of, groups = {}, []
+   693	    for number, group_id in enumerate(sample, 1):
+   694	        group = stored['groups'][group_id]
+   695	        later = []
+   696	        for member in group['members']:
+   697	            member_id = f'K{len(member_of) + 1}'
+   698	            member_of[member_id] = (group_id, member['id'])
+   699	            later.append({'id': member_id, **key_entry(member)})
+   700	        groups.append({'group': f'G{number}', 'id': group_id, 'earlier': key_entry(group['original']), 'later': later})
+   701	    shown = lambda entry: {k: v for k, v in entry.items() if k != 'id'}
+   702	    key_check = lambda ids: rows_check(ids, {'details': is_text_list})
+   703	    jobs = []
+   704	    for number, chunk in enumerate(packets(groups, KEY_PACKET), 1):
+   705	        ids = [member['id'] for entry in chunk for member in entry['later']]
+   706	        jobs += [{'name': f'key-{number}-{family}', 'family': family, 'ids': ids,
+   707	                  'prompt': inline(KEY_PROMPT, 'Read PACKET. ', [shown(entry) for entry in chunk]), 'check': key_check(ids)} for family in FAMILIES]
+   708	    answers = sessions(folder, jobs)
+   709	    drafts = collections.defaultdict(dict)
+   710	    for job in jobs:
+   711	        for member_id in job['ids']:
+   712	            if answers[job['name']] is not None:
+   713	                drafts[member_id][job['family']] = answers[job['name']][member_id]['details']
+   714	    final, unsettled = {}, collections.defaultdict(list)
+   715	    for entry in groups:
+   716	        ids = [member['id'] for member in entry['later']]
+   717	        if any(len(drafts[m]) < len(FAMILIES) for m in ids):
+   718	            continue
+   719	        if all(len({frozenset(map(normal, drafts[m][f])) for f in FAMILIES}) == 1 for m in ids):
+   720	            final.update({m: drafts[m][FAMILIES[0]] for m in ids})
+   721	        else:
+   722	            unsettled[drawn_family(SEED + 3, entry['id'])].append(entry)
+   723	    third_check = lambda ids: rows_check(ids, {'details': is_text_list, 'dropped': is_text_list})
+   724	    jobs = []
+   725	    for family, family_groups in sorted(unsettled.items()):
+   726	        for number, chunk in enumerate(packets(family_groups, KEY_PACKET), 1):
+   727	            ids = [member['id'] for entry in chunk for member in entry['later']]
+   728	            packet = [{**shown(entry), 'drafts': {m['id']: dict(zip('AB', (drafts[m['id']][f] for f in FAMILIES))) for m in entry['later']}}
+   729	                      for entry in chunk]
+   730	            jobs.append({'name': f'key-third-{number}-{family}', 'family': family, 'ids': ids,
+   731	                         'prompt': inline(KEY_THIRD_PROMPT, 'Read PACKET. ', packet), 'check': third_check(ids)})
+   732	    answers = sessions(folder, jobs)
+   733	    for job in jobs:
+   734	        if answers[job['name']] is not None:
+   735	            final.update({m: answers[job['name']][m]['details'] for m in job['ids']})
+   736	    unkeyed = [m for m in member_of if m not in final]
+   737	    if unkeyed:
+   738	        return finish(out, 3, folder, {'status': 'not measured', 'reason': f'{len(unkeyed)} later reports with no settled key (first {unkeyed[0]})',
+   739	                                       **beside})
+   740	    key = {'draw': DRAW, 'seed': SEED + 3, 'groups': [
+   741	        {'group': entry['id'], 'details': [{'id': f'D{n}', 'member': member_of[m][1], 'text': text}
+   742	                                           for n, (m, text) in enumerate(((m['id'], t) for m in entry['later'] for t in final[m['id']]), 1)]}
+   743	        for entry in groups]}
+   744	    key_sha = freeze(folder / 'key.json', key)
+   745	    # The renderings are built only now, from the frozen key.
+   746	    key = read_frozen(folder / 'key.json')
+   747	    store = library.Library()
+   748	    store.groups, store.order = stored['groups'], stored['order']
+   749	    codes = random.Random(f'{SEED + 3}:codes').sample(range(100, 1000), 2 * LINE3_GROUPS)
+   750	    code_key, jobs, dossier_sizes = {}, [], []
+   751	    for index, entry in enumerate(key['groups']):
+   752	        renderings, others = renderings_of(store, stored, entry['group'])
+   753	        dossier_sizes.append(others)
+   754	        if not entry['details']:
+   755	            continue
+   756	        details = [{'id': d['id'], 'detail': d['text']} for d in entry['details']]
+   757	        for offset, (rendering, text) in enumerate(renderings.items()):
+   758	            code = codes[2 * index + offset]
+   759	            code_key[str(code)] = {'group': entry['group'], 'rendering': rendering}
+   760	            jobs += [{'name': f'render-{code}-{family}', 'family': family, 'code': str(code), 'prompt': rendering_prompt(text, details),
+   761	                      'check': rows_check([d['id'] for d in details], {'stated': lambda value: isinstance(value, bool)})} for family in FAMILIES]
+   762	    write_key(key_file, code_key)
+   763	    sizes = sorted(len(job['prompt'].encode()) for job in jobs)
+   764	    answers = sessions(folder, jobs)
+   765	    stated = {}
+   766	    for job in jobs:
+   767	        if answers[job['name']] is not None:
+   768	            stated[(code_key[job['code']]['group'], code_key[job['code']]['rendering'], job['family'])] = \
+   769	                sum(1 for row in answers[job['name']].values() if row['stated'])
+   770	    missing = [job['name'] for job in jobs if answers[job['name']] is None]
+   771	    totals = {family: {'grouped': 0, 'apart': 0} for family in FAMILIES}
+   772	    differences = {family: [] for family in FAMILIES}
+   773	    for entry in key['groups']:
+   774	        for family in FAMILIES:
+   775	            grouped, apart = stated.get((entry['group'], 'grouped', family), 0), stated.get((entry['group'], 'apart', family), 0)
+   776	            totals[family]['grouped'] += grouped
+   777	            totals[family]['apart'] += apart
+   778	            differences[family].append(grouped - apart)
+   779	    pooled = {rendering: sum(totals[f][rendering] for f in FAMILIES) for rendering in ('grouped', 'apart')}
+   780	    pooled_differences = [sum(values) for values in zip(*differences.values())]
+   781	    result = {'key sha256': key_sha, 'groups': LINE3_GROUPS, 'key details': sum(len(e['details']) for e in key['groups']),
+   782	              'groups with an empty key': sum(1 for e in key['groups'] if not e['details']), 'pooled totals': pooled,
+   783	              'mean paired difference, pooled': sum(pooled_differences) / len(pooled_differences),
+   784	              'bootstrap_95, pooled': bootstrap_interval(pooled_differences, f'{SEED + 3}:pooled'),
+   785	              'totals by family': totals, 'mean paired difference by family': {f: sum(d) / len(d) for f, d in differences.items()},
+   786	              'bootstrap_95 by family': {f: bootstrap_interval(d, f'{SEED + 3}:{f}') for f, d in differences.items()},
+   787	              'surrounding dossier': {'groups with no thesis link': sum(1 for n in dossier_sizes if n == 0), 'largest': max(dossier_sizes)},
+   788	              'rendering prompt bytes': {'sessions': len(sizes), 'median': sizes[len(sizes) // 2] if sizes else None,
+   789	                                         'max': sizes[-1] if sizes else None, f'over {LARGE_PROMPT}': sum(1 for s in sizes if s > LARGE_PROMPT)},
+   790	              **beside}
+   791	    if missing:
+   792	        result.update(status='not measured', reason=f'{len(missing)} rendering sessions missing (first {missing[0]})')
+   793	    else:
+   794	        result.update(status='passed' if pooled['grouped'] >= pooled['apart'] else 'failed')
+   795	    return finish(out, 3, folder, result)
+   796	
+   797	
+   798	def bootstrap_interval(values, seed):
+   799	    """95% percentile interval of the mean over groups, resampled with replacement."""
+   800	    chooser = random.Random(seed)
+   801	    means = sorted(sum(chooser.choice(values) for _ in values) / len(values) for _ in range(BOOTSTRAP))
+   802	    return [means[int(0.025 * BOOTSTRAP)], means[int(0.975 * BOOTSTRAP) - 1]]
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py | sed -n '155,226p;402,452p'
+nl -ba docs/research/2026-11-17-product-comparison/DESIGN-1.6.md | sed -n '92,141p'
+nl -ba clean-arch/step4-2026-11-10/stage_a/collect_readings.py | sed -n '43,62p;165,177p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   155	
+   156	class LookupCountingKey(dict):
+   157	    """The key from item number to send, counting every item the collector finds in it, so that two rows for one item are seen."""
+   158	
+   159	    def __init__(self, key):
+   160	        super().__init__(key)
+   161	        self.found = collections.Counter()
+   162	
+   163	    def __getitem__(self, item):
+   164	        send = super().__getitem__(item)
+   165	        self.found[item] += 1
+   166	        return send
+   167	
+   168	
+   169	def rows_problem(answer, family, packet_sends, key, outcomes):
+   170	    """Why a reader's answer to a packet is void, or None. The answer is read by the collector's own `collect_readings.rows_of`, so the
+   171	    wrapper accepts only what the collector keeps: every line it reads is read as a row (an item written `1.0` is not), each item has
+   172	    one row, no row names a send outside the packet (the collector merges a family's files by item), and every send of the packet has a
+   173	    valid row (accounting.row_problem). `packet_sends` is {item: (case, pass)}; `outcomes` is {(case, pass): outcome}."""
+   174	    counting_key = LookupCountingKey(key)
+   175	    with tempfile.TemporaryDirectory(prefix='d400-reader-answer-') as folder:
+   176	        (Path(folder) / 'readers-answers').mkdir()
+   177	        (Path(folder) / 'readers-answers' / f'reader-{family}-packet-1.jsonl').write_text(answer)
+   178	        rows, unreadable = collect_readings.rows_of(folder, counting_key, family)
+   179	    if unreadable:
+   180	        return f'{len(unreadable)} lines the collector would not read as a row: ' + '; '.join(
+   181	            f'line {number}: {text}' for _, number, text in unreadable[:5])
+   182	    repeated = sorted(item for item, count in counting_key.found.items() if count > 1)
+   183	    if repeated:
+   184	        return f'more than one row for items {repeated[:10]}'
+   185	    outside = sorted(set(rows) - set(packet_sends.values()))
+   186	    if outside:
+   187	        return f'rows for sends outside the packet: {outside[:10]}'
+   188	    problems = [(item, accounting.row_problem(rows.get(send), outcomes[send])) for item, send in packet_sends.items()]
+   189	    problems = [(item, problem) for item, problem in problems if problem]
+   190	    if problems:
+   191	        return f'{len(problems)} items without a valid row: ' + '; '.join(f'item {item}: {problem}' for item, problem in problems[:5])
+   192	    return None
+   193	
+   194	
+   195	def rulings_problem(answer, mark_of_point):
+   196	    """Why a third reader's answer to a ruling packet is void, or None. Each line is read as `collect_readings.read_rulings` reads a
+   197	    rulings file (collect_readings.py:166-175: blank lines and code fences skipped, a line kept by its `id`); a line it would skip, a point
+   198	    ruled twice, a point outside the packet, or a point without a ruling of the form (`holds` or `fails` on a mark, `upheld` true or false
+   199	    on a fault named under W, as `read_rulings` takes them) makes the answer void."""
+   200	    rulings, unreadable, repeated = {}, [], []
+   201	    for line in answer.splitlines():
+   202	        line = line.strip()
+   203	        if not line or line.startswith('```'):
+   204	            continue
+   205	        try:
+   206	            ruling = json.loads(line)
+   207	            point = ruling['id']
+   208	            if point in rulings:
+   209	                repeated.append(point)
+   210	            rulings[point] = ruling
+   211	        except (ValueError, KeyError, TypeError):
+   212	            unreadable.append(line[:80])
+   213	    if unreadable:
+   214	        return f'{len(unreadable)} lines the collector would not read as a ruling: {unreadable[:5]}'
+   215	    if repeated:
+   216	        return f'more than one ruling for points {repeated[:10]}'
+   217	    outside = sorted(str(point) for point in set(rulings) - set(mark_of_point))
+   218	    if outside:
+   219	        return f'rulings for points outside the packet: {outside[:10]}'
+   220	    missing = [point for point, mark in mark_of_point.items()
+   221	               if not (rulings.get(point, {}).get('upheld') in (True, False) if mark == 'W'
+   222	                       else rulings.get(point, {}).get('ruling') in accounting.VERDICTS)]
+   223	    if missing:
+   224	        return f'{len(missing)} points without a valid ruling: {missing[:10]}'
+   225	    return None
+   226	
+   402	    """The answer files `collect_readings.py` expects and does not find: a session reported missing, or not yet run."""
+   403	    missing = [f'reader-{family}-packet-{number_of(packet_file)}' for packet_file in sorted((folder / 'readers').glob('packet-*.json'), key=number_of)
+   404	               for family in FAMILIES if not (folder / 'readers-answers' / f'reader-{family}-packet-{number_of(packet_file)}.jsonl').exists()]
+   405	    missing += [f'rulings-{family}-{number_of(packet_file)}' for packet_file in sorted((folder / 'third-reader').glob('ruling-packet-*.json'), key=number_of)
+   406	                for family in FAMILIES if not (folder / 'third-reader' / f'rulings-{family}-{number_of(packet_file)}.jsonl').exists()]
+   407	    return missing
+   408	
+   409	
+   410	def report(out):
+   411	    """`collect_readings.py report` on every draw with a reading folder, with line 5 recomputed under D452's scaling; written to
+   412	    `<out>/d400-reader-lines.json` and printed."""
+   413	    out = Path(out)
+   414	    manifest = load_manifest(out)
+   415	    result = {'eligible': manifest['eligible'], 'draws': {}}
+   416	    to_read = {draw: (folder, key_path) for draw, folder, key_path in draws_to_read(out, manifest)}
+   417	    for draw, entry in manifest['draws'].items():
+   418	        if draw not in to_read:
+   419	            result['draws'][draw] = {'status': entry['status'], **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
+   420	            continue
+   421	        folder, key_path = to_read[draw]
+   422	        stored_path = folder / 'stage-a-report.json'
+   423	        stored_path.unlink(missing_ok=True)                     # a failed report must not leave an earlier one to be read
+   424	        collected = run_stage_a_tool([COLLECT_READINGS, 'report', folder, key_path], cwd=out)
+   425	        (folder / 'report.txt').write_text(collected.stdout + (f'\n[exit {collected.returncode}] {collected.stderr}' if collected.returncode else ''))
+   426	        missing = missing_sessions(folder)
+   427	        if collected.returncode != 0:
+   428	            reason = collected.stderr.strip().splitlines()[-1] if collected.stderr.strip() else f'exit {collected.returncode}'
+   429	            result['draws'][draw] = {'status': f'not measured: collect_readings.py report refused: {reason}', 'missing sessions': missing,
+   430	                                     **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
+   431	            continue
+   432	        stored = json.loads(stored_path.read_text())
+   433	        countings = {'one counting (no rulings of two third readers)': stored} if 'lines' in stored else {label: stored[label] for label in TWO_COUNTINGS}
+   434	        entry_out = {'status': 'read', 'missing sessions': missing,
+   435	                     'reading': {label: counting['reading'] for label, counting in countings.items()},
+   436	                     'dispute share': next(iter(countings.values()))['dispute share'],
+   437	                     'unresolved points': len(stored.get('unresolved', []))}
+   438	        for number in ('1', '2', '3', '4'):
+   439	            entry_out[f'line {number}'] = verdict_under_both(
+   440	                [line if isinstance(line, str) else line[0] for line in (counting['lines'][number] for counting in countings.values())])
+   441	        line_5 = {label: line_5_of(counting['lines']['5']) for label, counting in countings.items()}
+   442	        entry_out['line 5'] = verdict_under_both([verdict for verdict, _ in line_5.values()])
+   443	        entry_out['line 5 by counting'] = {label: {'verdict': verdict, **details} for label, (verdict, details) in line_5.items()}
+   444	        result['draws'][draw] = entry_out
+   445	    for draw_result in result['draws'].values():
+   446	        if draw_result.get('missing sessions') and accounting.NOT_MEASURED in (draw_result[f'line {number}'] for number in (1, 2, 3, 4, 5)):
+   447	            draw_result['note'] = NO_ASK_AGAIN
+   448	    (out / 'd400-reader-lines.json').write_text(json.dumps(result, indent=1, ensure_ascii=False) + '\n')
+   449	    print_report(result)
+   450	    return result
+   451	
+   452	
+    92	**Line 3, later details: the shipped renderer, as the Step 2 log §12 measured it.**
+    93	- **Population:** groups whose original has at least one later report.
+    94	- **Sample:** 30 at random.
+    95	- **The two renderings:**
+    96	  - "grouped": the frozen dossier, `step3/library.group_text(member_text=True)`;
+    97	  - "apart": each member as its own entry, `record_text`.
+    98	  - Any loss the frozen renderer causes, such as a later report's tier, stated day, period or speaker, counts against it.
+    99	- **An independent detail key, of content only** (the council's round-8 consensus, D675):
+   100	  - **A detail** is what a later report's statement adds to its group's original: "a figure, condition, party, date or qualification an
+   101	    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+   102	    condition"; the recorded test's "detail" category).
+   103	  - The record's own attribution fields (tier, stated day, period, reporting speaker) are not shown to the key readers, so the key
+   104	    holds content by construction. A party or period that changes the claim still counts when the statement's own text says it.
+   105	  - Two closed key readers, one per family, each list the details. A third session settles every detail they do not share.
+   106	  - The key is frozen before either rendering is read.
+   107	- **Reading:**
+   108	  - Each rendering of a group goes to its own closed session in each family: four sessions per group. No session sees both renderings,
+   109	    as in the recorded test, where each reader read one view.
+   110	  - Both renderings carry the same surrounding dossier: the other groups under the same thesis, each as its original's record.
+   111	  - The session marks which key details its rendering states.
+   112	- **Pass:** over the 30 groups, the grouped rendering's detail total is no fewer than the apart rendering's, summed over both families,
+   113	  as the recorded test summed both readers. Each family's totals are printed beside.
+   114	  - The mean paired difference per group is printed with a 95% bootstrap interval over groups.
+   115	  - Fewer than 30 groups: **not measured**.
+   116	- **Printed beside:** the count of later reports whose tier, stated day, period or speaker differs from the original's (the fields
+   117	  `group_text` drops), counted by code.
+   118	- **Disclosed with the result:** both renderings carry the same content, so the line checks that grouping loses no content a later
+   119	  report adds, against the readers' own noise. It is weaker than the recorded test's unprompted questions.
+   120	
+   121	Lines 1 and 2 are decided on their point estimates, with a Wilson 95% interval printed beside.
+   122	
+   123	## 3. D431's frozen-reference reading at 07-14 (printed beside; both systems)
+   124	
+   125	D442's procedure (`clean-arch/e2e-comparison-2026-11-13/DESIGN.md`, "Procedure", steps 3 to 6) is run as it was run then, on both
+   126	systems' draws as they stood at 07-14. It compares the answers the systems actually gave; MATCHING-v2 §4's adapter, which would re-ask
+   127	the ruler's question, is not built (D442's precedent).
+   128	- **The as-of state:** every view created on or before 2026-07-14 is listed first: by `created_seq` up to the last sequence of 07-14,
+   129	  closed views included. Then `service.state_as_of` at 2026-07-14 is read for each one. New-system units are joined by
+   130	  `clean_ladders.view_id`, split children included.
+   131	- **Step 4, matching:** MATCHING-v2's SAME rule, two blind families, and two third readers, one per family, on each disagreement, as the
+   132	  full run did (`READING-COMMITMENT.md`). A split stays unresolved. D442's rule for a ruler question's candidates applies.
+   133	- **Step 5, eligibility:** question, period and quantity the ruler's, and due day the ruler's (D430). Decided by two blind readers with
+   134	  a third on disagreement; the literal reading (the same due day) beside.
+   135	- **Step 6, outcomes:** the first that applies, (i) to (ix).
+   136	  - Several SAME views: the first created is judged and the others listed.
+   137	  - A figure rung with no bound: "no comparison". A unit that differs from the ruler question's, or that cannot be established:
+   138	    "no comparison (unit)". No conversion is made.
+   139	  - Agreement by the frozen scorer's rule (`prod_records.outcome` for the old system; for the new system the same rule, as Stage B counted
+   140	    it: "Ruled out" and "Still open" answer no, `stage_b/control_theses.py`).
+   141	- **Printed:** per ruler question and draw, its outcome; and per draw and system, the agreements on the seven graded questions.
+    43	def rows_of(run_folder, key, family):
+    44	    """{(case, pass): row} for one reader, with the lines that could not be read as a row."""
+    45	    rows, unreadable = {}, []
+    46	    answer_files = sorted((Path(run_folder) / 'readers-answers').glob(f'reader-{family}-packet-*.jsonl'),
+    47	                          key=lambda answer_file: ('-again-' in answer_file.name, answer_file.name))     # first answers, then asked-again ones
+    48	    for answer_file in answer_files:
+    49	        for line_number, line in enumerate(answer_file.read_text().splitlines(), start=1):
+    50	            line = line.strip()
+    51	            if not line or line.startswith('```'):
+    52	                continue
+    53	            try:
+    54	                row = json.loads(line)
+    55	                send = key[str(row['item'])]
+    56	            except (ValueError, KeyError, TypeError):
+    57	                unreadable.append((answer_file.name, line_number, line[:80]))
+    58	                continue
+    59	            rows[(send[0], send[1])] = row
+    60	    return rows, unreadable
+    61	
+    62	
+   165	    pattern = f'rulings-{family}-*.jsonl' if family else 'rulings-[0-9]*.jsonl'
+   166	    for answer_file in sorted((Path(run_folder) / 'third-reader').glob(pattern)):
+   167	        for line in answer_file.read_text().splitlines():
+   168	            line = line.strip()
+   169	            if not line or line.startswith('```'):
+   170	                continue
+   171	            try:
+   172	                ruling = json.loads(line)
+   173	                given[ruling['id']] = ruling
+   174	            except (ValueError, KeyError, TypeError):
+   175	                continue
+   176	    rulings, missing = {}, []
+   177	    for send, marks, faults in disputes_of(outcomes, readers):
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/step2_lines.py | sed -n '238,258p;757,798p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/d431_reading.py | sed -n '61,79p;145,169p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/test_step2_lines.py | sed -n '231,259p;315,351p;368,390p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/test_d431_reading.py | sed -n '183,229p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/test_d400_reader_lines.py | sed -n '196,255p'
+rg -n 'verified_source_passages' clean-arch/step1 -g '*.py'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   238	    return {str(p.relative_to(ROOT)): eligibility.sha256(p) for p in SOURCES}
+   239	
+   240	
+   241	# ---- prompts and sessions -----------------------------------------------------------------------------------------------------------
+   242	
+   243	def inline(prompt, read_sentence, packet):
+   244	    """The prompt with its packet in place of the file it names: a closed session opens no file."""
+   245	    if prompt.count(read_sentence) != 1:
+   246	        raise SystemExit(f'refused: the prompt does not name its packet exactly once ({read_sentence!r})')
+   247	    return prompt.replace(read_sentence, 'Read this packet:\n\n```json\n' + json.dumps(packet, ensure_ascii=False, indent=1) + '\n```\n\n')
+   248	
+   249	
+   250	def label_prompt(packet, adjudication=False):
+   251	    """Question 1 of the Step 2 reference labelling (`v2-prompt-1.md`) alone, with the reference's adjudication sentence for a third
+   252	    reader."""
+   253	    body = (LABEL_HEAD + 'Answer from the passages and context, not only the summaries.\n\n' + QUESTION_1
+   254	            + (ADJUDICATION_SENTENCE if adjudication else '')
+   255	            + 'Return only a JSON array in packet order: [{"id": "V..", "relation": "...", "why": "<one short sentence>"}].\n')
+   256	    return inline(body, V2_READ, packet)
+   257	
+   258	
+   757	        for offset, (rendering, text) in enumerate(renderings.items()):
+   758	            code = codes[2 * index + offset]
+   759	            code_key[str(code)] = {'group': entry['group'], 'rendering': rendering}
+   760	            jobs += [{'name': f'render-{code}-{family}', 'family': family, 'code': str(code), 'prompt': rendering_prompt(text, details),
+   761	                      'check': rows_check([d['id'] for d in details], {'stated': lambda value: isinstance(value, bool)})} for family in FAMILIES]
+   762	    write_key(key_file, code_key)
+   763	    sizes = sorted(len(job['prompt'].encode()) for job in jobs)
+   764	    answers = sessions(folder, jobs)
+   765	    stated = {}
+   766	    for job in jobs:
+   767	        if answers[job['name']] is not None:
+   768	            stated[(code_key[job['code']]['group'], code_key[job['code']]['rendering'], job['family'])] = \
+   769	                sum(1 for row in answers[job['name']].values() if row['stated'])
+   770	    missing = [job['name'] for job in jobs if answers[job['name']] is None]
+   771	    totals = {family: {'grouped': 0, 'apart': 0} for family in FAMILIES}
+   772	    differences = {family: [] for family in FAMILIES}
+   773	    for entry in key['groups']:
+   774	        for family in FAMILIES:
+   775	            grouped, apart = stated.get((entry['group'], 'grouped', family), 0), stated.get((entry['group'], 'apart', family), 0)
+   776	            totals[family]['grouped'] += grouped
+   777	            totals[family]['apart'] += apart
+   778	            differences[family].append(grouped - apart)
+   779	    pooled = {rendering: sum(totals[f][rendering] for f in FAMILIES) for rendering in ('grouped', 'apart')}
+   780	    pooled_differences = [sum(values) for values in zip(*differences.values())]
+   781	    result = {'key sha256': key_sha, 'groups': LINE3_GROUPS, 'key details': sum(len(e['details']) for e in key['groups']),
+   782	              'groups with an empty key': sum(1 for e in key['groups'] if not e['details']), 'pooled totals': pooled,
+   783	              'mean paired difference, pooled': sum(pooled_differences) / len(pooled_differences),
+   784	              'bootstrap_95, pooled': bootstrap_interval(pooled_differences, f'{SEED + 3}:pooled'),
+   785	              'totals by family': totals, 'mean paired difference by family': {f: sum(d) / len(d) for f, d in differences.items()},
+   786	              'bootstrap_95 by family': {f: bootstrap_interval(d, f'{SEED + 3}:{f}') for f, d in differences.items()},
+   787	              'surrounding dossier': {'groups with no thesis link': sum(1 for n in dossier_sizes if n == 0), 'largest': max(dossier_sizes)},
+   788	              'rendering prompt bytes': {'sessions': len(sizes), 'median': sizes[len(sizes) // 2] if sizes else None,
+   789	                                         'max': sizes[-1] if sizes else None, f'over {LARGE_PROMPT}': sum(1 for s in sizes if s > LARGE_PROMPT)},
+   790	              **beside}
+   791	    if missing:
+   792	        result.update(status='not measured', reason=f'{len(missing)} rendering sessions missing (first {missing[0]})')
+   793	    else:
+   794	        result.update(status='passed' if pooled['grouped'] >= pooled['apart'] else 'failed')
+   795	    return finish(out, 3, folder, result)
+   796	
+   797	
+   798	def bootstrap_interval(values, seed):
+    61	DAY = '2026-07-14'
+    62	SEED = 20261117 + 3                      # the comparison's seed plus the design section (§3)
+    63	CONTROLS_A_PACKET = 4                    # as the precedent's eligibility packets
+    64	MATCHING_RULE = ROOT / 'clean-arch/unseeded-2026-11-10/MATCHING-v2.md'
+    65	EARLIER_RULINGS = ROOT / 'clean-arch/e2e-comparison-2026-11-13/full-matching/adjudication-earlier-rulings.md'
+    66	QUESTIONS_FILE = prod_records.GOLD_DIR / 'questions-v1.json'
+    67	RELATIONS = ('same', 'broader', 'narrower', 'overlapping', 'unrelated')
+    68	YES_NO = ('yes', 'no')
+    69	FIELDS = ('same_question', 'same_due')
+    70	NOT_OPENED = "not opened in the ruler's shape"
+    71	NO_UNIT = 'no comparison (unit)'
+    72	# The frozen ruler's unit texts (questions-v1.json), each read as a unit of the systems' closed list, or None when that list has no
+    73	# such unit (it cannot be established). A full match: any other text is refused.
+    74	RULER_UNITS = {'USD': 'USD', 'percent': 'percent', 'percent (75 means 75%)': 'percent',
+    75	               'percent change 2027 vs 2026 (10 means up 10%)': 'percent', 'percent growth 2026 vs 2025': 'percent',
+    76	               'USD per share': None, 'wafers per month': None}
+    77	
+    78	# The precedent's run brief (`full-matching/reader-brief-run.md`), its words unchanged except that the material is given inline.
+    79	MATCH_BRIEF = """# Question identity reading for a measured run (read-only)
+   145	## The disputed pairs
+   146	
+   147	{pairs}
+   148	"""
+   149	
+   150	# The precedent's control-reader brief (`full-eligibility/control-reader-brief.md`), questions 1 and 2 unchanged; its third question
+   151	# (reader B's items shown to the judge) serves the loss trace, which this reading does not run.
+   152	ELIGIBILITY_RULES = """You are an independent reader. You have no material other than this brief and the packet below.
+   153	
+   154	Each item of your packet pairs a **ruler question** (a question written by hand for an earlier, frozen measurement, with its
+   155	unit, due day and ladder of rungs) with a **judged question** the system wrote itself for a thesis it opened (its question, the
+   156	outcome it looks at, its unit as stored ("n/a" when none is stored), due day, year and rungs). You are not told either answer, and
+   157	you do not judge which answer is right.
+   158	
+   159	For each item, answer two questions.
+   160	
+   161	1. `same_question`: **yes** when the judged question asks what the ruler question asks: the same quantity measured the same way
+   162	   (the same total, scope and unit: not a part of it, a ceiling on it, another quantity or another unit), or the same event,
+   163	   for the same period. **no** otherwise. Wording may differ; a judged question that asks for more or less than the ruler's,
+   164	   or for another period, is **no**.
+   165	2. `same_due`: for an **event** (a yes-or-no question), **yes** only when the judged question's deadline is the ruler's
+   166	   deadline. For a **figure**, **yes** when the two due days both mark the publication of the same period's figure (for
+   167	   example, both the annual report of the same fiscal year, even if the two days differ); **no** otherwise.
+   168	"""
+   169	
+   231	def test_line1_and_line2_packets_flag_an_unverified_quote_and_give_it_no_source_context(tmp_path, reader):
+   232	    """Council round 8 (Codex): a passage Step 1 did not find in the source is shown as "Unverified quote" and never as source context."""
+   233	    unverified = f'{ANCHOR}, report 2'
+   234	    for line, corpus, marker in ((step2_lines.line1, anchor_corpus(12), 'Question 1, the relation'),
+   235	                                 (step2_lines.line2, anchor_corpus(200), 'has just placed')):
+   236	        fake = reader()
+   237	        corpus[0][2][0] = step1_record(unverified, verified=False)
+   238	        root = tmp_path / line.__name__
+   239	        line(root, make_draw(root, *corpus), root / 'out', root / 'keys')
+   240	        entries = packet_entries_sent(fake, marker)
+   241	        flagged = [e for e in entries if e['summary'] == unverified]
+   242	        control = [e for e in entries if e['summary'] == f'{ANCHOR}, report 3']
+   243	        assert flagged and all(e['passages'] == [f'Unverified quote: {unverified}, the company said.'] and e['source_context'] == []
+   244	                               for e in flagged)
+   245	        assert control and all(e['passages'] == [f'{ANCHOR}, report 3, the company said.'] and e['source_context'] for e in control)
+   246	
+   247	
+   248	def test_line1_prompts_name_only_their_chunk_and_no_folder(tmp_path, reader):
+   249	    """Council round 8 wording: the scan session sees one chunk of the earlier records' summaries; a closed label session opens no folder."""
+   250	    fake = reader()
+   251	    step2_lines.line1(tmp_path, make_draw(tmp_path, *anchor_corpus(12)), tmp_path / 'out', tmp_path / 'keys')
+   252	    scans = [p for _f, p in fake.calls if 'one incoming evidence record' in p]
+   253	    labels = [p for _f, p in fake.calls if 'Question 1, the relation' in p]
+   254	    assert scans and all('one chunk of the evidence records stored before it' in p and 'every evidence record stored before it' not in p
+   255	                         for p in scans)
+   256	    assert labels and not any('Do not open any other file in that folder' in p for p in labels)
+   257	
+   258	
+   259	# ---- line 2 -------------------------------------------------------------------------------------------------------------------------
+   315	
+   316	
+   317	def test_line3_passes_on_pooled_totals_no_fewer_grouped_and_is_not_measured_below_30(tmp_path, reader):
+   318	    """Hard check: Step 2 line 3, no fewer later details grouped than apart on 30 groups, the totals summed over both readers as the
+   319	    recorded reader test summed them (council round 8); each family's totals beside; fewer than 30 groups is not measured."""
+   320	    cases = (('equal', 30, states, 'passed', {'codex': (30, 30), 'claude': (30, 30)}),
+   321	             ('one-fewer', 30, misses({('claude', 'grouped'): '3% margin'}), 'failed', {'codex': (30, 30), 'claude': (29, 30)}),
+   322	             ('offsetting', 30, misses({('claude', 'grouped'): '3% margin', ('codex', 'apart'): '5% margin'}), 'passed',
+   323	              {'codex': (30, 29), 'claude': (29, 30)}),
+   324	             ('short', 29, states, 'not measured', None))
+   325	    for name, groups, render, expected, totals in cases:
+   326	        fake = reader(render=render)
+   327	        root = tmp_path / name
+   328	        result = step2_lines.line3(root, make_draw(root, *anchor_corpus(1)[:2], grouped_library(groups)), root / 'out', root / 'keys')
+   329	        assert result['status'] == expected
+   330	        if totals:
+   331	            assert {f: (t['grouped'], t['apart']) for f, t in result['totals by family'].items()} == totals
+   332	        else:
+   333	            assert fake.calls == []
+   334	
+   335	
+   336	def test_line3_key_readers_see_content_only_and_attribution_differences_are_counted_beside(tmp_path, reader):
+   337	    """Council round 8 (D675): the key holds content only, so the key readers never see a record's tier, stated day, period or speaker;
+   338	    code counts the later reports whose attribution fields differ, printed beside line 3 and not in its rule."""
+   339	    fake = reader()
+   340	    stored = grouped_library(30, period_in={3}, speaker_in={5})
+   341	    result = step2_lines.line3(tmp_path, make_draw(tmp_path, *anchor_corpus(1)[:2], stored), tmp_path / 'out', tmp_path / 'keys')
+   342	    keys = [p for _f, p in fake.calls if 'building an answer key' in p]
+   343	    assert keys and not any(word in p for p in keys for word in ('"tier"', '"statement_date"', '"period"', '"reporting_speaker"',
+   344	                                                                  'FY2027', 'Bloomberg', 'statement date, period and speaker'))
+   345	    for counted in ('attribution differences, sampled groups', 'attribution differences, all groups with a later report'):
+   346	        assert result[counted]['later reports that differ'] == 2
+   347	        assert result[counted]['by field'] == {'tier': 0, 'statement_date': 0, 'evidence_period': 1, 'reporting_speaker': 1}
+   348	    assert result['status'] == 'passed'
+   349	
+   350	
+   351	def test_line3_no_session_sees_both_renderings_of_a_group(tmp_path, reader):
+   368	def test_line3_both_renderings_follow_the_same_surrounding_dossier(tmp_path, reader):
+   369	    """DESIGN-1.6.md §2 line 3 ("the group's other context is the same in both renderings"; council round 8): each rendering session
+   370	    sees every other group linked to the group's first thesis, as its original's record_text, identical in both renderings."""
+   371	    reader()
+   372	    stored = grouped_library(30, thesis_of=lambda n: f'T{n % 2}')
+   373	    step2_lines.line3(tmp_path, make_draw(tmp_path, *anchor_corpus(1)[:2], stored), tmp_path / 'out', tmp_path / 'keys')
+   374	    code_key = json.loads((tmp_path / 'keys' / 'step2-line3-key.json').read_text())
+   375	    prompts = tmp_path / 'out' / 'line-3' / 'prompts'
+   376	    seen = {}
+   377	    for code, entry in code_key.items():
+   378	        for family in step2_lines.FAMILIES:
+   379	            seen[(entry['group'], entry['rendering'], family)] = excerpt_of((prompts / f'render-{code}-{family}.md').read_text())
+   380	    assert len(seen) == 4 * 30
+   381	    for group_id in stored['order'][:30]:
+   382	        thesis = next(iter(stored['groups'][group_id]['links']))
+   383	        others = [g for g in stored['order'] if g != group_id and thesis in stored['groups'][g]['links']]
+   384	        context = '\n\n'.join(library.record_text(stored['groups'][g]['original'], f'E{n}') for n, g in enumerate(others, 1)) + '\n\n'
+   385	        excerpts = [seen[(group_id, rendering, family)] for rendering in ('grouped', 'apart') for family in step2_lines.FAMILIES]
+   386	        assert len(others) == 15 and all(excerpt.startswith(context) for excerpt in excerpts)
+   387	        assert excerpts[0][len(context):] != excerpts[2][len(context):]
+   388	
+   389	
+   390	# ---- report -------------------------------------------------------------------------------------------------------------------------
+   183	def test_a_figure_answer_is_withheld_when_the_units_differ_or_cannot_be_established(tmp_path, monkeypatch):
+   184	    """Council round 8, item 1: the eligibility packet carries the judged question's stored unit (old view_keys.unit, new figure.unit);
+   185	    at (viii)'s place, after (vii), a figure answer is "no comparison (unit)" when the stored unit and the ruler's differ or either cannot
+   186	    be established; no conversion; a yes/no answer is not touched."""
+   187	    old = make_store(tmp_path / 'old.sqlite', 'old', [
+   188	        ('v1', 2, Q_CAPEX26, '2027-03-31', CAPEX_RUNGS, {'unit': 'GW'}),                                          # q04 is USD
+   189	        ('v2', 4, Q_MARGIN, '2027-02-28', [('below 74%', None, 74.0), ('74% to below 76%', 74.0, 76.0), ('76% or more', 76.0, None)],
+   190	         {'unit': 'percent'}),                                                                                      # 'percent (75 means 75%)'
+   191	        ('v3', 5, Q_EPS, '2027-02-28', [('below $9', None, 9.0), ('$9 to below $10.5', 9.0, 10.5), ('$10.5 or more', 10.5, None)],
+   192	         {'unit': 'USD'}),                                                                                          # 'USD per share': not in the list
+   193	        ('v4', 7, Q_CAPEX27, '2028-03-31', CAPEX_RUNGS, {'unit': 'n/a'}),
+   194	        ('v5', 8, Q_CHINA, '2027-01-31', YES_NO)],
+   195	        judgements=[('v1', 3, 2), ('v2', 6, 2), ('v3', 6, 2), ('v5', 9, 1)])
+   196	    new = make_store(tmp_path / 'new.sqlite', 'new', [('v1', 2, Q_CAPEX26, '2027-03-31', CAPEX_RUNGS, {'unit': 'other'})], judgements=[('v1', 3, 2)])
+   197	    prompts = []
+   198	    result = read(tmp_path, monkeypatch, {'old-1': {'system': 'old', 'views': old}, 'new-1': {'system': 'new', 'views': new}},
+   199	                  {'match': {Q_CAPEX26: both('q04'), Q_MARGIN: both('q03'), Q_EPS: both('q11'), Q_CAPEX27: both('q13'), Q_CHINA: both('q08')}},
+   200	                  prompts)
+   201	    got = {(q, draw): r['outcome'] for q in ('q04', 'q03', 'q11', 'q13', 'q08') for draw, r in result['outcomes'][q].items() if 'judged_view' in r}
+   202	    assert got == {('q04', 'old-1'): d431.NO_UNIT, ('q04', 'new-1'): d431.NO_UNIT,           # GW, and the new system's "other"
+   203	                   ('q03', 'old-1'): 'agree',                                                # percent read as the ruler's percent
+   204	                   ('q11', 'old-1'): d431.NO_UNIT,                                           # the ruler's unit cannot be established
+   205	                   ('q13', 'old-1'): 'no judgement',                                         # (vii) before (viii)
+   206	                   ('q08', 'old-1'): 'agree'}                                                # a yes/no answer
+   207	    shown = {(item['judged_question']['question'], item['judged_question'].get('unit')) for prompt in prompts
+   208	             if prompt.startswith('# Reading the control questions') for item in last_packet(prompt)}
+   209	    assert {(Q_CAPEX26, 'GW'), (Q_MARGIN, 'percent'), (Q_CHINA, 'n/a')} <= shown
+   210	
+   211	
+   212	def test_both_systems_no_unit_words_look_the_same_in_every_packet(tmp_path, monkeypatch):
+   213	    """Council round 8: readers are blind to the system, so the new system's "other" and the old system's "n/a" (and a question with no
+   214	    stored unit) are all shown "n/a" in every packet; the output keeps the stored value."""
+   215	    rungs = CAPEX_RUNGS
+   216	    new = make_store(tmp_path / 'new.sqlite', 'new', [('v1', 2, Q_CAPEX26, '2027-03-31', rungs, {'unit': 'other'}),
+   217	                                                      ('v2', 4, Q_CHINA, '2027-01-31', ANSWER_CHOICE)], judgements=[('v1', 3, 2), ('v2', 6, 1)])
+   218	    old = make_store(tmp_path / 'old.sqlite', 'old', [('v1', 2, Q_CAPEX26, '2027-03-31', rungs, {'unit': 'n/a'}),
+   219	                                                      ('v2', 4, Q_CHINA, '2027-01-31', YES_NO)], judgements=[('v1', 3, 2), ('v2', 6, 1)])
+   220	    prompts = []
+   221	    result = read(tmp_path, monkeypatch, {'new-1': {'system': 'new', 'views': new}, 'old-1': {'system': 'old', 'views': old}},
+   222	                  {'match': {Q_CAPEX26: both('q04'), Q_CHINA: both('q08')}}, prompts)
+   223	    shown = [item['judged_question']['unit'] for prompt in set(prompts) if prompt.startswith('# Reading the control questions')
+   224	             for item in last_packet(prompt)]                               # each family gets the same packet: read it once
+   225	    assert sorted(shown) == ['n/a'] * 4                                     # two systems, a figure and an event each
+   226	    assert result['outcomes']['q04']['new-1']['unit'] == 'other' and result['outcomes']['q04']['old-1']['unit'] == 'n/a'
+   227	
+   228	
+   229	def strings_in(value):
+   196	def test_a_session_still_void_after_one_retry_is_reported_missing(tmp_path, monkeypatch):
+   197	    """DESIGN-1.6.md, state x event: a reader session that voids (a closed-session breach, or an answer without a valid row for every
+   198	    item of its packet) is retried once, then reported missing; a line with a missing mark is not measured, and the report says in one
+   199	    line that no ask-again round follows (council round 8)."""
+   200	    sessions = FakeSessions(voids={'claude': 2}, bad_answers={'codex': ['short']})
+   201	    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', sessions)
+   202	    out = one_draw_with_packets(tmp_path)
+   203	    results = sorted(d400_reader_lines.read_packets(out))
+   204	    assert [void for _, _, void in results] == ['a tool use', None]
+   205	    assert [family for family, _ in sessions.calls].count('codex') == 2          # the answer short of a row was asked again
+   206	    assert not (out / 'new-1' / 'readers-answers' / 'reader-claude-packet-1.jsonl').exists()
+   207	    result = d400_reader_lines.report(out)['draws']['new-1']
+   208	    assert result['missing sessions'] == ['reader-claude-packet-1'] and result['line 5'] == 'NOT MEASURED'
+   209	    assert result['note'] == d400_reader_lines.NO_ASK_AGAIN
+   210	
+   211	
+   212	def test_an_answer_the_collector_would_read_otherwise_is_void(tmp_path, monkeypatch):
+   213	    """Council round 8: a packet answer is validated as `collect_readings.rows_of` reads it. A row whose item the collector would drop
+   214	    (written 1.0) and two rows for one item each void the answer, which is then asked again, so nothing accepted is later discarded."""
+   215	    sessions = FakeSessions(bad_answers={'codex': ['float item'], 'claude': ['repeated row']})
+   216	    monkeypatch.setattr(d400_reader_lines.census_readers, 'run', sessions)
+   217	    out = one_draw_with_packets(tmp_path)
+   218	    assert [void for _, _, void in sorted(d400_reader_lines.read_packets(out))] == [None, None]
+   219	    voids = dict((session, void) for session, void in voids_logged(out) if void)
+   220	    assert voids['reader-codex-packet-1'].startswith('1 lines the collector would not read as a row: line 7:')
+   221	    assert voids['reader-claude-packet-1'].startswith('more than one row for items')
+   222	
+   223	
+   224	def test_a_ruling_answer_is_read_as_the_collector_reads_it():
+   225	    """Council round 8: a third reader's answer is read line by line as `collect_readings.read_rulings` reads it; a point ruled twice
+   226	    and a line it would skip (an `id` that cannot key a ruling) void the answer instead of being dropped or stopping the tool."""
+   227	    points = {'4-Q': 'Q', '4-W-a': 'W'}
+   228	    good = [json.dumps({'id': '4-Q', 'ruling': 'fails', 'why': 'No fiscal year is named.'}),
+   229	            json.dumps({'id': '4-W-a', 'upheld': False, 'why': 'The rungs do name the year.'})]
+   230	    assert d400_reader_lines.rulings_problem('\n'.join(good), points) is None
+   231	    assert d400_reader_lines.rulings_problem('\n'.join(good + [good[0]]), points) == "more than one ruling for points ['4-Q']"
+   232	    unkeyable = json.dumps({'id': ['4-Q'], 'ruling': 'holds'})
+   233	    assert d400_reader_lines.rulings_problem('\n'.join(good + [unkeyable]), points).startswith('1 lines the collector would not read')
+   234	
+   235	
+   236	def test_a_reader_timeout_is_a_void_retried_once_then_reported_missing(tmp_path, monkeypatch):
+   237	    """DESIGN-1.6.md, state x event, with the shared launcher's timeout: `census_readers.run` returns a session with no answer within
+   238	    3600 s as a void, so it is retried once, then reported missing. Only the command-line process is faked: the Claude one times out,
+   239	    the Codex one answers in Codex's event stream."""
+   240	    launched = []
+   241	
+   242	    def command_line(command, input, **options):
+   243	        family = 'claude' if command[0] == 'claude' else 'codex'
+   244	        launched.append(family)
+   245	        if family == 'claude':
+   246	            raise subprocess.TimeoutExpired(command, options['timeout'])
+   247	        answer, _ = FakeSessions()(family, input)
+   248	        events = [{'type': 'turn.started'}, {'type': 'item.completed', 'item': {'type': 'agent_message', 'text': answer}}]
+   249	        return subprocess.CompletedProcess(command, 0, stdout='\n'.join(map(json.dumps, events)), stderr='')
+   250	    monkeypatch.setattr(d400_reader_lines.census_readers, 'subprocess',
+   251	                        types.SimpleNamespace(run=command_line, TimeoutExpired=subprocess.TimeoutExpired))
+   252	    out = one_draw_with_packets(tmp_path)
+   253	    results = sorted(d400_reader_lines.read_packets(out))
+   254	    assert [void for _, _, void in results] == ['no answer within 3600 s', None] and launched.count('claude') == 2
+   255	    assert [void for session, void in voids_logged(out) if session == 'reader-claude-packet-1'] == ['no answer within 3600 s'] * 2
+clean-arch/step1/test_materialize_source.py:110:        self.assertEqual(runner.validate(answer(joined), schema, item, [{'id': 't1'}])['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_materialize_source.py:111:        self.assertEqual(runner.validate(answer(contiguous), schema, item, [{'id': 't1'}])['evidence'][0]['verified_source_passages'], [contiguous])
+clean-arch/step1/test_materialize_source.py:113:        self.assertEqual(runner.validate(answer(joined), schema, old_item, [{'id': 't1'}])['evidence'][0]['verified_source_passages'], [joined])
+clean-arch/step1/render_replay.py:35:    verified = evidence.get('verified_source_passages')
+clean-arch/step1/render_replay.py:160:        unverified = bool(result and (lookup_errors or result.get('unresolved_links') or result.get('unlinked_new_thesis_ids') or any(any(p is None for p in ev.get('verified_source_passages', [])) for ev in result.get('evidence', []))))
+clean-arch/step1/test_runner.py:169:        self.assertEqual(result['evidence'][0]['verified_source_passages'][0], item['text'])
+clean-arch/step1/test_runner.py:172:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_runner.py:182:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [first, second])
+clean-arch/step1/test_runner.py:186:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_runner.py:209:        self.assertEqual(result['verified_source_passages'], [None])
+clean-arch/step1/test_runner.py:218:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_runner.py:237:            self.assertEqual(result['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_runner.py:245:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [item['text']])
+clean-arch/step1/test_runner.py:255:        self.assertEqual(evidence['verified_source_passages'], [source])
+clean-arch/step1/test_runner.py:271:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None, None])
+clean-arch/step1/test_runner.py:284:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_runner.py:306:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None, 'Quarterly profit was 20 dollars .'])
+clean-arch/step1/test_runner.py:318:                self.assertEqual(result['evidence'][0]['verified_source_passages'], [expected])
+clean-arch/step1/test_runner.py:330:        self.assertEqual(result['evidence'][0]['verified_source_passages'], [None])
+clean-arch/step1/test_render_replay.py:35:                    'verified_source_passages': ['First original passage.', 'Second original passage.'],
+clean-arch/step1/test_render_replay.py:84:                    'source_passages': ['The product may change.'], 'verified_source_passages': [None],
+clean-arch/step1/test_render_replay.py:97:                    'source_passages': ['A model quotation.'], 'verified_source_passages': [None],
+clean-arch/step1/test_render_replay.py:116:                                        'verified_source_passages': ['A source passage.'],
+clean-arch/step1/runner.py:165:        ev['verified_source_passages'] = verified
+clean-arch/step1/runner.py:193:            elif not figure_in_passages(str(figure.get('value') or ''), ev['verified_source_passages']):
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sys
+sys.path.insert(0,'\\''docs/research/2026-11-17-product-comparison/stage0'\\'')
+import d400_reader_lines as d, test_d400_reader_lines as t, step2_lines as v, d431_reading as q
+print('\\''one missing Stage A packet, written figure only:'\\'', {i:d.accounting.account([t.figure_outcome('\\''new-1'\\'','\\''x'\\'',1)],{},{},{})['\\''lines'\\''][i] for i in range(1,6)})
+print('\\''three manifest strata:'\\'',v.strata_of([[{'\\''id'\\'':'\\''a'\\'','\\''article'\\'':2}],[{'\\''id'\\'':'\\''b'\\'','\\''article'\\'':5}],[{'\\''id'\\'':'\\''c'\\'','\\''article'\\'':9}]],12))
+print('\\''two matching adjudicators disagree:'\\'',q.ruling([True,False]))
+r={'\\''summary'\\'':'\\''Guidance unchanged.'\\'','\\''passages'\\'':['\\''Guidance unchanged.'\\''],'\\''verified_passages'\\'':['\\''Guidance unchanged.'\\''],'\\''original_party'\\'':'\\''Company'\\'','\\''publication_date'\\'':'\\''2026-09-12'\\'','\\''publisher'\\'':'\\''Reuters'\\'','\\''tier'\\'':'\\''fact'\\'','\\''reporting_speaker'\\'':'\\''x'\\'','\\''statement_date'\\'':'\\''2026-09-05'\\'','\\''evidence_period'\\'':'\\''2027'\\''}
+print('\\''fields visible to detail key readers:'\\'',sorted(v.key_entry(r)))
+'" in /Users/lchingen/hivemind
+ exited 1 in 37ms:
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+  File "<string>", line 4, in <dictcomp>
+  File "/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_d400_reader_lines.py", line 40, in figure_outcome
+    _, outcome = THESES[thesis_id]
+KeyError: 'x'
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sys
+sys.path.insert(0,'\\''docs/research/2026-11-17-product-comparison/stage0'\\'')
+import d400_reader_lines as d, test_d400_reader_lines as t, step2_lines as v, d431_reading as q
+a=d.accounting.account([t.figure_outcome('\\''new-1'\\'',next(iter(t.THESES)),1)],{},{},{})
+print('\\''missing Stage A packet:'\\'',a['\\''lines'\\''])
+print('\\''manifest strata:'\\'',v.strata_of([[{'\\''id'\\'':'\\''a'\\'','\\''article'\\'':2}],[{'\\''id'\\'':'\\''b'\\'','\\''article'\\'':5}],[{'\\''id'\\'':'\\''c'\\'','\\''article'\\'':9}]],12))
+print('\\''adjudicators disagree:'\\'',q.ruling([True,False]))
+r={'\\''summary'\\'':'\\''Guidance unchanged.'\\'','\\''passages'\\'':['\\''Guidance unchanged.'\\''],'\\''verified_passages'\\'':['\\''Guidance unchanged.'\\''],'\\''original_party'\\'':'\\''Company'\\'','\\''publication_date'\\'':'\\''2026-09-12'\\'','\\''publisher'\\'':'\\''Reuters'\\'','\\''tier'\\'':'\\''fact'\\'','\\''reporting_speaker'\\'':'\\''x'\\'','\\''statement_date'\\'':'\\''2026-09-05'\\'','\\''evidence_period'\\'':'\\''2027'\\''}
+print('\\''fields visible to detail key readers:'\\'',sorted(v.key_entry(r)))
+'" in /Users/lchingen/hivemind
+ succeeded in 23ms:
+missing Stage A packet: {1: 'NOT MEASURED', 2: 'NOT MEASURED', 3: 'NOT MEASURED', 4: 'no refusal occurred', 5: 'NOT MEASURED', 6: {'direction': ('NOT MEASURED', {'theses whose three sends are company figures': 0, 'needed': 3}), 'due day': ('NOT MEASURED', {'theses whose three sends are ladders': 0, 'needed': 20}), 'shape differs across sends': []}}
+manifest strata: [[], ['b'], ['c']]
+adjudicators disagree: unresolved
+fields visible to detail key readers: ['original_party', 'passages', 'publication_date', 'publisher', 'summary']
+
+codex
+- **D400 validation and timeout handling are fixed.** The wrapper uses the collector’s parser, rejects duplicate rows, and treats timeouts as voids. The no-ask-again rule is still incomplete. Running `read` again retries exhausted sessions because it checks only for an answer file. The report also retains the collector’s line 4 result when a packet is missing. Treat exhausted sessions as terminal and mark the draw’s reader lines unmeasured. [Validation](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:169) · [Retry and report](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:335) · [D675](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9842) · [Timeout](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_readers.py:122)
+- **Step 2’s manifest strata, quote flags, shared dossier context and pooled totals are fixed.** V7 still says the four attribution fields count against line 3, contradicting D675 and v7’s own key definition. Delete that sentence. Tell key readers to count facts from the statement and use the visible publisher and publication date only as context. [Packets](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:181) · [Strata](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:364) · [Line 3](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:632) · [Conflicting sentence](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:98) · [D675](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9827)
+- **D431 is fixed as recorded.** Eligibility packets show stored units. Numeric agreement is withheld for missing or different units. Two identity adjudicators are used, and a split stays unresolved. [Units](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:441) · [Adjudication](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:551) · [Comparison](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:686)
+
+NOT READY: make exhausted D400 sessions terminal and align line 3’s design and key prompts with the recorded content-only rule.
+tokens used
+3,676,014
+- **D400 validation and timeout handling are fixed.** The wrapper uses the collector’s parser, rejects duplicate rows, and treats timeouts as voids. The no-ask-again rule is still incomplete. Running `read` again retries exhausted sessions because it checks only for an answer file. The report also retains the collector’s line 4 result when a packet is missing. Treat exhausted sessions as terminal and mark the draw’s reader lines unmeasured. [Validation](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:169) · [Retry and report](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:335) · [D675](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9842) · [Timeout](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_readers.py:122)
+- **Step 2’s manifest strata, quote flags, shared dossier context and pooled totals are fixed.** V7 still says the four attribution fields count against line 3, contradicting D675 and v7’s own key definition. Delete that sentence. Tell key readers to count facts from the statement and use the visible publisher and publication date only as context. [Packets](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:181) · [Strata](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:364) · [Line 3](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:632) · [Conflicting sentence](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:98) · [D675](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9827)
+- **D431 is fixed as recorded.** Eligibility packets show stored units. Numeric agreement is withheld for missing or different units. Two identity adjudicators are used, and a split stays unresolved. [Units](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:441) · [Adjudication](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:551) · [Comparison](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:686)
+
+NOT READY: make exhausted D400 sessions terminal and align line 3’s design and key prompts with the recorded content-only rule.

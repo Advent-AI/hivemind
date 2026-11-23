@@ -1,0 +1,264 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 16: the complementary screen is prepared at $0; send or not? (`reflection-6/astra/DESIGN-REST.md`)
+
+Read `astra/DESIGN-REST.md`, `astra/astra_rest.py`, `astra/test_astra_rest.py`, `astra/check-output-rest.txt`,
+`astra/mutants-rest.txt` and `astra/preflight-rest.txt`.
+
+**Your round-15 conditions, one by one:**
+- **Exact complement frozen and verified against the first 12:** it is computed from the first draw's own seed and size, checked
+  against the first run's sent topics, and the union is checked to equal the 26.
+- **Launcher adapted and tested:** the same launcher, re-pointed by `astra_rest.py`. 4 tests pass, plus the first screen's 16 in their
+  own process.
+- **Spending guards:** the same, at caps of sol $1.20 and astra $5.00.
+- **Blind packets:** 84 sends and the same six controls, a new shuffle seed and a new key outside the repository.
+- **Preflight:** `preflight-rest.txt`.
+- **The memory-aggregation concern:** I read astra's ladder against its topic and article. The topic asks "the change in HBM/DRAM
+  contract prices over calendar 2027"; neither the topic nor the article defines an aggregation. Astra's "equal-weighted mean of
+  matched AI-server HBM and DRAM quotations" is its own construction. Both families held it. I record it as a concern, not a counted
+  fault, and will read any such construction in this half.
+
+**One defect found and fixed at $0:** the first draft drew the "first 12" with the overridden size and got 14. A test caught it; it is
+now mutant R3.
+
+**Cost:** about $1.8 expected, $6.20 at most. That leaves at least $1.25 of D439's $40.
+
+**Asked:** send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the complement, preflight and spending guard against the prepared launcher, then give a send decision.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/astra_rest.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/test_astra_rest.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/mutants-rest.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/preflight-rest.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/check-output-rest.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN-REST.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The complementary Astra screen (council round 15): the same launcher, checks and verdict as `astra_probe.py`, on the 14 topics the
+first screen's seeded draw left out, with fresh sol and astra arms, three interleaved draws each, read blind together.
+
+  python3 astra_rest.py check                          # $0: the complement, requests, controls, spend; writes check-passed-rest.json
+  python3 astra_rest.py send <new run folder>
+  python3 astra_rest.py reading <run folder> <key folder>
+  python3 astra_rest.py score <run folder> <key folder>
+"""
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import astra_probe as base  # noqa: E402
+import refcontrol  # noqa: E402
+
+FIRST_SIZE, FIRST_SEED = 12, 20261123                # the first screen's draw (D632), fixed here, not read from the launcher
+FIRST_RUN = base.ROOT / 'poc' / 'data' / 'clean-astra-screen-2026-11-16' / 'sol-d1' / 'outcomes.jsonl'
+
+
+def first_sample():
+    """The first screen's 12 topics, drawn again by its own seed and size, and checked against the topics its run sent."""
+    population = refcontrol.population()
+    names = sorted(f'{source}:{name}' for source, name, _, _ in population)
+    chosen = set(random.Random(FIRST_SEED).sample(names, FIRST_SIZE))
+    if FIRST_RUN.exists():
+        sent = {json.loads(line)['case'].split('|', 1)[1] for line in FIRST_RUN.read_text().splitlines()}
+        if sent != chosen:
+            raise SystemExit('the first screen sent other topics than its seed draws: the complement is not defined')
+    return [entry for entry in population if f'{entry[0]}:{entry[1]}' in chosen]
+
+
+def complement():
+    """The 26 topics less the first screen's 12: (source, name, case, stored)."""
+    first = {f'{source}:{name}' for source, name, _, _ in first_sample()}
+    rest = [entry for entry in refcontrol.population() if f'{entry[0]}:{entry[1]}' not in first]
+    if len(first) != FIRST_SIZE or len(rest) != 14:
+        raise SystemExit(f'the complement is not 14 of 26: first {len(first)}, rest {len(rest)}')
+    return rest
+
+
+base.sample = complement
+base.SAMPLE_SIZE = 14
+base.CAPS = {'sol': 1.20, 'astra': 5.00}       # $6.20 in all; about $7.45 remains of D439's $40
+base.SHUFFLE_SEED = 20261124
+base.RECORD = HERE / 'check-passed-rest.json'
+base.CODE_FILES = base.CODE_FILES + [Path(__file__)]
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        base.check()
+    elif command == 'send':
+        base.send(sys.argv[2])
+    elif command == 'reading':
+        base.reading(*sys.argv[2:4])
+    elif command == 'score':
+        base.score(*sys.argv[2:4])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+"""The complementary Astra screen at $0 (council round 15): the 14 topics are the 26 less the first screen's 12, and the same launcher
+sends, reads and scores them as it did the first 12 (run in its own process: importing `astra_rest` re-points the launcher)."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parent / 'model'), str(HERE.parent / 'effort')]
+import astra_rest  # noqa: E402
+import test_astra_probe as first  # noqa: E402   (its fake transport and made-up reader rows)
+import refcontrol  # noqa: E402
+
+probe = astra_rest.base
+KEY = first.KEY
+
+
+def names(entries):
+    return {f'{source}:{name}' for source, name, _, _ in entries}
+
+
+def test_the_complement_is_the_fourteen_topics_the_first_screen_left_out():
+    rest, earlier = names(astra_rest.complement()), names(astra_rest.first_sample())
+    assert len(rest) == 14 and not rest & earlier and rest | earlier == names(refcontrol.population())
+    assert 'fortnight:c1/clean-13' in rest and 'week-10-06:c1/clean-7' in rest       # where D629's ladder and refusal faults were
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('rest')
+    original, probe.RECORD = probe.RECORD, folder / 'check-passed-rest.json'
+    try:
+        probe.check()
+        fake = first.transport()
+        probe.send(folder / 'run', transport=fake)
+        probe.reading(folder / 'run', folder / 'keys')
+        yield folder, fake
+    finally:
+        probe.RECORD = original
+
+
+def test_each_arm_draw_sends_the_fourteen_and_the_reading_holds_both_arms(run):
+    folder, fake = run
+    rest = names(astra_rest.complement())
+    for arm, draw in probe.ORDER:
+        rows = [json.loads(line) for line in (folder / 'run' / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()]
+        assert {row['case'].split('|', 1)[1] for row in rows} == rest and len(rows) == 14
+    key = json.loads((folder / 'keys' / 'key.json').read_text())
+    arms = [case.split('-d')[0] for case, _ in key.values() if not case.startswith('control|')]
+    assert arms.count('sol') == 42 and arms.count('astra') == 42 and len(key) == 90
+
+
+def test_one_astra_failure_against_three_is_promising_on_the_fourteen(run):
+    folder, _ = run
+    first.write_rows(folder, first.faulted({'sol-d1': first.ladders(folder, 'sol-d1')[:3], 'astra-d2': first.ladders(folder, 'astra-d2')[:1]}))
+    verdict, report = probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 3, 'astra': 1} and verdict.startswith('promising')
+
+
+def test_three_astra_failures_close_it_on_the_fourteen(run):
+    folder, _ = run
+    first.write_rows(folder, first.faulted({'sol-d1': first.ladders(folder, 'sol-d1')[:4], 'astra-d3': first.ladders(folder, 'astra-d3')[:3]}))
+    verdict, report = probe.score(folder / 'run', folder / 'keys')
+    assert report['holds'][KEY] == {'sol': 4, 'astra': 3} and verdict == 'closes this candidate under this test'
+
+ succeeded in 0ms:
+R0 control (unmutated): 4 passed in 0.20s
+R1 the complement is the first 12: 1 failed, 3 errors in 0.10s | failed: ['test_the_complement_is_the_fourteen_topics_the_first_screen_left_out', 'test_each_arm_draw_sends_the_fourteen_and_the_reading_holds_both_arms', 'test_one_astra_failure_against_three_is_promising_on_the_fourteen', 'test_three_astra_failures_close_it_on_the_fourteen'] | first: ['E           SystemExit: the complement is not 14 of 26: first 12, rest 12']
+R2 the sample size left at 12: 2 failed, 2 passed in 0.25s | failed: ['test_one_astra_failure_against_three_is_promising_on_the_fourteen', 'test_three_astra_failures_close_it_on_the_fourteen'] | first: ["E               SystemExit: NOT SCORED: an arm does not hold 36 sends: {'sol': Counter({'ladder': 42}), 'astra': Counter({'ladder': 42})}"]
+R3 the first draw read from the launcher (the defect the tests found): 1 failed, 3 errors in 0.10s | failed: ['test_the_complement_is_the_fourteen_topics_the_first_screen_left_out', 'test_each_arm_draw_sends_the_fourteen_and_the_reading_holds_both_arms', 'test_one_astra_failure_against_three_is_promising_on_the_fourteen', 'test_three_astra_failures_close_it_on_the_fourteen'] | first: ['E               SystemExit: the first screen sent other topics than its seed draws: the complement is not defined']
+
+ succeeded in 0ms:
+stored attempts of the 14 topics, D629 sol and luna, 3 draws: judged {'sol': 45, 'luna': 50}; refused by the current checks {'sol': 3, 'luna': 8}
+  5 x the reference's words are not in the item: copy one unbroken passage from the item exactly
+  3 x due_day_basis 'expected_publication' does not fit an event: use one of stated, period_end
+  2 x The question or a condition refers to the item or the article ("this item", "in the item")
+  1 x the reference's value 105,000,000,000 must lie in the middle range, from 120,000,000,000 t
+attempts whose current verdict differs from the stored one: 0 []
+
+ succeeded in 0ms:
+the sample: ['fortnight:c1/clean-1', 'fortnight:c1/clean-10', 'fortnight:c1/clean-12', 'fortnight:c1/clean-13', 'fortnight:c1/clean-3', 'fortnight:c1/clean-4', 'fortnight:c1/clean-5', 'fortnight:c1/clean-6', 'fortnight:c1/clean-7', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-10', 'week-10-06:c1/clean-6', 'week-10-06:c1/clean-7', 'week-10-06:c1/clean-9']
+14 topics: each frozen request equals its stored first request, and the sol and astra requests differ from it only in their model: True; controls 6; worst-case reserve of one attempt {sol: $0.22, astra: $1.09}; caps {'sol': 1.2, 'astra': 5.0}; in flight {'sol': 2, 'astra': 1}
+check passed
+
+ succeeded in 0ms:
+# The complementary Astra screen (council round 15; D633 when sent)
+
+**What it is.** The same launcher, checks, controls, reading and verdict as the first screen (`DESIGN.md`), run on the 14 topics that
+the first screen's seeded draw left out (`astra_rest.py`).
+- **Topics:**
+  - fortnight c1/clean-1, -3, -4, -5, -6, -7, -10, -12 and -13;
+  - week-10-06 c1/clean-1, -6, -7, -9 and -10.
+- **How the complement is fixed:** it is computed from the first draw's own seed and size (20261123, 12) and checked against the
+  topics the first run actually sent.
+- **The defect the tests found:** the first draft read the size from the launcher after overriding it, which silently drew 14. It was
+  caught by the test, and is now mutant R3.
+- **Disclosed:** on these 14, D629 had sol at 3 agreed failures (week c1/clean-7 L once; fortnight c1/clean-13 refusals twice) and
+  luna at 12. These are the topics where the earlier ladder faults were.
+- **This is an exposed development set** chosen after the first result. A positive result makes astra a stronger candidate lead. It
+  does not establish a general fault rate or pass gate 1.
+
+**Arms.** Fresh sol and astra, interleaved, three draws each, 42 sends an arm. Only `"model"` differs (`check-output-rest.txt`).
+
+**Spend.**
+- **Caps:** sol $1.20 (2 in flight) and astra $5.00 (1 in flight), $6.20 in all. About $7.45 remains of D439's $40.
+- **Worst-case reserve:** $0.22 a sol attempt, $1.09 an astra attempt.
+- **First request:** sent alone. The rest is refused if its price × 42 plus one attempt in flight passes $5.00.
+- **Estimate:** about $1.8, from the first screen's measured averages (astra $0.037 a send, sol $0.006).
+
+**Verdict.** Unchanged from `DESIGN.md`, on 42 sends an arm:
+- closes this candidate at 3 or more astra failures;
+- inconclusive if sol has fewer than 2;
+- promising at astra 1 or fewer and below sol, with strict below strict, no more unjustified refusals and no new harm;
+- closes if astra has at least sol's failures;
+- otherwise inconclusive.
+
+Both halves are reported side by side, never pooled into a new verdict.
+
+**Proofs at $0:**
+- `test_astra_rest.py`: 4 of 4. `test_astra_probe.py`: still 16 of 16, run in its own process.
+- `mutants-rest.txt`: three mutants caught, each traceback read.
+- `preflight-rest.txt`: 95 stored attempts; the current checks agree with every stored verdict. The 11 refusals there are the model's
+  known contract errors, each repaired on its resend in D629.
+
+codex
+**Send the complementary screen under the $6.20 combined cap.** The recorded preflight checked **95 stored attempts**, with no changed verdicts, and the launcher’s check identifies the intended 14 topics and the stated caps. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN-REST.md), [preflight](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/preflight-rest.txt)
+
+The memory-price aggregation should remain a disclosed source-fidelity concern, as you propose; the readers’ passing marks do not establish that the invented weighting is supported.
+
+One proof limitation belongs in the record: R1–R3 stop through `SystemExit`, so they demonstrate that the mutated launcher refuses those conditions, rather than a clean assertion-based catch in every test. That does not change the send decision here. A stopped draw remains **not measured**. Both halves should be reported separately as exposed-topic diagnostics, with the **$6.20 maximum** and roughly **$1.25 minimum remainder** clear.
+
+I have not started the run.
+
+**CONSENSUS: Send the fixed complementary screen within the stated caps and stop rules.**
+tokens used
+906,139
+**Send the complementary screen under the $6.20 combined cap.** The recorded preflight checked **95 stored attempts**, with no changed verdicts, and the launcher’s check identifies the intended 14 topics and the stated caps. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN-REST.md), [preflight](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/preflight-rest.txt)
+
+The memory-price aggregation should remain a disclosed source-fidelity concern, as you propose; the readers’ passing marks do not establish that the invented weighting is supported.
+
+One proof limitation belongs in the record: R1–R3 stop through `SystemExit`, so they demonstrate that the mutated launcher refuses those conditions, rather than a clean assertion-based catch in every test. That does not change the send decision here. A stopped draw remains **not measured**. Both halves should be reported separately as exposed-topic diagnostics, with the **$6.20 maximum** and roughly **$1.25 minimum remainder** clear.
+
+I have not started the run.
+
+**CONSENSUS: Send the fixed complementary screen within the stated caps and stop rules.**

@@ -1,0 +1,11 @@
+**Data Center should read total revenue. Run old-2 as the first test after tightening the pass rule.** It’s the only draw where the receiving question sees both the final annual forecast ($419B) and the matching Q4 forecast ($127B).
+
+**(a) What the probe can show.** I independently matched the three archived control hashes. Each total-revenue judgement was recorded earlier in the same round, and none read Data Center through a dependency. Old-1 hides the decisive $112.2B Q4 figure and passes along the mistaken use of FY2028’s 70% growth for FY2027. Old-3 shows $419B and $127B **before** an uplift whose final $446B estimate is cut off. Treat both as examples of what the 600-character limit loses. Neither can decide whether the original forecasts reconcile. [Rendered requests](/Users/lchingen/hivemind/docs/research/2026-11-20-production-readiness/dependency-probe/render-check.json)
+
+**(b) Direction.** PRD 06 lets a question opened from an article read the conclusion it relies on. D537 found a concrete reason for Data Center to read total revenue. D368 item 4 governs historical seed links. My round-two objection applied that seed rule too broadly. D538’s seven filing changes still matter before any build. [PRD 06](/Users/lchingen/hivemind/docs/prd/06-views-database.md:134) · [D538](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6479)
+
+**(c) Before sending.** Keep three fresh samples per arm for old-2. Apply the same rule to both arms. Require an explicit annual and Q4 estimate, arithmetic that adds up, disclosed assumptions grounded in the sources, and room for the rest of NVIDIA’s revenue. A missing Q4 estimate leaves reconciliation untested. Track separately whether the changed answer actually uses the linked forecast. A number copied from that forecast remains an estimate.
+
+Require fresh archives, preserve first-attempt refusals, and reserve the next call’s maximum cost before sending. The script currently opens existing archive paths and checks spend already incurred. A pass would justify reopening the design review. A failure would show that this input did not reliably help, leaving the cause open. [Probe script](/Users/lchingen/hivemind/docs/research/2026-11-20-production-readiness/dependency-probe/probe.py:70)
+
+**DISAGREE**

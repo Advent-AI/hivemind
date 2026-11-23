@@ -1,0 +1,13 @@
+**NOT READY:** the reader can overwrite the first probe’s saved reading and does not verify that the answers belong to the selected case.
+
+1. **Serious — answer folder is not bound to the case.** [judge_probe.py:212](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:212) reads any supplied send folder without checking its registration against `--case` or the request hashes, then overwrites that folder’s `reading.json` at [line 233](/Users/lchingen/hivemind/clean-arch/step2-edge-effect-2026-11-10/judge_probe.py:233). For example, pointing the v22 reader at the existing first probe’s folder would replace its saved reading. The six actual first-probe answers all fail the v22 check, so that particular mix-up yields “not decided”; the code does not establish that answers from another mismatched folder could never pass and produce a verdict. The reader should verify the registered case and request hashes before reading or writing.
+
+2. **Not serious — the protocol understates the sender changes.** [PROBE-v22.md:29](/Users/lchingen/hivemind/clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md:29) says the only change is that the question, day and record are arguments. The draw and sequence are arguments too, and the permitted output roots changed. The control comparison also excludes the judgement `call_id` column, as its report explicitly states, so “ledger … equal” at [line 16](/Users/lchingen/hivemind/clean-arch/step2-revision-links-2026-11-10/PROBE-v22.md:16) needs that qualification.
+
+For **A**, the specified `--case` reaches the saved-run selection, request filenames, saved judgement lookup, removed block, frozen check and registration. The permitted no-send check passed for draw 3, v22, sequence 76 and e176. The old v20/e185/draw 1 values remain as defaults and in the introductory description, but do not survive in those paths when this `--case` is supplied.
+
+For **B**, the adapter writes the revision before reading the old record’s links; the hook filters the selected link while preserving the order of the others. Comparing the saved control and counterfactual ledgers through sequence 76 found exactly one link difference: e176 → v22. The revision, same-claim, evidence and source rows matched. The saved requests differ only by the four-line e176 block and the item count. The replay stopped at the first changed request, so this evidence does not establish what happens afterward.
+
+No network request was sent and no file was edited.
+
+NOT READY — serious finding 1.

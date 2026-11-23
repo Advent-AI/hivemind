@@ -1,0 +1,195 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 141: proof 10's design revised for your four points (contract, "Proof 10's design")
+
+1. **Timing by brackets.** Each day's completion is bracketed by the times just before and after `close_and_complete`. An answer's
+   day must have started completing before the answer arrived, and be no older than the last day whose completion ended before the
+   request was sent. A request that pins just after a commit is therefore accepted.
+2. **Two distinct snapshot states, labelled and asserted:**
+   - 2026-09-25 before judging: articles committed, the day not completed. The copy's last day is 2026-09-24, with steps dated
+     2026-09-25.
+   - 2027-01-31 before close: a due-day closing not completed, no articles. The copy's last day is 2027-01-30, with no switch dated
+     2027-01-31.
+3. **Readiness:** 200, or 503 with exactly the first-day body, counts as ready. Any other answer fails, and the known-finding
+   exception is removed.
+4. **MCP** is named a module-level check (tool implementation, not transport; transport stays a limit).
+   - The poller must not be vacuous: at least 20 answers, and at least one completion with answers on both sides.
+   - The dated read is compared as decoded JSON (a hash of the canonical form), and a first difference is read before it is called a
+     leak.
+   - At the writer's end, WAL may be kept with "another connection held the store at the end" recorded, since the poller may hold a
+     read then.
+
+The harness is a new file; the D573 one stays as its run's record.
+
+End with `CONSENSUS: yes` (build and run proof 10) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the revised timing bounds and pause assertions against the writer’s commit order, then assess whether the proof can distinguish a leak from a timing artifact.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '557,635p'
+rg -n 'def close_and_complete|def complete_day|mark_step|def mark\\(' clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py src/hivemind/views/store.py src/hivemind/dispatch.py
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '315,345p;490,525p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   557	## Proof 10's design (council rounds 140 and 141)
+   558	
+   559	**What it runs.**
+   560	
+   561	- A new harness, `live-service/proof10_serving_while_writing.py`. It reuses the D573 harness's page rendering and checks, and leaves
+   562	  that file as the record of its own run.
+   563	- It re-runs the extension draw's c1 through the accepted loop into a new scratch store to 2027-04-02.
+   564	  - Every judge request is answered from the stored archive by identity: $0, no model or embedding call.
+   565	  - The writer is the built `replay`: WAL, its lock, the checks before each day, its end.
+   566	- It runs detached with a log after the council's yes.
+   567	
+   568	**Starting the API.** The API is started on the store being written at the first pause, lexical. It is ready when `/days` answers
+   569	200, or 503 with exactly "the store's first day has not completed". Any other answer fails the proof, and the D573 harness's "known
+   570	finding" exception is gone.
+   571	
+   572	**At each of the seven pauses (states labelled):**
+   573	
+   574	1. **The API, `/days` and `/library`:** every D573 check holds, the first-day one included.
+   575	   - At 2026-09-22 before close (the first day, nothing completed), both answer 503 with that body.
+   576	   - Fresh pages are rendered at the same two pauses as before.
+   577	2. **MCP, a module-level check:** the MCP module is loaded once at the first pause, as its entry point builds it, lexical, and its
+   578	   tool functions are called in-process. This exercises the tools' implementation, not the MCP transport, which stays a stated
+   579	   limit.
+   580	   - On the first day, its instructions say no day has completed, and `thesis_library()` and `views()` refuse.
+   581	   - Afterwards, `thesis_library()`'s day and view ids equal `/library`'s.
+   582	3. **Lock and copies:**
+   583	   - `live_lock.acquire` is refused, and so is preflight's `store_copies`, which names the snapshot route;
+   584	   - the store is in WAL mode.
+   585	4. **Snapshots in two distinct states:**
+   586	   - **2026-09-25 before judging, a day's articles committed and the day not completed:** the copy's last day is 2026-09-24 and it
+   587	     holds processing steps dated 2026-09-25;
+   588	   - **2027-01-31 before close, a due-day closing not yet completed (no articles that day):** the copy's last day is 2027-01-30 and
+   589	     it holds no switch dated 2027-01-31.
+   590	   - Both copies are out of WAL mode, with integrity `ok`.
+   591	
+   592	**Concurrent reads.** A poller asks `GET /library` back to back from the API's start to the writer's return. The harness brackets
+   593	each day's completion with the times just before and just after `close_and_complete`. For every answer:
+   594	
+   595	- the status is 200, or 503 only for a request sent before the first day's completion ended;
+   596	- the day it serves completed no later than the answer arrived (the day's completion started before the answer was received);
+   597	- it is no older than the last day whose completion had ended before the request was sent;
+   598	- the days never go backwards;
+   599	- after the run, `GET /library?as_of=<that day>` decodes to the same JSON (compared by a hash of its canonical form). The first
+   600	  difference is read before anything is called a leak; this is a test of the historical filter, not a guarantee row 3 already
+   601	  gives.
+   602	- **The polling must not be vacuous:** at least 20 answers, and at least one day whose completion has answers on both sides (one
+   603	  served an earlier day and arrived before the completion started; one served that day or later).
+   604	
+   605	**After the writer ends:**
+   606	
+   607	- the lock is free;
+   608	- the store is out of WAL mode, or WAL is kept with "another connection held the store at the end" recorded (the poller may hold a
+   609	  read at that moment);
+   610	- the API answers as of the store's last completed day.
+   611	
+   612	**It exits 1 unless every check holds.** A failure is read to its first differing value before anything is changed.
+   613	
+   614	## Not covered
+   615	
+   616	- Resuming a stopped live store.
+   617	- The Idea planner on a new-system ledger.
+   618	- A long-running service's restart and monitoring.
+   619	- The page's note when its live read fails, which is Alex's presentation choice.
+src/hivemind/dispatch.py:52:    store.mark_step(conn, input_id, sequence_no, 'dispatched', 'ok', '', item.get('publication_day'), time.strftime('%Y-%m-%dT%H:%M:%S'))
+src/hivemind/dispatch.py:57:def mark(conn, item, sequence_no, step, result='ok', reason=''):
+src/hivemind/dispatch.py:58:    store.mark_step(conn, item['input_id'], sequence_no, step, result, reason, item.get('publication_day'), time.strftime('%Y-%m-%dT%H:%M:%S'))
+src/hivemind/views/store.py:444:def mark_step(conn, input_id, sequence_no, step, result, reason, publication_day, at):
+src/hivemind/views/store.py:475:def complete_day(conn, day, seq, at):
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:356:    def close_and_complete(self, day):
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:367:        """The processing record the product's read side places items in time by (store.mark_step; `service.seq_day_map`): the
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:369:        store.mark_step(self.conn, input_id, k, 'handed_over', 'ok', None, day, day)
+   315	            return
+   316	        view = outcome['view']
+   317	        store.create_view(self.conn, view_id=view_id, object_id=view['object_id'], object_kind=view['object_kind'], kind=view['kind'],
+   318	                          looks_at=view['looks_at'], question=view['question'], due_day=view['due_day'], year=view['year'],
+   319	                          rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+   320	                                 for rung in view['rungs']],
+   321	                          seq=seq, input_id=input_id, created_at=f'{day}T00:00:00Z')
+   322	        self.views.add(view_id)
+   323	        self.mapping[thesis_id] = [view_id]
+   324	        self.counts['views written from a ladder'] += 1
+   325	
+   326	    def _link(self, evidence_id, thesis_id, k, changed):
+   327	        if evidence_id is not None and thesis_id in self.unjudged:
+   328	            self.counts['links to an unjudged thesis'] += 1
+   329	            return
+   330	        if evidence_id is not None and thesis_id in self.mapping:
+   331	            for view_id in self.mapping[thesis_id]:
+   332	                self.counts['links from a laddered thesis to its view'] += 1
+   333	                self._write_link(evidence_id, view_id, k, changed)
+   334	            return
+   335	        self._write_link(evidence_id, thesis_id, k, changed)
+   336	
+   337	    def _write_link(self, evidence_id, view_id, k, changed):
+   338	        """A link to a closed question is written as production's writer writes one and not judged (production's round takes open
+   339	        questions only); each new one is counted, since it arises from Step 1's library not learning closings (CLOSING-DESIGN.md
+   340	        §2, §6). A link that already exists writes nothing and is not counted."""
+   341	        closed = evidence_id is not None and view_id in self.views and not store.is_open(self.conn, view_id)
+   342	        linked = lambda: self.conn.execute('select 1 from evidence_links where evidence_id=? and view_id=?', (evidence_id, view_id)).fetchone() is not None
+   343	        before = closed and linked()
+   344	        super()._link(evidence_id, view_id, k, changed)
+   345	        if closed and not before and linked():
+   490	            for k in articles:
+   491	                seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+   492	                input_id = by_article[k][0]['input_id'] if k in by_article else f'article:{k}'
+   493	                opened_here = sorted(opened.get(k, {}), key=lambda name: int(name.split('-', 1)[1]))
+   494	                for thesis_id in opened_here:
+   495	                    runner.open_thesis(thesis_id, ladders[thesis_id], k, seq, day, input_id, source)
+   496	                runner.article(seq, by_article.get(k, []), library, revisions_by_record, later_by_article.get(k, []), changed)
+   497	                runner.record_article(seq, inputs_of[k], day)       # after its records are written, as production marks a handover
+   498	                for thesis_id in opened_here:
+   499	                    for view_id in runner.mapping.get(thesis_id, []):
+   500	                        if runner.conn.execute('select count(*) from evidence_links where view_id=?', (view_id,)).fetchone()[0] == 0:
+   501	                            runner.counts['views with no opening evidence'] += 1
+   502	            runner.conn.commit()
+   503	            if changed:
+   504	                runner.judge(day, sequences[max(articles)], changed)
+   505	            runner.close_and_complete(day)
+   506	            last_completed = day
+   507	            checkpoint = truncate_checkpoint(runner.conn)
+   508	            if checkpoint == 'done':
+   509	                failed_checkpoints = 0
+   510	            elif checkpoint == 'busy':
+   511	                failed_checkpoints += 1
+   512	            else:
+   513	                checkpoint_error = checkpoint             # not a reader: the writer stops before the next day with this reason
+   514	        if checkpoint_error is not None:
+   515	            runner.counts['the truncating checkpoint after the last day failed'] = checkpoint_error
+   516	        mode, kept = leave_wal(runner.conn)
+   517	        runner.counts['store journal mode at the end'] = mode
+   518	        if kept:
+   519	            runner.counts['stopped in order'] = f'WAL kept: {kept}'
+   520	        (output / 'sequences.json').write_text(json.dumps({str(k): seq for k, seq in sequences.items()}, indent=1) + '\n')
+   521	        runner.counts['judging usd this draw (charged: from tokens, or the reserve when no usage came back)'] = round(runner.budget.spent_usd - spent_before, 4)
+   522	        runner.counts['judging usd of the whole limit so far (from its ledger)'] = round(ledger_total(runner.budget.ledger_path), 4)
+   523	        (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   524	        (output / 'judge-requests.json').write_text(json.dumps(runner.sent, indent=1))
+   525	    finally:
+
+codex
+**Yes: build and run proof 10 with the revised design.** The January snapshot is now described as a pre-closing state, first-day 503 is a readiness result, and the MCP and historical-comparison limits are explicit. [Proof design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:557).
+
+One qualification for the result: the timing brackets show that a response is **compatible with** a completed-day snapshot. A completion having *started* before a response arrived does not by itself prove it had committed before the request’s read. The dated JSON comparison and pause checks provide additional evidence, but the report should not claim the brackets alone prove the exact commit time. [Timing checks](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:592).
+
+CONSENSUS: yes
+tokens used
+3,603,293
+**Yes: build and run proof 10 with the revised design.** The January snapshot is now described as a pre-closing state, first-day 503 is a readiness result, and the MCP and historical-comparison limits are explicit. [Proof design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:557).
+
+One qualification for the result: the timing brackets show that a response is **compatible with** a completed-day snapshot. A completion having *started* before a response arrived does not by itself prove it had committed before the request’s read. The dated JSON comparison and pause checks provide additional evidence, but the report should not claim the brackets alone prove the exact commit time. [Timing checks](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:592).
+
+CONSENSUS: yes

@@ -1,0 +1,44 @@
+PASS  control: control passes
+PASS  S1 value: caught: FAIL  A2  trillions written as 1.2 USD bn (S1)  [expected S1; got pass]  []
+PASS  S1 qualifier: caught: FAIL  A2  "an estimated $750 billion" recorded with qualifier "none" (S1) [D745]  [expected S1; got pass]  []
+PASS  S1 estimated qualifier [D745]: caught: FAIL  A1  "an estimated $750 billion" with qualifier "estimated" [D745]  [expected pass; got schema]  ["$.figures[0].qualifier: 'estimated' not in ['none', 'app
+PASS  S1 whole expression: caught: FAIL  A2  [D740] "from $35 billion to $170 billion" copied as one range (S1)  [expected S1; got pass]  []
+PASS  S1 sign kept: caught: FAIL  A1  "-3%" as written  [expected pass; got S1]  [["S1", "S: \"-3%\" gives value 3 %"]]
+PASS  S1 passage: caught: FAIL  A2  [D740] "from $35 billion to $170 billion" copied as one range (S1)  [expected S1; got pass]  []
+PASS  S2 arithmetic: caught: FAIL  A2  a plain wrong sum (S2)  [expected S2; got pass]  []
+PASS  S2 money times percent: caught: FAIL  A3  money × % through product  [expected S2; got S3,S6]  [["S6", "v8: rung 2 [350.0, 400.0] does not hold its outcome 10445.7 as recomputed"], ["S3", "out
+PASS  S2 zero divisor: caught: FAIL  A2  division by a range that contains zero (S2)  [expected S2; got S2]  ["the refusal does not say \"can be zero\"", ["S2", "O: the value cannot be evalua
+PASS  S2 share range: caught: FAIL  A2  a share above 100% (S2)  [expected S2; got S3,S6]  [["S6", "v8: rung 2 [350.0, 400.0] does not hold its outcome 411.8 as recomputed"], ["S3", "outcome
+PASS  S2 one value on every path: caught: FAIL  A2  a part above its whole at one end of a linked range: part = 215 − whole (S3)  [expected S3; got S2]  [["S2", "F12: the value cannot be evaluated"]]
+PASS  S2 zero inside a straddling range: caught: FAIL  A1  a range straddling zero times itself is 0 to 9  [expected pass; got S2]  [["S2", "R: declared 0–9 but product of P, P gives 4–9"]]
+PASS  S3 part above whole: caught: FAIL  A2  a part forecast above the whole for Q3 (S3)  [expected S3; got pass]  []
+PASS  S3 linked ranges: caught: FAIL  A2  a part above its whole at one end of a linked range: part = 215 − whole (S3)  [expected S3; got pass]  []
+PASS  S4 two forecasts: caught: FAIL  A2  two Data Center Q4 forecasts, both used (S4)  [expected S4; got pass]  []
+PASS  S4 adopted only: caught: FAIL  A1  a final range estimate resting on a computed point of the same quantity  [expected pass + recorded one quantity, several figures; got S4]  [["S4", "NV
+PASS  S4 bypass: caught: FAIL  A2  Q3 guidance used directly beside the Q3 forecast (S4)  [expected S4; got pass]  []
+PASS  S4 bypass walks inputs only [D742]: caught: FAIL  A1  a guidance-implied growth rate as the stated benchmark of a Q4 estimate (D741 ruling 1) [D742]  [expected pass; got S4]  [["S4", "v4: uses F3 for NVID
+PASS  S5 estimate under reference: caught: FAIL  A2  an estimate marked as the reference (S5)  [expected S5; got pass]  []
+PASS  S5 forecast under reference: caught: FAIL  A2  a computed reference with basis forecast (S5)  [expected S5; got pass]  []
+PASS  S5 outside source: caught: FAIL  A2  a reported-only reference (S5)  [expected S5; got pass]  []
+PASS  S5 one choice: caught: FAIL  A2  both a reference figure and a reason (S5)  [expected S5; got pass]  []
+PASS  S6 rung holds outcome: caught: FAIL  A2  a rung whose band misses the outcome (S6)  [expected S6; got pass]  []
+PASS  S6 own forecast: caught: FAIL  A2  a source as the outcome (S6)  [expected S6; got pass]  []
+PASS  S6 one outcome marker: caught: FAIL  A2  no outcome marker (S6)  [expected S6; got pass]  []
+PASS  S6 outcome key: caught: FAIL  A2  an outcome key mismatch (S6)  [expected S6; got pass]  []
+PASS  S7 cycle: caught: FAIL  A2  a cycle through rests_on (S7)  [expected S7; got pass]  []
+PASS  S7 value or range: caught: FAIL  A2  value with low (S7)  [expected S7; got pass]  []
+PASS  S7 source basis: caught: FAIL  A2  a source with basis forecast (S7)  [expected S7; got pass]  []
+PASS  S7 unresolved shape: caught: FAIL  A2  a marker on an unresolved member (S7)  [expected S7; got pass]  []
+PASS  S7 rests_on estimates only: caught: FAIL  A2  rests_on on a reported figure (S7)  [expected S7; got pass]  []
+PASS  S7 inputs computed only: caught: FAIL  A2  inputs on an estimate (S7)  [expected S7; got pass]  []
+PASS  S7 finite numbers: caught: FAIL  A2  a number that is not finite (S7)  [expected S7; got S2]  [["S2", "F6: the value cannot be evaluated"], ["S2", "F10: the value cannot be evaluated"]]
+PASS  S8 part into whole: caught: FAIL  A2  Data Center added into company in one sum (S8)  [expected S8; got pass]  []
+PASS  S8 overlap only: caught: FAIL  A1  a part added to the whole for different periods: company H1 + Data Center Q3 (recorded, not refused)  [expected pass + recorded part and whole added f
+PASS  S8 remainder same period: caught: FAIL  A2  the remainder taken across periods: company Q3 − Data Center Q2 (S8)  [expected S8; got pass]  []
+PASS  S8 one period once: caught: FAIL  A2  one period added twice in plain words (S8)  [expected S8; got pass]  []
+PASS  S8 periods: caught: FAIL  A2  Q2 + Q3 labelled H1 (S8)  [expected S8; got pass]  []
+PASS  S8 period spelling: caught: FAIL  A3  "FY2027 first half" summed from quarters  [expected S8; got pass]  []
+PASS  D740 from-to is a change: caught: FAIL  A1  [D740] "from $35 billion to $170 billion": each amount copied alone  [expected pass; got S1]  [["S1", "S1: \"$35 billion\" is part of the longer expre
+PASS  D741 carried share: caught: FAIL  A2  [D741] consensus total × a past quarter's reported share marked as the market reference (S5)  [expected S5; got pass]  []
+PASS  recorded conversion: caught: FAIL  A1  a conversion between quantities (recorded, not refused)  [expected pass + recorded conversion between quantities; got pass]  ["missing recorded conver
+43 of 43 as expected (control + 42 mutants)

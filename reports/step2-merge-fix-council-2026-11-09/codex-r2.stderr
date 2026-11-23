@@ -1,0 +1,1097 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1bf08-9aff-74e1-bab4-eadda8b68bdb
+--------
+user
+Challenge your proposal using the exact saved census in reports/step2-merge-fix-council-2026-11-09/stored-census.md and the requirements. We counted all 363 c8 merged instances by exact path: 4 wrong, 43 overlaps; repeated dev pair is the same source pair twice. A 0.5 floor rejects 1 wrong, 4 accepted, 1 overlap; one known wrong has 0.84. Your 'name the shared statement' idea appears circular: both can share a broad statement while their main statements differ; Step 1 records can legitimately bundle distinct statements and add details; Jev cannot generate a common statement. Source articles may reference the same announcement but media summaries disagree; no proof why Jev chooses or that new generation fixes it. How would a concrete test avoid circular self-verification, dependence on quote exactness, excessive splits or changing D381, and avoid cherry-picking development errors? Is adding a separate model justified vs testing plain grouped source display through real Step 4 first? What precisely is $0 demonstrable on stored inputs, what requires paid sends, and where are identity contract/measurement/decision issues? Consider clean-path current steps are in use by a separate end-to-end run; don't edit files or send model calls. Review cited facts first; return refined proposal, unresolved choices and what evidence would reject it. Do not assert root cause without proof.
+
+codex
+我会先核对这份完整统计和现有展示、判断路径，再检验“指出共同说法”是否真的能独立发现错误，以及哪些结论只能靠之后的付费实验得到。全程只读，不碰正在运行的任务。
+exec
+/opt/homebrew/bin/zsh -lc 'cat reports/step2-merge-fix-council-2026-11-09/CONCLUSIONS.md' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+cat: reports/step2-merge-fix-council-2026-11-09/CONCLUSIONS.md: No such file or directory
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat reports/step2-merge-fix-council-2026-11-09/stored-census.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# c8 stored merge census, 2026-11-09
+
+Read-only count of decision outcome `kind == repeat`, linked by exact record ids to `merge-key.json`, `merge-answer-MA-*`, `merge-answer-MB-*` and `merge-third-answer.json`. All 363 selected pairs were identifiable and each had two first-reader judgments; all disputes carried their third-reader verdict. This is one fresh draw and three draws over the same 115-article dev set, not 363 independent events.
+
+| Saved run | merges | clearly wrong | overlap | accepted by both or adjudicator |
+|---|---:|---:|---:|---:|
+| Fresh | 57 | 1 | 2 | 54 |
+| Dev draw 1 | 100 | 1 | 14 | 85 |
+| Dev draw 2 | 100 | 1 | 12 | 87 |
+| Dev draw 3 | 106 | 1 | 15 | 90 |
+
+Four wrong merge instances by recorded readers comprise 3 different source-pair classes (one repeats in 2 dev draws): (1) production/20% forecast vs August customer deliveries, Jev 0.49; (2) analyst revenue-level forecasts vs growth rate forecasts, 0.53; (3) cloud providers' revenue share vs developers' sales share, 0.84 and 0.51. These have shared topic but distinct claims according to the readers; X22 was also called overlap by an independent blind Claude, so classification uncertainty remains. The developer-sales case has additional source-fidelity ambiguity: it is not proven that the media report accurately represented its source. See saved `library.json` group original and member and `decisions.json` at each run; see prior X22 council report.
+
+## 0.5 threshold counterexample
+
+Among the 363 merges, six selected same-statement scores are below 0.5: fresh X22 (0.49, wrong), fresh X47 (0.47, accepted by both), dev1 X33 (0.47, overlap), dev2 X27 (0.41, accepted by both), dev3 X26 (0.41, accepted by both), dev3 X28 (0.49, accepted by both). Rejecting these merges on a 0.5 floor would remove 1 of the 4 wrong instances, while splitting 4 accepted and 1 overlap instance. These are fixed archived outcomes; the statement is conditional on this isolated transformation and neither estimates behavior of a forward run nor argues any threshold is appropriate.
+
+The overlap rows are not silently reclassified as errors. Their counts are listed, but their reader-defined acceptability and product impact need source-backed review. Exact historical log and verdicts: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §§43–44 and each `poc/data/clean-{acceptance-2026-11-09/step2,step1-c8-dev-d1-2026-11-09/step2,step1-c8-dev-d2-2026-11-09/step2,step1-c8-dev-d3-2026-11-09/step2}/merge-third-answer.json`.
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '49,111p;158,184p;227,310p' AGENTS.md; sed -n '129,203p' clean-arch/PRD.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## 1. Before acting on a failure: diagnose
+
+A failure is a question, not a task. Nothing changes (code, prompt, configuration, test, gold) until these are written:
+
+1. **The class.** Count every instance on stored data, at no cost: how many, since when, what each costs; never only the case in view.
+   Match by path or field, not by substring, and check the census on one case whose answer is known. A flagged word in a document is a
+   class too: count it over the whole scope before the first edit.
+2. **The mechanism.** Trace one case end to end (the raw output, every check that dropped it, the input that produced it, the code
+   that built that input) to the design choice that produces the whole class. First check whether your own last change or load caused
+   it; when several mechanisms stack on the same cases, find them all first.
+3. **Step back.** Is it the product's problem, or one the measurement or process made? Read the governing standard and the decisions on
+   the topic before writing any rule: the answer is often written already, and a question about the measuring stick is answered by the
+   frozen ruler (§7.1), never by a new ruler (Alex, 2026-10-29: "我们是聊过这个事情的你难道没看文档吗").
+4. **The cheapest proof.** Show the change flips the decisive case on real data (a stored input edited and re-run, a rule run on a copy
+   of stored data) and count what else it fires or touches. If it does not flip, the cause is elsewhere: trace again and build nothing.
+5. **The share.** Show what share of the counted class the fix removes. A fix that removes part of it is a patch: say so, and do not
+   build it as the fix. A fix that another change subsumes is not built.
+
+Before any design: ten raw answers read beside their inputs, the whole request read as the model reads it, and, for a choice the model
+made, the model's own account (continue the stored conversation with "which instruction led you here, and which two statements did you
+reject", a cent a case).
+
+Then converge or stop:
+- A mechanism named on its counted class is fixed in the same slice and measured, and the report leads with it. A root-caused defect is
+  never parked "for Alex"; a parked fix is an open defect. Go to Alex only when the mechanism is not found, or the fix would change the
+  measuring stick or the PRD.
+- When one mechanism draws findings round after round, stop answering findings: propose one structural rule.
+- A failure called a flake is a defect until traced. Read a failing check to its first differing line before any rerun; a passing rerun
+  proves nothing.
+- A subagent's or reviewer's report is a lead. Read the code, contract or record it rests on before acting on it or recording it, and
+  cite what you read, not the summary (Alex, 2026-10-30: "那你找到的这些问题验证是真的问题吗？").
+
+## 2. Before writing code: design
+
+Code written before the thinking costs rounds of review. A design holds these tables before code and before any review; a blank cell
+means it is not ready:
+
+1. **State × event**, for work that spans more than one step, run or day: every state against every event it can meet (success,
+   refusal, a refused retry, an external failure, a crash midway, work still in flight when a run ends, a later run on a later date,
+   configuration changed in between, an input corrected while waiting, another writer of the same data, two scopes at once), including
+   the work before its first step and after its terminal outcome. Each cell names the transition, what is written, and the date every
+   read and write uses.
+2. **Value × reader.** Every value a change writes, against every reader of it (found by searching the field) and every input source the
+   value can come from. A rule over a kind of data lists every writer of that kind. A change to how often something fires is counted
+   against every reader of its output.
+3. **New path × old checks.** For a new input, derived value, mode or changed data shape: every check the old path passes, and whether
+   the new one meets it. A changed shape re-derives every check written for the old one.
+4. **Prior decisions.** The decisions searched for the mechanism by name; any decision that rejected or bounded it is quoted in the
+   design and in the question to Alex.
+
+- A contract over text or shapes states the closed set of what passes (a full match); anything else fails or is not judged. Enumerate
+  the accepted set against every context and reader it meets before the first edit.
+- **Code owns identity, never importance.** Before building a closed list, enum or gate, write which decision it takes from the model
+  and whether that decision is identity ("are these the same thing?") or judgement ("does this matter?"); build only the identity part.
+  A list of what matters is at most a hint shown to the model (Alex, 2026-10-25: "你这个做法难道不是非常的限死吗？永远都是一堆财务指标，真正的观点呢？").
+- **No case-fitted fix.** A hand list, a special path or a rule fitted to the case in view fixes that case and breaks the next. First ask
+  whether the judge had the material and the definition it needed, and whether a typed field is missing; run the proposal against the
+  existing tests and the gold for a counter-example before building (D167: "我不要 hardcode 解法 it's premature optimization, not general root fix").
+- A blind review measures the tables. A serious finding they do not hold shows a missing dimension: add it and walk every row again,
+  never answer the finding alone. Code starts when the review finds nothing serious. A design whose core contract is still open is a
+  question, not something to build.
+- A foundation's acceptance carries a size and speed budget from its first control, not only correctness.
+
+## 5. Verification
+
+Verify at the point the change touches, at the sharpest level that shows it works or fails, and stop there:
+1. Stored data: reproduce the failing case, show the fix flips it, show a mutant of the fix fails the check ($0).
+2. Only when what the model is asked changed: re-send just the affected calls.
+3. The touched suites, plus any standing structural checks the change can affect; the full suite once.
+4. The gate once, at merge (README, "Build and check"). The acceptance once, on the final configuration, scored on the frozen ruler
+   (§7.1). Never a full rerun per fix.
+
+- A further check the change does not need is offered in one line, not run. After the checks that prove a change pass, report and close.
+- To accept a code change, replay stored decisions through the code deterministically ($0); a sampler run proves nothing about code,
+  and a cached replay proves nothing about the model.
+- A re-sent request is the bytes production sends, not the archive's canonical JSON: `model.request_identity` sorts keys for the
+  archive, `model.call` sends the dict as built. Check a harness by comparing an answer's key order with a production answer's.
+- Before any paid run, `python3 scripts/preflight.py` replays the stored model answers and matching records of the archives and ledgers
+  it is given through the current code checks and prompts ($0; it skips rows an earlier run refused, so read what it says it skipped)
+  and prints, per check, the cases judged and the refusals with reasons (it does not yet replay the coverage-start reading's check:
+  `CURRENT_STATE.md`, open defects). A changed share or a refusal on a case a person would accept is
+  diagnosed before the run; a paid run is never the way a check or a prompt is first tried.
+- An acceptance round is a measurement of the final configuration, not a verification step. A new finding in it is recorded with its
+  census, not answered with another round.
+- The product runs end to end before anything else is built, and every merge is accepted on the product's own path. A gate passes only
+  what it runs: name the check that runs a new path, or say that none does.
+- Measure before claiming. Label estimates as estimates, report every sample, and treat a number in a design document as a measurement
+  with a script behind it.
+
+## 6. Writing prompts
+## 7. Measuring and iterating
+
+### 7.1 The ruler
+
+- **One ruler.** Every gold, judge, prompt and acceptance uses the one standard named before the first arm. A second ruler in use (an old
+  reference, a judge's rubric, a prompt's own categories) is a defect, fixed before anything is measured (D241, Alex: "我们今天一直浪费时间在不同标准之间来回").
+- **The frozen ruler (D261, D262; 2026-11-02)** remains the standard for existing measurements and historical comparisons until a separately reviewed replacement is established. For future evidence scoring (D372), combine the existing gold's core and supporting as helpful, treat its not-kept entries as unhelpful, and leave optional entries neutral; this does not alter the frozen files. Its pieces, with the hashes code checks:
+  1. The extraction standard: `docs/prd/05-extraction-standard.html`, its version 5 (version 3 as signed in D243, with D248's seven
+     boundaries and D250's four evidence boundaries and counting unit); the gold `docs/research/2026-10-29-ledger-standard/golden-v5/` (dev sha256 `6f9476bb…`, test `af2145cd…`, recorded
+     in `golden-v5.sha256`). There is no version 6.
+  2. The questions: golden-v5's must_open / may_open (questions standard version 3) and the seeds `poc/seeds/nvda-2026-07-01-v2.json`
+     (`fca16f42…`, 22 questions). The seeds are part of the ruler: the judgement scorer refuses a run whose seed questions differ; a new
+     seed set is a new ruler version, opened only by Alex's decision.
+  3. The judgement ruler (D3): `docs/research/2026-11-01-e2e-loop/judgement-gold/`: `ruler-v1.md` (the definition), `reader-brief.md`,
+     `packet-v1.json` (golden-v5's 309 items, `53d1e8b4…`), `questions-v1.json` (the 22 seeds plus the Ohio guarantee, `30854180…`),
+     `gold-v1.json` = reader B's answers (`636c056d…`, in `gold-v1.sha256`), `score_judgement.py` (refuses any other sha256 or ruler
+     version), `corrections-v1.json` (dated records only, printed with every score, never merged).
+
+  None of these files changes again (`tests/test_frozen_rulers.py` fails the suite when a hash moves; Alex, 2026-11-02: "你的尺子做出来和金标真的不能再动了，
+  已经造成了3天的各种漂移，非常的严重 … 我们做完的review过的尺子金标不能再动了"). A defect found later is a dated correction record beside the gold,
+  with its reason and its before and after, printed with every score and never merged in. Every measurement names the gold version it used. A new piece (the D2
+  matter-to-question mapping, not yet built, is one) is an addition recorded as such, never an edit of these. A new version of any piece
+  exists only by Alex's decision, derives its gold from scratch, and old scores are never compared with it. A disagreement between the
+  system and the gold is a gap in the system to close (D263), never a case for the ruler. A suspected inconsistency between gold and
+  standard no longer stops an arm: record the concern separately, continue scoring on the unchanged frozen gold, and disclose it with the results (D373).
+  What it measures: extraction against the gold's items, questions against must_open / may_open, the judgement at the window end
+  2026-07-14 against reader B's ranges (a numeric question agrees when the gold range overlaps the chosen rung's band, a yes/no question
+  when the answers match). What it does not measure: the judgement's daily path, and whether evidence was filed under the right question.
+- **The extraction standard** (piece 1) is the extraction step's PRD, signed by Alex on 2026-10-29 (D243: "其他几条的意见我都ok，sign off"),
+  which replaced the first version (D229: "按照这套标准来开始做测量，这条标准不要漂移"). It holds the ledger's three records, the five question
+  types, the opening tests, the evidence rule and its reject list, source tiers, weight, and how a prompt change is written, measured and
+  iterated. No arm, gold, judge or prompt adds a rule, an example or a weight the page does not hold; a change is a recorded decision in
+  Alex's words first, then a new version of the page, then a drift review.
+- **A ruler or gold that is built and reviewed is never changed again** (D261). Reviewed means readers who did not write it have read it
+  against the decisions and Alex has signed it. A ruler under construction is edited only until that review, and nothing is scored
+  against it before.
+- **The ruler is Alex's, never your own.** Gold, unit and the judge's reading are checked against what the product uses and fixed with
+  Alex before the first arm. A standard or reference you write gives every sentence its source (the signed standard, a decision, a PRD)
+  or lists it for Alex's decision with a lean; settling wording is no licence to change behaviour. After each rewrite, a read-only Codex
+  review against the decisions looks for unsourced rules, contradictions and misquotes, round after round until only wording-level
+  findings remain; clarity is tested apart, by independent readers on cases fixed before the text changes. A failed registered acceptance
+  stops the line and goes to Alex with its census; the next arm is never designed alone.
+- **Nobody grades their own change with a ruler still being corrected.** The reference is one Alex can read, reviewed and frozen before
+  the arms; a number scored against a ruler its author keeps correcting is not a conclusion. Meaning is judged by a reader who did not
+  write the change; code checks only structure and counts (Alex, 2026-10-29: "我根本无法相信你的评价").
+- **A new gold** (only for a new ruler version Alex opens). The unit is fixed before the first send (for extraction, one research matter
+  in one article, which several records may express; signed standard §11) and the gold is written from the complete material the model
+  sees before any answer is read. Each item holds the exact source span (checked by code), the standard line it follows, its weight under the signed rule and, where
+  proposals are pending, its weight under them with the proposals it depends on named.
+  A blind second reader reads the same sources; every disagreement is decided against the source and its reason recorded. The gold is
+  frozen with its sha256 and never edited after a send. Model-authored gold and model judges are labelled as such. A held-out set no arm
+  has seen is in from the first arm.
+- **Measure the stick before using it:** control against a second control, the criterion's null estimated (a conjunction over many items
+  fails by chance), and its workload sized from its rules. Tune on dev; score test once per configuration.
+
+### 7.2 Reading results
+
+- **A score is a lead; the traces are the measurement.** Every measurement has a score, and every time you read the traces yourself: the
+  raw answer beside the article for every missed helpful entry, and a sample of the extras and of the hits; historical gold keeps its original labels. The scorer
+  hard-codes no rule of the standard: it reads the gold file it is given, prints the gold's and the standard's sha256, and refuses a gold
+  made for another version; scores are compared only on the same gold. Do not write a new scorer to judge a probe: read the traces yourself (Alex, 2026-11-08:
+  "不要写评分器这个之前就出问题过，你自己读trace 来分析"). Alex, 2026-10-29 (D244): "我觉得这是最容易出错的问题；你非常容易写死，我们在改的过程中如果drift你会一直用久的标准来衡量，这边需要有打分，但是“一定”要你自己下去看trace这是必须，记起来".
+- **The ruler counts only what it was built to count.** Before a quality claim, a reader who did not write the change also reads the
+  fields the product stores (original day, original speaker, tier, the summary's hedges) and what the next step does with the record
+  (Alex, 2026-10-30: "现在到底质量怎么样你深度的解析不要只是看尺子").
+- Read the judges' reasons, not only the scores, and pick the next fix from the largest cause. Open the samples behind a metric's largest
+  values before reading it, and write down what a derived number reduces to.
+- **Report every number, regressions first.** For future evidence evaluation, combine the existing gold's core and supporting entries as helpful, use its not-kept entries as unhelpful, and leave optional entries neutral (D372). Count one research matter in one article (D250), not raw sentences. Retain the old labels and scores in historical results, and do not silently relabel the frozen gold. One quantity per table column. A comparison of
+  totals uses three draws; a count from one draw is labelled one draw and shows a mechanism, not a difference between arms. Lead with the
+  mechanism and the share of its class it explains, then the fix.
+- **Read what was dropped.** A statement the pipeline drops is thrown away with its reason, never parked on a side list; evaluation
+  reads the dropped statements by hand, classifies them by the mechanism that would have kept them, and fixes the largest class upstream
+  (D209: "if it doesn't matter, just fucking throw it away … if there are false positives that got thrown away … you got to pick it up").
+- **Measure end to end before a step's arm, and read the parked designs first.** A step's noise that the next step removes is not the
+  defect, and a step's recall that the next step throws away is. Before any arm on one step: the production replay through the whole path
+  on the gold window, the count at the step the product reads, and the decisions on the topic read for a parked fix (Alex, 2026-10-31:
+  "make sure we are not going around in circles using wrong ruler and wrong prompts that don't work"). Before a phase targets one step,
+  the upside of that step done perfectly is measured where the product is judged: the judge is given the gold's own evidence, built by
+  the production code, a few sends (Alex, 2026-11-04: "我很不开心你的失败，为什么，深度多轮检讨记录，想思路突破").
+- **Read what was kept against the gold, blind, before the next noise arm.** The not-kept gold entries a version keeps are judged by a
+  reader who wrote neither the gold nor the prompt, mixed with controls it cannot tell apart; where it parts from the gold, the standard
+  is unclear or the gold misreads it, and that goes to Alex before any arm counts it as noise (Alex, 2026-10-31: "你再次重新检查尺子，看看是不是这些留下的还有歧义；然后再思考怎么降低noise").
+- Pair every structural check with its semantic one. Run a data rule over its whole input range and on cases it was not tuned on. Weigh
+  a case by what it carries in the product, not by count.
+## 5. Step 2: find and compare related evidence
+
+### Why this is separate
+
+An open thesis may accumulate many evidence records. Step 1 needs to understand the article and the open research; it does not need to read every prior statement to do that. Step 2 uses each proposed `{thesis, evidence}` association to find the history worth comparing.
+
+### Find candidate evidence
+
+The proposed design places semantic search over the evidence library. It uses the thesis and incoming evidence to find top-N related evidence across the current entity, including evidence linked to other theses. The thesis is search context, not a restriction to evidence already linked to that thesis. This also applies when the proposed thesis is new. For example, “raised its revenue outlook” and “expects higher sales” can be related despite different wording. Alex chose this entity-wide scope on 2026-11-06.
+
+Search returns **candidates**, not a final decision. Alex discussed a starting point of top 10; the implementation and quality requirements need to be measured.
+
+A match outside the returned set will not be considered by the comparison. Search quality therefore matters independently from the model's ability to compare the records it receives.
+
+### Compare with Jev
+
+**2026-11-08 (candidate, [round log](step1-unfiled-2026-11-08/LOG.md) §§24, 31–35):**
+- Comparison reads the full passages; the 600-character cut is removed.
+- An unlinked record also searches by its own text.
+- `figures` never enter a search or comparison text.
+- Jev is asked the clean path's own piece question, aligned with line 2's test: a repeat reports the stored piece's main statement, and
+  an official's denial of a report is a revision.
+- When a thesis opens, every stored unlinked group from earlier articles is judged against it in batches of ten (a yes/no question; the
+  company's overall results inform only a revenue or earnings thesis). Each judged pair is recorded once.
+- On c6's records: search 97.9%, wrong merges 1.9% (2 of 104), both lines met; line 3 not re-measured.
+
+Jev compares the new evidence with the returned evidence. The intended outcomes are:
+
+| Outcome | Meaning | Example |
+|---|---|---|
+| Repeat | The new material presents the same statement again. | Another article reports the same company forecast. |
+| Revision | A later account changes the same statement. | The company revises its forecast from 12% to 25%. |
+| New evidence | It is not identified as a repeat or revision of the evidence compared. | A different analyst offers a separate forecast. |
+
+The words, amount, speaker, source and time can matter to the comparison. A later statement about the same subject is not necessarily a revision. A matching amount alone does not prove that two statements are the same.
+
+The result “new evidence” is the outcome of the comparison performed; it is not proof that no matching evidence exists elsewhere in the library. When the incoming evidence is judged a repeat of several candidates, it joins only the group Jev judges it most like: the highest same-statement probability, with ties going to the earliest group (Alex, 2026-11-08). A comparison that fails is not saved and is reported.
+
+**Repeat handoff:** when Jev identifies a repeat, the comparison must retain the identity of the existing evidence record it was compared against. Step 3 uses that identity to place the incoming record in the existing record's group, adding its source and any missing thesis link. The typed Jev response need not generate the record ID: the caller can associate the choice with the candidate it supplied. The rule for several matching candidates is stated above.
+
+**Step 2 acceptance (Alex, 2026-11-08).** Three lines apply:
+1. For incoming evidence whose earlier version is in the library, search returns it at least 90% of the time.
+2. At most 2% of merges are clearly wrong.
+3. Grouped dossiers keep no fewer details added by later reports than no merging does.
+
+The first measurement against these lines is in the [Step 2 log](step2-validation-2026-11-07/LOG.md) §12; the isolated modules are `step2/compare.py` and `step3/library.py`.
+
+The diagram's intended sequence is: use `{thesis, incoming evidence}` to search the evidence library; pass the returned candidates and incoming evidence to Jev; pass the comparison result and the proposed association to Step 3. For a new thesis, search the same entity-wide evidence library. A concrete working draft of the Jev comparison request appears in [section 13](#13-step-2-prompt-jev-working-draft).
+
+## 6. Step 3: save evidence and links
+
+Step 3 takes the proposals from Step 1 and the comparison outcomes from Step 2 and writes the resulting research information.
+
+| Result | What is saved |
+|---|---|
+| New thesis with supporting evidence | The new thesis and its evidence link; save new evidence or reuse a matching record according to Step 2. |
+| New evidence for an existing thesis | The evidence and its link to the thesis. |
+| Repeat | Place the incoming record in the existing evidence record's group: add its source and any missing link to the relevant thesis, and keep the incoming record's own text and fields inside the group. Do not rewrite the existing record, and do not create a separate evidence record for the same statement. |
+| Revision | The new evidence and its source, linked to the earlier statement as a revision. |
+
+A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). How a judgement reads a group is being tested. Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the chosen thesis, evidence and relationships are saved. How they are physically stored and written is a separate implementation decision.
+
+## 7. Step 4: judge the thesis
+
+Judgement is separate from processing and saving an article. It assesses what the evidence implies for an affected thesis and whether the thesis's current assessment should change.
+
+For the capital-spending example, saving the revised forecast records **what the company said**. Judgement later considers **what that means for the investment question**. The saved evidence and its relationships must be available to that work.
+
+This discussion has not yet defined the judgement's input selection, output, timing or decision method. Those are open design questions, not implicit requirements of the earlier steps.
+
+## 8. Evaluate Step 1
+
+Step 1 evaluation is an offline forward run followed by a source-by-source review of the trace and the changing thesis state. Alex's direction is to inspect what the system actually does instead of first constructing a hypothetical golden library of thesis–evidence pairs. This does not change the existing frozen references used by historical measurements.
+
+The evaluation should allow us to answer:
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Step 4|step4|group_text|independent|identity|assertion|363|census|0.5' clean-arch/PRD.md clean-arch/step2-validation-2026-11-07/LOG.md docs/CURRENT_STATE.md reports/step2-merge-fix-council-2026-11-09 -g '*.md'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step2-validation-2026-11-07/LOG.md:5:there is no Step 4.
+clean-arch/step2-validation-2026-11-07/LOG.md:25:  here is an exploratory reference by independent readers. It is not a frozen ruler until Alex signs it, and it is labelled as such
+clean-arch/step2-validation-2026-11-07/LOG.md:29:- **Out of scope.** Step 3's writer, Step 4, the UI, frozen production files.
+clean-arch/step2-validation-2026-11-07/LOG.md:32:## 1. Council A (independent design, then one challenge round)
+clean-arch/step2-validation-2026-11-07/LOG.md:222:  - a key written by independent readers before any view is read;
+clean-arch/step2-validation-2026-11-07/LOG.md:245:| roadmap | 10.5 / 0.0 / 10.5 | 2 / 0 / 0 | 62.9k / 40.2k / 65.9k |
+clean-arch/step2-validation-2026-11-07/LOG.md:266:**Wrong-group census ($0; the 9 no-home merges, read against exactly what Jev saw):**
+clean-arch/step2-validation-2026-11-07/LOG.md:334:and the census goes to him.
+clean-arch/step2-validation-2026-11-07/LOG.md:353:  unresolved; neither the prompt nor the configuration was changed. Recorded successful call cost was $0.005742; billing for the
+docs/CURRENT_STATE.md:26:  They are not integrated with production storage. **Step 4 (judging) is not built** on the clean path, so nothing yet shows the clean
+docs/CURRENT_STATE.md:45:**Clean Step 1 source investigation (2026-11-07):** A [source-loss census](../clean-arch/STEP1-SOURCE-LOSS-CENSUS.md) traces two separate losses in the historical cleaner and records reproducible corpus observations. Offline candidate comparisons expose both recovered content and source-identity or contamination risks. A subsequent [full-page diagnostic](../clean-arch/STEP1-FULL-PAGE-RESULTS.md) completed 102 calls on 17 selected articles and independent source-backed review. It exposes examples of both missing or misattributed source text and model errors that persist despite the right text being present. A Codex–Claude council is reviewing the results and earlier attempts; no source-cleaning candidate is adopted, and the source corpus and production defaults are unchanged.
+docs/CURRENT_STATE.md:49:**Clean architecture Step 1 (2026-11-06, isolated work on `clean-arch`):** Alex reopened work with the clean architecture. An experimental prepared-source handoff now preserves the archived page, prior cleaned text, source-role decisions and selected-line mapping without changing the original database; quotations for prepared items must also occur contiguously in the original captured page. Two seven-item runs are available in the [clean architecture PRD](../clean-arch/PRD.md), one in the earlier selection order and one in recorded page-timestamp order. The source selector is not a production service and source ordering is not established event-arrival ordering. The runs expose unresolved semantic problems: citations can omit supporting facts despite an exact location match; model output can change a benchmark into a deployment, reverse a backup relation, omit a named customer or assign an unstated currency. A blinded 84-call check-placement/wording comparison and a 27-call same-article citation-completion diagnostic did not give a clean semantic fix and are not adopted. The latter missed an omitted connectivity condition and a reversed backup relationship, and left six expected evidence reviews unaddressed. A further five-round Codex–Claude council produced a narrowly scoped Step 1 link candidate, independently checked for prompt-contract drift. A six-article, 36-call blind comparison completed; the candidate still produced an explicitly self-contradictory link and both arms consistently omitted the same Kyber report and company response. It is not adopted and has not changed the active PRD prompt. A trace confirms that both the Kyber report and open Kyber thesis were supplied, and the raw model answers omitted the report and denial; the reason is not established. See ../poc/data/clean-step1-kyber-trace-2026-11-06/TRACE.md. An isolated six-call comparison showed that hiding the Kyber thesis did not recover the report or denial in any draw. A second six-call comparison returned them in 3/3 draws with the original Kyber paragraph alone and 0/3 with the full article; length, position and surrounding content changed together, so the reason is not isolated. Excerpt outputs have source-attribution limitations. Neither experiment changed state or established a production fix. (Superseded: the next task then was a whole-article coverage approach; the current next task is under "One next task".) See ../clean-arch/STEP1-IMPLEMENTATION-COUNCIL.md. The earlier four-round council agreed that no tested semantic fix is ready; its next investigation is a source-backed review of the 49-item historical run and its 160 evidence records, with overlapping issue flags and separate article-level omissions, then a separate comparison of the seven-item replays. See ../clean-arch/STEP1-COUNCIL-REVIEW.md. Preserve relevant evidence while identifying the next intervention; production/frozen history remains as described below. See [Step 1 run log](../clean-arch/STEP1-RUN-LOG.md) and [English reading page](../clean-arch/architecture.html).
+docs/CURRENT_STATE.md:65:**Simple new-question diagnostic (2026-11-05):** At Alex's direction, an isolated prompt returned new questions plus article evidence without asking for product database fields. Four previously seen real dev articles each ran once: three returned one candidate, one returned none, all four quotes matched their source, and the gold-listed GPU backstop amount question was not proposed. Whether that omission is a new-topic miss depends on whether the existing library covers the topic. Two other candidates require source and independent-significance review; the actual experimental snapshot already had a Kyber topic, so its pass follows Alex's topic-level rule; whether its exact release question captures the shipping milestone remains unverified. This is not a production or full-pipeline acceptance. Details: `../hivemind-no-preseed-evidence-review/docs/research/2026-11-05-parallel-refinement/simple-new-question-results.zh.md`.
+docs/CURRENT_STATE.md:71:**Split extraction small test (2026-11-05):** At Alex's request, the isolated `hivemind-no-preseed-evidence-review` worktree ran two real golden-v5 articles once through each split lane. An independent model reader found 7 of 19 helpful gold matters fully retained, two partial, two written then dropped, eight missed, and one retained gold not-kept matter. Three saved v108 draws on these articles retained 7, 9 and 12 of 19, but used 22 seeded questions while the new test used 8/10-question snapshots; these are not directly comparable. The experiment remains unaccepted; see `../hivemind-no-preseed-evidence-review/docs/research/2026-11-05-parallel-refinement/small-scored-test-20261105.md` and `reports/2026-11-05-split-small-test.html`.
+docs/CURRENT_STATE.md:83:The small 2026-11-05 study used three archived NVDA articles and an 8/28 historical 68-question snapshot: without versus with an appended report, independent AI review found 14/27 versus 13/27 complete matters. This measured appended extraction context, not the distinct former coverage-start step; D370 removes both by Alex's decision. Full traces and limitations are in the separate `hivemind-no-preseed-evidence-review` worktree under `docs/research/2026-11-05-real-input-evidence/existing-library-results-2026-11-05.md`.
+docs/CURRENT_STATE.md:86:**One-day smoke completed (2026-11-05 UTC):** Alex requested a quick 1–2 day end-to-end test. One day, 2026-08-29, ran in `/Users/lchingen/hivemind-no-preseed-evidence-review/poc/data/v117-one-day-smoke-2026-11-05/`: config v117, an 8/28 historical library, 40 extraction calls, 93 evidence records written, four new questions, 54 judged and zero terminal failures. Two judgement attempts were refused and corrected. A Microsoft revenue forecast of $391.1bn was assigned to a rung whose upper bound excludes $391.1bn; the same article's actual quarterly revenue and next-quarter guidance were dropped with no home. Some source dates and bodies are not verified, and an independent 14-article sample review was incomplete due to truncated text. This is not semantic or production acceptance. Findings and scope: `docs/research/2026-11-05-real-input-evidence/one-day-v117-smoke-2026-11-05.zh.md` in that worktree. The clean source-text comparison and its condition-hidden review are complete; council discussion of next steps is ongoing.
+docs/CURRENT_STATE.md:90:**Clean Step 1 coverage council (2026-11-06):** Codex and Claude Code independently reviewed the existing attempts and completed three discussion rounds. The proposed next research candidate moves the existing evidence-reading block ahead of the thesis-opening block while preserving the article, open-thesis state and paired output. It is a hypothesis, not an implemented or validated fix. A complete prompt/contract audit and independent review precede any controlled Luna comparison. Historical paragraph-based and source-first experiments, their noise and attribution problems, and the rejected overlap-based merge are recorded in [the council review](../clean-arch/STEP1-COVERAGE-COUNCIL.md). No new Luna experiment was run in the council.
+docs/CURRENT_STATE.md:96:**Clean Step 1 fidelity review (2026-11-07):** All 49 saved source packets and 160 original evidence items have received a source-and-record review; focused independent cross-checks cover the findings and selected controls. The [review and article replay](../clean-arch/STEP1-FIDELITY-REVIEW.md) distinguish source contamination and missing source material from model meaning, citation, date and link issues. The [isolated schema property-order diagnostic](../clean-arch/STEP1-CITATION-ORDER-RESULTS.md) completed all 66 calls and condition-blinded article reviews. Several omissions and semantic errors persisted; it did not establish a fix and is not adopted. It used saved articles and before-states without changing production.
+docs/CURRENT_STATE.md:98:**Clean Step 1 source handoff council (2026-11-07):** The ongoing [council and offline checks](../clean-arch/STEP1-SOURCE-HANDOFF-COUNCIL.md) reconstructed 16 matching article-34 controls, all omitting a Kyber report and denial; the cause remains unknown. The 20-article saved source-role overlap review distinguished previously cited AI-generated summary lines and an unrelated recommendation from authored body. The clean runner does not send the saved source-role labels; the council chose to first compare original and previously selected source text on ten known articles. The isolated 60-call source-text comparison and condition-hidden review are complete; [results](../clean-arch/STEP1-SOURCE-TEXT-RESULTS.md) show specific contamination reductions alongside persistent omissions and changed meaning. It did not advance state or write production. The isolated six-article low-versus-medium source-fidelity diagnostic completed 36/36 calls and condition-hidden review. [Results](../clean-arch/STEP1-REASONING-FIDELITY-RESULTS.md) show partial improvements alongside persistent source-qualification and attribution concerns; no production setting is changed. The [prompt audit](../clean-arch/STEP1-FIDELITY-PROMPT-AUDIT.md) maps the observed failures to the full request and signed standard. The six-article isolated schema-description comparison completed 36/36 calls and condition-hidden review; the candidate did not preserve the repeated example qualification and is not adopted. [Results](../clean-arch/STEP1-SUMMARY-FIDELITY-RESULTS.md). A further six-article 36-call low-versus-medium comparison used corpus-cleaned sources outside the original 49-item clean replay and a fixed exploratory context; results were mixed, including unsupported links and incorrect attribution/date fields. [Results and replay](../clean-arch/STEP1-ADDITIONAL-SOURCES-RESULTS.md). The structured-claims candidate was not sent after review revealed scope and complexity concerns. Council review of the next action is ongoing. The date-text schema-description diagnostic completed 48/48 calls on eight known cases, with mixed results; the candidate is not adopted. A selected-run census found twelve literal "null" strings in date-text fields, but no production writer impact is established. [Results and replay](../clean-arch/STEP1-DATE-DESCRIPTION-RESULTS.md). A further preregistered eight-source date comparison completed 48/48 calls; the candidate lost a supported company-article statement date in all three draws on one source and is not adopted. [Results and replay](../clean-arch/STEP1-DATE-NEW-SOURCES-RESULTS.md). A bounded corpus census confirmed 163 source pages across three explicit generated-summary structures whose labels were removed while some summary text was retained; two NVIDIA cases were reproduced through the cleaner. [Source provenance investigation](../clean-arch/STEP1-SOURCE-PROVENANCE-CENSUS.md). A read-only source-lineage replay reproduced 363/363 cleaned pages with current inputs, preserved ambiguous original-line locations, and surfaced the generated-summary label loss for review. [Source investigation and lineage replay](../clean-arch/STEP1-SOURCE-PROVENANCE-CENSUS.md). An offline neighboring-context observation exposed only 144 or 149 of 163 known labels and introduced many other page lines; it is not adopted as a general source fix. [Observations and viewer](../clean-arch/STEP1-SOURCE-CONTEXT-OBSERVATIONS.md). A new [saved-quote integrity investigation](../clean-arch/STEP1-QUOTE-INTEGRITY-CENSUS.md) reconstructed 360 saved answers across eight overlapping cohorts, including 78 prepared-source calls. Five saved unverified passage instances were complete matches under the existing normalization; an in-memory candidate recovered their original slices, while ten others remained unverified. The normalized source-slice lookup is now installed only in the isolated clean Step 1 runner; saved-answer and entry-point checks are recorded there. Page provenance, Unicode completeness, production resource budgets and writer integration remain open. The existing writer stores only one quote, whereas 63 of 160 evidence items in the 49-article exploratory trace have multiple passages. A [source-first 49-article coverage review](../clean-arch/STEP1-COVERAGE-CENSUS.md) separates material missing from the model input from source-visible omissions in the saved answers, with uncertain matter boundaries labeled. (Superseded: the next investigation then was why supplied material is missed; the current next task is under "One next task".) The canonical prompt and production configuration remain unchanged. Adding fallible role annotations remains a separate untested candidate. Council streams and handoffs are in `poc/data/clean-step1-ongoing-council-2026-11-07/`.
+clean-arch/PRD.md:35:    W --> J[Step 4: judge affected theses]
+clean-arch/PRD.md:52:| Step 4 | The affected thesis and its saved evidence. | A thesis judgement; the detailed contract remains open. |
+clean-arch/PRD.md:83:These are two possible results from the same reading, not two required calls. Every proposed evidence statement is paired with an existing or proposed new thesis, and a new thesis is proposed with evidence. An existing thesis retains its identity; finding evidence for it does not require renaming it. The Step 1 prompt should define duplicate theses clearly so the model can use an existing thesis when the idea is already covered; the precise definition still needs to be worked out and evaluated.
+clean-arch/PRD.md:110:The first forward run can advance a separate, isolated test thesis library using those proposals. It can review Luna's output and the evolving thesis state without creating production-compatible judgement records. This test library must not be presented as proof that the existing ledger writer or Step 4 can consume the result.
+clean-arch/PRD.md:112:On 2026-11-06, Alex agreed that a new thesis should carry the entity, research question and outcome being tracked, with a period when known. For this single-entity flow, code supplies the entity from the input; Luna supplies the question, outcome and known period. The proposed `period` field is null when the period is unknown. Whether Step 4 needs predefined outcome ranges is a separate open decision; this minimum is not sufficient to claim compatibility with the current production writer.
+clean-arch/PRD.md:141:A match outside the returned set will not be considered by the comparison. Search quality therefore matters independently from the model's ability to compare the records it receives.
+clean-arch/PRD.md:167:**Repeat handoff:** when Jev identifies a repeat, the comparison must retain the identity of the existing evidence record it was compared against. Step 3 uses that identity to place the incoming record in the existing record's group, adding its source and any missing thesis link. The typed Jev response need not generate the record ID: the caller can associate the choice with the candidate it supplied. The rule for several matching candidates is stated above.
+clean-arch/PRD.md:189:A revision does not erase the earlier statement. On 2026-11-06, Alex chose to keep one evidence record for a repeat and add the new source and any missing thesis link. On 2026-11-08 the Step 2 validation showed that keeping only the earlier text discards details a later report adds, such as a guidance condition; Alex then chose to keep each repeat's own text and source inside the stored record's group, without rewriting the original ("A 继续；跑council loop 开始做"; [Step 2 log](step2-validation-2026-11-07/LOG.md) §7). How a judgement reads a group is being tested. Multiple articles reporting the same statement do not automatically establish independent original sources. The current production writer stores separate repeat records, so this is a change for the clean path and needs implementation and verification; the existing historical records remain available. Step 3 ends when the chosen thesis, evidence and relationships are saved. How they are physically stored and written is a separate implementation decision.
+clean-arch/PRD.md:191:## 7. Step 4: judge the thesis
+clean-arch/PRD.md:236:A separate model-assisted review was tested on nine saved, known source-and-evidence packets, with three calls per packet and two independent readers. All three Firmus reviews found the missing US$2 billion fundraising passage, but all three FEV reviews missed the source passage for limited or unavailable internet. All three also missed a different FEV record’s reversed local-versus-cloud backup relationship; only two of three identified an unsupported US-dollar currency on the Firmus valuation. Six of 69 expected evidence reviews were left unaddressed because returned identifiers did not match the evidence identifiers. These are selected examples, not a quality rate. [The detailed review](../poc/data/clean-step1-prepared-2026-11-06/citation-completion-probe/BLIND-REVIEW.md) keeps the source-backed examples and limitations.
+clean-arch/PRD.md:248:Codex and Claude Code reviewed the current source, prompt, code and saved answers, then challenged each other over four rounds. Their [detailed council record](STEP1-COUNCIL-REVIEW.md) links to each exchange and distinguishes observed errors from unproven causes. Claude could see earlier experiment reviews during its first pass, so this was not a blind independent assessment.
+clean-arch/PRD.md:252:The agreed next investigation is a source-backed review of the 49-item historical forward run and its 160 returned evidence records, with separate, overlapping flags and a separate article-level review for omitted facts. Preserve source contamination and incompleteness as distinct findings, and adjudicate difficult cases with another reader. Then compare the two seven-item replays separately: all seven source IDs are already in the 49-item manifest, and their inputs and order differ. Before the full review, check the review method against known problems and independently checked ordinary records. This is an investigation of recorded runs, not a production-quality rate or a change to the prompt.
+clean-arch/PRD.md:266:This is a proposed clarification, **not a verified fix**: the current request already implies much of the same behavior. Relevant context, counterevidence, multiple valid links and meaningful new topics must remain. The first comparison reuses six stored article requests and their actual open-thesis states, with the original request as a same-day control; it will compare all outputs and useful omissions. The prepared request files pass the existing structural checks, but have not been sent to Luna. [The implementation council plan](STEP1-IMPLEMENTATION-COUNCIL.md) records the exact approach, source examples, independent audit, controls and limitations. The earlier 49-item fidelity review remains incomplete.
+clean-arch/PRD.md:286:The independent reader first assessed anonymous source and evidence without seeing thesis identities or links. The second pass checked links against the actual input; at that point the condition could be inferred. No thesis state advanced. This result does not support claiming that the mere presence of the existing Kyber thesis caused the omission in this example, and it does not establish the underlying cause. Removing a thesis is a diagnostic only and is not a proposed production change. [The complete trace](../poc/data/clean-step1-kyber-trace-2026-11-06/TRACE.md) preserves the source, self-account, requests and limitations.
+clean-arch/PRD.md:318:Codex and Claude Code are examining the source-to-extraction handoff and prior attempts. The original 49 saved requests and seven prepared-source requests had empty author fields; the prepared records retained proposed source roles, but those roles were not sent in the extraction request. Roles can mix bylines, outlets, dates and uncertain page material, so they cannot safely be promoted to an author field. A 20-article overlap check found that previously cited passages excluded by the recorded selections were an unrelated recommendation or explicitly labeled AI summaries; it does not establish full body coverage. Sixteen repeated article-34 controls omitted the same Kyber report and denial; the cause remains unproven. The [council record](STEP1-SOURCE-HANDOFF-COUNCIL.md) links the reproduced comparisons and previous failures. An isolated ten-article comparison completed 60 calls with the same prompt, schema and pre-item thesis states. Prepared text removed a known unrelated-story error in article 3 (2/3 original, 0/3 prepared) and generated-summary citations in article 8 (2/3, 0/3), but did not reliably improve extraction: article 16’s restored financing paragraph was in all three prepared inputs and in none of their answers; article 28’s example model was stated as a selection in all six answers; and article 34’s delay report and denial appeared in 2/3 controls and 0/3 prepared answers despite being present in both inputs. These are selected-case observations, not general rates or established causes. The [full results](STEP1-SOURCE-TEXT-RESULTS.md) and [60-answer replay](../poc/data/clean-step1-source-text-comparison-2026-11-07/review.html) show source and output. In two retrospective follow-ups, the model recognized that the article 28 wording did not establish a fixed model selection, but could not recover its original reasoning; the article 16 follow-up did not identify the financing paragraph. These accounts are diagnostic, not a fix. No production change is adopted. An isolated low-versus-medium reasoning comparison on six known prepared articles completed and was reviewed with setting labels hidden. Both settings stated an example model as actually used in all three article-28 answers. In article 29, stock-market flows were blurred into infrastructure spending in 3/3 low and 0/3 medium answers, but the medium answers did not retain that stock-flow statement. Other attribution and context concerns remained. These are selected-case observations, not a production acceptance or proof of cause. See the [full results](STEP1-REASONING-FIDELITY-RESULTS.md) and [36-answer replay](../poc/data/clean-step1-reasoning-fidelity-2026-11-07/review.html). The [source-fidelity prompt audit](STEP1-FIDELITY-PROMPT-AUDIT.md) maps observed failures to the complete request and signed standards. The council and an independent reader reviewed a field-local wording hypothesis that asks summaries to preserve source qualifications. In a six-article isolated comparison, all three answers in each arm still described an example model as part of the proposed system without preserving the “such as” qualification; other context and linking concerns remained. The field-description candidate is not adopted. [Full results](STEP1-SUMMARY-FIDELITY-RESULTS.md) and [36-answer replay](../poc/data/clean-step1-summary-fidelity-2026-11-07/review.html) preserve the cases and limits; the council is investigating the next step.
+clean-arch/PRD.md:320:The continuing council has reviewed a possible structured representation of source statements and link explanations within the same extraction call. It is an untested diagnostic, not an adopted design or demonstrated fix. A prior reviewer missed a reversed relationship even with the full article and one evidence record; the proposed representation must still preserve legitimate inference, multiple sources and existing pairs. An independent audit found that the first draft could exclude the very link explanation being investigated, and the council chose not to run this enlarged diagnostic as the next test. A further low-versus-medium comparison completed on six manually selected real articles outside the original 49-item replay, with one fixed 22-thesis exploratory state for both settings. These use the corpus cleaned text, not the earlier prepared-source path; their prior exposure outside the clean replay is unknown. Earlier mixed results and regressions remain unresolved. The [council record](STEP1-SOURCE-HANDOFF-COUNCIL.md) and [draft experiment](../poc/data/clean-step1-structured-claims-2026-11-07/design.md) preserve the discussion, offline checks and limits.
+clean-arch/PRD.md:322:The additional-source comparison produced mixed results: both settings retained several central claims, while the higher setting also produced unsupported CPU-related links and date-field errors in individual answers. An independent review also found 13 fields across eight repeated answers that appear to use an event or data period as the original statement date; ambiguous cases were kept separate. In three later, specifically prompted continuations, the model correctly distinguished those time references; this does not establish the original cause or a fix. A quotation found in the cleaned input was not contiguous in the captured original page. These are selected-case observations, not population rates or a reason to change the production setting. [Results](STEP1-ADDITIONAL-SOURCES-RESULTS.md) and [article-by-article replay](../poc/data/clean-step1-reasoning-new-sources-2026-11-07/review.html) show the source, context, answers and limitations.
+clean-arch/PRD.md:326:An isolated date diagnostic compared one revised `statement_date_text` schema description with the saved request on eight known source/context pairs. It leaves all schema types, evidence pairing, prompt body and production configuration unchanged. Controls include a third-party statement independently dated to the article day, explicit announcements and a dated party release. Independent review identified risks of losing valid metadata-only or announcement dates; these were inspected alongside omissions and linkage. The results were mixed, including persistent date mistakes, unsupported-link concerns and literal `"null"` text in two fields; the candidate is not adopted. [Results](STEP1-DATE-DESCRIPTION-RESULTS.md) and [48-answer replay](../poc/data/clean-step1-date-description-2026-11-07/review.html) retain the details. The [design](../poc/data/clean-step1-date-description-2026-11-07/design.md) records the exact scope and prior attempts.
+clean-arch/PRD.md:330:A further isolated comparison completed on eight new source IDs selected before reading article contents using a recorded seed and a structured inventory of available clean-Step-1 artifacts. It reuses the same unmodified date-text candidate and the same fixed exploratory thesis context for both arms. The selection cannot prove absence from all past work or exclude syndicated stories under different IDs. An independent source review found related-story contamination and unlabeled generated summaries in some cleaned inputs; these were assessed separately. One company article lost its supported full statement date in all three candidate answers, while another preserved its date in both arms; the candidate is not adopted. [Results and replay](STEP1-DATE-NEW-SOURCES-RESULTS.md) and the [selection design](../poc/data/clean-step1-date-unseen-2026-11-07/design.md) retain the evidence.
+clean-arch/PRD.md:332:An independent [thesis-link review](STEP1-ROUTING-CENSUS.md) examined all 214 links across the eight preregistered articles. It records unsupported topic bridges and explanations that negate their own link, alongside valid indirect context and source-supported prospective topics. These are selected-case findings, not population error rates or a hardcoded relevance filter.
+clean-arch/PRD.md:334:A [source-provenance census](STEP1-SOURCE-PROVENANCE-CENSUS.md) found 163 records across three explicitly recognizable page components where generated-summary content was retained but its label was removed. This is a bounded source-structure count, not a count of model errors. On two NVIDIA pages, the cleaner's template removal and long-line restoration reproduce the mismatch; a general provenance-preserving handoff is under review. An offline probe reproduced the current cleaned text for 163 affected pages and 200 seed-selected additional pages. It retains all candidate original positions, marks transformed bylines, and shows one missing-HTML fallback; positions do not by themselves establish source role. [Lineage replay](../poc/data/clean-step1-source-lineage-2026-11-07/review.html). Source content remains available and no production data or prompt has been changed.
+clean-arch/PRD.md:338:A [saved quote-integrity census](STEP1-QUOTE-INTEGRITY-CENSUS.md) independently matched 360 answers in eight overlapping cohorts to their original requests and results, and reconstructed a further 60-answer source-text comparison separately. It distinguishes exact page location, unverified quotations and cleaned-text-only joins. Five unverified passage instances are full matches under the existing normalizer, including spaces before punctuation. The isolated Step 1 runner now locates a complete normalized match when every matching source slice has the same original bytes. It retains the model quotation, displays the located source text, and records lookup errors without stopping the exploratory stream. The [installed-path review](STEP1-QUOTE-INTEGRITY-CENSUS.md) covers saved-answer replays, Unicode and duplicate controls, resource checks and limitations. This fixes a narrow location issue in the isolated runner; semantic accuracy, original-page provenance and production compatibility remain unproven.
+clean-arch/PRD.md:348:The investigation also found that the historical extractor-matching key removes non-ASCII characters and can accidentally match an empty key. Two Unicode-aware offline alternatives had different effects on the saved articles, including adding unrelated page titles; neither is adopted. A proposed punctuation change recovered the financing paragraph but also added serialized HTML and navigation on other pages. The [investigation](STEP1-SOURCE-LOSS-CENSUS.md) records the full-corpus comparisons and their limits. Source identity and article boundaries need to be evaluated alongside text matching.
+clean-arch/PRD.md:354:Two independent readers have completed [source-first notes for the 17 proposed articles](STEP1-FULL-PAGE-SOURCE-NOTES.md), before any new comparison outputs. These notes identify source roles, incomplete captures, uncertain statements and later page material; they are not a new golden set or mandatory extraction checklist.
+clean-arch/PRD.md:356:The isolated full-page comparison completed all **102 calls** across 17 articles, with three answers for each input per article. Three independent readers examined the answers against the source, with imperfect condition hiding. In one selected article the page exposed an outlook qualification absent from the cleaned input, and all three page answers included it; in another, all three cleaned-input answers misattributed an unrelated later-story teaser, while the page answers did not. In a third, five of six answers turned an example model into a definite selection despite both inputs preserving the qualification. The [source-backed results](STEP1-FULL-PAGE-RESULTS.md) distinguish source loss, attribution and model meaning errors, and the [article-by-article replay](../poc/data/clean-step1-full-page-diagnostic-2026-11-07/review.html) shows the inputs and answers. These selected cases do not establish a general accuracy rate or production readiness.
+clean-arch/PRD.md:362:The isolated candidate has now been built and its 34,084 records compared with the two source snapshots. A fake-answer run through the actual Step 1 runner confirms that the previously excluded CNBC article reaches the runner with its saved page. Replays also preserve the recorded validation results for 102 saved comparison answers and 49 completed forward-run answers. This verifies the handoff and historical checks, not model extraction or article identity. The [council regroup](STEP1-SOURCE-REGROUP-COUNCIL.md) records why source cleanup comes first for a stable test and which model-processing errors remain separate.
+clean-arch/PRD.md:366:The [control-run design](STEP1-CAPTURE-CONTROLS-DESIGN.md) sends four eligible captured pages independently with one fixed hypothetical thesis state, plus one comparison using the CNBC article's previous cleaned text. It preserves the existing extraction request and treats missing article content, source attribution and model interpretation as separate questions. All five calls completed; the [replay](../poc/data/clean-step1-capture-controls-2026-11-07/review.html) shows the actual inputs and proposals. In these selected draws, the wrong page yielded no pairs, while the two partial pages yielded qualified proposals. Source review also found summary details whose supporting headline or article passage was not included in the attached quotations. The [results](STEP1-CAPTURE-CONTROLS-RESULTS.md) record the evidence and remaining uncertainty; these draws are not a general quality measurement. A [request audit](STEP1-CITATION-SUPPORT-AUDIT.md) confirms that the current prompt already asks for all passages needed to support each summary; the cause of these omissions is not established.
+clean-arch/PRD.md:370:An independent [citation review of all 160 returned records](STEP1-CITATION-COMPLETENESS-49.md) in the historical 49-article run found nine preliminary cases where details appear in the supplied article but not in their own evidence passages. A second reader checked those cases, distinguishing substantive missing conditions from source-identity or contextual antecedents. Meaning changes and whole-article omissions are separate problems, measured in different units; this selected run does not establish which problem is largest in production.
+clean-arch/PRD.md:372:The council is also examining whether selecting source-unit IDs could reduce copying errors. An [offline boundary and size check](STEP1-SOURCE-ID-OBSERVATIONS.md) found that the existing quote-repair boundary heuristic splits real abbreviations and that many saved quotations cross its units; a simple numbered JSON representation also increased source-only input size on the checked pages. IDs would not establish semantic support or article identity. No such representation is adopted.
+clean-arch/PRD.md:386:Codex and Claude Code (`claude-fable-5-1`) reviewed the 49 source records, original requests and answers, state, and the clean runner over three rounds. They challenged each other's claims against the saved records and code. Claude read the earlier Codex review before completing its first pass through all 49 articles, so this was **not a fully blind independent review**. The [first](../poc/data/clean-step1-review-consensus/claude-round1.md), [second](../poc/data/clean-step1-review-consensus/claude-round2.md) and [third](../poc/data/clean-step1-review-consensus/claude-round3.md) responses, [Codex's checks](../poc/data/clean-step1-review-consensus/CODEX-OBSERVATIONS.md), and local packets are retained for inspection. These are findings and proposed investigations, not approved changes to the architecture or production behavior.
+clean-arch/PRD.md:390:| 1. Wrong thesis links | In article 4, valuation and revenue are linked to Nemotron performance; in article 27, a cloud-gaming server is linked to the Shield TV thesis. Three of the 199 returned links explicitly say the item does not inform the selected thesis. Article 18 puts robotics evidence under the Nemotron/NemoClaw thesis; article 41 links general networking details to a specific Kyber setback. One 2027 roadmap statement in article 41 can also be defensible context for that thesis. | Luna returned these links; the clean runner checks reference identity and source location, not whether the link answers the thesis. That separation is deliberate: code does not decide importance. The cause of the model's decision is **not proven**. A forced pairing or insufficient deliberation may contribute; neither is established by one run. | Compare matching decisions against the complete question and outcome, including valid indirect links. Preserve the user's thesis–evidence pairing rule. Do not add a hard-coded list of keywords or make code decide investment relevance. |
+clean-arch/PRD.md:400:**First no-cost source test, completed as an investigation, not a replacement pipeline:** compare saved HTML, the structural extractor and the current cleaned text for article 3 and article 28, with article 34 as a positive control for real text that the fallback preserves. Count both unrelated content retained and relevant article content lost before proposing a change. The [candidate census](../poc/data/clean-step1-review-consensus/source_fallback_census.py) found 112 long retained lines across 23 of these 49 records that are absent from the extractor output; these are candidates, **not 112 proven errors**. The [timestamp census](../poc/data/clean-step1-review-consensus/timestamp_census.py) and raw outputs record its scope and limitations.
+clean-arch/PRD.md:413:A separate model-assisted source-preparation experiment asked Luna to identify article lines in the archived whole-page text without rewriting them. One draw on six known pages recovered the real body paragraphs checked in articles 2, 3, 16, 28, 34 and 42, including the previously missing CFO and funding statements; it excluded the identified unrelated recommendations in articles 3, 28 and 34. An independent reader checked the selected text against the page and HTML. But article 2's selected text presents the page's AI-generated summary without its label, and also includes a photo caption and credit. Articles 3 and 16 lose visible author names while the stored author field is empty. All six returned no uncertain lines. Each selected line was copied unchanged from the stored normalized page, with no invalid or repeated IDs; exact copying does not solve source attribution. These six selected pages and one draw do not establish production safety, quality across the source pool, or completeness of a paywalled article.
+clean-arch/PRD.md:415:A second isolated source-boundary experiment separated article text, bylines, captions, page-generated summaries and uncertain material, allowing a line to have several roles. An independent reviewer compared one draw on ten selected pages with the saved page and HTML. They found no wholly missing authored body paragraph or visible byline name among those pages, and the explicitly labeled AI summaries were separate from the article role. The CFO and funding statements remained, and the known unrelated recommendations were excluded. Figure captions on two pages were available only in the caption role; article 7's AI-widget disclosure was omitted; and the source of some widget “Next Steps” text is unclear even though the model marked no lines uncertain. A downstream consumer would need the separate source roles and their provenance, not just the article text. These are selected-case observations, not a completeness or accuracy guarantee. A further check used three sends each on ten other articles, randomly selected from the same 49-article corpus. Independent readers found the substantive paragraphs visible in the archived article regions in all 30 outputs, but one output omitted a visible author whose stored `authors` field was empty. Some outlet labels, contributor roles and article/caption roles also require care. The model later identified the missed author when prompted, which does not prove why it missed her initially. These articles appeared in the earlier extraction review, so this is not a fully unseen corpus; the [independent check](../poc/data/clean-step1-review-consensus/source-prep-check/INDEPENDENT-REVIEW.md) is not a population accuracy estimate. The [second probe](../poc/data/clean-step1-review-consensus/source-prep-probe-v2/) is not integrated into the pipeline.
+clean-arch/PRD.md:421:**Status:** the causes above have been traced, but no general source-cleaning or ordering fix is established. Do not silently remove the fallback, switch extractors or invent times for missing records. Compare a candidate against both contamination and genuine-body controls before using it in a new stateful run. The [source fallback census](../poc/data/clean-step1-review-consensus/source_fallback_census.json), [headline-filter census](../poc/data/clean-step1-review-consensus/headline-filter-census.json), [extractor comparison](../poc/data/clean-step1-review-consensus/default-extractor-comparison.json), and [corrected timestamp census](../poc/data/clean-step1-review-consensus/timestamp_census_v2.json) preserve the local investigation. The censuses identify candidates, not independently adjudicated error counts.
+clean-arch/PRD.md:427:A second reader independently checked eight saved link cases. Across their 41 evidence items and 47 links, the stored links match the raw provider answers; the runner did not choose them. The reader confirmed article 4's two links and article 27's one link explicitly contradict the model's own explanations. Article 18 attaches seven robotics statements to a Nemotron/NemoClaw thesis without a named connection in the item. Article 41 requires care: its general networking facts do not state a connection to the Kyber setback, but its 2027 plan can be relevant context to the roadmap. Article 10's provider commitments and roadmap counter-evidence are examples of links that can legitimately inform more than one question. Source contamination and the original order limit all these observations.
+clean-arch/PRD.md:429:For articles 4 and 27, Luna was shown its own stored answer and the original context and asked to review the links. It acknowledged both contradictions. In article 4 it suggested a new, evidence-backed revenue thesis; in article 27 it suggested no pair. It attributed the errors to an overly broad interpretation of indirect relevance. This is a **retrospective account**, not proof of the original cause. The full [requests and responses](../poc/data/clean-step1-review-consensus/link-account-probes/) are retained. A controlled exploratory comparison resent eight unchanged saved requests and their original before-states three times at low and three at medium reasoning. Independent readers reviewed anonymous outputs before the settings were revealed. In five selected wrong-link scenarios, 6 of 15 low-setting answers contained at least one clear wrong-product or unrelated-question link, compared with 0 of 15 medium-setting answers in that specific class. Other links and source-fidelity issues remained, and the examples were selected after the original run, so this is not a general accuracy estimate or proof of cause. The 24 low responses used 45,091 completion tokens versus 106,839 for the 24 medium responses; these are usage counts, not a cost or latency comparison. [Blind review and limitations](../poc/data/clean-step1-review-consensus/link-setting-probe/BLIND-REVIEW.md) records the cases. The experiment did not advance state or change the production setting. A second isolated test compared the saved prompt with a candidate that makes the existing final check actionable and makes the technical-comparison exclusion explicit. Three independent readers inspected six unlabeled answers for each of three known articles before the prompt labels were revealed. Every candidate and baseline answer still retained excluded technical comparisons, while also retaining the IBM integration, relevant AMD competitor comparison and Perplexity usage in the applicable controls. A candidate answer additionally misstated which company’s hardware was in a 100 kW rack. The candidate is not adopted. This small, selected test does not establish a general rate; the [blind review](../poc/data/clean-step1-review-consensus/benchmark-prompt-probe/BLIND-REVIEW.md) records the outputs and limits. Neither test changes the current prompt or database.
+clean-arch/PRD.md:433:For topic and evidence noise, article 8's company-reported technical benchmark items and article 33's benchmark conflict with the saved prompt's final check. An independent reader inspected all 160 output items and flagged 13 primarily technical test or comparison items, two mixed items whose non-benchmark content needs separate review, two competitor-comparison controls and six uncertain boundary items. These are item-level leads from one run, not a count of research matters or a general error rate. This does not prove every technical detail is unhelpful. In article 1 the only evidence for the newly opened performance thesis is a company-reported benchmark; excluding that item under the existing standard would leave that proposed thesis without evidence. Its separate adoption thesis has other evidence and must be considered independently. Article 8 also reports IBM production-workload testing and integration, which should not be discarded with the benchmark. A rival's comparison and reported use in article 19, the named robotics integration in article 20, and NVIDIA-backed financing in article 44 require their own relevance judgment. The user's rule remains: an observable, meaningful topic can be opened before its financial impact is known; avoid noise without imposing a blanket size or industry threshold.
+clean-arch/PRD.md:491:The precise boundaries between these two theses, and which additional material an analyst would retain from each complete source, need independent review. The exercise illustrates how to save before-state, article, proposed pairs and after-state. It does not establish a finalized golden answer or acceptance rule.
+clean-arch/PRD.md:506:6. **Judge separately:** Step 4 may assess the thesis using the evidence. Its decision process is not specified here.
+clean-arch/PRD.md:513:2. **New thesis identity:** How should the Step 1 prompt define duplicate theses, and how accurately does the model apply that definition without a separate thesis-routing stage?
+clean-arch/PRD.md:518:7. **Judgement:** What evidence does Step 4 use, when does it run, and what does it produce?
+clean-arch/PRD.md:553:The weak point is link clutter: a blind recheck of the 34 disputed fresh links found 19 weak and 2 wrong; 10 accepted links mixed in as controls were all useful, and the other 49 links were not rechecked. Step 4 is not built, so these results do not show that the clean system can judge an investment view.
+clean-arch/PRD.md:578:- open_theses: the identity, question, tracked outcome and period of each thesis already tracked. They tell you where evidence belongs
+clean-arch/PRD.md:629:  independently.
+clean-arch/PRD.md:1076:Application checks are needed for cross-record and source rules the schema alone cannot enforce: each existing target must resolve to the supplied open list; each new target must resolve to one new thesis in the same answer; each new thesis must be referenced by evidence; local IDs must be unique within their list; each evidence item must have a link; and every evidence item must contain at least one nonempty source passage, and every passage must come from this item. Code retrieves an existing thesis description from the supplied list rather than asking Luna to echo it. These are the intended source and identity relationships, not proof that the source supports every summary claim or that an analyst agrees with the thesis. In the isolated exploratory runner, unmatched passages and unresolved links are retained and explicitly marked as provisional rather than blocking the stream; an unlinked new thesis is not added to the state. Production integration remains open.
+clean-arch/PRD.md:1155:| Propose evidence for an existing thesis | **2. Choose a thesis**, existing outcome, uses its supplied identity. Code obtains the description from the supplied list. |
+clean-arch/PRD.md:1163:The review covered the visible system prompt, sample input, proposed schema and sample response together, with an independent reader. It found three places needing more than formatting: the thesis bar did not explain which business outcome the question could change; the within-item repeat instruction could hide distinct useful facts; and the output did not distinguish the original party from the reporting speaker. The draft above addresses those points. Its expanded examples teach these distinctions across industries; their added length is intentional for that purpose, not a measured quality improvement.
+clean-arch/PRD.md:1167:The assembled clean request and partial forward-run answers now exist in the local trace. This review is not the measured failure-class audit required for an existing measured prompt. The exact thesis-opening boundary, storage mapping for evidence tier and source provenance, handling of ambiguous thesis identity, and compatibility with the existing ledger are still open. The partial run and source contamination do not establish that the draft works end to end.
+clean-arch/PRD.md:1214:<thesis identity and description>
+clean-arch/PRD.md:1284:| Step 4: thesis judgement | [Judgement](../src/hivemind/views/judging.py), [round orchestration](../src/hivemind/views/round.py) | An existing judgement path can be inspected. What to reuse depends on the clean design's still-open judgement contract. |
+clean-arch/PRD.md:1293:This section records the read-only challenge of the clean design, including the independent Claude Code Fable 5.1 review and discussion. The reviewers found no evidence requiring the existing thesis and evidence ledger or its records to be discarded. Reuse still requires checking the actual readers, writers and meaning of the historical relationships. The points below are risks or open contracts unless a specific observation is identified. They are not new product rules or evidence that the proposed system has failed.
+clean-arch/PRD.md:1299:5. **What should judgement see?** Two different sources can independently support or contradict one another without being a repeat or revision. Step 2 can save them as different evidence, but whether those relationships must be recorded explicitly or can be understood by Step 4 remains open. Step 4's input and output are not yet designed.
+clean-arch/PRD.md:1315:- **Cold start:** preprocess an initial map of entities and their explicit relationships from available sources. The sources, coverage and way to resolve entity identity are open.
+clean-arch/PRD.md:1348:- The current slice processes one entity at a time. Cross-entity relationship maintenance remains future design work in section 16. Live Hummingbird integration and Step 4 judgement are not prerequisites for the first Step 1 run.
+clean-arch/PRD.md:1353:**Goal:** define the request, references, test-library behavior and failure handling needed for an isolated Step 1 forward run. A complete production writer and reader census is not a prerequisite to this run.
+clean-arch/PRD.md:1355:1. Use the field map in section 18 to identify the source data and fields needed for the first run. Keep the meaning of unknown values explicit. A full census of production writers and readers belongs before milestone 3, not before the isolated Step 1 test.
+clean-arch/PRD.md:1359:5. Review the complete assembled request and response checks as a unit: instructions, source and open-thesis payload, structured-output schema and field descriptions, followed by the code that reads them. The prompt must not ask for a value the schema or reader cannot represent. Apply the repository's prompt-audit and independent-review rules; the draft has not had a measured clean-design run to audit.
+clean-arch/PRD.md:1368:2. **Implement the reviewed handoff.** Supply the article and source fields, relevant company tags, and complete open-thesis identities and descriptions. Consume the reviewed response for existing-thesis evidence, new thesis with evidence, and no result. Keep source passages and attribution. The field mapping and any unresolved thesis-identity boundary must be reviewed in milestone 0.
+clean-arch/PRD.md:1370:4. **Advance the test library.** For each article, send the current open-thesis list, capture Luna's proposals, and make the resulting thesis state available to the next article. This is a Step 1 test-library update, not the final production evidence writer or a Jev decision. Use the reviewed identity and reference contract from milestone 0. Start with ordered, one-at-a-time processing so the next item sees the prior result; the existing production selector uses the start-of-day list and cannot simply be assumed to do this.
+clean-arch/PRD.md:1404:1. Define Step 4's input, output, timing and treatment of accumulated evidence. This is an open design, not a contract already determined by the diagram.
+clean-arch/PRD.md:1406:3. Only after the Step 4 contract is decided, integrate and review judgement using saved evidence. Define the actual Hummingbird event contract and live integration separately; the local source database remains the stand-in until then.
+clean-arch/PRD.md:1414:| First Step 1 implementation | Exact thesis–evidence response shape, thesis identity and duplicate definition; how the isolated test library advances. The agreed minimum for a new thesis is entity, question, tracked outcome and period when known. |
+clean-arch/PRD.md:1418:| Step 4 and live integration | Judgement contract, source event contract and timing. |
+clean-arch/PRD.md:1447:| Evidence and attribution | Evidence includes `id`, `quote`, `one_line`, `speaker`, `original_who`, `original_day`, `tier`, `event_time` and `links`. | Evidence has a response-local ID, source passages, summary, attribution, tier, original statement date and date text, described period and per-link relevance. | Analogous fields need a tested mapping; the described period is not automatically equivalent to `event_time`, and local identity differs from a stored ID. The current writer does not write per-link relevance. In the 49-article exploratory forward trace, 63 of 160 evidence items have multiple passages; one survey item needs its second passage to identify the 60-person population. This confirms that dropping additional passages loses source context in an actual output, while the correct storage and reader mapping is still open. [Handoff evidence and counts](STEP1-QUOTE-INTEGRITY-CENSUS.md). Unknown-date representation also differs. |
+clean-arch/PRD.md:1448:| New thesis | A candidate includes the object, question, kind, year, due date, outcome ranges, typed identity fields, opening reason and evidence IDs. | A new proposal has a question, tracked outcome, period when known and response-local ID, referenced by evidence; code supplies the entity. | The existing thesis creation and downstream judgement contracts need additional information that the draft does not supply. Missing dates, outcome ranges, source tiers or research meaning cannot safely be manufactured just to satisfy the old writer. Whether Step 4 needs outcome ranges remains open. |
+clean-arch/PRD.md:1457:This is a **design map**, not a built adapter or a decision to preserve every old rule. The current reader examples below are grounded in the linked code; a complete reader and writer census belongs before milestone 3. In the test run, an application-assigned ID is a test-library identity until an eventual ledger write; it is not automatically a production ledger ID.
+clean-arch/PRD.md:1466:| Evidence identity and links | Luna uses response-local IDs and attaches typed links with per-thesis relevance; code assigns persistent IDs. | Existing evidence has a local `id` and `links`; the writer assigns stored IDs and writes `evidence_links`. | Verify how response-local IDs become stored IDs and how per-link relevance is retained. Do not collapse records solely because their text is equal. |
+clean-arch/PRD.md:1468:| New thesis proposal | Luna returns a question, the outcome to track and a period when known, with evidence; code supplies the current entity. | The current candidate and thesis writer expect object, kind, question, due date, year, rungs and additional typed identity and admission fields. | The minimum is agreed. Verify how it maps to the writer and what judgement requires; whether outcome ranges are needed remains open. Do not invent dates, categories or ranges to force compatibility. An isolated Step 1 test library may track a proposal before those production questions are settled. |
+clean-arch/PRD.md:1478:The draft prompt describes the new Step 1 decision, evidence pairing, source attribution and examples, but the **full request and its downstream path are not ready to run**. In particular, the precise thesis identity boundary and what the existing writer and judgement require for a new thesis need further work. The production prompt's opening rules and its later thesis matcher are not automatically part of the clean design. The old production configuration is frozen; the new draft is not a supported production prompt version.
+clean-arch/PRD.md:1480:The recommended next task is to finish the Step 1 request and isolated test-library contract, including the open product decisions, and perform the no-cost checks in section 17. The full field-to-reader census and production-compatible writer test are required before milestone 3, not before the first isolated Step 1 run. The new shape must carry the required meaning without inventing fields or silently dropping information.
+clean-arch/PRD.md:1488:| 1. Repeat handling | The local snapshot has 2,023 `same_claims` rows for 4,298 evidence records, and the current writer saves a separate linked record. These are model-generated relation labels, not 2,023 independently confirmed duplicates. On 2026-11-06 Alex selected option B: reuse the evidence record and add the new source and missing thesis link. Sections 5, 6 and 13 record the decision and Jev handoff. |
+clean-arch/PRD.md:1489:| 2. Multiple thesis links and search | 1,918 of 4,298 stored evidence records link to two or more theses. The nested draft lacked one explicit shared local evidence identity. Section 12 now proposes separate new-thesis and evidence lists, typed links and response-local IDs; code must verify that all links resolve and every new thesis has evidence. This handles one statement linked to multiple theses **within the response**. Alex chose entity-wide evidence search, including for a new thesis; the count does not prove the proposed cross-thesis failure happened. |
+clean-arch/PRD.md:1495:| 8. First-run workload | The cited archive has 243 extraction calls averaging about 4,964 input and 1,207 output tokens; median recorded duration is 12.5 seconds. Median times 118 is about 25 minutes, but the first 118 recorded durations sum to about 31 minutes, before any new-run overhead. The clean request may be different. Of the 118 old development articles, one is not marked for the normal feed. These figures are estimates, not a commitment to a run, cost or eligible sample. Section 17 now separates first-run preparation from the later production writer/reader census. |
+clean-arch/PRD.md:1499:The pending choices include whether Step 4 needs outcome ranges and what quality the first trace review will establish as sufficient to proceed. The original review's recommended answers on those items are proposals, not decisions. The revised multi-passage prompt and schema have been exercised in an exploratory Luna run, not formally accepted; Jev and the production writing path are not implemented by this clean Step 1 slice.
+reports/step2-merge-fix-council-2026-11-09/codex-r1.md:1:**我的建议是先验证“这两条到底重复了哪一句”，不要先加 0.5 门槛，也不要改变现有分组和展示语义。** 目前能确定的是：Step 2 有时把相关但不同的事实当成重复，Step 3 就照这个结果放进同一组。至于模型为什么这么判断，现有记录还不能证明；因此现在还没有经过证明的修复方案。
+reports/step2-merge-fix-council-2026-11-09/codex-r1.md:28:**直接过程已成立：**X22 的正确候选被找到；模型对它选择“同一句”，概率 0.49，对“不同”是 0.36；代码按所选类别执行，没有 0.5 下限。Step 3 把新记录放进旧组，保留其自身文字和来源。[保存的决定](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/decisions.json:6723)、[比较代码](/Users/lchingen/hivemind/clean-arch/step2/compare.py:109)、[保存代码](/Users/lchingen/hivemind/clean-arch/step3/library.py:63)。
+reports/step2-merge-fix-council-2026-11-09/codex-r1.md:32:**实际代价：**这条 clean 路径保存了双方原文，并未观察到 X22 的文字被删除。风险在于组标题把新事实说成旧事实的转述，未来读者可能因此忽略新进展；这次运行没有完成 clean Step 4，不能声称已经观察到投资判断受影响。较早的生产路径曾只加来源、丢掉新文字：抽查 40 条重复中有 8 条丢了不同或更丰富的内容，这正是后来保留每条文字的原因。[D204](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2610)
+reports/step2-merge-fix-council-2026-11-09/codex-r1.md:36:- **0.5 门槛：**在新鲜样本这一次的 57 次合组中，它会挡住 X22 的 0.49，也会挡住 X47 的 0.47。X47 两篇都报告 Broadcom 对相同财年的 1,150 亿和 2,300 亿美元预测，后文增加了原先预测；两位读者都接受合组。开发样本的明确错误也有 0.53、0.84、0.51，门槛挡不住。历史上 0.6 的试验也同时挡住正确合并。[X47 原文](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/merge-packet-2.json:849)、[历史检查](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:1131)。所以这不是已证明的根本修复；不能把被挡住的记录自动说成“不同”。
+reports/step2-merge-fix-council-2026-11-09/stored-census.md:1:# c8 stored merge census, 2026-11-09
+reports/step2-merge-fix-council-2026-11-09/stored-census.md:3:Read-only count of decision outcome `kind == repeat`, linked by exact record ids to `merge-key.json`, `merge-answer-MA-*`, `merge-answer-MB-*` and `merge-third-answer.json`. All 363 selected pairs were identifiable and each had two first-reader judgments; all disputes carried their third-reader verdict. This is one fresh draw and three draws over the same 115-article dev set, not 363 independent events.
+reports/step2-merge-fix-council-2026-11-09/stored-census.md:12:Four wrong merge instances by recorded readers comprise 3 different source-pair classes (one repeats in 2 dev draws): (1) production/20% forecast vs August customer deliveries, Jev 0.49; (2) analyst revenue-level forecasts vs growth rate forecasts, 0.53; (3) cloud providers' revenue share vs developers' sales share, 0.84 and 0.51. These have shared topic but distinct claims according to the readers; X22 was also called overlap by an independent blind Claude, so classification uncertainty remains. The developer-sales case has additional source-fidelity ambiguity: it is not proven that the media report accurately represented its source. See saved `library.json` group original and member and `decisions.json` at each run; see prior X22 council report.
+reports/step2-merge-fix-council-2026-11-09/stored-census.md:14:## 0.5 threshold counterexample
+reports/step2-merge-fix-council-2026-11-09/stored-census.md:16:Among the 363 merges, six selected same-statement scores are below 0.5: fresh X22 (0.49, wrong), fresh X47 (0.47, accepted by both), dev1 X33 (0.47, overlap), dev2 X27 (0.41, accepted by both), dev3 X26 (0.41, accepted by both), dev3 X28 (0.49, accepted by both). Rejecting these merges on a 0.5 floor would remove 1 of the 4 wrong instances, while splitting 4 accepted and 1 overlap instance. These are fixed archived outcomes; the statement is conditional on this isolated transformation and neither estimates behavior of a forward run nor argues any threshold is appropriate.
+
+exec
+/opt/homebrew/bin/zsh -lc "ls reports/step2-merge-fix-council-2026-11-09; ls clean-arch/step4; rg -n 'group_text\\(|dossier\\(' clean-arch" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+claude-r1.jsonl
+claude-r1.stderr
+codex-challenge.txt
+codex-r1.md
+codex-r1.out
+codex-r1.stderr
+codex-r2.out
+codex-r2.stderr
+independent-handoff.txt
+stored-census.md
+ls: clean-arch/step4: No such file or directory
+clean-arch/step3/library.py:122:    def dossier(self, thesis_id):
+clean-arch/step3/library.py:145:def group_text(library, group_id, label, labels, member_text=True, notes=()):
+clean-arch/step3/test_library.py:44:        self.assertEqual(self.library.dossier('clean-5'), ['12:e1'])
+clean-arch/step3/test_library.py:105:        shown = library.group_text(self.library, '31:e2', 'E2', {'31:e2': 'E2'})
+clean-arch/step3/test_library.py:114:        shown = library.group_text(self.library, '31:e2', 'E2', {'31:e2': 'E2'})
+clean-arch/step3/test_library.py:121:        shown = library.group_text(self.library, '12:e1', 'E1', {'12:e1': 'E1'})
+clean-arch/step3/test_library.py:122:        source_only = library.group_text(self.library, '12:e1', 'E1', {'12:e1': 'E1'}, member_text=False)
+clean-arch/step2-validation-2026-11-07/build_final_check.py:49:                    'source': [library.group_text(store, g, labels[g], labels, member_text=False) for g in groups],
+clean-arch/step2-validation-2026-11-07/build_final_check.py:50:                    'group': [library.group_text(store, g, labels[g], labels, member_text=True) for g in groups]}
+clean-arch/step2-validation-2026-11-07/build_views.py:71:            'source': [library.group_text(store, g, labels[g], labels, member_text=False, notes=notes(g)) for g in groups],
+clean-arch/step2-validation-2026-11-07/build_views.py:72:            'group': [library.group_text(store, g, labels[g], labels, member_text=True, notes=notes(g)) for g in groups]}
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat reports/step2-merge-fix-council-2026-11-09/codex-r1.md; cat reports/step2-merge-fix-council-2026-11-09/codex-challenge.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+**我的建议是先验证“这两条到底重复了哪一句”，不要先加 0.5 门槛，也不要改变现有分组和展示语义。** 目前能确定的是：Step 2 有时把相关但不同的事实当成重复，Step 3 就照这个结果放进同一组。至于模型为什么这么判断，现有记录还不能证明；因此现在还没有经过证明的修复方案。
+
+例如，X22 的旧记录说产品已在生产，并预测它占下一季度数据中心收入约 20%；新记录说产品已在 8 月商业交付。它们谈的是同一产品，但交付不是对生产状态或收入预测的简单复述。后来的原文仍在组里，却被放在“同一句话的后续报道”之下。[原始对照材料](poc/data/clean-acceptance-2026-11-09/step2/merge-packet-1.json:882)；[展示代码](/Users/lchingen/hivemind/clean-arch/step3/library.py:145)。
+
+这次是我的独立只读审查，**不是新一轮双人 council**：你禁止模型调用和写文件，所以我没有启动 Claude 或其他独立审查，也没有补做需要继续模型对话的诊断。以下把已保存的读者意见和我核对过的原始材料分开说。
+
+## 已发现的错误和有争议的重叠
+
+四次当前记录的结果中，第三位读者各判出一条明确错误：新鲜样本 **1/57**，三个开发样本分别 **1/100、1/100、1/106**。这是四次运行中的四次错误，涉及下面三个不同的案例；不是四个互相独立的问题，也不是对未来错误率的可靠估计。[记录](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:1603)。
+
+| 案例 | 原文支持的区别 | 我的判断 |
+|---|---|---|
+| 新鲜样本 X22 | 已生产和预计收入占比，对比已经商业交付。 | 我倾向于分别保存。第三位读者判错；先前也有读者认为是重叠。把交付理解为事件进度的修订有一定解释空间，但不能当成明确的重复。 |
+| 开发样本 1，X30 | 一篇给出分析师的收入金额路径；另一篇给出 82% 和 41% 增长预测。金额与增长率或许有关，但材料不足以证明它们是同一预测。 | 同意不应直接作为同一句话合并。[材料](/Users/lchingen/hivemind/poc/data/clean-step1-c8-dev-d1-2026-11-09/step2/merge-packet-2.json:136) |
+| 开发样本 2 X4、样本 3 X3 | 公司原文描述支持云服务商、分享云收入；另一报道描述给开发者代币额度、分享开发者未来销售收入。报道也引用了同一公司博客和相似措辞。 | 两份材料表达的交易关系不同，不能仅凭同一公司、主题和措辞认定是同一说法。两次是同一对文章在不同开发运行中的重复出现，不应算两种原因。[样本 2](/Users/lchingen/hivemind/poc/data/clean-step1-c8-dev-d2-2026-11-09/step2/merge-packet-1.json:144)、[样本 3](/Users/lchingen/hivemind/poc/data/clean-step1-c8-dev-d3-2026-11-09/step2/merge-packet-1.json:99) |
+
+第三位读者还分别标出 **2、14、12、15 条重叠**。这些按 Alex 已定的“明确错误”验收线不计入错误，但也不等于都已证明无误。[验收记录](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:1645)。
+
+新鲜样本最值得保留的两个边界是：
+
+- **X7：**旧记录是 AWS 增长 37%；新记录同时用 AWS、Azure 和 Google Cloud 的增长描述整个云市场。AWS 数字确实重合，但后者要表达的范围更大。第三位读者称重叠。[材料](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/merge-packet-1.json:251)
+- **X49：**两条都提 Hugging Face 约 1,800 万用户；后者还给出 CEO 的 1 亿用户目标。相同现状与新增目标都真实出现在材料中；问题是把整条后文称为旧说法的报道，是否会让目标被看轻。[材料](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/merge-packet-2.json:937)
+
+开发样本的重叠也不是一种情况：有把两家公司的部署放进一家公司的记录，有订单与销售、有当季结果附带更多数字，也有报道与否认一起出现。它们需要逐条讨论，不能全判错，也不能用一个“有相同词”规则处理。我检查了各条保存的摘要和读者分类；**没有对全部 41 条重叠逐篇重做完整原文裁决**，所以这不是一份独立完成的全部重叠终审。
+
+## 哪些原因已经成立，哪些还不知道
+
+**直接过程已成立：**X22 的正确候选被找到；模型对它选择“同一句”，概率 0.49，对“不同”是 0.36；代码按所选类别执行，没有 0.5 下限。Step 3 把新记录放进旧组，保留其自身文字和来源。[保存的决定](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/decisions.json:6723)、[比较代码](/Users/lchingen/hivemind/clean-arch/step2/compare.py:109)、[保存代码](/Users/lchingen/hivemind/clean-arch/step3/library.py:63)。
+
+**尚未成立：**模型是因为同主题、旧记录包含多个事实、对“主要说法”理解不同，还是其他原因而选错。请求里有这些可能影响判断的因素，但没有模型解释，也没有隔离变量的实验。X30 与两条融资计划错误同样由“判重复后入组”产生，但不能因此断言它们的模型内部原因相同。
+
+**实际代价：**这条 clean 路径保存了双方原文，并未观察到 X22 的文字被删除。风险在于组标题把新事实说成旧事实的转述，未来读者可能因此忽略新进展；这次运行没有完成 clean Step 4，不能声称已经观察到投资判断受影响。较早的生产路径曾只加来源、丢掉新文字：抽查 40 条重复中有 8 条丢了不同或更丰富的内容，这正是后来保留每条文字的原因。[D204](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2610)
+
+## 为什么不直接采用看起来简单的办法
+
+- **0.5 门槛：**在新鲜样本这一次的 57 次合组中，它会挡住 X22 的 0.49，也会挡住 X47 的 0.47。X47 两篇都报告 Broadcom 对相同财年的 1,150 亿和 2,300 亿美元预测，后文增加了原先预测；两位读者都接受合组。开发样本的明确错误也有 0.53、0.84、0.51，门槛挡不住。历史上 0.6 的试验也同时挡住正确合并。[X47 原文](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/merge-packet-2.json:849)、[历史检查](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:1131)。所以这不是已证明的根本修复；不能把被挡住的记录自动说成“不同”。
+- **所有多事实记录都拆开：**历史上的 Kyber 报道和否认被放在一条里，确实导致一条记录引发多次错误合组；后来把不同人的报道和回应分开，消除了那次连锁。但同一份业绩报告也可以合理地一起呈现收入和利润，X47 也包含两年的同一预测。全面拆分会改变上游记录契约，且 X22 的生产与收入预测即使拆开，也不自动证明交付该与哪个记录是什么关系。[历史试验](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:1131)
+- **只合并完全没有新增信息的报道：**过去的试验在原来 102 条合并上只保留 22 条，连一些无关紧要的措辞差异也造成不合并。这不是新的完整运行，但足以否定它作为简单门槛。[J2 试验](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:155)
+- **再加一个独立模型或要求模型写出共同的说法：**值得作为候选实验，不是已经证明有效的修复。第二次判断可能重复第一次错误；要求写“共同说法”也可能编出过于宽泛的说法，比如“两篇都谈产品进展”。只有共同说法能被双方原文具体支持、并确实对应旧记录的主要说法，才可能有用；这仍需要盲读和反例验证。
+
+Alex 已决定：重复进入最相似的一组；每篇自己的文字和来源保留；明确错误合组不超过 2%；不能因分组丢失后来报道的细节。[D381](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4101)。修订也不是抹掉旧说法；同主题本身不足以构成修订。[D168](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2338)、[D202](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2594)。这些决定不授权我们自行改架构、clean 基线、展示含义或冻结的衡量标准。
+
+## 可证伪的下一步
+
+我推荐先做一个**只基于已保存材料的 $0 对照审查**：把四次运行中的所有明确错误、全部争议重叠、X47 等正确重复，以及已经保存的漏合重复放在一起；逐对让未写方案的读者指出双方原文中具体重复的是哪句话，并区分新增事实、改变的对象、时间和说话者。固定记录每个判断及分歧，不改现有判分或验收结果。
+
+这个检查要回答一个可以推翻建议的问题：**是否存在足够清楚、可从双方原文支持的共同说法，能区分这些错误和 X47 这样的正确重复？** 如果读者也无法稳定区分，或者共同说法只能笼统地概括同一主题，就停止，不把“写共同说法”包装成修复。还要检查它对分组后读者理解、正确重复和漏合的影响，而不只看 X22 是否翻转。
+
+只有 $0 审查支持这个方向，并按项目规则完成完整请求审计、设计和无费用预检后，才值得提出一个**单独授权的、小范围付费实验**：对同一批预先固定的错误、重叠、正确重复和漏合案例，比较原判断与独立核验或共同说法检查；盲读原文与结果，报告误合、漏合、争议、成本和延迟。实验需要展示它改变了多少已数清的错误，同时没有破坏正确合并；否则就不是已证明的完整修复。按当前规则，模型为何作出原判断仍需要在获准后继续原对话询问，现阶段不能补造答案。
+
+没有修改文件、发送模型请求，或触碰正在运行的 Step 1／端到端任务。
+
+Challenge your proposal using the exact saved census in reports/step2-merge-fix-council-2026-11-09/stored-census.md and the requirements. We counted all 363 c8 merged instances by exact path: 4 wrong, 43 overlaps; repeated dev pair is the same source pair twice. A 0.5 floor rejects 1 wrong, 4 accepted, 1 overlap; one known wrong has 0.84. Your 'name the shared statement' idea appears circular: both can share a broad statement while their main statements differ; Step 1 records can legitimately bundle distinct statements and add details; Jev cannot generate a common statement. Source articles may reference the same announcement but media summaries disagree; no proof why Jev chooses or that new generation fixes it. How would a concrete test avoid circular self-verification, dependence on quote exactness, excessive splits or changing D381, and avoid cherry-picking development errors? Is adding a separate model justified vs testing plain grouped source display through real Step 4 first? What precisely is $0 demonstrable on stored inputs, what requires paid sends, and where are identity contract/measurement/decision issues? Consider clean-path current steps are in use by a separate end-to-end run; don't edit files or send model calls. Review cited facts first; return refined proposal, unresolved choices and what evidence would reject it. Do not assert root cause without proof.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step2-validation-2026-11-07/LOG.md | sed -n '209,275p;285,335p'; nl -ba clean-arch/step2-validation-2026-11-07/build_final_check.py | sed -n '1,100p'; nl -ba docs/CURRENT_STATE.md | sed -n '8,32p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   209	## 10. Grouping round (2026-11-08, council loop)
+   210	
+   211	**Frame.** Alex chose A (§9).
+   212	- Goal: build grouping and test whether readers notice what later reports add, without double counting or being misled, compared with
+   213	  source-only merging and with no merging (the full-information control).
+   214	- No model judge exists (PRD §7), so blind readers act as the dossier's readers.
+   215	
+   216	**Council A** (`council/group/a-*`, `b-*`).
+   217	- Agreed:
+   218	  - the group contract: the original is never rewritten; members keep their own id, text, fields and source; links carry their
+   219	    provenance; revisions are links; a replay is idempotent; one unit per item; distinct articles are counted;
+   220	  - the dossier view;
+   221	  - three views built from one stored history;
+   222	  - a key written by independent readers before any view is read;
+   223	  - one view per reader.
+   224	- Settled in the challenge:
+   225	  - several matches (15 items): kept as their own entry with `also_matches` references in both merged views. This is a **test
+   226	    convention only**; the product rule stays Alex's.
+   227	  - What was built: the isolated library with only the decided rows, refusing a failed comparison and several targets.
+   228	
+   229	**Built.**
+   230	- `clean-arch/step3/library.py`: groups, members, links, revisions, refusals and the dossier text.
+   231	- `test_library.py`: 12 tests, one per table row. All 5 mutants were caught (the original rewritten, a replay appended, articles not
+   232	  distinct, a failed comparison saved, several targets joined).
+   233	- `build_views.py` replays the forward simulation's 282 stored decisions through the library: 195 groups, 0 refused. This is a
+   234	  fixed-decision reconstruction, not a new forward run.
+   235	
+   236	**Reader test** (`reader-test/`).
+   237	- Questions and scoring rules were frozen first (`FROZEN.sha256`, checked by the scorer): 39 questions over three dossiers.
+   238	- Key: two readers; a third settled the 16 questions where the drafts differed.
+   239	- 18 masked view readers; 3 blind graders. Tally: `score_reader_test.py`, 234 grades.
+   240	
+   241	| Dossier | Detail: none / source / group (out of 12) | Unsupported claims: none / source / group | Characters: none / source / group |
+   242	|---|---|---|---|
+   243	| financing | 7.0 / 1.0 / 6.5 | 0 / 4 / 0 | 43.7k / 23.0k / 42.5k |
+   244	| competition | 7.5 / 2.0 / 8.0 | 2 / 2 / 2 | 18.1k / 15.2k / 22.5k |
+   245	| roadmap | 10.5 / 0.0 / 10.5 | 2 / 0 / 0 | 62.9k / 40.2k / 65.9k |
+   246	
+   247	- Detail in total: none 25, source 3, group 25, out of 36.
+   248	- Double counting: 0 in every view, on 4 independence questions.
+   249	- Controls, comparison and independence scores are about equal; group is slightly ahead on comparison (9 against 8 against 6).
+   250	- No frozen falsifier fired. Detail: group trails none in financing by 0.25 question per reader, under the 1-question threshold. The
+   251	  wrong-group questions scored the same in every view.
+   252	
+   253	**Traces read.**
+   254	- C3: group readers saw both Lisa Su accounts, but read the ambiguous sentence as covering MI450 only. That is a judgement point, not a
+   255	  missed detail.
+   256	- R5: group readers put "orders" and "sales" side by side, while none readers added an inferred year.
+   257	- F1 is partial everywhere because grading was strict.
+   258	
+   259	**Council B** (`council/group/c-*`).
+   260	- The test supports preserving later text. It does not prove equivalence with no merging, overall dossier quality (the questions were
+   261	  chosen for added details), or wrong-group safety (the questions pointed readers at the facts).
+   262	- Size is about no merging, up to 25% more in competition: groups bring members whose own links point elsewhere. Grouping gives
+   263	  structure, not compression.
+   264	- Next class: wrong groups.
+   265	
+   266	**Wrong-group census ($0; the 9 no-home merges, read against exactly what Jev saw):**
+   267	- M2, Sharon AI into Firmus: the incoming record's quote is the whole paragraph, Firmus sentence included, so Jev matched on the quote.
+   268	  Step 1 bundle on the incoming side.
+   269	- M57, NVL576 into NVL144: the stored record's own summary also states the NVL576 claim, so the merge is defensible. Step 1 bundle on
+   270	  the stored side.
+   271	- M30, analysts' 82% and 41% into the analysts' revenue path: different figures. A Jev error.
+   272	- 6 arguable (the same announcement, the same figure, or a relayed report): under grouping both texts sit side by side.
+   273	- So 2 real wrong groups out of 102, and their texts survive.
+   274	
+   275	**Open for Alex:**
+   285	## 12. Close-out (2026-11-08)
+   286	
+   287	**Alex's decisions (2026-11-08):**
+   288	- a record that is a repeat of several groups joins only the one Jev judges it most like (the highest same_statement probability; ties
+   289	  go to the earliest group);
+   290	- the Step 2 lines: (1) search at least 90%; (2) clear wrong merges at most 2%; (3) grouped dossiers keep no fewer later details than
+   291	  no merging.
+   292	
+   293	Both are recorded in PRD §5.
+   294	
+   295	**Built.**
+   296	- `clean-arch/step2/compare.py`: search, Jev comparison, the outcome with best match, forward order, and a failed comparison refused and
+   297	  reported. `test_compare.py`: 6 tests; all 4 mutants caught.
+   298	- `run_forward.py` reads a stored Step 1 trace directly.
+   299	- **Run** (`poc/data/clean-step2-forward-2026-11-08/`, a fresh Jev draw): 282 records made 178 groups.
+   300	  - 104 repeats, 3 revisions, 0 refused; 16 records had several same_statement answers.
+   301	  - The cached embedding texts were verified identical: 282 of 282 documents, 313 of 313 queries.
+   302	
+   303	**Council A** (`council/group/d-*`):
+   304	- report search as recall over known labelled counterparts;
+   305	- blind-review every merge, previously labelled positives included;
+   306	- verify the cache texts;
+   307	- re-run the reader test on the new views.
+   308	
+   309	| Line | Result | Met |
+   310	|---|---|---|
+   311	| 1. Search | 112/113 known labelled counterparts had a holding group among the candidates (99.1%). For 107 of them the group's original, which is what Jev saw, is itself a counterpart. This is not recall over all real repeats. | yes |
+   312	| 2. Clear wrong merges | 104 merges read by two blind readers; 85 accepted by both; the 19 rejected by either went to a third reader: acceptable 1, overlap 15, **wrong 3** = 2.9% | **no** (missed by one merge) |
+   313	| 3. Later details | Reader test re-run on the rebuilt views with the frozen questions and key: detail none 27.5, source 3, group **28** of 36; unsupported claims 3 / 2 / 2; double counting 0 | yes |
+   314	
+   315	**Line 2 detail.**
+   316	- The 3 wrong merges:
+   317	  - NVL576 into the NVL144 group, twice. The group's original Step 1 record states both claims.
+   318	  - Analysts' 82% and 41% growth into the analysts' revenue-path record: different figures, a Jev error.
+   319	- 15 overlaps, which the third reader called imperfect but not misleading to a reader of the record's own text. Among them:
+   320	  - orders against sales ($1tn);
+   321	  - expected revenue against committed off-take (Firmus);
+   322	  - bundled records: the business model into the Sharon group, the Kyber delay report into the backup-rack group, the Taiwan raid
+   323	    alongside the Singapore mansion.
+   324	- My own reading had 5 wrong (Sharon AI into Firmus, and the business-model bundle into the Sharon group, both overlap to the third
+   325	  reader). Both readings miss the line.
+   326	
+   327	**Council B** (`council/group/e-*`):
+   328	- do not offer the result as a pass;
+   329	- report 3 wrong, 15 overlap and 1 acceptable after dispute;
+   330	- a later look at bundled records would explain only part of it;
+   331	- stop and report.
+   332	
+   333	**Verdict.** Step 2 meets lines 1 and 3 and misses line 2 by one merge, in one Jev draw. Per Alex's instruction, the work stops here,
+   334	and the census goes to him.
+   335	
+     1	"""Close-out check packets for the Step 2 forward run (no model calls).
+     2	
+     3	  merges   every repeat in decisions.json as a pair (the chosen group's original record, the incoming record) with full fields and
+     4	           article context, for blind readers, previously labelled pairs included;
+     5	  views    the three reader views of each predeclared dossier rebuilt from the run's library.json (none / source / group), masked,
+     6	           with prompts for the frozen reader test (reader-test/questions.json, unchanged).
+     7	
+     8	Usage: build_final_check.py <validation folder> <forward run folder>"""
+     9	import importlib.util, json, random, sys
+    10	from pathlib import Path
+    11	
+    12	ROOT = Path(__file__).resolve().parents[2]
+    13	spec = importlib.util.spec_from_file_location('clean_step3_library', ROOT / 'clean-arch/step3/library.py')
+    14	library = importlib.util.module_from_spec(spec)
+    15	spec.loader.exec_module(library)
+    16	sys.path.insert(0, str(Path(__file__).resolve().parent))
+    17	from build_reader_packets import full  # noqa: E402
+    18	from build_views import DOSSIERS, as_record  # noqa: E402
+    19	
+    20	
+    21	def main():
+    22	    folder, run = Path(sys.argv[1]), Path(sys.argv[2])
+    23	    items = {it['key']: it for it in json.loads((folder / 'items.json').read_text())}
+    24	    decisions = json.loads((run / 'decisions.json').read_text())
+    25	    saved = json.loads((run / 'library.json').read_text())
+    26	    pairs = [(d['outcome']['repeat_of'][0], d['id']) for d in decisions if d['outcome']['kind'] == 'repeat']
+    27	    key = {}
+    28	    for start in range(0, len(pairs), 26):
+    29	        packet = []
+    30	        for original, incoming in pairs[start:start + 26]:
+    31	            mid = f'X{len(key) + 1}'
+    32	            key[mid] = {'earlier': original, 'later': incoming}
+    33	            packet.append({'id': mid, 'earlier': full(items[original]), 'later': full(items[incoming])})
+    34	        (run / f'merge-packet-{start // 26 + 1}.json').write_text(json.dumps(packet, ensure_ascii=False, indent=1))
+    35	    (run / 'merge-key.json').write_text(json.dumps(key, indent=1))
+    36	    store = library.Library()
+    37	    store.groups, store.order, store.placement = saved['groups'], saved['order'], saved['placement']
+    38	    theses = {t['id']: t['question'] for it in items.values() for t in it['theses']}
+    39	    views_dir = run / 'views'
+    40	    views_dir.mkdir(exist_ok=True)
+    41	    codes = random.Random(20261108 + 1).sample(range(100, 1000), 9)
+    42	    vkey = {}
+    43	    for (name, thesis_ids), triplet in zip(DOSSIERS.items(), [codes[0:3], codes[3:6], codes[6:9]]):
+    44	        header = 'Research questions in this dossier:\n' + '\n'.join(f'- {theses[t]}' for t in thesis_ids) + '\n\nEvidence entries:\n'
+    45	        groups = [g for g in store.order if any(t in store.groups[g]['links'] for t in thesis_ids)]
+    46	        labels = {g: f'E{n}' for n, g in enumerate(groups, 1)}
+    47	        none = [k for k in items if any(t in {x['id'] for x in items[k]['theses']} for t in thesis_ids)]
+    48	        rendered = {'none': [library.record_text(as_record(items[k]), f'E{n}') for n, k in enumerate(none, 1)],
+    49	                    'source': [library.group_text(store, g, labels[g], labels, member_text=False) for g in groups],
+    50	                    'group': [library.group_text(store, g, labels[g], labels, member_text=True) for g in groups]}
+    51	        for (view, entries), code in zip(rendered.items(), triplet):
+    52	            text = header + '\n\n'.join(entries) + '\n'
+    53	            (views_dir / f'{code}.txt').write_text(text)
+    54	            vkey[str(code)] = {'dossier': name, 'view': view, 'entries': len(entries), 'characters': len(text)}
+    55	    (run / 'views-key.json').write_text(json.dumps(vkey, indent=1))
+    56	    placed = set(store.placement)
+    57	    missing = [d['id'] for d in decisions if d['id'] not in placed]
+    58	    print(f'merge pairs {len(pairs)} in {(len(pairs) + 25) // 26} packets; views {len(vkey)}; records not placed {len(missing)}')
+    59	    for code, v in vkey.items():
+    60	        print(f"  {v['dossier']}/{v['view']}: entries {v['entries']}, characters {v['characters']}")
+    61	
+    62	
+    63	if __name__ == '__main__':
+    64	    main()
+     8	  - only big matters open a thesis;
+     9	  - no target prices.
+    10	
+    11	  [PRD §12](../clean-arch/PRD.md) holds its system prompt, closing check and schema; a run with no candidate files sends exactly the
+    12	  accepted request.
+    13	- **Acceptance (D386, [protocol](../clean-arch/step1-unfiled-2026-11-08/ACCEPTANCE-PROTOCOL.md)).** 50 fresh articles that no run,
+    14	  old or new, had used: news from 2026-09-05 to 09-07, a holiday weekend with no NVIDIA posts. One draw; two readers and a third on
+    15	  disputes.
+    16	  - helpful 132/139 (core 83/83);
+    17	  - wrongly opened theses 1 of 10;
+    18	  - search 141/143 available repeat pairs, or 141/145 for the whole system (one 11-article story supplies 55 pairs, and revisions are
+    19	    barely exercised);
+    20	  - clear wrong merges 1/57, plus 2 overlaps;
+    21	  - detail retention 22 = 22. This is a storage comparison: every record keeps its own text. It is not a usability test.
+    22	
+    23	  Dev ×3 on the frozen golden-v5 (a lead): helpful 214, 211 and 212 of 234; search 98.9–100%; clear wrong merges about 1%. Step 1
+    24	  cost for the fresh set plus dev ×3: $4.20 at published rates.
+    25	- **Steps 2 and 3** are built in isolation (`clean-arch/step2`, `clean-arch/step3`): search, comparison, grouping and later linking.
+    26	  They are not integrated with production storage. **Step 4 (judging) is not built** on the clean path, so nothing yet shows the clean
+    27	  system can judge an investment view.
+    28	- **Open defects, by product impact** (reflection council, `council/av-codex.md`):
+    29	  1. **The Ohio-guarantee yes/no question is never covered** in the three dev draws; a broader credit-support amount thesis opens
+    30	     instead. Diagnosed (round log §48): the model folds the unsigned guarantee into the open aggregate thesis because the request
+    31	     uses "covers" both for "is evidence for" and for "already asks this question". The same clause sits under link clutter.
+    32	  2. **A revenue-share thesis was opened** (Vera Rubin's share of data-center revenue), the class-A boundary of D382.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Step 4|step4|judg|end.to.end' clean-arch/step1-unfiled-2026-11-08/LOG.md | tail -25; rg -n 'Jev|same_statement|question' src/hivemind/views/jev_matching.py | head -50; nl -ba reports/step2-merge-fix-council-2026-11-09/stored-census.md | sed -n '1,30p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2040:- **fresh-12** opens the EU programme again, judged off-topic (c10a 1/1, c11 1/1; c8 0/2, c10b 0/1).
+2041:- **fresh-22** loses c8's HBM-shipments thesis (c8 2/2 open; c10a, c10b and c11 all lose it). A blind reader judged that thesis open
+2060:- Whether the added paragraph shifts unrelated judgments, or this is noise, is not established.
+2116:- The Nscale ~$2bn statement is routed too (linked to clean-7), so the focused call must still make the scale judgment.
+2125:  unjudged;
+2166:- One reader judged all of these. They are not independent judgments.
+2185:- Its two remaining errors are a size judgment not tied to the written impact, and an obligation inferred beyond the article.
+2197:- large_enough is "the conclusion your company_impact reaches", with a qualitative judgment allowed when the amount is unknown;
+2300:  Technologies …". The model marks Firmus not_yet_signed and judges the size qualitatively, since no amount is stated. Blind
+2317:## 59. Deep council on priorities: close Step 1, measure end to end (2026-11-09)
+2337:- **The highest-impact gap is end to end.** Step 4 is not built on the clean path, so nothing shows the clean system's evidence reaches
+2338:  a judgement. The phase goal is the final judgement on the frozen judgement ruler (docs/prd/10-filing-phase.md §1; AGENTS §7.2).
+2339:  Production v108 agrees on 15, 15 and 16 questions (`judgement-gold/score-r9-frozen-v108-d{1,2,3}.txt`); q10 and q12 are never judged,
+2341:- **The minimal path, verified.** `score_judgement.py` refuses a run whose v1–v22 are not the seed questions, and the clean runs start
+2345:  3. the frozen judging as a measuring harness, not the clean Step 4 design;
+2348:  It is labelled a test of evidence delivery and judgment, conditional on those questions being supplied. Unanswered questions and q23
+2351:- **The circle, and a rule.** Fixes were judged by Step 1's own counts on an overused probe set, and boundaries became small rules one
+2353:  would flip") as too narrow. Agreed instead: every proposed change states its expected effect on the reader or the final judgement,
+2356:## 60. The end-to-end measurement plan, after a full read and a council (2026-11-09)
+2361:- production's end-to-end traces: v108 15, 15, 16; v116 18, 18, 18; q10 and q12 starved because the facts never arrive; q16 decided
+2363:- the clean path's gaps to a judge: no ladders or due dates, links without timing, multi-passage records, repeat groups;
+2364:- the judging and scorer contract.
+2366:I verified the decision-critical lines: the scorer's seed refusal, replay's refusal of seeded ledgers, and the judging entry points.
+2369:- **The question:** given the 22 ruler questions as an isolated fixture, does clean Steps 1–3 deliver to the frozen judge the facts that
+2436:so it will most likely read inconclusive or worse. It still gives the first whole-window picture of the clean system's judgements.
+1:"""The matching step answered by Jev instead of a generative call (log row 34). For each candidate: its relation to every
+18:# D190: the collision judge. Jev reads wording and calls a population variant of one aggregate 'part of' (six 2026 aggregates on the r3
+19:# ledger, each judged 'new'); the generative model, asked the analyst's question, merged five of six. It is asked only for the theses of
+20:# the candidate's own object and measure, and its verdict on those replaces Jev's.
+21:COLLISION_RELATIONS = ['same_question', 'same_question_other_period', 'distinct_question_same_matter', 'different']
+32:                   "false": "the supplied material shows a different matter, or a question outside the GROUP's stated scope"}
+37:PIECES = {"same_statement": "the same evidence: a retelling, the same number stated in text and in a table or in another document, or the same speaker repeating the same statement; wording, precision and document may differ",
+60:    return (f'CANDIDATE ({c["kind"]}, object {c["object"]}, focus "{c["looks_at"]}", {c["year"]}, due {c["due_day"]}): {c["question"]}\n'
+73:    return f'{group["name"]}. Scope: {group["scope"]} Also called: {", ".join(group.get("aliases") or [])}. Member questions: {members or "(none yet)"}'
+80:def relation_question(text):
+85:def member_question(text):
+90:def piece_question(text):
+96:    """D248 item 2 (R2-a): an open event question of the same object takes the same event under another deadline; the deadline is
+97:    evidence, and the successor opens only once the question has closed (can_succeed)."""
+147:    """Ask independent questions; equal concurrent requests share one archived result."""
+149:        raise ValueError('Jev workers must be a positive integer')
+152:        state, questions = job
+153:        return jev.ask(archive, cfg, cfg.matching, state, questions, 'match', transport=transport)
+158:    for state, questions in jobs:
+159:        if not questions:
+162:        _, key = model.request_identity(jev.request_for(cfg.matching, state, questions))
+165:            unique[key] = (state, copy.deepcopy(questions))
+203:    """The listed theses of the candidate's own object and measure: where one question may be held twice under other words."""
+229:        fixed = shared_quantity_target(conn, c)                       # D197: code decides a shared quantity's destination; Jev is not asked its relations
+230:        questions = {} if fixed else {f'rel__{v}': relation_question(thesis_text(conn, v)) for v in listed}
+231:        groups = store.groups_for_prompt(conn, [c['object']], f'{c["looks_at"]} {c["question"]}')
+233:            questions[f'member__{g["group_id"]}'] = member_question(group_text(g))
+234:        candidate_jobs.append((c, listed, groups, len(jobs) if questions else None, fixed))
+235:        if questions:
+236:            jobs.append((candidate_state(c, evidence), questions))
+241:        questions = {f'piece__{v}__{x}': piece_question(matching.describe_evidence(conn, x, english=True)) for _, v in pairs for x in lists.evidence_lists[(e['id'], v)]}
+244:        jobs.append((piece_state(e, said_day), questions))
+305:            # D258 (R2-e, D248 items 1 and 6): a candidate that asks about a component, instance or subset of an open question is filed
+306:            # under it; the part is evidence of the card, not a card of its own. The typed fields still decide (a signing question never
+334:            if target in peers and verdicts.get(target) not in ('same_question', 'same_question_other_period'):
+335:                outcome, target = 'new', ''                      # Jev's merge or succession on a peer the judge keeps apart
+339:                    if verdicts.get(v) == 'same_question' and not identity.conflicts(key, c, merging=False):
+348:                    if verdicts.get(v) == 'same_question_other_period' and can_succeed(conn, v, key, c):
+357:            repeats = sorted(((a['probabilities']['same_statement'], x) for a, x in scored if a['choice'] == 'same_statement' and a['probabilities']['same_statement'] >= THRESHOLD), reverse=True)
+     1	# c8 stored merge census, 2026-11-09
+     2	
+     3	Read-only count of decision outcome `kind == repeat`, linked by exact record ids to `merge-key.json`, `merge-answer-MA-*`, `merge-answer-MB-*` and `merge-third-answer.json`. All 363 selected pairs were identifiable and each had two first-reader judgments; all disputes carried their third-reader verdict. This is one fresh draw and three draws over the same 115-article dev set, not 363 independent events.
+     4	
+     5	| Saved run | merges | clearly wrong | overlap | accepted by both or adjudicator |
+     6	|---|---:|---:|---:|---:|
+     7	| Fresh | 57 | 1 | 2 | 54 |
+     8	| Dev draw 1 | 100 | 1 | 14 | 85 |
+     9	| Dev draw 2 | 100 | 1 | 12 | 87 |
+    10	| Dev draw 3 | 106 | 1 | 15 | 90 |
+    11	
+    12	Four wrong merge instances by recorded readers comprise 3 different source-pair classes (one repeats in 2 dev draws): (1) production/20% forecast vs August customer deliveries, Jev 0.49; (2) analyst revenue-level forecasts vs growth rate forecasts, 0.53; (3) cloud providers' revenue share vs developers' sales share, 0.84 and 0.51. These have shared topic but distinct claims according to the readers; X22 was also called overlap by an independent blind Claude, so classification uncertainty remains. The developer-sales case has additional source-fidelity ambiguity: it is not proven that the media report accurately represented its source. See saved `library.json` group original and member and `decisions.json` at each run; see prior X22 council report.
+    13	
+    14	## 0.5 threshold counterexample
+    15	
+    16	Among the 363 merges, six selected same-statement scores are below 0.5: fresh X22 (0.49, wrong), fresh X47 (0.47, accepted by both), dev1 X33 (0.47, overlap), dev2 X27 (0.41, accepted by both), dev3 X26 (0.41, accepted by both), dev3 X28 (0.49, accepted by both). Rejecting these merges on a 0.5 floor would remove 1 of the 4 wrong instances, while splitting 4 accepted and 1 overlap instance. These are fixed archived outcomes; the statement is conditional on this isolated transformation and neither estimates behavior of a forward run nor argues any threshold is appropriate.
+    17	
+    18	The overlap rows are not silently reclassified as errors. Their counts are listed, but their reader-defined acceptability and product impact need source-backed review. Exact historical log and verdicts: `clean-arch/step1-unfiled-2026-11-08/LOG.md` §§43–44 and each `poc/data/clean-{acceptance-2026-11-09/step2,step1-c8-dev-d1-2026-11-09/step2,step1-c8-dev-d2-2026-11-09/step2,step1-c8-dev-d3-2026-11-09/step2}/merge-third-answer.json`.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'judge|group_text|member|repeat|dossier|Step 4|Step 2' clean-arch/step1-unfiled-2026-11-08/*e2e* clean-arch/step1-unfiled-2026-11-08/*E2E* 2>/dev/null | head -70" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '2330,2440p' clean-arch/step1-unfiled-2026-11-08/LOG.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+zsh:1: no matches found: clean-arch/step1-unfiled-2026-11-08/*e2e*
+
+ succeeded in 0ms:
+    - q23 (Ohio): the focused call was tested and is not adopted. It opened Ohio 36 of 36, but each round opened one wrong
+      neighbouring case. D389 and D390 apply to it only.
+    - the revenue-share thesis;
+    - link clutter, about 20% weak and 2% wrong;
+    - unverified passages, 3 of 188, with Jev's input unmarked;
+    - lidar, 1 of 3 dev draws;
+    - the acceptance's limits: one draw, a holiday weekend.
+- **The highest-impact gap is end to end.** Step 4 is not built on the clean path, so nothing shows the clean system's evidence reaches
+  a judgement. The phase goal is the final judgement on the frozen judgement ruler (docs/prd/10-filing-phase.md §1; AGENTS §7.2).
+  Production v108 agrees on 15, 15 and 16 questions (`judgement-gold/score-r9-frozen-v108-d{1,2,3}.txt`); q10 and q12 are never judged,
+  and q23 is absent. For the clean path, the bigger risk is starved questions, not Ohio.
+- **The minimal path, verified.** `score_judgement.py` refuses a run whose v1–v22 are not the seed questions, and the clean runs start
+  empty. So the first test is an isolated measurement library holding the 22 historical questions as a fixture:
+  1. c8 Steps 1–3 over 07-01 to 07-14;
+  2. an adapter from the clean library to the view store;
+  3. the frozen judging as a measuring harness, not the clean Step 4 design;
+  4. the unchanged scorer.
+
+  It is labelled a test of evidence delivery and judgment, conditional on those questions being supplied. Unanswered questions and q23
+  are reported apart.
+- **D370 boundary.** D370 retired the 22 presets as an active starting library. Using them as a test fixture needs Alex's word.
+- **The circle, and a rule.** Fixes were judged by Step 1's own counts on an overused probe set, and boundaries became small rules one
+  case at a time (D388 → D389 → D390). Codex rejected the Claude reader's rule ("no arm unless it names a ruler question a trace shows it
+  would flip") as too narrow. Agreed instead: every proposed change states its expected effect on the reader or the final judgement,
+  and is tested there where possible; a fix that keeps moving its error to neighbouring cases stops being tuned on that set.
+
+## 60. The end-to-end measurement plan, after a full read and a council (2026-11-09)
+
+**What was read.** Following Alex's D391 instruction ("需要你完整的读完trace 和所有历史的learning 和我们的状态"), four read-only
+digests covered:
+- the lessons and their governing rules;
+- production's end-to-end traces: v108 15, 15, 16; v116 18, 18, 18; q10 and q12 starved because the facts never arrive; q16 decided
+  by whether Broadcom's figures link; q17 on the gold's boundary; q23 folded into v9;
+- the clean path's gaps to a judge: no ladders or due dates, links without timing, multi-passage records, repeat groups;
+- the judging and scorer contract.
+
+I verified the decision-critical lines: the scorer's seed refusal, replay's refusal of seeded ledgers, and the judging entry points.
+
+**The plan** (`council/ej-claude.md` → `em-claude.md` → `en-claude.md`, v4 plus qualifications) is a seeded diagnostic.
+- **The question:** given the 22 ruler questions as an isolated fixture, does clean Steps 1–3 deliver to the frozen judge the facts that
+  change answers, against production re-sent the same day on the same 243 items?
+- **Stage 0 ($0):**
+  - a dispatch-order adapter with leakage checks and a mutant;
+  - a control harness with outgoing-byte proof;
+  - a decision rule calibrated, exploratorily, on the six stored v108 draws;
+  - council review of the new code.
+- **Stage 1 (cents):** a delivery probe, testing whether c8 with the seeds links q10's and q12's facts without losing the company-figure
+  links.
+- **Stage 2 (about $11):** three paired draws, with an inconclusive band and with and without the reader-noise questions.
+
+**Reviews.** Codex went NOT READY → NOT READY → READY WITH CHANGES (`el`, `ep`, `er-codex.md`). The Claude reader went READY WITH CHANGES.
+The Claude reader found the largest bias: the clean dev list has 115 items against v108's 243, and the second week is 17 against 145. It
+also found the D382 conflict: most seeds are financial-figure questions that c8 would not open itself.
+
+**For Alex:**
+1. The seeds as an isolated fixture (D370, D382).
+2. The same-day control through a separate harness.
+3. The staged spend.
+
+## 61. Stage 1 of D392 (the delivery probe) sent: it fails its frozen line on q12, by design (2026-11-09)
+
+**Before the send** (`clean-arch/e2e-2026-11-09/`):
+- `stage1_probe.py`, `stage1_cases.json` and `stage1-frozen.md`, frozen with sha256.
+- Four code-review rounds (`council/es`–`ez`) fixed: the whole-request byte check (`live.deepseek_json_mode`); a stricter matcher with
+  blind adjudication; per-question gold items; refusals counted as misses; a stated worst-case cost; a condition 4 that a failed control
+  cannot pass.
+- The stored answers wrote all 26 gold items.
+
+**Results** (`poc/data/clean-e2e-2026-11-09/stage1-probe`; 52 calls; 0 errors; $0.75). 72 matched pairs were adjudicated blind
+(`stage1-adjudication-verdicts.md`; 42 confirmed). Delivery to each seed, counting seeded draws out of 3:
+
+| Question | Draws |
+|---|---|
+| v10, the 66% operating margin | 3 |
+| v12 | 0, both cases |
+| v16, Broadcom | 3 and 3 |
+| v17 | 2 and 3 |
+| v1, v3, v11 and v22 | each delivered in 3 for some case |
+| the Ohio statement | linked to v9 (no signing thesis; c8 unchanged) |
+
+**Verdict under the frozen line: STAGE 1 FAILS.** Condition 2 (q12) and condition 4 (written facts not lost) fail.
+
+**The failures read against the source:**
+- **q12 fails by design.** The gold's reasoning is operating cash flow $50.3bn minus free cash flow $48.6bn, giving about capex (i131).
+  - c8 does not link that sentence to v12, since it would have to reason a step.
+  - Once unlinked, c8's closing read-back drops it under Alex's cash-flow ruling ("a cash-rich company's balance or cash flow that the
+    item ties to nothing usually cannot"). Today's same-day control did not write it either.
+  - The other q12 gold item (i145, the Valar nuclear-AI exploration) is written in every draw and linked to nothing. That is a remote
+    link, reasonably left.
+- **Condition 4 is partly a measurement error.** i304 ("Beijing refused to allow Chinese companies to buy these AI processors") is the
+  exact gold sentence, but the reader rejected it because the passage "does not identify the processors as H200". The gold passage does
+  not either. Counted correctly, i304 is written in 3 of 3.
+- **Condition 4's remaining losses:**
+  - i131 (above);
+  - i006 (the $3.5bn May-filing guarantees), written by the control (1 of 1) and seeded d3, but missing in seeded d1 and d2. One control
+    draw cannot separate an effect from noise.
+
+**What it says for the product question:**
+- With the questions present, c8 delivers what production missed: the 66% margin for q10, which v108 never wrote, and Broadcom's
+  figures for q16, which v108 linked elsewhere.
+- It keeps production's figure questions.
+- q12 cannot be delivered under the current cash-flow ruling plus literal linking.
+
+Under D392, the line stops and goes to Alex.
+
+**Alex's answer.** "照样跑正式对比 (Recommended)": Stage 2 runs with its frozen line unchanged. Its "better" requires both q10 and q12,
+so it will most likely read inconclusive or worse. It still gives the first whole-window picture of the clean system's judgements.
+Stage 0's adapter and control harness are built and council-read first.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step3/library.py | sed -n '35,75p;127,165p'; nl -ba clean-arch/step2/compare.py | sed -n '40,70p;100,118p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    35	    def apply(self, record, outcome):
+    36	        """Write one record with its Step 2 outcome: {'kind': 'new' | 'repeat' | 'revision' | 'failed', 'repeat_of': [group ids],
+    37	        'revises': [group ids], 'reason': text}. Returns the id of the group that holds the record."""
+    38	        missing = [f for f in RECORD_FIELDS if f not in record]
+    39	        if missing:
+    40	            raise Refused(f'record lacks {missing}')
+    41	        kind, repeat_of, revises = outcome['kind'], list(outcome.get('repeat_of') or []), list(outcome.get('revises') or [])
+    42	        if kind == 'failed':
+    43	            raise Refused(f"comparison failed for {record['id']}: {outcome.get('reason', 'no reason given')}")
+    44	        if kind not in ('new', 'repeat', 'revision'):
+    45	            raise Refused(f'unknown outcome {kind!r}')
+    46	        if (kind == 'repeat') != bool(repeat_of) or len(repeat_of) > 1:
+    47	            raise Refused(f"a repeat names exactly one group; got {repeat_of} for outcome {kind}")
+    48	        if kind == 'revision' and not revises:
+    49	            raise Refused('a revision names the group it revises')
+    50	        for group_id in repeat_of + revises:
+    51	            if group_id not in self.groups:
+    52	                raise Refused(f'unknown group {group_id}')
+    53	        target = repeat_of[0] if repeat_of else record['id']
+    54	        if record['id'] in self.placement:
+    55	            if self.placement[record['id']] != target:
+    56	                raise Refused(f"{record['id']} was placed in {self.placement[record['id']]}, not {target}")
+    57	            group = self.groups[target]
+    58	            stored = next(r for r in [group['original']] + group['members'] if r['id'] == record['id'])
+    59	            if {k: v for k, v in stored.items() if k != 'thesis_ids'} != {k: v for k, v in record.items() if k != 'thesis_ids'}:
+    60	                raise Refused(f"{record['id']} names a stored record with different content; a changed record needs a new id")
+    61	            self._link(group, record)
+    62	            return target
+    63	        if kind == 'repeat':
+    64	            group = self.groups[target]
+    65	            group['members'].append(copy.deepcopy(record))
+    66	        else:
+    67	            group = {'original': copy.deepcopy(record), 'members': [], 'links': {}, 'revises': []}
+    68	            self.groups[target] = group
+    69	            self.order.append(target)
+    70	        self.placement[record['id']] = target
+    71	        self._link(group, record)
+    72	        for revised in revises:
+    73	            if revised != target and not any(r['group'] == revised for r in group['revises']):
+    74	                group['revises'].append({'group': revised, 'by': record['id']})
+    75	        return target
+   127	def labelled_passages(record):
+   128	    """Each passage as a reader sees it: the source text Step 1 found, labelled 'Quote', or, when Step 1 did not find it (verified
+   129	    value None), the model's text labelled 'Unverified quote'. The model's own text stays in the record's `passages`. A record stored
+   130	    before verification was carried shows its passages as 'Quote'."""
+   131	    verified = record.get('verified_passages') or record['passages']
+   132	    return [('Quote', found) if found is not None else ('Unverified quote', passage) for passage, found in zip(record['passages'], verified)]
+   133	
+   134	
+   135	def record_text(record, label):
+   136	    attribution = record['original_party'] or 'unknown party'
+   137	    if record['reporting_speaker'] and record['reporting_speaker'] != record['original_party']:
+   138	        attribution += f", reported by {record['reporting_speaker']}"
+   139	    head = (f"[{label}] {record['publication_date']} · {record['publisher'] or 'unknown publisher'} · {attribution} · tier {record['tier']}"
+   140	            f" · stated {record['statement_date'] or 'unknown'} · period {record['evidence_period'] or 'unknown'}")
+   141	    quotes = '\n'.join(f'  {label_of}: "{p}"' for label_of, p in labelled_passages(record))
+   142	    return f"{head}\n  {record['summary']}\n{quotes}"
+   143	
+   144	
+   145	def group_text(library, group_id, label, labels, member_text=True, notes=()):
+   146	    """A group as a reader sees it: the original record, then each later report of the same statement in arrival order, with its own
+   147	    text when `member_text` is set and as a source line otherwise. Distinct articles are counted; repeats are not called confirmation."""
+   148	    group = library.groups[group_id]
+   149	    lines = [record_text(group['original'], label)]
+   150	    if group['members']:
+   151	        articles = library.articles(group)
+   152	        publishers = {r['publisher'] for r in [group['original']] + group['members']}
+   153	        lines.append(f'  Later reports of the same statement: {len(group["members"])} records from {len(articles) - 1} further articles '
+   154	                     f'({len(publishers)} publishers in all). Articles repeating a statement do not by themselves confirm it independently.')
+   155	        for member in group['members']:
+   156	            if member_text:
+   157	                party = '' if member['original_party'] == group['original']['original_party'] else f" · {member['original_party']}"
+   158	                quotes = ' '.join(f'"{p}"' if kind == 'Quote' else f'"{p}" (unverified)' for kind, p in labelled_passages(member))
+   159	                lines.append(f"    - {member['publication_date']} · {member['publisher']}{party}: {member['summary']}\n      Quote: {quotes}")
+   160	            else:
+   161	                lines.append(f"    - {member['publication_date']} · {member['publisher']}")
+   162	    for revised in group['revises']:
+   163	        lines.append(f"  Revises [{labels[revised['group']]}]." if revised['group'] in labels else '  Revises an entry outside this dossier.')
+   164	    lines += [f'  {note}' for note in notes]
+   165	    return '\n'.join(lines)
+    40	def piece_text(record, label):
+    41	    return (f"{label} [{record['tier']}; {record['reporting_speaker']}; original source {record['original_party']}, stated "
+    42	            f"{stated(record)}] {record['summary']} | quote: {' '.join(record['passages'])}")
+    43	
+    44	
+    45	def query_vectors(vectors, record, thesis_questions):
+    46	    """The search queries of one record, in order: one per thesis association, then its own text when it has no association or lists
+    47	    the company's figures."""
+    48	    queries = [vectors[query_text(record, thesis_questions[t])] for t in record['thesis_ids']]
+    49	    if not record['thesis_ids'] or record.get('figures'):
+    50	        queries.append(vectors[doc_text(record)])
+    51	    return queries
+    52	
+    53	
+    54	# Jev's piece criteria aligned with the Step 2 merge line's own test (PRD §5 line 2; AGENTS §7.1, one ruler): a repeat is a later report
+    55	# of the stored piece's main statement. Production's wording (views/jev_matching.PIECES) judged "the same evidence", so a later report of
+    56	# only a secondary statement inside a stored record (an official's denial carried in the report it denies) was merged as a repeat.
+    57	PIECES = {'same_statement': "the INCOMING PIECE reports the STORED PIECE's main statement: a retelling, another outlet carrying it, the "
+    58	                            "same number in text or a table, or the same speaker repeating it; wording, precision and extra detail may "
+    59	                            "differ. If the stored piece carries several statements and the incoming piece reports only a secondary one, "
+    60	                            "this is not it",
+    61	          'supersedes': "a later version of the stored piece's main statement, changed: the same speaker revises that guidance, "
+    62	                        "forecast or event-progress statement, an official confirms or denies that reported claim, or the original "
+    63	                        "source revises it; another statement on the same topic is not this",
+    64	          'different': "a different fact, figure or matter, a figure for another period or quantity, or only a secondary statement of "
+    65	                       "the stored piece, even if on the same topic"}
+    66	
+    67	
+    68	def piece_question(text):
+    69	    return {'type': 'choice', 'criteria': PIECES,
+    70	            'instructions': 'How does the INCOMING PIECE relate to the STORED PIECE below? Use only the supplied text. STORED PIECE:\n' + text}
+   100	def search(library, vectors, record, thesis_questions):
+   101	    """Candidate group ids: each query's top 10 by cosine against the groups' original records, merged in rank order."""
+   102	    candidates = []
+   103	    for query in query_vectors(vectors, record, thesis_questions):
+   104	        ranked = sorted(library.order, key=lambda g: -cosine(query, vectors[doc_text(library.groups[g]['original'])]))[:TOP]
+   105	        candidates += [g for g in ranked if g not in candidates]
+   106	    return candidates
+   107	
+   108	
+   109	def outcome(answers, order):
+   110	    """answers: {group id: {'choice', 'probabilities'}}; order: group ids in creation order."""
+   111	    same = [g for g, a in answers.items() if a['choice'] == 'same_statement']
+   112	    later = [g for g, a in answers.items() if a['choice'] == 'supersedes']
+   113	    if same:
+   114	        best = max(same, key=lambda g: (answers[g]['probabilities']['same_statement'], -order.index(g)))
+   115	        return {'kind': 'repeat', 'repeat_of': [best], 'revises': later}
+   116	    if later:
+   117	        return {'kind': 'revision', 'revises': later}
+   118	    return {'kind': 'new'}
+
+codex
+我撤回“让模型指出共同说法”作为优先修复方向。你指出的循环问题成立：两条记录可以确实共享一个宽泛事实，但各自的主要内容不同；让同一个模型再写一遍共同说法，并不能独立证明合组正确。现有证据也不足以支持增加第二个模型。
+
+我建议先看**正在单独运行的端到端测量实际把分组交给判断时发生了什么**，同时在已保存数据上核对展示内容和受影响范围。若这条测量不能区分分组造成的影响，再设计一个隔离对照；目前不改 Step 2、分组或标签。
+
+例如 X7 的两条记录都包含 AWS 增长 37%，但后一条还比较 Microsoft 和 Google Cloud。共同的 AWS 数字是真的，仍不能单靠它证明把整个跨公司比较叫作 AWS 说法的重复是合适的。[X7 材料](/Users/lchingen/hivemind/poc/data/clean-acceptance-2026-11-09/step2/merge-packet-1.json:251)
+
+## 先校正我之前的统计和提议
+
+已保存的完整统计是 **363 次合组：4 次判为明确错误、43 次重叠、316 次被接受**。三次开发运行使用同一批文章；4 次错误里有一对来源在两次运行重复出现，所以是三个不同来源对，不能当作四个独立发现。[完整统计](/Users/lchingen/hivemind/reports/step2-merge-fix-council-2026-11-09/stored-census.md:3)
+
+0.5 门槛在这 363 个**固定结果**上会挡住 1 次明确错误，同时挡住 4 次被接受的合组和 1 次重叠；另一明确错误的分数是 0.84。它最多说明对保存结果作此变换的代价，不能预测新的顺序运行，也没有证明它是修复。[门槛统计](/Users/lchingen/hivemind/reports/step2-merge-fix-council-2026-11-09/stored-census.md:12)
+
+我的上一条回答还说要由未参与者指出“重复的是哪句话”，并把它作为候选验证。我现在会把这降为**供读者解释判断的可选笔记**，不作为必要条件或自动检查：
+
+- 重复可以是不同措辞，不能要求引用逐字相同；逐字匹配也不能证明含义相同。
+- 一条记录可以合理地包含多个相关事实，后来报道也可以增加细节；不能因为找不到一句覆盖整条记录的文字就拆组。
+- Jev 当前给的是类别和概率，不生成共同说法；要求它生成，意味着新增能力和调用，不是对现有答案的免费验证。
+- 两篇报道可能引用同一公告，却对交易关系描述不同。应分别记录“各报道说了什么”和“是否有证据确认原公告的真实含义”，不能仅凭共同出处消除冲突。
+
+## 先验证读者是否受到影响
+
+当前展示代码保留每个成员的摘要和来源段落，但在它们上方写“同一说法的后续报道”。这给读者一个关系判断；X22 的保存结果能证明这个标题与新记录并列出现，**不能证明实际判断因此出错**。[展示代码](/Users/lchingen/hivemind/clean-arch/step3/library.py:145)
+
+先前三份资料包的盲读测试显示，保留成员文本比只保留来源更能保住细节；但它的错误合组问题把注意力直接指向相关事实，所以没有证明自然阅读时不会受误导。[测试和局限](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:236)
+
+需要区分两件事：
+
+1. **已有端到端运行：**先等它完成，检查实际送入判断的内容、完整回答和理由。不能假定它直接使用 `group_text` 的原样输出；计划里有适配层，必须核对实际请求。它使用冻结的生产判断作为测量工具，不等于已经建成 clean Step 4。[端到端计划](/Users/lchingen/hivemind/clean-arch/step1-unfiled-2026-11-08/LOG.md:2337)
+2. **因果对照：**单看这次运行，即便判断正确或错误，也不能隔离分组的作用。若结果不足以回答，再考虑使用**同一批保存的证据和同一判断任务**，比较当前分组展示与逐条展开展示。逐条展开只作为实验中的完整信息对照，不把它变成新的产品行为，也不重写历史组。
+
+实验中应先固定问题、材料、分歧处理和衡量方式；读者或判断模型不知道哪种展示对应哪个版本。问题应让它自然评估投资问题，而不是点名“你有没有看到交付”。另由不参与方案编写的读者对照完整来源，检查新事实、说话者、时间、条件、是否把不同报道误当独立确认，以及最终判断的理由。比较结果应覆盖明确错误、重叠和正确重复，不能只选 X22。
+
+**这能检验分组的影响，但不能自动证明 Step 2 身份判断正确。** 即使判断读者看出了 X22 的新事实，错误标签仍可能违反已定的合组要求；反过来，判断出了错，也要先确认错在展示、输入选择还是判断本身。
+
+## $0 能证明什么，什么需要付费
+
+| 工作 | 在保存输入上可以做到什么 | 不能声称什么 |
+|---|---|---|
+| 还原链路 | 用记录 ID 对照原始 Step 2 请求、选择、组内成员和实际可生成的展示；统计 363 次中被门槛影响的记录。 | 不能从类别和概率推出 Jev 为什么这么选。 |
+| 检查已有读者答案 | 阅读 4 次错误、43 次重叠和全部接受结果的保存意见；对有争议处回看文章与记录。 | 重读者的意见不是新的盲审；读者自己手工分析也不是模型效果。 |
+| 固定结果的展示对照 | 在只读或隔离环境中重建同一保存历史的分组与逐条展开文本，核对成员、来源、顺序和实际送给判断的内容。 | 不会证明真实判断模型如何理解；改变展示也不会证明新一轮搜索和合组会怎样演化。 |
+| 门槛或规则的离线重放 | 在内存中模拟对已有决定的局部影响，列出错误和正确合并各受多少影响。 | 不是完整前向运行：改变早期合组会改变以后可搜索的组和候选。 |
+
+**需要付费发送**的是：询问模型当初的选择理由、用新提示或第二个模型重新判断、以及让实际判断模型对两种展示作盲态比较。模型自己事后解释只能作为线索；即便解释看似合理，也需要对照实验才能证明原因。任何付费实验都须先完成项目要求的请求审计、预检和隔离设计，不能碰当前运行。
+
+## 如何避免挑案例，以及何时考虑第二个模型
+
+如果将来评估一个具体改动，开发阶段应纳入保存的**全部 363 次合组**，包括 316 次接受和 43 次重叠；还要纳入已保存的非合组中已知的真实重复与修订，避免只优化误合而大量漏合。重复来源对应分别报告“发生次数”和“不同来源对”，不把多次抽样冒充独立案例。对已看过的新鲜集合也不能再把它称作未见过的最终验证集；最终效果需要另一个事先固定、未用于设计的材料集合，且维持冻结标准。[冻结规则](/Users/lchingen/hivemind/AGENTS.md:227)
+
+增加第二个模型，只有在以下证据出现后才值得提出：原始分组在真实判断路径上造成可复现的实质损失，或者明确错误合组本身需要修复；同时一个事先固定的独立核验方案，在未参与编写方案的读者审查下，能减少错误，且不明显增加正确重复被拆开、漏合、误判修订、成本和延迟。它不能用自己的解释给自己打分。现在这些证据都没有，因此我不推荐先加调用。
+
+## 仍需 Alex 决定的边界与会推翻提议的证据
+
+- **身份边界：**“旧记录有多个主要事实，而新记录只重复其中一个”时，现有文字要求判断旧记录的“主要说法”，但并没有给每种多事实组合一个机械答案。若源文和既有决定仍不能解决某个边界，不能由实验者自行扩大或缩小 D381；需要把具体例子和选项交给 Alex。
+- **测量边界：**43 条重叠是原读者的分类，不是 43 条错误，也不是安全证明。若重新审查发现分类分歧，应保留原结果并另报分歧，不能改冻结材料或悄悄重算历史验收。
+- **产品决定：**如果对照显示展示方式有问题，改变标签或展示方式是否仍符合现有产品契约，需要先把实际变化和证据交给 Alex；如果需要改变分组身份或存储方式，同样不能自行决定。
+
+会让我放弃当前优先方向的证据包括：实际判断根本没有看到这些组或标签；隔离对照中，错误组与逐条展开的判断没有可辨别差异且理由充分处理了新增事实；或反过来，展开展示让读者更常把同一来源当成独立确认。后一种结果说明“逐条展开”也有代价，不能直接替代现有展示。样本不足或结果相互矛盾时，应报**无法判断**，而不是宣布没有风险。
+
+本次没有编辑文件、发送模型调用或操作正在运行的任务。
+tokens used
+130,756

@@ -1,0 +1,9 @@
+**No-go on v9 as written.** Pre-registered, blind adjudication across all three arms is acceptable as a **new diagnostic reading**, provided the original reading and its verdict remain alongside it. It is a change to the reading procedure, however, not how the current scorer settles an agreed first-reader mark.
+
+For example, if both first readers mark a named way `already_judged`, the current `settled_h` returns that agreement before consulting third readers. The proposed procedure would let two third readers overturn it. The build must explicitly implement and test that path, preserve the original verdict, and treat disagreement or `cannot_tell` in the two new rulings as unresolved under both countings. [Current scorer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/probe_score.py:82>), [v9 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md>)
+
+The remaining design issue is **uncertain classification in A3**. V9 excludes `cannot tell` parts from the removal counts and makes the check inconclusive only when they outnumber restatements in A2. A3 could appear to halve the count by producing entries the classer cannot categorise. Before building, specify how uncertainty in **both** arms affects that comparison—for example, report the range of possible counts and call it inconclusive when the result changes across that range.
+
+The recount is appropriately labelled as one person’s reading. The per-send H rule also preserves a separate failure on a mixed send; its proposed test should prove that behavior.
+
+CONSENSUS: no, because uncertainty in A3 can still make the removal check look successful, and the new adjudication must be implemented as a distinct reading rather than assumed to be the existing scorer’s behavior.

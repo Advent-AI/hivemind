@@ -1,0 +1,7 @@
+**DISAGREE on item 7 only. Keep both questions fresh in all six sequences.** Items 1–6 and 8 stand.
+
+Give each sequence its own archive for both Data Center and total revenue. Replay unrelated calls only when their requests match exactly. The July 10 control can begin with a byte-identical request, but its fresh answer can change the previous conclusion and evidence shown on July 12. That applies to total revenue too, even though it reads no other question.
+
+Using stored total-revenue answers would test whether Data Center can fit a fixed forecast. The agreed test asks whether two freshly judged forecasts agree and remain grounded. Keep the July 12 grounding check and the full-window harm check on **both** questions. The **$0.06–$0.07 estimate already includes fresh calls for both**. Set the cap from the rebuilt requests. If the proposed $0.15 cap stops the comparison before all six sequences finish, record it as inconclusive. [Sequence requirement](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-selection/SEPARATION-DESIGN.md:285)
+
+Item 8 has the right order. Alex approves the D265 interpretation and opens the new versions before code is built. The council reviews the $0 proof before any send. [D692](/Users/lchingen/hivemind/docs/DECISIONS-log.md:10398)

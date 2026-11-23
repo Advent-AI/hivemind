@@ -1,0 +1,11 @@
+**Do not treat the planned checks as sufficient to close Step 2.** The new best-match rule changes where details appear, so preserving the text alone does not show that readers notice it.
+
+**(a) Search and merge scoring.** Using the same items is acceptable for a diagnostic, but the reference is incomplete and partly discovered from earlier Jev results. Report the search score as recall on **known labelled counterparts**, with the denominator, disputed cases, missing placements and failed comparisons. It is not recall over all real repeats. A counterpart sitting in a returned group also does not mean Jev saw that counterpart: Jev sees the group’s original. Report those cases separately.
+
+For wrong merges, blind independent readers should assess every selected original–incoming pair, including previously labelled positives, against the full source; use what Jev saw separately to understand the cause. Otherwise wrong positive labels can escape review. Report clear, arguable and unjudged counts as well as the denominator and failures.
+
+Before sending, verify the seed cache against the **exact text that was embedded**, not just item IDs: `run_forward.py` assigns old vectors to newly constructed text keys. A zero-missing count alone does not prove they match.
+
+**(b) Line 3 needs another reader check.** The structural check proves text is stored, not noticed. The 25–25 result used a different multi-match convention. Rebuild all three dossiers with the new decisions and repeat the blind comparison using the frozen questions and key, reporting every answer. It remains a small diagnostic, not proof of general equivalence.
+
+**(c) Step 1.** Excluding the four untagged articles follows the current single-entity selection rule, but limits the verdict to **26 tagged articles and 42 helpful entries**. The reduced threshold was amended before sends and is not separately confirmed; disclose that, the four excluded helpful entries and prior test exposure. Report production’s test-set noise draws on the same 26 articles where available, plus failed items, source fidelity, wrong links and actual small-thesis/fragment counts. A passing recall threshold alone does not establish production readiness.

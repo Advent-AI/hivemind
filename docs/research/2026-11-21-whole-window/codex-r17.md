@@ -1,0 +1,38 @@
+**PROBE A SHARPENED CRITERION FIRST.** The registered census PASS is sound. The reason to pause is a link the gate left open: all three draws told FY2028 revenue growth to read FY2027 CPU revenue with a positive sign, even though a higher prior-year base lowers growth if FY2028 revenue is held fixed. The shown evidence supplies no next-year CPU forecast to support the positive sign. [Census result](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/CENSUS-RESULT.md:16) · [SIGN criterion](/Users/lchingen/hivemind/src/hivemind/views/links.py:32)
+
+## 1. The registered PASS holds
+
+I regenerated and read all 105 pairs across all three draws. I checked the recorded READS and SIGN choices and probabilities against their archived responses, reran the completeness check on each draw, and matched both reused responses to the corresponding July archive. All three draws count. The known positive is right **3 of 3**, none of the **114 W decisions** links, and the stores contain **zero committed links**. The ledger’s 52 Jev entries reconcile to **$0.02655387**, with no refusal or overrun. The result establishes a pass on the registered R and W cases. The positive at seq 148 is still the three July samples. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/read_census.py:65) · [Completeness check](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/window_test.py:135) · [Ledger](/Users/lchingen/hivemind/poc/data/link-census-2026-11-21/ledger.json:2)
+
+One reporting correction: `CENSUS-RESULT.md` and `census-result.md` resolve to the same summary on this checkout. Give the regenerated pair table a distinct filename, and call the 7, 8 and 5 links **proposals**. [Summary’s table reference](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/CENSUS-RESULT.md:3) · [Scorer’s pair-table output](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/read_census.py:124)
+
+## 2. Which links could hurt the reader
+
+Both directions occur, and `v21–v9` is the only pair that flips direction. Four of the eight pairs vary in presence or direction. The scores support that narrower claim. They do not establish four near-even odds of flipping on a future run. [Observed links and margins](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/CENSUS-RESULT.md:16) · [Claude’s read](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/claude-r17.md:3)
+
+| Pair | Analyst read of the supplied material |
+|---|---|
+| `v9 reads v14` | Useful. The company total gives the segment a meaningful ceiling and a company-wide estimate it can translate with an explicit mix assumption. This is D537’s case. |
+| `v2 reads v1` | Defensible. AI-cloud credit support can inform the broader commitments estimate. The reader must account for overlap with guarantees and backstops before adding amounts. |
+| `v16 reads v14` | Weak. About $20B in CPU sales sits far below the $393B company estimate. The total is a ceiling, but the shown material gives little reason for it to move the likely CPU answer. |
+| `v17 reads v16` | The clearest risk. To the extent FY2027 CPU lifts the company’s FY2027 base, it pushes FY2028 percentage growth down at fixed FY2028 sales. A positive effect needs a next-year sales mechanism the request does not show. |
+| `v21 reads v16` | Defensible. FY2027 CPU sales contribute to the FY2027 numerator. The prior-year company total is still needed to translate the contribution into growth. |
+| `v21 reads v9` / `v9 reads v21` | Data Center can inform company growth because it accounted for 92% of the reported quarter. The reverse can help only if the reader converts the growth rate with the right prior-year base and reconciles it with the total forecast it already reads. Otherwise it risks counting two estimates of the same company-wide quantity as independent support. |
+| `v35 reads v14` | Defensible. The previous year’s company total is the base for a next-year level forecast built from growth. |
+| `v35 reads v9` | Weak and potentially misleading. The request shows a prior-year segment amount and next-year company estimates, with no segment carry-forward calculation. In draw 2 the reader already receives the prior-year company total that contains the segment. |
+
+These are assessments of the inputs. The census bought no judgements, so it cannot show that any reader actually made a worse forecast. [Archived requests](/Users/lchingen/hivemind/poc/data/link-census-2026-11-21/census-1/archive.sqlite) · [READS and SIGN criteria](/Users/lchingen/hivemind/src/hivemind/views/links.py:22) · [D537](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6457)
+
+## 3. The cheaper decision
+
+The roughly **$7 estimated** comparison would tell Alex whether the **current mixture** improves judgements on old-2’s trajectory. A pass could make that version a replacement candidate. A failure could reveal harm, but would leave open whether clearer link selection would have preserved the benefit. [Paid-run estimate](/Users/lchingen/hivemind/docs/research/2026-11-21-whole-window/CENSUS-RESULT.md:39) · [D699](/Users/lchingen/hivemind/docs/DECISIONS-log.md:10505)
+
+A cents-scale probe can first test whether requiring a clear link across periods, including how the prior-year base affects a growth rate, removes the unsupported positive sign while preserving the D537 link and the 38 negative pairs. I would avoid a blanket ban on whole-to-part reading: the credit-support example shows why a component can legitimately inform an aggregate. If the sharpened wording retains the useful links and removes the unsupported ones, take that version to Alex for the judgement design. If it loses the known positive or adds wrong links, retain the current wording as the candidate and bring its measured risks to the paid-design review. The probe would select what to test next. Its result would leave the judgement-quality question open. [READS criterion](/Users/lchingen/hivemind/src/hivemind/views/links.py:22) · [AGENTS §7.3](/Users/lchingen/hivemind/AGENTS.md:346)
+
+## 4. Reusing the census draws
+
+**Yes for these three recorded graphs, subject to a $0 replay check in the paid harness.** Ordinary READS uses the opening candidate and the shown question’s text, ladder and evidence. SIGN also uses the accepted READS direction, which replays with the paired answer. Writing a link adds the dependency and can queue a reader for judgement. That queue can change later **judgement** requests and propagate along the graph. It does not enter the matcher text, and `reads` rows are excluded from filing parents. [Request construction](/Users/lchingen/hivemind/src/hivemind/views/links.py:229) · [SIGN construction](/Users/lchingen/hivemind/src/hivemind/views/links.py:263) · [Writer](/Users/lchingen/hivemind/src/hivemind/views/writing.py:153) · [Filing parents](/Users/lchingen/hivemind/src/hivemind/views/store.py:256) · [Judgement queue](/Users/lchingen/hivemind/src/hivemind/views/judging.py:327)
+
+The exception is real: the chooser checks existing stored links, and a cycle can create a new correction request and possibly a new SIGN request. I ran the production cycle check in memory, adding each draw’s proposals in article order. **None of the three graphs triggered a correction.** Before buying judgements, have the actual linked harness commit the paired proposals at $0, verify each matcher request hash and the committed graph, and stop on any new matcher request. [Stored-graph check](/Users/lchingen/hivemind/src/hivemind/views/links.py:141) · [Correction requests](/Users/lchingen/hivemind/src/hivemind/views/links.py:285) · [Archive lookup](/Users/lchingen/hivemind/src/hivemind/jev.py:87)
+
+**PROBE A SHARPENED CRITERION FIRST**

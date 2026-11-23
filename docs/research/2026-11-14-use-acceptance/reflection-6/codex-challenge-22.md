@@ -1,0 +1,10 @@
+**Do not send yet.** The date tally now reads the stored view, but the blind review lacks information it needs to judge refusals and the answer choices the product actually shows.
+
+- **Fix the review packet and brief.** The packet omits `opens_as`, the theme list and fiscal-year note. The brief’s decline list also omits justified cases such as a company’s quarterly figure and a nonannual figure without a publication date, and it lacks the binding-obligation exception for later years. Two readers could therefore agree on an erroneous refusal mark. [Review brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/review-brief.md)
+- **Show the rendered view and rungs.** The packet currently gives reviewers the model’s raw ladder, while code writes the final event rungs and may set the stored date. They need the product-rendered question and choices to judge the result. [Packet builder](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py)
+- **Make the review check enforce two complete, valid readings.** `material()` accepts however many review files it is given and does not validate each reviewer’s 36 unique items or field types. Add decisive $0 checks for a missing or duplicated row, a single reviewer, and malformed verdicts.
+- **Add known sound and defective controls** to the blind reading, with a prewritten response if they are missed. The current 36-item packet has no positive control for whether the reviewers can detect the date and question defects the decision depends on.
+
+After those corrections, recheck the launcher, cap and preflight and return for the send decision. The two completion topics remain one matter, so a successful probe is still a limited lead.
+
+**CONSENSUS: no, because the blind reading and its validation need these $0 fixes before they can support the registered verdict.**

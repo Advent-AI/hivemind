@@ -1,0 +1,7 @@
+**No-go yet: the comparison still reports individual marks as “settled” when a reading is incomplete.** It correctly suppresses the line-level failure-set comparison, but then unconditionally compares Q/L/R values. A missing ruling can appear as `"no ruling"` and be counted as a changed settled value; invalid rows can also enter that section. Suppress that comparison when either reading is not measured, or explicitly report only valid, resolved pairs as partial observations. [compare_readings.py](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/gate1-stick/compare_readings.py:71)
+
+The other corrections are present: the script refuses a missing third-reader family and checks the selected outcome fields before accounting. The saved test shows the missing ruling makes the line **not measured**, and the design now promises line 5 counts rather than identities. [compare-selftest.txt](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/gate1-stick/compare-selftest.txt)
+
+One scope point for the record: the same-sends check compares case, pass, status and answer; it does not itself prove that the full reader packets—including article and thesis—are identical. Verify those packets separately before the re-reading. [compare_readings.py](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/gate1-stick/compare_readings.py:50)
+
+CONSENSUS: no, because an incomplete reading can still produce a misleading comparison of supposedly settled marks.

@@ -1,0 +1,15 @@
+**Proceed with the $0 page-contract design.** The display slice is built, but its real-page proof remains open; the three-choice event failure blocks the library before that proof can be completed.
+
+I verified the central defect in code and in the fortnight’s stored draw: **6 of 12 questions have three choices**, while the page contract accepts only two Yes/No scores or five ordinal scores. One such question makes the dataset fail validation. I did not independently reproduce the other stores’ census. [contract.js](/Users/lchingen/hivemind/poc/ui/src/model/contract.js:78)
+
+The design needs to cover more than accepting a third row:
+
+- **Events:** D409’s Yes / Ruled out / Still open are outcomes. Assigning them positive, negative or neutral scores by position would invent a business direction. The current two-choice fallback also maps unfamiliar labels by position to Yes/No, so include two-choice events in the audit. [D409](/Users/lchingen/hivemind/docs/DECISIONS.md:753), [bundle adapter](/Users/lchingen/hivemind/poc/ui/src/adapters/bundle.js:46)
+- **Figures:** preserve the registered favourable direction for company figures and examine theme figures separately. Trace the consequences through the card, history chart, score definitions and Idea composite; accepting the dataset alone would not prove that those readers represent it correctly. [D398](/Users/lchingen/hivemind/docs/DECISIONS.md:742), [thesis model](/Users/lchingen/hivemind/poc/ui/src/model/thesis.js:1)
+- **Proof:** use the real fortnight store and include each observed answer shape, the current and historical answer, unjudged questions, and the older production dataset. The falsifier is a page that cannot show the stored outcome faithfully or that invents a score needed by a downstream reader.
+
+The council can prepare and review a **presentation design** under D439 while Alex is inactive. If the design changes what a score means or makes an event usable in an investment composite, state that as a product choice with its consequences; do not silently infer a direction. Keep Alex’s separately reserved gate and D520 decisions in their existing order.
+
+One correction to the display-slice record: `page_store.py` compares selected judgement and ladder columns, not every column of every row. It also checks archive identity and call counts rather than equality of the complete request sequence. Report the proof at that scope or extend it before claiming full equality. The drawer’s browser proof—and its direct drawer checks required by the design—remain pending. [page_store.py](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/not-judged-display/page_store.py:21), [display design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/not-judged-display/DESIGN.md:44)
+
+CONSENSUS: yes

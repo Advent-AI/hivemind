@@ -1,0 +1,1 @@
+CONSENSUS: (a) Close the comparison loop, keep the old system running, and stop paid work. The probe missed its target, and the roughly $110 release test exceeds the $40 ceiling. Reconsider if Alex reverses D505 or funds a full run. Before spending, show a path to passing the frozen criteria.

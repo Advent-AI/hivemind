@@ -1,0 +1,495 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 7: the paired gate-3 comparison closes (`reflection-6/paired-gate3/RESULT.md`); gate 1's model lever, checked against D439
+
+**Gate 3, paired.**
+- The six unread weeks (07-20 to 08-24) give the old system 49 questions and the new system about 30 to 40. That is about 15 to 20
+  matched matters.
+- Exact McNemar power at 80% then needs a 44 to 49 point difference in supported answers, or none is reachable. Even all 49 matched
+  needs 22 to 29 points, against the unpaired 31.
+- By your condition it closes.
+
+**Gate 1, your round-6 point:** "changing a model [does not] necessarily change credentials or provider caps. Those constraints must
+be checked for a specific model and transport." I had conflated the two.
+
+- The step runs `gpt-6-luna` on the OpenAI provider (`model.build_request`, `openai_transport`, the key read by `model._key` from the
+  owner-only credentials file).
+- A stronger model on the same provider uses the same credential and transport, and touches no provider cap. The decision is to switch
+  a model explicitly and record it: AGENTS forbids only a silent switch.
+- Its price must come from the provider's published rates (AGENTS §7.2) and be added to `model.PRICES` with its source, or the budget
+  cannot reserve it.
+
+**My proposal, at $0 first:**
+1. List the models the OpenAI provider offers through the existing credential and transport: one read-only `GET /v1/models` call
+   through the production key reader, which writes no key anywhere. Find the published rate of any stronger model.
+2. If one exists, prepare a matched comparison like D625's: the frozen step on `gpt-6-luna` against the same request on the stronger
+   model, 3 and 3 fresh draws on the 26 topics outside the 44, read blind with the six controls, with the same outcome rule fixed before
+   (failed sends of 78).
+   - The request bytes may differ only in `model`, and in `reasoning_effort` if the model requires its own.
+   - Its cost is priced from the published rate, and it goes to its own send decision.
+3. If none exists, gate 1's model lever does exist, but only across providers, and that is outside D439. Alex's page states it as such.
+
+**Asked:**
+1. Agree that gate 3 closes.
+2. Is listing the provider's models (a free, read-only call through the production key reader) acceptable under D439 and AGENTS
+   (credentials never in arguments or logs)?
+3. Is the same-provider model comparison the right next step, and what must its design add?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the paired comparison’s assumptions and the repository’s model and spending rules, then assess the proposed discovery call and comparison without accessing credentials.
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/.codex/skills/.system/openai-docs/SKILL.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/effort/RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/paired-gate3/RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,165p' src/hivemind/model.py" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D439|D509|D544|D627|D628' docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The matched reasoning-effort comparison (D625): result, 2026-11-16
+
+**Run:** six interleaved arm-draws of 26 sends on 26 topics outside the 44 (`poc/data/clean-effort-probe-2026-11-16/`). Every
+arm-draw finished, with no charge above its reserve. Spend: medium $0.077, high $0.125, $0.20 in all. There were no unreadable
+answers, so high effort met no truncation.
+
+**Reading:** 160 blind items read by both families with the full gate form. All six controls behaved as fixed, so the reading is
+valid.
+
+**The verdict under the rule fixed before: closes it.**
+
+| | medium | high |
+|---|---:|---:|
+| Failed sends (agreed hard-line faults plus code refusals), of 78 | **13** | **14** |
+| The same, unresolved points counted against | 26 | 25 |
+| Model refusals | 14 | 13 |
+| Topics failed in 2 or more high draws but in no medium draw | | week c1/clean-13 |
+
+**Independent review** (`review.md`, read-only Codex): every agreed failure in both arms is an answer error, and none is a reader
+error.
+- L is the largest class: 6 medium sends and 8 high, a part of the topic's outcome neither judged nor listed.
+- Q is next: 4 and 5, often two decisions fused into one question (US approval and Chinese acceptance).
+- R: 3 and 1. N: 2 and 2, which are the global-AI-capex refusals, judged unjustified because 2026 has its main figure.
+
+**The mechanism both arms share:** turning a topic into one answerable question loses its shape. A part is omitted, or two decisions
+are fused.
+
+**What it means for production:**
+- Reasoning effort is not the lever.
+- The frozen step fails an agreed hard line in about 1 of 6 sends on these topics (13 of 78 fresh medium sends). Gate 1's zero-fault
+  lines are far out of reach while the step's L and Q faults stay at this rate.
+- The careful Claude writer had none on the same topics (`../reference-control/RESULT.md`), so the gap is in how the step builds the
+  question, not in what the readers demand.
+
+ succeeded in 0ms:
+---
+name: "openai-docs"
+description: "Use for Codex models/pricing, scheduled tasks, skills, settings, setup, troubleshooting, customization, automations, and self-knowledge—including 'you,' 'your,' 'this app,' or 'this coding agent' when they refer to Codex—and for OpenAI APIs/products and ChatGPT Work. Also use for model choice/migration, prompting, SDKs, Responses, Realtime, agents, evals, and Chat/Work/Codex comparisons. Do not use for generic app/software tasks that merely mention Codex."
+metadata:
+  short-description: "Codex models/pricing, scheduled tasks, skills, settings, setup, troubleshooting, and self-knowledge; OpenAI APIs and ChatGPT Work. 'You'/'this app' means Codex only."
+---
+
+# OpenAI Docs
+
+Provide current, cited OpenAI product, API, model, and Codex guidance. Read zero or one primary reference.
+
+**First substantive action:** Search the user's exact requested official OpenAI documentation topic and any explicitly named model using a concise, topic-specific query of 2-6 essential terms. When an already-available direct official documentation search and page-retrieval capability is present, use it first: search, then fetch or open the matching official page before general web search. Otherwise, immediately use official-domain web search, then actually open or fetch the relevant official page. Complete this source order before reading a reference, inspecting local or repository files, running a Codex manual or model resolver, drafting a plan, or answering from memory. Use the actual fetched page, not a search snippet or an unopened link. If one official search or page does not establish the answer, search another appropriate official domain and actually open or fetch the result. Preserve the exact requested model; never substitute a newer model.
+
+**Only exception:** An explicitly requested, genuinely broad, cross-topic Codex setup, orientation, or system-map synthesis may use the manual first when shell execution and an allowed temporary cache are available. A specific Codex feature, setting, command, error, model, or requested citation remains docs-first. Mixed Chat/Work/Codex comparisons are official documentation questions, not manual-first Codex requests.
+
+For generic software tasks, answer the software task directly. OpenAI implementation, debugging, SDK, API, prompting, agent, and eval requests are not generic.
+
+For a straightforward factual or citation-only request, follow the source order and do not read a route reference. This includes straightforward API facts, ChatGPT Work or mixed Chat/Work/Codex comparisons, model tiers, aliases, Pro mode, reasoning settings, factual migration baselines, and narrow Codex facts. Prioritize `learn.chatgpt.com` for ChatGPT Work.
+
+## Choose one primary route
+
+Use the first matching route, and read its reference only when the requested task needs that specialized workflow:
+
+- **Explicitly requested local documentation integration:** Read [integration guidance](references/mcp-diagnostics.md) only when the user explicitly requests that local integration.
+- **Model migration, upgrades, or model-specific prompting:** Read [model-migration.md](references/model-migration.md) for actual migration planning, implementation, dynamic target resolution, or prompt changes. Preserve an explicitly requested target.
+- **Model selection and comparisons:** Read [model-selection.md](references/model-selection.md) only when nuanced current, latest, default, cost, latency, quality, or modality tradeoffs need more guidance. Do not run a migration resolver for selection alone.
+- **Product, API, ChatGPT Work, and mixed Chat/Work/Codex documentation:** Read [official-docs.md](references/official-docs.md) only when fetched official pages leave source selection, API schemas, or the requested implementation unresolved. This route is not manual-first.
+- **Explicitly broad Codex setup, orientation, or cross-topic synthesis:** Read [codex-self-knowledge.md](references/codex-self-knowledge.md) when the eligible Codex manual or deeper Codex procedures are needed.
+
+Read at most one primary reference. Do not open every route, bundled model guide, or helper script. Read a supporting reference or run a helper only when the chosen workflow demonstrably needs it.
+
+## Source and execution boundaries
+
+- Search, open, fetch, and cite only `developers.openai.com`, `platform.openai.com`, and `learn.chatgpt.com`. Cite the page that supports the claim. State uncertainty when official sources do not establish pricing, availability, account access, limits, or behavior.
+- Preserve an explicitly requested model for selection, migration, and prompting. Resolve an unspecified latest or current migration target only after searching and fetching current official guidance.
+- Use `references/latest-model.md` only as a disclosed fallback after current official model guidance does not answer the question. Read `references/upgrading-to-gpt-6-astra.md` only for an actual, requested GPT-6 migration; read `references/prompting-guide.md` only for requested prompting work.
+- Before building, running, editing, debugging, or testing an API-backed app or tool, use `openai-platform-api-key` first when available. Documentation, conceptual examples, model selection, and read-only guidance do not require an API key.
+- Say "OpenAI Docs" or "official OpenAI documentation" in user-facing answers. Keep exact official citations and examples concise.
+
+ succeeded in 0ms:
+# A paired gate-3 comparison on the same matters: feasibility at $0 (D627), 2026-11-16
+
+**Answer: pairing does not rescue the comparison.** It closes by the council's condition: "the material, comparability or sensitivity
+cannot support a decision within the ceiling."
+
+**The material.** The only weeks no new-system run has read are 2026-07-20 to 08-24 (`comparison-feasibility/RESULT.md`, D613). The
+old system's served three-month run opened 11, 17, 2, 2, 9 and 8 questions in those six weeks: 49 in all. The new system, from a
+carried library, opens about 5 to 7 a week (the carried fortnight: 13 topics in two weeks). Matched matters, the same bet asked by
+both, are expected at about 15 to 20 over the six weeks, given how often the side-by-side found different shapes for the same matter.
+
+**The power** (`paired_power.py` → `power-output.txt`; exact two-sided McNemar at 5%, 80% power), the difference in supported answers
+needed:
+
+| Matched pairs | 30% of pairs discordant | 50% discordant |
+|---:|---|---|
+| 15 | not reachable | 49 points |
+| 20 | not reachable | 44 points |
+| 30 | 28 points | 37 points |
+| 49 (every old question matched, an upper bound) | 22 points | 29 points |
+
+The unpaired design needed about 31 points (`comparison/COMPARISON-SIZING.md`). At the realistic 15 to 20 pairs, pairing needs more,
+not less.
+
+**Cost, not reached:** the new system's six weeks would cost an estimated $3 to $5 of the about $9.3 left, before any reading.
+
+**So:** a paired gate-3 comparison cannot decide anything that matters within what is left. This does not show the systems equal.
+
+ succeeded in 0ms:
+"""One model call, archived and replayable.
+
+`call()` sends a system and user message with a strict JSON schema to an OpenAI-compatible chat endpoint (OpenAI,
+or DeepSeek through the same wire format), checks the answer against the schema, and records the exact request and
+raw answer in an archive (SQLite, a POC artefact kept beside the test database, never inside the views database).
+A request whose sha256 is already in the archive is answered from it without a network call, so a rerun of a
+replay costs nothing and gives the same answers. The provider key is read from the owner-only credentials file and
+never appears in the archive, logs or arguments.
+"""
+import dataclasses
+import base64
+import hashlib
+import http.client
+import json
+import re
+import os
+import sqlite3
+import time
+import uuid
+import urllib.error
+import urllib.request
+
+CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
+ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
+             'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
+# USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+# the published rate; the token columns are the measurement, the bill is the provider's.
+PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
+
+SCHEMA_SQL = """
+create table if not exists model_calls (
+  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+  request_sha256 text unique, request_json text, response_json text, answer_json text, prompt_chars integer,
+  input_tokens integer, output_tokens integer, cost_usd real, seconds real, created_at text
+);
+create index if not exists model_calls_sha on model_calls(request_sha256);
+"""
+
+
+class SchemaError(ValueError):
+    pass
+
+
+class TransportError(RuntimeError):
+    pass
+
+
+@dataclasses.dataclass
+class Answer:
+    data: dict
+    call_id: int
+    request_sha256: str
+    cached: bool
+    prompt_chars: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+
+
+class Archive:
+    """Shared by the extraction worker threads: one connection, every access under a lock."""
+
+    def __init__(self, path):
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
+        self.conn.executescript(SCHEMA_SQL)
+        import threading
+        self.lock = threading.Lock()
+
+    def lookup(self, sha):
+        with self.lock:
+            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+
+    def record(self, **fields):
+        """One row per distinct request; a second identical request recorded at the same moment (two threads, or a
+        failed answer repeated within the same second) keeps the first row's id instead of failing."""
+        columns = list(fields)
+        with self.lock:
+            cursor = self.conn.execute(f'insert or ignore into model_calls ({",".join(columns)}) values ({",".join("?" * len(columns))})',
+                                       [fields[c] for c in columns])
+            self.conn.commit()
+            if cursor.rowcount == 0:
+                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+            return cursor.lastrowid
+
+    def retire(self, call_id):
+        """A code check refused this answer: the row stays for the record, but no later identical request is answered with it
+        (the same shape as a schema-refused or malformed row, whose hash carries a suffix)."""
+        with self.lock:
+            self.conn.execute("update model_calls set request_sha256 = request_sha256 || ':refused:' || ? where call_id=? and request_sha256 not like '%:refused:%'",
+                              (uuid.uuid4().hex[:8], call_id))
+            self.conn.commit()
+
+    def totals(self):
+        with self.lock:
+            return self.conn.execute('select count(*), coalesce(sum(cost_usd),0), coalesce(sum(input_tokens),0), coalesce(sum(output_tokens),0) from model_calls').fetchone()
+
+
+def _key(provider):
+    name = ENDPOINTS[provider][1]
+    if os.environ.get(name):
+        return os.environ[name]
+    with open(CREDENTIALS, encoding='utf-8') as handle:
+        return json.load(handle)[name]
+
+
+def build_request(setting, system, user, schema, schema_name, provider):
+    request = {
+        'model': setting.model,
+        'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
+        'response_format': {'type': 'json_schema', 'json_schema': {'name': schema_name, 'strict': True, 'schema': schema}},
+    }
+    if provider == 'openai':
+        request['max_completion_tokens'] = setting.max_output_tokens
+        if setting.reasoning_effort:
+            request['reasoning_effort'] = setting.reasoning_effort
+    else:
+        request['max_tokens'] = setting.max_output_tokens
+    return request
+
+
+def openai_transport(provider, request, timeout=180, max_attempts=3):   # the default preserves the production retry behavior
+    url, _ = ENDPOINTS[provider]
+    body = json.dumps(request).encode('utf-8')
+    headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
+    last = None
+    last_http = None
+    if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or max_attempts < 1:
+        raise ValueError('max_attempts must be a positive integer')
+    for attempt in range(max_attempts):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, data=body, headers=headers, method='POST'), timeout=timeout) as response:
+                raw_bytes = response.read()
+                try:
+                    raw = raw_bytes.decode('utf-8')
+                except UnicodeDecodeError:
+                    if max_attempts != 1:
+                        raise
+                    failure = TransportError('invalid UTF-8 HTTP response')
+                    failure.response_body = raw_bytes.decode('utf-8', 'replace')
+                    failure.response_body_base64 = base64.b64encode(raw_bytes).decode('ascii')
+                    failure.http_status = response.status
+                    raise failure
+                try:
+                    return json.loads(raw)
+                except json.JSONDecodeError:
+                    if max_attempts != 1:
+                        raise
+                    failure = TransportError('malformed HTTP response')
+                    failure.response_body = raw
+                    failure.http_status = response.status
+                    raise failure
+        except urllib.error.HTTPError as error:
+            body_bytes = error.read()
+            body_text = body_bytes.decode('utf-8', 'replace' if max_attempts == 1 else 'ignore')
+            last_http = (error.code, body_text, base64.b64encode(body_bytes).decode('ascii'))
+            last = f'HTTP {error.code}: {body_text[:600]}'
+            if error.code in (400, 401, 403, 404):
+                failure = TransportError(last)
+                failure.response_body = body_text
+                failure.response_body_base64 = last_http[2]
+
+ succeeded in 0ms:
+783:| D439 | 2026-11-13 | While Alex is not active, the council (independent Codex review + Claude) decides by consensus on the data and the PRD's goals; recorded, executed, measured, traces read, each round logged with its lesson; AGENTS limits stay; paid spending within $40 (Claude's setting) | in force | AGENTS.md, Authority and scope |
+786:| D442 | 2026-11-13 | Next step (council consensus, D439): D431's same-day end-to-end comparison as a diagnostic (clean path against production as it now runs (poc-v118, D370; corrected from v116), unseeded, three draws each, graded questions one by one, every lost answer read back); design frozen, $0 replay, cost estimate and council review before any send | in force | `clean-arch/step1-unfiled-2026-11-08/council/mk-codex-2.md` |
+787:| D443 | 2026-11-13 | Shape B' (council consensus, D439): the stored clean chain against fresh production v118 draws as an exploratory census of final-answer losses; one-day slice first; one $5 shared ledger (conditional on stated bounds); shape A stays owed for D427 | in force | `clean-arch/e2e-comparison-2026-11-13/DESIGN.md` |
+788:| D444 | 2026-11-13 | D443's draws stopped at the $5 ledger (an over-conservative Jev charge, $4.999 ledger against $0.98 recorded); three fresh draws from empty under a new $3 ledger with Jev settled at three times its usage (council consensus, D439); stopped draws kept as records | in force | `clean-arch/step1-unfiled-2026-11-08/council/ml-codex-9.md` |
+789:| D445 | 2026-11-13 | Census: level on graded questions, every loss at opening; next a $0 path trace of the clean path's 17 graded opening losses, memory first, no repair until a cause is found (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/RESULT.md` |
+790:| D446 | 2026-11-13 | Trace: no single mechanism; 7 certain and 2 uncertain breaches of the standard's unit rules; next a $0 audit of a narrow typed-unit contract on stored losses and correct controls, with a stop rule (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/AUDIT-CONTRACT.md` |
+791:| D447 | 2026-11-13 | Typed-unit line stopped (audit: 2 of 16 detectable, none recovered); next a reviewed $0 design for the ladder step wired end to end and a diagnostic same-day run; the send decided after its review (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/AUDIT-RESULT.md` |
+792:| D448 | 2026-11-13 | Wiring contract settled (design v4); build the wiring and its $0 proof, then code review; the slice and the full run each by its own later decision (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md` |
+793:| D449 | 2026-11-13 | Wiring code review: shared stops read before every send, launcher liveness by its registered lock, the agreed reservation bound, the real orchestration proved; redo of Step 1, Step 2, production only by a reasoned relaunch; a crash stops the run (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/run_fresh.py` |
+794:| D450 | 2026-11-13 | Launch the slice: 2026-07-01 through the wired clean path (ladder pass 1) and production v118, live, on its own $1.50 ledger; a wiring check, every trace read; the full run by a later decision (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/preflight/PREFLIGHT-SLICE.md` |
+795:| D451 | 2026-11-13 | Launch the full run: clean c1–c3 (ladder three passes) and production p1–p3 for 2026-07-01..07-14, same day, ledger $14.84; readings committed before the send (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/READING-COMMITMENT.md` |
+796:| D452 | 2026-11-13 | The full run's reading plan: census rules as written; Stage A line 5 scaled as a council-set diagnostic line (never Alex's); new planted answers for Stage B; two gates of fresh-input checks (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/READING-PLAN.md` |
+797:| D453 | 2026-11-13 | Redo c2's Step 1 from empty after a dropped response at item 56 (an eligible transport failure under D449); no ceiling change (council consensus, D439) | in force | `poc/data/clean-e2e-full-2026-11-13/c2/run.json` |
+798:| D454 | 2026-11-13 | Full run read so far: census clean ≈ production, every loss at opening; Stage A missed on fresh theses; readings continue: loss-trace marks, then Stage B (gate 2), then a reflection on question scope and deadline (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/CENSUS-FULL-RESULT.md` |
+799:| D455 | 2026-11-13 | Full run: Stage B line 3 unexercised under every treatment (0 settled, at most 4 controls with material shown); the judgement reading stops (a recorded departure from D452/D454); next the reflection on question scope and deadline (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/CENSUS-FULL-RESULT.md` |
+800:| D456 | 2026-11-13 | Next angle: trace at $0 production's kept-but-unlinked facts (phase 10's blocker) beside the clean path's delivery of the same facts; falsifiers stated; opening stays out of scope until established (council consensus, D439) | in force | `clean-arch/step1-unfiled-2026-11-08/council/mt-codex-2.md` |
+801:| D457 | 2026-11-13 | Production's unlinked facts: three mechanisms, no final-answer loss shown in this window (D456's falsifier fired); next a $0 review of the opening losses, four outcomes per case, no automatic thresholds (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/unlinked-trace/UNLINKED-TRACE-RESULT.md` |
+802:| D458 | 2026-11-13 | Opening review: shown breaches small and spread (M2 4, M4 3, M5 3, M6 2, M1 2 + 5 unresolved, M3 unresolved); largest classes left open by the standard; no opening phase; next a $0 trace of Stage A's agreed answer-choice failures (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/opening-review/OPENING-REVIEW.md` |
+803:| D459 | 2026-11-13 | Stage A's first-pass faults: no class (D458's falsifier fired); next the standard's tests on q09, q18, q05 case by case and the model's account on seven unresolved cases, ceiling $0.50 (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/stage-a-trace/STAGE-A-TRACE-RESULT.md` |
+804:| D460 | 2026-11-13 | Accounts make M1 (7 draws, both systems) and M4 (5 of 6 clean) strong leads; a standard line is missing from clean Step 1's request; next a whole-request $0 prompt audit of clean Step 1, identity first, with a blind second reader (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/opening-review/D459-RESULT.md` |
+805:| D461 | 2026-11-13 | Prompt audit of clean Step 1: identity boundaries missing (F1, F2), the shared-quantity date sentence contradicts the standard (F6); F6 designed and falsified first, identity deferred (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/step1-audit/AUDIT.md` |
+806:| D462 | 2026-11-13 | F6 (the shared-quantity date sentence) recorded as a contradiction with uncertain standalone effect (decisive in 1–2 of 26 declines); status report for Alex first, then the $0 identity comparison (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/step1-audit/f6/` |
+807:| D463 | 2026-11-13 | Identity lever: a general clause in clean Step 1 first (candidate c16), written with narrowed boundaries and two or three general examples per class, and a frozen fresh-article probe, both reviewed before any send (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/step1-audit/IDENTITY-COMPARISON.md` |
+808:| D464 | 2026-11-13 | Send the case-specific identity diagnostic (c16 v5 against c8; one fresh story per target, 7 merge and 9 negative stories, stored guards), 258 jobs under one $5 ledger; result goes back to the council, never to adoption (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/identity-probe/v2/PROBE-DESIGN-v2.md` |
+813:| D469 | 2026-11-13 | Provisional (Alex not answering, D439): empty-start measurement; the three open shapes stay concerns; the ladder-step refusal fix starts with a $0 boundary check of every "no main" refusal (council consensus) | in force | `clean-arch/step1-unfiled-2026-11-08/council/mu-codex-6.md` |
+814:| D470 | 2026-11-13 | Ladder-refusal candidate stopped (readers split on the boundary); 41 Stage A splits recorded, eight read provisionally by D414; Stage A verdict unchanged; the written-ladder line question opened for the council (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/stage-a-splits/splits.json` |
+815:| D471 | 2026-11-13 | Written-ladder line kept; ten right-by-refusal theses traced (period rule read as a horizon in three); c17 (period sentence clarified) probed on stored cases under frozen lines (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/period-probe/PERIOD-PROBE-DESIGN.md` |
+816:| D472 | 2026-11-13 | Period probe budget exception: the nine never-sent jobs sent alone under a $0.50 ceiling before any answer is read; the timed-out send stays missing (council consensus, D439) | in force | `clean-arch/step1-unfiled-2026-11-08/council/mu-codex-14.md` |
+817:| D473 | 2026-11-13 | Period candidate c17 fails (target 0 of 3; memory-price theses 10 → 3, federal 3 → 0); not adopted; Step 1 sentence changes on these articles stop (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/period-probe/RESULT.md` |
+818:| D474 | 2026-11-13 | Unsigned-deal candidate c18 (D388 at the binding-obligation definition) probed on unseen articles against the acceptance library: one target story, six negatives, guards (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/unsigned-deals/PROBE-DESIGN.md` |
+820:| D476 | 2026-11-13 | Ladder-cost comparison not sent; next: a $0 two-reader source check of the eleven first-pass refusals (worth asking apart from can be laddered), no automatic threshold (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/reachability/` |
+821:| D477 | 2026-11-13 | Reflection rounds 19–22: Stage A not passed; six of eleven refusals right, four runs reachable on paper; no H100 theme or ladder change; no more Step 1 sentence changes here; production stays default; choices written for Alex (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/reachability/RESULT.md` |
+822:| D478 | 2026-11-13 | Council takes choice 2 under D439: c19 (the first step writes each new thesis's settling figure or event and fixed outcomes, schema only) probed on 18 stored states against c8 (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/outcomes-at-opening/PROBE-DESIGN.md` |
+823:| D479 | 2026-11-13 | c19 fails (outcomes written at opening fail the standard's checks, 1 of 21; one target opened less); council takes choice 3: production stays default, next test from production's own stored losses (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/outcomes-at-opening/RESULT.md` |
+824:| D480 | 2026-11-13 | Production's opening rule probed with a price (D191.4, D368.1) on 30 stored requests: the memory-price question never opened in 6 of 6 production draws (council consensus, D439) | in force | `docs/research/2026-11-13-shared-quantity-price/PROBE-DESIGN.md` |
+825:| D481 | 2026-11-13 | Production price change fails (no memory candidate in 45 sends; fewer candidates, more no-home drops) and stops; next a $0 census of opening losses by what the article states (council consensus, D439) | in force | `docs/research/2026-11-13-shared-quantity-price/RESULT.md` |
+826:| D482 | 2026-11-13 | No further paid test on this ruler that day; production stays default; clean path unchanged, Stage A not passed; the measured map and open disputes go to Alex (council consensus, D439) | in force | `docs/research/2026-11-13-shared-quantity-price/CENSUS-BY-ARTICLE.md` |
+837:| D493 | 2026-11-14 | Reflection council (D492): every change from D439 to D491 was words in the one Step 1 call and moved a neighbour; the reader's loss is around the company's main numbers; no further request change now; next a $0 test of the kept figures assembled as a company record; the standing-question comparison stays a candidate that goes to Alex first (D370) | in force | `docs/research/2026-11-14-use-acceptance/record/RECORD-TEST-DESIGN.md` |
+853:| D509 | 2026-11-15 | Alex goes inactive ("我要睡觉了，下来你自行按照我的准则操作，需要深度的审视每一轮run 用council"): D439 in force again; Claude carries the lean path and the open defect of D506/D508 forward by his rules, each round examined in depth with the council; paid calls within D439's $40 ceiling | in force | `docs/DECISIONS-log.md` D509 |
+854:| D510 | 2026-11-15 | Under D439 (council consensus, rounds 21 and 22): the six-call test of the effect of one missing fact (Beijing's 2025 RTX Pro 6000D stop order) on the stored judgement of the RTX Pro 5500 question is sent; outcomes fixed in advance; ceiling $0.25 | in force; the test ran (D511) | `docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-DESIGN.md` |
+855:| D511 | 2026-11-15 | Under D439: the six-call test is inconclusive (all six answers "yes"; the firmness rankings overlap; the judge marked the added statement against "yes" without naming it); the delivery line pauses, the change is deferred, the defect stays open; a cold reflection council comes next (council consensus) | in force | `docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md` |
+856:| D512 | 2026-11-15 | Under D439 (reflection council "my"): neither system has earned the choice and D489 stays "not clear"; the next step is a decision page for Alex on which system carries forward, prepared and reviewed while he is away; no further reading or send before it; production stays the default (council consensus) | in force | `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-15.md` |
+859:| D515 | 2026-11-15 | Under D439 (reflection council, three readings): the decision page on which system carries forward is left for Alex; advice: keep today's default and both systems, do not choose from this evidence; the one test that could decide it is a comparison written down before it runs, opened only on his word; nothing further is sent or run on the lean path until he answers | in force; its wait superseded by D516 | `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-15.md` |
+860:| D516 | 2026-11-15 | Under D439 (reflection council round 6): D515's wait is superseded; the next step is a $0 sizing and decision-ready design of the comparison (from D484 version 3 and the stored draws), with a stop condition, reviewed by the council before a separate decision on any send | in force | `docs/research/2026-11-14-use-acceptance/comparison/` |
+861:| D517 | 2026-11-15 | Under D439 (reflection council round 7): the comparison is sized and not sent (at the proposed size it may miss differences that matter; its reliability cannot be calculated from the stored readings); no answer-choice tests to resume; the look-back not widened now; next a $0 side-by-side of the two systems' output on the fresh week, then a bounded council decision | in force | `docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md` |
+862:| D518 | 2026-11-15 | Under D439 (reflection council round 8): production stays the default and both systems stay (what would change it is named); the side-by-side is corrected and rebuilt; the next investigation is a $0 census of the stored answers readers did not pass, with a stop condition before anything is built | in force | `docs/research/2026-11-14-use-acceptance/side-by-side/`, `unsupported/` |
+863:| D519 | 2026-11-15 | Under D439 (reflection council round 9): the side-by-side is left for Alex beside the decision page; the census of unsupported answers stands as corrected (31 of 36 settled failures: an amount asked with nothing enough to size it); four neutral accounts are asked of the frozen judge on stored answers, ceiling $0.10, raw accounts back to the council before any design | in force | `docs/research/2026-11-14-use-acceptance/unsupported/UNSUPPORTED-CENSUS.md` |
+864:| D520 | 2026-11-15 | Under D439 (reflection council rounds 10 and 11): the frozen judge's four accounts read and corrected; the judge line stops at a note for Alex with a product choice and no recommendation, nothing sent or changed; next a $0 trace of the old system's three agreed duplicate question pairs through their dated requests, with a stop rule | in force | `docs/research/2026-11-14-use-acceptance/unsupported/DESIGN-NOTE.md` |
+865:| D521 | 2026-11-15 | Under D439 (reflection council round 12): the duplicate-pair trace stands as corrected (reader leads, no answer change tested); D375 (not D251) governs same-day visibility and is not yet built; the same-day candidates of four stored runs traced at $0: in four of four different-article cases the later article was read without being shown the earlier question | in force | `docs/research/2026-11-14-use-acceptance/duplicates/DUPLICATES-RESULT.md` |
+866:| D522 | 2026-11-15 | Under D439 (reflection council round 13): the four-case same-day visibility finding is a lead; the stored-request probe is not sent; first a $0 check that the questions' state before each article can be reconstructed and the reading and filing checks exercised on it, else the limitation is reported and no probe proposed | in force | `clean-arch/step1-unfiled-2026-11-08/council/my-codex-13.md` |
+867:| D523 | 2026-11-15 | Under D439 (reflection council round 14): the reading-step probe is withdrawn (its pass condition contradicted the frozen prompt); each duplicate's opening traced at $0 to the comparison step: one second question never compared with the first (keyed candidate skips the search; day-start list), the others compared and kept apart | in force | `docs/research/2026-11-14-use-acceptance/duplicates/DUPLICATES-RESULT.md` |
+868:| D524 | 2026-11-15 | Under D439 (reflection council round 15): the lean path is not closed; the duplicate trace stands with qualifications; next a reviewed $0 design and deterministic proof of D375's per-article list on the historical state and the production entry point, with fake external comparisons and a stop rule; nothing frozen changes, nothing is sent | in force | `docs/CURRENT_STATE.md` (the one next task) |
+869:| D525 | 2026-11-15 | Under D439 (reflection council round 16): the D375 proof's first design is not built; the state before the tested article is rebuilt at $0 by the production replay from stored answers; six revisions (synthetic request boundaries, real interruption and resume, the as-of list invariant, full state comparison, allowed differences) go back to the council as version 2 | in force | `docs/research/2026-11-14-use-acceptance/duplicates/D375-PROOF-DESIGN.md` |
+870:| D526 | 2026-11-15 | Under D439 (reflection council round 17): the D375 proof's design is accepted for building with its recovery comparison corrected (same bounded comparison point, expected audit differences checked by content, a real mid-write failure with rollback verified); the unread dropped-statement lead does not come first | in force | `docs/research/2026-11-14-use-acceptance/duplicates/D375-PROOF-DESIGN.md` (version 3) |
+871:| D527 | 2026-11-15 | Under D439 (reflection council round 18): the D375 proof's four stages recorded as case-specific wiring findings with labelled fake answers; the registered proof has not passed; its missing checks (same-day closure, groups and names as shown, failing checks for allowed differences, a later article behind an interrupted one) come first, then a separately reviewed, priced measurement design | in force | `docs/research/2026-11-14-use-acceptance/duplicates/D375-PROOF-RESULT.md` |
+872:| D528 | 2026-11-15 | Under D439 (reflection council round 19): the D375 proof gets row-level checks and required failure records before it is called passed; the measurement of D375 is designed small, with a truthful request, complete days holding same-day openings, a same-day default control, a prediction on facts received by the final judgement and a harm control; the council reviews it before any send | in force | `clean-arch/step1-unfiled-2026-11-08/council/my-codex-19.md` |
+873:| D529 | 2026-11-15 | Under D439 (reflection council round 20): the D375 proof accepted as a passed, bounded serial proof; the fresh week's identified same-day facts traced into the final judging requests at $0: most arrived within days; the data-center revenue question never received the next quarter's guidance or a market estimate of the year (the question whose answer both teams called unsupported); returned to the council as an eligible case | in force | `docs/research/2026-11-14-use-acceptance/d375-measure/SAME-DAY-CASES-RESULT.md` |
+874:| D530 | 2026-11-15 | Under D439 (reflection council round 21): the data-center revenue answer is a confirmed missing-input case (cause and D375's effect unresolved); the six-call judge test is not sent; next a $0 sizing of that mechanism on the census's settled unsupported answers, with a stop rule | in force | `clean-arch/step1-unfiled-2026-11-08/council/my-codex-21.md` |
+875:| D531 | 2026-11-15 | Under D439 (reflection council round 22): the missing-input sizing stands as corrected (three of ten answers on two matters; a later-linking decision in the new system); the two filing decisions traced at $0: each was made by a frozen piece's written rule working as written (takes lines at reading; the later-linking question's wording); a lead on unwritten dependencies in the old system | in force | `docs/research/2026-11-14-use-acceptance/missing-input/FILING-TRACE-RESULT.md` |
+876:| D532 | 2026-11-15 | Under D439 (reflection council round 23): the two filing decisions stand as traced, no common mechanism established; D368 already decides the dependency selection the default path lacks; next a bounded $0 trace of the trial's 19 undelivered facts against stored relationships, D368's direction and the conclusion a judge would receive, with a stop rule | in force | `clean-arch/step1-unfiled-2026-11-08/council/my-codex-23.md` |
+877:| D533 | 2026-11-15 | Under D439 (reflection council round 24): this stretch of the lean investigation is closed and consolidated on the decision page (section 7); the default and both systems stay; D375 and D368 are Alex's decisions awaiting implementation and acceptance; next a separate $0 assessment of D368's dependency channel on a stored, correctly directed case, with a stop rule | in force | `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-15.md` (section 7) |
+878:| D534 | 2026-11-15 | Under D439 (reflection council round 25): the dependency-channel assessment corrected (its lines were built from conclusions judged after the receiver; eight edges into two questions); before any measurement design, a $0 chronology for the two receiving questions and an ordering-and-propagation proof with labelled fake judgement outputs, with a stop rule | in force | `docs/research/2026-11-14-use-acceptance/dependency-channel/CHANNEL-ASSESSMENT.md` |
+879:| D535 | 2026-11-15 | Under D439 (reflection council round 26): the one-chain ordering proof of D368's direction accepted as a bounded wiring result; before any measurement design, a source-backed decision-relevant case among the supporting lines and a verified rebuild of the state of 2026-07-14 before its judging round, both at $0 | in force | `docs/research/2026-11-14-use-acceptance/dependency-channel/CHANNEL-ASSESSMENT.md` |
+880:| D536 | 2026-11-15 | Under D439 (reflection council round 27): no measurement of the reversed reading direction is sent now (D368 item 4 stays recorded, awaiting build and measurement; the harness is kept); next, at $0, a design census of where dependency selection could act in the stored unseeded fresh week, with a stop rule | in force | `docs/research/2026-11-14-use-acceptance/dependency-channel/CHANNEL-ASSESSMENT.md` |
+881:| D537 | 2026-11-15 | Under D439 (reflection council round 28): the dependency-selection census of the unseeded fresh week has one clear case (data-center revenue reading total revenue) and negative controls; before any send, a stored-data proof of the edge's effect on filing and judging, with a stop rule | in force | `docs/research/2026-11-14-use-acceptance/dependency-selection/DEPENDENCY-SELECTION-CENSUS.md` |
+882:| D538 | 2026-11-15 | Under D439 (reflection council round 29): one dependency edge shows the intended conclusion to the judge (conditional proof) and removes seven filing links through the narrowest rule; the dependency slice's design is opened at $0, beginning with the separation of the edge's two uses; no send, no frozen piece changed | in force | `docs/research/2026-11-14-use-acceptance/dependency-selection/EDGE-PROOF-RESULT.md` |
+883:| D539 | 2026-11-15 | Under D439 (reflection council round 30): the separation of a dependency edge's two uses (kind set by the writer; judging and filing each read one derived relation) is kept as a candidate; its design continues at $0 (duplicate and old-row contracts, the D265 and D207 reading with its cost, completed tables, a proof through real writers) | in force | `docs/research/2026-11-14-use-acceptance/dependency-selection/SEPARATION-DESIGN.md` |
+884:| D540 | 2026-11-15 | Under D439 (reflection council round 31): the separation stays a provisional research candidate (not applying the narrowest rule to a chosen dependency is a provisional interpretation, not a product rule); no judge call; the filing and duplicate-label contracts are finished at $0 first, with a stop if homes cannot be expressed or a label's meaning would have to be invented | in force | `docs/research/2026-11-14-use-acceptance/dependency-selection/SEPARATION-DESIGN.md` |
+885:| D541 | 2026-11-15 | Under D439 (reflection council round 32): the seed edge's label (`last_end`, defined nowhere) stops everything that touches a seed edge and is given no meaning; the filing finding is a bounded hand reading; the unseeded failure-and-reader contract is finished at $0 before the separation is called sound | in force | `docs/research/2026-11-14-use-acceptance/dependency-selection/SEPARATION-DESIGN.md` |
+886:| D542 | 2026-11-15 | Under D439 (reflection council round 33): the dependency stretch (D533 to D542) is closed with the separation of an edge's two uses recorded as a provisional candidate, not sound for build; the status is consolidated to one next task; nothing sent; no general stopping rule adopted | in force | `docs/research/2026-11-14-use-acceptance/dependency-selection/SEPARATION-DESIGN.md` |
+887:| D543 | 2026-11-15 | Under D439 (a cold reflection council on the whole lean path): D518 stands with its reasons (continuity; the new path not ready), the quality of the two systems' answers is not ranked, the choice of system is not made in Alex's place, and no investigation is opened; the pages corrected for a cold reader | in force, except its deferral of the choice of system, withdrawn by D544 | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-1.md` |
+888:| D544 | 2026-11-15 | Under D439 (council consensus): the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates; both remain; reversal conditions and a $5 checkpoint recorded; next, a $0 review of the fresh week's answer choices against the six lines | in force | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-3.md` |
+889:| D545 | 2026-11-15 | Under D439 (council consensus): the fresh week's answer choices read by two readers apart and traced to the judge; an omitted-clause fault of line 2 recorded, its repair deferred; ranges written without a figure and overrun by the first filed amount found on two questions (and one of the old system's); next, a $0 census of amount ranges in both systems | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md` |
+890:| D546 | 2026-11-15 | Under D439 (council consensus): the census of 49 amount questions closes the general range design for now (12 opened without a comparable amount, 9 of them on an end range, mostly one matter; the trigger of three further matters not met); next, a prompt audit of the omitted-clause fault of the answer-choice step, ceiling $0.05 | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md` |
+891:| D547 | 2026-11-15 | Under D439 (council consensus): the audit of line 2 finds an undefined term ("the topic's wording"); the description-only reading is refused (D397, D436); the recount against the July rulings finds no omission recurring on two questions under an agreed reading: no prompt change; the frozen step untouched | in force | `docs/research/2026-11-14-use-acceptance/fresh-ladders/PROMPT-AUDIT-LINE-2.md` |
+892:| D548 | 2026-11-15 | Under D439 (council consensus): the gates the new system must pass, listed from the record (Stage A on Alex's lines; Stage B; the end-to-end comparison; use on unseen news as proposed lines; integration); the first blocker is the worthwhile questions its answer-choice step declines, framed at $0 | in force | `docs/research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md` |
+893:| D549 | 2026-11-15 | Under D439 (council consensus): no candidate change for the questions the answer-choice step declines; one more week of news is prepared for a diagnostic reading of the answer choices (rule fixed beforehand; ceiling $3.50), the send conditional on exposure, price and run checks | in force | `docs/research/2026-11-14-use-acceptance/second-week/DESIGN.md` |
+894:| D550 | 2026-11-15 | Under D439 (council consensus): the one-week diagnostic of the answer choices is sent as its third design (the new week judged apart; a bounded exposure claim with two counts; outcomes as evidence; a reading sized to the population); pipeline ledger ceiling $3.95 in place of D549's $3.50 | in force | `docs/research/2026-11-14-use-acceptance/second-week/DESIGN.md` |
+895:| D551 | 2026-11-15 | Under D439 (council consensus), with Alex's pause: the week's run stalled on a call cut by the machine sleeping and is frozen; at his return it is continued as a second part after $0 proofs, inside the unchanged $3.95 (the continuation's ledger about $2.70); the first step's unbounded call timeout is a defect, its fix decided apart | in force | `docs/research/2026-11-14-use-acceptance/second-week/RUN-STALL-2026-11-15.md` |
+896:| D552 | 2026-11-15 | Under D439 (council consensus), on Alex's "continue": each call of the new system's first step waits at most 600 seconds on a silent connection (tests and a mutant); the week's run is continued as a second part on a ledger of $2.699577 after the $0 split and entry proofs; an unfinished second part stops before the matching step | in force | `clean-arch/step1/live.py`; `docs/research/2026-11-14-use-acceptance/second-week/split_proof.py` |
+897:| D553 | 2026-11-15 | Under D439 (council consensus): after the continued first step only the topics and the answer choices are run, the matching and the judge recorded as not run (eight lost attempts charged at their reservations left no room for them); no ceiling raised; proved at $0 with a full positive control | in force | `docs/research/2026-11-14-use-acceptance/second-week/choices_full_control.py` |
+898:| D554 | 2026-11-15 | Under D439: the one-week diagnostic of the answer choices is read and recorded as evidence, not as a gate: not clean on both counts (9 of 39 attempts declined on 4 of 13 topics; three zero-fault lines missed on agreed faults); the largest reason for declining, over every stored run, is a topic that asks two things, which is D397's known open defect | in force | `docs/research/2026-11-14-use-acceptance/second-week/RESULT.md` |
+899:| D555 | 2026-11-15 | Under D439 (council consensus): the work stays on the new system; next a $0 study of the boundary of "no main part" on the nine declined topics and the D469/D470 cases, with a stop condition; Claude's first-named rule refused (D397, D469, D470); no change to the frozen step, no send | in force | `docs/research/2026-11-14-use-acceptance/second-week/RESULT.md` |
+900:| D556 | 2026-11-15 | Under D439 (council consensus): no candidate for the "no main part" refusals among those considered; next, at $0, one map of every stored topic short of the first gate (104 topics, four readings kept apart), with overlapping and unresolved causes, reconciled to each report; it cannot by itself prove the gate out of reach or trigger D544's reversal | in force | `docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md` |
+901:| D557 | 2026-11-15 | Under D439 (council consensus): the map of the first gate accepted with one correction; D400's lines stay as written and no pass is claimed; the record shows no bounded way to bring the four zero-fault lines to zero together (a delivery risk, not a reversal); next, at $0, one prompt audit of the event-reference class and the unlisted-part class with an independent second read | in force | `docs/research/2026-11-14-use-acceptance/second-week/FIRST-GATE-MAP.md` |
+902:| D558 | 2026-11-15 | Under D439 (council consensus): the audit of the event-reference and unlisted-part classes finds no bounded, product-relevant repair ready; D400's lines unchanged, the first gate recorded as not met; put to Alex: that record and one request, to finish the unfinished week as a diagnostic (matching and judge, pipeline ledger at most $0.80) after a $0 proof of the continuation; nothing sent without his word | in force; its proposed next task superseded by D559 | `docs/research/2026-11-14-use-acceptance/second-week/PROMPT-AUDIT-TWO-CLASSES.md` |
+909:| D565 | 2026-11-16 | Under D439 (council rounds 12 to 16): the six contested answers of the fortnight traced (no candidate read would move any; too little evidence and question forms); D520's open choice turned into one bounded diagnostic of the frozen judge's self-report on 45 Stage B figure answers, frozen design and decision rule, ceiling $0.45 | in force | `docs/research/2026-11-14-use-acceptance/self-report/DESIGN.md` |
+910:| D566 | 2026-11-16 | Under D439 (council rounds 17 to 24): the D520 line closed (the judge's self-report does not separate; the readers' source check unclear; the choice stays Alex's); production's replay completes a day at the last sequence it wrote (a closing on a day without items was invisible at the next day's start); the new system's loop to close due questions as production does, one owner of the sequence, as designed | in force | `docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md` |
+911:| D567 | 2026-11-16 | Under D439 (council rounds 25 and 26): the new system's daily loop closes due questions with production's closing step, walks calendar days and owns its store sequence; accepted on tests, mutants, the unchanged extension proof and a replay to 2027-04-02; next a $0 check of gate 1's reading method on independently established sound answer choices | in force | `docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md` |
+912:| D568 | 2026-11-16 | Under D439 (council rounds 27 to 31): gate 1's reading of the fortnight repeated from the start by the unchanged tooling (identical packets, fresh readers and third readers of both families) and compared send by send by the gate's own accounting; it reports agreement and difference only; the lines unchanged | in force | `docs/research/2026-11-14-use-acceptance/gate1-stick/DESIGN.md` |
+913:| D569 | 2026-11-16 | Under D439 (council round 32): gate 1's verdict reproduced by its method on the fortnight (not a validity proof); D397's 'shown beside the answer as not judged' is missing from the product's page; next a $0 design and proof of that display path, judgements unchanged | in force | `docs/research/2026-11-14-use-acceptance/gate1-stick/RESULT.md` |
+914:| D570 | 2026-11-16 | Under D439 (council rounds 33 to 37): D397's parts not judged carried to the product's page (bundle, closed schema, adapter, snapshot, drawer; unit-proved, browser proof pending); the page refuses the new system's three-choice events (gate 5's third defect); next a $0 design of the page contract for the new system's answer shapes | in force | `docs/research/2026-11-14-use-acceptance/not-judged-display/DESIGN.md` |
+915:| D571 | 2026-11-16 | Under D439 (council rounds 38 to 40): the product page reads the new system's events, theme ranges and unrecorded shapes without inventing a direction (neutral, outcome or range named, no composite) and shows D397's parts not judged; proved by tests, mutants and the fortnight's page in headless Chrome | in force | `docs/research/2026-11-14-use-acceptance/page-contract/RESULT.md` |
+916:| D572 | 2026-11-16 | Under D439 (council rounds 41 to 43): the page slices of D570 and D571 accepted after round 41's four fixes and the drawer checks; next a $0 check of the API serving a new-system store to the page, before and after a closing | in force | `docs/research/2026-11-14-use-acceptance/page-contract/RESULT.md` |
+917:| D573 | 2026-11-16 | Under D439 (council round 44): the API serves a new-system store to the page (dates, closings, shapes, the page's cards); the page's one-time read and date clamp observed; next a $0 check of serving while a stored replay writes | in force | `docs/research/2026-11-14-use-acceptance/page-contract/SERVE-RESULT.md` |
+918:| D574 | 2026-11-16 | Under D439 (council rounds 45 to 50): a freshly opened page shows the served library's latest completed day (the startup read passes the served day; later replacements clamp as before); a live store's first day in progress is an open defect (a race-free guard not built); next, the $0 live-service design | in force | `docs/research/2026-11-14-use-acceptance/page-contract/LIVE-READ-DESIGN.md` |
+919:| D575 | 2026-11-16 | Under D439 (council rounds 51 and 52): the live-service design paused as recorded input; one consolidated decision page for Alex now; then a $0 feasibility census of Stage B's control line within its fixed population, no paid send implied | in force | `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md` |
+920:| D576 | 2026-11-16 | Under D439 (council rounds 53 to 58): Alex's page stands; Stage B's control line cannot be exercised by re-sending the judge (4 of 8; the blockers set upstream); no delivery check; next, at $0, a census of the unlisted-parts class (line 2) now that the page reads the list, back to the council before any arm | in force | `docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md` |
+921:| D577 | 2026-11-16 | Under D439 (council rounds 59 to 65): the unlisted-parts probe of arm A (the topic's wording defined as its description and outcome) sent on 18 stored requests, unchanged and changed ×3 the same day, read blind with planted controls and scored by a rule fixed before the send; a diagnostic, not acceptance | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN.md` |
+922:| D578 | 2026-11-16 | Under D439 (council round 66): arm A's probe negative under both countings (no unlisted parts in changed written answers against 4-5 control topics, but 2 unjustified refusals); the line stops; two bounded accounts of the refusals ($0.02 ceiling) before any further design | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md` |
+923:| D579 | 2026-11-16 | Under D439 (council round 67): the two refusal accounts apply line 6's decline rules to the outcome's words; the proposed outcome-only exemption refused (D397, D417); a bounded $0 audit of the decline rules and the outcome's extra parts, then a sourced rule or no candidate | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md` |
+924:| D580 | 2026-11-16 | Under D439 (council rounds 68 and 69): no reviewed repair for the unlisted parts (the decisions give no general rule for the main part of a multi-part topic; an independent reader left 29 of 63 open); arm A stays stopped; next, a $0 check of the Idea planner on new-system answer shapes | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/DECLINE-AUDIT.md` |
+925:| D581 | 2026-11-16 | Under D439 (council rounds 70 to 72): the Idea planner shows a three-choice event as Yes and Still open; the event-driver design parked as recorded input; no bounded gate-moving candidate on the record; paid work and new lines held until Alex returns or the council names one | in force | `docs/research/2026-11-14-use-acceptance/idea-planner/RESULT.md` |
+948:| D604 | 2026-11-16 | Under D439 (council round 145): the next production step is a $0 trace of the fresh topics' line-5 failures (each topic's three control answers beside topic, source and settled marks; the mark that changes its status under each counting; family agreement; product visibility), mapped to existing censuses before any candidate; closes this route if no sourced common mechanism | in force | `reflection-4/council-codex-145.md` |
+949:| D605 | 2026-11-16 | Under D439 (council rounds 146, 147): D604's line-5 route closes with no candidate (fresh misses are reference choices whose rule-following form gives the same answer choices, a stopped class, Alex's boundary, and a reader discrepancy on D414); the gate stays unmet; no paid send without a new reviewable candidate; resume on Alex's rulings or new evidence | in force | `unlisted-parts/fresh-a2/line5/RESULT.md` |
+950:| D606 | 2026-11-16 | Under D439 (council round 148), reversibly: next product test from a real earlier library (empty starts as diagnostics); Alex's six lines and accounting stay in force; postponement provisionally reads Still open (reversed by D607); D520/D571 running behaviour retained; P1 not taken; next a $0 audit of the postponed-event class (by topic and matter, full rungs, guards) | in force | `reflection-4/council-codex-148.md` |
+951:| D607 | 2026-11-16 | Under D439 (council round 149): D606's postponement reading reversed provisionally (a formal decision that a dated event will not happen by its due day rules it out; authorities by D420; forecast-versus-decision guard kept); the postponement repair route closes (no missing general rule; Taiwan p3 isolated); next a $0 audit of the shared fiscal-year note's consumers and effects | in force | `unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md` |
+952:| D608 | 2026-11-16 | Under D439 (council round 150): the fiscal-note lead closes as cleanup-only (no demonstrated product effect; the clause is not inert because check 5 refuses a pre-year-end day; the reader split's cause not established); a reflection council (fresh Codex, cold read) follows | in force | `unlisted-parts/fresh-a2/fiscal-note/RESULT.md` |
+953:| D609 | 2026-11-16 | Under D439 (reflection council, cold Codex read): the next production step is a $0 source-to-request trace of the company's own figures on the carried fortnight (D505), by member, with time, duplicate, population and relevance controls and an independent second reader on bearing cases; moves only on a shared, consequential delivery mechanism | in force | `reflection-5/codex-cold.md`, `reflection-5/codex-challenge-1.md` |
+954:| D610 | 2026-11-16 | Under D439 (reflection council): the company-figure delivery route closes narrowly (5 bearing undelivered statements on 3 questions, two mechanisms, none predicted to move an answer by a blind second reader with working controls; 49 groups homeless by D382/D384); no v12 effect test; next a $0 feasibility review of a same-news product comparison from established libraries | in force | `delivery-trace/RESULT.md` |
+955:| D611 | 2026-11-16 | Under D439: the same-news comparison from established libraries closes (D517's power arithmetic unchanged by a starting library; the old library ends 08-28; no exposure-free week remains from 09-21 to 10-26); nothing run | in force | `comparison-feasibility/RESULT.md` |
+956:| D612 | 2026-11-16 | Under D439 (council round 151): paid work held on the currently supported candidates (every bounded route closed with evidence; A2 cannot be decided on stored topics); the running system stays the default; reopen on new consequential delivery cases, decidable comparison material, Alex's marks or decisions, or a new concrete reversible candidate | in force | `reflection-4/council-codex-151.md` |
+957:| D613 | 2026-11-16 | Under D439 (council round 152): D611's exposure claim corrected (07-20..08-24 unread by any new-system Step 1 run); D612's hold stands; official gate 1 already meets lines 2 and 5 on the 44 and misses zero-fault lines 1, 3, 4 by 6 sends of 131 of different meanings; no code check or send on them | in force | `reflection-4/council-codex-152.md` |
+958:| D614 | 2026-11-16 | Under D439 (council round 153): the refusal census (174 over 30 topics; 13 unjustified on 6, all 'none main') maps to the closed main-part class; D612 stands; next a $0 design review of splitting (separate topics vs two judged questions under one topic) against D397, D436, D38 with the guards; no version opened, D397 unchanged | in force | `refusal-census/RESULT.md` |
+959:| D615 | 2026-11-16 | Under D439 (council round 154): the period split (D38's one view a year; the step names a typed 'one quantity for two periods' case, code splits by the years named) is developed at $0 as a lead on D397's open defect; no gate movement claimed; probe only after a reviewed design | in force | `splitting/DESIGN-REVIEW.md` |
+960:| D616 | 2026-11-16 | Under D439 (council rounds 155 to 158): the period split's design v4 accepted for a $0 scratch build beside the frozen ladder step; the narrow D397 departure (one judged question per open year for one quantity over two open years) recorded as a reversible proposal, not in force; Stage B readers refuse split stores; nothing sent | in force | `splitting/DESIGN.md` |
+971:| D627 | 2026-11-16 | Required outcome-parts field closed by construction (an omission from both lists passes); council: no accepted gate-1 candidate (not exhaustion); Alex's page reports the impasse, model switch an unproven lead; next a $0 feasibility design for a paired gate-3 comparison on the same matters | in force | `reflection-6/codex-challenge-6.md` |
+
+codex
+The paired comparison closes under its stated sizing assumptions. I’m checking the official API description for what a model-list response actually proves about access.
+web search: 
+web search: site:platform.openai.com/docs api list models available model capabilities
+codex
+**I agree with the same-provider model investigation as the next step.** A model-list call can be read-only under D439; it does not change a credential or a spending cap.
+
+1. **Gate 3:** close the proposed paired comparison under its prewritten condition. Its **15–20 matched matters are an estimate**, not an observed count; the power calculation depends on the assumed disagreement rates and independence. It does not prove that every possible comparison is futile or that the systems are equal. [Paired result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/paired-gate3/RESULT.md)
+
+2. **Listing models:** yes, a single read-only request using the existing key reader is within the stated boundary, with the key kept out of arguments, files and logs. The current production transport is a **POST to chat completions**, so listing models needs a separate GET; it should not alter that transport. Also, `_key` prefers the environment variable over the credentials file, so the result is for whichever existing key it actually selects. [Model code](/Users/lchingen/hivemind/src/hivemind/model.py:102)
+
+   A listed model is a **candidate**, not proof that it supports this exact endpoint, strict schema, output cap and effort setting, or that it will do better. An unsuccessful listing also does not prove no suitable same-provider model exists. Verify published capabilities and prices separately; do not print account-sensitive response details. [Official OpenAI model documentation](https://platform.openai.com/overview?lang=fr), [official pricing](https://platform.openai.com/pricing/)
+
+3. **Comparison design:** use the matched six-draw design as the starting point, with these additions before a send decision:
+
+   - Select **one named, priced model** and cite its published rates. Check the exact request’s documented compatibility; any necessary parameter difference must be disclosed, so the test is described as a model-and-setting comparison.
+   - Price **both arms**, worst-case reservations, retries and output limits against the remaining ceiling. Do not change credentials or provider caps. Validate the pricing calculation and stop behaviour at $0.
+   - Keep the **26 topics outside the 44**, fresh interleaved draws, blind reading and all six controls. Count code refusals and incomplete outputs as failures, and retain an inconclusive outcome for insufficient signal.
+   - Register the move, close and inconclusive results before sending. Read every regression against its topic and source. These 26 topics have been exposed during development, so improvement is a **candidate lead**, not production acceptance.
+   - Keep D426’s prohibition on tuning and a fifth Stage A on the 44; a later acceptance route needs its own decision consistent with it.
+
+The scope remains a **$0 discovery and design**, with a separate council decision before paid calls. I did not access credentials or make the model-list request.
+
+**CONSENSUS: Close this paired comparison; perform the read-only same-provider model discovery and prepare one priced, matched candidate for a separate send decision.**
+tokens used
+746,351
+**I agree with the same-provider model investigation as the next step.** A model-list call can be read-only under D439; it does not change a credential or a spending cap.
+
+1. **Gate 3:** close the proposed paired comparison under its prewritten condition. Its **15–20 matched matters are an estimate**, not an observed count; the power calculation depends on the assumed disagreement rates and independence. It does not prove that every possible comparison is futile or that the systems are equal. [Paired result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/paired-gate3/RESULT.md)
+
+2. **Listing models:** yes, a single read-only request using the existing key reader is within the stated boundary, with the key kept out of arguments, files and logs. The current production transport is a **POST to chat completions**, so listing models needs a separate GET; it should not alter that transport. Also, `_key` prefers the environment variable over the credentials file, so the result is for whichever existing key it actually selects. [Model code](/Users/lchingen/hivemind/src/hivemind/model.py:102)
+
+   A listed model is a **candidate**, not proof that it supports this exact endpoint, strict schema, output cap and effort setting, or that it will do better. An unsuccessful listing also does not prove no suitable same-provider model exists. Verify published capabilities and prices separately; do not print account-sensitive response details. [Official OpenAI model documentation](https://platform.openai.com/overview?lang=fr), [official pricing](https://platform.openai.com/pricing/)
+
+3. **Comparison design:** use the matched six-draw design as the starting point, with these additions before a send decision:
+
+   - Select **one named, priced model** and cite its published rates. Check the exact request’s documented compatibility; any necessary parameter difference must be disclosed, so the test is described as a model-and-setting comparison.
+   - Price **both arms**, worst-case reservations, retries and output limits against the remaining ceiling. Do not change credentials or provider caps. Validate the pricing calculation and stop behaviour at $0.
+   - Keep the **26 topics outside the 44**, fresh interleaved draws, blind reading and all six controls. Count code refusals and incomplete outputs as failures, and retain an inconclusive outcome for insufficient signal.
+   - Register the move, close and inconclusive results before sending. Read every regression against its topic and source. These 26 topics have been exposed during development, so improvement is a **candidate lead**, not production acceptance.
+   - Keep D426’s prohibition on tuning and a fifth Stage A on the 44; a later acceptance route needs its own decision consistent with it.
+
+The scope remains a **$0 discovery and design**, with a separate council decision before paid calls. I did not access credentials or make the model-list request.
+
+**CONSENSUS: Close this paired comparison; perform the read-only same-provider model discovery and prepare one priced, matched candidate for a separate send decision.**

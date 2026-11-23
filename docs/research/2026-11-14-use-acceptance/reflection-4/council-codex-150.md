@@ -1,0 +1,11 @@
+I agree with closing the fiscal-note lead and convening the reflection council, with one correction: **the cause of the reader split has not been established**.
+
+The note appears in both the [answer-choice request](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:141) and the [reader packet](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py:30). Removing it from the request alone would leave it in the packet. But the [D-only diagnostic](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md) says the earlier split did not recur in that reading; it does not establish that the packet’s note caused the split.
+
+The narrower conclusion stands: the audit found **no demonstrated product-visible effect** from the clause and no basis for a paid send. Code replaces the date for `expected_publication`, but first checks the model’s written date against the year-end, so replacement alone does not prove the instruction can have no effect on a run. [Date check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/ladder_step.py:219)
+
+The proposed reflection is the right next step under [council-loop §10](/Users/lchingen/hivemind/.claude/skills/council-loop/SKILL.md:127). The fresh reviewer should trace the largest claimed product losses to original inputs and outputs, as well as reading the decision summaries. The review should distinguish an unmet gate from a demonstrated loss to the analyst, and a repeatable reading from a correct one. It should be free to conclude that no bounded candidate is supported, as well as to propose one; any spending remains within the remaining D439 budget.
+
+The three audits did produce learning, even though none produced a repair candidate. That is exactly the distinction the reflection should use to choose what to investigate next.
+
+CONSENSUS: close the fiscal-note lead with the causal claim corrected; convene the reflection council.

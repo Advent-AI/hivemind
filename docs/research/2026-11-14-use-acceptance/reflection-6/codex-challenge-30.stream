@@ -1,0 +1,897 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 30: astra with A2, prepared at $0 as round 29 asked (`reflection-6/astra-a2/DESIGN.md`)
+
+Read `astra-a2/DESIGN.md`, `a2_probe.py`, `test_a2_probe.py`, `mutants.txt`, `preflight.txt`, `audit.md` and `check-output`.
+
+**Your round-29 points:**
+- **Premise corrected:** astra's agreed failures are H20 (3) and memory (1). Hugging Face is a control.
+- **Comparison against a fresh frozen arm,** counting every send including lost answers, with agreed and strict countings. A
+  replacement question must be free of material defects in a source-backed product review.
+- **A2's harm is in the verdict:** harmful listings at most the frozen count plus 1.
+- **Topic-level comparisons, controls on both readings, and an inconclusive outcome** are all pre-registered.
+- **Budget:** the cap reserves retries and in flight. One budget defect was found by a test and fixed: the draw-start estimate now
+  uses the arm's last draw.
+- **The whole-request blind audit:**
+  - A2 adds no main-part priority rule.
+  - **NOT SOUND** on one point: its closing check is wider than its system text and schema. I aligned the closing to "that the question
+    leaves out", which adds nothing. A3's removal instruction is not reused (it failed).
+- **Narrowed to 10 topics:** the two clean-ladder controls were dropped to fit D439 at a $3.40 cap. Hugging Face and the disputed
+  topics still carry written ladders for the harm and per-topic checks.
+
+**Defects found at $0 and fixed before any send:**
+- the A2 text loader recursing on itself;
+- the cap too tight for the reserve;
+- the A2 closing file's trailing newline in the check.
+
+**Asked:** is the aligned closing a sound change, or does it need its own audit round? Send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll inspect the revised request, the audit and the probe’s decision and spending rules before judging whether it is ready to send.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/check-output' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/DESIGN.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/preflight.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/mutants.txt' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+cat: docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/check-output: No such file or directory
+
+ succeeded in 0ms:
+# Astra with A2: design (council rounds 29 and 30; D639 when sent)
+
+**What it tests.** On astra, does arm A2's request reduce the step's gate-line failures against a fresh frozen-request arm, without A2's
+known harm?
+- **A2:** D436's second-side sentences, and "the topic's wording" read as its description and outcome.
+- **Not tested:** any rule for choosing the main part. The blind audit (`audit.md`) finds A2 adds none.
+- **One alignment after the audit:** A2's closing check said "every other part … listed", wider than its own system text and schema
+  ("that the question leaves out"). The closing is aligned to them; nothing is added. A3's removal instruction was not used: it
+  failed (D584, D585).
+
+**Topics** (exposed, outside the 44; a diagnostic, not a production claim):
+- astra's agreed failures: H20 and memory;
+- the disputed main-part topics: Reflection, equity commitments, Blackwell into China, CPO;
+- Hugging Face, which astra writes;
+- three declines both families justify: the two-year capex topics and robotics funding.
+
+**Arms and spend.** Frozen and A2, interleaved, 2 draws, 40 sends.
+- **Requests:** the frozen ones are the stored ones, and A2's differ only by the recorded edits (`check-passed.json`).
+- **Cap:** $3.40, one attempt in flight ($1.14 reserve). A draw starts only if its arm's last draw and the reserve fit.
+- **D439:** about $36.43 used, so at most about $39.83.
+
+**Two blind readings, both families each:**
+1. **The gate form with A2's H field** (`unlisted-parts/run_readers.py`, first kind), with six known controls. A missed control
+   voids it.
+2. **The source-backed product review** (`review-brief.md`), with the due-day probe's four known controls. A missed control voids it.
+
+**Verdict, fixed before.** It is counted twice: with unresolved points held, and with them failed (one reviewer suffices for a
+material flag). When the two countings differ, the verdict is inconclusive.
+- **Moves (a diagnostic),** when all of these hold:
+  - failed sends (agreed hard-line faults plus lost answers) are at least 2 fewer in A2 than in the frozen arm;
+  - no topic is worse;
+  - the three justified declines stay declined in both draws;
+  - harmful listings (already decided, or a settlement route) are at most the frozen count plus 1;
+  - every A2 question written where the frozen arm declined is free of material defects;
+  - no topic has more material defects in A2.
+- **Closes:** A2 fails as many sends as the frozen arm or more, flips or loses a justified decline, exceeds the harm bound, or a
+  replacement question is flagged.
+- **Otherwise:** inconclusive.
+
+**Proofs:**
+- tests 12 of 12;
+- nine mutants, each caught (`mutants.txt`);
+- the preflight: 200 stored attempts on the 10 topics, the current checks agreeing with every stored verdict (`preflight.txt`);
+- the check passes.
+
+ succeeded in 0ms:
+stored attempts on the 10 topics: judged 200; refused by the current checks 12; verdicts that differ from the stored ones 0
+  7 x the reference's words are not in the item: copy one unbroken passage from the item exactly
+  4 x due_day_basis 'expected_publication' does not fit an event: use one of stated, period_end
+  1 x a company's figure carries its fiscal year as FY and four digits; got '2027'
+  1 x The question or a condition refers to the item or the article ("this item", "in the item")
+
+ succeeded in 0ms:
+**A2 does not add the refused rule that the description takes priority, but its closing check is too broad: it can label an event’s own answer choices as “not judged.”**
+
+For example, if the question asks whether an acquisition closes, the answer can already distinguish closing, withdrawal and neither by the due date. A check that demands *every other part* be listed as not judged can nevertheless list withdrawal there.
+
+| Request instruction | Verdict against the cited standard |
+|---|---|
+| Ask one figure for a period or one event; judge what the outcome names as tracked. | **Consistent** with D397. It does not say the description wins when the outcome names several candidates. |
+| Read the description and outcome together; list other parts **the question leaves out**. The schema repeats this. | **Consistent** with D397’s instruction to show the remaining wording as not judged. This does not resolve which part is main. |
+| Keep a second side of the same bet as context and list it as not judged; that side alone does not require a decline. | **Consistent** with D436, while preserving D397’s decline when no part is main. D436’s own scope is clean Step 1, and it does not supply a general main-part selection rule. |
+| Decline when no part is main, or the main part meets a listed decline case. | **Consistent** with D397 on no main part. The instruction does not itself choose a main part. |
+| Decline an undated event without a named period, except the stated regulatory-decision exception. | **Consistent** with D403. |
+| Decline another company’s figure or a matter without a listed theme; the remaining figure-period and year decline cases. | **No source in the three cited decisions.** These are retained from the frozen request; this audit does not establish their separate authority. |
+| List a difference *within* an event outcome, such as approval with versus without conditions, as not judged. | **Consistent** with D397 when that distinction is genuinely left unresolved by the answer choices. It does not justify listing alternatives that the choices do resolve. |
+| Closing check: list **every other part** of the description and outcome as not judged. | **Keeps wider** than the system text and schema’s “the question leaves out.” It lacks their limitation and can include the event’s own resolved alternatives. |
+
+On the requested boundaries: two years presented equally still meet the explicit “none the main one” decline; another company’s figure and a matter with no listed theme still have explicit decline instructions. The added “second side” sentence could be misapplied to those cases, but it does not expressly override their decline rules. The sources remain silent on disputed cases where it is unclear which part is main, as the [earlier audit](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md:1) found. These are readings of the request, not results from a new run.
+
+NOT SOUND: The closing check can list already judged event alternatives as not judged.
+ succeeded in 0ms:
+M0 control (unmutated): 12 passed in 0.33s
+M1 one fewer failure is enough: 1 failed, 11 passed in 0.36s | failed: ['test_one_fewer_failure_is_inconclusive_not_a_move'] | first: ["E       AssertionError: assert 'moves (a dia...posed topics)' == 'inconclusive'"]
+M2 per-topic comparison dropped: 1 failed, 11 passed in 0.36s | failed: ['test_a_topic_where_a2_fails_more_than_frozen_blocks_a_move'] | first: ['E       AssertionError: assert not True']
+M3 justified declines not required: 1 failed, 11 passed in 0.37s | failed: ['test_a_justified_decline_lost_in_a2_closes'] | first: ["E       AssertionError: assert 'inconclusive' == 'closes'"]
+M4 harmful listings not counted: 2 failed, 10 passed in 0.38s | failed: ['test_harmful_listings_beyond_one_more_than_frozen_close', 'test_countings_that_disagree_are_inconclusive'] | first: ["E       AssertionError: assert 'moves (a dia...posed topics)' == 'closes'"]
+M5 replacements not reviewed: 1 failed, 11 passed in 0.39s | failed: ['test_a_replacement_question_flagged_by_both_reviewers_closes'] | first: ["E       AssertionError: assert 'inconclusive' == 'closes'"]
+M6 countings that disagree not inconclusive: 1 failed, 11 passed in 0.37s | failed: ['test_countings_that_disagree_are_inconclusive'] | first: ['E       AssertionError: assert False']
+M7 a lost answer not a failure: 1 failed, 11 passed in 0.37s | failed: ['test_an_answer_code_refuses_twice_counts_as_a_failure'] | first: ["E       AssertionError: assert 'inconclusive' == 'closes'"]
+M8 gate controls not checked: 1 failed, 11 passed in 0.37s | failed: ['test_a_missed_gate_control_voids_the_reading'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+M9 draw-start check dropped: 1 failed, 11 passed in 0.37s | failed: ['test_a_draw_whose_estimate_does_not_fit_is_not_started'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat .claude/skills/prompt-audit/SKILL.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+---
+name: prompt-audit
+description: After every measurement of an extraction configuration, and before any prompt change, map each failure class in the stored draws to the sentence of the request that produced it, check that sentence against the frozen standard and the prompt principles, and write the audit table. Alex, 2026-11-02 - "你应该看着prompt，然后对比失败的trace，然后仔细的根据尺子做对比，并且我们prompt的principle也要带入，是尝试教他general hedge fund analyst skill，不是要hardcode或是benchmark farming；你把这个写成一个skill以后固定跑".
+---
+
+# Prompt audit: failures → the request's sentences → the standard → the principle
+
+Run this after every measured configuration (three draws scored on the frozen ruler) and before any edit to a prompt file, a schema
+description or a takes line. A measurement without this audit is a score without a diagnosis (AGENTS §7.2, §6). The audit is read,
+not scripted: the scripts below only produce the lists to read.
+
+## 0. Inputs
+
+- The arm's run folders (`docs/research/2026-11-01-e2e-loop/arms/<arm>/d1..3`) and the baseline's.
+- The frozen ruler (AGENTS §7.1): the extraction standard `docs/prd/05-extraction-standard.html` (version 3, D243, with D250's
+  boundaries), golden-v5, the questions standard, the judgement gold. Never edited; every disagreement is a gap in the system.
+- The prompt principles (AGENTS §6 and §8): the prompt carries the standard and no new rule; it teaches a general hedge-fund
+  analyst, so every sentence and example reads the same for a bank, a drug maker, a retailer or a chip maker, names no covered
+  company, product or number, and takes no example from a test article; a classification is a closed set with examples; never grow a
+  prompt to fix quality without cutting as much elsewhere; a field's definition sits in the schema beside the field; code owns
+  identity, never importance.
+
+## 1. Dump the request as the model reads it
+
+One stored request of the configuration (any article), printed whole: the system text (the role), every user block before the item
+(category block, subjects, research reference, open questions with their takes lines, research groups), the closing sentence, the
+end-of-request check, and every schema field description (evidence and candidates). Read it top to bottom once. List every
+instruction that decides keep, reject, link, open, or a field value, with its location (role paragraph, check row, schema field,
+takes line, category block). This list is the thing the failures are mapped onto.
+
+```sh
+python3 - <<'PY'
+import sqlite3, json
+a = sqlite3.connect('file:<run folder>/archive.sqlite?mode=ro', uri=True)
+req = json.loads(a.execute("select request_json from model_calls where purpose='extract' and request_json like '%<title fragment>%' order by call_id desc limit 1").fetchone()[0])
+print(req['messages'][0]['content']); print(req['messages'][1]['content'].split('[Item]')[0]); print(req['messages'][1]['content'].rsplit('\n\n', 2)[-2:])
+print(json.dumps({k: v.get('description') for k, v in req['response_format']['json_schema']['schema']['properties']['evidence']['items']['properties'].items() if v.get('description')}, ensure_ascii=False, indent=1))
+PY
+```
+
+## 2. Produce the failure lists (all at no model cost, on the stored draws)
+
+| List | Script | What it gives |
+|---|---|---|
+| Matter states across draws | `harness/matter_states.py arm=d1,d2,d3 base=d1,d2,d3` | every gold core/supporting matter: extracted or reaching in 3/2/1/0 draws; the systematic misses (0 of 3) and the coin flips (1 of 3) |
+| Written noise by the standard's row | the `rows_all` count in `design-v72.md` §10 (the gold's `not_kept[].row`) | which row of the standard the written noise falls under, with examples |
+| No-home drops | `harness/dropped_census.py d1 d2 d3` | gold matters written but dropped, with the questions open at the time |
+| Where links go | `harness/links_by_question.py d1 d2 d3 --sample 20` | the pile per question, the revenue-sink share, statements under several questions, noise under revenue |
+| Quote refusals | the `dropped` reasons of the handovers (`quote not in item`), each diffed against its closest source window | paraphrase against a word or two off |
+| Question recall | `harness/question_recall.py d1 d2 d3` | must_open / may_open covered by seeds and by article-opened questions |
+| Fields | 15 random stored statements with speaker, original_who, original_day, tier | read against the quote and the item's day and publisher |
+
+For every list, read the items, not the counts: the raw answer beside the article for every systematic miss (a miss the scorer reports
+may be the matter written in other words: check before counting it), a sample of twenty for every pile.
+
+## 3. Map each failure class to the request
+
+For each class with more than a handful of cases, fill one row:
+
+| Failure class (count, share) | The sentence(s) of the request that produced it, quoted | The standard's line on the same case (section, decision) | Verdict | The model's own account (when the sentence is not obvious) |
+|---|---|---|---|---|
+
+Verdicts, one of: **contradiction** (two sentences of the request pull opposite ways, or a request sentence removes what the standard
+keeps, D240), **missing** (no sentence decides the case; the model guesses, a coin flip per send), **abstract** (a clause without an
+example, read differently each send), **misread** (the sentence is right, the model does not apply it; needs the model's own account
+before any change), **not the prompt** (code, scorer or sampler).
+
+The model's own account: continue the stored conversation with one question about one case (`harness/probe_v72_link.py`,
+`probe_v72_missing.py`), a cent a case, for every "misread" and for any class whose sentence is not obvious from reading.
+
+## 4. Check every proposed fix against the principles before writing it
+
+- It is written from the standard's line, not from the failing article: the example comes from another domain, names no covered
+  company, product or number, and reads the same for every industry. A fix that only recovers the bench's misses is benchmark
+  farming and is not written.
+- It removes a contradiction, supplies a missing definition at its owner (schema field, takes line, check row, category block), or
+  replaces an abstract clause with a closed set and examples. It never adds a rule the standard does not hold.
+- It cuts at least as much as it adds, or the growth has a written reason; report characters before and after.
+- One class per change; the change is proved on the stored requests of that class, three sends as stored against three changed,
+  with the noise guards of the same articles; the whole bench accepts it (three draws) only when Alex asks for a run.
+
+## 5. Output
+
+Write the table and the verdicts into the arm's design document (a numbered section), one row per class, in the order of the loss;
+the report to Alex states each class in a reader's words (what the system does wrong, which sentence makes it do that, what the
+standard says), never in the loop's own words (AGENTS, "Authority and scope": explain as to a sixteen-year-old).
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/test_a2_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The astra-with-A2 probe at $0 (council round 29): the check, the four arm-draws through the real runner and limit with a fake
+transport, both blind readings built from the run, made-up reader rows, and every condition of the verdict fixed before."""
+import json
+import shutil
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parent / 'astra'), str(HERE.parent / 'due-day'), str(HERE.parent / 'model'), str(HERE.parent / 'effort')]
+import a2_probe as probe  # noqa: E402
+import accounting  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 2000, 'completion_tokens': 400}
+
+
+def transport():
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    systems = []
+
+    def send(provider, request):
+        systems.append(request['messages'][0]['content'])
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+    send.systems = systems
+    return send
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('a2')
+    original, probe.RECORD = probe.RECORD, folder / 'check-passed.json'
+    try:
+        probe.check()
+        fake = transport()
+        probe.send(folder / 'run', transport=fake)
+        yield folder, fake
+    finally:
+        probe.RECORD = original
+
+
+def test_each_arm_sends_its_own_request_and_a2_differs_only_by_its_edits(run):
+    _, fake = run
+    a2_text = probe.a2_texts()['system']
+    frozen_text = probe.FROZEN_TEXTS()['system']
+    assert fake.systems.count(frozen_text) >= 20 and fake.systems.count(a2_text) >= 20 and set(fake.systems) == {frozen_text, a2_text}
+
+
+def copy_with(run, tmp_path, changes):
+    """A copy of the run with the given sends rewritten: `decline`, `lost`, or a dict of fields."""
+    folder, _ = run
+    copy = tmp_path / 'run'
+    shutil.copytree(folder / 'run', copy)
+    for send, change in changes.items():
+        path = copy / send.split('|')[0] / 'outcomes.jsonl'
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        for row in rows:
+            if row['case'] == send:
+                if change == 'decline':
+                    row.update(status='no ladder', answer=None, view=None, passage=None, reason='made up: several parts, none the main one')
+                elif change == 'lost':
+                    row.update(status='no ladder: refused', answer=None, view=None, passage=None)
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    return copy
+
+
+def gate_rows(copy, keys, fail=(), harm=(), harm_one_reader=()):
+    """Both families' gate rows: every hard line holds except `fail` sends (L for a ladder, N for a decline); every listed part is
+    `part` except the sends in `harm` (both families mark their first part already_judged) or `harm_one_reader` (Codex only)."""
+    key = json.loads((keys / 'key.json').read_text())
+    expected = json.loads((keys / 'controls-expected.json').read_text())
+    outcomes = {row['case']: row for row in map(json.loads, (copy / 'gate-reading' / 'send-1' / 'outcomes.jsonl').read_text().splitlines())}
+    answers = copy / 'gate-reading' / 'readers-answers'
+    answers.mkdir(exist_ok=True)
+    for family in ('codex', 'claude'):
+        lines = []
+        for item, (send, _) in key.items():
+            outcome = outcomes[send]
+            kind = accounting.kind_of(outcome)
+            applicable = accounting.marks_that_apply(kind)
+            row = {'item': int(item), 'W': '', 'why': 'made up for the test'}
+            for mark in accounting.ALL_MARKS:
+                row[mark] = ('not_assessable' if kind in ('company figure', 'theme figure') else 'n/a') if mark == 'G' \
+                    else 'holds' if mark in applicable else 'n/a'
+            listed = 0 if kind == 'refusal' else len(outcome['answer']['ladder']['not_judged'])
+            row['B'] = ['not_a_bet'] * listed
+            row['H'] = ['part'] * listed
+            if listed and (send in harm or (family == 'codex' and send in harm_one_reader)):
+                row['H'][0] = 'already_judged'
+            for mark, value in expected.get(send, {}).items():
+                if mark != 'all':
+                    row[mark] = value
+            if send in fail:
+                row['N' if kind == 'refusal' else 'L'] = 'fails'
+            lines.append(json.dumps(row))
+        (answers / f'reader-{family}-packet-1.jsonl').write_text('\n'.join(lines) + '\n')
+
+
+def review_rows(copy, keys, flags=()):
+    key = json.loads((keys / 'key.json').read_text())
+    files = []
+    for reader in ('codex', 'claude'):
+        lines = []
+        for item, send in key.items():
+            bad = send in flags or (send in probe.dueday_probe.CONTROLS and probe.dueday_probe.CONTROLS[send][2] == 'material')
+            lines.append(json.dumps({'item': int(item), 'verdict': 'defect' if bad else 'sound', 'class': 'other' if bad else None,
+                                     'material': bad, 'evidence': '', 'why': ''}))
+        path = copy / f'review-{reader}.jsonl'
+        path.write_text('\n'.join(lines) + '\n')
+        files.append(path)
+    return files
+
+
+TARGET_FAILS = tuple(f'frozen-d{d}|{t}' for t in probe.TARGETS for d in (1, 2))      # frozen fails both targets in both draws
+
+
+def verdict(run, tmp_path, changes=None, fail=TARGET_FAILS, harm=(), harm_one_reader=(), flags=()):
+    copy = copy_with(run, tmp_path, changes or {})
+    gate_keys, review_keys = tmp_path / 'gate-keys', tmp_path / 'review-keys'
+    probe.gate_reading(copy, gate_keys)
+    gate_rows(copy, gate_keys, fail, harm, harm_one_reader)
+    probe.review_reading(copy, review_keys)
+    return probe.final(copy, gate_keys, review_keys, review_rows(copy, review_keys, flags))
+
+
+def first_ladder(run, arm):
+    folder, _ = run
+    rows = [json.loads(line) for draw in (1, 2) for line in (folder / 'run' / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()]
+    return next(row['case'] for row in rows if row['status'] == 'ladder' and row['answer']['ladder']['not_judged'])
+
+
+def test_two_fewer_failures_with_every_guard_kept_moves(run, tmp_path):
+    assert verdict(run, tmp_path).startswith('moves')
+
+
+def test_no_fewer_failures_closes(run, tmp_path):
+    assert verdict(run, tmp_path, fail=()) == 'closes'
+
+
+def test_an_answer_code_refuses_twice_counts_as_a_failure(run, tmp_path):
+    one = (f'frozen-d1|{probe.TARGETS[0]}',)
+    assert verdict(run, tmp_path, changes={f'a2-d1|{probe.TARGETS[1]}': 'lost'}, fail=one) == 'closes'
+
+
+def test_a_justified_decline_lost_in_a2_closes(run, tmp_path):
+    assert verdict(run, tmp_path, changes={f'a2-d2|{probe.JUSTIFIED[0]}': 'lost'}) == 'closes'
+
+
+def test_harmful_listings_beyond_one_more_than_frozen_close(run, tmp_path):
+    send = first_ladder(run, 'a2')
+    other = send.replace('-d1|', '-d2|') if '-d1|' in send else send.replace('-d2|', '-d1|')
+    assert verdict(run, tmp_path, harm=(send, other)) == 'closes'
+
+
+def test_a_replacement_question_flagged_by_both_reviewers_closes(run, tmp_path):
+    topic = probe.DISPUTED[0]
+    changes = {f'frozen-d1|{topic}': 'decline'}
+    assert verdict(run, tmp_path, changes=changes, flags=(f'a2-d1|{topic}',)) == 'closes'
+
+
+def test_countings_that_disagree_are_inconclusive(run, tmp_path):
+    send = first_ladder(run, 'a2')
+    other = send.replace('-d1|', '-d2|') if '-d1|' in send else send.replace('-d2|', '-d1|')
+    assert verdict(run, tmp_path, harm_one_reader=(send, other)).startswith('inconclusive')
+
+
+def test_a_topic_where_a2_fails_more_than_frozen_blocks_a_move(run, tmp_path):
+    clean = f'a2-d1|{probe.RECOVERED[0]}'
+    result = verdict(run, tmp_path, fail=TARGET_FAILS + (clean,))
+    assert not result.startswith('moves')
+
+
+def test_a_missed_gate_control_voids_the_reading(run, tmp_path):
+    copy = copy_with(run, tmp_path, {})
+    gate_keys, review_keys = tmp_path / 'gate-keys', tmp_path / 'review-keys'
+    probe.gate_reading(copy, gate_keys)
+    gate_rows(copy, gate_keys, TARGET_FAILS)
+    path = copy / 'gate-reading' / 'readers-answers' / 'reader-claude-packet-1.jsonl'
+    key = json.loads((gate_keys / 'key.json').read_text())
+    item = next(int(item) for item, (send, _) in key.items() if send == 'control|unlisted-part')
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    path.write_text('\n'.join(json.dumps(dict(row, L='holds') if row['item'] == item else row) for row in rows) + '\n')
+    probe.review_reading(copy, review_keys)
+    with pytest.raises(SystemExit, match='VOID: a family missed the planted control\\|unlisted-part'):
+        probe.final(copy, gate_keys, review_keys, review_rows(copy, review_keys))
+
+
+def test_a_draw_whose_estimate_does_not_fit_is_not_started(tmp_path, monkeypatch):
+    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+    monkeypatch.setattr(probe, 'CAP_USD', 2.6)        # four draws of about $0.40 and a $1.14 reserve: the fourth does not fit
+    probe.check()
+    with pytest.raises(SystemExit, match='a2 d2 STOPPED before sending'):
+        probe.send(tmp_path / 'run', transport=transport())
+    assert (tmp_path / 'run' / 'frozen-d2').exists() and not (tmp_path / 'run' / 'a2-d2').exists()
+
+
+def test_one_fewer_failure_is_inconclusive_not_a_move(run, tmp_path):
+    target = probe.TARGETS[0]
+    fail = (f'frozen-d1|{target}', f'frozen-d2|{target}', f'a2-d1|{target}')
+    assert verdict(run, tmp_path, fail=fail) == 'inconclusive'
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""Astra with arm A2's request against astra with the frozen request (council round 29): a diagnostic on 12 exposed topics outside
+the 44, two interleaved draws, read twice blind (the gate form with the H field; a source-backed product review), and the verdict
+fixed before. A2 is the frozen request plus D436's second-side sentences, with "the topic's wording" read as its description and outcome.
+
+  python3 a2_probe.py check                                  # $0: A2 differs from the frozen request only by its recorded edits
+  python3 a2_probe.py send <new run folder>                  # frozen d1, a2 d1, frozen d2, a2 d2
+  python3 a2_probe.py gate-reading <run folder> <key folder> # the gate form's packets (+ six controls)
+  python3 a2_probe.py review-reading <run folder> <key folder>   # the product review's packet (+ four controls)
+  python3 a2_probe.py final <run folder> <gate key folder> <review key folder> <review files...>
+"""
+import collections
+import dataclasses
+import hashlib
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+sys.path[:0] = [str(HERE.parent / 'astra'), str(HERE.parent / 'due-day'), str(ROOT / 'clean-arch' / 'step4-2026-11-10' / 'stage_a')]
+import astra_probe as base  # noqa: E402
+from astra_probe import budget, collector, model, probe_split, refcontrol, stage_a  # noqa: E402
+import build_reader_packets  # noqa: E402
+import dueday_probe  # noqa: E402   (the product review's controls and row checks)
+
+A2 = ROOT / 'docs' / 'research' / '2026-11-14-use-acceptance' / 'unlisted-parts' / 'arm-a2'
+EDITS = {   # file: the exact replacements that turn the frozen text into A2's (checked byte for byte)
+    'system': [
+        ("- A topic's wording may ask about more than one thing.", "- A topic's description and outcome together may ask about more than one thing."),
+        ("List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked.",
+         "List every other part of the topic's description and outcome that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part itself meets a case below."),
+        ("when the topic's wording names it, list it in not_judged.", "when the topic's description or outcome names it, list it in not_judged."),
+    ],
+    'closing': [("is every other part of the topic's wording listed in not_judged?",
+                 "is every other part of the topic's description and outcome that the question leaves out listed in not_judged?")],
+}
+CLOSING_ALIGNMENT = ("is every other part of the topic's description and outcome listed in not_judged?",
+                     "is every other part of the topic's description and outcome that the question leaves out listed in not_judged?")
+# the blind audit (audit.md): A2's closing check keeps wider than its own system text and schema ("that the question leaves out");
+# aligned to them, nothing added
+ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+ARMS = ('frozen', 'a2')
+ORDER = [('frozen', 1), ('a2', 1), ('frozen', 2), ('a2', 2)]
+CAP_USD = 3.40                     # 40 sends at about $0.05 measured; D439 (about $36.43 used) then at most about $39.83 of $40
+WORKERS = 1
+RECORD = HERE / 'check-passed.json'
+TARGETS = ('week-10-06:c1/clean-6', 'week-10-06:c1/clean-3')                                   # astra's agreed failures (H20, memory)
+DISPUTED = ('week-10-06:c1/clean-11', 'week-10-06:c1/clean-13', 'fortnight:c1/clean-3', 'fortnight:c1/clean-13')
+RECOVERED = ('week-10-06:c1/clean-5',)                                                         # Hugging Face: astra writes it
+JUSTIFIED = ('week-10-06:c1/clean-4', 'week-10-06:c1/clean-12', 'fortnight:c1/clean-8')         # declines both families justify
+TOPICS = TARGETS + DISPUTED + RECOVERED + JUSTIFIED
+HARD = refcontrol.HARD
+H_VALUES, H_HARM = ('part', 'already_judged', 'settlement', 'cannot_tell'), ('already_judged', 'settlement')
+GATE_SEED, REVIEW_SEED = 20261129, 20261130
+FROZEN_TEXTS = stage_a.request_texts          # held here: `send` re-points stage_a.request_texts at a2_texts during A2's draws
+
+
+def a2_texts():
+    frozen = FROZEN_TEXTS()
+    system, closing = frozen['system'], frozen['closing']
+    for old, new in EDITS['system']:
+        system = system.replace(old, new)
+    for old, new in EDITS['closing']:
+        closing = closing.replace(old, new)
+    return dict(frozen, system=system, closing=closing, schema=json.loads((A2 / 'candidate-schema.json').read_text()))
+
+
+def texts_of(arm):
+    return FROZEN_TEXTS() if arm == 'frozen' else a2_texts()
+
+
+def population():
+    entries = [entry for entry in refcontrol.population() if f'{entry[0]}:{entry[1]}' in TOPICS]
+    if len(entries) != len(TOPICS):
+        raise SystemExit('a probe topic is not in the population')
+    return entries
+
+
+def built(case, arm, rl):
+    texts = texts_of(arm)
+    user = base.ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(Path(__file__).read_bytes() + b''.join((A2 / name).read_bytes() for name in
+                                                                  ('candidate-system.txt', 'candidate-closing.txt', 'candidate-schema.json'))).hexdigest()
+
+
+def check():
+    frozen, a2 = FROZEN_TEXTS(), a2_texts()
+    failures = []
+    for name in ('system', 'closing'):
+        if any(frozen[name].count(old) != 1 for old, _ in EDITS[name]):
+            failures.append(f'an edit of the {name} text is not found once in the frozen text')
+        stored = (A2 / f'candidate-{name}.txt').read_text()
+        if name == 'closing':           # the step strips the closing check as it loads it; the audit's alignment (CLOSING_ALIGNMENT)
+            stored = stored.strip().replace(*CLOSING_ALIGNMENT)
+        if a2[name] != stored:
+            failures.append(f"the {name} text with A2's recorded edits is not A2's stored file")
+    schema_edit = (json.dumps(frozen['schema']).replace("the topic's wording that the question leaves out", "the topic's description and outcome that the question leaves out")
+                   .replace('the question leaves nothing of the wording out', 'the question leaves nothing of either out'))
+    if json.loads(schema_edit) != a2['schema']:
+        failures.append("A2's schema is not the frozen schema with its recorded not_judged description")
+    rl = refcontrol.research_list()
+    shas = {arm: {} for arm in ARMS}
+    for source, name, case, stored in population():
+        luna = model.build_request(stage_a.SETTING, frozen['system'], built(case, 'frozen', rl)['messages'][1]['content'], frozen['schema'],
+                                   'clean_ladder', 'openai')
+        if model.request_identity(luna)[1] != stored['requests'][0]['request_sha256']:
+            failures.append(f'{source}:{name}: the frozen request is not the stored one')
+        for arm in ARMS:
+            shas[arm][f'{source}:{name}'] = model.request_identity(built(case, arm, rl))[1]
+    worst = max(budget.worst_cost(built(case, 'a2', rl)) for *_, case, _ in population())
+    print(f'{len(TOPICS)} topics; A2 is the frozen request with its recorded edits, the frozen requests are the stored ones: {not failures}; '
+          f'worst-case reserve of one attempt ${worst:.2f}; cap ${CAP_USD:.2f}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    entries = population()
+    for arm in ARMS:
+        if {f'{s}:{n}': model.request_identity(built(c, arm, rl))[1] for s, n, c, _ in entries} != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent, last = 0.0, {}
+    worst = max(budget.worst_cost(built(c, 'a2', rl)) for *_, c, _ in entries)
+    original = stage_a.request_texts
+    try:
+        for arm, draw in ORDER:
+            if last.get(arm, 0.0) + WORKERS * worst > CAP_USD - spent:        # the same arm's last draw estimates this one
+                raise SystemExit(f'{arm} d{draw} STOPPED before sending: the arm\'s last draw and the attempt in flight pass what is left. NOT MEASURED.')
+            stage_a.request_texts = original if arm == 'frozen' else a2_texts
+            cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in entries]
+            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', CAP_USD - spent, ASTRA, rl, transport=guard, workers=WORKERS)
+            stage_a.request_texts = original
+            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            spent += known + in_full
+            last[arm] = known + in_full
+            over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            print(f'{arm} d{draw}: {len(written)} of {len(entries)} written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+            if over or guard.breaches or limit.stopped or len(written) != len(entries):
+                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    finally:
+        stage_a.request_texts = original
+    print(f'spent ${spent:.4f}')
+
+
+def outcomes(folder):
+    rows = {}
+    for arm, draw in ORDER:
+        for line in (Path(folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines():
+            row = json.loads(line)
+            rows[row['case']] = row
+    return rows
+
+
+def readable(folder):
+    return {send: row for send, row in outcomes(folder).items() if row['status'] != 'no ladder: refused'}
+
+
+def gate_reading(folder, key_folder):
+    """The gate form's blind packets: every readable send and the six known controls of the model comparison, as Stage A's readers
+    see an item; the key and the controls' expected marks outside the repository."""
+    folder, key_folder = Path(folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    cases = {f'{s}:{n}': c for s, n, c, _ in population()}
+    rows, item_cases, expected = dict(readable(folder)), {}, {}
+    for send in rows:
+        item_cases[send] = cases[send.split('|', 1)[1]]
+    for row, case, marks in base.controls():
+        rows[row['case']], item_cases[row['case']], expected[row['case']] = row, case, marks
+    order = sorted(rows)
+    random.Random(GATE_SEED).shuffle(order)
+    rl = refcontrol.research_list()
+    reading = folder / 'gate-reading'
+    (reading / 'send-1').mkdir(parents=True)
+    (reading / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(dict(rows[send], **{'pass': 1}), ensure_ascii=False) + '\n' for send in order))
+    (reading / 'readers').mkdir()
+    key, packets = {}, []
+    for number, send in enumerate(order, start=1):
+        key[str(number)] = [send, 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(rows[send], item_cases[send], rl)})
+    for number, packet in enumerate(packets, start=1):
+        (reading / 'readers' / f'packet-{number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    print(f'{len(order)} items in {len(packets)} packets')
+
+
+def gate_marks(folder, key_folder):
+    """{counting: {send: True for a hard-line fault}} and {counting: {send: number of harmful listings}}, after the controls."""
+    reading = Path(folder) / 'gate-reading'
+    key, item_of, outcomes_read, readers, problems = collector.read_rows(reading, Path(key_folder) / 'key.json')
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+        for mark, value in marks.items():
+            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+            if mark == 'all' and all(any(readers[reader][(control, 1)].get(hard) == 'fails' for hard in HARD) for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: both families fail a hard line on the sound {control}')
+    faults, harm = {}, {}
+    for counting in ('holds', 'fails'):
+        faults[counting], harm[counting] = {}, {}
+        for send_key, outcome in outcomes_read.items():
+            send = send_key[0]
+            if send.startswith('control|'):
+                continue
+            rows = [readers[reader][send_key] for reader in collector.FAMILIES]
+            kind = base.accounting.kind_of(outcome)
+            faults[counting][send] = any(refcontrol.settled(rows, mark, counting) == 'fails'
+                                         for mark in base.accounting.marks_that_apply(kind) if mark in HARD)
+            listed = len(outcome['answer']['ladder']['not_judged']) if outcome['status'] == 'ladder' else 0
+            for row in rows:
+                if not isinstance(row.get('H'), list) or len(row['H']) != listed or any(value not in H_VALUES for value in row['H']):
+                    raise SystemExit(f'VOID: an H list of {send} does not hold one value for each of its {listed} listed parts')
+            values = list(zip(*[row['H'] for row in rows])) if listed else []
+            harm[counting][send] = sum((all(v in H_HARM for v in pair) if counting == 'holds' else any(v in H_HARM for v in pair)) for pair in values)
+    return faults, harm
+
+
+def review_reading(folder, key_folder):
+    """The product review's blind packet: every readable send and the due-day probe's four known controls."""
+    folder, key_folder = Path(folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    cases = {f'{s}:{n}': c for s, n, c, _ in refcontrol.population()}
+    rows = readable(folder) | dueday_probe.control_rows()
+    sources = {send: send.split('|', 1)[1] for send in readable(folder)} | \
+        {control: dueday_probe.CONTROLS[control][1].split('|', 1)[1] for control in dueday_probe.CONTROLS}
+    order = sorted(rows)
+    random.Random(REVIEW_SEED).shuffle(order)
+    rl = refcontrol.research_list()
+    items, key = [], {}
+    for number, send in enumerate(order, start=1):
+        key[str(number)] = send
+        items.append({'item': number, **build_reader_packets.item_of(rows[send], cases[sources[send]], rl)})
+    (folder / 'review').mkdir(exist_ok=False)
+    (folder / 'review' / 'packet.json').write_text(json.dumps(items, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    print(f'{len(items)} items')
+
+
+def final(folder, gate_keys, review_keys, review_files):
+    """The verdict fixed before the send (council round 29)."""
+    rows = outcomes(folder)
+    faults, harm = gate_marks(folder, gate_keys)
+    review = dueday_probe.material(review_files, json.loads((Path(review_keys) / 'key.json').read_text()))
+    verdicts = {}
+    for counting, review_rule in (('holds', all), ('fails', any)):
+        failed = {send: rows[send]['status'] == 'no ladder: refused' or faults[counting].get(send, False) for send in rows}
+        flagged = {send for send, values in review.items() if review_rule(values)}
+        total = {arm: sum(failed[f'{arm}-d{d}|{t}'] for t in TOPICS for d in (1, 2)) for arm in ARMS}
+        per_topic = all(sum(failed[f'a2-d{d}|{t}'] for d in (1, 2)) <= sum(failed[f'frozen-d{d}|{t}'] for d in (1, 2)) for t in TOPICS)
+        justified_kept = all(rows[f'a2-d{d}|{t}']['status'] == 'no ladder' for t in JUSTIFIED for d in (1, 2))
+        harm_total = {arm: sum(harm[counting].get(f'{arm}-d{d}|{t}', 0) for t in TOPICS for d in (1, 2)) for arm in ARMS}
+        replacements = [f'a2-d{d}|{t}' for t in TOPICS for d in (1, 2)
+                        if rows[f'a2-d{d}|{t}']['status'] == 'ladder' and rows[f'frozen-d{d}|{t}']['status'] != 'ladder']
+        replacements_sound = not any(send in flagged for send in replacements)
+        material_per_topic = all(sum(f'a2-d{d}|{t}' in flagged for d in (1, 2)) <= sum(f'frozen-d{d}|{t}' in flagged for d in (1, 2)) for t in TOPICS)
+        improved = total['a2'] <= total['frozen'] - 2
+        if improved and per_topic and justified_kept and harm_total['a2'] <= harm_total['frozen'] + 1 and replacements_sound and material_per_topic:
+            verdicts[counting] = 'moves (a diagnostic on exposed topics)'
+        elif total['a2'] >= total['frozen'] or not justified_kept or harm_total['a2'] > harm_total['frozen'] + 1 or not replacements_sound:
+            verdicts[counting] = 'closes'
+        else:
+            verdicts[counting] = 'inconclusive'
+        print(f'{counting}: failed sends {total}; per topic {per_topic}; justified declines kept {justified_kept}; harmful listings {harm_total}; '
+              f'replacements {len(replacements)}, sound {replacements_sound}; material per topic {material_per_topic} -> {verdicts[counting]}')
+    verdict = verdicts['holds'] if verdicts['holds'] == verdicts['fails'] else 'inconclusive (the countings disagree)'
+    print(f'VERDICT: {verdict}')
+    return verdict
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'gate-reading':
+        gate_reading(*sys.argv[2:4])
+    elif command == 'review-reading':
+        review_reading(*sys.argv[2:4])
+    elif command == 'final':
+        final(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5:])
+    else:
+        sys.exit(__doc__)
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls -la docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+total 256
+drwxr-xr-x@  12 lchingen  staff    384 Nov 16 20:03 .
+drwxr-xr-x@ 105 lchingen  staff   3360 Nov 16 20:03 ..
+-rw-r--r--@   1 lchingen  staff   2834 Nov 16 20:03 DESIGN.md
+-rw-r--r--@   1 lchingen  staff  19197 Nov 16 20:03 a2_probe.py
+-rw-r--r--@   1 lchingen  staff   1703 Nov 16 20:02 audit-prompt.md
+-rw-r--r--@   1 lchingen  staff   3079 Nov 16 20:02 audit.md
+-rw-r--r--@   1 lchingen  staff  69332 Nov 16 20:02 audit.stream
+-rw-r--r--@   1 lchingen  staff   2059 Nov 16 20:03 check-passed.json
+-rw-r--r--@   1 lchingen  staff   1872 Nov 16 20:02 mutants.txt
+-rw-r--r--@   1 lchingen  staff    497 Nov 16 20:02 preflight.txt
+-rw-r--r--@   1 lchingen  staff   3892 Nov 16 20:03 review-brief.md
+-rw-r--r--@   1 lchingen  staff   9676 Nov 16 20:01 test_a2_probe.py
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 90 '"'^def material|''^CONTROLS|''^def reading'"' docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+176:CONTROLS = {   # stored answers outside the probe's sends, each with the verdict both reviewers must give (or the reading is void)
+177-    'control|completion-at-filing': ('clean-astra-rest-2026-11-16', 'sol-d1|fortnight:c1/clean-6', 'material'),
+178-    'control|unjustified-decline': ('clean-model-probe-2026-11-16', 'sol-d2|week-10-06:c1/clean-5', 'material'),
+179-    'control|sound-stated-date': ('clean-astra-rest-2026-11-16', 'astra-d1|fortnight:c1/clean-12', 'sound'),
+180-    'control|justified-decline': ('clean-astra-screen-2026-11-16', 'astra-d1|week-10-06:c1/clean-12', 'sound'),
+181-}
+182-VERDICTS, CLASSES = {'sound', 'defect'}, {None, 'unjustified_decline', 'period_changed', 'measure_invented', 'measure_changed',
+183-                                           'condition_lost', 'condition_added', 'choices_unusable', 'other'}
+184-READERS = ('codex', 'claude')
+185-
+186-
+187-def control_rows():
+188-    rows = {}
+189-    for control, (run, send, _) in CONTROLS.items():
+190-        found = [json.loads(line) for line in (base.ROOT / 'poc' / 'data' / run / send.split('|')[0] / 'outcomes.jsonl').read_text().splitlines()
+191-                 if json.loads(line)['case'] == send]
+192-        if len(found) != 1:
+193-            raise SystemExit(f'{control}: the stored send {send} is not found once')
+194-        rows[control] = dict(found[0], case=control)
+195-    return rows
+196-
+197-
+198:def reading(folder, key_folder):
+199-    """The blind review packet: the 36 sends of both arms and the four controls in a fixed shuffle, each as the gate's readers see an
+200-    item (the topic with opens_as, the article, the fiscal-year note, the question and rungs as the product shows them, the stored due
+201-    day, the other fields); the key outside the repository."""
+202-    import random
+203-    import build_reader_packets
+204-    folder, key_folder = Path(folder), Path(key_folder)
+205-    if key_folder.resolve().is_relative_to(base.ROOT.resolve()):
+206-        raise SystemExit('the key folder must sit outside the repository')
+207-    cases = {f'{s}:{n}': c for s, n, c, _ in refcontrol.population()}
+208-    sent = {send: row for send, row in outcomes(folder).items() if row['status'] != 'no ladder: refused'}     # a lost answer is not read
+209-    rows = sent | control_rows()
+210-    sources = {send: send.split('|', 1)[1] for send in sent} | {control: CONTROLS[control][1].split('|', 1)[1] for control in CONTROLS}
+211-    order = sorted(rows)
+212-    random.Random(REVIEW_SEED).shuffle(order)
+213-    rl = refcontrol.research_list()
+214-    items, key = [], {}
+215-    for number, send in enumerate(order, start=1):
+216-        key[str(number)] = send
+217-        items.append({'item': number, **build_reader_packets.item_of(rows[send], cases[sources[send]], rl)})
+218-    (folder / 'review').mkdir(exist_ok=False)
+219-    (folder / 'review' / 'packet.json').write_text(json.dumps(items, indent=1, ensure_ascii=False) + '\n')
+220-    key_folder.mkdir(parents=True, exist_ok=True)
+221-    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+222-    print(f'{len(items)} items ({len(CONTROLS)} controls)')
+223-
+224-
+225:def material(review_files, key):
+226-    """{send: [True for a material defect, per reviewer]} over the 36 sends, after checking two complete valid readings and the
+227-    controls; refuses anything else."""
+228-    if len(review_files) != len(READERS):
+229-        raise SystemExit(f'NOT SCORED: {len(READERS)} review files are needed, got {len(review_files)}')
+230-    marks = {}
+231-    for path in review_files:
+232-        rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+233-        items = [row.get('item') for row in rows]
+234-        if sorted(items) != list(range(1, len(key) + 1)):
+235-            raise SystemExit(f'NOT SCORED: {path} does not hold each of the {len(key)} items once')
+236-        for row in rows:
+237-            if row.get('verdict') not in VERDICTS or not isinstance(row.get('material'), bool) or row.get('class') not in CLASSES:
+238-                raise SystemExit(f'NOT SCORED: {path} item {row.get("item")} is not a valid row')
+239-            send = key[str(row['item'])]
+240-            flagged = row['verdict'] == 'defect' and row['material']
+241-            if send in CONTROLS and flagged != (CONTROLS[send][2] == 'material'):
+242-                raise SystemExit(f'VOID: {path} misses the {send}')
+243-            marks.setdefault(send, []).append(flagged)
+244-    return {send: values for send, values in marks.items() if send not in CONTROLS}
+245-
+246-
+247-def final(folder, key_folder, review_files):
+248-    """The verdict fixed before the send (council rounds 20 and 21)."""
+249-    dates = tally(folder)
+250-    key = json.loads((Path(key_folder) / 'key.json').read_text())
+251-    marks = material(review_files, key)
+252-    verdicts = {}
+253-    for counting in ('agreed', 'either'):
+254-        flagged = {send for send, values in marks.items() if (all(values) if counting == 'agreed' else any(values))}
+255-        per_topic = all(sum(f'v2-d{d}|{topic}' in flagged for d in (1, 2)) <= sum(f'frozen-d{d}|{topic}' in flagged for d in (1, 2))
+256-                        for topic in TOPICS)
+257-        completion_sound = not any(f'v2-d{d}|{topic}' in flagged for topic in COMPLETION for d in (1, 2))
+258-        declines_justified = not any(send in flagged for send in dates['new_declines'])
+259-        if not dates['mechanism']:
+260-            verdicts[counting] = 'inconclusive (the frozen arm did not date the signed completion at the annual filing)'
+261-        elif dates['fixed'] and dates['kept'] and per_topic and completion_sound and declines_justified:   # a lost v2 answer fails `fixed` or `kept`: no topic lists `lost`
+262-            verdicts[counting] = 'moves'
+263-        else:
+264-            verdicts[counting] = 'closes'
+265-    verdict = verdicts['agreed'] if verdicts['agreed'] == verdicts['either'] else 'inconclusive (the reviewers disagree on a deciding item)'
+266-    print(f'mechanism {dates["mechanism"]}; completion fixed {dates["fixed"]}; controls kept {dates["kept"]}; new declines {dates["new_declines"]}; '
+267-          f'new losses {dates["new_losses"]}')
+268-    print(f'by counting: {verdicts}')
+269-    print(f'VERDICT: {verdict}')
+270-    return verdict
+271-
+272-
+273-if __name__ == '__main__':
+274-    command = sys.argv[1] if len(sys.argv) > 1 else ''
+275-    if command == 'check':
+276-        check()
+277-    elif command == 'send':
+278-        send(sys.argv[2])
+279-    elif command == 'tally':
+280-        tally(sys.argv[2])
+281-    elif command == 'reading':
+282-        reading(*sys.argv[2:4])
+283-    elif command == 'final':
+284-        final(sys.argv[2], sys.argv[3], sys.argv[4:])
+285-    else:
+286-        sys.exit(__doc__)
+
+codex
+**Do not send yet.** The closing alignment is plausible, but it changes the request after the independent audit and needs its own blind audit of the complete revised request. The existing [audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md>) explicitly says it checked only three decisions and did not establish the authority for all retained decline rules.
+
+Two checks also need strengthening before a send:
+
+- **Test the known A2 harm directly.** The six gate controls check hard lines, but [the scorer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py>) skips controls before checking the listing classifications. A reader could label every listing harmless and pass. Add blind examples of an already-decided alternative and a settlement route, plus a sound listing; require both families to classify them correctly.
+- **Check the actual request bytes.** The launcher compares canonical request identities, which sort keys. Compare the built-and-sent requests byte for byte, allowing only the documented text and schema edits. Test that an unintended change is refused.
+
+Also make the product-review validation reject the same review file supplied twice, so “two readers” cannot be satisfied by one file. Recheck the cap and the revised controls after those changes. The ten exposed topics remain a diagnostic, and dropping the clean-ladder controls limits what it can show.
+
+CONSENSUS: no send; independently audit the aligned request and fix the control, byte-comparison and reviewer validation checks first.
+tokens used
+1,125,866
+**Do not send yet.** The closing alignment is plausible, but it changes the request after the independent audit and needs its own blind audit of the complete revised request. The existing [audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md>) explicitly says it checked only three decisions and did not establish the authority for all retained decline rules.
+
+Two checks also need strengthening before a send:
+
+- **Test the known A2 harm directly.** The six gate controls check hard lines, but [the scorer](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py>) skips controls before checking the listing classifications. A reader could label every listing harmless and pass. Add blind examples of an already-decided alternative and a settlement route, plus a sound listing; require both families to classify them correctly.
+- **Check the actual request bytes.** The launcher compares canonical request identities, which sort keys. Compare the built-and-sent requests byte for byte, allowing only the documented text and schema edits. Test that an unintended change is refused.
+
+Also make the product-review validation reject the same review file supplied twice, so “two readers” cannot be satisfied by one file. Recheck the cap and the revised controls after those changes. The ten exposed topics remain a diagnostic, and dropping the clean-ladder controls limits what it can show.
+
+CONSENSUS: no send; independently audit the aligned request and fix the control, byte-comparison and reviewer validation checks first.

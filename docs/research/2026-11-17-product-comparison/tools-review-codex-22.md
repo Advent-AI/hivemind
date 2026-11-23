@@ -1,0 +1,4 @@
+1. Both entry points now restore `sys.path` on return or exception. I verified this in memory by forcing the first import to fail in each entry point and by repeating the missing-confirmation case from a fresh process. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:533) · [Rebuild](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/rebuild.py:50)
+2. The round‑21 confirmations still hold. Scoring uses the rebuilt snapshot, edited records are refused, and rebuild progress stays off stdout. The dry run reports the same `too small` verdict and counts. [Dry-run record](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/chain-dry-run.txt:1)
+
+READY

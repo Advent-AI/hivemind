@@ -1,0 +1,528 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 145: slice 5 done (D603); re-rank the next production step from the goal
+
+## Slice 5 (D603)
+
+- **Built:**
+  - `service.open_pinned` (one pinned opener for the API and MCP; `StoreUnreadable` names the path on an opening, `BEGIN` or pinning
+    failure);
+  - an explicit 5 s reader busy timeout.
+- **Proven:**
+  - 6a;
+  - 6b (the exclusive-lock stand-in, checked to make the read wait first);
+  - 5a;
+  - 5b;
+  - 7′ (88 outcomes of the listed 14 functions at 4 bounds in 2 states, against a reference taken before the third day; no Idea
+    function or route);
+  - 8′.
+- The suite passes (346), the new system's folders (192), and the frozen checks. Mutants 6 of 6.
+- Row 1's wording is narrowed to what the code does.
+- **The live store's contract is now proven at $0 on test stores** (D594 to D603). Live operation, P1 and a restart remain Alex's,
+  on his decision page §6, rewritten in plain words.
+
+## Re-rank: my reading of the record (each point cites its source)
+
+**The production goal** is the new system replacing the running one: a research library with important questions, the facts for and
+against, and a present answer with visible reasons (D560's statement).
+
+**Where the clean path stands:**
+
+1. **Steps 1 to 3** passed their lines. Step 2 is frozen (D427).
+2. **Step 4 (judging) has not passed:**
+   - Gate 1's answer-choice lines (D400) are not met. The frozen step on fresh topics misses lines 2, 3 and 5 (D590).
+   - A2 is unaccepted.
+   - Edge tuning is stopped (D586, D391).
+   - Line 3's one fresh failure rests on the postponement boundary, Alex's (D591).
+   - No bounded candidate for line 2 is on the record (D580). Line 5's: I have not re-read.
+3. **Stage B's final-answer test** cannot reach 8 comparable controls by a re-send (4); delivering three facts gives at most 7
+   (D592).
+4. **The product-level review** is Deck 1, a calibration pilot Alex marks (D560). The six lines' role is his question #2.
+5. **Live operation** is proven at $0 (this stretch). Adopting it waits on the quality gates.
+
+**Budget:** about $10 left under D439's $40 ceiling. Nothing paid was spent in this stretch.
+
+**What I think is open to the council without Alex's word:**
+
+- **(a) Line 5's bounded candidate.** I do not remember its census. The first step is to read `RESULT-FRESH-A2.md` and the line-5
+  marks, at $0, to see whether a bounded, sourced candidate exists, under D543's rule that a path with no moving result is closed.
+- **(b) A $0 design for the Stage B 8th control's two-step change**, to state whether it is provable at all before any send.
+- **(c)** Nothing else I can see moves a gate without Alex: the lines' role, the boundary and Deck 1 are his. D544 says "Alex's
+  choice" is not an outcome, so each must be decided reversibly or closed.
+
+**My lean:** (a) first, at $0, because Step 4's lines are the largest blocker by the record. If the read finds no bounded candidate,
+close the path and say so; then (b).
+
+**Asked of you:** re-rank from the goal and the largest loss, not from my list. Name the next step, the result that would move its
+question, and the result that would close it.
+
+End with `CONSENSUS: <the step>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the slice 5 evidence and the quality-gate records, then rank the next council-owned step by what it could change for the product.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D603|D590|D592|D543|D544|D560|D427' docs/DECISIONS.md | tail -16
+cat docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md
+rg -n 'line 5|line five|Line 5|right|unresolved' poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt | head -55
+rg -n 'D543|D544' docs/DECISIONS-log.md | head -10
+rg -n 'slice 5|88 outcomes|6a|6b|5a|5b|7′|8′' docs/research/2026-11-14-use-acceptance/live-service --glob '*.md' | tail -30
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+771:| D427 | 2026-11-11 | Clean Step 2 (search, Jev comparison, best-match grouping, forward runner, Step 3 library) closed and frozen; not moved into production alone; goes to production with the whole clean path after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each) | in force | `tests/test_frozen_clean_step2.py`; clean-arch PRD §5; Step 2 log §19 |
+775:| D431 | 2026-11-12 | D427's end-to-end comparison is against production as it now runs (no preset questions, D370), frozen ruler, same day, three draws each; the seven graded questions beside; the seeded comparison stays a diagnostic | in force | `clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md` |
+787:| D443 | 2026-11-13 | Shape B' (council consensus, D439): the stored clean chain against fresh production v118 draws as an exploratory census of final-answer losses; one-day slice first; one $5 shared ledger (conditional on stated bounds); shape A stays owed for D427 | in force | `clean-arch/e2e-comparison-2026-11-13/DESIGN.md` |
+887:| D543 | 2026-11-15 | Under D439 (a cold reflection council on the whole lean path): D518 stands with its reasons (continuity; the new path not ready), the quality of the two systems' answers is not ranked, the choice of system is not made in Alex's place, and no investigation is opened; the pages corrected for a cold reader | in force, except its deferral of the choice of system, withdrawn by D544 | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-1.md` |
+888:| D544 | 2026-11-15 | Under D439 (council consensus): the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates; both remain; reversal conditions and a $5 checkpoint recorded; next, a $0 review of the fresh week's answer choices against the six lines | in force | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-3.md` |
+900:| D556 | 2026-11-15 | Under D439 (council consensus): no candidate for the "no main part" refusals among those considered; next, at $0, one map of every stored topic short of the first gate (104 topics, four readings kept apart), with overlapping and unresolved causes, reconciled to each report; it cannot by itself prove the gate out of reach or trigger D544's reversal | in force | `docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md` |
+904:| D560 | 2026-11-15 | Reflection council (Alex's request; council consensus): the goal is a continuing research library whose answers show their reasons, with no single number for "ready"; the measuring method is a major part of the impasse beside real product defects, not apportioned; next a $0 pilot of Alex's own product-level review on the stored fresh week (16 cards, 3 repeats, controls, three completeness sheets), then D559's comparison; the role of the six answer-choice lines put to him after the pilot; nothing changes or is sent | in force | `docs/research/2026-11-14-use-acceptance/reflection-4/council-codex-3.md` |
+934:| D590 | 2026-11-16 | The fresh A2 comparison closes (no verdict; a fresh gate-1 reading of the frozen step: lines 2, 3, 5 missed, 4 met); the due-day mark's family split (133 Codex vs 0 Claude fails on code-set days) is a reader discrepancy: a D-only diagnostic held all 12 class items in both families, the brief is unchanged; next a $0 census of Ruled-out rungs that catch a postponement | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md` |
+936:| D592 | 2026-11-16 | Stage B's control line: an unchanged re-send stays at 4 of 8, delivery of three facts reaches at most 7, the eighth needs an unproven two-step change; the 7-control course is not started for the line's sake; the live-service operating contract resumed as a $0 design (D575's rows, a falsifier), back to the council before any build | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+947:| D603 | 2026-11-16 | Slice 5 built and proven at $0: `service.open_pinned` (one pinned opener for the API and MCP, `StoreUnreadable` naming the path on an opening, `BEGIN` or pinning failure) and an explicit 5 s reader busy timeout; proofs 5a, 5b, 6a, 6b (stand-in), 7′ (88 outcomes against an independent pre-partial-day reference) and 8′; 346 + 192 tests, 6 of 6 mutants | in force | `live-service/OPERATING-CONTRACT.md` (Slice 5) |
+# The fresh A2 comparison (D587 to D589): a fresh gate-1 reading of the frozen step, and no comparative verdict
+
+**In one line:** on topics no development touched, the frozen answer-choice step still misses Alex's gate (lines 2, 3 and 5). A2
+does no worse anywhere and better on the one topic with a part left unlisted. But the comparison gives no verdict:
+
+- population (b) is under its minimum;
+- the control fails L on only 1 topic;
+- the two countings disagree;
+- a planted control was missed.
+
+The two reader families' third readers disagree on 21 of the 29 points they ruled, and those splits decide most of the gap between
+the two countings.
+
+## What ran
+
+- **First step:** the frozen Step 1 on the unread week of 10-13 (383 articles) from the 10-06 week's library. Complete, $3.4485, 5
+  topics (`poc/data/clean-fresh-a2-2026-11-16/`).
+- **Populations** (`population/population.json`):
+  - (a) has all 5 topics.
+  - (b), classed blind by a Codex classer and me separately, has 3: f1/clean-16, -17, -18.
+  - f1/clean-15 is a development matter. f1/clean-14 is uncertain, because the classers split on it.
+- **Answer choices:** control and A2, three sends each (30 sends, $0.0282). 12 ladders and 3 refusals in each arm. The $0 checks
+  passed first (D589).
+- **Reading:**
+  - Two families of first readers, 2 packets (33 items, with 3 plants).
+  - Third readers of both families on 22 sends (26 differing marks, 3 named faults) and on 5 H points.
+  - One Codex row (item 24, a plant) was invalid (F marked on an event) and was asked again of a fresh session.
+  - Score: `fresh_score.py`, output `choices/score-output-fresh.txt`.
+- **My own read** of every send was written before the readers' rows (`choices/own-read-before-readers.md`).
+
+## The fresh gate-1 reading of the frozen step (control), population (a), n = 5
+
+| Line | Unresolved counted for the answer | Counted against |
+|---|---|---|
+| 1 | met | met |
+| 2 | missed: clean-15 p1, p2 | missed: clean-15 p1, p2, p3 |
+| 3 | missed: clean-17 p3 | missed: clean-17 p1, p3 |
+| 4 | met (the 3 refusals of the AI-bill topic justified) | met |
+| 5 | 2 of 5 right (1 by a ladder) | 1 of 5 right (0 by a ladder) |
+| 6 | not measured (1 company figure, 4 ladder topics; 3 and 20 needed) | not measured |
+
+- **Line 2:** on the hyperscaler custom-silicon topic the control leaves out the outcome's spending split (p1) or Maia's role as
+  Microsoft's primary inference system (p2: both families' third readers). Its other three written topics list every part.
+- **Line 3:** on Taiwan's export controls, p3's Ruled-out rung ("formally announces that it will not adopt tighter export controls
+  … by January 31, 2027") also catches a postponement, which leaves the event still awaited (both third readers). This is the known
+  wait-as-ruling-out class.
+- **Line 5:** right needs every mark, so the reference mark (XR, not one of Alex's six lines) and the due-day mark (D) decide much of it.
+
+## A2 beside the control (no verdict; reported as "not shown to be independent of the development matters")
+
+| | Control | A2 |
+|---|---|---|
+| L topics, counted for / against | clean-15 / clean-15 | none / clean-15 (p1, p3 unresolved) |
+| Line 3, for / against | missed / missed | met / met |
+| N sends | 0 | 0 |
+| H points (both third readers: all "part") | 0 | 0 |
+| Line 5 right, for / against | 2 / 1 of 5 | 4 / 1 of 5 |
+| A2 failures above the control to review | none | none |
+
+- **Population (b)**, the 3 different-matter topics: neither arm fails L, and both arms give the same counts.
+- **Why no verdict:**
+  - (b) has 3 topics, under 5.
+  - The control fails L on 1 topic, under 2.
+  - The countings disagree.
+  - `fresh_score.py` stops the comparison because a planted control was missed. The Codex first reader marked plant 1 (a
+    termination the Ruled-out rung decides) as "part" instead of "already judged".
+  - The plants guard only H, which is not one of Alex's lines. The Codex family's first H marks are therefore not trusted.
+  - The two H third readers ruled all 5 disputed points "part".
+
+## Where the families split (21 of 29 ruled points unresolved)
+
+| Mark | Unresolved on arm sends | What splits them |
+|---|---|---|
+| D | 6 (clean-18, every send, both arms) | Code sets an undated annual filing at 60 days after year-end (2027-04-01, D414). The request's fiscal-year note says "published in the annual report around 2027-02; use that day as the due date". Codex reads the shown day as wrong; Claude follows code's rule. |
+| XR | 4 (clean-14) | Whether IDC's "19% growth" forecast is the reference for a unit count. |
+| L | 3 (clean-15) | Whether Maia's role as Microsoft's primary inference system is a part the gigawatt question leaves out. |
+| R | 1 (clean-17 p1) | Whether a final control list that excludes Nvidia's products rules the event out. |
+
+- **The D split comes from a contradiction inside the product,** checked in code:
+  - The request's fiscal-year note (`src/hivemind/universe.py:136`) tells the step, for a company whose fiscal year does not end in
+    December, that the full-year figures appear "around {year}-{month after year-end}; use that day as the due date".
+  - The ladder step's D414 rule (`ladder_step.py`, `due_day_of`) sets every such figure with basis `expected_publication` to 60
+    days after the year's end.
+  - So every NVDA company figure answered this way is shown to the judge and the readers with a day the note contradicts.
+  - How many disputed D marks this caused across the stored gate readings has not been counted.
+
+## The rejection checked (AGENTS §7.3)
+
+- **The control's line-2 and line-3 failures are the model's errors.** Both third-reader families agree on clean-15 p2 (L) and
+  clean-17 p3 (R). I read both against the topic and agree.
+- **The D failures under "against" are not shown to be model errors.** They are a request-and-code contradiction (see above).
+- **My own pre-reading lead on line 6 was wrong.** I read the model's raw due day. The stored view, which code sets, is the same
+  across sends on all 4 topics (correction in `own-read-before-readers.md`).
+
+## What it teaches
+
+- **Line 2 on fresh material:** the frozen step's line-2 failure rate on fresh material (1 of 4 written topics) is lower than on
+  the development topics that motivated A to A3 (6 of 13). One week, one draw.
+- **Where the gate's outcome comes from:** the readers' splits on two marks Alex has not ruled on (D on code-set days, XR) now
+  decide more of it than A2's change does.
+- **The comparison closes, as decided** (D589). A2 stays unaccepted.
+1:===== gate-1 report, control, unresolved counted for the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+8:line 5: ('missed', {'right': 2, 'right by a ladder': 1, 'of': 5})
+33:===== gate-1 report, A2, unresolved counted for the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+40:line 5: ('missed', {'right': 4, 'right by a ladder': 3, 'of': 5})
+65:== comparison, population_a, unresolved counted for: STOPPED: a planted control was missed
+71:== comparison, population_b, unresolved counted for: STOPPED: a planted control was missed
+77:===== gate-1 report, control, unresolved counted against the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+84:line 5: ('missed', {'right': 1, 'right by a ladder': 0, 'of': 5})
+109:===== gate-1 report, A2, unresolved counted against the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+116:line 5: ('missed', {'right': 1, 'right by a ladder': 0, 'of': 5})
+141:== comparison, population_a, unresolved counted against: STOPPED: a planted control was missed
+147:== comparison, population_b, unresolved counted against: STOPPED: a planted control was missed
+6589:## D543 · 2026-11-15 · Under D439: the cold reflection on the lean path: D518 stands with its reasons, the choice of system is not made in Alex's place, and no investigation is opened (reflection council consensus)
+6616:## D544 · 2026-11-15 · Under D439: the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates (council consensus; D543's deferral of the choice is withdrawn)
+6618:- **Why D543 was reopened the same day:** its consensus left the path's own question (which system carries forward) to Alex.
+6650:- **The review D544 set** (`docs/research/2026-11-14-use-acceptance/fresh-ladders/FRESH-LADDERS-RESULT.md`, $0): the new system's 21
+6661:  is not established: the pass rule of D544 justifies considering a repair, not that one is ready. "All three answers are
+6723:- **Why:** D544 says "until the new system passes its gates" and lists none. Claude's draft table read the use-oriented
+6757:  reported apart with every disputed mark; a ceiling of $3.50 for the run and its readings, inside D544's $5 checkpoint.
+6769:  verified within D544's $5.
+6880:  and does not by itself reverse D544 or reopen a stopped line. Cost: $3.6707 on the ledgers of D550's $3.95 ($1.11 of it lost
+6881:  or cut attempts charged at their reservations); paid calls under D439 about $22.10 of $40. D544's $5 checkpoint is reached
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:40:     empty or stale answer in its place. In code (slice 5, D603), `service.open_pinned` raises `StoreUnreadable` for a SQLite failure
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:43:     it; there is no application-level retry (slice 5, D603). SQLite documents rare WAL cases where a read returns busy, for example
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:636:- **6a.** A WAL store whose side files are absent, in a read-only directory:
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:641:- **6b.** A WAL store held by a connection in exclusive locking mode, a stand-in for SQLite's rare WAL busy cases (such as WAL-index
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:645:- **5a.** `max_page_count` set on the writer's connection during a day, so the day fails with SQLite's "database or disk is full":
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:650:- **5b.** A real reader held across one completed day, then released:
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:653:- **7′.** In the `SIGKILL` test, the killed writer takes a reference backup through its own connection right after its second day
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:661:- **8′.** On the same crashed store, `scripts/snapshot_store.py` through a symlink and through the own path gives two copies whose
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:670:  - `tests/test_reader_rules.py` (5): 6a through `open_pinned`, the API's `/days` and streamed Idea route (500 with the path,
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:671:    before headers), and MCP at start and per tool; 6b waits about 0.5 s and then reads, and held past a 0.3 s timeout it fails
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:673:  - `stage_b/test_writer_proofs.py` (2): 5a, a `max_page_count` failure on the third day, incomplete with no redo, the lock free,
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:674:    and readers on the second day; 5b, `busy` while a reader is held, then `done` with the `-wal` at 0 bytes.
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:675:  - The `SIGKILL` test now does 7′ and 8′. 7′ is 88 outcomes over the listed 14 functions at 4 bounds in 2 states, the crashed
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:676:    store and preflight's copy each equal to the reference taken before the third day. 8′ is the symlink and own-path snapshots
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,33p' poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt
+sed -n '77,109p' poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt
+cat docs/research/2026-11-14-use-acceptance/stage-b-controls/DESIGN-SHORTFALL.md | head -105
+sed -n '6589,6640p' docs/DECISIONS-log.md
+rg -n 'D400|D548|D590|D591' docs/DECISIONS.md | tail -8
+rg -n 'open_pinned|READ_BUSY' src/hivemind/service.py src/hivemind/views/store.py tests/test_reader_rules.py
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '665,690p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+===== gate-1 report, control, unresolved counted for the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+sends: 15 {'refusal': 3, 'event': 3, 'theme figure': 6, 'company figure': 3}
+reading: complete | dispute share: (11, 99)
+line 1: ('met', [])
+line 2: ('missed', [('control|fresh:f1/clean-15', 1), ('control|fresh:f1/clean-15', 2)])
+line 3: ('missed', [('control|fresh:f1/clean-17', 3)])
+line 4: ('met', [])
+line 5: ('missed', {'right': 2, 'right by a ladder': 1, 'of': 5})
+line 6, direction: ('NOT MEASURED', {'theses whose three sends are company figures': 1, 'needed': 3})
+line 6, due day: ('NOT MEASURED', {'theses whose three sends are ladders': 4, 'needed': 20})
+line 6, shape differs across sends: []
+shares:
+   Q: (12, 12)
+   O: (12, 12)
+   R: (11, 12)
+   D: (12, 12)
+   X: (12, 12)
+   L: (10, 12)
+   XR: (6, 12)
+   F: (3, 3)
+   Y: (9, 9)
+   N: (3, 3)
+   G, reader 1: {'holds': 7, 'not_assessable': 2}
+   B, reader 1: {'not_a_bet': 2, 'bet': 24}
+   G, reader 2: {'holds': 4, 'not_assessable': 4, 'fails': 1}
+   B, reader 2: {'not_a_bet': 11, 'bet': 15}
+refusals by the model, each with N as the two readers gave it and as ruled:
+   control|fresh:f1/clean-16 pass 1 | N holds / holds -> holds | The question concerns U.S. federal legislation regulating AI development, a matter not covered by any listed theme.
+   control|fresh:f1/clean-16 pass 2 | N holds / holds -> holds | The question concerns federal legislation on AI safety and development, a matter not covered by any listed theme; it is not a question about NVDA.
+   control|fresh:f1/clean-16 pass 3 | N holds / holds -> holds | The tracked matter is U.S. federal legislation on AI safety and advanced AI development, which none of the listed themes covers.
+refused twice by code, with the reasons of each attempt:
+W named: 1; upheld: 0
+===== gate-1 report, A2, unresolved counted for the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+===== gate-1 report, control, unresolved counted against the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+sends: 15 {'refusal': 3, 'event': 3, 'theme figure': 6, 'company figure': 3}
+reading: complete | dispute share: (11, 99)
+line 1: ('met', [])
+line 2: ('missed', [('control|fresh:f1/clean-15', 1), ('control|fresh:f1/clean-15', 2), ('control|fresh:f1/clean-15', 3)])
+line 3: ('missed', [('control|fresh:f1/clean-17', 1), ('control|fresh:f1/clean-17', 3)])
+line 4: ('met', [])
+line 5: ('missed', {'right': 1, 'right by a ladder': 0, 'of': 5})
+line 6, direction: ('NOT MEASURED', {'theses whose three sends are company figures': 1, 'needed': 3})
+line 6, due day: ('NOT MEASURED', {'theses whose three sends are ladders': 4, 'needed': 20})
+line 6, shape differs across sends: []
+shares:
+   Q: (12, 12)
+   O: (12, 12)
+   R: (10, 12)
+   D: (9, 12)
+   X: (12, 12)
+   L: (9, 12)
+   XR: (5, 12)
+   F: (3, 3)
+   Y: (9, 9)
+   N: (3, 3)
+   G, reader 1: {'holds': 7, 'not_assessable': 2}
+   B, reader 1: {'not_a_bet': 2, 'bet': 24}
+   G, reader 2: {'holds': 4, 'not_assessable': 4, 'fails': 1}
+   B, reader 2: {'not_a_bet': 11, 'bet': 15}
+refusals by the model, each with N as the two readers gave it and as ruled:
+   control|fresh:f1/clean-16 pass 1 | N holds / holds -> holds | The question concerns U.S. federal legislation regulating AI development, a matter not covered by any listed theme.
+   control|fresh:f1/clean-16 pass 2 | N holds / holds -> holds | The question concerns federal legislation on AI safety and development, a matter not covered by any listed theme; it is not a question about NVDA.
+   control|fresh:f1/clean-16 pass 3 | N holds / holds -> holds | The tracked matter is U.S. federal legislation on AI safety and advanced AI development, which none of the listed themes covers.
+refused twice by code, with the reasons of each attempt:
+W named: 1; upheld: 0
+===== gate-1 report, A2, unresolved counted against the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+# The final-answer test's control shortfall: what could exercise the line, and what stays unproven (D591; $0 design, nothing sent)
+
+**In one line:** an unchanged re-send of the judge cannot exercise the control line.
+
+- **Within the fixed population** a single repair gives at most 7 of the 8 needed: delivering three kept facts that reached no
+  question.
+- **The eighth** needs a change to two steps at once, the first step and the answer-choice step. That change is unproven, but the
+  council could review it under D439.
+- **A diagnostic on another population** need not replace the frozen ruler. It would not pass the existing control line, which only a
+  new reference (Alex's) could do. (Corrected in council round 110.)
+
+## The line and where it stands (`CENSUS.md`; `clean-arch/step4-2026-11-10/stage_b/CONTROL_TRACE.md` governs the attributions)
+
+- **The line:** at least 8 of the 15 control theses must be comparable with reader B's reference (the frozen judgement ruler), with
+  reader B's material shown. All but one of those 8 must then agree.
+- **Today:** 4 are comparable, and an unchanged judge-only re-send stays at 4.
+
+## The courses, each with what it could show and what it could not
+
+| Course | Comparable controls | Could show | Stays unproven | Who can open it |
+|---|---|---|---|---|
+| Re-send the judge unchanged | 4 | nothing new | the line | (not proposed) |
+| Deliver the three kept, unfiled facts to their questions (q13 ×2, q04) | at most 7 | whether delivery changes the shown material on those 3 | the line (7 < 8); the three controls agree with reader B without these facts, which does not prove they would stay unchanged with them (round 110) | the delivery line is paused (D511); resuming it is the council's, with its own design |
+| Plus u1/clean-6: the first step's period (2028) and the answer-choice step's question and day both brought to the ruler's | at most 8 | the line exercised, not passed | that the two steps' changes hold beyond this control; that the readers' marks carry over to changed questions | a new version of each frozen step (D426, D427), each its own reviewed design; the council may review it under D439 |
+| A diagnostic on another population | — | the judge's behaviour on other questions | it does not pass the existing control line | the council, as its own design; a new reference for the line itself is Alex's |
+
+## What the council can decide
+
+- **Not to start the 7-control course for the line's sake.** It cannot reach 8, and its three controls already agree without the
+  facts. The delivery gap stays an open product defect on its own merits (a kept fact that never reaches its question's judge), under
+  D511's pause.
+- **To record that the final-answer test's control line waits on a choice that is Alex's (a new reference)** or on a two-step change
+  no one has designed. This is a stated limit, not a parked defect: no defect of the judge is shown or excluded by it.
+## D543 · 2026-11-15 · Under D439: the cold reflection on the lean path: D518 stands with its reasons, the choice of system is not made in Alex's place, and no investigation is opened (reflection council consensus)
+
+- **The council** (`docs/research/2026-11-14-use-acceptance/reflection-2/`): Claude's own reflection written first
+  (`own-reflection.md`); a fresh independent Codex session reading the whole record cold (`handoff-cold.md`, `cold-codex-1.md`);
+  one challenge round (`cold-challenge-1.md`, `cold-codex-2.md`). Both readings, made apart, reached the same place.
+- **Why the path did not reach its goal (agreed):** the fresh week mixed a difference of product policy with a comparison of
+  quality (three of the old system's four covered matters are questions Alex's rule forbids the new system, D505); the evidence
+  was too thin to rank answers (one run a system, seven answers against fifteen, readers' bars apart); the work followed each
+  newly exposed defect instead of asking whether resolving it would select a system (the dependency stretch is the clearest
+  case); and the council often corrected work already framed on a premise that the stored request, an earlier decision or the
+  order of events contradicted.
+- **Conclusions marked as weaker than they look:** "no eligible judgement disagrees" in the July comparison (few were eligible);
+  "36 of 438" (repeated daily readings on a few question paths, not an error rate); the three unsupported answers with a
+  missing stored figure (two matters, cause not shown); the new system's three confirmed missing pairs (a minimum; the one test
+  was inconclusive); the dependency connection (a conditional replay; it also removes seven filing links).
+- **Decided, citing D439:** D518 stands, restated with its reasons: the old system stays the default and both systems stay,
+  for continuity and because the new system's answer-choice step has not passed its tests and it is not integrated with
+  production storage. The quality of the two systems' answers is not ranked and **the choice of a foundation is not made in
+  Alex's place** (the reviewer withdrew "carry the old system forward provisionally" as readable for such a choice). No
+  investigation is opened: no bounded test on the record is likely to change the choice at a justified cost, and no narrow
+  defect is reopened to postpone it. The two problems that do not depend on the choice stay recorded: related facts reaching
+  the question that needs them (no common cause or tested general fix among the known cases), and the judge's amounts with
+  nothing sizing them (what the product shows is Alex's choice). The pages were corrected where a cold reader could be misled
+  (the advice's reasons; "the one test that could decide"; a stale "waiting on Alex" and an unsourced spend figure on the
+  status page; "three small mismatches"; "36 of 438" without its qualification). A new step worth a decision returns to the
+  council under D439.
+
+## D544 · 2026-11-15 · Under D439: the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates (council consensus; D543's deferral of the choice is withdrawn)
+
+- **Why D543 was reopened the same day:** its consensus left the path's own question (which system carries forward) to Alex.
+  His words in D439 give that job to the council ("自行的根据数据和目标做决策 ... 掰扯直到你们能达到共识为止再下去执行 ... 持续迭代完成我们的PRD生产目标";
+  D509: "下来你自行按照我的准则操作"), and where it cannot settle a question it takes the cheaper, reversible course; it does not hand
+  the question back. Claude had argued the independent reviewer out of a position; that was Claude's error, recorded here.
+- **The council** (`docs/research/2026-11-14-use-acceptance/reflection-2/cold-challenge-2.md`, `cold-codex-3.md`): the evidence set
+  out by Alex's own criteria; Claude's position; the reviewer's decision with two qualifications.
+- **Decided, citing D439:** **the work toward production goes on the new system (the rebuild under `clean-arch/`). The old
+  system stays the running default until the new one passes its gates; both remain; nothing that runs is switched, deleted or
+  deployed by this decision.** It does not establish that the new system's answers are better. Reasons: Alex had reopened work
+  on the rebuild (2026-11-06) and D439's scope names its steps; its treatment of the company's financial figures follows the
+  product rule he last confirmed (D505); the fresh week gives no demonstrated reason to abandon it and shows fewer trivial or
+  duplicate questions in that one run; the old system's known defects sit in frozen pieces whose fixes are each a new version.
+- **Qualifications kept:** D505's rule was given for the new system; whether it applies to the old one stays open and is not
+  claimed. The rebuild's cost and time to production are unknown: its step that writes answer choices has not met its lines on
+  the original or the fresh questions, Stage B did not pass, integration is undone, and several of its pieces are frozen or
+  stopped and need their own decisions.
+- **What reverses it:** Alex's word (it overrides this at any time); Alex changing the product rule; a sound comparison on the
+  subjects both systems track that materially favours the old system; the rebuild failing to meet its unchanged gates within a
+  bound agreed later; cost, only after correctness is established and the cost examined.
+- **A first checkpoint:** $5 of further spending on this direction; reaching it without a candidate that passes its prewritten
+  small test returns the direction to the council (it does not prove the rebuild cannot work).
+- **The one next step, $0 of model calls (ceiling $1 for the step):** a bounded review of the new system's answer choices in
+  the fresh week already run (seven questions, three attempts each, stored): each attempt read beside its source article, the
+744:| D400 | 2026-11-10 | Stage A of the clean ladder step is read against Alex's absolute lines with no paid control arm (an exception to AGENTS §7.3 for this first measurement); the lines are fixed; every report says it does not compare with production | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+892:| D548 | 2026-11-15 | Under D439 (council consensus): the gates the new system must pass, listed from the record (Stage A on Alex's lines; Stage B; the end-to-end comparison; use on unseen news as proposed lines; integration); the first blocker is the worthwhile questions its answer-choice step declines, framed at $0 | in force | `docs/research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md` |
+901:| D557 | 2026-11-15 | Under D439 (council consensus): the map of the first gate accepted with one correction; D400's lines stay as written and no pass is claimed; the record shows no bounded way to bring the four zero-fault lines to zero together (a delivery risk, not a reversal); next, at $0, one prompt audit of the event-reference class and the unlisted-part class with an independent second read | in force | `docs/research/2026-11-14-use-acceptance/second-week/FIRST-GATE-MAP.md` |
+902:| D558 | 2026-11-15 | Under D439 (council consensus): the audit of the event-reference and unlisted-part classes finds no bounded, product-relevant repair ready; D400's lines unchanged, the first gate recorded as not met; put to Alex: that record and one request, to finish the unfinished week as a diagnostic (matching and judge, pipeline ledger at most $0.80) after a $0 proof of the continuation; nothing sent without his word | in force; its proposed next task superseded by D559 | `docs/research/2026-11-14-use-acceptance/second-week/PROMPT-AUDIT-TWO-CLASSES.md` |
+934:| D590 | 2026-11-16 | The fresh A2 comparison closes (no verdict; a fresh gate-1 reading of the frozen step: lines 2, 3, 5 missed, 4 met); the due-day mark's family split (133 Codex vs 0 Claude fails on code-set days) is a reader discrepancy: a D-only diagnostic held all 12 class items in both families, the brief is unchanged; next a $0 census of Ruled-out rungs that catch a postponement | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md` |
+935:| D591 | 2026-11-16 | An announced "not by the due day" as a ruling out (37 company delays and 1 authority case in 296 frozen-step event answers): no decision settles the boundary; form and step unchanged, both readings recorded, 38 answers listed as candidates affected; the question on Alex's page (Claude's lean: it rules out); next a $0 design for the final-answer test's control shortfall | in force | `docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/BOUNDARY-CASES.md` |
+tests/test_reader_rules.py:2:144): a reader that cannot open the store, or cannot begin and pin its read, fails loudly with the store's path (`service.open_pinned`,
+tests/test_reader_rules.py:59:        service.open_pinned(str(path))
+tests/test_reader_rules.py:109:    conn = service.open_pinned(str(tmp_path / 'views.sqlite'))
+tests/test_reader_rules.py:111:    assert 0.4 <= waited < store.READ_BUSY_TIMEOUT_SECONDS                   # it waited for the holder, then read
+tests/test_reader_rules.py:118:    monkeypatch.setattr(store, 'READ_BUSY_TIMEOUT_SECONDS', 0.3)
+tests/test_reader_rules.py:122:        service.open_pinned(str(tmp_path / 'views.sqlite'))
+src/hivemind/views/store.py:216:READ_BUSY_TIMEOUT_SECONDS = 5.0     # a reader's busy timeout: SQLite's busy handler retries SQLITE_BUSY within it (live-service row 1)
+src/hivemind/views/store.py:225:    conn = sqlite3.connect(f'file:{real}?mode=ro', uri=True, timeout=READ_BUSY_TIMEOUT_SECONDS)
+src/hivemind/service.py:296:def open_pinned(path):
+   665	
+   666	- **Built:**
+   667	  - `store.READ_BUSY_TIMEOUT_SECONDS` and the explicit timeout;
+   668	  - `service.open_pinned` and `StoreUnreadable`, used by the API's `Connections` and MCP's `connections()`.
+   669	- **Tests:**
+   670	  - `tests/test_reader_rules.py` (5): 6a through `open_pinned`, the API's `/days` and streamed Idea route (500 with the path,
+   671	    before headers), and MCP at start and per tool; 6b waits about 0.5 s and then reads, and held past a 0.3 s timeout it fails
+   672	    with the path. The exclusive-lock fixture was first checked to make the read wait.
+   673	  - `stage_b/test_writer_proofs.py` (2): 5a, a `max_page_count` failure on the third day, incomplete with no redo, the lock free,
+   674	    and readers on the second day; 5b, `busy` while a reader is held, then `done` with the `-wal` at 0 bytes.
+   675	  - The `SIGKILL` test now does 7′ and 8′. 7′ is 88 outcomes over the listed 14 functions at 4 bounds in 2 states, the crashed
+   676	    store and preflight's copy each equal to the reference taken before the third day. 8′ is the symlink and own-path snapshots
+   677	    equal in every table.
+   678	- The suite passes (346), the new system's folders (192), and the frozen checks. Mutants 6 of 6 (`slice5-mutants.txt`).
+   679	
+   680	## Not covered
+   681	
+   682	- Resuming a stopped live store.
+   683	- The Idea planner on a new-system ledger.
+   684	- A long-running service's restart and monitoring.
+   685	- The page's note when its live read fails, which is Alex's presentation choice.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Step 1.*pass|Step 2.*pass|Step 3.*pass|step 3.*accepted|step 3.*passed|c8.*accepted|Stage B.*8' docs/DECISIONS.md docs/research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md clean-arch/PRD.md | head -25
+rg -n '2026-11-16|Deck 1|six lines|delay|reference' docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md | head -15
+cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/RESULT.md | head -40" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/PRD.md:134:| 2. The judge on the system's own questions (Stage B) | D428: unsupported figure answers at most five points above the baseline; unsupported yes/no answers at most 5%; unsupported last answers at most 3 in 30; enough controls. | Not passed: 4 comparable controls against 8 needed; the strictest last-answer reading missed (3 of 24). |
+docs/DECISIONS.md:745:| D401 | 2026-11-10 | Once a fresh review finds nothing serious, the ladder step is built and Stage A sent without asking again, capped at $3; a missed line stops and goes to Alex; Stage B needs his word again | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+docs/DECISIONS.md:752:| D408 | 2026-11-10 | Stage A of the clean ladder step missed its lines: the work stays at the step; the event answers are changed first, checked at no cost and reviewed, then the same Stage A is run once more within D401's $3; the other classes follow one at a time; Stage B is not started | in force | `clean-arch/step4-2026-11-10/stage_a/result/RESULT.md`; `DESIGN.md` §8 |
+docs/DECISIONS.md:759:| D415 | 2026-11-10 | The third Stage A of the clean ladder step is sent without asking again once each change (D413, D414, the scope of a ruling out, D411) is proved small and reviewed; a change that does not pass stops and goes to Alex; Stage B needs his word | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+docs/DECISIONS.md:763:| D419 | 2026-11-10 | The fourth Stage A is sent without asking again once each change (D416, D417, D418) is proved small and reviewed; a change that does not pass stops and goes to Alex; Stage B needs his word | superseded by D421 for these changes | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+docs/DECISIONS.md:770:| D426 | 2026-11-10 | The ladder step is not tuned further on the 44 theses and no fifth Stage A is sent; Stage A has not passed (lines 1, 3, 4 missed by 1 to 3 answers of 131); by his word the preparation of Stage B opens on that step, its $0 baseline reading of the 159 stored judgements first; no paid Stage B send without his word again | in force (an exception to D401's stop at a missed line) | `clean-arch/step4-2026-11-10/DESIGN.md` §8 |
+docs/DECISIONS.md:773:| D429 | 2026-11-11 | Build the adapter's ladder mode ($0, tests, mutants, fresh reviews until one finds nothing serious), then send Stage B's three draws without asking again (cap $2), read each judgement alone with the baseline's form, controls and count | in force | `clean-arch/step4-2026-11-10/DESIGN.md` §5, §8 |
+docs/DECISIONS.md:839:| D495 | 2026-11-14 | Alex opens a test arm of clean Step 1 (c21): each kept figure carries its own source and a fixed-form period, two fields and no rule change; a guarded probe on stored states first, the record test on unread articles only if it passes | in force; the probe ran and is undecided (D496) | `docs/research/2026-11-14-use-acceptance/LEAN-LOG.md` §6 |
+docs/DECISIONS.md:920:| D576 | 2026-11-16 | Under D439 (council rounds 53 to 58): Alex's page stands; Stage B's control line cannot be exercised by re-sending the judge (4 of 8; the blockers set upstream); no delivery check; next, at $0, a census of the unlisted-parts class (line 2) now that the page reads the list, back to the council before any arm | in force | `docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md` |
+docs/DECISIONS.md:936:| D592 | 2026-11-16 | Stage B's control line: an unchanged re-send stays at 4 of 8, delivery of three facts reaches at most 7, the eighth needs an unproven two-step change; the 7-control course is not started for the line's sake; the live-service operating contract resumed as a $0 design (D575's rows, a falsifier), back to the council before any build | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+docs/research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md:27:| 2 | The judge on the system's own questions (Stage B) | D428, against the baseline reading: unsupported amount answers at most five points above baseline; unsupported yes-or-no answers at most 5%; unsupported last answers at most 3 in 30, scaled; the design's completeness, coverage and control conditions | **Not passed** (2026-11-12): four qualifying controls with the needed material against eight required (question mismatches and missing material both contributed); the last-answer line missed on its strictest reading, 3 of 24 | nothing |
+1:# What waits on Alex: one page for one sitting (2026-11-16, D575)
+19:### 1. Mark the pilot cards (Deck 1), about half an hour
+42:### 2. What role should your six lines play for the answer-choice step?
+44:**Your six lines (D400):**
+69:- **One reading mark checks a field still unread.** It is not one of your six lines but a mark the readers give (an event's stated plan,
+70:  part of the reference); that field is read nowhere in the product.
+71:- **A paper recount:** with both of those marks set aside (the unjudged-parts mark and the event-reference mark), 9 or 7 of 13 topics
+72:  come out right, against 11 needed. The recount was not done with only the reference mark set aside.
+76:- Keep all six lines, read with every mark, as the gate.
+77:- Decide separately what role each disputed mark should play (the unjudged-parts mark, now shown on the page; the event-reference
+79:- Set new lines after your Deck 1 reading.
+96:  themselves on every one of these kinds, and none of them is one of your six lines. So we stopped adjusting this edge.
+112:    announces a slip past the date. Cost: on the card, a delay and a cancellation look the same.
+117:- **The final-answer test (D592):** it can compare only 4 questions with your reference where 8 are needed. No single repair the
+119:  reference set would be your choice.
+# The D diagnostic (council rounds 103 to 106): the sentence is not adopted; the obligation split does not recur when D is read alone
+
+**In one line:** fresh readers of both families, reading only the due-day mark, hold D on all 12 obligation yearly figures whose day
+code set. That includes the 8 the Codex readers had failed in the full readings, and it holds under the unchanged brief as under
+the clarified one. The sentence changes no mark in either family, and the prewritten rule does not adopt it.
+
+- One draw per reader.
+- Future gate reports note it as a reader discrepancy (council round 107), not as a proven artefact.
+
+## The marks (`score-output.txt`; frozen expectations in `expected.json`, hashes in `sha256.txt`)
+
+| Group | Expected | Codex, unchanged | Codex, clarified | Claude, unchanged | Claude, clarified | Earlier full-form readers, Codex / Claude |
+|---|---|---|---|---|---|---|
+| 1-8 obligation yearly figures, code's day, split before | holds | 8 holds | 8 holds | 8 holds | 8 holds | 8 fails / 8 holds |
+| 9-12 the same class, agreed before | holds | 4 holds | 4 holds | 4 holds | 4 holds | holds / holds |
+| 13-15 fail controls (a day's price, a 12-month window, a quarter) | fails | 3 fails | 3 fails | 3 fails | 3 fails | fails / fails |
+| 17-18 agreed acquisitions shown with an 18-month check day | fails | 2 fails | 2 fails | **2 holds** | **2 holds** | fails / fails |
+| 19-22 stated days | holds | 4 holds | 4 holds | 4 holds | 4 holds | holds / holds |
+| 23 constructed: the stated filing day shown | holds | holds | holds | holds | holds | (new) |
+| 24 constructed: a stated filing day, code's day shown | fails | fails | fails | fails | fails | (new) |
+| 16 uncounted (a rolling window's last day) | n/a | fails | fails | fails | fails | fails / fails |
+
+**The rule's result: NOT ADOPTED.**
+
+- Under the sentence, Claude fails 3 of the 5 fail controls, where 4 are needed: it holds the two acquisitions.
+- It does the same under the unchanged brief, so the sentence did not cause it.
+- Every other check passes.
+- No control moved between the two briefs, in either family.
+
+## What it shows, and what it does not
+
+- **A reader discrepancy, not a proven cause** (council round 107):
+  - In one draw, a fresh Codex reader under the unchanged brief applies D414 to all 12 class items, including 8 whose earlier
+    full-form Codex reading failed. It also keeps a stated filing day (item 23) and fails code's day against it (item 24).
+  - That suggests a context or reader effect of the full-form reading.
+  - It does not identify the cause, and it does not show that all 128 earlier marks would change: one draw per reader, 8 of the 23
+    class topics.
+  - The two countings bracket the unresolved rulings. They do not decide which reading is correct.
+- **Claude reading D alone departs from both families' full-form reading on agreed acquisitions** (items 17 and 18). So a D-only
+  pass is not simply more accurate; each family moves on a different class.
+
+codex
+**The next step should be a $0 trace of what makes the fresh topics fail line 5**, before designing another candidate. Line 5 counts whole topics as right only when their applicable marks hold; it is not a separate fault with one obvious repair. The fresh reading gives 2 of 5 right under one counting and 1 of 5 under the other, with the reference and due-day disputes moving much of the result. [Fresh result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md), [score](/Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt).
+
+Read each of the five topics’ three control answers beside the topic, source and settled marks. For every topic that is not right, show which mark changes its status under each counting, whether the families agree, and whether the issue reaches the question, answer choices, date or visible explanation. Then map each proposed cause to the existing censuses and decisions before considering a repair.
+
+- **A result that moves the question:** a recurrent, product-visible failure with a sourced general mechanism and a bounded test that could reduce it without fitting the five topics. Bring that design back before a send.
+- **A result that closes this particular investigation:** the missing rights reduce to already stopped classes, unresolved reader or policy disagreements, or no common sourced mechanism. Record the table and leave the gate unmet; that closes this *route to a candidate*, not the possibility of a later one.
+
+I would not design the eighth Stage B control first. The record says it would require changes to two steps to make a reference comparison possible; exercising the line would not show that the changes improve the product. Stage B also has a last-answer reading that missed its line, so the four-versus-eight control shortfall is not its only recorded obstacle. [Control shortfall](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/DESIGN-SHORTFALL.md), [clean PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:134).
+
+Two qualifications to the re-rank: the slice 5 record supports the named test-store proofs, with Idea and route coverage excluded from 7′; it does not establish live operation. And D544 keeps the old system running while work proceeds on the rebuild—it does not establish that the rebuild is better or authorize a switch. [Slice 5 evidence](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:665), [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6616).
+
+I inspected the saved records and code; I did not rerun the reported suites.
+
+CONSENSUS: trace the fresh line-5 failures at $0.
+tokens used
+3,645,763
+**The next step should be a $0 trace of what makes the fresh topics fail line 5**, before designing another candidate. Line 5 counts whole topics as right only when their applicable marks hold; it is not a separate fault with one obvious repair. The fresh reading gives 2 of 5 right under one counting and 1 of 5 under the other, with the reference and due-day disputes moving much of the result. [Fresh result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md), [score](/Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt).
+
+Read each of the five topics’ three control answers beside the topic, source and settled marks. For every topic that is not right, show which mark changes its status under each counting, whether the families agree, and whether the issue reaches the question, answer choices, date or visible explanation. Then map each proposed cause to the existing censuses and decisions before considering a repair.
+
+- **A result that moves the question:** a recurrent, product-visible failure with a sourced general mechanism and a bounded test that could reduce it without fitting the five topics. Bring that design back before a send.
+- **A result that closes this particular investigation:** the missing rights reduce to already stopped classes, unresolved reader or policy disagreements, or no common sourced mechanism. Record the table and leave the gate unmet; that closes this *route to a candidate*, not the possibility of a later one.
+
+I would not design the eighth Stage B control first. The record says it would require changes to two steps to make a reference comparison possible; exercising the line would not show that the changes improve the product. Stage B also has a last-answer reading that missed its line, so the four-versus-eight control shortfall is not its only recorded obstacle. [Control shortfall](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/DESIGN-SHORTFALL.md), [clean PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:134).
+
+Two qualifications to the re-rank: the slice 5 record supports the named test-store proofs, with Idea and route coverage excluded from 7′; it does not establish live operation. And D544 keeps the old system running while work proceeds on the rebuild—it does not establish that the rebuild is better or authorize a switch. [Slice 5 evidence](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:665), [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6616).
+
+I inspected the saved records and code; I did not rerun the reported suites.
+
+CONSENSUS: trace the fresh line-5 failures at $0.

@@ -8,6 +8,7 @@ import {
   changePoints,
   historyIndexAt,
   assessmentAt,
+  scoreTitle,
 } from '../model/thesis.js';
 import { axisScore, badgeHtml } from './primitives.js';
 import { esc } from './dom.js';
@@ -137,7 +138,7 @@ export function ladderChart(
   const cur = atStart.length ? lastOf(atStart).rung : null;
   const id = `clip-${scope}-${v.id}`.replace(/[^A-Za-z0-9_.:-]/g, '_');
   let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs><clipPath id="${id}"><rect class="js-clip" x="0" y="0" width="${day >= end ? W : x(day)}" height="${H}"/></clipPath></defs>`;
-  s += chartTitle('AI score', W, showScore ? badgeHtml(v, assessmentAt(v, day)) : '');
+  s += chartTitle(scoreTitle(v), W, showScore ? badgeHtml(v, assessmentAt(v, day)) : '');
   s += `<rect class="volume-bg" x="${left}" y="${volumeTop}" width="${W - left - right}" height="${barH}" rx="3"/>`;
   for (const l of axisLabels(start, x, end))
     s += `${l.day === end && !interactive ? '' : `<line class="timeline-grid" x1="${l.x}" x2="${l.x}" y1="${top}" y2="${baseY}"/>`}<line class="ax-tick" x1="${l.x}" x2="${l.x}" y1="${baseY}" y2="${baseY + 4}"/><text class="timeline-date" x="${l.x}" y="${baseY + 20}" text-anchor="${l.anchor}">${l.text}</text>`;

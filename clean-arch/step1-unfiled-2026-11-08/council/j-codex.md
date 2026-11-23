@@ -1,0 +1,9 @@
+**Do not send probe 3; close this fix round with the defect recorded.** The candidate has an unresolved conflict, and its expected benefit does not reach the missing revenue question behind the major test miss.
+
+**(a) The audit does not pass yet.** The new text says not to link a broader question alongside a narrower one for the same reason. The unchanged closing check says to link **every** question the evidence informs. Those instructions can point in different directions. The candidate also replaces the general instruction to assess related periods, populations and product variants with a narrower clause about estimates; that could lose other relevant evidence. [Candidate diff and audit](../LOG.md), [closing check](../arms/k6b-closing.txt)
+
+The fallback’s condition that the revenue question exists is sensible for an unseeded library. It still needs review alongside the prior evidence test and Alex’s supplier ruling; the audit itself identifies that outcome as uncertain.
+
+**(b) Close the round.** A 96-call probe would test a possible improvement to existing-question links, but it would not show whether the missing question is opened, and it may not satisfy Alex’s margin ruling. The reader disagreement also remains unresolved. Keep K6b as the chosen candidate, **not accepted**, with the financial loss and failed test recorded.
+
+The next work should be the separately versioned D371 evaluation: turn Alex’s exact rulings into reviewed examples, then check whether independent readers can apply them to fresh cases before using it to choose another change. Keep the frozen evaluation and test set unchanged. [D371](../../../docs/DECISIONS-log.md)

@@ -1,0 +1,22 @@
+**Send nothing on the dependency reversal now.** The verified rebuild and dry run are useful preparation, but they do not show that a uniform reversal would improve the product, and a one-day switch would retain old-direction conclusions. I recommend a separate $0 sizing of **dependency selection for today’s unseeded path** as the next task.
+
+The main corrections to the assessment are:
+
+- The table counts whether **statement IDs appeared in `v2`’s evidence block**. That is not the whole request. Its last request already showed the H200 question through the theme block, and the total-revenue conclusion included both the $392 billion reference and the $91 billion guidance. The $392 billion also appears in `v2`’s previous conclusion. Thus “four facts would be brought” and “the only sized reference is removed” are too strong: the corrected run would stop showing the direct total-revenue dependency, but what its newly generated and carried-forward conclusions contain is untested. [Reference-fact script](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-channel/reference_facts.py)
+- The supporters’ stored conclusions are leads, not predictions of their answers under reversed inputs. The source-backed passages establish relevance, but the dry run uses fake answers.
+- The frozen score leaves little room for measured improvement—15, 15 and 16 of 17 agreed—but **benefit is not impossible on that ruler**. The two disagreeing questions can change when an old dependency is *removed*, even if they receive no new line. Whether that would improve them is unknown.
+- The July 11–12 movement is an observed dependence on the total-revenue estimate; it is not, by itself, proof that the daily answers were wrong.
+
+I agree that the one-day switch is a poor next send because its previous conclusions and unrefreshed supporters carry the old direction. A clean 14-day comparison could address that contamination, but it would still be a seeded diagnostic and would not test today’s missing dependency selection. The earlier independent review also leaves the contracts for cycles, edge meaning, citations, truncation and closing unresolved. [Earlier review](/Users/lchingen/hivemind/docs/research/2026-11-04-filing-end-to-end/review-core-codex.md)
+
+D368 item 4 remains a **recorded decision**, settled by Claude on Alex’s delegation and awaiting build and measurement. It is fair to say its uniform reversal is not established as beneficial by these results; do not silently replace it with typed edges. A design that changes the relationship between a part and its whole would return to council under D439, and would have to prevent the same-round cycles the present design avoids. [D368](/Users/lchingen/hivemind/docs/DECISIONS-log.md:3960)
+
+For the **next $0 task**, examine the actual question openings in the stored fresh-week default run:
+
+1. For each newly opened question, identify the questions and same-item candidates the matcher was permitted to consider. Find candidate supporting relationships from those inputs, including distinct negative cases; read their sources and the existing conclusions at the time.
+2. Count which potential relationships could convey a useful, source-backed conclusion in the permitted direction, and which would duplicate the theme block, require a future question, or risk a cycle. This is a design census, not a claim that the matcher would choose them.
+3. **Stop** if the stored openings do not yield an identifiable positive case and a negative control, or if the relation cannot be stated without changing D368’s contract. Report the selection question as unexercised and return to council. If they exist, use them to frame the separately reviewed design for D368’s already-decided selection step; no model send or build follows automatically.
+
+I would also avoid calling D375 or later-linking fixes “patches” solely from the three confirmed examples: their effect and the share a correction would remove have not been measured. Neither currently offers a demonstrated next send that would choose between the two systems. Production remains the default, both systems remain, and the frozen ruler remains unchanged.
+
+Council position: record the corrected table and decision history; send neither reversal measurement now; size real unseeded dependency-selection opportunities at $0, with the stated stop rule, before designing that separate D368 slice.

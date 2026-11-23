@@ -1,0 +1,7 @@
+**NOT READY.** Part B can still pass when none of the three answers gives a correct source for a material claim.
+
+1. **Count material loss separately from wrong attribution.** For `8807`, suppose two answers give the $393B reference with a wrong source and the third omits it. The two wrong attributions are within tolerance, and the material-loss rule only counts answers labelled omitted or unsupported. Record whether each draw gives valid support separately from its error label. This case should be **not ready** because the saved retry supports the claim. [Part B outcome](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/PROBE-DESIGN.md:139)
+
+2. **Apply Part C’s claim-based count to wrong attributions too.** Rule (b) still requires the same source to be used twice. If two v12 answers use different sources for the same incorrect $390B market reference, and both sources actually say $393B, count that as repeated harm. [Part C harm rules](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/PROBE-DESIGN.md:124)
+
+3. **Require successful A1 and A0 results in the ordered verdict.** If A1 times out after retries, it has neither a format rejection nor a valid answer. The ordered incomplete rule does not cover that case, so a clean B and C could fall through to pass. Add the missing required A result to the incomplete rule and rehearse it separately from an explicit format rejection. [Ordered verdict](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/PROBE-DESIGN.md:136)

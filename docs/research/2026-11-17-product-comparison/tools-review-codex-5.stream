@@ -1,0 +1,1597 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 5 (read-only, $0; D672's condition)
+
+**Part A, Codex only.** Your round-4 Part A named three points. D675's "Round 4" entry says how each was fixed, in:
+- `stage0/score_comparison.py` (`verify_inputs`);
+- `stage0/eligibility.py` (`last_attempt`);
+- `stage0/build_cards.py` (the theme context).
+
+Confirm or refute each one, citing file and line. End Part A with `READY TO READ` or `NOT READY: <the smallest changes>`.
+
+**Part B.** `DESIGN-1.6.md` is now v2, answering round 4's Part B (Codex's `tools-review-codex-4.md` and the Claude reader's points
+summarised in D675).
+
+Check it against:
+- `RUN-PLAN-v12.md` §1.6;
+- `stage0/verdict-rule.json`;
+- the code it names: `clean-arch/step2-validation-2026-11-07/`, `clean-arch/step3/library.py`, `clean-arch/step4-2026-11-10/stage_a/`,
+  `clean-arch/unseeded-2026-11-10/MATCHING-v2.md`, `docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py`,
+  `src/hivemind/service.py`.
+
+Questions:
+1. Is each item faithful?
+2. Is each item buildable on the stores the run writes?
+3. Is the reading "a hard check not measured cannot clear release", extended to D400's code parts, right?
+
+End Part B with `BUILD AS WRITTEN` or `CHANGE: <the smallest changes>`. Keep it under about 500 words.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`, except the six `<draw>/run.json` files.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll verify the three reading-tool fixes, then check whether v2 of the §1.6 design can be built from the recorded stores.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '9729,9820p'
+nl -ba docs/research/2026-11-17-product-comparison/DESIGN-1.6.md
+nl -ba docs/research/2026-11-17-product-comparison/tools-review-codex-4.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/score_comparison.py | sed -n '150,225p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/eligibility.py | sed -n '45,135p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/build_cards.py | sed -n '70,188p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   150	                    if q['covers'] == 'split':                       # every split matter-question pair, as the counting resolves it
+   151	                        key = f"{system_of(draw)} cover split resolved to {'covers' if fav else 'does not cover'}"
+   152	                        tally[key] = tally.get(key, 0) + 1
+   153	        resolutions[c] = tally
+   154	    out['split resolutions'] = resolutions
+   155	    return out
+   156	
+   157	
+   158	def verify_inputs(readings):
+   159	    """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
+   160	    they name: each file is read again and compared with what the readings carry."""
+   161	    inputs = readings.get('inputs') or {}
+   162	    def read(kind):
+   163	        path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
+   164	        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):
+   165	            raise SystemExit(f'refused: the {kind} file the readings name is missing or differs from its fingerprint')
+   166	        return json.loads(path.read_text())
+   167	    frozen = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(MATTERS.read_text())['matters']]
+   168	    if readings['matters'] != frozen or inputs.get('matters_sha256') != hashlib.sha256(MATTERS.read_bytes()).hexdigest():
+   169	        raise SystemExit('refused: the readings were not made on the frozen matter list')
+   170	    mapped, eligibility, key = read('mapping'), read('eligibility'), read('deck_key')
+   171	    if mapped['mapping'] != readings['mapping'] or mapped['distinct'] != readings['distinct']:
+   172	        raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+   173	    if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+   174	        raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+   175	    keyed = {}
+   176	    for k in key.values():
+   177	        if k['role'] == 'product':
+   178	            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
+   179	    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+   180	    if keyed != held:
+   181	        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
+   182	
+   183	
+   184	def verdict(readings):
+   185	    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+   186	    for k, draws in present.items():
+   187	        if sorted(DRAWS) != draws:
+   188	            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+   189	    verify_inputs(readings)
+   190	    n = len(readings['matters'])
+   191	    controls = readings['controls']
+   192	    report = {'N': n}
+   193	    invalid = []
+   194	    def rejected(m):
+   195	        return m in REJECTED or (isinstance(m, dict) and 'split' in m and all(x in REJECTED for x in m['split']))
+   196	    if any(not rejected(m) for m in controls['plants']):
+   197	        invalid.append('a planted wrong answer without an explicit rejection')
+   198	    if sum(m == 'supported' for m in controls['supported']) < 3:
+   199	        invalid.append('fewer than 3 of 4 supported controls accepted')
+   200	    if sum(bool(x) for x in controls['repeats_same']) < 2:
+   201	        invalid.append('fewer than 2 of 3 repeats marked the same')
+   202	    if len(controls['plants']) != 6 or len(controls['supported']) != 4 or len(controls['repeats_same']) != 3:
+   203	        invalid.append('the deck does not hold 6 plants, 4 supported controls and 3 repeats')
+   204	    if invalid:
+   205	        return dict(report, verdict='invalid', why=invalid)
+   206	    small = []
+   207	    if n < 20:
+   208	        small.append(f'N = {n} < 20')
+   209	    for draw, d in readings['distinct'].items():
+   210	        both_ways = (d['ids'] - d['duplicates_both'], d['ids'] - d['duplicates_both'] - d['duplicates_split'])
+   211	        if min(both_ways) < 30:
+   212	            small.append(f'{draw}: {both_ways} distinct bets')
+   213	    if small:
+   214	        return dict(report, verdict='too small', why=small)
+   215	    margin = max(3, math.ceil(0.15 * n))
+   216	    per_counting = {}
+   217	    for counting in ('1', '2'):
+   218	        served = served_by(readings, counting)
+   219	        a = len(served['new'] - served['old'])
+   220	        b = len(served['old'] - served['new'])
+   221	        per_counting[counting] = {'a': a, 'b': b, 'served_new': sorted(served['new']), 'served_old': sorted(served['old']),
+   222	                                  'guardrails': guardrails(readings, counting)}
+   223	    report['margin'] = margin
+   224	    report['countings'] = per_counting
+   225	    report['beside'] = beside(readings, per_counting)
+    45	
+    46	def last_call(draw_folder):
+    47	    """The latest model call stored in any database under the draw's folder, and how many databases hold calls."""
+    48	    latest, databases = None, 0
+    49	    for path in sorted(Path(draw_folder).rglob('*.sqlite')):
+    50	        conn = sqlite3.connect(f'file:{path}?mode=ro&immutable=1', uri=True)
+    51	        if not conn.execute("select 1 from sqlite_master where type='table' and name='model_calls'").fetchone():
+    52	            continue
+    53	        databases += 1
+    54	        stamp = conn.execute('select max(created_at) from model_calls').fetchone()[0]
+    55	        if stamp and (latest is None or local(stamp) > latest):
+    56	            latest = local(stamp)
+    57	    return latest, databases
+    58	
+    59	
+    60	def expected_identity(run_root, draw):
+    61	    """The identity launch_comparison.py registers for a counted draw (plan §2; D667)."""
+    62	    options = {'until_day': '2026-09-20', 'passes': 3, 'from_day': '2026-07-01', 'manifest': str(DATA / 'manifest-2026-07-01-09-20.json'),
+    63	               'items': str(DATA / 'items-comparison.sqlite')}
+    64	    if draw.startswith('new'):
+    65	        options.update(limits=str(DATA / 'comparison-limits.json'), ladder_variant='astra-frozen', judge_end_day='2026-09-20')
+    66	    return {'kind': 'clean' if draw.startswith('new') else 'prod', 'label': draw, 'ledger': str(Path(run_root) / 'ledgers' / f'{draw}.json'),
+    67	            'options': options}
+    68	
+    69	
+    70	def last_attempt(ledger_path):
+    71	    """The latest attempt the ledger's log records (failed sends and refusals included), how many lines it holds, and why the log cannot
+    72	    establish the timing, or None: the log must exist and reconcile with the ledger (one line per settled attempt and per refusal, the
+    73	    settled charges summing to the spend, nothing still reserved), since the ledger writes its log line after its own state."""
+    74	    path = Path(str(ledger_path).replace('.json', '.attempts.jsonl'))
+    75	    if not path.exists():
+    76	        return None, 0, f'{path.name} missing'
+    77	    lines = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    78	    ledger = json.loads(Path(ledger_path).read_text())
+    79	    charged = sum(line.get('charged', 0) for line in lines)
+    80	    if len(lines) != ledger['attempts'] + ledger['refused'] or abs(charged - ledger['spent']) > 1e-6 or ledger['reserved'] > 1e-9:
+    81	        return None, len(lines), (f"{path.name} holds {len(lines)} lines and ${charged:.6f} against the ledger's {ledger['attempts']} attempts, "
+    82	                                  f"{ledger['refused']} refusals, ${ledger['spent']:.6f} spent and ${ledger['reserved']:.6f} reserved")
+    83	    return (max(local(line['at']) for line in lines) if lines else None), len(lines), None
+    84	
+    85	
+    86	def check(run_root):
+    87	    run_root = Path(run_root).resolve()
+    88	    draws, problems = {}, []
+    89	    for draw in mapping.DRAWS:
+    90	        record = json.loads((run_root / draw / 'run.json').read_text())
+    91	        if record.get('identity') != expected_identity(run_root, draw):
+    92	            problems.append(f"{draw}: registered identity {record.get('identity')} is not the counted draw's {expected_identity(run_root, draw)}")
+    93	        starts = [local(a['started at']) for c in record['components'].values() for a in c.get('attempts', []) if a.get('started at')]
+    94	        paths = mapping.store_paths(run_root, draw)                    # refuses an incomplete draw
+    95	        latest, databases = last_call(run_root / draw)
+    96	        attempt, attempts, unreconciled = last_attempt(run_root / 'ledgers' / f'{draw}.json')
+    97	        if unreconciled:
+    98	            problems.append(f'{draw}: the timing cannot be established: {unreconciled}')
+    99	        if attempt and (latest is None or attempt > latest):
+   100	            latest = attempt
+   101	        draws[draw] = {'launch': min(starts).isoformat() if starts else None, 'last call': latest.isoformat() if latest else None,
+   102	                       'databases with calls': databases, 'ledger attempts': attempts,
+   103	                       'stores': {Path(p).name: {'path': str(p), 'sha256': sha256(p)} for p in paths} if paths else {}}
+   104	        if not starts:
+   105	            problems.append(f'{draw}: no launch recorded')
+   106	    launches = [datetime.datetime.fromisoformat(d['launch']) for d in draws.values() if d['launch']]
+   107	    if launches and max(launches) - min(launches) > LAUNCH_WINDOW:
+   108	        problems.append(f'launches span {max(launches) - min(launches)}, more than one hour')
+   109	    first = min(launches) if launches else None
+   110	    for draw, d in draws.items():
+   111	        if first and d['last call'] and datetime.datetime.fromisoformat(d['last call']) > first + SEND_WINDOW:
+   112	            problems.append(f"{draw}: a call at {d['last call']}, more than 72 h after the first launch {first.isoformat()}")
+   113	    return {'eligible': not problems, 'problems': problems, 'first launch': first.isoformat() if first else None, 'draws': draws}
+   114	
+   115	
+   116	if __name__ == '__main__':
+   117	    result = check(sys.argv[1])
+   118	    Path(sys.argv[2]).write_text(json.dumps(result, indent=1) + '\n')
+   119	    print('ELIGIBLE' if result['eligible'] else 'NOT ELIGIBLE: ' + '; '.join(result['problems']))
+    70	    return re.split(r'\n\n(?:\[|Answer per the JSON schema)', body, maxsplit=1)[0]
+    71	
+    72	
+    73	def entries(body):
+    74	    """The '- ' entries of a section, each kept whole across line breaks."""
+    75	    return [e[2:] for e in re.split(r'\n(?=- )', body) if e.startswith('- ')]
+    76	
+    77	
+    78	def context(request_json, conn):
+    79	    """What the answering request gave besides its evidence items (`judging._lines_english`), blinded as the card is: thesis ids removed,
+    80	    each rung shown by its condition (D673). {hidden, previous, depends_on, themes}."""
+    81	    text = json.loads(request_json)['messages'][-1]['content']
+    82	    hidden = re.search(r'\[Not shown: (\d+) more pieces in force', text)
+    83	    previous = re.search(r'\[Previous conclusion, for comparison only\] rung (\d+); reasons: (.*?)(?:\n\nAnswer per the JSON schema|$)', text, re.S)
+    84	    out = {'hidden': int(hidden.group(1)) if hidden else 0, 'previous': None, 'depends_on': [], 'themes': []}
+    85	    for e in entries(section(text, '[Current conclusions of the theses it depends on]')):
+    86	        m = re.match(r'(v\d+) \(([^;]*); ([^)]*)\) (.*): now rung (\S+) .*?; reasons: (.*)$', e, re.S)
+    87	        if m:
+    88	            answer = conditions(m.group(1), conn).get(int(m.group(5))) if m.group(5).isdigit() else 'not judged yet'
+    89	            out['depends_on'].append({'flag': m.group(2), 'direction': m.group(3), 'question': m.group(4), 'answer': answer, 'reasons': m.group(6).strip()})
+    90	        else:
+    91	            out['depends_on'].append({'flag': 'not yet created', 'direction': '', 'question': re.sub(r'^the (\S+) thesis on chain v\d+', r'the \1 question of a chain', e).strip(),
+    92	                                      'answer': None, 'reasons': ''})
+    93	    for e in entries(section(text, '[Themes in force, ')):
+    94	        m = re.match(r'(v\d+) \([^,]*, due (\S+)\) (.*): now rung (\d+) .*?; judged (\S+?)(; updated since this thesis was last judged)?; reasons: (.*)$', e, re.S)
+    95	        if not m:
+    96	            raise ValueError(f'a theme entry the card cannot read: {e[:120]!r}')
+    97	        rungs = conditions(m.group(1), conn)
+    98	        out['themes'].append({'question': m.group(3), 'due': m.group(2), 'rung': int(m.group(4)), 'answer': rungs.get(int(m.group(4))),
+    99	                              'possible_answers': [rungs[p] for p in sorted(rungs)], 'judged': m.group(5), 'updated': bool(m.group(6)),
+   100	                              'reasons': m.group(7).strip()})
+   101	    if previous:
+   102	        out['previous'] = {'rung': int(previous.group(1)), 'reasons': previous.group(2).strip()}
+   103	    return out
+   104	
+   105	
+   106	def library(views_path, archive_path, items_path):
+   107	    conn, archive, items = ro(views_path), ro(archive_path), ro(items_path)
+   108	    day_of = lambda input_id: (items.execute('select publication_day from items where input_id=?', (input_id,)).fetchone() or [None])[0]
+   109	    publisher_of = lambda input_id: (items.execute('select publisher from items where input_id=?', (input_id,)).fetchone() or [None])[0]
+   110	    views = list(conn.execute('select view_id, question, due_day, created_seq, created_from_input from views order by created_seq'))
+   111	    out = []
+   112	    for v in views:
+   113	        latest = conn.execute('select rung, reasons, request_sha256, seq from judgements where view_id=? order by seq desc limit 1',
+   114	                              (v['view_id'],)).fetchone()
+   115	        rungs = conditions(v['view_id'], conn)
+   116	        bounded = conn.execute('select count(*) from rungs where view_id=? and (lo is not null or hi is not null)', (v['view_id'],)).fetchone()[0]
+   117	        entry = {'question_id': v['view_id'], 'question': v['question'], 'due': v['due_day'], 'opened': day_of(v['created_from_input']),
+   118	                 'opened_from': v['created_from_input'], 'type': 'figure' if bounded else 'yes/no',
+   119	                 'possible_answers': [rungs[p] for p in sorted(rungs)], 'answer': None, 'answer_index': None, 'reasons': None, 'material': []}
+   120	        if latest is not None:
+   121	            entry['answer'] = rungs.get(latest['rung'])
+   122	            entry['answer_index'] = sorted(rungs).index(latest['rung'])      # the stored rung's place in possible_answers
+   123	            entry['reasons'] = latest['reasons']
+   124	            row = archive.execute('select request_json from model_calls where request_sha256=? limit 1', (latest['request_sha256'],)).fetchone()
+   125	            if row is None:
+   126	                raise SystemExit(f"{v['view_id']}: the latest judgement's request is not in the archive")
+   127	            entry['material'] = [dict(item, publisher=publisher_of(item['input_id'])) for item in material(row['request_json'])]
+   128	            entry['context'] = context(row['request_json'], conn)
+   129	            if entry['context']['previous']:
+   130	                entry['context']['previous']['answer'] = rungs.get(entry['context']['previous']['rung'])
+   131	        out.append(entry)
+   132	    return out
+   133	
+   134	
+   135	def card_text(entry, lib):
+   136	    lines = [f"Question: {entry['question']}", f"Opened: {entry['opened']}", f"Due: {entry['due']}", 'Possible answers (numbered as the reasons cite them):']
+   137	    lines += [f'{k}. {c}' for k, c in enumerate(entry['possible_answers'], 1)]
+   138	    if entry['answer'] is None:
+   139	        lines += ['', 'Latest answer at the cutoff: no answer']
+   140	    else:
+   141	        lines += ['', f"Latest answer at the cutoff: {entry['answer']}", f"Reason given: {entry['reasons']}", '',
+   142	                  f"Material that answer was given ({len(entry['material'])} items, by day):"]
+   143	        for k, item in enumerate(sorted(entry['material'], key=lambda m: m['day']), 1):
+   144	            lines.append(f"{k}. ({item['tier']}; publisher {item['publisher']}; speaker {item['speaker']}; original source {item['original']}; "
+   145	                         f"published {item['day']}) {item['summary']}")
+   146	            if item['quote']:
+   147	                lines.append(f"   Quote: {item['quote']}")
+   148	        ctx = entry.get('context') or {}
+   149	        if ctx.get('hidden'):
+   150	            lines.append(f"Not shown to the answer: {ctx['hidden']} more items in force, read in earlier answers; the previous answer carries them.")
+   151	        if ctx.get('depends_on'):
+   152	            lines += ['', 'Answers of the questions it depends on, as the answer was given them:']
+   153	            for d in ctx['depends_on']:
+   154	                lines.append(f"- ({d['flag']}; {d['direction']}) {d['question']}: answered {d['answer'] or 'not yet'}; reason: {d['reasons']}"
+   155	                             if d['answer'] else f"- {d['question']} ({d['flag']})")
+   156	        if ctx.get('themes'):
+   157	            lines += ['', 'Themes in force, as the answer was given them:']
+   158	            for t in ctx['themes']:
+   159	                lines.append(f"- {t['question']} (due {t['due']}): answered {t['rung']}. {t['answer']} on {t['judged']}"
+   160	                             + ('; updated since this question was last answered' if t['updated'] else '') + f"; reason: {t['reasons']}")
+   161	                lines.append('  Its possible answers: ' + ' '.join(f'{k}. {c}' for k, c in enumerate(t['possible_answers'], 1)))
+   162	        previous = ctx.get('previous')
+   163	        lines += ['', f"Previous answer, given for comparison: {previous['rung']}. {previous['answer']}; reason: {previous['reasons']}" if previous
+   164	                  else 'Previous answer: none (this was the first answer).']
+   165	    lines += ['', "The library's questions in opening order (this card's question marked):"]
+   166	    lines += [f"- opened {e['opened']}: {e['question']}" + ('   <- this question' if e['question_id'] == entry['question_id'] else '') for e in lib]
+   167	    return '\n'.join(lines)
+   168	
+   169	
+   170	def main(views_path, archive_path, items_path, out_path):
+   171	    lib = library(views_path, archive_path, items_path)
+   172	    cards = [{'question_id': e['question_id'], 'answered': e['answer'] is not None, 'text': card_text(e, lib)} for e in lib]
+   173	    Path(out_path).write_text(json.dumps({'library': lib, 'cards': cards}, indent=1, ensure_ascii=False) + '\n')
+   174	    print(f'{len(lib)} questions, {sum(c["answered"] for c in cards)} answered; material items {sum(len(e["material"]) for e in lib)}')
+   175	
+   176	
+   177	if __name__ == '__main__':
+   178	    main(*sys.argv[1:5])
+
+ succeeded in 0ms:
+  9729	- **Round 3** (Codex in `tools-review-codex-3.md`, plus a fresh Claude reader; both "not ready"), fixed the same day:
+  9730	  - **Eligibility:** a draw must carry exactly the identity `launch_comparison.py` registers (kind, ledger, items database, manifest,
+  9731	    07-01 to 09-20, three passes; for the new system also the limits, astra-frozen and the judge to 09-20). All six live draws match.
+  9732	    The 72-hour window also counts every attempt in the draw's ledger, because a failed send leaves no archive row.
+  9733	  - **The scorer re-reads every input:**
+  9734	    - the matter rows must equal the frozen list;
+  9735	    - the mapping file must match its fingerprint and equal the readings' mapping;
+  9736	    - the eligibility file must pass and must be the one the mapping names;
+  9737	    - the deck key's product cards must be the readings' cards.
+  9738	    - Codex had shown a lead scored on 20 synthetic matters with placeholder fingerprints.
+  9739	  - **Every split matter-question pair** is reported with its resolution, including on a question that covers another matter outright.
+  9740	  - **The card:**
+  9741	    - shows its own opening day and marks its place in the library's opening order, which a `duplicate` mark needs;
+  9742	    - numbers the possible answers, as the reasons cite rungs;
+  9743	    - now carries what the answering request gave besides its evidence: the hidden-items line, the themes in force and the previous
+  9744	      answer, each rung shown by its condition and with no thesis id.
+  9745	    - Without these, readers would judge "supported" on part of what the answer was given. Stored latest requests hid pieces in 10 of
+  9746	      29 (new) and 14 of 39 (old) cases, 143 and 461 pieces.
+  9747	    - Over the 829 stored judge requests of both systems, the theme, dependency and previous-answer counts parse exactly. None of them
+  9748	      holds a dependency, so that branch is not exercised on real data.
+  9749	  - **Smaller fixes:**
+  9750	    - control confirmations are appended per deck attempt and kept on a shortfall;
+  9751	    - the export writes its key and folder only after every store passed its check.
+  9752	  - **Now:** 44 tests; 35 mutants and 5 controls, all as predicted, each mutant failing its own assertion.
+  9753	- **Card form check after the round-3 card changes** (D673; `stage0/blinding-check-codex-3.md`, `-4.md`):
+  9754	  - Round 3 named one form element: a third annotation form that the answer step appends to a rung condition. The filter is now the
+  9755	    closed set of `ladder_step.py`'s three suffixes; of 484 stored conditions, none is left annotated.
+  9756	  - Round 4 named only content: the number of rungs, the number of themes and the size of the library. The check is closed.
+  9757	- **Round 4.**
+  9758	  - **Readers' verdicts on the reading tools:** the Claude reader said "ready to read". Codex named three more points, all fixed:
+  9759	    - the scorer takes each card's guardrail, covering and type marks from the verified deck key, and refuses readings that differ.
+  9760	      Codex had flipped a loss to a lead by changing six flags in memory;
+  9761	    - the 72-hour timing needs a complete attempt log: its line count must equal the ledger's attempts plus refusals, its charges must
+  9762	      sum to the spend, and nothing may still be reserved. A missing or short log leaves the timing "not established", and the draw is
+  9763	      not eligible. On slice 2: 156 of 156 and 79 of 79;
+  9764	    - theme context on the card keeps the update marker and lists each theme's numbered possible answers. 29 of 52 stored theme reasons
+  9765	      cite another rung.
+  9766	  - **Also fixed:**
+  9767	    - the card refuses a request whose evidence count it cannot read in full;
+  9768	    - eligibility resolves the run root before it compares paths.
+  9769	  - **Totals:** 47 tests; 39 mutants and 5 controls, all as predicted. 125 answered cards are built on all 12 stored stores of both
+  9770	    systems without a refusal.
+  9771	  - **The §1.6 design moved to v2 (`DESIGN-1.6.md`) on both readers' Part B:**
+  9772	    - every store is taken from `run.json` and fingerprinted;
+  9773	    - the release status is printed beside the verdict;
+  9774	    - Step 2 line 1 uses the neutral labelling question, a generator-miss audit, and labels frozen before retrieval is read;
+  9775	    - line 3 is a paired test that varies grouping alone, against an independent detail key;
+  9776	    - D431 records its substitution and its comparability rule;
+  9777	    - every printed-beside item has its tool.
+     1	# The §1.6 tools: what D665 prints beside the verdict (design v2, before any output is read; D672)
+     2	
+     3	Governing text:
+     4	- `RUN-PLAN-v12.md` §1.6;
+     5	- `stage0/verdict-rule.json`: `hard_checks` and `printed_beside`.
+     6	
+     7	The ruler and the frozen instruments do not move (D674). Every reader is a closed session (`census/census_readers.run`), one per
+     8	family, with memories off (D661).
+     9	
+    10	v2 answers round 4's Part B: Codex in `tools-review-codex-4.md`, and the Claude reader summarised in D675.
+    11	
+    12	## 0. Inputs, release status and the report
+    13	
+    14	- **Stores.**
+    15	  - Every tool reads a draw's components from its `run.json`: `components[c]['folder']`, so `step1-redo` or `step2-redo` after a D449
+    16	    redo, and the judge's completed attempt (`mapping.store_paths`).
+    17	  - `eligibility.py` fingerprints every file a tool reads: the judge or old store, `step1/trace.sqlite`, `step2/decisions.json` and
+    18	    `library.json`, and each pass's ladder `outcomes.jsonl`.
+    19	  - Each tool refuses a file whose sha256 differs.
+    20	- **Release status sits beside the verdict and does not replace it.**
+    21	  - `score_comparison` gives the verdict (invalid / too small / lead / loss / no winner).
+    22	  - The report adds "release: clear", or "release blocked: <check>" for any hard check that failed or was not measured (D665: "a release
+    23	    blocker reported with the verdict").
+    24	- **A hard check that is not measured cannot clear release.**
+    25	  - The frozen rule says this of Step 2's lines. This design reads it the same way for D400's code parts, whose own accounting marks a
+    26	    line "not measured" below 3 company-figure theses or 20 laddered theses.
+    27	  - This is a reading to settle in the council and record before any output; it is the cautious, reversible course.
+    28	- **Printed beside, each from its tool:**
+    29	
+    30	| Item | Tool | Source |
+    31	|---|---|---|
+    32	| D428's limits beside the guardrails | `score_comparison.beside` | The new system's figure share against 12.7% to 14.4%, its yes/no share against 5%, as D428 states them |
+    33	| Sign test and interval (illustrative) | `score_comparison.beside` | Matters served by exactly one system: two-sided binomial p on a against b, and the Wilson 95% interval for a/(a+b), labelled illustrative |
+    34	| Company-figure subgroup a, b, N | `score_comparison.beside` | Built |
+    35	| Days from first source to opening | `score_comparison.beside` | For each matter a system serves: the matter's `first_day` (`matters.json`) to the earliest opening day of a covering question, per draw |
+    36	| Floors | `score_comparison.beside` | §4 |
+    37	| D400 reader lines, D400 code parts | §1 | |
+    38	| Step 2's three lines | §2 | |
+    39	| D431's 07-14 reading | §3 | |
+    40	| 37 bulk-viewer articles excluded; 2 split matter pairs kept apart | report text | D669 and D671 records |
+    41	
+    42	## 1. D400, all three passes
+    43	
+    44	- **Code parts** (`d400_code_check.py`): Stage A's accounting, line 6, on each new draw's three ladder passes. The ladder folder comes
+    45	  from `run.json`.
+    46	  - A skipped ladder component (no question opened) is "not measured".
+    47	  - "Figure ranges meet end to end" is enforced at the write (`ladder_step.check_answer`).
+    48	- **Reader lines 1–5:** Stage A's reading, unchanged, run per draw. `collect_readings.py` reads one ladder folder and its packet files:
+    49	  `build_reader_packets.py <key> --run <ladder folder>=<cases.json> --readers <draw's reader folder>`, then
+    50	  `collect_readings.py rows | disputes | report` on that folder.
+    51	
+    52	## 2. Step 2's three lines on draw new-1 (hard)
+    53	
+    54	Inputs: new-1's Step 1 trace, its `decisions.json` and its `library.json`. The seed is 20261117 plus the line's number.
+    55	
+    56	**Line 1, search.**
+    57	- **Sample:** records drawn at random in three equal article strata (by forward position).
+    58	- **Candidates:** earlier records only, in forward order, from two routes that do not use Step 2's embeddings:
+    59	  - entity-wide word overlap, top 10 (`retrieve.py` R0e);
+    60	  - the same original party within 3 days.
+    61	- **Labels:** two readers, one per family, answer the neutral relation question of the Step 2 reference labelling
+    62	  (`poc/data/step2-validation-2026-11-07/v2-prompt-*.md`, question 1: the relation of the later record to the earlier, with no claim that
+    63	  the system filed it). A third reader settles disagreements.
+    64	- **Generator-miss audit (Step 2 log §1):** for each sampled record, 5 random earlier records of the same entity that neither route
+    65	  returned are labelled the same way. A same-statement pair found here is a labelled counterpart too, and the audit's yield is
+    66	  reported.
+    67	- **The labels are frozen** (file and sha256) before Step 2's candidates are read.
+    68	- **Pass:** a group holding a labelled counterpart is among the record's Step 2 candidates (`decisions.json` `candidates`) for at least 90
+    69	  of 100 labelled records. Sampling stops at 100 labelled records. Fewer: **not measured**.
+    70	
+    71	**Line 2, clear wrong merges.**
+    72	- **Population:** every repeat in `decisions.json` that was not refused, each joined to its recorded `repeat_of` original.
+    73	- **Sample:** 200 at random.
+    74	- **Reading:** the frozen Step 2 merge reading (`merge-prompt-1.md`, and `merge-third-prompt.md` on every pair either reader rejected).
+    75	  The packet goes in the prompt in place of the file path.
+    76	- **Pass:** the third reader's `wrong` count is at most 4 of 200. Fewer than 200 repeats: **not measured**.
+    77	
+    78	**Line 3, later details.**
+    79	- **Population:** groups whose original has at least one later report.
+    80	- **Sample:** 30 at random.
+    81	- **The two renderings vary the grouping alone:**
+    82	  - "apart": each member as its own entry;
+    83	  - "grouped": the original, then each later report under it.
+    84	  - Both use the same per-record fields (`step3/library.record_text`'s head line for every member).
+    85	- **An independent detail key:** a third-family reader lists, from the members' own records, every material detail that only a later
+    86	  report adds. This is the key, and it is frozen before either rendering is read.
+    87	- **Reading:** two readers, one per family, each read both renderings under random labels and mark which key details each rendering
+    88	  states.
+    89	- **Pass:** over the 30 groups, the grouped rendering's paired detail total is no fewer than the apart rendering's, under both readers
+    90	  (the recorded "no fewer" test). Fewer than 30 groups: **not measured**.
+    91	
+    92	The point estimate decides each line. A Wilson 95% interval is printed beside.
+    93	
+    94	## 3. D431's frozen-reference reading at 07-14 (printed beside; both systems)
+    95	
+    96	- **The as-of state:** each store's own readers at a day (`service.py`'s as-of path): questions opened from inputs published on or before
+    97	  07-14, and the latest judgement with an input id of `day:2026-07-14` or earlier.
+    98	- **The mapping:** two blind readers map each question to the 23 ruler questions under MATCHING-v2's SAME rule, and a third reader settles
+    99	  disagreements.
+   100	- **A substitution, recorded here before any output:**
+   101	  - MATCHING-v2 §4's adapter, which re-asks the ruler question on the mapped evidence, is not built. It would change what the system
+   102	    answered.
+   103	  - This reading compares the answers actually given. It is therefore a different measurement from D395's seven-question score, and it
+   104	    is labelled as such.
+   105	- **Comparable only when the questions are the same:**
+   106	  - a yes/no question with the same due day as the ruler question;
+   107	  - a figure question with the same period, measure and unit. The unit comes from the old system's `view_keys.unit` and the new system's
+   108	    checked ladder answer (`figure.unit`).
+   109	  - Every other SAME match is "not comparable", for example another deadline or a part of a total.
+   110	- **Agreement** uses `score_judgement.py`'s own rules.
+   111	- **Printed:** per question and draw: agree, disagree, not comparable, not opened, or opened but not judged. Also the count of comparable
+   112	  agreements on the seven graded questions, per draw and system.
+   113	
+   114	## 4. The floors (printed beside; proposed, not gates)
+   115	
+   116	From the cards, per system, under both countings:
+   117	- **Coverage:** matters served / N.
+   118	- **Trivia:** trivia marks among the guardrail sample's decided worth marks. Duplicates are reported apart.
+   119	- **Supported:** supported answers among the guardrail sample's decided answers.
+   120	
+   121	Wrong citations and answer-changing omissions: **not measured**.
+   122	
+   123	## Tables
+   124	
+   125	**Value × reader:**
+   126	
+   127	| Value | Written by | Read by |
+   128	|---|---|---|
+   129	| `eligibility.json` (all fingerprints) | eligibility | every §1.6 tool, export, scorer |
+   130	| d400 code check and reader lines | `d400_code_check`, Stage A tools | report: release status |
+   131	| step2-lines.json | `step2_lines.py` | report: release status |
+   132	| d431-0714.json | `d431_reading.py` | report |
+   133	| beside quantities | `score_comparison.beside` | report |
+   134	
+   135	**State × event:**
+   136	
+   137	| Event | Handling |
+   138	|---|---|
+   139	| A reader session voids | Retried once, then reported missing. A line with a missing mark is not measured |
+   140	| A draw stopped or ineligible | No release verdict. The tools run on what finished, as a diagnostic (plan §1.4 item 10) |
+   141	| A file changed after eligibility | The tool refuses |
+   142	| A component was redone | Its counted folder is the one `run.json` names |
+     1	## Part A — Reading tools
+     2	
+     3	All six permitted `run.json` identities match. The native-ID sample, redo selection, prior-round debate, confirmed plants, split tally and the card’s own position in the opening order are fixed. I accept D675’s readings of the frozen rule. [Eligibility](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:60) · [D675](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9729)
+     4	
+     5	- **The scorer still trusts the flags that decide which cards count.** It re-reads the key but compares only question IDs. In memory, changing six `guardrail` flags flipped a practical loss to a lead with every input file unchanged. Take `guardrail`, `covering` and answer type from the verified key. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:158)
+     6	- **Timing can pass with incomplete evidence.** A missing attempt log counts as zero attempts, and the writer can lose a log line after recording the charge. Reconcile settled attempts with ledger totals. Where timing cannot be established, report a diagnostic. [Eligibility](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:70) · [Ledger](/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/budget_replay.py:101)
+     7	- **Theme context still loses meaning.** The card drops the update marker and shows only the chosen condition. In two historical stores, 29 of 52 theme reasons cited another rung. Preserve the marker and show the numbered conditions those reasons refer to, without raw IDs. [Judge request](/Users/lchingen/hivemind/src/hivemind/views/judging.py:149) · [Card builder](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/build_cards.py:89)
+     8	
+     9	NOT READY: verify scoring flags and attempt-log completeness, and render the theme references.
+    10	
+    11	## Part B — §1.6 design
+    12	
+    13	- **D400 and Step 2 line 2 have usable inputs.** Run the D400 collector per draw because it reads one ladder folder and its packet files. Treat a skipped ladder as unmeasured. For line 2, join each accepted repeat to its recorded `repeat_of` and retain the frozen third-reader rule. [D400 check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:19) · [Collector](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/collect_readings.py:38) · [Repeat record](/Users/lchingen/hivemind/clean-arch/step2/compare.py:109)
+    14	- **Line 1 needs independent labels.** Lexical and party searches provide independent candidates but can miss the same pairs the product misses. Restore the earlier generator-miss audit. Remove the merge prompt’s claim that each candidate was already filed as a repeat. Freeze the labels before checking product retrieval. [Design](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:27) · [Audit](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:39) · [Prompt](/Users/lchingen/hivemind/poc/data/clean-step2-forward-2026-11-08/merge-prompt-1.md:3)
+    15	- **Line 3 needs the paired dossier test.** Both renderers exist. Hold the surrounding dossier and independent detail key fixed, vary grouping alone, and compare paired detail totals. The proposed zero-loss rule is stricter than the recorded “no fewer” test. [Renderers](/Users/lchingen/hivemind/clean-arch/step3/library.py:135) · [Recorded test](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:305)
+    16	- **D431 needs a recorded method decision.** Use the stores’ existing as-of readers for July 14. The no-adapter comparison can report agreement on the answers actually given, but D395’s seven-question score used ruler wording and ladders. Record the substitution and freeze comparability rules before reading. [As-of readers](/Users/lchingen/hivemind/src/hivemind/service.py:118) · [D395](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4303)
+    17	- **Keep the verdict and release status separate.** “Practical lead” can coexist with “no release: hard check.” The floors can be computed from the cards. Assign the remaining report items, including D428 limits, illustrative statistics and time to opening. [Plan](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md:219) · [Frozen report](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/verdict-rule.json:77)
+    18	
+    19	CHANGE: fix Step 2’s labels and paired test, record the D431 substitution, and complete the report wiring.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md | sed -n '215,227p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/verdict-rule.json | sed -n '75,93p'
+rg -n '"'^def test|''^== control|log.*complete|key metadata|updated.*rung'"' docs/research/2026-11-17-product-comparison/stage0/{test_eligibility.py,test_build_cards.py,test_score_comparison.py,mutants-reading-tools.txt}" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   215	  - It is tested on stored draws of both systems (`clean-e2e-full` c1 and p1).
+   216	  - `council_mark.py` takes the deck and its card count as arguments, and adds `insufficient` and `no answer`. Deck 1's recorded output must
+   217	    reproduce under the change.
+   218	
+   219	### 1.6 What D665 prints beside, with its tool and input
+   220	
+   221	| What | Status | Tool and input |
+   222	|---|---|---|
+   223	| D400 accounting, all three passes (`stage_a/accounting.py`) | **Hard:** figure ranges meet end to end; the favourable end is stable; the due day agrees across all three sends for ≥ 90% of eligible questions. A failure is a release blocker reported with the verdict. Lines 1–5: reported | The new system's three draws. The reader lines use Stage A's two-family reading (`clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py` and its tally, D400) on every draw |
+   224	| Step 2's three lines (D427; PRD §5) | **Hard**, like D400's code-decided parts: a failed line is a release blocker reported with the verdict. Pass: earlier version found ≥ 90%; clearly wrong merges ≤ 2%; no fewer later details than no merging. Each decided on its point estimate, intervals printed. A line with fewer eligible cases than its frozen sample is **not measured** and cannot clear release | The Step 2 log §12 method on draw 1 of the new system: recall over 100 records with a labelled earlier version (stratified random); blind review of 200 random merges; the no-merge dossier comparison on 30 groups. The sample sizes are a recorded design choice |
+   225	| D431's frozen-reference reading, 07-01 to 07-14 | Printed beside | The D395 method (`clean-arch/unseeded-2026-11-10/MATCHING-v2.md`: the seven graded questions against the frozen judgement gold) on **both** systems' draws as they stood at 07-14 |
+   226	| Proposed absolute floors | Printed beside | Coverage ≥ 80%, trivia ≤ 20% and supported ≥ 90% come from this comparison's cards. Wrong citations ≤ 5% and zero answer-changing omissions need source-first readings this plan does not run: printed as **not measured** (agreed in the council before the send) |
+   227	
+    75	  "no practical winner: everything else"
+    76	 ],
+    77	 "hard_checks": [
+    78	  "D400 accounting code parts on all three passes (figure ranges end to end; favourable end stable; due day agreeing across all three sends for >= 90% of eligible questions)",
+    79	  "Step 2 three lines (>= 90% recall on 100 records; <= 2% clearly wrong merges on 200; no fewer later details on 30 groups); a line short of its sample is not measured and cannot clear release"
+    80	 ],
+    81	 "printed_beside": [
+    82	  "D428 limits",
+    83	  "sign test and interval (illustrative)",
+    84	  "company-figure subgroup a, b, N",
+    85	  "days from first source to opening",
+    86	  "D400 reader lines",
+    87	  "D431 frozen-reference reading for both systems",
+    88	  "floors: coverage >= 80%, trivia <= 20%, supported >= 90% from the cards; citations and omissions not measured",
+    89	  "37 bulk-viewer articles excluded (kept would be 447)",
+    90	  "2 split matter pairs kept apart"
+    91	 ],
+    92	 "card": "stage0/card-spec.md (frozen with this rule)"
+    93	}
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:67:def test_a_plant_without_an_explicit_rejection_makes_the_reading_invalid():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:74:def test_fewer_than_three_supported_controls_or_two_repeats_is_invalid():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:84:def test_too_small_when_n_under_20_or_a_draw_under_30_distinct_bets_either_way():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:92:def test_a_practical_lead_needs_the_margin_twice_b_and_every_guardrail_exercised_and_passing():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:100:def test_an_unexercised_guardrail_blocks_a_lead_but_not_a_loss():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:106:def test_a_guardrail_breach_under_both_countings_is_a_loss():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:116:def test_a_matter_counts_as_served_only_in_two_of_three_draws():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:125:def test_splits_resolve_for_the_favoured_system_in_each_counting():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:136:def test_a_resolved_insufficient_stays_out_of_the_decided_shares():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:144:def test_exactly_ten_points_is_not_a_breach_and_more_is():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:160:def test_a_plant_both_readers_rejected_with_different_labels_is_rejected():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:167:def test_readings_without_all_six_draws_are_refused():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:180:def test_the_company_figure_subgroup_is_printed_beside():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:189:def test_a_sampled_card_that_covers_a_matter_is_not_in_the_shares():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:198:def test_a_split_cover_on_a_sampled_card_resolves_per_counting():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:207:def test_readings_not_made_from_their_named_inputs_are_refused():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:228:def test_every_split_matter_question_pair_is_reported_with_its_resolution():
+docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:238:def test_card_marks_that_differ_from_the_deck_key_are_refused():
+docs/research/2026-11-17-product-comparison/stage0/mutants-reading-tools.txt:1:== control: scorer: exit 0, as predicted | 18 passed in 0.04s | 18 passed in 0.04s
+docs/research/2026-11-17-product-comparison/stage0/mutants-reading-tools.txt:2:== control: mapping: exit 0, as predicted | 9 passed in 0.01s | 9 passed in 0.01s
+docs/research/2026-11-17-product-comparison/stage0/mutants-reading-tools.txt:3:== control: marking: exit 0, as predicted | 12 passed in 0.02s | 12 passed in 0.02s
+docs/research/2026-11-17-product-comparison/stage0/mutants-reading-tools.txt:4:== control: cards: exit 0, as predicted | 4 passed in 0.01s | 4 passed in 0.01s
+docs/research/2026-11-17-product-comparison/stage0/mutants-reading-tools.txt:5:== control: eligibility: exit 0, as predicted | 4 passed in 0.06s | 4 passed in 0.06s
+docs/research/2026-11-17-product-comparison/stage0/test_eligibility.py:40:def test_six_complete_draws_inside_both_windows_are_eligible(tmp_path):
+docs/research/2026-11-17-product-comparison/stage0/test_eligibility.py:48:def test_a_launch_over_an_hour_apart_or_a_call_after_72_hours_is_not_eligible(tmp_path):
+docs/research/2026-11-17-product-comparison/stage0/test_eligibility.py:57:def test_a_draw_registered_with_other_options_or_a_late_failed_attempt_is_not_eligible(tmp_path):
+docs/research/2026-11-17-product-comparison/stage0/test_eligibility.py:74:def test_an_attempt_log_that_does_not_reconcile_with_its_ledger_leaves_the_timing_unestablished(tmp_path):
+docs/research/2026-11-17-product-comparison/stage0/test_build_cards.py:26:def test_every_evidence_item_is_read_whole_with_its_speaker_and_without_matcher_notes():
+docs/research/2026-11-17-product-comparison/stage0/test_build_cards.py:38:def test_the_card_shows_no_reference_annotation_and_orders_material_by_day():
+docs/research/2026-11-17-product-comparison/stage0/test_build_cards.py:55:    'updated since this thesis was last judged; reasons: The reference sits in rung 3.',
+docs/research/2026-11-17-product-comparison/stage0/test_build_cards.py:61:def test_the_card_carries_what_the_request_gave_besides_its_evidence(tmp_path):
+docs/research/2026-11-17-product-comparison/stage0/test_build_cards.py:84:def test_a_request_whose_items_the_card_cannot_all_read_is_refused():
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/score_comparison.py | sed -n '158,194p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/eligibility.py | sed -n '69,114p'
+nl -ba clean-arch/step4-2026-11-10/stage_a/accounting.py | sed -n '186,213p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py | sed -n '18,37p'
+rg -n '"'^## (D428|D665|D675)'"' docs/DECISIONS-log.md
+nl -ba docs/DECISIONS-log.md | sed -n '4756,4775p'
+rg -n 'sign test|interval|D428' docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   158	def verify_inputs(readings):
+   159	    """Refuses readings that were not made from the frozen matter list, the mapping file, a passing eligibility check and the deck key
+   160	    they name: each file is read again and compared with what the readings carry."""
+   161	    inputs = readings.get('inputs') or {}
+   162	    def read(kind):
+   163	        path = Path(inputs.get(f'{kind}_path') or '/nonexistent')
+   164	        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != inputs.get(f'{kind}_sha256'):
+   165	            raise SystemExit(f'refused: the {kind} file the readings name is missing or differs from its fingerprint')
+   166	        return json.loads(path.read_text())
+   167	    frozen = [{'matter': m['matter'], 'company_figure': m['company_figure']} for m in json.loads(MATTERS.read_text())['matters']]
+   168	    if readings['matters'] != frozen or inputs.get('matters_sha256') != hashlib.sha256(MATTERS.read_bytes()).hexdigest():
+   169	        raise SystemExit('refused: the readings were not made on the frozen matter list')
+   170	    mapped, eligibility, key = read('mapping'), read('eligibility'), read('deck_key')
+   171	    if mapped['mapping'] != readings['mapping'] or mapped['distinct'] != readings['distinct']:
+   172	        raise SystemExit('refused: the readings\' mapping differs from the mapping file')
+   173	    if mapped.get('eligibility_sha256') != inputs['eligibility_sha256'] or eligibility.get('eligible') is not True:
+   174	        raise SystemExit('refused: the mapping was not made from a passing eligibility check')
+   175	    keyed = {}
+   176	    for k in key.values():
+   177	        if k['role'] == 'product':
+   178	            keyed.setdefault(k['draw'], {})[k['question']] = {f: k[f] for f in ('guardrail', 'covering', 'type')}
+   179	    held = {draw: {q: {f: card[f] for f in ('guardrail', 'covering', 'type')} for q, card in cards.items()} for draw, cards in readings['cards'].items()}
+   180	    if keyed != held:
+   181	        raise SystemExit('refused: the readings\' cards, or their guardrail, covering or type marks, are not the deck key\'s product cards')
+   182	
+   183	
+   184	def verdict(readings):
+   185	    present = {k: sorted(readings[k]) for k in ('mapping', 'cards', 'distinct')}
+   186	    for k, draws in present.items():
+   187	        if sorted(DRAWS) != draws:
+   188	            raise SystemExit(f'refused: readings[{k!r}] holds {draws}, not the six draws {list(DRAWS)}')
+   189	    verify_inputs(readings)
+   190	    n = len(readings['matters'])
+   191	    controls = readings['controls']
+   192	    report = {'N': n}
+   193	    invalid = []
+   194	    def rejected(m):
+    69	
+    70	def last_attempt(ledger_path):
+    71	    """The latest attempt the ledger's log records (failed sends and refusals included), how many lines it holds, and why the log cannot
+    72	    establish the timing, or None: the log must exist and reconcile with the ledger (one line per settled attempt and per refusal, the
+    73	    settled charges summing to the spend, nothing still reserved), since the ledger writes its log line after its own state."""
+    74	    path = Path(str(ledger_path).replace('.json', '.attempts.jsonl'))
+    75	    if not path.exists():
+    76	        return None, 0, f'{path.name} missing'
+    77	    lines = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    78	    ledger = json.loads(Path(ledger_path).read_text())
+    79	    charged = sum(line.get('charged', 0) for line in lines)
+    80	    if len(lines) != ledger['attempts'] + ledger['refused'] or abs(charged - ledger['spent']) > 1e-6 or ledger['reserved'] > 1e-9:
+    81	        return None, len(lines), (f"{path.name} holds {len(lines)} lines and ${charged:.6f} against the ledger's {ledger['attempts']} attempts, "
+    82	                                  f"{ledger['refused']} refusals, ${ledger['spent']:.6f} spent and ${ledger['reserved']:.6f} reserved")
+    83	    return (max(local(line['at']) for line in lines) if lines else None), len(lines), None
+    84	
+    85	
+    86	def check(run_root):
+    87	    run_root = Path(run_root).resolve()
+    88	    draws, problems = {}, []
+    89	    for draw in mapping.DRAWS:
+    90	        record = json.loads((run_root / draw / 'run.json').read_text())
+    91	        if record.get('identity') != expected_identity(run_root, draw):
+    92	            problems.append(f"{draw}: registered identity {record.get('identity')} is not the counted draw's {expected_identity(run_root, draw)}")
+    93	        starts = [local(a['started at']) for c in record['components'].values() for a in c.get('attempts', []) if a.get('started at')]
+    94	        paths = mapping.store_paths(run_root, draw)                    # refuses an incomplete draw
+    95	        latest, databases = last_call(run_root / draw)
+    96	        attempt, attempts, unreconciled = last_attempt(run_root / 'ledgers' / f'{draw}.json')
+    97	        if unreconciled:
+    98	            problems.append(f'{draw}: the timing cannot be established: {unreconciled}')
+    99	        if attempt and (latest is None or attempt > latest):
+   100	            latest = attempt
+   101	        draws[draw] = {'launch': min(starts).isoformat() if starts else None, 'last call': latest.isoformat() if latest else None,
+   102	                       'databases with calls': databases, 'ledger attempts': attempts,
+   103	                       'stores': {Path(p).name: {'path': str(p), 'sha256': sha256(p)} for p in paths} if paths else {}}
+   104	        if not starts:
+   105	            problems.append(f'{draw}: no launch recorded')
+   106	    launches = [datetime.datetime.fromisoformat(d['launch']) for d in draws.values() if d['launch']]
+   107	    if launches and max(launches) - min(launches) > LAUNCH_WINDOW:
+   108	        problems.append(f'launches span {max(launches) - min(launches)}, more than one hour')
+   109	    first = min(launches) if launches else None
+   110	    for draw, d in draws.items():
+   111	        if first and d['last call'] and datetime.datetime.fromisoformat(d['last call']) > first + SEND_WINDOW:
+   112	            problems.append(f"{draw}: a call at {d['last call']}, more than 72 h after the first launch {first.isoformat()}")
+   113	    return {'eligible': not problems, 'problems': problems, 'first launch': first.isoformat() if first else None, 'draws': draws}
+   114	
+   186	        report['lines'][4] = ('met' if not failed else 'missed', failed)
+   187	
+   188	    cases = sorted({outcome['case'] for outcome in outcomes})
+   189	    sends_of = {case: sorted((outcome for outcome in outcomes if outcome['case'] == case), key=lambda outcome: outcome['pass']) for case in cases}
+   190	    if read and not measured:
+   191	        report['lines'][5] = NOT_MEASURED
+   192	    else:
+   193	        right_cases = [case for case in cases if sum(right[(o['case'], o['pass'])] for o in sends_of[case]) >= 2]
+   194	        ladder_cases = [case for case in cases if sum(sound_ladder[(o['case'], o['pass'])] for o in sends_of[case]) >= 2]
+   195	        met = len(right_cases) >= 35 and len(ladder_cases) >= 28
+   196	        report['lines'][5] = ('met' if met else 'missed', {'right': len(right_cases), 'right by a ladder': len(ladder_cases), 'of': len(cases)})
+   197	
+   198	    all_company_figures = [case for case in cases if len(sends_of[case]) == 3 and all(kind_of(o) == 'company figure' for o in sends_of[case])]
+   199	    all_ladders = [case for case in cases if len(sends_of[case]) == 3 and all(kind_of(o) not in ('refusal', 'refused twice') for o in sends_of[case])]
+   200	    shape_differs = [case for case in all_ladders if len({kind_of(o) for o in sends_of[case]}) > 1]
+   201	    if len(all_company_figures) < 3:
+   202	        direction = (NOT_MEASURED, {'theses whose three sends are company figures': len(all_company_figures), 'needed': 3})
+   203	    else:
+   204	        differing = [case for case in all_company_figures
+   205	                     if len({o['answer']['ladder']['figure']['favourable_end'] for o in sends_of[case]}) > 1]
+   206	        direction = ('met' if not differing else 'missed', {'theses': len(all_company_figures), 'direction differs': differing})
+   207	    if len(all_ladders) < 20:
+   208	        due_day = (NOT_MEASURED, {'theses whose three sends are ladders': len(all_ladders), 'needed': 20})
+   209	    else:
+   210	        same = [case for case in all_ladders if len({o['view']['due_day'] for o in sends_of[case]}) == 1]      # the day the question is due (D414)
+   211	        due_day = ('met' if len(same) * 10 >= len(all_ladders) * 9 else 'missed', {'theses': len(all_ladders), 'same due day': len(same)})
+   212	    report['lines'][6] = {'direction': direction, 'due day': due_day, 'shape differs across sends': shape_differs}
+   213	
+    18	
+    19	def check(run_root):
+    20	    out = {}
+    21	    for draw in ('new-1', 'new-2', 'new-3'):
+    22	        record = json.loads((Path(run_root) / draw / 'run.json').read_text())
+    23	        folder = Path(run_root) / draw / record['components']['ladder']['folder']
+    24	        outcomes = [json.loads(line) for p in (1, 2, 3) for line in (folder / f'send-{p}' / 'outcomes.jsonl').read_text().splitlines()]
+    25	        line6 = accounting.account(outcomes, {}, {}, {})['lines'][6]
+    26	        out[draw] = {'sends': len(outcomes), 'direction': line6['direction'], 'due day': line6['due day'],
+    27	                     'shape differs across sends': line6['shape differs across sends'],
+    28	                     'figure ranges meet end to end': 'enforced at the write (ladder_step.check_answer)'}
+    29	    passed = all(v['direction'][0] == 'met' and v['due day'][0] == 'met' for v in out.values())
+    30	    return out, passed
+    31	
+    32	
+    33	if __name__ == '__main__':
+    34	    result, passed = check(sys.argv[1])
+    35	    print(json.dumps(result, indent=1, default=str))
+    36	    print('HARD CHECK (D400 code parts):', 'PASS' if passed else 'NOT PASSED (missed or not measured)')
+4756:## D428 · 2026-11-11 · Stage B's lines compare figure and yes/no questions apart with the baseline
+9398:## D665 · 2026-11-17 · Council (D664, Alex's "run your council to determine"): the six lines stop blocking release; one product comparison against the running pipeline decides readiness, its verdict written before the first send (council consensus)
+9674:## D675 · 2026-11-18 · Under D672: the reading tools' review found them not ready; fixed, and the frozen rule's open readings written down (before any output)
+  4756	## D428 · 2026-11-11 · Stage B's lines compare figure and yes/no questions apart with the baseline
+  4757	
+  4758	- **Asked:** "第二段（让老判断程序每天去判新系统自己出的题）怎么算通过？基准里老程序在人工写的题上：数字题站不住 8%，是非题 0%，16 道题最后一天全部站得住。"
+  4759	  - Options: compare figure and yes/no questions apart (recommended): "数字题站不住的比例不超过基准再加 5 个百分点（约 13%–14%）；是非题不超过 5%；三轮共约 30 道题里，最后一天站不住的不超过 3 道，“证据不足”的另外列出。不看总体比例，因为总体会随题型比例变化。代价：判断程序没变差时，数字题这条也有 6%–17% 的机会被误判不过。"; apart with 10 points; the design's original lines (overall 8%, last at least 90%).
+  4760	  - Alex: "数字题和是非题分开比 (Recommended)".
+  4761	- **Decided:** Stage B passes when, over its three draws, (1) the share of decided figure-question judgements that are
+  4762	  UNSUPPORTED is at most 5 points above the baseline's (4 of 52 with the unresolved left out, 7.7%; 5 of 53 counted
+  4763	  against, 9.4%: so at most 12.7% to 14.4% on the same three readings); (2) the share of decided yes/no judgements that are
+  4764	  UNSUPPORTED is at most 5%; (3) of the judged theses whose last judgement in the window is decided, at most 3 in 30 (scaled
+  4765	  to the number judged) are UNSUPPORTED, with the INSUFFICIENT last judgements reported beside. No overall line. The
+  4766	  design's other lines (no draw incomplete after one redo; nine in ten laddered theses judged at least once; the control
+  4767	  theses) and its NOT MEASURED conditions stand. Baseline: `clean-arch/step4-2026-11-10/stage_b/RESULT.md`; the lines'
+  4768	  chance behaviour: `stage_b/result/line-chance.txt`.
+  4769	- **Scope:** the clean path's Step 4, Stage B.
+  4770	
+  4771	## D429 · 2026-11-11 · The adapter's ladder mode is built; once a review finds nothing serious, Stage B is sent without asking again
+  4772	
+  4773	- **Asked:** "第二段要付费：判断程序每天判新系统的题，三轮约 1 美元（估计），上限 2 美元；还要两类读者读 200–360 条判断。开跑前得先给连接程序补一个模式（不花钱，写完测试并送评审）。下一步怎么走？"
+  4774	  - Options: build it and run once the review clears (recommended): "补程序、测试、送评审；评审挑不出严重问题就直接发三轮付费测试，不再问你。每条判断单独读，和基准的读法一样，两者才能直接比。读完把结果报给你。第一段没过线这一点会写在每份报告里。"; build, then ask again; build and read by question packet; stop.
+  4775	  - Alex: "补好程序，评审放行就直接跑 (Recommended)".
+160:8. **The guardrails** (D428's measure, which D665 turns into these guardrails):
+193:    - D428's limits next to the guardrails;
+194:    - a sign test and an interval, labelled illustrative;
+224:| Step 2's three lines (D427; PRD §5) | **Hard**, like D400's code-decided parts: a failed line is a release blocker reported with the verdict. Pass: earlier version found ≥ 90%; clearly wrong merges ≤ 2%; no fewer later details than no merging. Each decided on its point estimate, intervals printed. A line with fewer eligible cases than its frozen sample is **not measured** and cannot clear release | The Step 2 log §12 method on draw 1 of the new system: recall over 100 records with a labelled earlier version (stratified random); blind review of 200 random merges; the no-merge dossier comparison on 30 groups. The sample sizes are a recorded design choice |
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'writer|unit|view_keys|figure.unit|condition|lo\\]|unless' clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py src/hivemind/views/store.py docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py | head -82
+nl -ba clean-arch/step2/run_forward.py | sed -n '30,78p;116,123p'
+nl -ba clean-arch/step3/library.py | sed -n '127,164p'
+rg --files poc/data/step2-validation-2026-11-07 -g 'v2-prompt-*.md' | head -10
+rg -n 'detail|generator-miss|recall|strata' clean-arch/step2-validation-2026-11-07/LOG.md | head -35
+nl -ba src/hivemind/service.py | sed -n '116,148p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py:68:        if q['unit'] == 'yes/no':
+src/hivemind/views/store.py:15:    'rungs': 'view_id text, position integer, label text, condition text, lo real, hi real',
+src/hivemind/views/store.py:16:    'view_keys': 'view_id text primary key, measure text, scope text, scope_key text, period_start text, period_end text, basis text, unit text, event_type text, seq integer, scope_source text, key_version integer',
+src/hivemind/views/store.py:85:        insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'], lo=rung.get('lo'), hi=rung.get('hi'))
+src/hivemind/views/store.py:99:    return [dict(position=r['position'], label=r['label'], condition=r['condition'],
+src/hivemind/views/store.py:108:    insert(conn, 'view_keys', view_id=view_id, measure=key['measure'], scope=key.get('scope', ''), scope_key=_universe.scope_key(key.get('scope', '')),
+src/hivemind/views/store.py:109:           period_start=key.get('period_start', ''), period_end=key.get('period_end', ''), basis=key.get('basis', 'n/a'), unit=key.get('unit', 'n/a'),
+src/hivemind/views/store.py:115:    earlier keys read as model-owned scopes unless the scope is empty."""
+src/hivemind/views/store.py:116:    columns = [r[1] for r in conn.execute('pragma table_info(view_keys)')]
+src/hivemind/views/store.py:118:        conn.execute('alter table view_keys add column scope_source text')
+src/hivemind/views/store.py:120:        conn.execute('alter table view_keys add column key_version integer')
+src/hivemind/views/store.py:156:    if not conn.execute('pragma table_info(view_keys)').fetchone():
+src/hivemind/views/store.py:158:    row = conn.execute('select * from view_keys where view_id=?', (view_id,)).fetchone()
+src/hivemind/views/store.py:167:def open_views_with_key(conn, object_id, measure, scope_key, period_start, period_end, basis='n/a', unit='n/a', event_type=None):
+src/hivemind/views/store.py:168:    """Open views of the object with the same measure, scope and unit whose period overlaps: the ones a candidate must
+src/hivemind/views/store.py:169:    be confirmed against before it may open (keyed-views-plan.md 2.5). A basis or unit of n/a on either side matches
+src/hivemind/views/store.py:171:    rows = [dict(r) for r in conn.execute('''select k.* from view_keys k join views v on v.view_id=k.view_id
+src/hivemind/views/store.py:176:            and (unit == 'n/a' or r['unit'] == 'n/a' or r['unit'] == unit)
+src/hivemind/views/store.py:187:    rows = conn.execute('''select k.*, v.object_id from view_keys k join views v on v.view_id=k.view_id
+src/hivemind/views/store.py:365:    """Retires old_id (history before D202; kept for the readers and tests of stored ledgers, no longer called by the writer)."""
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:13:Everything a replay day writes before its round is one commit, as the Stage 2 adapter commits (the store's writers do not commit).
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:173:    """The writer stopped before a day, its store holding every completed day (OPERATING-CONTRACT.md, "The writer's start, stops and
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:183:    (checked) before `store.open_db` writes its schema, with the -wal size limit on the writer's own connection; its identity checked
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:239:    """The change to rollback-journal mode at the writer's end: (the mode it ends in, why WAL was kept or None). A reader holding
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:264:        """The writer's end on every path: the store taken out of WAL mode when no reader holds it (so no WAL-mode store is left
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:330:                          rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:344:            sys.path.append(str(STEP / 'ladder'))       # last: none of its modules shares a name with the writer's own folders
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:384:                              rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:407:        """A link to a closed question is written as production's writer writes one and not judged (production's round takes open
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:582:                checkpoint_error = checkpoint             # not a reader: the writer stops before the next day with this reason
+    30	
+    31	def step1_records(trace):
+    32	    """Kept evidence of a completed Step 1 run (unlinked statements included), as Step 3 records grouped by article, with every thesis
+    33	    question and, per article, the thesis ids it opened. `trace` may join continuation segments with '+'. An article is numbered by its
+    34	    position in the first segment's manifest, so a failed item never shifts the numbers of the articles after it. A record keeps Step 1's
+    35	    verified passages beside the model's (None marks a passage not found in the source). A link resolves as the runner resolves it,
+    36	    by its type: an existing target must be among the theses shown open, a new one among the theses the answer opened; any other link
+    37	    stays out of `thesis_ids` and is listed in `unresolved_thesis_ids` as '<type>:<id>'."""
+    38	    questions = {}
+    39	    articles = []
+    40	    opened = []
+    41	    rows = []
+    42	    position = None
+    43	    for part in trace.split('+'):
+    44	        conn = sqlite3.connect(f'file:{part}?mode=ro', uri=True)
+    45	        try:
+    46	            if position is None:
+    47	                position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+    48	            done = conn.execute("select input_id, request, result, before_state, after_state from trace where status='complete' order by sequence").fetchall()
+    49	        finally:
+    50	            conn.close()
+    51	        rows += [(position[row[0]], *row[1:]) for row in done]
+    52	    for seq, request, result, before, after in rows:
+    53	        source = json.JSONDecoder().raw_decode(json.loads(request)['messages'][1]['content'])[0]['source_item']
+    54	        questions.update({t['id']: t['description'] for t in json.loads(after)})
+    55	        opened.append(sorted({t['id'] for t in json.loads(after)} - {t['id'] for t in json.loads(before)}))
+    56	        answer = json.loads(result)
+    57	        local = answer.get('new_thesis_ids', {})
+    58	        open_before = {t['id'] for t in json.loads(before)}
+    59	        def resolve(link):   # the runner's own rule: an existing target must have been shown open; a new one must have been opened
+    60	            if link['target_type'] == 'existing':
+    61	                return link['target_id'] if link['target_id'] in open_before else None
+    62	            return local.get(link['target_id'])
+    63	        def targets(ev, resolved):
+    64	            if resolved:
+    65	                return sorted({resolve(l) for l in ev['links'] if resolve(l)})
+    66	            return sorted({f"{l['target_type']}:{l['target_id']}" for l in ev['links'] if not resolve(l)})
+    67	        articles.append([{'id': f"{seq}:{ev['local_id']}", 'article': seq, 'input_id': source['id'], 'title': source.get('title'),
+    68	                          'publisher': source['publisher'], 'publication_date': source['publication_date'], 'summary': ev['summary'],
+    69	                          'passages': ev['source_passages'], 'verified_passages': ev.get('verified_source_passages'),
+    70	                          'original_party': ev['original_party'],
+    71	                          'reporting_speaker': ev['reporting_speaker'], 'tier': ev['tier'], 'statement_date': ev['statement_date'],
+    72	                          'statement_date_text': ev['statement_date_text'], 'evidence_period': ev['evidence_period'],
+    73	                          'figures': ev.get('figures') or [],
+    74	                          'thesis_ids': targets(ev, True), 'unresolved_thesis_ids': targets(ev, False)}
+    75	                         for ev in answer['evidence']])
+    76	    kept = [i for i, a in enumerate(articles) if a]
+    77	    return [articles[i] for i in kept], questions, [opened[i] for i in kept]
+    78	
+   116	    ask = lambda state, qs: jev.ask(archive, cfg, SETTING, state, qs, 'clean_step2').data
+   117	    store = library.Library()
+   118	    decisions = compare.forward(articles, store, vectors, questions, ask, opened=opened)
+   119	    (out / 'decisions.json').write_text(json.dumps(decisions, indent=1))
+   120	    (out / 'library.json').write_text(json.dumps({'order': store.order, 'groups': store.groups, 'placement': store.placement,
+   121	                                                  'judged': [[k[0], k[1], v] for k, v in store.judged.items()], 'later_log': store.later_log,
+   122	                                                  'pending': store.pending}, indent=1))
+   123	    kinds = {}
+   127	def labelled_passages(record):
+   128	    """Each passage as a reader sees it: the source text Step 1 found, labelled 'Quote', or, when Step 1 did not find it (verified
+   129	    value None), the model's text labelled 'Unverified quote'. The model's own text stays in the record's `passages`. A record stored
+   130	    before verification was carried shows its passages as 'Quote'."""
+   131	    verified = record.get('verified_passages') or record['passages']
+   132	    return [('Quote', found) if found is not None else ('Unverified quote', passage) for passage, found in zip(record['passages'], verified)]
+   133	
+   134	
+   135	def record_text(record, label):
+   136	    attribution = record['original_party'] or 'unknown party'
+   137	    if record['reporting_speaker'] and record['reporting_speaker'] != record['original_party']:
+   138	        attribution += f", reported by {record['reporting_speaker']}"
+   139	    head = (f"[{label}] {record['publication_date']} · {record['publisher'] or 'unknown publisher'} · {attribution} · tier {record['tier']}"
+   140	            f" · stated {record['statement_date'] or 'unknown'} · period {record['evidence_period'] or 'unknown'}")
+   141	    quotes = '\n'.join(f'  {label_of}: "{p}"' for label_of, p in labelled_passages(record))
+   142	    return f"{head}\n  {record['summary']}\n{quotes}"
+   143	
+   144	
+   145	def group_text(library, group_id, label, labels, member_text=True, notes=()):
+   146	    """A group as a reader sees it: the original record, then each later report of the same statement in arrival order, with its own
+   147	    text when `member_text` is set and as a source line otherwise. Distinct articles are counted; repeats are not called confirmation."""
+   148	    group = library.groups[group_id]
+   149	    lines = [record_text(group['original'], label)]
+   150	    if group['members']:
+   151	        articles = library.articles(group)
+   152	        publishers = {r['publisher'] for r in [group['original']] + group['members']}
+   153	        lines.append(f'  Later reports of the same statement: {len(group["members"])} records from {len(articles) - 1} further articles '
+   154	                     f'({len(publishers)} publishers in all). Articles repeating a statement do not by themselves confirm it independently.')
+   155	        for member in group['members']:
+   156	            if member_text:
+   157	                party = '' if member['original_party'] == group['original']['original_party'] else f" · {member['original_party']}"
+   158	                quotes = ' '.join(f'"{p}"' if kind == 'Quote' else f'"{p}" (unverified)' for kind, p in labelled_passages(member))
+   159	                lines.append(f"    - {member['publication_date']} · {member['publisher']}{party}: {member['summary']}\n      Quote: {quotes}")
+   160	            else:
+   161	                lines.append(f"    - {member['publication_date']} · {member['publisher']}")
+   162	    for revised in group['revises']:
+   163	        lines.append(f"  Revises [{labels[revised['group']]}]." if revised['group'] in labels else '  Revises an entry outside this dossier.')
+   164	    lines += [f'  {note}' for note in notes]
+poc/data/step2-validation-2026-11-07/v2-prompt-11.md
+poc/data/step2-validation-2026-11-07/v2-prompt-12.md
+poc/data/step2-validation-2026-11-07/v2-prompt-template.md
+poc/data/step2-validation-2026-11-07/v2-prompt-7.md
+poc/data/step2-validation-2026-11-07/v2-prompt-8.md
+poc/data/step2-validation-2026-11-07/v2-prompt-15.md
+poc/data/step2-validation-2026-11-07/v2-prompt-3.md
+poc/data/step2-validation-2026-11-07/v2-prompt-14.md
+poc/data/step2-validation-2026-11-07/v2-prompt-2.md
+poc/data/step2-validation-2026-11-07/v2-prompt-10.md
+58:  - Sample: 30 incoming items, drawn uniformly within three time strata (articles 1–40, 41–80, 81–115) with a fixed seed. Inclusion
+73:  - recall at 10 by type and by cross-thesis status;
+103:## 3. Search: recall at 10 (`score_retrieval_v2.py`, forward simulation)
+182:Question for Alex: when a later article repeats a stored statement with more detail, what does the library do?
+191:after, and check that grouped details are visible and that nothing is counted twice. The Kyber group of 14 retellings is the size case.
+257:  missed detail.
+263:  chosen for added details), or wrong-group safety (the questions pointed readers at the facts).
+285:| Grouping (A) | Keeping each repeat's text keeps added details noticeable without double counting | Isolated library and group view | Detail 25/36, the same as no merging, against 3/36 source-only; 0 double counting; size about the same as no merging | yes (Alex's decision; tested) |
+292:- the Step 2 lines: (1) search at least 90%; (2) clear wrong merges at most 2%; (3) grouped dossiers keep no fewer later details than
+306:- report search as recall over known labelled counterparts;
+313:| 1. Search | 112/113 known labelled counterparts had a holding group among the candidates (99.1%). For 107 of them the group's original, which is what Jev saw, is itself a counterpart. This is not recall over all real repeats. | yes |
+315:| 3. Later details | Reader test re-run on the rebuilt views with the frozen questions and key: detail none 27.5, source 3, group **28** of 36; unsupported claims 3 / 2 / 2; double counting 0 | yes |
+317:**Line 2 detail.**
+354:  interrupted, selected sample cannot establish equivalence, precision, recall or revision quality.** The effect of scores remains
+360:Alex asked the Codex–Claude council to select and execute the next small Step 2 test. The candidate asked Jev to identify the statement addressed before applying the existing revision definition, preserving the three existing choices. A full-request audit, blind second read and isolated-sender review preceded the send. Seven archived full-candidate requests were sent under the original and candidate criteria three times each: 42/42 completed. In the predeclared wrong-revision controls, the original and candidate both kept the C036 backup and interconnect links in all three draws; C057's target left revision once in the candidate, below the required two-draw advantage, and its new `same_statement` answer was not supported by the two source readers. The selected correct revision and repeat controls retained their labels in all draws. The predeclared improvement condition failed; **do not adopt this candidate or tune another variant on these cases**. The remaining source disputes, particularly C059, are not silently resolved. This selected small probe does not measure overall precision, recall or final investment judgment.
+447:  1 of 57, plus 2 overlaps; later details kept. The first forward run's 3 of 104 (§12) is the older measurement. The fresh set barely
+   116	# ---------- views
+   117	
+   118	def view_exists(conn, record, as_of):
+   119	    return visible(conn, record['created_seq'], as_of)
+   120	
+   121	
+   122	def is_open_as_of(conn, view_id, as_of):
+   123	    for row in conn.execute('select open, after_seq from view_switches where view_id=? order by id desc', (view_id,)):
+   124	        if visible(conn, row['after_seq'], as_of):
+   125	            return bool(row['open'])
+   126	    return True
+   127	
+   128	
+   129	def state_as_of(conn, view_id, as_of):
+   130	    """The last judgement on or before the day, with the day the current position was first taken."""
+   131	    rows = [dict(r) for r in conn.execute('select * from judgements where view_id=? and publication_day<=? order by judgement_id', (view_id, as_of))]
+   132	    if not rows:
+   133	        return None
+   134	    last = rows[-1]
+   135	    since, previous = last['publication_day'], None
+   136	    for row in reversed(rows[:-1]):
+   137	        if row['rung'] != last['rung']:
+   138	            previous = row['rung']
+   139	            break
+   140	        since = row['publication_day']
+   141	    return {'position': last['rung'], 'judgement_day': last['publication_day'], 'since_day': since, 'previous_position': previous,
+   142	            'rounds': len(rows), 'why_changed': last['why_changed'], 'reasons': last['reasons'], 'theme_pushes': _json(last.get('theme_pushes_json'))}
+   143	
+   144	
+   145	def summaries(conn, as_of=None, include_closed=False):
+   146	    """Every view as of the day as a light record (id, object, kind, what it looks at, the question, due day, open,
+   147	    dependency and dependant ids): what a search ranks. The full record with its evidence counts is `view`; listing
+   148	    92 of those cost 0.29 s per search (1,205 evidence reads), measured 2026-10-24."""
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Wilson|sign test|95% interval|paired interval|days.*open' docs/research/2026-11-14-use-acceptance/reflection-10/{own-position,codex-1,codex-2,codex-3}.md docs/DECISIONS-log.md | tail -34
+nl -ba docs/research/2026-11-17-product-comparison/stage0/test_eligibility.py | sed -n '71,103p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/test_build_cards.py | sed -n '48,96p'
+nl -ba docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py | sed -n '234,262p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/e2e-comparison-2026-11-13/run_fresh.py | sed -n '330,382p'
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '312,389p'
+nl -ba docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py | sed -n '20,77p'
+nl -ba poc/data/step2-validation-2026-11-07/v2-prompt-template.md | sed -n '1,33p'
+nl -ba clean-arch/unseeded-2026-11-10/MATCHING-v2.md | sed -n '6,27p;74,82p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/DECISIONS-log.md:2946:- Decided: role-v51 replaces role-v42; `scripts/replay.py` defaults to `poc/config/poc-v67.json`, which differs from `poc-v58` only in the ten extraction prompt versions (T*-v51). role-v51 changes one clause of the main_driver opening reason to the page's §3 B row (the generation of the company's own product that carries the quantity, its launch or first shipment), with one example and one counter-example (+177 characters). Against role-v42 sent together: must-not questions on small products, features and services 20 → 0 over 15 draws each; one full run (development + test, three draws) shows no cost elsewhere: must-open raised in every draw 18 against 16 of 28, core 235 against 230 of 258, supporting in two draws 154 against 155 of 181, rejected sentences kept 100 against 106 per draw; all paired intervals cross 0 (`loop-log.md` rows 20–22).
+docs/DECISIONS-log.md:2952:- Measured (`loop-log.md` rows 26–33, `research/2026-10-29-ledger-standard/fields-2026-10-30/`): writing the same definitions into the role text (role-v52) fixed the fields but kept about 7–15 more gold-rejected statements per draw; in the schema, against role-v51 sent together (run U, development + test, three draws): outlet-as-speaker and report-day signals 166 → 35 over 148 articles × 3 draws; verified field errors on a blind read of 24 fresh articles 18/96 → 11/94 records; gold-rejected statements kept −6.7 per draw; core per draw −1.3 and supporting at least two draws −4, both inside their paired intervals; must-open raised in every draw 17 → 22. Two follow-ups did not beat it and are not adopted: role-v54 (the role text's attribution clause removed) and role-v55 (the tier rule moved to the schema, refuted on its small sample). Left open: an author's restatement of another company's reported figures is still credited to the author (role-v56, which removes the T7 and T8 attribution phrases, is built and unsent).
+docs/DECISIONS-log.md:2957:- The class ($0, `census/`): the sealed three-month run opened 69 questions in 59 days; Claude's reading of the first 50 (not reviewed by Alex) marks 12 duplicates and 10 that should not have opened, 5 borderline. Matching merged 39 of 122 candidates; the candidates opened new fall in three verdict classes (parsed from the decisions' reason text, not yet verified case by case): the collision judge's "distinct question in one matter", "same question" verdicts the code still opened (two traced to a model-written period start), and twins never compared.
+docs/DECISIONS-log.md:3003:- Measured next (three draws against three control draws, the same 14 days, end to end): core and supporting matters reaching judgement and dropped for no home, noise reaching judgement, questions opened and their duplicates. The driver-in-force block for the judge and re-placement of earlier statements (D208's later steps) are not built here.
+docs/DECISIONS-log.md:6280:  a product question: complete consecutive days that contain independently identified same-day openings, the preceding state
+docs/DECISIONS-log.md:6669:  apart); distinct matters apart from the same matter in several runs, days apart from questions; questions that had an opening
+docs/DECISIONS-log.md:7248:  answered from the stored archive, six questions closed on their own due days at their last answers, one open, no judgement after
+docs/DECISIONS-log.md:9422:     - **Illustrative only:** a sign test and an interval.
+docs/research/2026-11-14-use-acceptance/reflection-10/codex-2.md:5:2. **Show the sign test and interval for what they measure.** The sign test asks whether the new system wins more often among matters served by only one side. Even a result below 0.05 does not establish a 10-point gain across all matters. The ordinary exact calculation also assumes independent discordant matters. Freeze how related matters and weeks are grouped. If the design cannot support that assumption or a defensible interval that accounts for the grouping, label the statistics illustrative. Keep **20 distinct matters and 30 distinct questions per system per draw** as minimum counts for the practical reading. Neither my earlier 30-week illustration nor the “about half the time” estimate establishes power for this paired measure. [Sizing assumptions and limits](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md:45)
+docs/research/2026-11-14-use-acceptance/reflection-10/codex-1.md:24:I propose **10 percentage points as the material difference**, roughly one additional usable answer per ten important matters. Use a prewritten 95% interval for the new-minus-old difference, accounting for matters and weeks shared by both systems:
+    71	    assert not result['eligible'] and 'old-3' in result['problems'][0]
+    72	
+    73	
+    74	def test_an_attempt_log_that_does_not_reconcile_with_its_ledger_leaves_the_timing_unestablished(tmp_path):
+    75	    """D667: the timing rests on the complete attempt log; a missing log or one short of the ledger is not eligible (D675)."""
+    76	    make_run(tmp_path, LAUNCH, CALLS)
+    77	    ledger = tmp_path / 'ledgers' / 'new-2.json'
+    78	    ledger.write_text(json.dumps(dict(json.loads(ledger.read_text()), attempts=2)))
+    79	    result = eligibility.check(tmp_path)
+    80	    assert not result['eligible'] and 'cannot be established' in result['problems'][0]
+    48	
+    49	
+    50	CONTEXT = '\n'.join([
+    51	    '[Evidence in view under this thesis, 0 items]',
+    52	    '[Not shown: 104 more pieces in force, read in earlier judgements; the previous conclusion carries them]',
+    53	    '', '[Themes in force, 1]',
+    54	    '- v5 (ai-capex, due 2028-02-01) How much will hyperscalers spend in 2027?: now rung 3 Middle; judged 2026-07-10; '
+    55	    'updated since this thesis was last judged; reasons: The reference sits in rung 3.',
+    56	    '', '[Previous conclusion, for comparison only] rung 2; reasons: Guidance implies strong growth.',
+    57	    'It continues on a second line.',
+    58	    '', 'Answer per the JSON schema. cites may name only the evidence ids listed above.'])
+    59	
+    60	
+    61	def test_the_card_carries_what_the_request_gave_besides_its_evidence(tmp_path):
+    62	    """card-spec 3 as D675 reads it: the hidden-items line, the themes in force and the previous answer the answering request carried,
+    63	    each rung shown by its condition and no thesis id (D673)."""
+    64	    conn = sqlite3.connect(tmp_path / 'views.sqlite')
+    65	    conn.execute('create table rungs (view_id text, position integer, label text, condition text)')
+    66	    conn.executemany('insert into rungs values (?, ?, ?, ?)', [('v5', 3, 'Middle', 'from 500bn to 700bn'), ('v9', 2, 'Up', 'from 150bn to 200bn')])
+    67	    conn.commit()
+    68	    ctx = build_cards.context(json.dumps({'messages': [{'role': 'user', 'content': CONTEXT}]}), build_cards.ro(tmp_path / 'views.sqlite'))
+    69	    assert ctx['hidden'] == 104 and ctx['previous'] == {'rung': 2, 'reasons': 'Guidance implies strong growth.\nIt continues on a second line.'}
+    70	    assert ctx['themes'] == [{'question': 'How much will hyperscalers spend in 2027?', 'due': '2028-02-01', 'rung': 3, 'answer': 'from 500bn to 700bn',
+    71	                              'possible_answers': ['from 500bn to 700bn'], 'judged': '2026-07-10', 'updated': True,
+    72	                              'reasons': 'The reference sits in rung 3.'}]
+    73	    entry = {'question_id': 'Q2', 'question': 'q', 'opened': '2026-07-04', 'due': '2027-02-28', 'possible_answers': ['below 150bn', 'from 150bn to 200bn'],
+    74	             'answer': 'below 150bn', 'reasons': 'r', 'material': [], 'context': dict(ctx, previous=dict(ctx['previous'], answer='from 150bn to 200bn'))}
+    75	    other = {'question_id': 'Q1', 'question': 'earlier question', 'opened': '2026-07-04'}
+    76	    text = build_cards.card_text(entry, [other, entry])
+    77	    assert 'Not shown to the answer: 104 more items' in text and 'answered 3. from 500bn to 700bn on 2026-07-10; updated since' in text
+    78	    assert 'Its possible answers: 1. from 500bn to 700bn' in text
+    79	    assert 'Previous answer, given for comparison: 2. from 150bn to 200bn' in text and 'v5' not in text and 'Middle' not in text
+    80	    assert 'q   <- this question' in text and 'Opened: 2026-07-04' in text
+    81	    assert text.index('earlier question') < text.index('q   <- this question')
+    82	
+    83	
+    84	def test_a_request_whose_items_the_card_cannot_all_read_is_refused():
+    85	    """card-spec 3: every evidence item the request contained; a quote line opening with '[' must not cut the material silently (D675)."""
+    86	    text = REQUEST.replace('well beyond supply," he said.', '[sic] well beyond supply," he said.\n\n[Analyst note] x')
+    87	    try:
+    88	        build_cards.material(json.dumps({'messages': [{'role': 'user', 'content': text}]}))
+    89	    except ValueError as e:
+    90	        assert 'states 2 evidence items' in str(e)
+    91	    else:
+    92	        raise AssertionError('a cut material list was accepted')
+   234	    assert out['beside']['split resolutions']['1'] == {'new cover split resolved to covers': 1}
+   235	    assert out['beside']['split resolutions']['2'] == {'new cover split resolved to does not cover': 1}
+   236	
+   237	
+   238	def test_card_marks_that_differ_from_the_deck_key_are_refused():
+   239	    """Which cards enter the guardrail shares comes from the verified deck key, never from the readings alone (D675)."""
+   240	    r = seal(base(n=20, new_served=5, old_served=1))
+   241	    r['cards']['new-1']['new-1-g-figure-0']['guardrail'] = False
+   242	    try:
+   243	        sc.verdict(r)
+   244	    except SystemExit as e:
+   245	        assert 'guardrail, covering or type' in str(e)
+   246	    else:
+   247	        raise AssertionError('a guardrail flag changed after the deck was scored')
+
+ succeeded in 0ms:
+   330	
+   331	    def _call(self, argv, folder, record=None):
+   332	        """Run a component; returns ('crashed', reason) for a signal exit, else (None, exit status)."""
+   333	        def started(process):
+   334	            self.child = process
+   335	            if record is not None and getattr(process, 'pid', None):
+   336	                attempt = next(entry['attempts'][-1] for entry in record['components'].values()
+   337	                               if entry['attempts'] and entry['attempts'][-1]['state'] == 'started')
+   338	                attempt['pid'] = process.pid                # for the operator and the proof; liveness is the launcher's lock
+   339	                self.save(record)
+   340	        status = self.run_component(argv, folder.parent / f'{folder.name}.log', started)
+   341	        self.child = None
+   342	        if status < 0:
+   343	            return 'crashed', f'killed by signal {-status} (see {folder.name}.log)'
+   344	        return None, status
+   345	
+   346	    # the components: each returns (outcome, reason); outcome 'completed', 'stopped' (a redo may follow), 'stopped-run' or 'crashed'
+   347	    def _step1(self, record, folder):
+   348	        folder.mkdir()
+   349	        (folder / 'manifest.json').write_text(json.dumps(manifest_until(self.options['until_day'], self.options.get('manifest'), self.items()), indent=1))
+   350	        shutil.copy(ROOT / 'clean-arch/unseeded-2026-11-10/initial-empty.json', folder / 'initial.json')
+   351	        shutil.copy(STAGE2 / 'stage2-settings.json', folder / 'settings.json')
+   352	        shutil.copy(self.options.get('limits') or STAGE2 / 'stage2-limits.json', folder / 'limits.json')
+   353	        crash, status = self._call([sys.executable, ROOT / 'clean-arch/step1/run_live.py', '--source', self.items(), '--output', folder / 'trace.sqlite',
+   354	                                    '--manifest', folder / 'manifest.json', '--initial', folder / 'initial.json', '--settings', folder / 'settings.json',
+   355	                                    '--limits', folder / 'limits.json', '--shared-ledger', self.ledger_path], folder, record)
+   356	        if crash:
+   357	            return crash, status
+   358	        return ('completed', None) if status == 0 else ('stopped', f'run_live exit {status}: the trace is not complete (see its log)')
+   359	
+   360	    def _step2(self, record, folder):
+   361	        trace = self.done_folder(record, 'step1') / 'trace.sqlite'
+   362	        crash, status = self._call([sys.executable, HERE / 'budget_step2.py', '--shared-ledger', self.ledger_path, trace, folder], folder, record)
+   363	        if crash:
+   364	            return crash, status
+   365	        if status != 0:
+   366	            return 'stopped', f'Step 2 exit {status}: refused, pending or unresolved links, or a failed call (see its log)'
+   367	        stamp = '\n'.join(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path}' for path in (trace, folder / 'library.json'))
+   368	        (folder / 'inputs.sha256').write_text(stamp + '\n')
+   369	        return 'completed', None
+   370	
+   371	    def _cases(self, record, folder):
+   372	        folder.mkdir()
+   373	        step1 = self.done_folder(record, 'step1')
+   374	        crash, status = self._call([sys.executable, STEP4 / 'stage_a/build_cases.py', '--fresh', self.label, '--draws', step1, '--parts', 'trace.sqlite',
+   375	                                    '--output', folder / 'cases.json'], folder, record)
+   376	        if crash:
+   377	            return crash, status
+   378	        if status != 0:
+   379	            return 'stopped-run', f'build_cases exit {status}: the cases do not match the opened theses (see its log)'
+   380	        if not json.loads((folder / 'cases.json').read_text()):
+   381	            for component in ('ladder', 'judge'):
+   382	                record['components'][component] = {'attempts': [], 'state': 'skipped', 'note': 'the draw opened no thesis'}
+   312	            checked = json.loads(json.dumps(answer))
+   313	            if checked['ladder'].get('reference') is not None and outcome['passage'] is not None:
+   314	                checked['ladder']['reference']['words'] = outcome['passage']
+   315	        elif status == 'no ladder':                 # §5.4: the answer as given, the reason and a null ladder
+   316	            checked = answer if answer is not None else {'ladder': None, 'no_ladder': outcome['reason']}
+   317	        else:
+   318	            checked = None
+   319	        store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period='', view_id=view_id, status=status,
+   320	                     reason=outcome['reason'] if status == 'no ladder' else None, reference_status=reference_status,
+   321	                     checked_answer=None if checked is None else json.dumps(checked, ensure_ascii=False),
+   322	                     outcome_record=json.dumps(outcome['requests'], ensure_ascii=False), config_checksum=source, article_seq=k, article_day=day)
+   323	        if view_id is None:
+   324	            self.unjudged.add(thesis_id)
+   325	            self.counts[f'theses with {status}'] += 1
+   326	            return
+   327	        view = outcome['view']
+   328	        store.create_view(self.conn, view_id=view_id, object_id=view['object_id'], object_kind=view['object_kind'], kind=view['kind'],
+   329	                          looks_at=view['looks_at'], question=view['question'], due_day=view['due_day'], year=view['year'],
+   330	                          rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+   331	                                 for rung in view['rungs']],
+   332	                          seq=seq, input_id=input_id, created_at=f'{day}T00:00:00Z')
+   333	        self.views.add(view_id)
+   334	        self.mapping[thesis_id] = [view_id]
+   335	        self.counts['views written from a ladder'] += 1
+   336	
+   337	    def open_split(self, thesis_id, outcome, k, seq, day, input_id, source):
+   338	        """A topic declined as one quantity over two open years and re-asked per year (splitting/DESIGN.md v4): the parent's row with
+   339	        status `split`; one row per year, whatever its outcome; one view per written year, its id v, 0, the parent's number and the
+   340	        four-digit year (digits only, as the frozen judge reads view ids; the leading 0 keeps it apart from every ordinary id); every
+   341	        statement linked to the parent reaches every written year's view.
+   342	        A written year whose sibling has no view lists that year as not judged, with the model's own reason or code's words."""
+   343	        if str(STEP / 'ladder') not in sys.path:
+   344	            sys.path.append(str(STEP / 'ladder'))       # last: none of its modules shares a name with the writer's own folders
+   345	        import ladder_split
+   346	        periods = outcome['periods']
+   347	        if (not isinstance(periods, list) or len(periods) != 2 or len(set(periods)) != 2
+   348	                or not all(isinstance(p, str) and YEAR.fullmatch(p) for p in periods) or len({p.startswith('FY') for p in periods}) != 1):
+   349	            raise SystemExit(f'{thesis_id}: a split names two different years written alike (2026, or FY2027), not {periods!r}')
+   350	        number = thesis_id.split('-', 1)[1]
+   351	        store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period='', view_id=None, status='split', reason=None,
+   352	                     reference_status=None, checked_answer=json.dumps({'ladder': None, 'no_ladder': outcome['reason']}, ensure_ascii=False),
+   353	                     outcome_record=json.dumps(outcome['requests'], ensure_ascii=False), config_checksum=source, article_seq=k, article_day=day)
+   354	        written = {}
+   355	        for year in outcome['periods']:
+   356	            child = outcome['children'][year]
+   357	            if child['status'] == 'ladder':
+   358	                written[year] = f'v0{number}{YEAR.fullmatch(year).group(1)}'   # digits only (the judge reads v\d+); the leading 0 no ordinary id has
+   359	        for year in outcome['periods']:
+   360	            child = outcome['children'][year]
+   361	            status = SPLIT_STATUS[child['status']]
+   362	            view_id = written.get(year)
+   363	            checked = None
+   364	            if view_id is not None:
+   365	                checked = json.loads(json.dumps(child['answer']))
+   366	                if checked['ladder'].get('reference') is not None and child['passage'] is not None:
+   367	                    checked['ladder']['reference']['words'] = child['passage']
+   368	                for other in outcome['periods']:     # the model's own parts pass unchanged; code adds only a year with no question
+   369	                    if other != year and other not in written:
+   370	                        checked['ladder']['not_judged'] = list(checked['ladder'].get('not_judged') or []) + [
+   371	                            {'part': f'{other}: no question written', 'why': ladder_split.shown_reason(outcome['children'][other])}]
+   372	            elif child['status'] == 'no ladder':
+   373	                checked = {'ladder': None, 'no_ladder': child['reason']}
+   374	            store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period=year, view_id=view_id, status=status,
+   375	                         reason=None if view_id else ladder_split.shown_reason(child),
+   376	                         reference_status=(child.get('view') or {}).get('reference_status') if view_id else None,
+   377	                         checked_answer=None if checked is None else json.dumps(checked, ensure_ascii=False),
+   378	                         outcome_record=json.dumps(child['requests'], ensure_ascii=False), config_checksum=source, article_seq=k, article_day=day)
+   379	            if view_id is None:
+   380	                continue
+   381	            view = child['view']
+   382	            store.create_view(self.conn, view_id=view_id, object_id=view['object_id'], object_kind=view['object_kind'], kind=view['kind'],
+   383	                              looks_at=view['looks_at'], question=view['question'], due_day=view['due_day'], year=view['year'],
+   384	                              rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+   385	                                     for rung in view['rungs']],
+   386	                              seq=seq, input_id=input_id, created_at=f'{day}T00:00:00Z')
+   387	            self.views.add(view_id)
+   388	            self.counts['views written from a yearly ladder'] += 1
+   389	        if written:
+    20	    ap = argparse.ArgumentParser()
+    21	    ap.add_argument('run'); ap.add_argument('--day', default='2026-07-14'); ap.add_argument('--map', nargs='*', default=[])
+    22	    args = ap.parse_args()
+    23	    gold_path = HERE / 'gold-v1.json'
+    24	    sha = hashlib.sha256(gold_path.read_bytes()).hexdigest()
+    25	    gold = json.loads(gold_path.read_text(encoding='utf-8'))
+    26	    if gold.get('ruler_version') != RULER_VERSION:
+    27	        raise SystemExit(f'gold ruler_version {gold.get("ruler_version")} != scorer {RULER_VERSION}: refused')
+    28	    frozen = (HERE / 'gold-v1.sha256').read_text().split()[0] if (HERE / 'gold-v1.sha256').exists() else None
+    29	    if GOLD_SHA256 and frozen != GOLD_SHA256:
+    30	        raise SystemExit(f'gold-v1.sha256 {frozen} != the frozen value in this scorer {GOLD_SHA256}: refused')
+    31	    if frozen and frozen != sha:
+    32	        raise SystemExit(f'gold sha256 {sha} != frozen {frozen}: refused')
+    33	    corrections = json.loads((HERE / 'corrections-v1.json').read_text()) if (HERE / 'corrections-v1.json').exists() else []
+    34	    label = 'FROZEN' if frozen else f'DRAFT, {gold.get("status")}'
+    35	    print(f'gold v{RULER_VERSION} sha256 {sha[:16]}… [{label}]; corrections on record, not applied: {len(corrections)}; run {args.run}; window end {args.day}')
+    36	    conn = sqlite3.connect(f'file:{args.run}/views.sqlite?mode=ro', uri=True); conn.row_factory = sqlite3.Row
+    37	    mapping = {k: v for k, v in (m.split('=') for m in args.map)}
+    38	    seeds = {f'q{k:02d}': f'v{k}' for k in range(1, 23)}
+    39	    questions = {q['id']: q for q in json.loads((HERE / 'questions-v1.json').read_text(encoding='utf-8'))['questions']}
+    40	    for qid, vid in seeds.items():     # the seeds keep their ids in every run: check the text, refuse a run that differs
+    41	        row = conn.execute('select question from views where view_id=?', (vid,)).fetchone()
+    42	        if not row or row['question'] != questions[qid]['question']:
+    43	            raise SystemExit(f'{vid} in the run is not the seed question {qid}: refused')
+    44	    mapping = {**seeds, **mapping}
+    45	    if 'q23' not in mapping:
+    46	        hit = conn.execute("select view_id from views where question like '%Ohio%' and question like '%guarantee%' order by created_seq limit 1").fetchone()
+    47	        if hit:
+    48	            mapping['q23'] = hit['view_id']
+    49	    totals = {'agree': 0, 'disagree': 0, 'no judgement': 0, 'not in run': 0, 'gold open': 0, 'no_view': 0}
+    50	    base_lookup = [0, 0]; base_neutral = [0, 0]
+    51	    print(f'{"q":<4}{"outcome":<14}{"gold implied":<28}{"judge rung / band":<40}{"lookup":<8}{"neutral":<8}question')
+    52	    for entry in gold['entries']:
+    53	        qid = entry['question_id']; q = questions[qid]
+    54	        if entry.get('no_view'):
+    55	            totals['no_view'] += 1; print(f'{qid:<4}{"no_view":<14}{"":<28}{"":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    56	        if not entry.get('implied_outcome'):
+    57	            totals['gold open'] += 1; print(f'{qid:<4}{"gold open":<14}{"":<28}{"":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    58	        resolved = entry.get('resolution') or entry
+    59	        implied, direction = resolved['implied_outcome'], resolved.get('direction')
+    60	        vid = mapping.get(qid)
+    61	        if not vid:
+    62	            totals['not in run'] += 1; print(f'{qid:<4}{"not in run":<14}{"":<28}{"":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    63	        j = conn.execute('select rung from judgements where view_id=? and publication_day<=? order by judgement_id desc limit 1', (vid, args.day)).fetchone()
+    64	        rungs = [dict(r) for r in conn.execute('select position, label, lo, hi from rungs where view_id=? order by position', (vid,))]
+    65	        if j is None:
+    66	            totals['no judgement'] += 1; print(f'{qid:<4}{"no judgement":<14}{str(implied):<28}{vid + " never judged":<40}{"":<8}{"":<8}{q["question"][:60]}'); continue
+    67	        chosen = rungs[j['rung'] - 1]
+    68	        if q['unit'] == 'yes/no':
+    69	            agree = (chosen['label'].lower() == 'yes') == bool(implied['yes_no'])
+    70	            gold_text = 'yes' if implied['yes_no'] else 'no'; band = chosen['label']
+    71	            lookup = neutral = None
+    72	        else:
+    73	            lo, hi = chosen['lo'], chosen['hi']
+    74	            agree = (lo is None or implied['high'] >= lo) and (hi is None or implied['low'] < hi)
+    75	            gold_text = f'{implied["low"]:,.4g}..{implied["high"]:,.4g}'; band = f'{lo if lo is not None else "-inf"}..{hi if hi is not None else "inf"}'
+    76	            ref = ((entry.get('reference') or {}).get('A') or {}).get('value') if isinstance(entry.get('reference'), dict) and 'A' in entry['reference'] else (entry.get('reference') or {}).get('value')
+    77	            lookup = None
+     1	You are an independent reader for a hedge-fund research system. Read-only task: do not edit files or run model calls.
+     2	
+     3	Read PACKET. Each entry is a pair of evidence records about NVIDIA from two different news articles, "earlier" and "later", each with its summary, verbatim source passages, the article context around them, the original party, reporting speaker, tier, statement date, period and dates. Do not open any other file in that folder.
+     4	
+     5	Answer two separate questions from the passages and context, not only the summaries.
+     6	
+     7	Question 1, the relation of LATER to EARLIER:
+     8	- "same_statement": LATER makes the same statement or gives the same figure as EARLIER (a retelling, another outlet reporting the same claim, the same party repeating it);
+     9	- "revision": LATER is the same party's later version of that statement that changes it (a revised figure, guidance, forecast, plan or schedule), or an official confirming or denying that report;
+    10	- "different_fact_same_matter": both concern the same story or matter, but LATER states a different fact or event (for example, an arrest and a later charge in one case; a company's general programme and one customer's own deal under it);
+    11	- "same_quantity_other_party": the same quantity or event estimated or claimed by a different party;
+    12	- "different": different matters;
+    13	- "insufficient": the material does not let you decide.
+    14	
+    15	Question 2, independently: list each material fact in LATER that EARLIER does not contain (a figure, condition, party, date or qualification an analyst would want to keep), as short phrases; an empty list if none. Then say whether merging LATER into EARLIER by keeping only EARLIER's text plus LATER's source would lose any of them ("source_only_merge_loses": true or false).
+    16	
+    17	Return only a JSON array in packet order: [{"id": "V..", "relation": "...", "added_material": ["..."], "source_only_merge_loses": true|false, "why": "<one short sentence>"}].
+     6	## 1. The matching rule (an addition to the measurement; no frozen file changes)
+     7	
+     8	An opened question is the same as a ruler question when the same reported figure or event settles both (D248 and its boundaries).
+     9	**Extra wording that does not separate them:**
+    10	- a part, programme or single deal of a reference total (D248 boundary 1; R2-e);
+    11	- the same event under another deadline, in either direction (boundary 2);
+    12	- a later milestone, variant or parenthetical widening that the question's own check does not rest on (boundary 3; R2-f for steps of
+    13	  one approval process).
+    14	
+    15	**It stays apart only when:**
+    16	- it is a yes/no signing question beside an amount question (the Ohio exception, D248); or
+    17	- its extra scope is its own check and could resolve on its own, as a separately watched bet.
+    18	
+    19	**How the rule was set** (`reader-brief.md`):
+    20	- Two blind readers, Codex and Claude, read the 28 questions opened by the three stored unseeded c8 dev runs.
+    21	- They agreed on SAME or not SAME for 24 of 28.
+    22	- A third reader decided the 4 disagreements against the full texts and the decisions: all SAME (`adjudication.md`). The rule above is
+    23	  that reader's general statement.
+    24	- **Limit:** boundary 2 (another deadline) applies to an event's date, not to an amount held at a date. dev-d1 clean-1 asks for credit
+    25	  support at end-2027, while q09 asks for a broader total at FY2027 year-end. The amounts can differ, so it is NOT SAME, as both readers
+    26	  had it. dev-d2 and dev-d3 clean-1 are checked in the same FY2027 10-K and stay SAME.
+    27	
+    74	  - three draws.
+    75	
+    76	## 4. What a paid run needs first (none of it built yet)
+    77	
+    78	- **The adapter extension.** All 22 seed views plus q23 are created with their ruler text and ladder, so the frozen scorer accepts the
+    79	  run. Each clean thesis mapped SAME by the rule above, as applied by an independent reader to the run's opened questions before any
+    80	  judging, feeds its links to that view. Unmapped ruler questions have no evidence and are not judged.
+    81	- **A council read and tests with mutants.**
+    82	- **Cost:** about $7–8 (three clean draws at about $2.3; no new control, since the seeded Stage 2 is the comparison).
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import sys,json,hashlib
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0,'\\''docs/research/2026-11-17-product-comparison/stage0'\\'')
+import build_cards as b, eligibility as e, score_comparison as s, test_score_comparison as t
+class MemPath:
+    def __init__(self,name):
+        self.name=name
+    def exists(self):
+        return self.name in files
+    def read_bytes(self):
+        return files[self.name]
+    def read_text(self):
+        return self.read_bytes().decode()
+files={}
+def put(name,data):
+    files[name]=json.dumps(data).encode()
+    return hashlib.sha256(files[name]).hexdigest()
+r=t.base(new_served=10,guard_cards=10)
+mh=put('\\''matters'\\'',{'\\''matters'\\'':r['\\''matters'\\'']})
+eh=put('\\''eligible'\\'',{'\\''eligible'\\'':True})
+ph=put('\\''mapping'\\'',dict(mapping=r['\\''mapping'\\''],distinct=r['\\''distinct'\\''],eligibility_sha256=eh))
+kh=put('\\''deck'\\'',{str(i):dict(draw=d,question=q,role='\\''product'\\'',**{f:c[f] for f in ('\\''guardrail'\\'','\\''covering'\\'','\\''type'\\'')}) for i,(d,q,c) in enumerate((d,q,c) for d,cards in r['\\''cards'\\''].items() for q,c in cards.items())})
+r['\\''inputs'\\'']=dict(matters_sha256=mh,mapping_path='\\''mapping'\\'',mapping_sha256=ph,eligibility_path='\\''eligible'\\'',eligibility_sha256=eh,deck_key_path='\\''deck'\\'',deck_key_sha256=kh)
+with patch.object(s,'\\''Path'\\'',MemPath),patch.object(s,'\\''MATTERS'\\'',MemPath('\\''matters'\\'')):
+    print('\\''sealed scorer'\\'',s.verdict(r)['\\''verdict'\\''])
+    q=r['\\''cards'\\'']['\\''new-1'\\'']['\\''new-1-g-figure-0'\\'']
+    for field,bad in [('\\''guardrail'\\'',False),('\\''covering'\\'',True),('\\''type'\\'','\\''yes/no'\\'')]:
+        before=q[field]; q[field]=bad
+        try: s.verdict(r)
+        except SystemExit as err: print(field,'\\''refused'\\'', '\\''deck key'\\'' in str(err))
+        q[field]=before
+put('\\''ledger.json'\\'',dict(attempts=2,refused=1,spent=0.75,reserved=0))
+with patch.object(e,'\\''Path'\\'',MemPath):
+    print('\\''missing log refused:'\\'', bool(e.last_attempt('\\''ledger.json'\\'')[2]))
+    lines=[dict(at='\\''2026-11-18T18:00:00-0800'\\'',charged=0.25),dict(at='\\''2026-11-18T18:01:00-0800'\\'',charged=0.5),dict(at='\\''2026-11-18T18:02:00-0800'\\'',refused=0.2)]
+    for data in (lines[:2],lines):
+        files['\\''ledger.attempts.jsonl'\\'']='\\''\\n'\\''.join(map(json.dumps,data)).encode()
+        print('\\''attempt log'\\'',len(data),'\\''lines refused:'\\'',bool(e.last_attempt('\\''ledger.json'\\'')[2]))
+for rel in ('\\''c1/judge/draw-c1'\\'','\\''p1/prod'\\''):
+    root=Path('\\''poc/data/clean-e2e-full-2026-11-13'\\'')/rel
+    lib=b.library(root/'\\''views.sqlite'\\'',root/'\\''archive.sqlite'\\'',Path('\\''poc/data/items-nvda-2026-07-01-10-27.sqlite'\\''))
+    all_themes=[th for x in lib for th in x.get('\\''context'\\'',{}).get('\\''themes'\\'',[])]
+    rows=[b.card_text(x,lib) for x in lib]
+    print(rel,len(all_themes),'\\''themes;'\\'',sum(th['\\''updated'\\''] for th in all_themes),'\\''updated expected;'\\'',sum(t.count('\\''updated since this question was last answered'\\'') for t in rows),'\\''rendered;'\\'',sum(t.count('\\''Its possible answers:'\\'') for t in rows),'\\''rung lists'\\'')
+'" in /Users/lchingen/hivemind
+ succeeded in 10ms:
+sealed scorer practical lead
+guardrail refused True
+covering refused True
+type refused True
+missing log refused: True
+attempt log 2 lines refused: True
+attempt log 3 lines refused: False
+c1/judge/draw-c1 20 themes; 10 updated expected; 10 rendered; 20 rung lists
+p1/prod 32 themes; 8 updated expected; 8 rendered; 32 rung lists
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '9414,9437p'
+nl -ba clean-arch/PRD.md | sed -n '146,161p'
+nl -ba \"docs/research/2026-11-17-product-comparison/RUN-PLAN-v12.md\" | sed -n '169,196p'
+nl -ba clean-arch/step2-validation-2026-11-07/LOG.md | sed -n '52,66p;305,316p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  9414	     - **The main quantity:** big matters served, paired per matter.
+  9415	     - **Verdicts:**
+  9416	       - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both split
+  9417	         countings.
+  9418	       - **Practical loss:** the mirror, or a guardrail breach confirmed under both countings.
+  9419	       - **No practical winner, too small or invalid**, as written.
+  9420	     - **Guardrails:** unsupported shares (figure and yes/no apart) and the not-worth-tracking share, each within 10 points of the old system's.
+  9421	       D428's limits are printed beside them.
+  9422	     - **Illustrative only:** a sign test and an interval.
+  9423	     - **Frozen and hashed before the first send:** the matter list (blind), the credit rules (one cutoff per matter, the grouping of repeats,
+  9424	       what counts as the same question), the controls, the versions and the rule.
+  9425	  2. **What changes, explicitly:**
+  9426	     - D548's use of D400's six lines as a release gate is superseded. The lines are reported on every ladder run.
+  9427	     - The parts code decides stay hard: figure ranges meet end to end; the favourable end is stable; the due day is consistent at D400's 90%.
+  9428	     - D431's frozen-reference reading of 07-01 to 07-14 is still produced and printed beside the comparison, not deciding. D665 supersedes D431
+  9429	       on that point only.
+  9430	     - Step 2's three checks stay as D427 and D431 set them.
+  9431	     - Gate 2's unsupported lines become the guardrails, and its control line waits (D658).
+  9432	     - Gate 4 folds in.
+  9433	     - Gate 5 waits for a practical lead and Alex's word.
+  9434	     - The absolute floors stay proposals, reported beside.
+  9435	  3. **Back to Alex,** before any release engineering resumes: a practical lead (with the split cards for his spot check), a practical loss at
+  9436	     once, no practical winner, too small or invalid, or no verdict by 2026-12-01.
+  9437	- **Next:**
+   146	    - **Invalid:** a planted wrong answer accepted, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same.
+   147	- **The guardrails:** the unsupported share for figures, the unsupported share for yes/no questions, and the not-worth-tracking share, none
+   148	  more than 10 points above the old system's. D428's original limits are printed beside them.
+   149	- **Printed beside the verdict, not deciding:** a sign test and an interval (illustrative unless the frozen grouping supports them); the
+   150	  frozen-reference reading of 07-01 to 07-14 (D431, superseded on this point only); and the proposed absolute floors.
+   151	- **Kept from the earlier gates:**
+   152	  - **The six lines of D400** are measured and reported on every ladder run. They no longer block release.
+   153	  - **The parts code decides stay hard checks:** figure ranges meet end to end; the favourable end is the same across sends; the due day is
+   154	    consistent in at least nine of ten.
+   155	  - **Step 2's three checks stay,** as D427 and D431 set them.
+   156	  - **Stage B's control line waits** with D658.
+   157	- **Back to Alex,** before any release engineering resumes:
+   158	  - a practical lead, with the split cards for his spot check;
+   159	  - a practical loss, at once (D544);
+   160	  - no practical winner, too small, or invalid, with the counts;
+   161	  - no verdict by 2026-12-01.
+   169	   - **Exercised:** each subgroup needs at least 10 cards per system decided without a split (item 7), or it is "not exercised".
+   170	9. **The controls,** outside every product count:
+   171	   - 6 planted wrong answers (a rung moved, 3 per system). Each needs an explicit unsupported or insufficient mark, or the reading is invalid.
+   172	   - 4 supported controls, confirmed first by a separate reader.
+   173	   - 3 hidden repeats.
+   174	10. **No release verdict without six complete draws.** A draw that cannot finish (stopped after D449's one redo, or by its guard) gives no
+   175	    release verdict. What finished goes to Alex as a diagnostic, with the cause.
+   176	    - **D431's "same day" for a run longer than one day:** a new-system draw takes about 20 h, so one calendar day cannot hold it.
+   177	      - The six counted draws are launched within one hour of each other and run concurrently.
+   178	      - A D449 redo inside a draw counts as part of that draw.
+   179	      - Every counted send falls within 72 h of the first launch.
+   180	      - A breach makes the result a diagnostic.
+   181	      - Recorded as decision D667 before any paid send, replacing D431's one-calendar-day reading for this run only.
+   182	    - No replacement draw counts toward the verdict. The reviewers read "same day" differently (Codex: the send day; the Claude reviewer:
+   183	      the window), so the council took the cheaper, reversible course (D439): a later replacement would be a diagnostic only.
+   184	11. **The verdicts, tested in this order:**
+   185	    1. **Invalid:** a plant without an explicit rejection, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked
+   186	       the same.
+   187	    2. **Too small:** N < 20, or fewer than 30 distinct questions in any system-draw.
+   188	    3. **Practical lead:** a − b ≥ max(3, ⌈0.15·N⌉) and a ≥ 2b under both countings, with every guardrail exercised and passing under both.
+   189	    4. **Practical loss:** b − a ≥ max(3, ⌈0.15·N⌉) and b ≥ 2a under both countings (needing no guardrail exercised), or a breach in an
+   190	       exercised guardrail under both.
+   191	    5. **No practical winner:** everything else.
+   192	12. **Printed beside, not deciding:**
+   193	    - D428's limits next to the guardrails;
+   194	    - a sign test and an interval, labelled illustrative;
+   195	    - the company-figure subgroup;
+   196	    - the floors (§1.6).
+    52	    - different;
+    53	    - insufficient information;
+    54	    - and, for repeats, whether the later item is richer or qualified (D204's risk).
+    55	
+    56	    Two blind readers label each pair with the same full source context; disagreements are kept, then adjudicated with the source.
+    57	- **Generator-miss control.**
+    58	  - Sample: 30 incoming items, drawn uniformly within three time strata (articles 1–40, 41–80, 81–115) with a fixed seed. Inclusion
+    59	    probabilities are recorded and the estimate weighted.
+    60	  - Scan: the reader reads the incoming item's full passages, then every earlier summary.
+    61	  - Audit: a random sample of unflagged pairs is re-checked with full context.
+    62	  - Expected to be inconclusive if positives are few; expand rather than claim.
+    63	- **Retrieval arms.**
+    64	  - R0: production as written, word overlap within the linked thesis, top 10; a new thesis has no candidates.
+    65	  - R0e: entity-wide word overlap.
+    66	  - R1: embedding of summary, verified passages, party, time and period; query of thesis description, outcome and period plus the
+   305	**Council A** (`council/group/d-*`):
+   306	- report search as recall over known labelled counterparts;
+   307	- blind-review every merge, previously labelled positives included;
+   308	- verify the cache texts;
+   309	- re-run the reader test on the new views.
+   310	
+   311	| Line | Result | Met |
+   312	|---|---|---|
+   313	| 1. Search | 112/113 known labelled counterparts had a holding group among the candidates (99.1%). For 107 of them the group's original, which is what Jev saw, is itself a counterpart. This is not recall over all real repeats. | yes |
+   314	| 2. Clear wrong merges | 104 merges read by two blind readers; 85 accepted by both; the 19 rejected by either went to a third reader: acceptable 1, overlap 15, **wrong 3** = 2.9% | **no** (missed by one merge) |
+   315	| 3. Later details | Reader test re-run on the rebuilt views with the frozen questions and key: detail none 27.5, source 3, group **28** of 36; unsupported claims 3 / 2 / 2; double counting 0 | yes |
+   316	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/reflection-10/codex-2.md | sed -n '1,12p'
+nl -ba docs/research/2026-11-14-use-acceptance/reflection-10/codex-3.md | sed -n '1,22p'
+nl -ba clean-arch/step4-2026-11-10/stage_a/collect_readings.py | sed -n '112,127p;234,245p'
+nl -ba \"docs/research/2026-11-17-product-comparison/stage0/versions-manifest.json\" | sed -n '24,33p'
+nl -ba clean-arch/step3/library.py | sed -n '17,64p'
+rg -n \"first_day|earliest opening|ISO\" \"docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py\" | tail -15" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	**DISAGREE as written. Keep the paired rule, but call its result a practical lead, give the middle outcome an honest name, and explicitly record which existing release requirements the council is changing.** On 20 matters, four served only by the new system and none served only by the old would pass the practical rule. Even assuming independent matters, the one-sided sign-test probability would be 0.0625. That is a lead worth showing Alex. [Proposed paired rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md:10)
+     2	
+     3	1. **Write the full verdict before the first send.** Use the proposed rule for a practical lead and its mirror for a practical loss. Require the result to hold under both split countings. A guardrail breach confirmed under both countings is **Worse**. If a split could change the verdict, or neither side meets the margin, say **No practical winner**. “No worse” would claim more than this rule tests. Fix the denominators and minimum count for each guardrail subgroup. An empty or undersized subgroup cannot clear a guardrail. Keep D428’s original limits visible so the new 10-point guardrail does not silently replace them. [Paired rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-10/claude-1.md:10) · [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4756)
+     4	
+     5	2. **Show the sign test and interval for what they measure.** The sign test asks whether the new system wins more often among matters served by only one side. Even a result below 0.05 does not establish a 10-point gain across all matters. The ordinary exact calculation also assumes independent discordant matters. Freeze how related matters and weeks are grouped. If the design cannot support that assumption or a defensible interval that accounts for the grouping, label the statistics illustrative. Keep **20 distinct matters and 30 distinct questions per system per draw** as minimum counts for the practical reading. Neither my earlier 30-week illustration nor the “about half the time” estimate establishes power for this paired measure. [Sizing assumptions and limits](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md:45)
+     6	
+     7	3. **Freeze the population and how a matter earns credit.** Use July 1–19 to build both libraries, then score July 20–September 20 only if the full exposure census supports that span. D613 establishes the 10 and 4 exposures for the weeks of September 7 and 14 from Step 1 traces. Freeze the actual exclusion list and apply it to both replays. Fix one scoring cutoff per matter, how repeat mentions are grouped, and what counts as the same question. A missing question or answer earns no credit. Hash the article list, versions, reader instructions, controls, and verdict rule before sending. Keep Alex’s spot checks beside the prewritten verdict. [D613](/Users/lchingen/hivemind/docs/DECISIONS-log.md:8197) · [Source-first reading and denominators](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md:21) · [Reader protocol](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/pilot-deck-1/council-marking/PROTOCOL.md:24)
+     8	
+     9	4. **Record the authority separately.** The absolute floors were proposals. D427 and D431 were agreed with Alex and include the frozen-reference comparison and Step 2’s three checks. If the council wants the frozen-reference result reported alongside the comparison, say explicitly what D664 supersedes and retain the Step 2 checks unless that requirement is expressly changed. Likewise, moving line 6 to code should preserve the agreed **90%** due-day consistency threshold unless the decision explicitly changes it. D658 waits. Even a practical lead goes to Alex before any release engineering resumes. [D400](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4381) · [D427](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4738) · [D431](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4795) · [D664](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9383)     1	**CONSENSUS.** Make one sentence explicit before the first send: **“A practical lead requires every guardrail subgroup to meet its frozen minimum and pass under both split countings.”**
+     2	
+     3	For example, if there are too few yes/no answers to check their guardrail, report **No practical winner** and name the shortfall, unless a practical loss is independently established under the written rule. That closes the gap between “no breach observed” and “the check was exercised.” [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4761) · [Empty-denominator rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md:41)   112	            print(f'   item {item} ({send[0]} pass {send[1]}): {problem}')
+   113	        for entry in bad['unreadable lines']:
+   114	            print('   unreadable:', entry)
+   115	    return all(not problems[reader]['rows'] for reader in FAMILIES)
+   116	
+   117	
+   118	def command_disputes(run_folder, key_path):
+   119	    _, item_of, outcomes, readers, problems = read_rows(run_folder, key_path)
+   120	    if any(problems[reader]['rows'] for reader in FAMILIES):
+   121	        raise SystemExit('a row is missing or not valid: ask the reader again first (the `rows` command lists them)')
+   122	    packets = {}
+   123	    for packet_file in sorted((Path(run_folder) / 'readers').glob('packet-*.json')):
+   124	        for item in json.loads(packet_file.read_text()):
+   125	            packets[item['item']] = item
+   126	    found = sorted(disputes_of(outcomes, readers), key=lambda entry: item_of[entry[0]])
+   127	    third_folder = Path(run_folder) / 'third-reader'
+   234	
+   235	
+   236	def command_report(run_folder, key_path):
+   237	    _, item_of, outcomes, readers, _ = read_rows(run_folder, key_path)
+   238	    families = third_reader_families(run_folder)
+   239	    rows = (readers['reader 1'], readers['reader 2'])
+   240	    if families == [None]:
+   241	        rulings, missing = read_rulings(run_folder, item_of, outcomes, readers)
+   242	        if missing:
+   243	            print('rulings missing or not valid:', missing)
+   244	        report = accounting.account(list(outcomes.values()), *rows, rulings)
+   245	        print_report(report, outcomes, readers, rulings, item_of)
+    24	 "docs/research/2026-11-17-product-comparison/stage0/verdict-rule.json": "693911ebb2ea624c09e39da8fdb536a6a77c4d5cc310c411d489ac1704db36db",
+    25	 "docs/research/2026-11-17-product-comparison/stage0/kept-articles.json": "6999d037b6e0789bbbf4940907022402e990d0d7236924397dc85dbe843e624e",
+    26	 "docs/research/2026-11-17-product-comparison/stage0/census/matters.json": "5e68fb7c29820dc4100222a0e045182349c08a2bf51de1165e73ac025bf3cce8",
+    27	 "poc/data/comparison-2026-11-17/items-comparison.sqlite": "75c28d3c609ad857f4bc928967799fc83b41a13b6df7e181010c098731c81ad1",
+    28	 "poc/data/comparison-2026-11-17/manifest-2026-07-01-09-20.json": "7b5035eda1ed79316edcf77eb1b984ab9f0c62ee9308ad52b3762750909d2809",
+    29	 "poc/data/comparison-2026-11-17/comparison-limits.json": "badd10d4cb06d481f07b18b5730ad1f56c8cfabab94bda0d23da0a2fb224acfe",
+    30	 "git_commit": "0f428b42b2a4e60b7956f5287a8de85f82f432d6",
+    31	 "docs/research/2026-11-17-product-comparison/stage0/launch_comparison.py": "bb454627c7243c7e0436ff6549bfcd2ce40b4a28b2c8c2a04c6c94e85572a8fe",
+    32	 "docs/research/2026-11-17-product-comparison/stage0/card-spec.md": "1a9d67533988d1ef539ae6c08cf70d01ed9a597d0d1e91a0df2e4f23629eb029"
+    33	}
+    17	RECORD_FIELDS = ('id', 'article', 'publisher', 'publication_date', 'summary', 'passages', 'original_party', 'reporting_speaker', 'tier',
+    18	                 'statement_date', 'evidence_period', 'thesis_ids')
+    19	
+    20	
+    21	class Refused(Exception):
+    22	    """A Step 2 outcome the library will not write; nothing was changed."""
+    23	
+    24	
+    25	class Library:
+    26	    def __init__(self):
+    27	        self.groups = {}       # group id → {'original': record, 'members': [record], 'links': {thesis id: record id}, 'revises': [{'group', 'by'}]}
+    28	        self.placement = {}    # record id → group id
+    29	        self.order = []        # group ids in the order they were created
+    30	        self.judged = {}       # (thesis id, group id) → True | False, the later-linking ledger
+    31	        self.later_log = []    # one entry per later-linking call: thesis, article, linked, pending, judged
+    32	        self.opened_at = {}    # thesis id → the article that opened it: the boundary of its later linking
+    33	        self.pending = {}      # thesis id → group ids whose judgement failed twice and waits for the next write to the thesis
+    34	
+    35	    def apply(self, record, outcome):
+    36	        """Write one record with its Step 2 outcome: {'kind': 'new' | 'repeat' | 'revision' | 'failed', 'repeat_of': [group ids],
+    37	        'revises': [group ids], 'reason': text}. Returns the id of the group that holds the record."""
+    38	        missing = [f for f in RECORD_FIELDS if f not in record]
+    39	        if missing:
+    40	            raise Refused(f'record lacks {missing}')
+    41	        kind, repeat_of, revises = outcome['kind'], list(outcome.get('repeat_of') or []), list(outcome.get('revises') or [])
+    42	        if kind == 'failed':
+    43	            raise Refused(f"comparison failed for {record['id']}: {outcome.get('reason', 'no reason given')}")
+    44	        if kind not in ('new', 'repeat', 'revision'):
+    45	            raise Refused(f'unknown outcome {kind!r}')
+    46	        if (kind == 'repeat') != bool(repeat_of) or len(repeat_of) > 1:
+    47	            raise Refused(f"a repeat names exactly one group; got {repeat_of} for outcome {kind}")
+    48	        if kind == 'revision' and not revises:
+    49	            raise Refused('a revision names the group it revises')
+    50	        for group_id in repeat_of + revises:
+    51	            if group_id not in self.groups:
+    52	                raise Refused(f'unknown group {group_id}')
+    53	        target = repeat_of[0] if repeat_of else record['id']
+    54	        if record['id'] in self.placement:
+    55	            if self.placement[record['id']] != target:
+    56	                raise Refused(f"{record['id']} was placed in {self.placement[record['id']]}, not {target}")
+    57	            group = self.groups[target]
+    58	            stored = next(r for r in [group['original']] + group['members'] if r['id'] == record['id'])
+    59	            if {k: v for k, v in stored.items() if k != 'thesis_ids'} != {k: v for k, v in record.items() if k != 'thesis_ids'}:
+    60	                raise Refused(f"{record['id']} names a stored record with different content; a changed record needs a new id")
+    61	            self._link(group, record)
+    62	            return target
+    63	        if kind == 'repeat':
+    64	            group = self.groups[target]
+41:  "merged_from": ["<batch>:<old key>", ...], "articles": [n, ...], "first_day": "YYYY-MM-DD", "company_figure": true|false}}
+256:                        'first_day': min([d for d in (a.get('first_day'), b.get('first_day')) if d], default=None), 'company_figure': flag})
+273:                            'articles': m.get('articles', []), 'first_day': m.get('first_day'), 'company_figure': all(f is True for f in flags)})
+342:                        'first_day': min([m['first_day'] for m in members if m.get('first_day')], default=None),
+460:        canonical = sorted(members, key=lambda m: (m['listed_by'] != 'both', m.get('first_day') or '9999'))[0]
+465:                        'first_day': min([m['first_day'] for m in members if m.get('first_day')], default=None),
+
+codex
+## Part A — Reading tools
+
+- **Scorer fixed.** The verified deck key now governs `guardrail`, `covering` and `type`. I changed each field independently in memory. All three changes were refused. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:175)
+- **Attempt-log check fixed.** It checks line count, total charges and outstanding reservations. My in-memory check rejected missing and short logs and accepted a reconciled log. [Eligibility](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:70)
+- **Theme context fixed.** Across both historical stores, all 52 themes showed numbered answer choices and all 18 update markers were preserved. I opened no live outputs. [Card renderer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/build_cards.py:156)
+
+READY TO READ
+
+## Part B — §1.6 design
+
+- **D400 and release status.** I agree that an unmeasured D400 code check cannot clear release under the existing accounting minima. Record that interpretation. Use “hard checks clear” when they pass. Release still requires a practical lead and Alex’s word. The per-draw reader tools are usable. The code check still needs the designed skipped-ladder handling and fingerprinted inputs. [Accounting](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/accounting.py:198) · [D400 tool](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:19) · [D665](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9425)
+- **Step 2 lines 1 and 2 are buildable.** The trace and library support independent labelling and the `repeat_of` join. Keep line 1 labelled as recall over known counterparts. Five random pairs per record are a spot check. Restore the whole-history summary scan on a fixed stratified subset for the generator-miss audit. Line 2’s threshold and third-reader rule match the record. [Trace and library](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:116) · [Recorded audit](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:56) · [Recorded results](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:305)
+- **Step 2 line 3 must exercise the shipped renderer.** The proposed common header adds fields the grouped output omits, which could mask a loss. Pair the actual `group_text` output with the ungrouped dossier using the same independent detail key. Use a paired interval over groups for the detail difference. Wilson fits the proportion lines. [Design](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:78) · [Renderers](/Users/lchingen/hivemind/clean-arch/step3/library.py:135)
+- **D431 is buildable as the recorded as-run substitute.** Use `state_as_of` and borrow the frozen comparison rules. The scorer itself refuses unseeded stores. Join clean units by `clean_ladders.view_id`, including split children. Freeze how multiple matches and nonbinary rungs are handled before reading. [As-of reader](/Users/lchingen/hivemind/src/hivemind/service.py:118) · [Frozen scorer](/Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py:36) · [Writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:374)
+- **The remaining report quantities have sources.** Label the Wilson interval as the share among discordant matters. Add D428’s last-judgement limit beside its figure and yes/no limits, with its original denominator. [Design table](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:28) · [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4761)
+
+CHANGE: finish the input and release-status wiring, restore the search audit, use the shipped dossier renderer, and pin D431 comparability and the D428 report.
+tokens used
+3,495,008
+## Part A — Reading tools
+
+- **Scorer fixed.** The verified deck key now governs `guardrail`, `covering` and `type`. I changed each field independently in memory. All three changes were refused. [Scorer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:175)
+- **Attempt-log check fixed.** It checks line count, total charges and outstanding reservations. My in-memory check rejected missing and short logs and accepted a reconciled log. [Eligibility](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/eligibility.py:70)
+- **Theme context fixed.** Across both historical stores, all 52 themes showed numbered answer choices and all 18 update markers were preserved. I opened no live outputs. [Card renderer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/build_cards.py:156)
+
+READY TO READ
+
+## Part B — §1.6 design
+
+- **D400 and release status.** I agree that an unmeasured D400 code check cannot clear release under the existing accounting minima. Record that interpretation. Use “hard checks clear” when they pass. Release still requires a practical lead and Alex’s word. The per-draw reader tools are usable. The code check still needs the designed skipped-ladder handling and fingerprinted inputs. [Accounting](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/accounting.py:198) · [D400 tool](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_code_check.py:19) · [D665](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9425)
+- **Step 2 lines 1 and 2 are buildable.** The trace and library support independent labelling and the `repeat_of` join. Keep line 1 labelled as recall over known counterparts. Five random pairs per record are a spot check. Restore the whole-history summary scan on a fixed stratified subset for the generator-miss audit. Line 2’s threshold and third-reader rule match the record. [Trace and library](/Users/lchingen/hivemind/clean-arch/step2/run_forward.py:116) · [Recorded audit](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:56) · [Recorded results](/Users/lchingen/hivemind/clean-arch/step2-validation-2026-11-07/LOG.md:305)
+- **Step 2 line 3 must exercise the shipped renderer.** The proposed common header adds fields the grouped output omits, which could mask a loss. Pair the actual `group_text` output with the ungrouped dossier using the same independent detail key. Use a paired interval over groups for the detail difference. Wilson fits the proportion lines. [Design](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:78) · [Renderers](/Users/lchingen/hivemind/clean-arch/step3/library.py:135)
+- **D431 is buildable as the recorded as-run substitute.** Use `state_as_of` and borrow the frozen comparison rules. The scorer itself refuses unseeded stores. Join clean units by `clean_ladders.view_id`, including split children. Freeze how multiple matches and nonbinary rungs are handled before reading. [As-of reader](/Users/lchingen/hivemind/src/hivemind/service.py:118) · [Frozen scorer](/Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/score_judgement.py:36) · [Writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:374)
+- **The remaining report quantities have sources.** Label the Wilson interval as the share among discordant matters. Add D428’s last-judgement limit beside its figure and yes/no limits, with its original denominator. [Design table](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:28) · [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4761)
+
+CHANGE: finish the input and release-status wiring, restore the search audit, use the shipped dossier renderer, and pin D431 comparability and the D428 report.

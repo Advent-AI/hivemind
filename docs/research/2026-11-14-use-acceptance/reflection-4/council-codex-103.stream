@@ -1,0 +1,565 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 103: the fresh reading is done; the comparison closes. Re-rank the production work. My proposal: remove the D mark's two-ruler split first
+
+## The result (read `unlisted-parts/RESULT-FRESH-A2.md`, `poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt`)
+
+- **The send:** 30 sends, $0.0282. Rows complete after one re-ask (a Codex row marked F on an event). All third rulings are in.
+- **The frozen step on fresh topics** (population a, n = 5), unresolved points counted for / against:
+  - line 2 missed (clean-15, 2 / 3 sends);
+  - line 3 missed (clean-17: p3 / p1 and p3; the Ruled-out rung catches a postponement);
+  - line 4 met;
+  - line 5: 2 / 1 of 5 right;
+  - line 6 not measured.
+- **A2:** lines 1 to 4 met when counted for. Line 2 is missed when counted against (clean-15 p1 and p3, unresolved). Line 5: 4 / 1
+  of 5. No A2 failure above the control to review. H: all 5 disputed points ruled "part" by both families.
+- **The comparison is STOPPED.** The Codex first reader missed plant 1 (it marked "part" where "already judged" is expected). The
+  comparison was already without a verdict for three other reasons:
+  - (b) has 3 topics;
+  - the control fails L on 1 topic;
+  - the countings disagree.
+- As decided in round 102, it closes. A2 stays unaccepted.
+- **My own read before the readers** matched on line 2 (clean-15) and line 4. Its line-6 lead was wrong: I read the raw due day, not
+  the stored view. That is corrected in the file.
+
+## A new finding with its census: the D mark has two rulers
+
+- **The two rulers:**
+  - The reader brief's D row (`ladder/stage-a-reader-brief.md` l.98) says a figure's day set by code (D414: the fiscal year-end
+    plus 60 days) holds.
+  - The packet also shows each reader the step's own fiscal-year note (`src/hivemind/universe.py:136`): "FY2027's full-year figures
+    are published in the annual report around 2027-02; use that day as the due date".
+  - D414's code (`ladder_step.due_day_of`) replaces that day with 2027-04-01.
+- **The census** (`unlisted-parts/fresh-a2/d_split_census.py`, output beside it):
+  - Over all 14 stored gate-1 readings, 225 items are company figures whose shown day differs from the note's month.
+  - The Codex first readers fail D on 133 of them; the Claude first readers on 0.
+  - The third readers split the same way: in the latest readings the Codex third readers rule "fails" and the Claude ones "holds"
+    (for example A2's probe 25 / 24, the second week 10 / 10, and this reading 6 / 6).
+  - Checked on the known case: this reading's 6 Poolside sends.
+- **What it does to the gate:** each such point is unresolved, so the "counted against" line 5 loses every NVDA company-figure topic
+  whose day code set. Today that alone turns clean-18 from right to wrong in both arms.
+- **The product itself is consistent:** code's day is the one the judge and the page use. The contradiction is a request sentence
+  that code always overrides (AGENTS §6: a request never asks for what code then replaces). It goes on the next ladder version's
+  list; it changes nothing the product shows.
+
+## Re-ranking the production work, from the evidence
+
+| # | Problem | Evidence | Decidable without Alex? |
+|---|---|---|---|
+| 1 | Gate 1's reading has a root-caused two-ruler split on D | 133 vs 0 over 225 items, 14 readings | yes: it implements D414, which is in force |
+| 2 | Line 3: a Ruled-out rung that catches a postponement (the wait-as-ruling-out class) | fresh clean-17 p3 (both families); earlier censuses exist (`stage_a/wait_as_ruling_out_census.py`) | a new ladder version, reviewed (D426) |
+| 3 | Line 2 | A2 closed, unaccepted; the frozen step's rate on fresh topics is 1 of 4 written topics | closed |
+| 4 | The reference mark (XR) splits too, and the product reads it nowhere | 4 unresolved here | no: Alex's choice 2 |
+| 5 | The final-answer test (Stage B) | 4 comparable controls, 8 needed | needs a design |
+
+## My proposal (one recommendation, one test)
+
+- **The fix:** the D row of the reader brief gains one sentence that states D414's precedence, so the form has one ruler. Proposed
+  wording: "The fiscal-year note gives the month the step was told to expect; for a figure whose `due_day_basis` is
+  `expected_publication`, code replaces the step's day with this rule's day, which holds even where it differs from the note."
+  - It is a clarification of an in-force decision, not a new rule.
+  - It is not Alex's frozen ruler (D261 covers the extraction and judgement rulers).
+  - It changes how the brief is worded, not what the gate asks.
+- **The test ($0 in dollars; reader sessions unpriced):**
+  - Fresh Codex third readers re-rule only the class's disputed D points in the three latest readings (A2's probe, A3's probe and
+    this one): 25 + 17 + 6 points, under the clarified brief.
+  - The gate is then recounted under both countings, beside the unchanged counts. Nothing is overwritten.
+- **Falsifier:** the split is a family threshold, not the note, if the fresh Codex third readers still rule "fails" on more than a
+  third of the points. Then stop instrument work on D, record that, and leave the D role to Alex with the census.
+- **Why it is first:**
+  - It is the only item that is root-caused, cheap and decidable by the council.
+  - It sits under every gate number since 2026-11-10.
+  - Item 2 needs a new ladder version, and its count on the fresh week is 1 to 2 sends. It comes next, after a census over the
+    stored readings.
+
+## Asked of you
+
+- Is the brief sentence faithful to D414 and to the brief's own D row? Does it change any other mark?
+- Is re-ruling only the disputed class points (not whole items) a fair recount?
+- Should item 2 (or something else) come first instead?
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the fresh result and the date-mark census against the brief, the code and D414, then assess the proposed re-reading and priority.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md; cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py; head -65 poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt' in /Users/lchingen/hivemind
+ exited 1 in 0ms:
+# The fresh A2 comparison (D587 to D589): a fresh gate-1 reading of the frozen step, and no comparative verdict
+
+**In one line:** on topics no development touched, the frozen answer-choice step still misses Alex's gate (lines 2, 3 and 5). A2
+does no worse anywhere and better on the one topic with a part left unlisted. But the comparison gives no verdict:
+
+- population (b) is under its minimum;
+- the control fails L on only 1 topic;
+- the two countings disagree;
+- a planted control was missed.
+
+The two reader families' third readers disagree on 21 of the 29 points they ruled, and those splits decide most of the gap between
+the two countings.
+
+## What ran
+
+- **First step:** the frozen Step 1 on the unread week of 10-13 (383 articles) from the 10-06 week's library. Complete, $3.4485, 5
+  topics (`poc/data/clean-fresh-a2-2026-11-16/`).
+- **Populations** (`population/population.json`):
+  - (a) has all 5 topics.
+  - (b), classed blind by a Codex classer and me separately, has 3: f1/clean-16, -17, -18.
+  - f1/clean-15 is a development matter. f1/clean-14 is uncertain, because the classers split on it.
+- **Answer choices:** control and A2, three sends each (30 sends, $0.0282). 12 ladders and 3 refusals in each arm. The $0 checks
+  passed first (D589).
+- **Reading:**
+  - Two families of first readers, 2 packets (33 items, with 3 plants).
+  - Third readers of both families on 22 sends (26 differing marks, 3 named faults) and on 5 H points.
+  - One Codex row (item 24, a plant) was invalid (F marked on an event) and was asked again of a fresh session.
+  - Score: `fresh_score.py`, output `choices/score-output-fresh.txt`.
+- **My own read** of every send was written before the readers' rows (`choices/own-read-before-readers.md`).
+
+## The fresh gate-1 reading of the frozen step (control), population (a), n = 5
+
+| Line | Unresolved counted for the answer | Counted against |
+|---|---|---|
+| 1 | met | met |
+| 2 | missed: clean-15 p1, p2 | missed: clean-15 p1, p2, p3 |
+| 3 | missed: clean-17 p3 | missed: clean-17 p1, p3 |
+| 4 | met (the 3 refusals of the AI-bill topic justified) | met |
+| 5 | 2 of 5 right (1 by a ladder) | 1 of 5 right (0 by a ladder) |
+| 6 | not measured (1 company figure, 4 ladder topics; 3 and 20 needed) | not measured |
+
+- **Line 2:** on the hyperscaler custom-silicon topic the control leaves out the outcome's spending split (p1) or Maia's role as
+  Microsoft's primary inference system (p2: both families' third readers). Its other three written topics list every part.
+- **Line 3:** on Taiwan's export controls, p3's Ruled-out rung ("formally announces that it will not adopt tighter export controls
+  … by January 31, 2027") also catches a postponement, which leaves the event still awaited (both third readers). This is the known
+  wait-as-ruling-out class.
+- **Line 5:** right needs every mark, so the reference mark (XR, not one of Alex's six lines) and the due-day mark (D) decide much of it.
+
+## A2 beside the control (no verdict; reported as "not shown to be independent of the development matters")
+
+| | Control | A2 |
+|---|---|---|
+| L topics, counted for / against | clean-15 / clean-15 | none / clean-15 (p1, p3 unresolved) |
+| Line 3, for / against | missed / missed | met / met |
+| N sends | 0 | 0 |
+| H points (both third readers: all "part") | 0 | 0 |
+| Line 5 right, for / against | 2 / 1 of 5 | 4 / 1 of 5 |
+| A2 failures above the control to review | none | none |
+
+- **Population (b)**, the 3 different-matter topics: neither arm fails L, and both arms give the same counts.
+- **Why no verdict:**
+  - (b) has 3 topics, under 5.
+  - The control fails L on 1 topic, under 2.
+  - The countings disagree.
+  - `fresh_score.py` stops the comparison because a planted control was missed. The Codex first reader marked plant 1 (a
+    termination the Ruled-out rung decides) as "part" instead of "already judged".
+  - The plants guard only H, which is not one of Alex's lines. The Codex family's first H marks are therefore not trusted.
+  - The two H third readers ruled all 5 disputed points "part".
+
+## Where the families split (21 of 29 ruled points unresolved)
+
+| Mark | Unresolved on arm sends | What splits them |
+|---|---|---|
+| D | 6 (clean-18, every send, both arms) | Code sets an undated annual filing at 60 days after year-end (2027-04-01, D414). The request's fiscal-year note says "published in the annual report around 2027-02; use that day as the due date". Codex reads the shown day as wrong; Claude follows code's rule. |
+| XR | 4 (clean-14) | Whether IDC's "19% growth" forecast is the reference for a unit count. |
+| L | 3 (clean-15) | Whether Maia's role as Microsoft's primary inference system is a part the gigawatt question leaves out. |
+| R | 1 (clean-17 p1) | Whether a final control list that excludes Nvidia's products rules the event out. |
+
+- **The D split comes from a contradiction inside the product,** checked in code:
+  - The request's fiscal-year note (`src/hivemind/universe.py:136`) tells the step, for a company whose fiscal year does not end in
+    December, that the full-year figures appear "around {year}-{month after year-end}; use that day as the due date".
+  - The ladder step's D414 rule (`ladder_step.py`, `due_day_of`) sets every such figure with basis `expected_publication` to 60
+    days after the year's end.
+  - So every NVDA company figure answered this way is shown to the judge and the readers with a day the note contradicts.
+  - How many disputed D marks this caused across the stored gate readings has not been counted.
+
+## The rejection checked (AGENTS §7.3)
+
+- **The control's line-2 and line-3 failures are the model's errors.** Both third-reader families agree on clean-15 p2 (L) and
+  clean-17 p3 (R). I read both against the topic and agree.
+- **The D failures under "against" are not shown to be model errors.** They are a request-and-code contradiction (see above).
+- **My own pre-reading lead on line 6 was wrong.** I read the model's raw due day. The stored view, which code sets, is the same
+  across sends on all 4 topics (correction in `own-read-before-readers.md`).
+
+## What it teaches
+
+- **Line 2 on fresh material:** the frozen step's line-2 failure rate on fresh material (1 of 4 written topics) is lower than on
+  the development topics that motivated A to A3 (6 of 13). One week, one draw.
+- **Where the gate's outcome comes from:** the readers' splits on two marks Alex has not ruled on (D on code-set days, XR) now
+  decide more of it than A2's change does.
+- **The comparison closes, as decided** (D589). A2 stays unaccepted.
+cat: docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.txt: No such file or directory
+
+ succeeded in 0ms:
+"""The D-mark split on code-set due days ($0; RESULT-FRESH-A2.md, "Where the families split").
+
+A company figure whose due day the step gave as `expected_publication` is shown with the day code sets (D414: 60 days after the
+fiscal year-end). The fiscal-year note shown beside it says the annual report appears "around <year>-<month>; use that day as the
+due date". For every stored gate-1 reading, this counts the items of that class (the shown day not in the note's month), each
+first-reader family's D failures on them, and the third readers' rulings on their D points.
+
+  python3 d_split_census.py
+"""
+import collections
+import glob
+import json
+import os
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[5]
+NOTE = re.compile(r'around (\d{4})-(\d{2}); use that day as the due date')
+FAMILIES = ('codex', 'claude')
+
+
+def items_of(reading):
+    items = {}
+    for packet in sorted(glob.glob(f'{reading}/readers/packet-*.json')):
+        content = json.loads(Path(packet).read_text())
+        for item in content if isinstance(content, list) else []:
+            if isinstance(item, dict) and 'item' in item:
+                items[item['item']] = item
+    return items
+
+
+def in_class(item):
+    shown, other = item.get('ladder_as_the_judge_is_shown_it') or {}, item.get('other_fields') or {}
+    note = NOTE.search(item.get('fiscal_year_note') or '')
+    return bool(shown.get('kind') == 'asset' and other.get('due_day_basis') == 'expected_publication' and note and shown.get('due_day')
+                and not shown['due_day'].startswith(f'{note.group(1)}-{note.group(2)}'))
+
+
+def rows_of(reading, family):
+    rows = {}
+    files = sorted(glob.glob(f'{reading}/readers-answers/reader-{family}-packet-*.jsonl'), key=lambda name: ('-again-' in name, name))
+    for answer_file in files:
+        for line in Path(answer_file).read_text().splitlines():
+            line = line.strip()
+            if line.startswith('{'):
+                try:
+                    row = json.loads(line)
+                    rows[row['item']] = row
+                except (ValueError, KeyError):
+                    pass
+    return rows
+
+
+def rulings_of(reading, family, members):
+    found = collections.Counter()
+    for ruling_file in glob.glob(f'{reading}/third-reader/rulings-{family}-*.jsonl'):
+        for line in Path(ruling_file).read_text().splitlines():
+            if line.strip().startswith('{'):
+                try:
+                    ruling = json.loads(line)
+                except ValueError:
+                    continue
+                point = ruling.get('id', '')
+                if point.endswith('-D') and point.split('-')[0].isdigit() and int(point.split('-')[0]) in members:
+                    found[ruling.get('ruling')] += 1
+    return dict(found)
+
+
+def main():
+    readings = sorted(os.path.dirname(path) for path in glob.glob(str(ROOT / 'poc/data/**/readers-answers'), recursive=True))
+    totals = collections.Counter()
+    for reading in readings:
+        items = items_of(reading)
+        if not items:
+            continue
+        members = {number for number, item in items.items() if in_class(item)}
+        rows = {family: rows_of(reading, family) for family in FAMILIES}
+        fails = {family: sum(1 for number in members if rows[family].get(number, {}).get('D') == 'fails') for family in FAMILIES}
+        rulings = {family: rulings_of(reading, family, members) for family in FAMILIES}
+        print(f'{os.path.relpath(reading, ROOT)}: items {len(items)}; in the class {len(members)}; D fails on them {fails}; third rulings {rulings}')
+        totals['items'] += len(items)
+        totals['in the class'] += len(members)
+        for family in FAMILIES:
+            totals[f'{family} D fails'] += fails[family]
+    print('TOTAL', dict(totals))
+
+
+if __name__ == '__main__':
+    main()
+===== gate-1 report, control, unresolved counted for the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+sends: 15 {'refusal': 3, 'event': 3, 'theme figure': 6, 'company figure': 3}
+reading: complete | dispute share: (11, 99)
+line 1: ('met', [])
+line 2: ('missed', [('control|fresh:f1/clean-15', 1), ('control|fresh:f1/clean-15', 2)])
+line 3: ('missed', [('control|fresh:f1/clean-17', 3)])
+line 4: ('met', [])
+line 5: ('missed', {'right': 2, 'right by a ladder': 1, 'of': 5})
+line 6, direction: ('NOT MEASURED', {'theses whose three sends are company figures': 1, 'needed': 3})
+line 6, due day: ('NOT MEASURED', {'theses whose three sends are ladders': 4, 'needed': 20})
+line 6, shape differs across sends: []
+shares:
+   Q: (12, 12)
+   O: (12, 12)
+   R: (11, 12)
+   D: (12, 12)
+   X: (12, 12)
+   L: (10, 12)
+   XR: (6, 12)
+   F: (3, 3)
+   Y: (9, 9)
+   N: (3, 3)
+   G, reader 1: {'holds': 7, 'not_assessable': 2}
+   B, reader 1: {'not_a_bet': 2, 'bet': 24}
+   G, reader 2: {'holds': 4, 'not_assessable': 4, 'fails': 1}
+   B, reader 2: {'not_a_bet': 11, 'bet': 15}
+refusals by the model, each with N as the two readers gave it and as ruled:
+   control|fresh:f1/clean-16 pass 1 | N holds / holds -> holds | The question concerns U.S. federal legislation regulating AI development, a matter not covered by any listed theme.
+   control|fresh:f1/clean-16 pass 2 | N holds / holds -> holds | The question concerns federal legislation on AI safety and development, a matter not covered by any listed theme; it is not a question about NVDA.
+   control|fresh:f1/clean-16 pass 3 | N holds / holds -> holds | The tracked matter is U.S. federal legislation on AI safety and advanced AI development, which none of the listed themes covers.
+refused twice by code, with the reasons of each attempt:
+W named: 1; upheld: 0
+===== gate-1 report, A2, unresolved counted for the answer (population a; line 5's 35 of 44 and 28 of 44 not applicable) =====
+sends: 15 {'refusal': 3, 'theme figure': 6, 'event': 3, 'company figure': 3}
+reading: complete | dispute share: (11, 99)
+line 1: ('met', [])
+line 2: ('met', [])
+line 3: ('met', [])
+line 4: ('met', [])
+line 5: ('missed', {'right': 4, 'right by a ladder': 3, 'of': 5})
+line 6, direction: ('NOT MEASURED', {'theses whose three sends are company figures': 1, 'needed': 3})
+line 6, due day: ('NOT MEASURED', {'theses whose three sends are ladders': 4, 'needed': 20})
+line 6, shape differs across sends: []
+shares:
+   Q: (12, 12)
+   O: (12, 12)
+   R: (12, 12)
+   D: (12, 12)
+   X: (12, 12)
+   L: (12, 12)
+   XR: (9, 12)
+   F: (3, 3)
+   Y: (9, 9)
+   N: (3, 3)
+   G, reader 1: {'holds': 6, 'not_assessable': 3}
+   B, reader 1: {'bet': 30, 'not_a_bet': 4}
+   G, reader 2: {'fails': 1, 'holds': 5, 'not_assessable': 3}
+   B, reader 2: {'bet': 20, 'not_a_bet': 14}
+refusals by the model, each with N as the two readers gave it and as ruled:
+   changed|fresh:f1/clean-16 pass 1 | N holds / holds -> holds | The question concerns federal legislation regulating or banning advanced AI systems, a matter not covered by any listed theme.
+   changed|fresh:f1/clean-16 pass 2 | N holds / holds -> holds | The tracked event is enactment of U.S. federal AI-safety legislation, a matter not covered by any listed theme.
+   changed|fresh:f1/clean-16 pass 3 | N holds / holds -> holds | The tracked matter is enactment of federal AI-safety legislation, which is not covered by any of the listed themes.
+refused twice by code, with the reasons of each attempt:
+W named: 0; upheld: 0
+== comparison, population_a, unresolved counted for: STOPPED: a planted control was missed
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D414|''^## D543|''^## D590'"' docs/DECISIONS-log.md; nl -ba clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md | sed -n '80,110p'; nl -ba src/hivemind/universe.py | sed -n '118,145p'; rg -n -A 42 'def due_day_of' clean-arch/step4-2026-11-10/ladder/ladder_step.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+6589:## D543 · 2026-11-15 · Under D439: the cold reflection on the lean path: D518 stands with its reasons, the choice of system is not made in Alex's place, and no investigation is opened (reflection council consensus)
+    80	  which is due at the company's fiscal year-end); it is the company's figure for a
+    81	  quarter or a half-year; it is a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve
+    82	  months, and neither the thesis nor the article gives the day it is published (D417); it is a figure for a year that had already
+    83	  ended on the article's day; it is a figure for a year beyond
+    84	  next year, unless the thesis's `opens_as` is binding_obligation; or the question belongs to another company, or to a matter that
+    85	  none of the listed themes covers (the listed themes are given with the packet). Declining for any other reason, or when the case
+    86	  named does not truly apply, is not justified.
+    87	
+    88	## What to return
+    89	
+    90	One JSON object per item, one per line, in item order, as your final message: no prose before or after, no code fence. Fields:
+    91	
+    92	| field | values | the mark |
+    93	|---|---|---|
+    94	| `item` | the item number | |
+    95	| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+    96	| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+    97	| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+    98	| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+    99	| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+   100	| `F` | `holds`, `fails`, `n/a` | for a company's figure only: the direction is defensible (which end is bullish), and the reason given in `favourable_why` supports the favourable end. For an amount the company owes, guarantees or has committed to pay, where neither the thesis nor the article settles which end is good for the business (they argue both ends or say nothing on it), the lower end is the favourable one (D413), and "higher" fails unless the thesis's own words say that more of it is good. `n/a` for an event and for a theme |
+   101	| `Y` | `holds`, `fails`, `n/a` | for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails, whatever the thesis asks |
+   102	| `G` | `holds`, `fails`, `not_assessable`, `n/a` | for a figure, always one of the first three: where the article gives any figure for this quantity, `holds` when an analyst would accept the ranges as a fair division of the outcomes around it and `fails` when not; `not_assessable` when the article gives none. `n/a` only for an event's ladder and for a `no_ladder` |
+   103	| `L` | `holds`, `fails`, `n/a` | every other part of the thesis's wording that the question leaves out (a second figure or event, a condition, a comparison) is listed in `not_judged`, each with a reason that says why it is left out; a wording that asks nothing else holds with an empty list |
+   104	| `B` | a list | exactly one entry for each part listed in `not_judged`, in its order: `"bet"` when an analyst would hold a separate view on it, `"not_a_bet"` when it is a detail of the judged question; `[]` when nothing is listed and for a `no_ladder` |
+   105	| `XR` | `holds`, `fails`, `n/a` | the `reference` field quotes what the article states the market expects, with `kind` `expected`, or, for a figure where the article states no expectation, the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), with `kind` `last_reported`; the kind says truly which. It carries the number when the article states one (a range by its two ends), and no number the article does not state. It is null only when the article states no expectation and, for a figure, no amount last reported for the same quantity either; an event's is null whenever the article states no expectation |
+   106	| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+   107	| `W` | a string | any other fault that would mislead a reader of this judged question, in a short sentence; the empty string `""` when there is none. The field is always present |
+   108	| `why` | a string | one sentence giving the reason for every `fails` and for a non-empty `W`, naming the words or the figure; it may be empty only when no mark fails and `W` is empty |
+   109	
+   110	Read each item's article before answering it. Judge only what is in the item.
+   118	        company = self.companies.get(object_id)
+   119	        if not company:
+   120	            return ''
+   121	        month = int(company.get('fiscal_year_end_month') or 12)
+   122	        year = int(publication_day[:4])
+   123	        if month == 12:
+   124	            if english:
+   125	                return (f"{object_id}'s fiscal year is the calendar year and ends in December: this year is FY{year}, next year is FY{year + 1}; "
+   126	                        f'full-year figures are published in the annual report in January to March of the following year.')
+   127	            return f'{object_id} 的财年和自然年一样，12 月结束：今年是 FY{year}，明年是 FY{year + 1}；全年数在次年 1 到 3 月的年报里公布。'
+   128	        # the fiscal year is named by the calendar year in which it ends
+   129	        current = self.fiscal_year_of(object_id, publication_day)
+   130	        start_month = month % 12 + 1
+   131	        start_year = current - 1 if start_month > month else current
+   132	        report_month = month + 1 if month < 12 else 1
+   133	        if english:
+   134	            return (f"{object_id}'s fiscal year ends in month {month} and is named for the calendar year in which it ends: FY{current} runs from "
+   135	                    f'{start_year}-{start_month:02d} to {current}-{month:02d}; the publication day {publication_day} falls in FY{current}, so this year is FY{current} '
+   136	                    f"and next year is FY{current + 1}; FY{current}'s full-year figures are published in the annual report around {current}-{report_month:02d}; use that day as the due date.")
+   137	        return (f'{object_id} 的财年在 {month} 月结束，财年按结束的那一年命名：FY{current} 从 {start_year}-{start_month:02d} 到 {current}-{month:02d}，'
+   138	                f'发布日 {publication_day} 落在 FY{current}，所以今年是 FY{current}，明年是 FY{current + 1}；FY{current} 的全年数在 {current}-{report_month:02d} 前后的年报里公布，到期日按那天写。')
+   139	
+   140	
+   141	# The accepted spellings of one year (docs/research/2026-10-25-english/plan.md, "Period text"): a full match, nothing else.
+   142	FISCAL_YEAR = re.compile(r'(?:FY\s*|fiscal\s+(?:year\s+)?)(\d{4})|(\d{4})\s*财年|FY\s*(\d{2})', re.I)
+   143	CALENDAR_YEAR = re.compile(r'(?:CY\s*|calendar\s+(?:year\s+)?)(\d{4})|(\d{4})\s*自然年|(\d{4})\s*calendar\s+year', re.I)
+   144	BARE_YEAR = re.compile(r'(\d{4})\s*年?')
+   145	
+289:def due_day_of(ladder, object_kind, object_id, research_list):
+290-    """The day the question is due, as an ISO string (D414). A figure whose day the model would estimate (due_day_basis
+291-    expected_publication) is due a fixed number of days after the end of the year it covers; every other day is the answer's."""
+292-    figure = ladder.get('figure')
+293-    if figure is not None and ladder['due_day_basis'] == 'expected_publication':
+294-        year_end = year_end_of(figure['year'], object_kind, object_id, research_list)
+295-        if year_end is not None:
+296-            return (year_end + datetime.timedelta(days=FIGURE_DUE_LAG_DAYS[object_kind])).isoformat()
+297-    return ladder['due_day']
+298-
+299-
+300-def event_rungs(event, due_day, article_day):
+301-    """An event's rungs (D409): it happened; it is ruled out; neither. The model writes the first condition and, when something
+302-    can rule the event out before the due day, the way it names for that. Code writes the rest, so that exactly one rung holds
+303-    for every outcome whatever the two conditions say. The second rung takes the way the model names and every other decision
+304-    against the event as a whole, or abandonment or withdrawal of it as a whole, and asks of each of them, the model's own
+305-    included, that it was made after the article's day and stands on the due day: so a rejection the model did not name is
+306-    never counted as still open, and one that was lifted, that concerns only a part, or that was already in place when the
+307-    question opened, is not counted as a ruling out, whether or not the model's sentence says so. The second
+308-    rung holds only when the first does not, and the last rung is the complement of the others. The labels answer the question
+309-    as it is printed beside them: Yes and No, or Yes, Ruled out and Still open."""
+310-    happened = {'label': 'Yes', 'condition': event['happened']}
+311-    if event['ruled_out'] is None:
+312-        return [happened, {'label': 'No', 'condition': f'Rung 1 does not hold on {due_day}.'}]
+313-    ruled_out = ruling_out_of(event).rstrip()
+314-    return [happened,
+315-            {'label': 'Ruled out',
+316-             'condition': f"{ruled_out}{'' if ruled_out.endswith('.') else '.'} This rung holds when that, or any other decision against the event of "
+317-                          f'rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after {article_day} and '
+318-                          f'stands on {due_day}, and only when rung 1 does not.'},
+319-            {'label': 'Still open', 'condition': f'Neither rung 1 nor rung 2 holds on {due_day}.'}]
+320-
+321-
+322-def write_view(ladder, passage, *, thesis, article_day, company, research_list):
+323-    """The view an accepted ladder is written as: its object, kind, focus, question, year, due day and its rungs in position
+324-    order, each with the label and condition the judge is shown and, for a figure, its bounds as floats."""
+325-    object_id = research_list.resolve(ladder['object'])
+326-    object_kind = research_list.kind(object_id)
+327-    reference = ladder.get('reference')
+328-    reference_status = None
+329-    if ladder.get('event') is not None:
+330-        rungs = event_rungs(ladder['event'], ladder['due_day'], article_day)
+331-        year = ladder['due_day'][:4]
+
+exec
+/opt/homebrew/bin/zsh -lc "ls docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/*split*; sed -n '4568,4593p' docs/DECISIONS-log.md; rg -n 'D split|TOTAL|225|133|25.*24' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2 --glob '*.txt' --glob '*.md'; rg -n 'fiscal_year_note|due_day_basis|ladder_as_the_judge' clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md | head" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+## D415 · 2026-11-10 · The third Stage A is sent without asking again once each change is proved small and reviewed; a failure stops and goes to Alex
+
+- **Asked:** "上面两项按你的选择做好、并各自小额验证通过之后，第三次正式测试（同样 44 道题各发三次，约 0.15 美元，在你批的 3 美元上限内；目前累计花了约 0.48 美元）怎么发？"
+  - Options: send once the checks pass (recommended): "每项改动先单独小额验证并过评审；任何一项没通过就停下来找你，不发正式测试。发完照旧：我自己读完全部答案，两类读者再读，六条线按宽、严两种读法一起报。"; ask again before the send.
+  - Alex: "验证通过就直接发 (Recommended)".
+- **Decided:** the changes of D413 and D414, with the two already in hand (the scope of a ruling out; D411's reference), are
+  each proved on stored cases with a small send and reviewed in the council; when all pass, the third Stage A (the same 44
+  theses, three sends each, within D401's $3) is sent without asking again. A change that does not pass stops the line and
+  goes to him, and no Stage A is sent. The result is read as before: every answer by Claude, then the two reader families,
+  the six lines under both readings. Stage B still needs his word.
+- **Scope:** the clean path's ladder step.
+
+## D416 · 2026-11-10 · The lines stay; the ruling out of an event as a typed answer is proved small before anything else
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt:13:poc/data/clean-unlisted-probe-a2-2026-11-16/reading: items 171; in the class 31; D fails on them {'codex': 25, 'claude': 0}; third rulings {'codex': {'fails': 25}, 'claude': {'holds': 24, 'fails': 1}}
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt:15:TOTAL {'items': 1559, 'in the class': 225, 'codex D fails': 133, 'claude D fails': 0}
+12:- `fiscal_year_note`: how the company names its fiscal years and which is this year and which next year on the article's day,
+14:- `ladder_as_the_judge_is_shown_it`: the proposed judged question exactly as a later judge will see it: its `object` (the company's
+33:  of that rung is the decision it names for them), `due_day_basis`.
+69:  the thesis or the article states the day a figure is published, that day is right. Where neither does (`due_day_basis` is
+98:| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+106:| `N` | `holds`, `fails`, `n/a` | for a `no_ladder` only: the refusal is justified by one of the allowed cases, and that case truly applies. A refusal because the question belongs to another company or to a matter no listed theme covers names that company or matter. Which year is this year and which next year is read from the `fiscal_year_note` |
+
+exec
+/opt/homebrew/bin/zsh -lc "cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt; rg -n 'April|April 1|2027-04-01|60 days|February|2027-02' poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-*.jsonl | head -8; ls poc/data/clean-fresh-a2-2026-11-16/choices" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+poc/data/clean-carried-run-2026-11-16/stage-a: items 39; in the class 7; D fails on them {'codex': 6, 'claude': 0}; third rulings {'codex': {'holds': 5, 'fails': 1}, 'claude': {'holds': 6}}
+poc/data/clean-carried-run-2026-11-16/stage-a-reread: items 39; in the class 7; D fails on them {'codex': 1, 'claude': 0}; third rulings {'codex': {'fails': 1}, 'claude': {'holds': 1}}
+poc/data/clean-e2e-full-2026-11-13/stage-a: items 119; in the class 18; D fails on them {'codex': 12, 'claude': 0}; third rulings {'codex': {'fails': 8, 'holds': 4}, 'claude': {'holds': 12}}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading: items 33; in the class 6; D fails on them {'codex': 6, 'claude': 0}; third rulings {'codex': {'fails': 6}, 'claude': {'holds': 6}}
+poc/data/clean-ladder-stage-a-2026-11-10/probe-second-look: items 102; in the class 18; D fails on them {'codex': 18, 'claude': 0}; third rulings {'codex': {'fails': 18}, 'claude': {'holds': 18}}
+poc/data/clean-ladder-stage-a-2026-11-10/run-2: items 130; in the class 3; D fails on them {'codex': 0, 'claude': 0}; third rulings {'codex': {}, 'claude': {}}
+poc/data/clean-ladder-stage-a-2026-11-10/run-3: items 132; in the class 24; D fails on them {'codex': 7, 'claude': 0}; third rulings {'codex': {'holds': 4, 'fails': 3}, 'claude': {'holds': 7}}
+poc/data/clean-ladder-stage-a-2026-11-10/run-4: items 131; in the class 24; D fails on them {'codex': 14, 'claude': 0}; third rulings {'codex': {'fails': 9, 'holds': 5}, 'claude': {'holds': 14}}
+poc/data/clean-ladder-stage-a-2026-11-10/run-rechecked: items 128; in the class 4; D fails on them {'codex': 0, 'claude': 0}; third rulings {'codex': {}, 'claude': {}}
+poc/data/clean-ladder-stage-a-2026-11-10/run-rechecked-2: items 132; in the class 4; D fails on them {'codex': 0, 'claude': 0}; third rulings {'codex': {}, 'claude': {}}
+poc/data/clean-second-week-2026-11-15/week-continued/stage-a: items 39; in the class 10; D fails on them {'codex': 10, 'claude': 0}; third rulings {'codex': {'fails': 10}, 'claude': {'holds': 10}}
+poc/data/clean-unlisted-probe-2026-11-16/reading: items 110; in the class 22; D fails on them {'codex': 15, 'claude': 0}; third rulings {'codex': {'fails': 15}, 'claude': {'holds': 15}}
+poc/data/clean-unlisted-probe-a2-2026-11-16/reading: items 171; in the class 31; D fails on them {'codex': 25, 'claude': 0}; third rulings {'codex': {'fails': 25}, 'claude': {'holds': 24, 'fails': 1}}
+poc/data/clean-unlisted-probe-a3-2026-11-16/reading: items 254; in the class 47; D fails on them {'codex': 19, 'claude': 0}; third rulings {'codex': {'fails': 17, 'holds': 2}, 'claude': {'holds': 19}}
+TOTAL {'items': 1559, 'in the class': 225, 'codex D fails': 133, 'claude D fails': 0}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-1.jsonl:5:{"id":"5-D","ruling":"fails","why":"The licence commitment was already undertaken, so it is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-1.jsonl:7:{"id":"7-D","ruling":"fails","why":"The licence commitment was already undertaken, so it is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-1.jsonl:8:{"id":"8-D","ruling":"fails","why":"The licence commitment was already undertaken, so it is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-2.jsonl:1:{"id":"17-D","ruling":"fails","why":"The licence obligation is already undertaken, so it is due at the next annual filing around February 2027, not April 1."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-2.jsonl:4:{"id":"20-D","ruling":"fails","why":"The licence obligation is already undertaken, so it is due at the next annual filing around February 2027, not April 1."}
+poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-2.jsonl:11:{"id":"26-D","ruling":"fails","why":"The licence obligation is already undertaken, so it is due at the next annual filing around February 2027, not April 1."}
+changed
+control
+own-read-before-readers.md
+reading
+score-output-fresh.txt
+
+codex
+**No-go on the proposed re-ruling as written.** The date split is worth investigating first, but its cause is not yet established, and the proposed sentence could settle more than D414 decides.
+
+The clearest counterexample is the fresh Poolside question. The Codex third readers did not simply say “the note disagrees with code”: they said it was an **already undertaken obligation**, which the existing brief says is due at its next annual filing. D414 says code sets an *estimated yearly figure’s* day, while keeping a day stated in the topic or article. How those rules apply together to this question needs to be resolved against its topic, article and full choices before all six marks are treated as the same error. [Codex rulings](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-1.jsonl>), [reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98>), [D414](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4568>)
+
+The proposed sentence is faithful for a yearly figure whose publication day is **an estimate**. As written, however, it could be read to make `expected_publication` conclusive even when the topic or article states a day, or when the separate obligation rule applies. It could also affect other marks that use the fiscal-year note, such as N’s reading of “this year” and “next year”; that needs a check, not an assumption. [Reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:106>)
+
+The census establishes a striking **association**: 133 Codex first-reader failures and none from Claude on 225 flagged items. Its selector finds company figures whose shown month differs from the note; it does not establish that each day was correctly set, that no stated date applied, or that the note caused each failure. Those are readings, including repeated attempts, not 225 independent questions. [Census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt>), [selector](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py>)
+
+I would do a **$0 source-backed diagnostic first**: classify the disputed points by estimated annual figure, explicitly stated date and binding obligation; have both families independently read a blinded sample containing those cases plus controls where D should hold and fail. Show the unchanged reading beside the clarified reading. Re-ruling only previously disputed points cannot measure false passes or establish a general reader error rate, and a one-third threshold on Codex alone cannot prove the note was—or was not—the cause.
+
+The postponement class should follow its stored census; it is a product fault, but the present fresh reading supplies one agreed send, so it does not yet displace this cheap check. Preserve the stopped fresh-comparison verdict and A2’s unaccepted status.
+
+CONSENSUS: no, because the proposed clarification may override the obligation or stated-date rules, and the selected re-rulings cannot establish the cause or error rate of the split.
+tokens used
+2,907,169
+**No-go on the proposed re-ruling as written.** The date split is worth investigating first, but its cause is not yet established, and the proposed sentence could settle more than D414 decides.
+
+The clearest counterexample is the fresh Poolside question. The Codex third readers did not simply say “the note disagrees with code”: they said it was an **already undertaken obligation**, which the existing brief says is due at its next annual filing. D414 says code sets an *estimated yearly figure’s* day, while keeping a day stated in the topic or article. How those rules apply together to this question needs to be resolved against its topic, article and full choices before all six marks are treated as the same error. [Codex rulings](</Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/reading/third-reader/rulings-codex-1.jsonl>), [reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98>), [D414](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4568>)
+
+The proposed sentence is faithful for a yearly figure whose publication day is **an estimate**. As written, however, it could be read to make `expected_publication` conclusive even when the topic or article states a day, or when the separate obligation rule applies. It could also affect other marks that use the fiscal-year note, such as N’s reading of “this year” and “next year”; that needs a check, not an assumption. [Reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:106>)
+
+The census establishes a striking **association**: 133 Codex first-reader failures and none from Claude on 225 flagged items. Its selector finds company figures whose shown month differs from the note; it does not establish that each day was correctly set, that no stated date applied, or that the note caused each failure. Those are readings, including repeated attempts, not 225 independent questions. [Census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt>), [selector](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py>)
+
+I would do a **$0 source-backed diagnostic first**: classify the disputed points by estimated annual figure, explicitly stated date and binding obligation; have both families independently read a blinded sample containing those cases plus controls where D should hold and fail. Show the unchanged reading beside the clarified reading. Re-ruling only previously disputed points cannot measure false passes or establish a general reader error rate, and a one-third threshold on Codex alone cannot prove the note was—or was not—the cause.
+
+The postponement class should follow its stored census; it is a product fault, but the present fresh reading supplies one agreed send, so it does not yet displace this cheap check. Preserve the stopped fresh-comparison verdict and A2’s unaccepted status.
+
+CONSENSUS: no, because the proposed clarification may override the obligation or stated-date rules, and the selected re-rulings cannot establish the cause or error rate of the split.

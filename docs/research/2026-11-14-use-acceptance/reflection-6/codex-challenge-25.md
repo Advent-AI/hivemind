@@ -1,0 +1,13 @@
+**The result is inconclusive, and v2 should remain a candidate—not a confirmed correction.** On the two forms of one deal, it kept the intended dates in **4 of 4** answers; the fresh control did so in **0 of 4**. The registered safety condition remains unresolved. [Result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/RESULT.md)
+
+1. **Record the verdict as proposed.** No third reader was in the design. The blocking MIIT answer is concrete: its “Yes” condition allows approval for Chinese firms “such as Alibaba or ByteDance,” while the topic names purchases by Alibaba, ByteDance **and** other firms. One reader sees a material change in whose approval counts; the other accepts it. [Blind packet and reviews](/Users/lchingen/hivemind/poc/data/clean-dueday-probe-2026-11-16/review/packet.json)
+
+2. **On v2:** it is fair to call the clause a *proposed, decision-supported correction* of the D210/D403 conflict. It overclaims to call the result a confirmed correction: the safety verdict was inconclusive, and the changed clause’s influence on the MIIT answer is unknown. Keep v2 beside the frozen request, unadopted.
+
+3. **The page must not combine measurements into one result.** Astra’s **4 of 78** and **11 material defects among 51 written questions** are measurements of the **unchanged request**. V2 was tested on nine topics, not across those 78 sends. Its four corrected completion dates are one deal in two forms; they do not prove that four of the earlier defects are generally fixed.
+
+4. **One $0 next step remains:** trace the four MIIT answers in this probe, including their question, rungs and `not_judged` list, against the topic and source. Determine what a judge would record if only an unnamed firm were approved, and compare that with the earlier MIIT reading. This does not change the registered verdict. It can establish whether the disputed difference is a consequential, recurring question-shape problem worth diagnosing; if it is immaterial or cannot be separated from reader disagreement, close that lead.
+
+No further paid send is justified by the current result alone. That is a decision on the candidates now supported, not proof that no future in-budget test could move a decision.
+
+**CONSENSUS: no, because v2’s date change is a promising candidate with an inconclusive safety result; trace the MIIT difference at $0 and keep the measurements separate.**

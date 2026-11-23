@@ -1,0 +1,262 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e779-1876-71b0-86f1-c948da524e95
+--------
+user
+You are an independent, read-only reader. Read `/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/main-part/brief.md` and `/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/main-part/topics.json` and follow the brief exactly. Open no other file.
+
+codex
+I’ll read the two specified files and follow the brief within that boundary.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/main-part/brief.md docs/research/2026-11-14-use-acceptance/reflection-6/main-part/topics.json' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Applying one rule to 26 research topics (read-only)
+
+Each topic in `topics.json` has three fields an analyst system wrote when it opened the topic:
+- `description`: the topic's wording, the question an analyst is asking;
+- `outcome`: what is tracked;
+- `period`: when.
+
+A later step turns each topic into one question with dated answer choices, or declines. It may decline when the topic has no main
+thing to judge: the outcome names none, or "several with none of them the main one". The parts a question leaves out are listed
+beside it as not judged.
+
+**The rule to apply, exactly as written:**
+
+> When a topic's outcome names several things, the main one is the thing its description asks about, if the description asks about
+> exactly one of them. Judge that one, and list the outcome's other things as not judged. When the description asks about several of
+> them alike, or about none of them, there is no main one.
+
+**For each topic, answer in one JSON line:**
+- `topic`;
+- `several`: does the outcome name several things (true or false)?
+- `main`: the main thing under the rule, in a few words, or `"none"`;
+- `decisive_words`: the description's words that decide it, quoted exactly;
+- `overrides_outcome`: true if the outcome expressly tracks two or more things as equal bets and the rule nevertheless picks one.
+  Two years each asked for their own value, two separate decisions by two parties each tracked, and two figures each named as tracked
+  all count;
+- `arbitrary`: true if a careful analyst could read the description as asking a different one of the outcome's things;
+- `why`: one sentence.
+
+Apply the rule as written, not your own view of which thing matters more. Return exactly 26 lines, one JSON object per line, in the
+file's order, and nothing else.
+[
+ {
+  "topic": "T01",
+  "description": "What total of credit support and minimum-revenue guarantees to AI labs and cloud partners will NVIDIA disclose at its next annual report?",
+  "outcome": "The disclosed amount of guarantees, credit-support commitments and revenue backstops NVIDIA has extended to AI labs and cloud partners (including the credit support for nearly 2 gigawatts of computing capacity for one additional AI lab), versus the equity investments it has made, at NVIDIA's next annual report.",
+  "period": "Fiscal 2027 annual report (fiscal year ending late January 2027; Form 10-K expected around February 2027) — set as the next annual report following this 22 September 2026 item, per section 3 (obligation already undertaken tracked by its amount at the next annual report; the additional AI lab's credit support is not yet signed and is checked within 18 months)."
+ },
+ {
+  "topic": "T02",
+  "description": "How much will NVIDIA disclose in purchase and supply commitments (obligations to buy capacity, components or services) at its next annual report?",
+  "outcome": "The amount of purchase obligations/supply commitments NVIDIA reports in its contractual obligations and purchase commitment disclosures in the Form 10-K, versus the prior year, given the analyst report that NVIDIA is taking on larger supply commitments.",
+  "period": "Fiscal 2027 annual report (fiscal year ending late January 2027; Form 10-K expected around February 2027) — the next annual report after this 22 September 2026 item, per section 3 (an obligation already undertaken is tracked by its amount at the next annual report)."
+ },
+ {
+  "topic": "T03",
+  "description": "Will Nvidia be permitted to sell its current Blackwell-generation AI chips into China — through U.S. export approval and Chinese acceptance of shipments — by the end of fiscal 2027?",
+  "outcome": "Whether U.S. authorities extend export approval beyond the older H200 to Nvidia's current Blackwell-generation chips for approved Chinese customers, and whether Chinese authorities stop restricting Nvidia chip shipments, so that China data-center revenue can resume; the item reports H200 shipments are already U.S.-permitted while Chinese authorities still restrict them.",
+  "period": "NVIDIA fiscal year ending late January 2027 — the current fiscal year-end, used as the check date for a pending regulatory decision per section 3 (item gives no date of its own)."
+ },
+ {
+  "topic": "T04",
+  "description": "Will NVIDIA's next-generation Vera Rubin AI platform, which the company says has entered full production, reach volume customer shipments (first revenue recognition) by the end of fiscal 2027?",
+  "outcome": "Whether Vera Rubin moves from full production to volume customer shipments and first revenue recognition within NVIDIA's fiscal 2027, as shown in the company's quarterly results and Form 10-K.",
+  "period": "NVIDIA fiscal year ending late January 2027 (FY2027), checked at NVIDIA's quarterly results and FY2027 Form 10-K. The item gives no shipment date; the current fiscal year-end following the September 2026 report that Vera Rubin entered full production is used as the check date."
+ },
+ {
+  "topic": "T05",
+  "description": "How much will the five largest AI hyperscalers spend in total on data centers in calendar 2026?",
+  "outcome": "The big five AI hyperscalers' combined calendar-2026 data center capital expenditure, compared with the nearly $800 billion the article says they will spend this year.",
+  "period": "Calendar year 2026 (the item's 'this year' in a 23 September 2026 article), checked at the hyperscalers' Q4/full-year 2026 earnings and capex disclosures in early 2027."
+ },
+ {
+  "topic": "T06",
+  "description": "Will NVIDIA complete its approximately $12.9 billion acquisition of Hugging Face, agreed in 2026, by the check date?",
+  "outcome": "Whether the agreed ~$12.9 billion Hugging Face acquisition is signed and closed (completed) as disclosed in NVIDIA's filings, versus being repriced, delayed past the check date or terminated.",
+  "period": "Check date 24 March 2028 (18 months after the 25 September 2026 item) — set per section 3 for a sized acquisition not yet completed, because the item gives no signing or closing date; also observable in NVIDIA's quarterly filings before then."
+ },
+ {
+  "topic": "T07",
+  "description": "Will China's Ministry of Industry and Information Technology formally approve purchases of Nvidia's new RTX Pro 5500 high-end GPU by Alibaba, ByteDance and other Chinese firms by the end of Nvidia's fiscal 2027, allowing those sales to proceed?",
+  "outcome": "Whether MIIT moves from signaling intent and collecting purchase plans to actually approving Alibaba's, ByteDance's and other Chinese firms' purchases of the RTX Pro 5500 (versus blocking, delaying or capping quantities), so that Nvidia can ship the product into China and book related revenue.",
+  "period": "NVIDIA fiscal year ending late January 2027 — the current fiscal year-end used as the check date for a pending regulatory decision per section 3, because the item gives no date of its own."
+ },
+ {
+  "topic": "T08",
+  "description": "How much venture funding will physical AI (robotics) companies raise globally in calendar 2026?",
+  "outcome": "Total global venture capital raised by physical AI/robotics startups in calendar 2026, versus the $28.7 billion raised in all of 2025 and the $33.4 billion already raised in the first half of 2026, per PitchBook data.",
+  "period": "Calendar year 2026, checked at PitchBook's full-year 2026 venture funding release (expected early 2027); the item gives H1 2026 and full-year 2025 figures only."
+ },
+ {
+  "topic": "T09",
+  "description": "How much will the five largest AI hyperscalers spend in total on data centers in calendar 2027?",
+  "outcome": "The big five AI hyperscalers' combined calendar-2027 data-center capital expenditure, versus the $1.3 trillion Nvidia projects for next year (as cited in the item) and the nearly $800 billion expected for calendar 2026.",
+  "period": "Calendar year 2027, checked at the hyperscalers' 2027 capex guidance from their October 2026 earnings and at their Q4/full-year 2027 earnings and capex disclosures in early 2028."
+ },
+ {
+  "topic": "T10",
+  "description": "How many gigawatts of new data-center capacity will be added in the United States in calendar 2026?",
+  "outcome": "US data-center capacity additions in gigawatts for calendar 2026, versus the pace of 'somewhere between 10, 20 gigawatts a year' that Nvidia CEO Jensen Huang described, and against how far labour availability constrains that pace.",
+  "period": "Calendar year 2026 — the item's present-tense annual pace in a 30 September 2026 article; checked against full-year 2026 grid-operator/interconnection and industry data-center capacity data (expected early 2027)."
+ },
+ {
+  "topic": "T11",
+  "description": "How much will average DRAM (including HBM) contract prices rise in calendar 2026, as Nvidia reports substantially higher memory and component costs across the industry?",
+  "outcome": "The change in average DRAM/HBM contract prices in calendar 2026 versus calendar 2025, per TrendForce/DRAMeXchange data.",
+  "period": "Calendar year 2026 — the item's present-tense 'ongoing memory shortage' and Nvidia's statement that memory costs 'have increased substantially' (article dated 2 October 2026); checked against TrendForce/DRAMeXchange full-year 2026 DRAM contract price data (expected early 2027)."
+ },
+ {
+  "topic": "T12",
+  "description": "Will Nvidia finalize its proposed sharing of up to $125 billion in risk by guaranteeing hardware residual values for its AI infrastructure financing platform by the check date?",
+  "outcome": "Whether the proposed up-to-$125 billion hardware residual-value guarantee is signed and disclosed, and at what amount, versus remaining a proposal or being reduced or withdrawn.",
+  "period": "Check date 3 April 2028 (18 months after the 3 October 2026 item), with earlier disclosure possible in Nvidia's quarterly or annual filings."
+ },
+ {
+  "topic": "T13",
+  "description": "Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts?",
+  "outcome": "Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.",
+  "period": "Calendar 2027, with the item's stated checkpoints at Q4 2026, early 2027 and mid-2027, checked against Nvidia's quarterly results and supplier disclosures. The item gives no confirmation date, so the forecast periods it states fix the check dates."
+ },
+ {
+  "topic": "T14",
+  "description": "How much will Nvidia's maximum potential guarantee liability under the SB Energy/OpenAI affiliate infrastructure leases be at its next annual report?",
+  "outcome": "The maximum potential amount guaranteed, any amounts paid or accrued, and the remaining term of the guarantees disclosed in Nvidia's next annual report.",
+  "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken."
+ },
+ {
+  "topic": "T15",
+  "description": "How much of Nvidia's $279 billion of supply and capacity commitments will remain outstanding or unconditional at its next annual report?",
+  "outcome": "The total supply and capacity purchase commitments and the portion that is adjustable or cancelable at a cost, as disclosed in Nvidia's next annual report.",
+  "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken."
+ },
+ {
+  "topic": "T16",
+  "description": "By how much will contract prices for AI-server memory (HBM/DRAM) — the memory input cost embedded in Nvidia's GPUs — rise or fall in calendar 2027?",
+  "outcome": "The change in HBM/DRAM contract prices over calendar 2027, and the memory makers' reported average selling prices and memory gross margins for the periods covering 2027.",
+  "period": "Calendar 2027 (overlapping Micron's fiscal 2027, roughly September 2026–August 2027), as supported by Micron management's fiscal 2027 price guidance in the October 6, 2026 article."
+ },
+ {
+  "topic": "T17",
+  "description": "How much combined capital expenditure will the five largest hyperscalers — Amazon, Alphabet, Microsoft, Meta Platforms and Oracle — spend in calendar 2026 and calendar 2027?",
+  "outcome": "The big five hyperscalers' combined capex for calendar 2026 and calendar 2027, versus the approximately $800 billion for 2026 and roughly $1.3 trillion for 2027 the article reports they plan to spend.",
+  "period": "Calendar 2026 and calendar 2027 (the two years the Oct. 6, 2026 article gives), settled at the hyperscalers' quarterly earnings releases reporting capex through the fourth quarter of 2027."
+ },
+ {
+  "topic": "T18",
+  "description": "Will Nvidia complete its approximately $12.93 billion acquisition of Hugging Face — and at what final cost and regulatory conditions — by the check date?",
+  "outcome": "Closing or termination of the signed Hugging Face acquisition, the final consideration paid (roughly $11.9 billion to shareholders plus up to $1 billion of equity-based retention awards), and any conditions regulators impose.",
+  "period": "Check date: the first half of calendar 2027, the closing window the Sept. 3, 2026 agreement states (within 18 months of the Oct. 6, 2026 item)."
+ },
+ {
+  "topic": "T19",
+  "description": "Will the U.S. licence requirement on Nvidia's data center chips still bar it from China's data center compute market at Nvidia's fiscal 2027 year-end, or will it be lifted before then?",
+  "outcome": "Whether the U.S. export-licence requirement on Nvidia's H20-class data center products remains in force or is lifted, and whether Nvidia resumes recognizing data center compute revenue from China.",
+  "period": "Nvidia's fiscal year ending late January 2027 (current fiscal year-end, the date fixed for the pending export-control status)."
+ },
+ {
+  "topic": "T20",
+  "description": "Will Nvidia's Rubin data center GPU — the next generation of the product that carries Nvidia's data center revenue — reach volume ramp in the quarter management describes, or slip into calendar 2027 because of memory shortages?",
+  "outcome": "Whether Rubin's volume ramp and shipments occur in the quarter Nvidia describes (about 20% of data center revenue) or are pushed into calendar 2027, and whether reported sales timing slips.",
+  "period": "Check date: Nvidia's fiscal Q3 FY2027 report (~November 2026) and fiscal Q4 FY2027 report (~February 2027), which will show whether the Rubin ramp landed by the quarter ending late January 2027 or slid into calendar 2027, the two points the item frames ('this quarter' versus 'slip into 2027')."
+ },
+ {
+  "topic": "T21",
+  "description": "How much residual-value/loss-share exposure has Nvidia taken on under its customer data center financing support — the commitment to cover up to 25% of the loss if financed chips lose value — and how much is disclosed at its next annual report?",
+  "outcome": "The maximum potential amount of Nvidia's loss coverage on customer data center chip values, any amounts paid or accrued, and the terms and remaining duration of that support, as disclosed in Nvidia's next annual report.",
+  "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken."
+ },
+ {
+  "topic": "T22",
+  "description": "Will Nvidia's Groq 3 LPX rack-scale LPU system — the first product built on the Groq technology it paid about $20 billion to license and staff — reach volume shipments and commercial scale in the quarter Nvidia describes (its fiscal Q3 FY2027), or slip?",
+  "outcome": "Whether Groq 3 LPX volume shipments occur 'later this quarter' as Nvidia stated, and whether the system begins contributing to reported data center revenue or slips into fiscal Q4 FY2027/calendar 2027.",
+  "period": "Check date: Nvidia's fiscal Q3 FY2027 report (~November 2026) confirming shipments in the quarter Nvidia described in the Oct. 8, 2026 item; if unconfirmed there, the fiscal Q4 FY2027 report (~February 2027) fixes the slip."
+ },
+ {
+  "topic": "T23",
+  "description": "What will the hourly spot rental price for Nvidia B200 GPUs be at the end of calendar 2026, after more than doubling from March 2026 to October 2026?",
+  "outcome": "The hourly spot rental price for Nvidia B200 GPUs at year-end 2026 and whether it remains above its March 2026 level.",
+  "period": "Calendar 2026, settled by Ornn's published GPU rental index releases through year-end 2026 (the Oct. 10, 2026 article gives the March-to-October 2026 move)."
+ },
+ {
+  "topic": "T24",
+  "description": "Will Nvidia sign and complete an acquisition of Reflection AI — and at what consideration and terms — by the check date?",
+  "outcome": "A definitive agreement to acquire Reflection AI, its closing (or the talks' collapse), and the final consideration paid and any regulatory conditions imposed.",
+  "period": "Check date: April 2028, the outer limit of a date within 18 months of the Oct. 10, 2026 item for an acquisition not yet signed."
+ },
+ {
+  "topic": "T25",
+  "description": "How much will global AI capital spending total in calendar 2026 and calendar 2027?",
+  "outcome": "Global AI capex for calendar 2026 and calendar 2027, measured against Goldman Sachs' forecast of $1 trillion of global AI spend this year and AI spend equal to 1.8% of U.S. GDP in 2026, 2.5% in 2027 (and 2.8% in 2028).",
+  "period": "Calendar 2026 and calendar 2027 (with 2028 also given), the years Goldman Sachs' forecast in the Oct. 11, 2026 article covers."
+ },
+ {
+  "topic": "T26",
+  "description": "How much of Nvidia's $25 billion of equity-investment commitments outstanding at July 26, 2026 will be funded or remain outstanding at its next annual report?",
+  "outcome": "The remaining balance of Nvidia's equity-investment commitments, the cash paid to fund them, and any change in the committed amounts, as disclosed in Nvidia's next annual report.",
+  "period": "Nvidia's next annual report (fiscal year ending late January 2027), as fixed by the reason for an obligation already undertaken."
+ }
+]
+codex
+{"topic":"T01","several":true,"main":"guarantees and credit support","decisive_words":"credit support and minimum-revenue guarantees","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the guarantees and credit support, not the equity investments."}
+{"topic":"T02","several":false,"main":"purchase and supply commitments","decisive_words":"purchase and supply commitments","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks one commitment amount, with the prior year as a comparison."}
+{"topic":"T03","several":true,"main":"none","decisive_words":"U.S. export approval and Chinese acceptance of shipments","overrides_outcome":false,"arbitrary":false,"why":"The description asks about both countries' decisions."}
+{"topic":"T04","several":true,"main":"none","decisive_words":"volume customer shipments (first revenue recognition)","overrides_outcome":false,"arbitrary":false,"why":"The description names both shipments and first revenue recognition."}
+{"topic":"T05","several":false,"main":"2026 data center capital expenditure","decisive_words":"spend in total on data centers in calendar 2026","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks one spending total against a reported estimate."}
+{"topic":"T06","several":false,"main":"acquisition completion","decisive_words":"complete its approximately $12.9 billion acquisition","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks whether the acquisition is completed, with other statuses as alternatives."}
+{"topic":"T07","several":false,"main":"MIIT purchase approval","decisive_words":"formally approve purchases","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks the approval decision, with shipment and revenue described as consequences."}
+{"topic":"T08","several":false,"main":"2026 robotics venture funding","decisive_words":"venture funding will physical AI (robotics) companies raise globally in calendar 2026","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks the 2026 total against earlier reported figures."}
+{"topic":"T09","several":false,"main":"2027 data center capital expenditure","decisive_words":"spend in total on data centers in calendar 2027","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks the 2027 total against forecasts and a prior-year figure."}
+{"topic":"T10","several":true,"main":"US capacity additions","decisive_words":"gigawatts of new data-center capacity will be added in the United States","overrides_outcome":true,"arbitrary":false,"why":"The description asks for capacity additions, while the outcome also tracks the labour constraint."}
+{"topic":"T11","several":false,"main":"DRAM and HBM contract price change","decisive_words":"average DRAM (including HBM) contract prices rise in calendar 2026","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks one price change against the previous year."}
+{"topic":"T12","several":true,"main":"guarantee finalization","decisive_words":"finalize its proposed sharing of up to $125 billion in risk","overrides_outcome":true,"arbitrary":false,"why":"The description asks whether the guarantee is finalized, while the outcome also tracks its amount."}
+{"topic":"T13","several":true,"main":"none","decisive_words":"30,000 units by mid-2027 and the 100,000 units for the full year","overrides_outcome":false,"arbitrary":false,"why":"The description asks about shipment volume at more than one checkpoint."}
+{"topic":"T14","several":true,"main":"maximum potential guarantee liability","decisive_words":"maximum potential guarantee liability","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the maximum liability, while the outcome also tracks payments or accruals and the remaining term."}
+{"topic":"T15","several":true,"main":"none","decisive_words":"remain outstanding or unconditional","overrides_outcome":false,"arbitrary":true,"why":"The description can be read as asking about the total outstanding or the part that cannot be adjusted or canceled."}
+{"topic":"T16","several":true,"main":"HBM and DRAM contract price change","decisive_words":"contract prices for AI-server memory (HBM/DRAM)","overrides_outcome":true,"arbitrary":false,"why":"The description asks about contract prices, while the outcome separately tracks selling prices and gross margins."}
+{"topic":"T17","several":true,"main":"none","decisive_words":"calendar 2026 and calendar 2027","overrides_outcome":false,"arbitrary":false,"why":"The description asks alike for the spending total in each of two years."}
+{"topic":"T18","several":true,"main":"none","decisive_words":"complete its approximately $12.93 billion acquisition of Hugging Face — and at what final cost and regulatory conditions","overrides_outcome":false,"arbitrary":false,"why":"The description asks about completion, final cost and regulatory conditions."}
+{"topic":"T19","several":true,"main":"US licence requirement status","decisive_words":"U.S. licence requirement on Nvidia's data center chips","overrides_outcome":true,"arbitrary":true,"why":"The description directly asks whether the requirement remains or is lifted, but its reference to access to the market could also be read as asking about revenue resumption."}
+{"topic":"T20","several":true,"main":"Rubin volume ramp and shipments","decisive_words":"reach volume ramp in the quarter management describes, or slip into calendar 2027","overrides_outcome":true,"arbitrary":false,"why":"The description asks when the Rubin ramp occurs, while the outcome also tracks reported sales timing."}
+{"topic":"T21","several":true,"main":"maximum loss coverage","decisive_words":"How much residual-value/loss-share exposure has Nvidia taken on","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the exposure amount, while the outcome also tracks payments or accruals and support terms."}
+{"topic":"T22","several":true,"main":"none","decisive_words":"reach volume shipments and commercial scale","overrides_outcome":false,"arbitrary":true,"why":"The description names shipments and commercial scale, which can also be read as the outcome's separate revenue contribution."}
+{"topic":"T23","several":true,"main":"year-end B200 rental price","decisive_words":"hourly spot rental price for Nvidia B200 GPUs be at the end of calendar 2026","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the year-end price, while the outcome also tracks whether it exceeds the March level."}
+{"topic":"T24","several":true,"main":"none","decisive_words":"sign and complete an acquisition of Reflection AI — and at what consideration and terms","overrides_outcome":false,"arbitrary":false,"why":"The description asks about the agreement, completion, consideration and terms."}
+{"topic":"T25","several":true,"main":"none","decisive_words":"global AI capital spending total in calendar 2026 and calendar 2027","overrides_outcome":false,"arbitrary":false,"why":"The description asks alike for global spending in each of two years."}
+{"topic":"T26","several":true,"main":"none","decisive_words":"funded or remain outstanding","overrides_outcome":false,"arbitrary":false,"why":"The description asks about both funding and the remaining commitments."}
+tokens used
+15,313
+{"topic":"T01","several":true,"main":"guarantees and credit support","decisive_words":"credit support and minimum-revenue guarantees","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the guarantees and credit support, not the equity investments."}
+{"topic":"T02","several":false,"main":"purchase and supply commitments","decisive_words":"purchase and supply commitments","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks one commitment amount, with the prior year as a comparison."}
+{"topic":"T03","several":true,"main":"none","decisive_words":"U.S. export approval and Chinese acceptance of shipments","overrides_outcome":false,"arbitrary":false,"why":"The description asks about both countries' decisions."}
+{"topic":"T04","several":true,"main":"none","decisive_words":"volume customer shipments (first revenue recognition)","overrides_outcome":false,"arbitrary":false,"why":"The description names both shipments and first revenue recognition."}
+{"topic":"T05","several":false,"main":"2026 data center capital expenditure","decisive_words":"spend in total on data centers in calendar 2026","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks one spending total against a reported estimate."}
+{"topic":"T06","several":false,"main":"acquisition completion","decisive_words":"complete its approximately $12.9 billion acquisition","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks whether the acquisition is completed, with other statuses as alternatives."}
+{"topic":"T07","several":false,"main":"MIIT purchase approval","decisive_words":"formally approve purchases","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks the approval decision, with shipment and revenue described as consequences."}
+{"topic":"T08","several":false,"main":"2026 robotics venture funding","decisive_words":"venture funding will physical AI (robotics) companies raise globally in calendar 2026","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks the 2026 total against earlier reported figures."}
+{"topic":"T09","several":false,"main":"2027 data center capital expenditure","decisive_words":"spend in total on data centers in calendar 2027","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks the 2027 total against forecasts and a prior-year figure."}
+{"topic":"T10","several":true,"main":"US capacity additions","decisive_words":"gigawatts of new data-center capacity will be added in the United States","overrides_outcome":true,"arbitrary":false,"why":"The description asks for capacity additions, while the outcome also tracks the labour constraint."}
+{"topic":"T11","several":false,"main":"DRAM and HBM contract price change","decisive_words":"average DRAM (including HBM) contract prices rise in calendar 2026","overrides_outcome":false,"arbitrary":false,"why":"The outcome tracks one price change against the previous year."}
+{"topic":"T12","several":true,"main":"guarantee finalization","decisive_words":"finalize its proposed sharing of up to $125 billion in risk","overrides_outcome":true,"arbitrary":false,"why":"The description asks whether the guarantee is finalized, while the outcome also tracks its amount."}
+{"topic":"T13","several":true,"main":"none","decisive_words":"30,000 units by mid-2027 and the 100,000 units for the full year","overrides_outcome":false,"arbitrary":false,"why":"The description asks about shipment volume at more than one checkpoint."}
+{"topic":"T14","several":true,"main":"maximum potential guarantee liability","decisive_words":"maximum potential guarantee liability","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the maximum liability, while the outcome also tracks payments or accruals and the remaining term."}
+{"topic":"T15","several":true,"main":"none","decisive_words":"remain outstanding or unconditional","overrides_outcome":false,"arbitrary":true,"why":"The description can be read as asking about the total outstanding or the part that cannot be adjusted or canceled."}
+{"topic":"T16","several":true,"main":"HBM and DRAM contract price change","decisive_words":"contract prices for AI-server memory (HBM/DRAM)","overrides_outcome":true,"arbitrary":false,"why":"The description asks about contract prices, while the outcome separately tracks selling prices and gross margins."}
+{"topic":"T17","several":true,"main":"none","decisive_words":"calendar 2026 and calendar 2027","overrides_outcome":false,"arbitrary":false,"why":"The description asks alike for the spending total in each of two years."}
+{"topic":"T18","several":true,"main":"none","decisive_words":"complete its approximately $12.93 billion acquisition of Hugging Face — and at what final cost and regulatory conditions","overrides_outcome":false,"arbitrary":false,"why":"The description asks about completion, final cost and regulatory conditions."}
+{"topic":"T19","several":true,"main":"US licence requirement status","decisive_words":"U.S. licence requirement on Nvidia's data center chips","overrides_outcome":true,"arbitrary":true,"why":"The description directly asks whether the requirement remains or is lifted, but its reference to access to the market could also be read as asking about revenue resumption."}
+{"topic":"T20","several":true,"main":"Rubin volume ramp and shipments","decisive_words":"reach volume ramp in the quarter management describes, or slip into calendar 2027","overrides_outcome":true,"arbitrary":false,"why":"The description asks when the Rubin ramp occurs, while the outcome also tracks reported sales timing."}
+{"topic":"T21","several":true,"main":"maximum loss coverage","decisive_words":"How much residual-value/loss-share exposure has Nvidia taken on","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the exposure amount, while the outcome also tracks payments or accruals and support terms."}
+{"topic":"T22","several":true,"main":"none","decisive_words":"reach volume shipments and commercial scale","overrides_outcome":false,"arbitrary":true,"why":"The description names shipments and commercial scale, which can also be read as the outcome's separate revenue contribution."}
+{"topic":"T23","several":true,"main":"year-end B200 rental price","decisive_words":"hourly spot rental price for Nvidia B200 GPUs be at the end of calendar 2026","overrides_outcome":true,"arbitrary":false,"why":"The description asks for the year-end price, while the outcome also tracks whether it exceeds the March level."}
+{"topic":"T24","several":true,"main":"none","decisive_words":"sign and complete an acquisition of Reflection AI — and at what consideration and terms","overrides_outcome":false,"arbitrary":false,"why":"The description asks about the agreement, completion, consideration and terms."}
+{"topic":"T25","several":true,"main":"none","decisive_words":"global AI capital spending total in calendar 2026 and calendar 2027","overrides_outcome":false,"arbitrary":false,"why":"The description asks alike for global spending in each of two years."}
+{"topic":"T26","several":true,"main":"none","decisive_words":"funded or remain outstanding","overrides_outcome":false,"arbitrary":false,"why":"The description asks about both funding and the remaining commitments."}

@@ -1,0 +1,267 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1c8ab-aa6a-7671-bd10-33720abcf19b
+--------
+user
+You are an independent reader acting as a hedge-fund analyst. Read-only: do not edit files, do not use the network. Do not read any
+file other than the one named below.
+
+Read the news article stored in the SQLite file /Users/lchingen/hivemind/poc/data/items-nvda-2026-07-01-10-27.sqlite: find the item
+whose id is `gnews:d5c48abb470f394f86549b6b` (inspect the schema first; read its full text).
+
+One statement in it: an NVIDIA spokesperson told Investing.com "Our roadmap is intact."
+
+An analyst holds this open question, with this answer ladder (NVIDIA's fiscal 2027 ends in late January 2027):
+"How much revenue will NVIDIA report from Blackwell and Rubin products in FY2027?"
+rung 1: at least $400 billion; rung 2: $320 to below $400 billion; rung 3: $270 to below $320 billion; rung 4: $220 to below $270
+billion; rung 5: below $220 billion.
+
+Answer from the article alone:
+1. What exactly is the spokesperson responding to, in the article's own words (quote the sentences around the statement)?
+2. Would a careful analyst file this statement as evidence under the revenue question above? Choose one: (a) yes, it bears directly
+   on the FY2027 figure; (b) weakly or indirectly, it could be noted but should not move the estimate; (c) no, it concerns something
+   outside this question. Give the reason in two or three sentences, including which products and which period the disputed report
+   concerns according to the article.
+3. If it were shown under that question, in which direction, if any, should it push the estimate, and by roughly how much?
+Keep the answer under 300 words.
+
+codex
+I’ll inspect the database schema and read the full article, then assess the statement against the revenue question.
+exec
+/opt/homebrew/bin/zsh -lc "sqlite3 'file:/Users/lchingen/hivemind/poc/data/items-nvda-2026-07-01-10-27.sqlite?mode=ro' '.schema'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+CREATE TABLE items (
+  input_id text primary key, klass text, category text, content_sha256 text, copy_of text, supersedes text,
+  channel text, source_uri text, publisher text, publisher_type text, authors text, published_at text,
+  publication_day text, day_source text, listing_day text, page_day text, retrieved_at text, is_structured integer,
+  has_readable_text integer, document_format text, channel_category text, media_type text, language text,
+  object_identifiers text, title text, text text, text_article text, coverage text, text_chars integer,
+  bootstrap integer, feed integer, source text, topic text, tier text, extra text
+, text_page text, cleaning text);
+CREATE INDEX items_day on items(publication_day);
+CREATE INDEX items_klass on items(klass, publication_day);
+CREATE INDEX items_feed on items(feed, publication_day);
+
+exec
+/opt/homebrew/bin/zsh -lc "sqlite3 -readonly -line /Users/lchingen/hivemind/poc/data/items-nvda-2026-07-01-10-27.sqlite \"SELECT title, published_at, text, text_article, text_page FROM items WHERE input_id = 'gnews:d5c48abb470f394f86549b6b';\"" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+       title = Nvidia underperforms peers as report sparks rack delay worries
+published_at = Mon, 06 Jul 2026 07:00:00 GMT
+        text = Investing.com -- NVIDIA Corporation (NASDAQ:NVDA) shares ticked up just 0.8% on Monday, starkly trailing a 3.2% surge in the Philadelphia Semiconductor Index and lagging rivals Advanced Micro Devices Inc (NASDAQ:AMD), which gained 7.7%, and Broadcom Inc (NASDAQ:AVGO), which jumped 4.4%. The underperformance came as a broad rally for chipmakers collided with a boutique research report alleging significant delays in the AI giant's next-generation server architectures.
+Supply chain research firm SemiAnalysis claimed in a weekend report that Nvidia's highly anticipated Kyber NVL144 rack architecture will be delayed to 2028 due to manufacturing challenges with its PCB midplane. An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: "Our roadmap is intact."
+The research firm further alleged that Nvidia cancelled an alternative back-to-back rack design following heavy operational pushback from hyperscale cloud clients. Additionally, the report pointed to a downsized version of the upcoming Rubin Ultra platform, claiming a crucial four-die configuration had been scrapped.
+The negative headlines triggered a sharp overnight selloff among Asian tech suppliers, which stumbled on the report as investors locked in profits following massive year-to-date run-ups. Japan's Ibiden Co., a PCB maker that counts Nvidia as its largest client, dropped 8.4% by close, while Hong Kong-listed Kingboard Laminates Holdings Ltd. tumbled 12.6% and South Korea's Samsung Electro-Mechanics Co. slid 8.1%.
+According to analysts cited by Bloomberg, these rumored technical setbacks could severely cap the scale-up capacity of Nvidia's future hardware. This perceived vulnerability may create a wider competitive window for alternative AI platforms, specifically AMD's MI500X and Broadcom-backed custom TPUs.
+Mizuho analyst Jordan Klein dismissed such fears in his daily "Tech Bytes" note, calling the product delay stories "more noise." "I would not be worried about NVDA nor looking to sell the stock," Klein said.
+The analyst additionally pointed to strong earnings last Friday from Hon Hai Precision Industry Co Ltd (TW:2317), one of Nvidia's largest suppliers. Klein noted that Hon Hai management forecasted a continued acceleration in AI demand, which the analyst said was "a very good sign into the NVDA launch of their new Vera Rubin rack."
+The lackluster session keeps the world's most valuable public company squarely rangebound as investors navigate an increasingly jittery AI market. Just last week, erratic headlines regarding Meta Platforms' AI spending ambitions sent tech stocks on a whipsaw ride, underscoring growing market anxiety in the AI trade.
+Ultimately, the market's outsized reaction to the unconfirmed supply chain friction reveals a fragile consensus among AI investors after a multi-year, historic run-up. With valuation multiples priced for perfection, even the slightest hint of a product roadmap stumble is enough to make traders pause, regardless of Nvidia's official denials.
+text_article = Skip to navigation Skip to main content Skip to right column Nvidia underperforms peers as report sparks rack delay worries Luke Juricic 7 July 2026 3 min read NVDA AMD AVGO Investing.com -- NVIDIA Corporation (NASDAQ:NVDA) shares ticked up just 0.8% on Monday, starkly trailing a 3.2% surge in the Philadelphia Semiconductor Index and lagging rivals Advanced Micro Devices Inc (NASDAQ:AMD), which gained 7.7%, and Broadcom Inc (NASDAQ:AVGO), which jumped 4.4%. The underperformance came as a broad rally for chipmakers collided with a boutique research report alleging significant delays in the AI giant's next-generation server architectures.
+
+Supply chain research firm SemiAnalysis claimed in a weekend report that Nvidia's highly anticipated Kyber NVL144 rack architecture will be delayed to 2028 due to manufacturing challenges with its PCB midplane. An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: "Our roadmap is intact."
+
+The research firm further alleged that Nvidia cancelled an alternative back-to-back rack design following heavy operational pushback from hyperscale cloud clients. Additionally, the report pointed to a downsized version of the upcoming Rubin Ultra platform, claiming a crucial four-die configuration had been scrapped.
+
+The negative headlines triggered a sharp overnight selloff among Asian tech suppliers, which stumbled on the report as investors locked in profits following massive year-to-date run-ups. Japan's Ibiden Co., a PCB maker that counts Nvidia as its largest client, dropped 8.4% by close, while Hong Kong-listed Kingboard Laminates Holdings Ltd. tumbled 12.6% and South Korea's Samsung Electro-Mechanics Co. slid 8.1%.
+
+According to analysts cited by Bloomberg, these rumored technical setbacks could severely cap the scale-up capacity of Nvidia's future hardware. This perceived vulnerability may create a wider competitive window for alternative AI platforms, specifically AMD's MI500X and Broadcom-backed custom TPUs.
+
+Mizuho analyst Jordan Klein dismissed such fears in his daily "Tech Bytes" note, calling the product delay stories "more noise." "I would not be worried about NVDA nor looking to sell the stock," Klein said.
+
+The analyst additionally pointed to strong earnings last Friday from Hon Hai Precision Industry Co Ltd (TW:2317), one of Nvidia's largest suppliers. Klein noted that Hon Hai management forecasted a continued acceleration in AI demand, which the analyst said was "a very good sign into the NVDA launch of their new Vera Rubin rack."
+
+The lackluster session keeps the world's most valuable public company squarely rangebound as investors navigate an increasingly jittery AI market. Just last week, erratic headlines regarding Meta Platforms' AI spending ambitions sent tech stocks on a whipsaw ride, underscoring growing market anxiety in the AI trade.
+
+Ultimately, the market's outsized reaction to the unconfirmed supply chain friction reveals a fragile consensus among AI investors after a multi-year, historic run-up. With valuation multiples priced for perfection, even the slightest hint of a product roadmap stumble is enough to make traders pause, regardless of Nvidia's official denials.
+
+Nvidia underperforms peers as report sparks rack delay worries
+
+EasyJet agrees to Castlelake's £5.2B takeover offer; shares soar
+
+FTSE 100 today: Stocks close lower as mining rout eclipses M&A surge
+   text_page = Nvidia underperforms peers as report sparks rack delay worries
+Something went wrong
+Skip to navigation Skip to main content Skip to right column
+News
+Finance
+Sport
+More
+News
+Today's news
+World
+UK
+Weather
+Politics
+Science & Tech
+Lifestyle
+Health & Wellness
+Relationships
+Parenting
+Entertainment
+TV
+Reality TV
+Movies
+Celebrity
+Music
+Finance
+My portfolio
+Watchlists
+Markets
+News
+Screeners
+Industries
+Crypto
+Bank of England
+Property
+Top stocks
+Work and management
+Brexit
+Sport
+Premier League
+Football
+Formula 1
+Rugby
+Cricket
+Golf
+Tennis
+NFL
+Athletics
+Cycling
+NBA
+Motorsport
+MMA
+Selected edition
+UK English
+Sign in
+My Portfolio
+News
+Originals
+Investing
+Stocks
+Earnings
+Crypto
+Tech
+Budget
+Economy
+Bank Of England
+Personal Finance
+Savings
+Pensions
+Small Business
+Property & Mortgages
+Markets
+Live Blog
+Stocks: Most Active
+Stocks: Gainers
+Calendar
+Trending Tickers
+World Indices
+Currencies
+Currency Converter
+Crypto
+Stocks: Losers
+Screeners
+Saved Screeners
+Equity Screener
+Mutual Fund Screener
+ETF Screener
+Features
+Behind The Brand
+Work & Management
+...
+UK markets closed
+UK
+UK
+US Markets
+Europe Markets
+Asia Markets
+Cryptocurrencies
+Rates
+Commodities
+Currencies
+UK markets closed
+FTSE 100
+10,767.33
++76.97 +0.72%
+GBP/USD
+1.3359
+-0.0016 -0.12%
+GBP/EUR
+1.1928
+-0.0005 -0.04%
+FTSE 250
+24,501.25
++263.86 +1.09%
+AIM
+753.18
++6.51 +0.87%
+GOLD FUTURES
+4,042.00
++34.10 +0.85%
+ADVERTISEMENT
+Nvidia underperforms peers as report sparks rack delay worries
+Luke Juricic
+7 July 2026 3 min read
+NVDA
+AMD
+AVGO
+Investing.com -- NVIDIA Corporation (NASDAQ:NVDA) shares ticked up just 0.8% on Monday, starkly trailing a 3.2% surge in the Philadelphia Semiconductor Index and lagging rivals Advanced Micro Devices Inc (NASDAQ:AMD), which gained 7.7%, and Broadcom Inc (NASDAQ:AVGO), which jumped 4.4%. The underperformance came as a broad rally for chipmakers collided with a boutique research report alleging significant delays in the AI giant's next-generation server architectures.
+Supply chain research firm SemiAnalysis claimed in a weekend report that Nvidia's highly anticipated Kyber NVL144 rack architecture will be delayed to 2028 due to manufacturing challenges with its PCB midplane. An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: "Our roadmap is intact."
+The research firm further alleged that Nvidia cancelled an alternative back-to-back rack design following heavy operational pushback from hyperscale cloud clients. Additionally, the report pointed to a downsized version of the upcoming Rubin Ultra platform, claiming a crucial four-die configuration had been scrapped.
+The negative headlines triggered a sharp overnight selloff among Asian tech suppliers, which stumbled on the report as investors locked in profits following massive year-to-date run-ups. Japan's Ibiden Co., a PCB maker that counts Nvidia as its largest client, dropped 8.4% by close, while Hong Kong-listed Kingboard Laminates Holdings Ltd. tumbled 12.6% and South Korea's Samsung Electro-Mechanics Co. slid 8.1%.
+According to analysts cited by Bloomberg, these rumored technical setbacks could severely cap the scale-up capacity of Nvidia's future hardware. This perceived vulnerability may create a wider competitive window for alternative AI platforms, specifically AMD's MI500X and Broadcom-backed custom TPUs.
+Mizuho analyst Jordan Klein dismissed such fears in his daily "Tech Bytes" note, calling the product delay stories "more noise." "I would not be worried about NVDA nor looking to sell the stock," Klein said.
+The analyst additionally pointed to strong earnings last Friday from Hon Hai Precision Industry Co Ltd (TW:2317), one of Nvidia's largest suppliers. Klein noted that Hon Hai management forecasted a continued acceleration in AI demand, which the analyst said was "a very good sign into the NVDA launch of their new Vera Rubin rack."
+The lackluster session keeps the world's most valuable public company squarely rangebound as investors navigate an increasingly jittery AI market. Just last week, erratic headlines regarding Meta Platforms' AI spending ambitions sent tech stocks on a whipsaw ride, underscoring growing market anxiety in the AI trade.
+Story continues
+Ultimately, the market's outsized reaction to the unconfirmed supply chain friction reveals a fragile consensus among AI investors after a multi-year, historic run-up. With valuation multiples priced for perfection, even the slightest hint of a product roadmap stumble is enough to make traders pause, regardless of Nvidia's official denials.
+Related articles
+Nvidia underperforms peers as report sparks rack delay worries
+EasyJet agrees to Castlelake's £5.2B takeover offer; shares soar
+FTSE 100 today: Stocks close lower as mining rout eclipses M&A surge
+Terms and Privacy Policy
+Privacy dashboard
+Recommended stories
+Copyright © 2026 Yahoo. All rights reserved.
+What's trending
+NVDA Tesla Apple MSFT Lloyds FTSE 100
+Explore more
+Top Stocks Personal Finance Investing News Earnings Videos
+About
+Data disclaimer Help Feedback Safety Advertise Supply Chain Transparency About our ads
+Terms and Privacy Policy
+Privacy dashboard
+ADVERTISEMENT
+Edit your dock
+Terms and Privacy Policy
+Privacy dashboard
+Ad terms Feedback
+
+codex
+1. The spokesperson was responding to a reported delay in the Kyber rack:
+
+   > “Supply chain research firm SemiAnalysis claimed in a weekend report that Nvidia's highly anticipated Kyber NVL144 rack architecture will be delayed to 2028 due to manufacturing challenges with its PCB midplane. An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: ‘Our roadmap is intact.’”
+
+   The following paragraph also reports alleged cancellation of an alternative rack design and a four-die configuration of Rubin Ultra.
+
+2. **(b) Weakly or indirectly.** The disputed report concerns a Kyber NVL144 delay to 2028, after FY2027 ends, and alleged design changes including Rubin Ultra; the article does not give a timing or revenue impact for the Rubin Ultra claim. The denial gives no FY2027 Blackwell or Rubin revenue figure, so it could be noted as roadmap context but should not move the estimate.
+
+3. **No measurable change—approximately $0 and no rung change.** In isolation, the denial is reassuring relative to the alleged setbacks, but the article provides no basis to translate it into FY2027 revenue.
+tokens used
+29,699
+1. The spokesperson was responding to a reported delay in the Kyber rack:
+
+   > “Supply chain research firm SemiAnalysis claimed in a weekend report that Nvidia's highly anticipated Kyber NVL144 rack architecture will be delayed to 2028 due to manufacturing challenges with its PCB midplane. An Nvidia spokesperson swiftly refuted such claims in a brief statement emailed to Investing.com, stating: ‘Our roadmap is intact.’”
+
+   The following paragraph also reports alleged cancellation of an alternative rack design and a four-die configuration of Rubin Ultra.
+
+2. **(b) Weakly or indirectly.** The disputed report concerns a Kyber NVL144 delay to 2028, after FY2027 ends, and alleged design changes including Rubin Ultra; the article does not give a timing or revenue impact for the Rubin Ultra claim. The denial gives no FY2027 Blackwell or Rubin revenue figure, so it could be noted as roadmap context but should not move the estimate.
+
+3. **No measurable change—approximately $0 and no rung change.** In isolation, the denial is reassuring relative to the alleged setbacks, but the article provides no basis to translate it into FY2027 revenue.

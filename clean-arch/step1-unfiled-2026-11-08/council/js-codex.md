@@ -1,0 +1,1 @@
+Ready to put to Alex: say explicitly that the proposed structure may address six of the seven stored faults, leaves the French investigation fault open, and still needs a small send to show whether the model uses it correctly.

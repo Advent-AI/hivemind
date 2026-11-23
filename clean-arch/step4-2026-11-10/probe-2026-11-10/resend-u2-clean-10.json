@@ -1,0 +1,149 @@
+[
+ {
+  "request": "first request",
+  "send": 1,
+  "shape": "declined",
+  "answer": {
+   "ladder": null,
+   "no_ladder": "The topic names two tracked outcomes—whether meaningful new HBM capacity comes online and whether record-high HBM/memory prices persist—but neither is identified as the main outcome."
+  }
+ },
+ {
+  "request": "first request",
+  "send": 2,
+  "shape": "declined",
+  "answer": {
+   "ladder": null,
+   "no_ladder": "The topic’s outcome names two tracked matters—whether meaningful new HBM capacity comes online and whether record-high HBM/memory prices persist—without making either one the main outcome."
+  }
+ },
+ {
+  "request": "first request",
+  "send": 3,
+  "shape": "declined",
+  "answer": {
+   "ladder": null,
+   "no_ladder": "The topic names two tracked outcomes—whether meaningful new HBM capacity comes online before late 2027 and whether record-high HBM/memory prices persist—but does not identify either as the main one. They cannot be combined into a single ladder."
+  }
+ },
+ {
+  "request": "second request",
+  "send": 1,
+  "shape": "yes_no",
+  "answer": {
+   "ladder": {
+    "due_day": "2027-12-31",
+    "due_day_basis": "period_end",
+    "figure": null,
+    "not_judged": [
+     {
+      "part": "How much meaningful new HBM capacity SK Hynix, Micron, and Samsung bring online before late 2027.",
+      "why": "The topic’s tracked outcome is whether record-high HBM/memory prices persist; capacity is a separate supply measure."
+     }
+    ],
+    "object": "semiconductor-cycle",
+    "question": "Do memory-market research reports covering late 2027 show that HBM or memory prices remain at record-high levels through December 31, 2027?",
+    "reference": {
+     "value": null,
+     "words": "None of that supply, though, arrives before late 2027, which keeps the memory shortage going and record-high prices intact for now,"
+    },
+    "states": null,
+    "yes_no": {
+     "no": "Memory-market research reports covering late 2027 do not show HBM or memory prices remaining at record-high levels through December 31, 2027.",
+     "yes": "Memory-market research reports covering late 2027 show HBM or memory prices remaining at record-high levels through December 31, 2027."
+    }
+   },
+   "no_ladder": null
+  }
+ },
+ {
+  "request": "second request",
+  "send": 2,
+  "shape": "yes_no",
+  "answer": {
+   "ladder": {
+    "due_day": "2027-12-31",
+    "due_day_basis": "period_end",
+    "figure": null,
+    "not_judged": [
+     {
+      "part": "How much new HBM capacity the producers bring online",
+      "why": "The tracked event is whether any new capacity enters commercial production, not the amount of capacity."
+     },
+     {
+      "part": "Whether record-high HBM or memory prices persist through late 2027",
+      "why": "Price persistence is a separate outcome from whether new HBM capacity comes online."
+     },
+     {
+      "part": "Whether HBM supply and pricing constrain NVIDIA's GPU shipments",
+      "why": "The effect on NVIDIA's shipments is not the event tracked by this question."
+     }
+    ],
+    "object": "semiconductor-cycle",
+    "question": "Will any of SK Hynix, Micron, or Samsung bring new high-bandwidth memory (HBM) capacity into commercial production by December 31, 2027? Count capacity only when commercial production begins; announcements, construction, and pilot output do not count.",
+    "reference": {
+     "value": null,
+     "words": "None of that supply, though, arrives before late 2027, which keeps the memory shortage going and record-high prices intact for now,"
+    },
+    "states": null,
+    "yes_no": {
+     "no": "No new HBM capacity at SK Hynix, Micron, or Samsung has entered commercial production by December 31, 2027.",
+     "yes": "New HBM capacity at SK Hynix, Micron, or Samsung has entered commercial production by December 31, 2027."
+    }
+   },
+   "no_ladder": null
+  }
+ },
+ {
+  "request": "second request",
+  "send": 3,
+  "shape": "states",
+  "answer": {
+   "ladder": {
+    "due_day": "2027-12-31",
+    "due_day_basis": "period_end",
+    "figure": null,
+    "not_judged": [
+     {
+      "part": "How much new HBM capacity SK Hynix, Micron and Samsung will bring online.",
+      "why": "The tracked outcome is whether meaningful new capacity comes online, not the amount of capacity."
+     },
+     {
+      "part": "Whether HBM supply and prices constrain NVIDIA's GPU shipments.",
+      "why": "That is a potential business impact, not the tracked state of HBM supply and pricing."
+     }
+    ],
+    "object": "semiconductor-cycle",
+    "question": "By December 31, 2027, what will be the state of HBM supply and market prices: will SK Hynix, Micron or Samsung have started commercial production from newly added HBM capacity, and will HBM contract prices have remained at record highs through late 2027? Treat commercial production as excluding pilot or sample output; assess prices using quarterly HBM contract-price market research from Q3 2026 through Q4 2027.",
+    "reference": {
+     "value": null,
+     "words": "no new HBM supply arrives before late 2027, keeping the memory shortage going and record-high prices intact for now"
+    },
+    "states": [
+     {
+      "condition": "No newly added HBM capacity at SK Hynix, Micron or Samsung has started commercial production by December 31, 2027, and quarterly HBM contract-price market research reports record highs throughout Q3 2026–Q4 2027.",
+      "label": "No new capacity; record prices persist"
+     },
+     {
+      "condition": "No newly added HBM capacity at SK Hynix, Micron or Samsung has started commercial production by December 31, 2027; record highs do not persist throughout Q3 2026–Q4 2027; and the reported Q4 2027 HBM contract price is above the reported Q3 2026 price.",
+      "label": "No new capacity; prices remain above baseline"
+     },
+     {
+      "condition": "No newly added HBM capacity at SK Hynix, Micron or Samsung has started commercial production by December 31, 2027; record highs do not persist throughout Q3 2026–Q4 2027; and the reported Q4 2027 HBM contract price is at or below the reported Q3 2026 price.",
+      "label": "No new capacity; prices return to baseline or lower"
+     },
+     {
+      "condition": "At least one of SK Hynix, Micron or Samsung has started commercial production from newly added HBM capacity by December 31, 2027, and quarterly HBM contract-price market research reports record highs throughout Q3 2026–Q4 2027.",
+      "label": "New capacity; record prices persist"
+     },
+     {
+      "condition": "At least one of SK Hynix, Micron or Samsung has started commercial production from newly added HBM capacity by December 31, 2027, and quarterly HBM contract-price market research does not report record highs throughout Q3 2026–Q4 2027.",
+      "label": "New capacity; record prices do not persist"
+     }
+    ],
+    "yes_no": null
+   },
+   "no_ladder": null
+  }
+ }
+]

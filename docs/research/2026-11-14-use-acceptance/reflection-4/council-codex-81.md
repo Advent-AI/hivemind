@@ -1,0 +1,11 @@
+**No-go on v2 as written.** The grouped-choice control is intended to catch the right problem, but neither the sentence nor the control yet guarantees that it will.
+
+For example, suppose “Yes” means a merger closed and “Ruled out” groups a withdrawal with a regulator’s rejection. Holding “Yes” may say the regulator did not reject it, but holding “Ruled out” does not say **which** happened. The proposed “holding **one** of the choices” can therefore remove “whether the regulator rejected it,” even though the design says that finer difference should stay. The final clause, “holding **no** choice settles,” has the same gap. [A3 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:14>)
+
+The grouped-choice control also passes vacuously if no such entry is listed: it only requires that no listed entry be marked `already_judged`. Require the finer difference to appear when the topic names it, and verify that the generated choice actually groups the cases; otherwise the control is unexercised. [A3 controls](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:39>)
+
+The revised harm reporting is more candid, but “a traced failure caused by the change” needs a defined evidential standard: the model’s explanation and a comparison of sampled outputs can identify a plausible mechanism, not always prove causation. Record uncertain attribution as uncertain rather than letting it silently become either a negative or a clean lead. The `+2` H threshold remains an exploratory diagnostic, as the design says. [A3 decision rule](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md:48>)
+
+Revise the sentence to retain a named part whenever an applicable choice leaves whether it happened unresolved, subject to the separate source-only rule; make the control exercise that exact distinction. Then return the design for review before building the arm.
+
+CONSENSUS: no, because the wording can still remove a finer difference, and its control can pass without checking that the difference was retained.

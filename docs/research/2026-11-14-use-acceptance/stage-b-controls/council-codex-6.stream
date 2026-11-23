@@ -1,0 +1,663 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebb0-9724-7e51-a979-bae88cb9cba9
+--------
+user
+# Council round 6: design version 6 and the participant-facing texts
+
+Version 6 is in `review-v6/` in this folder, read-only:
+- `NEW-REFERENCE-DESIGN-v6.md`;
+- `control-items-brief.md`;
+- `templates/`, which holds the texts every participant will see, word for word.
+
+It answers your round-5 review and the Claude family's, condensed in `council-claude-5.md`. The change list is §15.
+
+Check your round-5 findings first:
+1. the stage-specific permitted source of the leak check, and its test on generated files;
+2. retry attempts as their own slots;
+3. the items brief's control ids.
+
+Then read every template as a participant would. Does any wording steer a reader or third reader towards an answer? In particular:
+- the `outcome_on_due_day` instruction;
+- the third reader's "1", "2" or "neither";
+- the ask-again reasons.
+
+Is any template inconsistent with the frozen brief or with D660?
+
+Also check the population resolution: the `questions` map, then `clean_ladders`.
+
+Report only findings that would change what is built or measured. Out of scope: the ladder step's prompt, gate 1 and cost. The frozen ruler's
+files must not change. End with `READY` or `NOT READY: <the smallest change>`.
+
+codex
+I’ll check the fixes from round 5, then read each participant-facing text against the frozen brief and D660, including how the 15 questions are located.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba review-v6/control-items-brief.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba /Users/lchingen/hivemind/docs/research/2026-11-01-e2e-loop/judgement-gold/reader-brief.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba review-v6/NEW-REFERENCE-DESIGN-v6.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba council-claude-5.md' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+     1	# Stage B: checking whether a reference's evidence reached the judge (read-only)
+     2	
+     3	You are an independent reader. Everything you may use is in this message. Do not read any file or run any command.
+     4	
+     5	Each item in this message gives a **judged question** that the system wrote for a thesis it opened. The question comes with its unit, its due
+     6	day and its rungs. The item also gives two lists:
+     7	- **The reference's decisive items:** the evidence that an independent analyst cited for their answer to this question. Each item has its id, its
+     8	  day, its title, its passage and its meaning.
+     9	- **The evidence shown to the judge:** every evidence entry that the system's judge was shown for this question, in any of its requests on or
+    10	  before 2026-07-14. The list is empty when there is none.
+    11	
+    12	You are not told any answer, and you do not judge which answer is right.
+    13	
+    14	For **each** of the reference's decisive items, by its id, answer one question:
+    15	- **shown** when its content is present in the evidence shown to the judge (the same fact or figure, in any wording, from any source);
+    16	- **not_shown** when it is absent.
+    17	
+    18	Search the entries for the figure or the fact; do not mark an item shown because a related item is.
+    19	
+    20	Return one JSON object per control, one per line, in the order given, and nothing else (no prose, no code fence):
+    21	`{"control": "c03", "items": {"i005": "shown"|"not_shown", ...}, "why": "one sentence naming what decides each not_shown"}`.
+    22	
+    23	## Third reader (only where the two readers differ)
+    24	
+    25	A third reader of each family gets this brief, the same items, and a list of the disputed points. Each point is a control id (c01 to c15) and an item id.
+    26	The third reader is not given the two readers' answers.
+    27	
+    28	For each point, answer that one question afresh by the rule above. Return one JSON object per point, one per line, and nothing else:
+    29	`{"control": "c03", "field": "item i005", "ruling": "shown"|"not_shown", "why": "one sentence"}`.
+
+ succeeded in 0ms:
+     1	# Brief for the analyst reader
+     2	
+     3	You are a senior hedge-fund analyst who follows NVIDIA. It is the evening of 2026-07-14. You have in front of you everything an analyst
+     4	following the company would have noted from the news of 2026-07-01 to 2026-07-14: the items in `packet-v1.json` (each with an id `iNNN`,
+     5	the publication day, the article title, the source tier, who said it, the exact passage and its meaning). You are asked, for each open
+     6	question in `questions-v1.json`, where you stand tonight and why.
+     7	
+     8	Use only the material in the packet. Do not use anything you know from outside it, and do not guess what happened after 2026-07-14.
+     9	Every claim you make must cite item ids from the packet. If the packet carries nothing about a question, say so (`no_view: true`) rather
+    10	than reasoning from general knowledge.
+    11	
+    12	How an analyst forms a stance (these are the house rules, quoted):
+    13	- "A thesis is an argued view about the business and the world; its stance comes from the argument weighed against what is priced."
+    14	  So first establish what the market expected for the question as of 2026-07-14 (a consensus figure, the company's guidance, the stated
+    15	  plan or deadline), then ask what the evidence implies, then compare the two.
+    16	- "Only facts can establish which rung holds." Published figures, official actions and completed transactions fix what is known; company
+    17	  guidance and management statements are the strongest forward input; analyst and media views and rumours move the view in proportion to
+    18	  their specificity (a number, a date, a named party). "A repeat is not new evidence, and model agreement is not corroboration": the same
+    19	  claim in several outlets counts once.
+    20	- "Lean cautious, catch the increment": most of what is written is noise; new information that changes the answer is never missed.
+    21	- Work the numbers where they exist: reported quarters and guidance give a run-rate; a quantified revision, a customer's demand number, a
+    22	  supplier's constraint, a confirmed delay or cancellation shift it. A part cannot exceed the whole it belongs to; a figure that spans
+    23	  several periods or products gives a question only its share.
+    24	- Say how far the material settles the matter (confidence), and name the strongest item against your view.
+    25	
+    26	Write one JSON object per question, exactly in this shape (numbers as plain numbers in the question's `unit`; use null where a field does
+    27	not apply):
+    28	
+    29	{
+    30	  "question_id": "q01",
+    31	  "no_view": false,
+    32	  "reference": {"text": "what the market expected and where it comes from, or 'none stated: status quo is ...'", "value": 392000000000, "items": ["i034"]},
+    33	  "implied_outcome": {"text": "the outcome the material implies and how you derived it", "low": 395000000000, "high": 420000000000, "yes_no": null, "items": ["i012", "i040"]},
+    34	  "direction": "above | in_line | below | yes | no",
+    35	  "confidence": "high | medium | low",
+    36	  "decisive_items": ["i012", "i040", "i077"],
+    37	  "against": {"text": "the strongest item against the view, or null", "items": ["i090"]},
+    38	  "reasoning": "three to six sentences, every claim with item ids"
+    39	}
+    40	
+    41	For a yes/no question set `implied_outcome.yes_no` to true or false and `low`/`high` to null; `direction` is then "yes" or "no". For a
+    42	numeric question give `low` and `high` as the range you would bet on (a point estimate is low = high); `direction` compares that range
+    43	with `reference.value` (in_line when the range contains the reference or the difference is within the noise of the estimate).
+
+ succeeded in 0ms:
+     1	(The Claude-family independent review of NEW-REFERENCE-DESIGN-v5.md, received as its final message on 2026-11-17 and stored by Claude; condensed.)
+     2	Verdict: NOT READY: write the four templates word for word for review (F1); resolve controls through clean_ladders (F3); fix the leak check's word cutting, permitted source and pre-step-2 test (F4, F5); print voided outputs on the signing page (F2).
+     3	Facts confirmed: 16 entries, 15 without q23; 6 figures (5 contiguous rungs, USD); quoted form on u1 v4, u2 v4, u3 v6; note on u1 v1, u2 v7, u3 v1; 9 events Yes/Ruled out/Still open; every control has a judgement on or before 2026-07-14; Codex defaults gpt-6.1-terra/high; ~/.codex/AGENTS.md absent.
+     4	(1) D658, D659, D660 carried exactly.
+     5	(2) F1: the output instruction, the ask-again template, the third readers' instruction and the signing summary line are only described, and the orchestrator who has seen the judgements would write them; the outcome_on_due_day wording moves the score directly. F2: a stop after the readers run can lead the council to re-issue the manifest and run fresh readers, choosing between sets of answers: print voided outputs beside replacements on the signing page.
+     6	(3) F3: mapping-runs.json has two maps; its `views` map holds the earlier run's view ids (u1 clean-3 -> v7 there, v3 in the Stage B store): use the `questions` map and clean_ladders.thesis_id -> view_id, as control_theses.py l.73-74. F4: word cutting undefined; "passages and meanings" rendering open (meaning is a dict); punctuation decides hits (i089 vs the rung's quoted text).
+     7	(4) F5: the signing page prints the stripped text, which its own leak check treats as a leak; third-reader prompts contain A's and B's answers, not permitted; the pre-step-2 test cannot cover files that do not exist yet. Fix: the permitted source is every byte of inputs written before any judgement that the file is built from (rendered packet, brief, question file, stored rungs before stripping) plus outputs of sessions that passed the checks; test on placeholder third-reader and signing files.
+     8	Wording: the column is `reasons`; name the new questions-v1.json's folder so it never lands in judgement-gold; kind changes from asset/theme to figure/event; the items brief: "per control"; "last judgement" by judgement_id; the 2-item exclusion cannot fire under the validity rule.
+
+ succeeded in 0ms:
+     1	# A new reference for the final-answer test's control line (D658, D660): design, version 6, for council review ($0; nothing run)
+     2	
+     3	**In one line:** answer the 15 control questions as the new system asks them, from the frozen ruler's own 14-day material and brief.
+     4	- **The questions** reach the readers with the system's quoted reference stripped.
+     5	- **The readers** are two, one of each family. They work in closed environments with no file or tool access.
+     6	- **Events** are answered and compared on their three outcomes.
+     7	- **Every disagreement** goes to Alex with the third readers' reasons.
+     8	- **Alex signs and the reference is frozen.** Only then are the judge's stored answers scored on D428's line, with null baselines reported beside it.
+     9	- **Fixed by sha before the first reader runs:** the generators, templates, permitted inputs, environments, checks and the scorer.
+    10	
+    11	Version 6 answers the round-5 reviews: Codex (`council-codex-5.md`, thread 01a1ebb0-9724-7e51-a979-bae88cb9cba9) and the Claude family
+    12	(`council-claude-5.md`). Earlier versions and their change lists are in `NEW-REFERENCE-DESIGN-v2.md` to `-v5.md`. This version's changes are in §15.
+    13	
+    14	**Every text a participant sees is written out word for word** in `templates/`:
+    15	- `reader-output-instruction.md`;
+    16	- `ask-again.md`, with its closed reasons in `ask-again-reasons.json`;
+    17	- `third-reader.md`;
+    18	- `signing-summary.md`;
+    19	- `control-items-brief.md` (in this folder).
+    20	
+    21	They are reviewed with this design and fixed in the manifest.
+    22	
+    23	## 0. The structural rule that closes the fitting class
+    24	
+    25	The orchestrator (Claude) and the council have seen the stored judgements. No step may rest on their not having seen them.
+    26	- **Fixed by sha before step 2** (`manifest-v1.json`):
+    27	  - every generator, template and check;
+    28	  - the permitted inputs (§3);
+    29	  - the reader environments, with their models and tool versions (§4);
+    30	  - the side-drawing seed;
+    31	  - the scorer and its tests.
+    32	- **Every text a participant sees** (readers, third readers, material-shown readers, Alex at signing) is generated by that fixed code from
+    33	  permitted inputs. It is kept with its sha.
+    34	- **A step refuses when a manifest sha differs.** A manifest re-issued after any step voids every artifact that depends on the old one: reader
+    35	  outputs, rulings, the signature, the frozen reference and the shown-check outputs. The void is recorded.
+    36	- **Every launched session** (participant, slot, attempt, start, end, outcome, output sha) is appended to `launches.jsonl`.
+    37	- **No output is dropped without trace.** From the moment step 2 starts, every voided reader or third-reader output is printed on the signing page
+    38	  beside its replacement, with the reason it was voided. This applies to a void session, an invalid row that was asked again, and every output
+    39	  voided by a manifest re-issue. So no one, the council included, can choose between sets of readers' answers unseen.
+    40	- **Every participant works inline,** with no file or tool access, from a new empty directory outside the repository. Its environment is closed as
+    41	  §4 states, and it is checked from its log's first event.
+    42	
+    43	## 1. What Alex decided, and the material
+    44	
+    45	- **D658's option, word for word** (recorded in D660): "按新系统实际出的这 15 道题，重写一份标准答案（推荐）。请两组没参与造这个系统的审查者，用同样的材料各自独立作答。两组意见不一致的地方，逐条对照原文裁定。你看过、签字后冻结，再拿判答案那一步的结果去批一次。旧标准答案一字不动，几乎不花钱。"
+    46	- **D660:**
+    47	  - events are compared on the three outcomes ("三选一要一致");
+    48	  - the system's quoted reference is stripped ("删掉");
+    49	  - baselines are reported only, marked above or below ("只作对照，标出高低").
+    50	- **The material is `packet-v1.json`** (golden-v5's 309 items, sha `53d1e8b4…`). Sources: ruler-v1 §1 ("材料：…309 条事项…不用系统的账本"),
+    51	  D658's Next line ("the readers' brief taken from the frozen ruler's definition"), and D659.
+    52	- **What it measures:** whether the judge's last answer lands where an analyst would land after reading the window's material, on controls whose
+    53	  decisive items reached the judge.
+    54	- **What it cannot measure:** statements the judge saw that the packet lacks; delivery; questions read as no_view.
+    55	
+    56	## 2. The piece
+    57	
+    58	A new piece beside the frozen ruler (AGENTS §7.1), never an edit of it.
+    59	- **Name:** `control-reference-v1`.
+    60	- **Unit:** 15 questions, c01 to c15. Each is the question the system wrote for one control thesis in one draw of the Stage B baseline (D428),
+    61	  judged at 2026-07-14.
+    62	- **Ohio** (q23) is not in this exercise. Its historical result stays listed apart, and this exercise neither tests it nor passes it.
+    63	- **Kept from the frozen ruler:** the material, the brief file, the fields and the figure comparison.
+    64	- **Changed by D660:** events and the stripping.
+    65	- **Old scores are never compared with it.**
+    66	
+    67	## 3. Permitted inputs, built by code (`build_control_reference.py`)
+    68	
+    69	- **Stored inputs,** hashed into the manifest:
+    70	  - `mapping-runs.json`;
+    71	  - the three draws' `views.sqlite` and `archive.sqlite`;
+    72	  - the run record that selects each completed attempt (`stored_judgements.py`'s inputs);
+    73	  - `packet-v1.json` and `reader-brief.md`.
+    74	- **The population.** It is taken from the `questions` map of `mapping-runs.json` (draw → thesis → seed question). The file's `views` map holds an
+    75	  earlier run's view ids and is not used.
+    76	  - The 16 entries less q23 (Ohio) are numbered c01 to c15 in the file's order:
+    77	    - u1: clean-1, clean-3, clean-4, clean-6, clean-11;
+    78	    - u2: clean-2, clean-3, clean-4, clean-5, clean-7;
+    79	    - u3: clean-1, clean-3, clean-5, clean-6, clean-7.
+    80	  - Each thesis resolves to its view through `clean_ladders.thesis_id → view_id`, in that draw's Stage B store. The store is found by
+    81	    `stored_judgements.stage_b_folders()` and checked by `refuse_split_store`, exactly as `control_theses.py` `facts()` does.
+    82	- **Where the files live.** All files are written under `poc/data/clean-control-reference-2026-11-17/`: the readers' inputs, `keys/` and the
+    83	  outputs. Code refuses any path inside `docs/research/2026-11-01-e2e-loop/judgement-gold/`. The new question file shares its name with the
+    84	  frozen one, `questions-v1.json`, so that the brief's words hold. Its `kind` field holds figure or event, where the frozen file holds asset or
+    85	  theme; this is stated.
+    86	- **Two frozen extracts,** hashed:
+    87	  - `questions-v1.json`, shown to the readers.
+    88	  - `judge-inputs-v1.json`, kept in `keys/` and never shown. For each control it holds every evidence entry the judge's requests listed on or before
+    89	    2026-07-14 (with the request day), and the last judgement's rung position and day. Shown-check readers get only the evidence entries.
+    90	- **Each question's closed key set:**
+    91	  - `id`;
+    92	  - `kind`:
+    93	    - `figure` when every rung has `lo` or `hi`;
+    94	    - `event` when the rungs are exactly Yes, Ruled out and Still open with no bounds, or exactly Yes and No (the writer's two-outcome form, D409);
+    95	    - anything else refuses the build.
+    96	  - `question`, `due_day` and `year` (from `views`);
+    97	  - `unit`: for a figure, `checked_answer.ladder.figure.unit`, read as that one key and no other; for an event, `yes/no`;
+    98	  - `rungs`: position, label, condition, lo and hi.
+    99	- **The stripping rule** (D660: "The ladder step's quoted reference text is stripped").
+   100	  - **What is removed.** Code removes, from a figure's middle rung, the two trailing parentheticals in which the ladder writer quotes a passage
+   101	    (`ladder_step.py`, `write_view`):
+   102	    - " (the reference when the question opened: "…")";
+   103	    - " (the amount last reported when the question opened: "…")".
+   104	  - **What is kept.** The third form, " (no reference figure when the question opened)", quotes nothing and is kept, following D660's words. The
+   105	    signing page discloses that it tells a reader the system found no reference.
+   106	  - **What is recorded.** Each removal: the control, the rung and the removed text.
+   107	  - **What is checked:**
+   108	    - code refuses any condition that still contains `when the question opened: "`;
+   109	    - every stripped condition's remainder must equal the writer's own interval text for its bounds (`interval_text(lo, hi, unit)`).
+   110	  - **Facts checked read-only today,** on the six figure controls' middle rungs:
+   111	    - three carry the quoted form (u1 v4, u2 v4, u3 v6) and are stripped;
+   112	    - three carry the no-reference note (u1 v1, u2 v7, u3 v1) and keep it;
+   113	    - none uses the last-reported form.
+   114	  - **The reason:** readers find the market's expectation in the material themselves, as the old reference was written, and do not share the
+   115	    judge's anchor.
+   116	- **Refused, stopping the whole build and returning to the council:**
+   117	  - a figure without exactly 5 rungs, or with a gap, an overlap or an unbounded middle rung (all six have 5 contiguous rungs today);
+   118	  - a missing view, rung or unit.
+   119	- **The judgement-text check** (source-aware, run on every participant-facing file before it is shown):
+   120	  - **Words.** Text is normalised by Unicode NFKC and lowercased. Every character that is not a letter or a digit becomes a space, and the text is
+   121	    split on spaces. So quote marks and full stops never decide a hit.
+   122	  - **The runs checked:** every run of 8 consecutive words of every stored judgement text for these 15 views. That means the `judgements` columns
+   123	    `reasons`, `reference`, `implied_outcome` and `why_changed`.
+   124	  - **A hit** is a run present in the file and **absent** from the file's permitted source.
+   125	  - **The permitted source is defined per file.** It is every byte of the inputs that were written before any judgement and that the file is built
+   126	    from:
+   127	    - the rendered packet text, as `prompt_for` renders it (ids, days, tiers, who, titles, passages, meanings);
+   128	    - the brief and the templates;
+   129	    - the question file, and the stored rungs before stripping;
+   130	    - for the shown-check readers, the evidence entries they are given;
+   131	    - the outputs of sessions that passed §4's checks (readers' answers and third readers' rulings), and Alex's amendments, for the files built
+   132	      from them.
+   133	  - **Also checked:** any key outside the closed key sets.
+   134	  - **A hit stops the step and goes to the council** (§12). Any output it voids is printed as §0 states.
+   135	  - **Tested before step 2, at $0,** on every kind of participant-facing file:
+   136	    - a real reader prompt;
+   137	    - a third-reader prompt and a signing page, both built from placeholder answers that pass the schema;
+   138	    - a shown-check prompt.
+   139	
+   140	    Each must pass, and each copy with a planted leak (a stored judgement's own sentence put in) must fire.
+   141	  - **Which rung was chosen** exists only in `judge-inputs-v1.json`.
+   142	
+   143	## 4. Readers (step 2)
+   144	
+   145	- **Two readers:** A (Codex) and B (Claude family). Each gets one inline prompt in the frozen reader-A runner's shape (`run_reader_codex.py`,
+   146	  `prompt_for`):
+   147	  - `reader-brief.md` byte for byte;
+   148	  - the packet as text;
+   149	  - the 15 questions;
+   150	  - the output instruction;
+   151	  - "Do not read any file or run any command: everything you may use is in this message."
+   152	- **The output instruction** is `templates/reader-output-instruction.md`, word for word. It replaces the frozen runner's one-line output paragraph,
+   153	  keeping its words, and adds two things to the brief's shape:
+   154	  - `decisive_items` holds 2 to 6 distinct item ids (ruler-v1 §1.5);
+   155	  - for an event, `outcome_on_due_day` is "the label of the one rung of that question that you expect to hold on its due_day, judged by each rung's
+   156	    own condition" (D660). It is "Yes" exactly when `yes_no` is true.
+   157	- **How each runs.** Each session gets a new empty directory outside the repository, with the environment closed and pinned in the manifest.
+   158	  - **A (Codex):** `codex exec --skip-git-repo-check --ephemeral --json -s read-only -C <empty dir> -m gpt-6.1-terra -c
+   159	    model_reasoning_effort=high -c features.memories=false -c memories.use_memories=false -c memories.generate_memories=false -`.
+   160	    - The model and effort are the operator's Codex defaults as of today (`~/.codex/config.toml` lines 1–2), pinned so they cannot move.
+   161	    - Probe (2026-11-17, a one-word prompt): the events were thread.started, turn.started, item.completed (agent_message) and turn.completed, with
+   162	      no command.
+   163	  - **B (Claude family):** `claude -p --output-format stream-json --verbose --no-session-persistence --setting-sources "" --strict-mcp-config
+   164	    --tools "" --disable-slash-commands --model claude-opus-5-5`, from `<empty dir>`.
+   165	    - Probe (same day): the init event shows tools [], mcp_servers [], skills [] and slash_commands []. The only plugins are the four built-in
+   166	      ones (cc-plugin-agents-md, cc-plugin-telemetry, cc-plugin-privacy, cc-plugin-plugin-authoring). The auto-memory path is keyed to the empty
+   167	      directory and is empty.
+   168	    - The user-level `~/.claude/CLAUDE.md` may still load. Its content is checked, not only hashed. Today it holds exactly two lines:
+   169	      "- Always use descriptive variable names" and "- Run all commands without asking me" (sha 7ec744d3…). Neither bears on an answer. The
+   170	      manifest stores that exact content, and a launch refuses if it differs.
+   171	- **The first event is checked against the manifest:**
+   172	  - for A, no event comes before turn.started other than thread.started;
+   173	  - for B, the init event's model, tools, mcp_servers, skills, slash_commands and plugins equal the pinned values.
+   174	- **A void session,** a closed set:
+   175	  - for A, any item type other than `agent_message` or `reasoning` (so any `command_execution`, `file_change`, `mcp_tool_call` or `web_search`),
+   176	    or any event type outside thread.started, turn.started, item.started, item.updated, item.completed and turn.completed;
+   177	  - for B, any content block of type `tool_use`, or any event type outside system/init, assistant, user, rate_limit_event and result;
+   178	  - for either, an unreadable log, a non-zero exit, a first event that does not match the manifest, or output that cannot be parsed.
+   179	  - **Slots.** Every launch has a slot: participant, step, question set and attempt kind. The attempt kinds are `first`, `rerun-after-void` and
+   180	    `ask-again-<question_id>`. Before any launch, `launches.jsonl` is read, and a slot that already has a completed or running session is not
+   181	    launched again. An ask-again is its own slot, so a completed first session never blocks it.
+   182	  - A void session is rerun once fresh, in its own `rerun-after-void` slot. A second void makes its questions unresolved, and they go to Alex.
+   183	- **Validity schema** (code, fixed now), one object per question.
+   184	  - **The keys, exactly:**
+   185	    - `question_id`: c01 to c15, each once;
+   186	    - `no_view`: boolean;
+   187	    - `reference`: `text` (string), `value` (finite number or null), `items` (list of ids);
+   188	    - `implied_outcome`: `text` (string), `low` and `high` (finite numbers or null), `yes_no` (boolean or null), `items` (list);
+   189	    - `direction`: above, in_line, below, yes or no;
+   190	    - `confidence`: high, medium or low;
+   191	    - `decisive_items`: a list;
+   192	    - `against`: an object with `text` (string or null) and `items` (list), or null;
+   193	    - `reasoning`: a string;
+   194	    - `outcome_on_due_day`: present for an event only, absent for a figure; one of that question's rung labels, or null when `no_view`.
+   195	  - **When `no_view` is true,** every other field may be null or empty.
+   196	  - **Otherwise:**
+   197	    - `reference.text`, `implied_outcome.text` and `reasoning` are non-empty;
+   198	    - a figure has `low` ≤ `high` (both numbers), `yes_no` null, and `direction` above, in_line or below;
+   199	    - an event has `yes_no` a boolean, `low` and `high` null, `direction` yes or no consistent with `yes_no`, and `outcome_on_due_day` consistent
+   200	      with `yes_no`;
+   201	    - `decisive_items` holds 2 to 6 distinct ids;
+   202	    - every id anywhere exists in the packet.
+   203	  - **Scale cannot be checked by code** (420 for $420bn passes). A scale slip may show as an A–B disagreement. When both readers make the same
+   204	    slip, it passes unnoticed; only the signing page, which prints each range with the question's unit, can show it.
+   205	  - **An invalid row** is asked again once by `templates/ask-again.md`, in a new session. That session gets the brief, the packet, that one question
+   206	    and the output instruction, and the template lists only the reasons from the closed set `templates/ask-again-reasons.json`. The reader's earlier
+   207	    row is not shown, so it judges afresh, as in the established Stage A ask-again. If the row is still invalid, the question is unresolved and goes
+   208	    to Alex. A reader unable to cite 2 items is unresolved; it is never pressed to cite more.
+   209	
+   210	## 5. Reconcile (step 3)
+   211	
+   212	- **Agreement, by code:**
+   213	  - a figure: the two closed ranges [low, high] intersect;
+   214	  - an event: `outcome_on_due_day` is equal;
+   215	  - both no_view: they agree, and the reference is no_view (not exercised);
+   216	  - one side no_view: a disagreement.
+   217	- **The proposed reference is reader B's answer** (D262). That the judge (gpt-6-luna, OpenAI) shares reader A's family is a supporting
+   218	  observation, not a rule.
+   219	- **Every disagreement goes to two third readers,** one of each family, inline and in the closed environments of §4.
+   220	  - They see the brief, the packet, the question, the output instruction, and `templates/third-reader.md` with both answers as Answer 1 and Answer
+   221	    2, on sides drawn by the manifest's seed. This is the Stage A third readers' practice (`collect_readings.py disputes`).
+   222	  - Each rules "1", "2" or **"neither"**, mapped back to A or B by the seed's key. "Neither" carries its own answer in the §4 schema, validated by
+   223	    the same code.
+   224	  - A missing or invalid ruling is asked again once; if still missing, the question is unresolved.
+   225	- **Nothing is replaced automatically.**
+   226	
+   227	## 6. Alex signs (step 4)
+   228	
+   229	- **Who signs:** only Alex. Signing cannot be delegated (AGENTS §7.1; D592), because the council has seen the judgements. While he is inactive,
+   230	  the line waits.
+   231	- **The signing page** `control-reference-v1-for-signing.md` is generated by the fixed generator, in plain English. It shows:
+   232	  - D660's three rules and the kept no-reference notes;
+   233	  - the 15 questions, with the stripped text recorded;
+   234	  - each proposed answer with its items, printed in the question's unit;
+   235	  - every disagreement, with both answers and both rulings;
+   236	  - every no_view, invalid or unresolved row;
+   237	  - every voided output beside its replacement (§0).
+   238	
+   239	  It shows no judge answer and no chosen rung. The judgement-text check runs on it.
+   240	- **The presenting message** is `templates/signing-summary.md`, its English and Chinese lines filled with the counts only. Claude adds no
+   241	  recommendation on a disputed question, and any reply to Alex during signing quotes the page only.
+   242	- **Agreed questions** (A and B agree under §5) are listed with B's answer as proposed. His one signature over the page confirms them, and he may
+   243	  change any of them by the closed set below. **Disputed, invalid or unresolved questions** each need an explicit choice.
+   244	- **His choices per question,** a closed set:
+   245	  - a **valid** answer of A, of B or of a third reader (an invalid row cannot be picked);
+   246	  - his own answer in the §4 schema, which code validates;
+   247	  - **leave out**, which makes it no_view;
+   248	  - **reject**, which excludes the question; his reason is recorded and its status kept.
+   249	- **A disputed, invalid or unresolved question without a choice blocks the freeze.** If Alex declines to sign, nothing is scored, and that is
+   250	  recorded.
+   251	
+   252	## 7. Freeze (step 5)
+   253	
+   254	- **`control-reference-v1.json`** holds:
+   255	  - `reference_version: 1`;
+   256	  - both readers' sha256;
+   257	  - each question's source (agreed, or Alex's choice in his words);
+   258	  - the stripping record;
+   259	  - the label model-authored.
+   260	- **Its sha** goes to `control-reference-v1.sha256`, the decision record, and a frozen-file test (`tests/test_frozen_control_reference.py`, as
+   261	  `test_frozen_rulers.py`). The scorer reads the sha from that file and refuses a mismatch.
+   262	- **Never edited.** A later defect becomes a dated correction record, printed with every score.
+   263	
+   264	## 8. Material shown (step 6, after the freeze)
+   265	
+   266	- **The brief.** `control-items-brief.md`, written now for review in this folder and fixed in the manifest. It is the items part of
+   267	  `control-reader-brief.md` with its rule word for word: "Search the entries for the figure or the fact; do not mark an item shown because a
+   268	  related item is". The same-question and same-due parts, and the names "ruler question" and "reader B", are removed.
+   269	- **The readers.** Two readers, one of each family, inline and closed as in §4, see each control's reference decisive items and the evidence
+   270	  entries from `judge-inputs-v1.json`.
+   271	- **The rule is unchanged:** every request on or before 2026-07-14. Its limit is disclosed: an item shown in an earlier request may be absent
+   272	  from the last request whose answer is compared (`STAGE_B_READING.md`).
+   273	- **Disputes** go to third readers of each family, who rule without the two answers. A split is `unresolved`, reported apart from `not_shown`.
+   274	- **A failed or invalid packet** is asked again once; if it still fails, the control is unresolved.
+   275	- **Before scoring,** the outputs' shape and the frozen reference's sha are checked. A failure stops the scoring; it does not exclude controls.
+   276	
+   277	## 9. The count (step 7, `control_reference_count.py`, fixed in the manifest with its tests)
+   278	
+   279	**Exclusions,** each listed with its reason and never counted:
+   280	- not built;
+   281	- no judgement on or before 2026-07-14;
+   282	- the reference is no_view, left out or rejected;
+   283	- fewer than 2 decisive items;
+   284	- an item not_shown;
+   285	- an item unresolved, reported apart.
+   286	
+   287	**Agreement:**
+   288	- **A figure:** the band of the last judgement's rung, [lo, hi), overlaps the reference's [low, high]. This is the frozen scorer's half-open rule
+   289	  (`score_judgement.py`).
+   290	- **An event:** the label of the last judgement's rung, resolved from its stored position through the question's rungs, equals the reference's
+   291	  `outcome_on_due_day` (D660).
+   292	- **"The last judgement"** is the one with the highest `judgement_id` on or before 2026-07-14, as in `control_theses.py` and `score_judgement.py`.
+   293	- **The "fewer than 2 decisive items" exclusion** cannot fire under §4's validity rule. It is kept as a guard against a signed own-answer that
+   294	  slipped past.
+   295	
+   296	**The verdict is D428's line:**
+   297	- **MET:** at least 8 controls counted, and all but one of them agree.
+   298	- **MISSED:** at least 8 counted, and two or more disagree.
+   299	- **UNEXERCISED:** fewer than 8 counted. The report names each exclusion's cause.
+   300	
+   301	**Reported beside the verdict, never changing it (D660):**
+   302	- **Null baselines.** Each is paired with the judge on its own available controls. For each, the report prints the controls it covers, the
+   303	  judge's agreements there, the baseline's agreements there, and "above", "equal" or "below". A baseline available on no control prints
+   304	  "unavailable".
+   305	  - **Figures, lookup** (ruler-v1 §1): the rung containing `reference.value`. Unavailable when the value is null or no rung contains it.
+   306	  - **Figures, middle** (D660's example): rung 3 of 5. For figures with a stated reference, the ladder puts that value in the middle range (the
+   307	    ladder request, line 16). For the others it is the model's own centre, which is disclosed.
+   308	  - **Events, always Still open** (D660's example). On a Yes / No event it is always No: the status quo.
+   309	- **The line against reader A:** the same counted controls, with A's answer in place of the reference.
+   310	  - A's no_view, invalid or unavailable answers are not counted, and the denominator is printed.
+   311	  - It is a sensitivity reading: the material shown was checked against the reference's items, not A's.
+   312	- **The A–B disagreement rate.**
+   313	- **Per matter:** each seed question id (q04, q07, q08, q09, q13, q16, q18) with its counted controls and agreements.
+   314	
+   315	## 10. Predictions, written before any reader runs
+   316	
+   317	- **The old reference's 8 of 15 with every item shown is a historical count, not a bound.**
+   318	- **An unexercised result** may come from no_view, invalid or unresolved references, missing judgements, unresolved shown checks, or delivery. The
+   319	  report names which.
+   320	- **A missed result** is specific to this reference, these questions and these stored judgements.
+   321	- **Most A–B disagreements will split by family.** On 9 of Stage B's 12 splits, each third reader sided with its own family's first reader. Those
+   322	  splits were on judgement verdicts.
+   323	
+   324	## 11. What it does not measure, and its weak points
+   325	
+   326	- **Not measured:** whether the right questions were opened (D1); delivery beyond the shown filter (D2); the judge's daily path.
+   327	- **Model-authored.** Alex's signature is the human vote, and the noise is printed.
+   328	- **One stored run,** on the luna configuration's questions.
+   329	  - MET shows the line met on these 15. It does not pass Stage B, which also missed the strictest last-answer reading.
+   330	  - MISSED stops the line before further spend (D355).
+   331	  - UNEXERCISED names its causes.
+   332	- **Tuning exposure.** If a miss leads to a judge change (D263), these 15 become tuning data, and the next application must be on unseen questions.
+   333	
+   334	## 12. State × event
+   335	
+   336	| Event | What happens |
+   337	|---|---|
+   338	| Build refusal | The whole build stops; to the council |
+   339	| A judgement-text hit in any participant-facing file | The build stops; to the council |
+   340	| A stored input, template, environment or tool version differs from the manifest | The step refuses; to the council |
+   341	| The manifest is re-issued after any step | Every dependent artifact (reader outputs, rulings, signature, frozen reference, shown-check outputs) is void; recorded |
+   342	| A slot already has a completed or running session | Not launched again |
+   343	| A session is void (closed set, §4) | Recorded; one fresh rerun; a second void makes its questions unresolved |
+   344	| An interruption mid-step | The step reruns from its last completed predecessor. Outputs are written whole with their sha; a partial output is discarded and recorded |
+   345	| An invalid reader row | Asked again once; if still invalid, unresolved |
+   346	| A and B disagree | Two third readers |
+   347	| A third reader is missing or invalid, or rules "neither" | Missing or invalid: asked again once, else unresolved. "Neither" goes to Alex |
+   348	| Alex inactive | The line waits |
+   349	| Alex amends | From the closed set, in his words; the page is regenerated and re-signed |
+   350	| A disputed, invalid or unresolved question has no choice, or Alex declines | No freeze, nothing scored; recorded |
+   351	| The signed reference or the shown-check output fails its sha or shape | Scoring stops; to the council |
+   352	| A shown-check session failure, invalid packet or split | Asked again once, else unresolved, reported apart |
+   353	| A defect after the freeze | A dated correction record |
+   354	| A later run with other questions | A new gold with its own decision (AGENTS §7.1) |
+   355	
+   356	## 13. Sources of every rule (AGENTS §11)
+   357	
+   358	| Rule | Source |
+   359	|---|---|
+   360	| The packet as material | ruler-v1 §1; D658; D659 |
+   361	| The brief byte for byte; inline; no file or command | ruler-v1 §2.1; `run_reader_codex.py` |
+   362	| 2 to 6 decisive items; fewer than 2 not counted | ruler-v1 §1.5; AGENTS §4 |
+   363	| Events on three outcomes; every question counts | D660; ruler-v1 §2 ("一题一个区间，每题都算") |
+   364	| Stripping the quoted reference; keeping the unquoted note | D660's words |
+   365	| Reader B as the proposed reference | D262 |
+   366	| Third readers see both answers on the reference, and neither answer on the shown check | `collect_readings.py disputes`; `control-reader-brief.md` |
+   367	| All disputes to Alex; signing his alone | D658; AGENTS §7.1; D592 |
+   368	| Figure comparison, threshold, window end | D428; `control_theses.py`; `score_judgement.py` |
+   369	| The baselines and their use | D660 (middle, always Still open, reported only); ruler-v1 §1 (lookup) |
+   370	| Freeze, correction records, frozen-file test | ruler-v1 §2; D261; `test_frozen_rulers.py` |
+   371	| Closed reader environments | D658 ("两组没参与造这个系统的审查者"); ruler-v1 §2.1 |
+   372	
+   373	## 14. Cost
+   374	
+   375	The A sessions run on the operator's Codex and the B sessions on the Claude command line. Neither is an API spend. No paid model call of the
+   376	pipeline is made.
+   377	
+   378	## 15. Changes from version 5
+   379	
+   380	- **Every participant-facing text is written out in `templates/`,** reviewed and fixed in the manifest: the output instruction, the ask-again text
+   381	  with its closed reasons, the third-reader text and the signing summary.
+   382	- **The population** comes from `mapping-runs.json`'s `questions` map. Each thesis resolves to its view through `clean_ladders` in its Stage B store,
+   383	  as `control_theses.py` does; the `views` map is not used. The 15 ids are listed.
+   384	- **The leak check:**
+   385	  - words are cut on everything that is not a letter or digit;
+   386	  - the columns are `reasons`, `reference`, `implied_outcome` and `why_changed`;
+   387	  - the permitted source is defined per file and includes checked session outputs and the unstripped rungs;
+   388	  - the test covers reader, third-reader, signing and shown-check files with planted leaks.
+   389	- **Voided outputs** are printed on the signing page beside their replacements.
+   390	- **Attempts:** ask-again and rerun are their own slots.
+   391	- **The user-level `CLAUDE.md` content** is checked.
+   392	- **The items brief** uses c-ids, one object per control.
+   393	- **The files** live under `poc/data/clean-control-reference-2026-11-17/`, and code refuses the frozen ruler's folder. The change of `kind` from
+   394	  asset/theme to figure/event is stated.
+   395	- **"The last judgement"** is the one with the highest `judgement_id`. The 2-item exclusion is kept as a guard.
+   396	
+   397	## 15a. Changes from version 4 (kept for the record)
+   398	
+   399	- **The leak check** is source-aware. It covers the judge's reason, reference, implied outcome and why_changed. It is tested on real inputs and on
+   400	  a planted leak, and a hit stops the build.
+   401	- **A manifest re-issued after any step** voids every dependent artifact, the signature and the frozen reference included.
+   402	- **The reader environments are closed and pinned:**
+   403	  - Codex runs with `--skip-git-repo-check`, memories off, and model and effort pinned;
+   404	  - Claude runs with no settings, no MCP, no tools and no slash commands, model pinned;
+   405	  - both were probed today, and each session's first event is checked against the manifest;
+   406	  - the void rule is now a closed set of events;
+   407	  - a slot with a completed or running session is not launched again.
+   408	- **The stripping rule follows D660's words:** the two quoted forms are removed and the unquoted no-reference note is kept and disclosed. The
+   409	  remainder equals `interval_text`. The facts are corrected: 3 stripped, 3 kept.
+   410	- **The schema:** `outcome_on_due_day` is absent for figures and null when no_view; the required texts are non-empty; the same scale slip by both
+   411	  readers is disclosed.
+   412	- **Signing:** agreed questions are confirmed by his one signature; disputed, invalid or unresolved questions need an explicit choice.
+   413	- **The items-only brief** is written (`control-items-brief.md`) for review.
+   414	- **The "always Yes" baseline is dropped,** for lack of a source. The baselines' sources are listed.
+   415	- **The c-ids follow `mapping-runs.json`'s order,** without q23.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba /Users/lchingen/hivemind/docs/DECISIONS-log.md | sed -n '9249,9273p'" in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+  9249	## D660 · 2026-11-17 · Alex: three rules of the new control-line reference, chosen after the orchestrator had seen the stored judgements; D658's option text recorded word for word
+  9250	
+  9251	- **D658's option, as shown to Alex,** word for word: "按新系统实际出的这 15 道题，重写一份标准答案（推荐）。请两组没参与造这个系统的审查者，用同样的材料各自独立作答。两组意见不一致的地方，逐条对照原文裁定。你看过、签字后冻结，再拿判答案那一步的结果去批一次。旧标准答案一字不动，几乎不花钱。"
+  9252	- **Asked** after the round-3 reviews of the design. Both families found that these choices move the score and were made after the orchestrator had
+  9253	  seen the stored judgements, so they are his.
+  9254	  1. **Event questions.** The system gives three outcomes (happened, formally ruled out, still open). The old comparison only splits yes and no, so
+  9255	     a "no" reference counts both "ruled out" and "still open" as right. The fact disclosed with the question: the orchestrator knows the judge chose
+  9256	     "still open" on the Kyber questions, so this rule moves the score; a strict three-way rule only makes passing harder.
+  9257	     - Options: the three outcomes must match (recommended); keep yes/no.
+  9258	     - **Alex: "三选一要一致 (Recommended)".**
+  9259	  2. **The system's quoted reference in the middle rung** (for example "Nvidia projects this could reach $1 trillion"). Delete it before readers see
+  9260	     the question?
+  9261	     - Options: delete (recommended): readers find the expectation in the material themselves, as the old reference was written, and do not share
+  9262	       the judge's anchor; keep it.
+  9263	     - **Alex: "删掉 (Recommended)".**
+  9264	  3. **Null baselines** (always the middle rung for figures, always "still open" for events).
+  9265	     - Options: reported beside the verdict, on the same questions, marked above or below (recommended); also a pass condition.
+  9266	     - **Alex: "只作对照，标出高低 (Recommended)".**
+  9267	- **Decided:**
+  9268	  - Events are compared on the three outcomes: the reference names the rung expected to hold on the due day, each rung's own condition governing,
+  9269	    and every question counts (no "cannot tell" exclusion, consistent with ruler-v1 §2: "一题一个区间，每题都算").
+  9270	  - The ladder step's quoted reference text is stripped from the rungs shown to readers. The rungs' bounds and conditions are otherwise unchanged.
+  9271	  - Baselines are reported only, each paired with the judge on its own available controls; the line's verdict stays D428's.
+
+exec
+/opt/homebrew/bin/zsh -lc "for f in review-v6/templates/*; do printf '\\nFILE %s\\n' \""'$f"; nl -ba "$f"; done' in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls
+ succeeded in 0ms:
+
+FILE review-v6/templates/ask-again-reasons.json
+     1	{
+     2	 "missing_key": "- `{key}` is missing.",
+     3	 "extra_key": "- `{key}` is not a key of the shape asked.",
+     4	 "wrong_type": "- `{key}` must be {expected}.",
+     5	 "empty_text": "- `{key}` must not be empty when `no_view` is false.",
+     6	 "low_above_high": "- `implied_outcome.low` must not be above `implied_outcome.high`.",
+     7	 "figure_fields": "- For this question `implied_outcome.low` and `implied_outcome.high` are numbers and `implied_outcome.yes_no` is null.",
+     8	 "event_fields": "- For this question `implied_outcome.yes_no` is true or false and `implied_outcome.low` and `implied_outcome.high` are null.",
+     9	 "direction": "- `direction` must be one of {allowed} for this question.",
+    10	 "outcome_label": "- `outcome_on_due_day` must be one of this question's rung labels: {labels}.",
+    11	 "outcome_consistent": "- `outcome_on_due_day` is \"Yes\" exactly when `implied_outcome.yes_no` is true.",
+    12	 "decisive_count": "- `decisive_items` must list 2 to 6 distinct item ids from the packet; it lists {count}.",
+    13	 "unknown_item": "- `{item}` is not an item id in the packet.",
+    14	 "duplicate_question": "- question {question_id} is answered more than once.",
+    15	 "missing_question": "- question {question_id} is not answered."
+    16	}
+
+FILE review-v6/templates/ask-again.md
+     1	# Asked again for one question
+     2	
+     3	Your answer for question {question_id} does not fit the shape asked above, for these reasons:
+     4	{reasons}
+     5	
+     6	Read question {question_id} and the packet again, and return one JSON object for question {question_id} only, every field, judged afresh, in the shape asked above, and nothing else. Do not read any file or run any command: everything you may use is in this message.
+
+FILE review-v6/templates/reader-output-instruction.md
+     1	# Output
+     2	
+     3	Return one JSON array containing exactly one object per question above, in the shape the brief gives, and nothing else. Two additions to that shape:
+     4	
+     5	1. `decisive_items` lists 2 to 6 distinct item ids from the packet.
+     6	2. For a question whose `unit` is `yes/no`, add the key `outcome_on_due_day`: the `label` of the one rung of that question that you expect to hold on its `due_day`, judged by each rung's own `condition`. It is "Yes" exactly when `implied_outcome.yes_no` is true. When `no_view` is true, set it to null. For a question whose `unit` is not `yes/no`, do not add this key.
+     7	
+     8	Do not read any file or run any command: everything you may use is in this message.
+
+FILE review-v6/templates/signing-summary.md
+     1	Control-line reference, version 1, for your signature: 15 questions, {agreed} agreed, {disputed} disputed, {unresolved} unresolved or invalid. The rules (D660): events are compared on their three outcomes; the system's quoted reference is removed from the rungs; the baselines are reported only. No answer of the system's judge appears on this page. Each disputed or unresolved question needs your choice; your signature confirms the agreed ones.
+     2	
+     3	对照标准答案第 1 版，请你签字：15 道题，其中 {agreed} 道两位审查者一致，{disputed} 道有分歧，{unresolved} 道未定或答卷不合格。规则（D660）："会不会发生"类题按三个选项比；题目里系统自己引的参照原话已删；闭眼乱选的成绩只作对照。本页不出现系统判答案那一步的任何答案。有分歧或未定的题每道都要你选；你签字即确认一致的那些。
+
+FILE review-v6/templates/third-reader.md
+     1	# Your task: a third reading of one question
+     2	
+     3	Two analysts answered the question above independently, from the same brief and packet you have above, and their answers disagree. They are shown below as Answer 1 and Answer 2, in an order drawn at random. Read the question and the packet yourself, then rule which answer the material supports:
+     4	- "1" when Answer 1 is the one the material supports;
+     5	- "2" when Answer 2 is;
+     6	- "neither" when the material supports neither; then give your own answer in the shape the brief gives, with the two additions above.
+     7	
+     8	Cite item ids for your ruling. Return one JSON object and nothing else:
+     9	{"question_id": "{question_id}", "ruling": "1" | "2" | "neither", "why": "two to four sentences, every claim with item ids", "answer": null or your own answer object}
+    10	
+    11	Do not read any file or run any command: everything you may use is in this message.
+    12	
+    13	## Answer 1
+    14	{answer_1}
+    15	
+    16	## Answer 2
+    17	{answer_2}
+
+codex
+**Version 6 is close, but two contracts still need tightening before the build.** The question lookup now follows the stored Stage B path, and the items brief uses the `c01`–`c15` IDs consistently. [Population](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:74), [items brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/control-items-brief.md:20).
+
+- **The leak check permits the text D660 says to remove.** Version 6 treats the unstripped choices as a permitted source for every participant-facing file. If a generator accidentally puts the removed quotation back into a reader prompt, the eight-word check will allow it because it exists in that source. Check each rendered reader question against the **stripped** question file; allow the removal record only on Alex’s signing page. The same per-stage contract should explicitly cover voided outputs, which the page must show even though the permitted-source list names only outputs that passed checks. [Leak check](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:119), [voided outputs](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:32), [D660](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9267).
+
+- **The third reader has no answer for a genuine unresolved choice.** “1,” “2,” and “neither” require the reader to select one answer or assert that neither is supported. If the material supports both different ranges, or the reader cannot distinguish them, the template forces a stronger conclusion than the material warrants. Add an explicit unresolved ruling for Alex, with the source-based reason. This does not exclude a control from the final reference: Alex still chooses at signing. [Third-reader template](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/templates/third-reader.md:3).
+
+The event instruction asks for the outcome expected on the due day and applies each choice’s condition; it does not steer toward a particular outcome and follows D660. The ask-again reasons describe shape failures without prescribing an answer, and the retry now has its own slot. [Event instruction](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/templates/reader-output-instruction.md:3), [retry rules](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:179).
+
+NOT READY: Check rendered reader questions against the stripped inputs and allow third readers to report an unresolved choice.
+tokens used
+177,415
+**Version 6 is close, but two contracts still need tightening before the build.** The question lookup now follows the stored Stage B path, and the items brief uses the `c01`–`c15` IDs consistently. [Population](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:74), [items brief](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/control-items-brief.md:20).
+
+- **The leak check permits the text D660 says to remove.** Version 6 treats the unstripped choices as a permitted source for every participant-facing file. If a generator accidentally puts the removed quotation back into a reader prompt, the eight-word check will allow it because it exists in that source. Check each rendered reader question against the **stripped** question file; allow the removal record only on Alex’s signing page. The same per-stage contract should explicitly cover voided outputs, which the page must show even though the permitted-source list names only outputs that passed checks. [Leak check](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:119), [voided outputs](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:32), [D660](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9267).
+
+- **The third reader has no answer for a genuine unresolved choice.** “1,” “2,” and “neither” require the reader to select one answer or assert that neither is supported. If the material supports both different ranges, or the reader cannot distinguish them, the template forces a stronger conclusion than the material warrants. Add an explicit unresolved ruling for Alex, with the source-based reason. This does not exclude a control from the final reference: Alex still chooses at signing. [Third-reader template](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/templates/third-reader.md:3).
+
+The event instruction asks for the outcome expected on the due day and applies each choice’s condition; it does not steer toward a particular outcome and follows D660. The ask-again reasons describe shape failures without prescribing an answer, and the retry now has its own slot. [Event instruction](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/templates/reader-output-instruction.md:3), [retry rules](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/review-v6/NEW-REFERENCE-DESIGN-v6.md:179).
+
+NOT READY: Check rendered reader questions against the stripped inputs and allow third readers to report an unresolved choice.

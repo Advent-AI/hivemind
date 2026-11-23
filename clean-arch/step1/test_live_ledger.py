@@ -1,0 +1,230 @@
+"""LiveTransport's optional shared ledger (WIRING-DESIGN.md §B2, D448): with a ledger, each attempt reserves before it is sent and
+settles at usage; without one, the transport is unchanged. Fake senders and a fake ledger only: no network, no credential."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path[:0] = [str(Path(__file__).resolve().parent), str(Path(__file__).resolve().parents[2] / 'src')]
+import live  # noqa: E402
+
+LIMITS = {'max_usd': 1.0, 'max_seconds': 3600, 'max_calls': 10, 'input_usd_per_million': 0.5, 'output_usd_per_million': 1.2}
+REQUEST = {'model': 'deepseek-flash', 'max_tokens': 64000,
+           'messages': [{'role': 'system', 'content': 'system text'}, {'role': 'user', 'content': 'user text ' * 200}],
+           'response_format': {'type': 'json_schema', 'json_schema': {'name': 'x', 'strict': True, 'schema': {'type': 'object'}}}}
+
+
+class FakeLedger:
+    def __init__(self, allow=True):
+        self.allow, self.reservations, self.settlements = allow, [], []
+
+    def reserve(self, amount):
+        self.reservations.append(amount)
+        return self.allow
+
+    def settle(self, reserved, actual):
+        self.settlements.append((reserved, actual))
+
+
+def recorder(response=None, error=None):
+    sent = []
+    def send(provider, request, timeout=None, max_attempts=None):
+        sent.append((provider, json.dumps(request), max_attempts))
+        if error:
+            raise error
+        return response if response is not None else {'choices': [], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 2000}}
+    return send, sent
+
+
+def test_the_request_sent_is_byte_identical_with_and_without_a_ledger():
+    plain_send, plain = recorder()
+    ledger_send, with_ledger = recorder()
+    for transport in (live.LiveTransport(LIMITS, send=plain_send), live.LiveTransport(LIMITS, send=ledger_send, ledger=FakeLedger())):
+        transport.reasoning_effort = 'high'
+        transport('deepseek', REQUEST)
+    assert plain == with_ledger and plain[0][2] == 1
+
+
+def test_each_attempt_reserves_then_settles_at_usage():
+    ledger = FakeLedger()
+    send, _ = recorder()
+    transport = live.LiveTransport(LIMITS, send=send, ledger=ledger)
+    transport('deepseek', REQUEST)
+    transport('deepseek', REQUEST)
+    assert len(ledger.reservations) == 2 and len(ledger.settlements) == 2
+    reserved, actual = ledger.settlements[0]
+    assert reserved == ledger.reservations[0] and abs(actual - (1000 * 0.30 + 2000 * 1.20) / 1e6) < 1e-15
+
+
+def test_a_refused_reservation_sends_nothing():
+    send, sent = recorder()
+    transport = live.LiveTransport(LIMITS, send=send, ledger=FakeLedger(allow=False))
+    with pytest.raises(ValueError, match='live run limit reached before send'):
+        transport('deepseek', REQUEST)
+    assert sent == []
+
+
+def test_a_failed_send_settles_at_its_reservation():
+    ledger = FakeLedger()
+    send, _ = recorder(error=RuntimeError('dropped'))
+    with pytest.raises(RuntimeError):
+        live.LiveTransport(LIMITS, send=send, ledger=ledger)('deepseek', REQUEST)
+    assert ledger.settlements == [(ledger.reservations[0], ledger.reservations[0])]
+
+
+def test_missing_usage_settles_at_its_reservation():
+    ledger = FakeLedger()
+    send, _ = recorder(response={'choices': []})
+    live.LiveTransport(LIMITS, send=send, ledger=ledger)('deepseek', REQUEST)
+    assert ledger.settlements[0][1] == ledger.reservations[0]
+
+
+def test_the_call_and_time_limits_hold_with_a_ledger():
+    send, _ = recorder()
+    transport = live.LiveTransport(dict(LIMITS, max_calls=1), send=send, ledger=FakeLedger())
+    transport('deepseek', REQUEST)
+    with pytest.raises(ValueError, match='live run limit reached before send'):
+        transport('deepseek', REQUEST)
+    clock = iter([0.0, 7200.0])
+    late = live.LiveTransport(LIMITS, send=send, ledger=FakeLedger(), clock=lambda: next(clock))
+    with pytest.raises(ValueError, match='live run limit reached before send'):
+        late('deepseek', REQUEST)
+
+
+def test_without_a_ledger_the_cumulative_dollar_cap_still_holds():
+    send, _ = recorder()
+    transport = live.LiveTransport(dict(LIMITS, max_usd=0.05), send=send)
+    with pytest.raises(ValueError, match='live run limit reached before send'):
+        transport('deepseek', REQUEST)
+    with_ledger = live.LiveTransport(dict(LIMITS, max_usd=0.05), send=send, ledger=FakeLedger())
+    with_ledger('deepseek', REQUEST)        # the ledger, not max_usd, decides
+
+
+def network_error(status=None):
+    from hivemind import model
+    error = model.TransportError('IncompleteRead(36144 bytes read)' if status is None else f'HTTP {status}')
+    if status is not None:
+        error.http_status = status
+    return error
+
+
+def scripted(outcomes):
+    """A fake sender returning or raising the given outcomes in order; records each send's max_attempts."""
+    sent = []
+    def send(provider, request, timeout=None, max_attempts=None):
+        sent.append(max_attempts)
+        outcome = outcomes[len(sent) - 1]
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return outcome
+    return send, sent
+
+
+ANSWER = {'choices': [], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 2000}}
+
+
+def test_a_network_loss_is_sent_again_and_every_attempt_is_reserved_and_settled():
+    """NETWORK-RETRY-DESIGN.md: a dropped connection no longer ends the step; each attempt is its own reservation (D448)."""
+    ledger, waits = FakeLedger(), []
+    send, sent = scripted([network_error(), network_error(503), ANSWER])
+    transport = live.LiveTransport(LIMITS, send=send, ledger=ledger, wait=waits.append)
+    assert transport('deepseek', REQUEST) is ANSWER
+    assert sent == [1, 1, 1] and waits == [30, 60]
+    assert len(ledger.reservations) == 3 and len(ledger.settlements) == 3
+    assert ledger.settlements[0] == (ledger.reservations[0], ledger.reservations[0])
+    assert ledger.settlements[1] == (ledger.reservations[1], ledger.reservations[1])
+    assert len(transport.network_errors) == 2 and 'attempt 1' in transport.network_errors[0]
+
+
+def test_an_http_error_that_is_not_a_network_loss_is_not_sent_again():
+    from hivemind import model
+    send, sent = scripted([network_error(400), ANSWER])
+    with pytest.raises(model.TransportError):
+        live.LiveTransport(LIMITS, send=send, ledger=FakeLedger(), wait=lambda seconds: None)('deepseek', REQUEST)
+    assert sent == [1]
+
+
+def test_three_network_losses_raise_after_three_sends():
+    from hivemind import model
+    send, sent = scripted([network_error(), network_error(), network_error(), ANSWER])
+    ledger = FakeLedger()
+    with pytest.raises(model.TransportError):
+        live.LiveTransport(LIMITS, send=send, ledger=ledger, wait=lambda seconds: None)('deepseek', REQUEST)
+    assert sent == [1, 1, 1] and len(ledger.settlements) == 3
+
+
+def test_a_resend_is_refused_by_the_call_limit_not_swallowed():
+    send, sent = scripted([network_error(), ANSWER])
+    transport = live.LiveTransport(dict(LIMITS, max_calls=1), send=send, ledger=FakeLedger(), wait=lambda seconds: None)
+    with pytest.raises(ValueError, match='live run limit reached before send'):
+        transport('deepseek', REQUEST)
+    assert sent == [1]
+
+
+# The bound on a call's wait (D552): a silent connection must time out and be retried, not hold the run until its own limit.
+
+def timeouts_seen(clock=None):
+    seen = []
+    def send(provider, request, timeout=None, max_attempts=None):
+        seen.append(timeout)
+        return {'choices': [], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 2000}}
+    return send, seen
+
+
+def test_a_call_waits_at_most_the_bound_however_long_the_run_may_still_last():
+    send, seen = timeouts_seen()
+    limits = dict(LIMITS, max_seconds=28800)
+    live.LiveTransport(limits, send=send)('deepseek', REQUEST)
+    assert seen == [live.CALL_WAIT_SECONDS] and live.CALL_WAIT_SECONDS == 600
+
+
+def test_a_run_with_less_time_left_than_the_bound_gives_the_call_only_that():
+    send, seen = timeouts_seen()
+    moments = iter([0.0, 3500.0])                                   # the transport's start, then the moment of the send
+    live.LiveTransport(LIMITS, send=send, clock=lambda: next(moments))('deepseek', REQUEST)
+    assert seen == [100.0]
+
+
+def test_a_connection_that_times_out_is_a_network_loss_sent_again_on_the_ledger():
+    from hivemind import model
+    ledger, waits, calls = FakeLedger(), [], []
+    def send(provider, request, timeout=None, max_attempts=None):
+        calls.append(timeout)
+        if len(calls) == 1:
+            raise model.TransportError('timed out')                # what model.openai_transport raises for a socket timeout
+        return {'choices': [], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 2000}}
+    transport = live.LiveTransport(LIMITS, send=send, ledger=ledger, wait=waits.append)
+    transport('deepseek', REQUEST)
+    assert len(calls) == 2 and waits == [30] and len(ledger.reservations) == 2
+    assert ledger.settlements[0][0] == ledger.settlements[0][1]      # the lost attempt is charged its whole reservation
+    assert transport.network_errors and 'timed out' in transport.network_errors[0]
+
+
+def test_the_real_send_turns_a_socket_timeout_into_an_error_with_no_http_status(monkeypatch):
+    import urllib.request
+    from hivemind import model
+    given = []
+    def silent(request, timeout=None):
+        given.append(timeout)
+        raise TimeoutError('timed out')
+    monkeypatch.setattr(urllib.request, 'urlopen', silent)
+    monkeypatch.setattr(model, '_key', lambda *arguments: 'test-placeholder-not-a-credential')
+    with pytest.raises(model.TransportError) as raised:
+        model.openai_transport('deepseek', REQUEST, timeout=600, max_attempts=1)
+    assert given == [600] and getattr(raised.value, 'http_status', None) is None and live.is_network_loss(raised.value)
+
+
+def test_a_timed_out_resend_is_refused_by_the_ledger_not_sent():
+    from hivemind import model
+    class OneReservation(FakeLedger):
+        def reserve(self, amount):
+            self.reservations.append(amount)
+            return len(self.reservations) == 1
+    ledger, calls = OneReservation(), []
+    def send(provider, request, timeout=None, max_attempts=None):
+        calls.append(timeout)
+        raise model.TransportError('timed out')
+    with pytest.raises(ValueError, match='the shared ledger refused'):
+        live.LiveTransport(LIMITS, send=send, ledger=ledger, wait=lambda seconds: None)('deepseek', REQUEST)
+    assert len(calls) == 1

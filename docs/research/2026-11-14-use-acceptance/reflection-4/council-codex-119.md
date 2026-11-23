@@ -1,0 +1,7 @@
+**Yes: version 9 is ready for the $0 proof build.** It no longer claims to detect an A → B → A swap, and it gives the hard-link and WAL-sidecar case a concrete refusal and test. [Operating contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:137).
+
+One wording qualification: §9 says new stored data gets a new dated name; the prohibition on replacing a path while it may be in use is the contract’s **operating precondition**, supported by that rule, rather than its exact wording. The proof should report that the checks detect the specified single replacements; it cannot prove the excluded A → B → A case safe. [AGENTS §9](/Users/lchingen/hivemind/AGENTS.md:421), [proof plan](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:220).
+
+The proof must also exercise hard-link refusal at each named entry point and compare the symlink and original-path copies while committed data remains in the WAL, as written. P1 remains a proposed decision; this agreement covers test stores, not live operation. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:172).
+
+CONSENSUS: yes

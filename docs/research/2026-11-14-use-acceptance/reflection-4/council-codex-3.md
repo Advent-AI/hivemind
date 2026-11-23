@@ -1,0 +1,20 @@
+**I agree with the direction and the revised answers to Alex. The pilot needs four concrete adjustments before it is built.**
+
+1. **Include the controls and completeness cases deliberately.** A random selection of six of seven new-system questions could omit one of the three D508 questions. Include those three first, then randomly select the other three. Include at least one independently checked supported control among the six old-system questions; otherwise the pilot cannot report whether Alex accepted a sound control. Publish the selection rule and seed before drawing. The old system’s controls include two that one reader disputed, so keep those disagreements visible after the blind reading. [Fresh-week result]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md:66), [D508 census]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-class/CLASS-CENSUS-RESULT.md)
+
+2. **Show the material needed for the exact judgement being compared.** The existing support marks were made against what the judge was shown, not only its cited passages. Put the cited passages on the card and make the **complete request and sources accessible**, so Alex can assess the same question; report any mark made without inspecting the full material separately. Verify that each planted answer has the same material and answer choices it had in its original control, and that no matching real card reveals the plant. [Fresh-week result]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md:66)
+
+3. **Separate relevance from changed answers on the three completeness sheets.** D508 established that two fresh readers found the facts relevant and absent; it did **not** establish that they change the answer. Ask Alex first whether each fact bears on the question, then whether it would change the answer, confidence, neither, or whether he cannot tell. Present the full judgement request and date with each sheet, and identify the independently checked negative control in the sealed key. On all other cards, completeness remains **not assessed**. [D508 result]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-class/CLASS-CENSUS-RESULT.md), [D511 effect test]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md)
+
+4. **Treat the stopping signals as diagnostic, not as a calibrated pass line.** Three repeats and two wrong answers are too few to establish an error rate. Two repeat disagreements or two missed plants should trigger investigation and redesign, but even perfect marks would not prove reliability. Record the elapsed time and where it went; exceeding half an hour may mean shortening the packet or changing the unit, rather than automatically proving the unit wrong.
+
+For the **two “no question” cards**, show the matter and source, but mark answer support **not applicable**. Keep the model families’ original marks and their scope attached to each card: their prior question-worth and support readings did not necessarily judge the same completeness sheets or planted-answer selection.
+
+Two wording refinements for Alex:
+
+- The week had **235 articles, 232 previously unsent**. Say “a fresh-week stored comparison,” rather than implying every article was unseen. [Week result]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md:8)
+- Say the July end-to-end result **could not rank the systems at that size and under that matching rule**. Its spread does not prove that no end-to-end comparison could rank them. [Comparison sizing]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/comparison/COMPARISON-SIZING.md)
+
+The pilot can be prepared from stored material without new model calls. The **$0 label excludes Alex’s time and any unpriced preparation work**. It would produce an inspectable set of disagreements and control outcomes, not a winner, a general usable share, or a replacement for the frozen reference.
+
+**CONSENSUS: yes**

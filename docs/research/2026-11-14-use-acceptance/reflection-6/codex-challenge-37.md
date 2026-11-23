@@ -1,0 +1,10 @@
+**The handoff is neutral in intent, but it is not yet ready to launch.** The README should call it a prepared draft until the missing checks and run handling are completed.
+
+- **The required preflight is absent.** Replay the stored Stage A answers through the current checks and report what was judged, refused or unexercised. The five listed files contain no preflight result.
+- **A stopped run exits successfully.** [The launcher](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/gate1-candidate/gate1_candidate.py>) prints the stop and returns; the [original Stage A entry point](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/stage_a.py:242>) exits with `NOT MEASURED`. Preserve that behavior and test it. Test both configurations through the fake transport.
+- **Correct the README.** A2 is more than one added sentence: it also changes how the topic’s wording is read and aligns the closing check. The combined A2-plus-v2 configuration is unmeasured. The approximately $9.04 cap is an estimate that allows two reserves alongside expected spend, **not a guarantee of completion**. Name the unchanged six-line reading and scoring procedure, including its missing-reading rules.
+- **The authorization file is a procedural guard**, not proof that Alex wrote it. The launcher checks its contents, not their origin.
+
+The [mutant record](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/gate1-candidate/mutants.txt>) says Claude Code’s automatic permission review rejected the scratch-mirror operation because it involved deleting and recopying folders. The guards’ mutant checks therefore remain unverified; the page should say so until they are checked.
+
+CONSENSUS: no, because the handoff needs preflight, stopped-run handling, fuller fake-transport verification and corrected wording before it is presented as ready.

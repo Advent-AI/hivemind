@@ -1,0 +1,443 @@
+2026-11-09T02:27:25.778812Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+2026-11-09T02:27:25.785121Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1bde6-88ee-7fe2-b771-854ce4bf476d
+--------
+user
+Re-read final files probe_send.py, probe_prepare.py, independent_check.py, integration_check.py, registration.json, and EXPERIMENT-DESIGN.md. User explicitly authorizes this isolated probe. We addressed all previously identified blockers: required set and checked SHA of 16 source/code/design/manifest inputs, 185-case and independent check send gates, actual fake urlopen one-attempt lost-reply journal/restart test, only stop on failure. Verify only consequential issues and judge READY / NOT READY for live 66-call probe; no edits or paid calls. Cite evidence. The blind packets are already constructed and are pre-outcome.
+
+2026-11-09T02:27:30.975290Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+2026-11-09T02:28:30.492724Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+codex
+我会核对最终登记、发送前检查和模拟中断测试是否与实际发送路径一致，再给出是否可以运行的结论。审查只读，不会发起付费调用。
+exec
+/opt/homebrew/bin/zsh -c 'cat -n EXPERIMENT-DESIGN.md' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c 'cat -n integration_check.py' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c 'cat -n probe_send.py' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c 'cat -n independent_check.py' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c 'cat -n probe_prepare.py' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c 'cat -n registration.json' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+ succeeded in 0ms:
+     1	import hashlib,importlib.util,json,tempfile
+     2	from pathlib import Path
+     3	H=Path(__file__).resolve().parent;s=importlib.util.spec_from_file_location('probe_sender',H/'probe_send.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+     4	reg={name:hashlib.sha256((H/name).read_bytes()).hexdigest() for name in m.REQUIRED};m.verify_registration(reg)
+     5	for mode in ['empty','missing','changed']:
+     6	 r=dict(reg)
+     7	 if mode=='empty':r={}
+     8	 if mode=='missing':r.pop(next(iter(r)))
+     9	 if mode=='changed':r[next(iter(r))]='0'*64
+    10	 try:m.verify_registration(r)
+    11	 except ValueError:print('registration control caught:',mode)
+    12	 else:raise AssertionError(mode)
+    13	manifest=json.loads((H/'probe-manifest.json').read_text());attempts=[];original_urlopen=m.urllib.request.urlopen;original_key=m.jev._key
+    14	try:
+    15	 m.jev._key=lambda:'fake-key'
+    16	 def lost(req,timeout):attempts.append(req);raise OSError('lost reply after dispatch')
+    17	 m.urllib.request.urlopen=lost
+    18	 with tempfile.TemporaryDirectory() as tmp:
+    19	  dest=Path(tmp)/'probe';rc=m.execute(manifest[:1],dest,reg,m.single_attempt)
+    20	  if rc!=1 or len(attempts)!=1:raise AssertionError('failure did not stop after one attempt')
+    21	  events=[json.loads(x) for x in (dest/'events.jsonl').read_text().splitlines()]
+    22	  if [x['status'] for x in events]!=['dispatching','failed_or_ambiguous']:raise AssertionError('bad ambiguity journal')
+    23	  try:m.execute(manifest[:1],dest,reg,m.single_attempt)
+    24	  except FileExistsError:pass
+    25	  else:raise AssertionError('restart allowed')
+    26	  if len(attempts)!=1:raise AssertionError('restart sent an extra call')
+    27	  print('integration: lost response produced one attempt, ambiguous event, stop and restart refusal')
+    28	finally:
+    29	 m.urllib.request.urlopen=original_urlopen;m.jev._key=original_key
+
+ succeeded in 0ms:
+     1	# Step 2 score experiment — design for review
+     2	
+     3	Alex asks whether sending embedding similarity to Jev helps, given existing high retrieval recall and merge quality. This is an isolated fixed-history diagnostic, not a product change, adoption, a fresh held-out acceptance, or a comparison of search recall. Prior recorded acceptance 141/143 is search recall, 1/57 clearly wrong merges is not recall of Jev's repeat decisions. The fresh frozen reference and old labels do not change. Start with 11 archived c8 fresh comparison requests, selected before sending, covering the clearly wrong merge, disputed overlaps, accepted repeats, and new-evidence controls: `22:ev-11`, `13:e11`, `38:ev-2`, `18:e2`, `43:e3`, `3:e1`, `9:e6`, `14:e3`, `5:e1`, `9:e1`, `19:ev-guidance-70`. Two arms times three draws = 66 calls, with the original candidate sets and state fixed. This is a selected diagnostic and cannot measure overall precision or recall. A larger comparison is considered only if the cheap probe reveals a useful signal (AGENTS §7.3); the raw articles are already used, so neither probe is fresh acceptance.
+     4	
+     5	## What is sent and why
+     6	
+     7	C control: exact archived model/state/questions. T: each candidate instruction adds a newline and factual metadata: `Retrieval metadata (not part of the stored piece; cosine, not a probability): query 1 [thesis search]: 0.xxxx; query 2 [own-text search]: 0.xxxx`. Each query corresponds in order to the existing caller's query_vectors; its label and query type are made explicit without disclosing thesis text otherwise not sent. Include a score for each query, including non-retrieving queries; retrieval origins are recorded in the manifest, not sent. Jev returns no textual reasoning, so do not infer why its choice changes. Query type labels expose information C did not have, so any observed effect is the joint effect of score metadata and labels. No shuffled-score arm: it would describe intentionally incorrect scores as real, and its interpretation as a formatting control is uncertain. The test compares the practical intervention of adding real scores against the current request; it does not establish how Jev uses the numbers. Freeze this representation; do not infer importance from cosine or set thresholds. Decimal precision 4, cosine computed with existing compare.py and cached exact text vectors. Retrieval always uses original queries, no candidate changes. User requests testing this candidate, not deployment or any new rule.
+     8	
+     9	## State × event
+    10	
+    11	| Event | State and action | Date/time |
+    12	|---|---|---|
+    13	| Preflight | Read archives read-only; use the separate offline census for all 185 request bytes and answers, then reconstruct the 11 selected cases and their historical candidate lists; compare identity and score reconstruction. Abort on missing keys, candidates, requests or inconsistent data. | No wall-clock data in requests |
+    14	| First send | Separate research archive for each arm/draw; interleave all 6 requests per case in fixed seeded order; fresh transport, no archived cache hit. | Same day for all arms; timestamps metadata only |
+    15	| Transport failure | Record actual error; exactly one transport attempt; a lost reply remains ambiguous and the experiment stops; no replacement or analysis as different. | No date decision |
+    16	| Crash or interruption | Journal dispatch with flush and fsync; on any interruption stop and inspect, with no automatic resume or re-send. A dispatch without completion is ambiguous. | Save identifiers, not wall-clock ordering |
+    17	| Completed response | Validate with current Jev validator; record raw response and costs; malformed/refusal stops case and is reported. | Original dates stay unchanged |
+    18	| Analysis | Compare each request on fixed original library; no advance to newly grouped state; reviewed changes and controls with source, not self-scorer claims. | Historical source dates preserved |
+    19	| Later run/config change/another writer/two scopes | Refuse existing output on rerun absent exact frozen manifest and explicit resume; do not access live data or concurrent Step 1 writes. Different scopes use different research directories and archives. | No runtime time used as identity |
+    20	
+    21	## Values × readers
+    22	
+    23	| Value | Origin | Reader | Consequence |
+    24	|---|---|---|---|
+    25	| query and record text | saved Step 1 trace | existing query construction, Jev | Preserve bytes and record identity |
+    26	| query-to-group cosine | cached embeddings and current cosine | T Jev question only | Keep query provenance; numeric score is not truth |
+    27	| Jev choice/probabilities | model per candidate | original outcome function | Compare same candidate ids and code; no probability gate |
+    28	| group outcome | original outcome | read-only analysis and blind readers | Compare mergers, target group, revisions and omissions, including changed outcomes and controls |
+    29	| article and source | archived Step 1 input | independent blind reader | Judge whether actual statements are same, revised, or different; no score/arm/model decision shown |
+    30	| cost/failure | archives | report | Never infer zero from missing response |
+    31	
+    32	## New path × old checks
+    33	
+    34	| Check | C | T |
+    35	|---|---|---|
+    36	| model, state, candidate order, choice criteria | exact archive equality | identical, only question text lines appended |
+    37	| request JSON identity | equal per archived request | first strip appended metadata, equals original |
+    38	| score alignment | not sent | raw values recomputed against exact query and candidate; reconstructed historical top-ten union and origin membership must equal saved candidate sequence |
+    39	| Jev choice set and probability validation | current validator | same validator |
+    40	| missing input / empty population | refuse | refuse |
+    41	| stored historical answers | replay baseline 185 exact requests/answers without live calls | original answer passes current validator |
+    42	| outcome function | original candidates and order | same; group state frozen |
+    43	| unrelated later-link Jev calls | excluded | excluded |
+    44	
+    45	## Acceptance and analysis
+    46	
+    47	1. Report every request, candidate, transport failure, cost and baseline variability. Quantify disagreements C vs T and change in wrong merges, missed repeats, revisions and target group, by request, comparing the three draws in each arm. Score-sensitivity is not proof of accuracy. No search recall improvement can be attributed to this intervention because search is held fixed.
+    48	2. As Jev and saved references are incomplete, blind readers inspect all eleven incoming records against their full candidate sets and source articles, including unchanged cases. Candidate order is randomized; scores, arm labels, retrieval rank and model decisions are hidden. Two independent reviews and adjudication of disagreements; do not use a new score program as semantic judge. If workload exceeds available reviewer context, partition into bounded batches and report coverage.
+    49	3. The original fresh run returned 3 supersedes answers attached to repeat outcomes; it did not exercise a standalone revision outcome. One selected case has a supersedes decision, so describe it as an individual diagnostic, not revision performance. A separate case set of documented real revisions may be read and assessed; it cannot stand in for the full product path.
+    50	4. One draw can expose mechanism; 3 same-day control draws characterize instability, not guarantee statistical power. State the counts and losses; no unregistered win threshold. Effect would justify a later separately approved, forward full-path validation; no effect is not proof of equivalence. Predeclare a compact decision before send with council, not after output.
+    51	
+    52	## Prior decisions and limits
+    53	
+    54	D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+    55	
+    56	## Probe prediction and stop
+    57	
+    58	Hypothesis: score information moves at least one relevant comparison and makes at least one source-backed decision better without a source-backed decision getting worse. Prediction: the clearly wrong X22 grouping becomes separate more often in T than C, while the selected accepted-repeat controls remain correctly grouped. We do not predict a perfect result. Predeclare individual decision comparisons, 3 samples per arm and show all 66 outcomes and errors. For each outcome and selected source-backed candidate, count correct and incorrect choices across three draws per arm. A repeatable improvement requires at least one agreed previously incorrect decision to become correct in at least 2 of 3 T draws and fewer than 2 of 3 C draws, with no agreed previously correct decision becoming wrong in at least 2 of 3 T draws while correct in at least 2 of 3 C draws. A repeatable regression stops the line. If neither occurs or independent readers disagree, report inconclusive. This is a screening rule for selected examples, not a quantitative estimate of product impact. Blind-read all eleven incoming records against all their candidate sets and source articles, including unchanged controls; report gaps. Register case ids and score mapping and historical top-ten replay before any send; send no paid calls until council review and preflight pass.
+    59	
+    60	## Review amendments and exact contract
+    61	
+    62	The read-only Codex reviewer cleared harness design but not sending. Claude reviewed the earlier 10-case/three-arm draft and found lack of revision coverage, unsupported X22 direction and number presentation ambiguity; an eleventh recorded revision-bearing case was added. Its conclusion that 40 borderline probabilities bound opportunity is a hypothesis; confident outputs can also be wrong. The X22 prediction is a falsifiable probe hypothesis, not evidence of likely improvement. The shuffled arm is removed due to false attribution; C versus T assesses the total intervention, not score causation.
+    63	
+    64	Literal metadata is appended after a newline: `Retrieval metadata (not part of the stored piece; cosine, not a probability): query 1 [thesis search]: 0.1234; query 2 [own-text search]: 0.5678`. Four-decimal Python formatting. The label is `thesis search` for every thesis query, `own-text search` for the extra document query, never the thesis content. One score per query against each candidate group's original. Do not claim all queries retrieved that candidate. The manifest records all query identities, full top-ten lists, origin query indices per candidate, all vectors' computed scores and union order. Reconstruct the pre-article group order by replaying saved outcomes article by article, with no same-article visibility, and require union order and saved answer outcome to match all selected cases; fail on missing input. The manifest and source request/answer identities and case list are frozen with hashes before send.
+    65	
+    66	Negative controls: mutate a query vector, candidate score, candidate id, and retrieval origin separately; each must trigger the independent check. A known multi-query case must have every query and origin checked, not only the union. A fake transport must pass 3 separate control draws with 3 calls, fail a malformed response and cover interruption; a missing input and empty population must fail. If an actual send ends ambiguously after dispatch, record it as unresolved and do not silently resend it; incomplete calls are not success. The experiment transport makes exactly one attempt, including after a dropped reply; no retries.
+    67	
+    68	Readers independently classify each new-versus-old statement as same / revision / different / overlapping / unable to decide, using both source articles. Candidate order is shuffled in the reading packet. A multiple-target repeat is acceptable if any source-supported candidate is selected; a revision link must itself be supported; a missing supported revision and a wrong extra revision are errors separately from grouping. Overlap or absent source makes that pair unresolved; it cannot establish improvement or regression. Resolve disagreements by a third reader, and report unresolved without counting correct or wrong. Each of the six draws per case is scored against the same frozen blinded judgments; evaluate repeat target and revision links, not only outcome kind. If model failures or blind review coverage prevent a comparison, report incomplete, never success.
+
+ succeeded in 0ms:
+     1	"""Isolated Jev probe; offline checks by default, live only with --send."""
+     2	import hashlib,importlib.util,json,random,sys,tempfile,os,urllib.request,subprocess
+     3	from pathlib import Path
+     4	from types import SimpleNamespace
+     5	HERE=Path(__file__).resolve().parent; ROOT=Path('/Users/lchingen/hivemind');sys.path.insert(0,str(ROOT/'src'))
+     6	spec=importlib.util.spec_from_file_location('prepare',HERE/'probe_prepare.py');prep=importlib.util.module_from_spec(spec);spec.loader.exec_module(prep)
+     7	from hivemind import jev,model
+     8	REQUIRED=['EXPERIMENT-DESIGN.md','probe_prepare.py','probe_send.py','independent_check.py','integration_check.py','inspect_saved.py','probe-manifest.json','../../clean-arch/step2/compare.py','../../clean-arch/step2/run_forward.py','../../clean-arch/step3/library.py','../../src/hivemind/jev.py','../../src/hivemind/model.py','../../poc/data/clean-acceptance-2026-11-09/step1/trace.sqlite','../../poc/data/clean-acceptance-2026-11-09/step2/decisions.json','../../poc/data/clean-acceptance-2026-11-09/step2/embeddings.json','../../poc/data/clean-acceptance-2026-11-09/step2/jev.sqlite']
+     9	CONFIG=SimpleNamespace(version='clean-step2-score-probe',checksum='experimental');SETTING=prep.run.SETTING
+    10	
+    11	def ask(archive,req,transport=None):
+    12	 return jev.ask(archive,CONFIG,SETTING,req['state'],req['questions'],'clean_step2_score_probe',transport=transport)
+    13	
+    14	def single_attempt(req):
+    15	 body=json.dumps(req,sort_keys=True,ensure_ascii=False).encode('utf-8')
+    16	 key=jev._key()
+    17	 request=urllib.request.Request(jev.ENDPOINT,body,{'Authorization':'Bearer '+key,'Content-Type':'application/json','Accept':'application/json'})
+    18	 with urllib.request.urlopen(request,timeout=60) as response: raw=response.read()
+    19	 if key.encode('utf-8') in raw:raise RuntimeError('credential echoed')
+    20	 return json.loads(raw.decode('utf-8'))
+    21	
+    22	def fake_checks(manifest):
+    23	 example=manifest[0];calls=[]
+    24	 def fake(req):calls.append(req);return {'answers':example['old_answers'],'usage':{'input_tokens':10,'output_tokens':0}}
+    25	 with tempfile.TemporaryDirectory() as directory:
+    26	  for n in range(3):
+    27	   ar=model.Archive(str(Path(directory)/f'{n}.sqlite')); answer=ask(ar,example['control'],fake)
+    28	   if answer.cached:raise AssertionError('unexpected cache hit')
+    29	   ar.conn.close()
+    30	  if len(calls)!=3:raise AssertionError('not three independent fake calls')
+    31	  interrupted=Path(directory)/'interrupted'; interrupted.mkdir()
+    32	  try:interrupted.mkdir(exist_ok=False)
+    33	  except FileExistsError:pass
+    34	  else:raise AssertionError('unsafe restart after interrupted dispatch')
+    35	  ar=model.Archive(str(Path(directory)/'lost.sqlite'));lost=[]
+    36	  def lost_reply(req):lost.append(req);raise OSError('simulated lost reply')
+    37	  try:ask(ar,example['control'],lost_reply)
+    38	  except OSError:pass
+    39	  else:raise AssertionError('lost reply accepted')
+    40	  if len(lost)!=1:raise AssertionError('lost reply retried')
+    41	  ar.conn.close()
+    42	  ar=model.Archive(str(Path(directory)/'bad.sqlite'))
+    43	  try:ask(ar,example['control'],lambda req:{'answers':{},'usage':{}})
+    44	  except model.SchemaError:pass
+    45	  else:raise AssertionError('malformed answer accepted')
+    46	  ar.conn.close()
+    47	 print('fake transport: 3 separate cache misses, malformed answer refused, lost reply attempted once, interrupted run refuses restart')
+    48	
+    49	def verify_registration(registration):
+    50	 if set(registration)!=set(REQUIRED):raise ValueError('registration population mismatch')
+    51	 for name,expected in registration.items():
+    52	  if hashlib.sha256((HERE/name).read_bytes()).hexdigest()!=expected:raise ValueError('registration hash changed: '+name)
+    53	
+    54	def execute(manifest,dest,registration,transport):
+    55	 dest.mkdir(exist_ok=False); (dest/'registration.json').write_text(json.dumps(registration,indent=2)+'\n'); order=[]
+    56	 for item in manifest:
+    57	  plan=[(arm,draw) for arm in ('control','treatment') for draw in range(3)];random.Random(42031+len(order)).shuffle(plan);order += [(item['id'],arm,draw) for arm,draw in plan]
+    58	 (dest/'plan.json').write_text(json.dumps(order,indent=2)+'\n'); data={x['id']:x for x in manifest}; archives={(arm,n):model.Archive(str(dest/f'{arm}-{n}.sqlite')) for arm in ('control','treatment') for n in range(3)}
+    59	 with (dest/'events.jsonl').open('x',buffering=1) as out:
+    60	  for i,(key,arm,draw) in enumerate(order):
+    61	   req=data[key][arm];event={'id':key,'arm':arm,'draw':draw,'sequence':i,'request_sha256':prep.digest(req)}
+    62	   out.write(json.dumps({**event,'status':'dispatching'})+'\n');out.flush();os.fsync(out.fileno())
+    63	   try:
+    64	    res=ask(archives[arm,draw],req,transport)
+    65	    if res.cached:raise RuntimeError('unexpected cached result')
+    66	    out.write(json.dumps({**event,'status':'complete','answers':res.data,'input_tokens':res.input_tokens,'cost_usd':res.cost_usd})+'\n');out.flush();os.fsync(out.fileno())
+    67	   except Exception as e:
+    68	    out.write(json.dumps({**event,'status':'failed_or_ambiguous','error':type(e).__name__})+'\n');print('Stopped on incomplete request',i,key,arm,draw,type(e).__name__,flush=True);return 1
+    69	   print(f'{i+1}/{len(order)} {key} {arm} draw {draw+1}',flush=True)
+    70	 (dest/'complete').write_text('complete\n')
+    71	 for a in archives.values():a.conn.close()
+    72	 return 0
+    73	
+    74	def main():
+    75	 manifest=json.loads((HERE/'probe-manifest.json').read_text());prep.check(manifest,prep.build());fake_checks(manifest)
+    76	 if sys.argv[1:]!=['--send']:
+    77	  if sys.argv[1:]:raise SystemExit('usage: probe_send.py [--send]')
+    78	  return
+    79	 registration=json.loads((HERE/'registration.json').read_text());verify_registration(registration)
+    80	 subprocess.run([sys.executable,str(HERE/'inspect_saved.py')],check=True,stdout=subprocess.DEVNULL)
+    81	 subprocess.run([sys.executable,str(HERE/'independent_check.py')],check=True)
+    82	 subprocess.run([sys.executable,str(HERE/'integration_check.py')],check=True)
+    83	 verify_registration(registration)
+    84	 return execute(manifest,HERE/'live-probe',registration,single_attempt)
+    85	if __name__=='__main__':raise SystemExit(main() or 0)
+
+ succeeded in 0ms:
+     1	"""Independent validation of stored scores and candidate ordering, with mutants."""
+     2	import copy,importlib.util,json,math,sys
+     3	from pathlib import Path
+     4	HERE=Path(__file__).resolve().parent;ROOT=Path('/Users/lchingen/hivemind');sys.path.insert(0,str(ROOT/'src'))
+     5	s=importlib.util.spec_from_file_location('preparer',HERE/'probe_prepare.py');p=importlib.util.module_from_spec(s);s.loader.exec_module(p)
+     6	def check(manifest,vectors):
+     7	 if not manifest or not vectors:raise ValueError('empty data')
+     8	 articles,questions,_=p.run.step1_records(str(p.SOURCE/'step1/trace.sqlite'));records={r['id']:r for a in articles for r in a};saved=json.loads((p.STEP/'library.json').read_text()); groups=saved['groups']; checked=0
+     9	 for item in manifest:
+    10	  rec=records[item['id']];keys=[p.cmp.query_text(rec,questions[t]) for t in rec['thesis_ids']]
+    11	  if not rec['thesis_ids'] or rec.get('figures'):keys.append(p.cmp.doc_text(rec))
+    12	  if len(keys)!=len(item['queries']):raise ValueError('query count mismatch')
+    13	  union=[]; origin={g:[] for g in item['candidates']}
+    14	  for index,(key,row) in enumerate(zip(keys,item['queries']),1):
+    15	   q=vectors[key];expect='thesis search' if index<=len(rec['thesis_ids']) else 'own-text search'
+    16	   if row['type']!=expect or row['vector_sha256']!=p.digest(q):raise ValueError('query identity or type mismatch')
+    17	   def cosine(a,b):return math.fsum(x*y for x,y in zip(a,b))/(math.sqrt(math.fsum(x*x for x in a))*math.sqrt(math.fsum(x*x for x in b)))
+    18	   scores={g:cosine(q,vectors[p.cmp.doc_text(groups[g]['original'])]) for g in item['group_order']}
+    19	   rank=sorted(item['group_order'],key=lambda g:-scores[g])[:p.cmp.TOP]
+    20	   if rank!=row['ranked_top10']:raise ValueError('ranking mismatch')
+    21	   for g in item['candidates']:
+    22	    if abs(row['scores'][g]-scores[g])>1e-12:raise ValueError('score mismatch')
+    23	    if g in rank:origin[g].append(index)
+    24	   union += [g for g in rank if g not in union];checked+=1
+    25	  if union!=item['candidates'] or origin!=item['origins']:raise ValueError('union or origins mismatch')
+    26	  for i,g in enumerate(item['candidates']):
+    27	   added='\nRetrieval metadata (not part of the stored piece; cosine, not a probability): '+'; '.join(f"query {j} [{row['type']}]: {row['scores'][g]:.4f}" for j,row in enumerate(item['queries'],1))
+    28	   if item['treatment']['questions'][f'q{i}']['instructions']!=item['control']['questions'][f'q{i}']['instructions']+added:raise ValueError('treatment metadata mismatch')
+    29	 return checked
+    30	m=json.loads((HERE/'probe-manifest.json').read_text());v=json.loads((p.STEP/'embeddings.json').read_text());print('independent query scores and rank lists checked',check(m,v))
+    31	for kind in ('vector','score','origin','candidate','missing'):
+    32	 mm=copy.deepcopy(m);vv=dict(v)
+    33	 if kind=='vector':
+    34	  articles,q,_=p.run.step1_records(str(p.SOURCE/'step1/trace.sqlite'));r=next(r for a in articles for r in a if r['id']==mm[0]['id']);key=p.cmp.query_text(r,q[r['thesis_ids'][0]]) if r['thesis_ids'] else p.cmp.doc_text(r);vv[key]=[x+0.5 for x in vv[key]]
+    35	 if kind=='score':mm[0]['queries'][0]['scores'][mm[0]['candidates'][0]]+=0.1
+    36	 if kind=='origin':mm[0]['origins'][mm[0]['candidates'][0]]=[]
+    37	 if kind=='candidate':mm[0]['candidates'][0]='missing'
+    38	 if kind=='missing':vv={}
+    39	 try:check(mm,vv)
+    40	 except (ValueError,KeyError):print('independent negative control caught:',kind)
+    41	 else:raise RuntimeError('mutant survived '+kind)
+
+ succeeded in 0ms:
+     1	"""Reconstruct selected c8 comparisons without service calls; refuse mismatches."""
+     2	import copy,hashlib,importlib.util,json,math,sqlite3,sys
+     3	from pathlib import Path
+     4	ROOT=Path('/Users/lchingen/hivemind');HERE=Path(__file__).resolve().parent; sys.path.insert(0,str(ROOT/'src'))
+     5	def load(path):
+     6	 spec=importlib.util.spec_from_file_location('step_runner',path); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+     7	run=load(ROOT/'clean-arch/step2/run_forward.py'); cmp=run.compare
+     8	from hivemind import jev
+     9	SOURCE=ROOT/'poc/data/clean-acceptance-2026-11-09'; STEP=SOURCE/'step2';IDS=['22:ev-11','13:e11','38:ev-2','18:e2','43:e3','3:e1','9:e6','14:e3','5:e1','9:e1','19:ev-guidance-70']
+    10	def serial(obj):return json.dumps(obj,sort_keys=True,ensure_ascii=False)
+    11	def digest(obj):return hashlib.sha256(serial(obj).encode()).hexdigest()
+    12	def build():
+    13	 arts,questions,_=run.step1_records(str(SOURCE/'step1/trace.sqlite')); decisions=json.loads((STEP/'decisions.json').read_text()); byid={x['id']:x for x in decisions}; vectors=json.loads((STEP/'embeddings.json').read_text());db=sqlite3.connect('file:'+str(STEP/'jev.sqlite')+'?mode=ro',uri=True); rows=db.execute("select request_json,answer_json from model_calls where purpose='clean_step2'").fetchall(); original={r:json.loads(a) for r,a in rows}; lib=run.library.Library(); output=[]
+    14	 if not arts or not decisions or not vectors or len(IDS)!=len(set(IDS)):raise ValueError('missing or empty input')
+    15	 for article in arts:
+    16	  for record in article:
+    17	   if record['id'] not in IDS:continue
+    18	   d=byid[record['id']]; ids=d['candidates']; qvec=cmp.query_vectors(vectors,record,questions); labels=['thesis search']*len(record['thesis_ids'])+(['own-text search'] if not record['thesis_ids'] or record.get('figures') else [])
+    19	   if not ids or len(qvec)!=len(labels):raise ValueError('missing candidates or queries')
+    20	   qrows=[]; union=[]
+    21	   for q,label in zip(qvec,labels):
+    22	    values={g:cmp.cosine(q,vectors[cmp.doc_text(lib.groups[g]['original'])]) for g in lib.order};ranked=sorted(lib.order,key=lambda g:-values[g])[:cmp.TOP];qrows.append({'type':label,'vector_sha256':digest(q),'ranked_top10':ranked,'scores':{g:values[g] for g in ids}})
+    23	    union.extend(g for g in ranked if g not in union)
+    24	   if union!=ids:raise ValueError('historical union mismatch '+record['id'])
+    25	   qs={f'q{i}':cmp.piece_question(cmp.piece_text(lib.groups[g]['original'],'STORED PIECE')) for i,g in enumerate(ids)}; req=jev.request_for(run.SETTING,cmp.piece_text(record,'INCOMING PIECE'),qs); encoded=serial(req)
+    26	   if encoded not in original:raise ValueError('request not in archive '+record['id'])
+    27	   answer=original[encoded]; problems=jev.validate(answer,qs)
+    28	   if problems:raise ValueError('saved answer invalid '+str(problems))
+    29	   mapped={g:{'choice':answer[f'q{i}']['choice'],'probabilities':answer[f'q{i}']['probabilities']} for i,g in enumerate(ids)}
+    30	   if mapped!=d['answers'] or cmp.outcome(mapped,lib.order)!=d['outcome']:raise ValueError('saved outcome mismatch '+record['id'])
+    31	   treatment=copy.deepcopy(req); origins={g:[i+1 for i,row in enumerate(qrows) if g in row['ranked_top10']] for g in ids}
+    32	   for i,g in enumerate(ids):
+    33	    bits=[f"query {j+1} [{row['type']}]: {row['scores'][g]:.4f}" for j,row in enumerate(qrows)]
+    34	    treatment['questions'][f'q{i}']['instructions']+='\nRetrieval metadata (not part of the stored piece; cosine, not a probability): '+'; '.join(bits)
+    35	   output.append({'id':record['id'],'group_order':list(lib.order),'candidates':ids,'queries':qrows,'origins':origins,'control':req,'treatment':treatment,'archive_sha256':digest(req),'old_answer_sha256':digest(answer),'old_answers':answer})
+    36	  for r in article:
+    37	   d=byid[r['id']];lib.apply(r,d['outcome'])
+    38	 if {x['id'] for x in output}!=set(IDS):raise ValueError('selected population incomplete')
+    39	 return output
+    40	
+    41	def check(manifest,expected):
+    42	 if not manifest or len(manifest)!=len(expected):raise ValueError('empty or wrong population')
+    43	 for got,want in zip(manifest,expected):
+    44	  if got!=want:raise ValueError('manifest differs for '+str(got.get('id')))
+    45	def main():
+    46	 a=build();b=build();check(a,b)
+    47	 for kind in ('score','candidate','origin','query'):
+    48	  mutated=copy.deepcopy(a);x=mutated[0]
+    49	  if kind=='score':x['queries'][0]['scores'][x['candidates'][0]]+=0.1
+    50	  if kind=='candidate':x['candidates'][0]='not-a-candidate'
+    51	  if kind=='origin':x['origins'][x['candidates'][0]]=[]
+    52	  if kind=='query':x['queries'][0]['ranked_top10'].reverse()
+    53	  try:check(mutated,b)
+    54	  except ValueError:print('negative control caught:',kind)
+    55	  else:raise RuntimeError('negative control failed '+kind)
+    56	 try:check([],b)
+    57	 except ValueError:print('negative control caught: empty input')
+    58	 else:raise RuntimeError('empty control failed')
+    59	 output=HERE/'probe-manifest.json';output.write_text(json.dumps(a,ensure_ascii=False,indent=1)+'\n');print('selected cases',len(a),'candidate pairs',sum(len(x['candidates']) for x in a),'multiquery',sum(len(x['queries'])>1 for x in a),'manifest sha256',hashlib.sha256(output.read_bytes()).hexdigest())
+    60	if __name__=='__main__':main()
+
+ succeeded in 0ms:
+     1	{
+     2	  "EXPERIMENT-DESIGN.md": "9105649468ae94720a0b56c7ce27772fbf4a42a7ee8a7cb83c89570ee996fc03",
+     3	  "probe_prepare.py": "ad2fd540a4b38d86f9dc7ac363c53542bfb3b0791deb10fda6e952800ca84be5",
+     4	  "probe_send.py": "40f785e3a255d9f86cbfe435ccd19fdc5b5d532de812dd8c9b78213d17073039",
+     5	  "independent_check.py": "7724ea68e1e61a8d737cc8a98903dbe1d369c2926ae1d6a1f27be8ecd1001575",
+     6	  "integration_check.py": "0065ebf2c4e798f77017e91ddfb228413a0404f145fb9933751e35598d8e7b5a",
+     7	  "inspect_saved.py": "e0243ff9ea1582a1c896fa3f780e089e7763ce190d9cf7f2e837a04c8077e88f",
+     8	  "probe-manifest.json": "ed3c61bab1932f6b7b493ae87ac3fe3d2d0621bfcfb61e681e0705346d9b2028",
+     9	  "../../clean-arch/step2/compare.py": "c7fcf0903d7df58a12f29c8a74171bf51968c68cb3cfcbcae54fd449935ffabe",
+    10	  "../../clean-arch/step2/run_forward.py": "ca2a49f85e58283737e06457b0875c28e56294802148b9b443f7447f5cb4a96d",
+    11	  "../../clean-arch/step3/library.py": "e091095d3034791d6d59a0ddce0be190aa468e8539abbb941eaeca228d089885",
+    12	  "../../src/hivemind/jev.py": "0854afbbb076be1f109d51837119f539f0842649beae9eea1000ec8b1ba7822e",
+    13	  "../../src/hivemind/model.py": "ff0d646c55da6598b12173667cfe2cb14f0a82c83e837cc6064959201f1e87a4",
+    14	  "../../poc/data/clean-acceptance-2026-11-09/step1/trace.sqlite": "07248630fd02401f2cfce3ce7123636f3895b6d95a9b097c9403a5847e36aa3e",
+    15	  "../../poc/data/clean-acceptance-2026-11-09/step2/decisions.json": "b4de2a24fe72945de446797136c9c884cc00f133fdcd5994ec896f4f086bffff",
+    16	  "../../poc/data/clean-acceptance-2026-11-09/step2/embeddings.json": "18c347f434f4c5523ad2f6dc941223c17ca008232772c9268a99a9b6b720ae4b",
+    17	  "../../poc/data/clean-acceptance-2026-11-09/step2/jev.sqlite": "243e217881f05417d71cf8aee5f799a4e0da19374041ad3632961bd444c064d5"
+    18	}
+
+2026-11-09T02:28:51.075263Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+exec
+/opt/homebrew/bin/zsh -c "rg --files reports/step2-score-council-2026-11-08 | rg -i 'blind|packet|integration|preflight'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+reports/step2-score-council-2026-11-08/make_blind.py
+reports/step2-score-council-2026-11-08/blind-packets.json
+reports/step2-score-council-2026-11-08/integration_check.py
+reports/step2-score-council-2026-11-08/blind-key.json
+
+exec
+/opt/homebrew/bin/zsh -c 'PYTHONDONTWRITEBYTECODE=1 python3 -B inspect_saved.py | head -5' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c 'PYTHONDONTWRITEBYTECODE=1 python3 -B independent_check.py' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+exec
+/opt/homebrew/bin/zsh -c "PYTHONDONTWRITEBYTECODE=1 python3 -B -c 'import importlib.util,json; s=importlib.util.spec_from_file_location(\"s\",\"probe_send.py\"); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.verify_registration(json.load(open(\"registration.json\"))); a=json.load(open(\"probe-manifest.json\")); m.prep.check(a,m.prep.build()); print(\"registration verified\",len(m.REQUIRED),\"manifest verified\",len(a))'" in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+ succeeded in 1625ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-LNy7BZeD' (errno=Operation not permitted)
+2026-11-08 18:28:51.331 xcodebuild[47169:40492420]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-08 18:28:51.516 xcodebuild[47169:40492417] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-yHNeTG6D' (errno=Operation not permitted)
+2026-11-08 18:28:51.908 xcodebuild[47179:40492455]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-08 18:28:52.039 xcodebuild[47179:40492453] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+{
+  "matched_stored_requests": 185,
+  "archive_rows": 206,
+  "pairs": 1861,
+  "multi_query_records": 34,
+
+ succeeded in 1671ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-viet23cW' (errno=Operation not permitted)
+2026-11-08 18:28:51.331 xcodebuild[47170:40492421]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-08 18:28:51.516 xcodebuild[47170:40492418] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-9YPQOm6A' (errno=Operation not permitted)
+2026-11-08 18:28:51.908 xcodebuild[47178:40492457]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-08 18:28:52.039 xcodebuild[47178:40492454] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+registration verified 16 manifest verified 11
+
+ succeeded in 1701ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-lrcTYBO1' (errno=Operation not permitted)
+2026-11-08 18:28:51.331 xcodebuild[47171:40492422]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-08 18:28:51.516 xcodebuild[47171:40492419] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-6rWfTSRt' (errno=Operation not permitted)
+2026-11-08 18:28:51.908 xcodebuild[47177:40492456]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-08 18:28:52.039 xcodebuild[47177:40492452] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+independent query scores and rank lists checked 13
+independent negative control caught: vector
+independent negative control caught: score
+independent negative control caught: origin
+independent negative control caught: candidate
+independent negative control caught: missing
+
+2026-11-09T02:29:04.740429Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+2026-11-09T02:29:17.397590Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+exec
+/opt/homebrew/bin/zsh -c 'cat -n make_blind.py | head -110' in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+ succeeded in 0ms:
+     1	import importlib.util,json,random,sqlite3,hashlib
+     2	from pathlib import Path
+     3	H=Path(__file__).resolve().parent;s=importlib.util.spec_from_file_location('prep',H/'probe_prepare.py');p=importlib.util.module_from_spec(s);s.loader.exec_module(p)
+     4	manifest=json.loads((H/'probe-manifest.json').read_text());groups=json.loads((p.STEP/'library.json').read_text())['groups']; articles,_,_=p.run.step1_records(str(p.SOURCE/'step1/trace.sqlite'));records={r['id']:r for a in articles for r in a};c=sqlite3.connect('file:'+str(p.SOURCE/'step1/trace.sqlite')+'?mode=ro',uri=True)
+     5	sources={}
+     6	for (request,) in c.execute("select request from trace where status='complete'"):
+     7	 req=json.loads(request);o=json.JSONDecoder().raw_decode(req['messages'][1]['content'])[0]['source_item'];sources[o['id']]={k:o.get(k) for k in ('title','publisher','publication_date','source_uri','text')}
+     8	pack=[];key={}
+     9	for num,item in enumerate(manifest,1):
+    10	 rec=records[item['id']];group_ids=list(item['candidates']);random.Random(8120+num).shuffle(group_ids);candidates=[]; key[str(num)]={'record_id':item['id'],'groups':{}}
+    11	 for i,g in enumerate(group_ids,1):
+    12	  old=groups[g]['original'];code=f'C{i}'; key[str(num)]['groups'][code]=g
+    13	  candidates.append({'id':code,'summary':old['summary'],'passages':old['passages'],'original_party':old['original_party'],'statement_date':old['statement_date'] or old['statement_date_text'],'source':sources[old['input_id']]})
+    14	 pack.append({'case':str(num),'incoming':{'summary':rec['summary'],'passages':rec['passages'],'original_party':rec['original_party'],'statement_date':rec['statement_date'] or rec['statement_date_text'],'source':sources[rec['input_id']]},'candidates':candidates})
+    15	(H/'blind-packets.json').write_text(json.dumps(pack,ensure_ascii=False,indent=1)+'\n');(H/'blind-key.json').write_text(json.dumps(key,indent=1)+'\n');print('cases',len(pack),'pairs',sum(len(x['candidates']) for x in pack),'chars',(H/'blind-packets.json').stat().st_size,'packet sha256',hashlib.sha256((H/'blind-packets.json').read_bytes()).hexdigest())
+
+exec
+/opt/homebrew/bin/zsh -c "ls -l integration* live-probe blind* 2>/dev/null; rg -n 'integration:|registration control caught' *.txt *.out *.md 2>/dev/null" in /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08
+ exited 1 in 0ms:
+-rw-r--r--@ 1 lchingen  staff    2315 Nov  8 18:26 blind-key.json
+-rw-r--r--@ 1 lchingen  staff  713454 Nov  8 18:26 blind-packets.json
+-rw-r--r--@ 1 lchingen  staff    1730 Nov  8 18:24 integration_check.py
+
+2026-11-09T02:29:34.451284Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+codex
+**READY for the isolated 66-call probe**, subject to the sender’s own preflight checks passing immediately before dispatch.
+
+The previous blockers are addressed in the final files. I verified the 16 registered hashes and reconstructed all 11 selected requests against the manifest. The independent score check passed for **13 query lists**, including the multi-query cases, and caught its vector, score, origin, candidate and missing-input mutations. The separate census matched **185 archived requests and answers**. [Registration and send gates](/Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/probe_send.py:49), [score check](/Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/independent_check.py:6).
+
+The sender now uses a single-attempt transport, journals dispatch before calling Jev, stops on failure and refuses to reuse an existing run directory. The integration test exercises that actual path with a fake lost reply and checks for one attempt, an ambiguous event and restart refusal. [Integration test](/Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/integration_check.py:13). I inspected that test but did not run it because it creates temporary files; the live sender runs it as a required preflight.
+
+The result will remain a **selected-case diagnostic**. C versus T measures the combined effect of adding scores and query-type labels; it cannot establish why Jev changed a decision or estimate production accuracy. The pre-outcome blind packets contain the full candidate sets with shuffled order and no scores or model decisions. The planned independent source review is still needed before judging whether changes are correct. [Blind packet construction](/Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/make_blind.py:9).
+
+No files were edited and no paid calls were made.
+tokens used
+205,555

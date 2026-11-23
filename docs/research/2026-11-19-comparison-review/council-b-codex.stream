@@ -1,0 +1,373 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f5a4-8ad4-7341-8f91-1b5676ea2d72
+--------
+user
+# Challenge round (read-only, $0). My reflection, written before I read yours: `claude-reflection.md` in this folder.
+
+**Where we agree**
+- The loss is real for the products as configured; the reading is sound.
+- Two mechanisms drive it.
+  - D382 and D505 forbid the company's own figures: 7 matters, of which the old system serves 5–6.
+  - The Step 1 to ladder hand-off drops bundled questions. new-2 lost 27 of 60 this way and new-3 19 of 60, including M04 capex and
+    M17 Anthropic in both runs. The class has been known since D432.
+- The outcome was computable before the run. We did not compute the attainable verdict (AGENTS §7.2).
+
+**Where we may differ**
+1. You call the old system's M17 serve a generous match. Does that change b in either counting? My count says b stays at or above 7 at
+   counting 1.
+2. My next step: a cents-level test that re-runs the frozen ladder on the 46 stored no-ladder cases, with Step 1's question cut to one
+   figure, one period and one outcome.
+   - The test: re-send those Step 1 items with that one rule, then ladder them.
+   - It counts how many get a valid ladder and which frozen matters they would cover.
+   - Your next step: a $0 check against the frozen list of which required matters can reach the reader as a single answerable question,
+     with capex and Anthropic first.
+   - Are these the same step? If not, which comes first and why?
+3. Alex's D382 decision for this comparison. Options:
+   - allow core-figure questions;
+   - score the 25 non-figure matters, or 20 by your stricter reading;
+   - stop and keep the old system.
+   Which would you recommend, on the evidence?
+
+**Reply** in under 300 words with:
+- your position on 1–3;
+- the single recommendation and its single test, written so that Alex, who is angry about two days spent on a predictable result, can
+  approve or refuse in one line.
+
+End with `CONSENSUS: <one line>` or `DISAGREE: <the point>`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check whether the Anthropic call can change the result, then compare the two proposed tests against the saved cases.
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba claude-reflection.md' in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+     1	# Claude's reflection, written before reading Codex's independent review
+     2	
+     3	## Did we measure wrong?
+     4	No. The reading measured what it was built to measure, which is the products as configured (D667).
+     5	- **The matter list is independent of both systems.** It was built by blind readers from the 410 kept articles; neither system's
+     6	  output went into it.
+     7	- **The mapping was done blind**, by two reader families plus third readers.
+     8	- **All controls pass:** 6 of 6 plants, 4 of 4 supported controls, 3 of 3 repeats.
+     9	- **The old system's served cards hold up** on four I read against their material: FY27 data-center revenue, FY28 revenue, FY27 gross
+    10	  margin and hyperscaler capex. Both readers did the arithmetic.
+    11	- **No new-system question was wrongly mapped out.** Its libraries at the cutoff contain no question on the 7–8 old-only matters.
+    12	
+    13	## Why the new system loses: two mechanisms, both known before the run
+    14	
+    15	**1. By design, D382, D384 and D505: the company's own figures are not questions.**
+    16	- 7 of the 32 matters are company figures, and the old system serves 5–6 of them.
+    17	- D667 itself says: "The new system does not open such questions by D505, and Alex sees how much of any gap that makes."
+    18	- The week of 2026-09-22 to 09-28 (D489) had already shown the same thing: production 4 of 5 big matters, clean 2, for this cause.
+    19	
+    20	**2. A broken hand-off between Step 1 and the ladder.**
+    21	- Step 1 opens compound questions: two years in one question, or several figures or outcomes in one. The frozen ladder refuses every one
+    22	  of them as "no ladder".
+    23	- Those questions never reach the judge and are absent from the library.
+    24	- new-2 lost 27 of 60 opened questions this way; new-3 lost 19 of 60.
+    25	- Among the lost are matters the old system wins on:
+    26	  - hyperscaler capex, M04, opened in both new draws;
+    27	  - the Anthropic anchor investment, M17, in both;
+    28	  - the Hugging Face acquisition, M19, in new-2;
+    29	  - DRAM contract prices, M16, in both.
+    30	- This class was identified on 2026-11-12 (D432). The Step 1 versions tried against it (c14, c15yc) did not pass their gates, so it was
+    31	  never fixed.
+    32	
+    33	Together the two mechanisms account for essentially all of b, the old-only matters (7–8): 5 company figures, M04 and M17, and M19 in
+    34	one draw.
+    35	
+    36	## Was the outcome predictable? Yes, and that is the process failure
+    37	- The pass line is a lead: a − b ≥ 5 and a ≥ 2b. Under D382 the old system serves 5–6 figure matters the new one never can, so the new
+    38	  system would need about 12 matters only it serves.
+    39	- The matters its rules allow and the old one misses number about 12.
+    40	- Even with the no-ladder loss fixed, the new system reaches about 7–8 against 10, which is no winner or a loss, never a lead.
+    41	- **This could have been computed in minutes**, from the frozen list (7 figures flagged), D505, D432 and the D489 week, before any paid
+    42	  send. AGENTS §7.2 asks for the upside of a step done perfectly to be measured before a phase targets it.
+    43	- Neither the council (D665–D667) nor I computed it. Two days and about $145 measured a result that was knowable.
+    44	- I added to the waste: a full Step 1 redo (about $21, 17 h) where a re-send of one item ($0.12) was enough.
+    45	
+    46	## The one thing to do next
+    47	- **No new comparison run** until two things are settled at $0 or cents on stored data.
+    48	- **(a) The Step 1 to ladder loss.** Questions must be cut to one figure, one period, one outcome; or the ladder splits a compound
+    49	  question.
+    50	  - Test: re-run the ladder on the 46 stored no-ladder cases with the fix, and count how many get a valid ladder and which key matters
+    51	    they would cover.
+    52	- **(b) Alex's decision on D382 for this comparison:**
+    53	  - allow core-figure questions; or
+    54	  - score the comparison on the 25 non-figure matters, where it stands now at 3 against 6 and could reach about 6 against 6 with (a).
+    55	- **Before any run, compute the attainable verdict.**
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D432|D489|D490|D491|D505|D665|D671' ../../DECISIONS.md | tail -27; nl -ba ../../../poc/data/comparison-2026-11-17/reading-diagnostic/diagnostic-count.json | sed -n '10,66p'; nl -ba ../2026-11-17-product-comparison/stage0/verdict-rule.json | sed -n '7,10p;69,76p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+776:| D432 | 2026-11-12 | After Stage B: diagnose how Step 1 cuts a matter into theses (the nine unopened graded questions, the eight theses with no ladder, the remaining Stage A faults); the diagnosis and one change, as a new Step 1 version measured on fresh articles, go to Alex before any build | in force | `clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md` |
+833:| D489 | 2026-11-14 | The fresh week (one draw a system): not clear by the rule written before reading, no system chosen; production covers 4 of 5 big matters and the clean path 2 (it lacks revenue and margin, D382/D384); whether the new system holds questions on the company's main numbers goes to Alex with three options (council consensus) | in force; Alex chose the test (D490) | `docs/research/2026-11-14-use-acceptance/week/WEEK-RESULT.md` |
+834:| D490 | 2026-11-14 | Alex opens a test arm of clean Step 1 that may open questions on the company's revenue and margin ("试开这类问题"): a probe of a few cents on the stored week first, the second fresh week only if it meets its lines; D382 and D384 stay in force for the adopted path | in force; the test ran and its arm was stopped (D491) | `docs/research/2026-11-14-use-acceptance/LEAN-LOG.md` §4 |
+835:| D491 | 2026-11-14 | The revenue-and-margin test arm (c20) opens the three questions with no number cards but fails its probe on a line written beforehand (the Vera Rubin question not opened, 0 of 3 against 2 of 3; cause not settled); stopped, not adopted; the next step goes to Alex (council consensus) | in force | `docs/research/2026-11-14-use-acceptance/main-numbers/RESULT.md` |
+837:| D493 | 2026-11-14 | Reflection council (D492): every change from D439 to D491 was words in the one Step 1 call and moved a neighbour; the reader's loss is around the company's main numbers; no further request change now; next a $0 test of the kept figures assembled as a company record; the standing-question comparison stays a candidate that goes to Alex first (D370) | in force | `docs/research/2026-11-14-use-acceptance/record/RECORD-TEST-DESIGN.md` |
+846:| D502 | 2026-11-15 | The table test: no wrong join found in the ten joined lines, all four table readers meet the written answer line, no reliable saving of effort shown; the table goes to Alex as a tested mock, not as the accepted handling of revenue and margin; D489's comparison unchanged; the next step is his (council consensus) | in force | `docs/research/2026-11-14-use-acceptance/record-3/TABLE-TEST-RESULT.md` |
+847:| D503 | 2026-11-15 | Alex reviews the mock table and opens a $0 reading on the fresh week of D489: the same table from that week's stored answers, read blind for the three matters the new system had no question for; a separate question, D489's count unchanged | in force; the test ran (D504) | `docs/research/2026-11-14-use-acceptance/LEAN-LOG.md` §10 |
+848:| D504 | 2026-11-15 | The table on the fresh week: M01 undecided, M02 and M03 not findable by the line; eleven of twelve key figures are in the table, two of four readers found all eleven; the table passes on stored-label faults; D489 unchanged ("not clear"), nothing ranks the systems; one product question goes to Alex: see the figures, a tracked question with a judgement, kept figures reaching related judgements, or several (council consensus) | in force | `docs/research/2026-11-14-use-acceptance/record-3/TABLE-WEEK-RESULT.md` |
+849:| D505 | 2026-11-15 | Alex: the kept financial figures should reach the judgements of related questions (not a table, not questions of their own; D382 and D384 stand); first a $0 check on the stored fresh-week run: is a kept financial figure a judgement should have received absent from its request | in force; the check ran (D506) | `docs/research/2026-11-14-use-acceptance/LEAN-LOG.md` §11 |
+856:| D512 | 2026-11-15 | Under D439 (reflection council "my"): neither system has earned the choice and D489 stays "not clear"; the next step is a decision page for Alex on which system carries forward, prepared and reviewed while he is away; no further reading or send before it; production stays the default (council consensus) | in force | `docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-15.md` |
+892:| D548 | 2026-11-15 | Under D439 (council consensus): the gates the new system must pass, listed from the record (Stage A on Alex's lines; Stage B; the end-to-end comparison; use on unseen news as proposed lines; integration); the first blocker is the worthwhile questions its answer-choice step declines, framed at $0 | in force | `docs/research/2026-11-14-use-acceptance/NEW-SYSTEM-FRAME.md` (gate order superseded by D665) |
+908:| D564 | 2026-11-16 | The fortnight read (council consensus): no held question re-opened; gate 1 still not met in the product condition (7 or 5 of 13 right); no last answer unsupported by both readers, 6 of 12 contested; the page fix (processing steps and completed days at the writer) accepted for completed replays; the due-date class is one matter; next a $0 sizing of D505's company-figure delivery gap, facts linked elsewhere included | in force | `docs/research/2026-11-14-use-acceptance/carried-run/RESULT.md` |
+953:| D609 | 2026-11-16 | Under D439 (reflection council, cold Codex read): the next production step is a $0 source-to-request trace of the company's own figures on the carried fortnight (D505), by member, with time, duplicate, population and relevance controls and an independent second reader on bearing cases; moves only on a shared, consequential delivery mechanism | in force | `reflection-5/codex-cold.md`, `reflection-5/codex-challenge-1.md` |
+1009:| D665 | 2026-11-17 | Council (Alex: "run your council to determine"): the six lines stop blocking release (reported; code-decidable parts stay hard); one product comparison against poc-v118 decides readiness: big matters served, practical lead/loss/no winner written before the first send, guardrails, sizes; D431 frozen reading printed beside; Step 2 checks kept; gate 5 waits; back to Alex on any verdict | in force | D665 record; clean-arch/PRD.md §1.5 |
+1010:| D666 | 2026-11-17 | Alex: "write a run plan and monitor it carefully and don't scope drift": run D665's comparison once its plan passes council review; $250 runaway guard, not a budget (single ledger superseded for this run by D667); out-of-scope findings recorded only | in force | D666 record; docs/research/2026-11-17-product-comparison/RUN-PLAN.md |
+1015:| D671 | 2026-11-17 | Under D667/D668 (council): blind matter list frozen at N = 32 (7 company figures), stage0/census/matters.json; merges need both families' grouping or both blind adjudicators; two split pairs kept apart and disclosed | in force | D671 record |
+    10	 "N": 32,
+    11	 "margin_rule": 5,
+    12	 "counting 1": {
+    13	  "a (new only)": 0,
+    14	  "b (old only)": 7,
+    15	  "served by new": 3,
+    16	  "served by old": 10,
+    17	  "both": 3,
+    18	  "served_new": [
+    19	   "M13",
+    20	   "M15",
+    21	   "M31"
+    22	  ],
+    23	  "served_old": [
+    24	   "M04",
+    25	   "M06",
+    26	   "M10",
+    27	   "M11",
+    28	   "M13",
+    29	   "M15",
+    30	   "M17",
+    31	   "M18",
+    32	   "M19",
+    33	   "M31"
+    34	  ]
+    35	 },
+    36	 "counting 2": {
+    37	  "a (new only)": 0,
+    38	  "b (old only)": 8,
+    39	  "served by new": 2,
+    40	  "served by old": 10,
+    41	  "both": 2,
+    42	  "served_new": [
+    43	   "M13",
+    44	   "M15"
+    45	  ],
+    46	  "served_old": [
+    47	   "M04",
+    48	   "M06",
+    49	   "M10",
+    50	   "M11",
+    51	   "M13",
+    52	   "M15",
+    53	   "M17",
+    54	   "M18",
+    55	   "M19",
+    56	   "M31"
+    57	  ]
+    58	 },
+    59	 "controls": {
+    60	  "plants marked unsupported or insufficient": 6,
+    61	  "plants": 6,
+    62	  "supported controls marked supported": 4,
+    63	  "supported controls": 4,
+    64	  "repeats the same": 3,
+    65	  "repeats": 3
+    66	 },
+     7	 "cutoff": "2026-09-20 (end of day); libraries read as they stand then; closed questions still count; timeliness not scored (days from first source to opening printed beside)",
+     8	 "matter_list": "stage0/census/matters.json",
+     9	 "N_frozen": 32,
+    10	 "covers": "both families mark the question opened, or narrower with both saying it carries the main outcome; broader and missed do not cover; mapping blind (each draw library under a random X/Y label, key outside the repository); a disagreement goes to two third readers, one per family; a remaining split is resolved per counting (covers > does not cover)",
+    69	 "complete_draws": "no release verdict without six complete draws within the D667 timing; a replacement draw is a diagnostic only",
+    70	 "verdict_order": [
+    71	  "invalid: a plant without explicit rejection, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same",
+    72	  "too small: N < 20, or fewer than 30 distinct bets in any system-draw (both ways for split duplicates)",
+    73	  "practical lead: a - b >= max(3, ceil(0.15 N)) and a >= 2b under both countings, every guardrail exercised and passing under both",
+    74	  "practical loss: b - a >= max(3, ceil(0.15 N)) and b >= 2a under both countings (no guardrail needed), or a breach in an exercised guardrail under both",
+    75	  "no practical winner: everything else"
+    76	 ],
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '\"M17\"|\"question\": \"Q4[05678]\"' ../../../poc/data/comparison-2026-11-17/reading-diagnostic/mapping-out/mapping.json; for f in ../../../poc/data/comparison-2026-11-17/reading-diagnostic/mapping-out/map-L{1,2,6}-{claude,codex}.txt; do rg -n 'M17' \""'$f"; done' in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+110:   "M17": [
+112:     "question": "Q45",
+116:     "question": "Q46",
+132:     "question": "Q47",
+202:   "M17": [
+204:     "question": "Q40",
+288:   "M17": [
+290:     "question": "Q47",
+294:     "question": "Q48",
+312:     "question": "Q45",
+17:{"matter": "M17", "status": "opened", "ids": ["Q40"], "main_outcome": true, "note": "Same outcome, but Q40's deadline (2026-09-20) is far shorter than 2027-03-14 and does not ask size."}
+17:{"matter":"M17","status":"opened","ids":["Q40"],"main_outcome":true,"note":"Q40 uses an earlier deadline and asks about completing a $10 billion investment."}
+17:{"matter": "M17", "status": "opened", "ids": ["Q48", "Q47"], "main_outcome": true, "note": "Q48 matches the 2027-03-14 deadline. Q47 is a short-window version (by 2026-09-20). Neither asks the investment size."}
+17:{"matter":"M17","status":"narrower","ids":["Q47","Q48"],"main_outcome":true,"note":"Both ask about agreement to invest $10 billion; Q47 uses an earlier deadline, and neither measures an investment of another size."}
+17:{"matter": "M17", "status": "opened", "ids": ["Q46", "Q45"], "main_outcome": true, "note": "Q46: $10B agreement, deadline 2026-09-20. Q45: completed investment of any size by 2027-09-14. Deadlines differ."}
+17:{"matter":"M17","status":"narrower","ids":["Q45","Q46"],"main_outcome":true,"note":"Q45 asks about completion at a later date; Q46 asks about agreement to invest $10 billion at an earlier date. Neither measures size."}
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D432|8.*no ladder|eight|no ladder|compound' /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/PROGRESS-2026-11-12.md | head -22; rg -n -i 'upside|perfect|strongest|ceiling' /Users/lchingen/hivemind/AGENTS.md | head -25; rg -n 'single|D382|researcher-set' /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters.json | rg 'Anthropic|single' | head" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+29:| 1 no ladder asks another question | missed | missed | missed | missed by 1 (agreed rulings) |
+46:eight theses of 34 in the unseeded draws get no question at all, and the evidence later filed to them (200 links in the dry
+47:  provider caps are untouched; paid spending stays within D439's ceiling. A disagreement the council cannot settle is recorded with
+314:  the upside of that step done perfectly is measured where the product is judged: the judge is given the gold's own evidence, built by
+482:   "question": "Will NVIDIA sign or fund an anchor investment of about $10B in Anthropic's IPO by 2027-03-14 (researcher-set check date), and if so of what size?",
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path
+import json,collections
+p=Path(\"/Users/lchingen/hivemind/poc/data/comparison-2026-11-17\")
+rd=json.loads((p/\"reading-diagnostic/deck/readings.json\").read_text())
+for run in (\"old-1\",\"old-2\",\"old-3\"):
+ print(run,[(m[\"question\"],rd[\"cards\"][run][m[\"question\"]][\"worth\"],rd[\"cards\"][run][m[\"question\"]][\"answer\"]) for m in rd[\"mapping\"][run][\"M17\"]])
+for run in (\"new-2\",\"new-3\"):
+ js=[json.loads(line) for line in (p/f\"run/{run}/ladder/send-1/outcomes.jsonl\").read_text().splitlines()]
+ print(run,collections.Counter(o[\"status\"] for o in js))
+ for i,o in enumerate(js,1):
+  if o[\"status\"]==\"no ladder\": print(i,o[\"case\"],o[\"reason\"])
+js=[json.loads(line) for line in (p/\"run/new-3/ladder/send-3/outcomes.jsonl\").read_text().splitlines()]
+o=next(o for o in js if o[\"case\"]==\"new-3/clean-4\")
+print(\"new-3 pass 3 capex:\",[(k,str(v)[:1800]) for k,v in o.items() if k"'!="requests"])
+print("capex raw request answer:",o["requests"][-1]["answer_text"][:2000])
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+old-1 [('Q45', 'worth', 'unsupported'), ('Q46', {'split': ['worth', 'duplicate']}, 'unsupported')]
+old-2 [('Q40', 'worth', 'supported')]
+old-3 [('Q47', 'worth', 'supported'), ('Q48', 'duplicate', 'unsupported')]
+new-2 Counter({'ladder': 33, 'no ladder': 27})
+1 new-2/clean-5 The topic tracks two annual figures—the big four AI hyperscalers' combined data-center capital expenditures for 2026 and for 2027—without naming either as the main figure. A single judged question and ladder cannot cover both years, and selecting one would arbitrarily discard an equally tracked outcome.
+2 new-2/clean-8 The topic's outcome tracks both six-year fixed and short-tenor GPU rental rates in calendar 2026 without naming either as the main figure. These are distinct prices and cannot be combined into one ladder or reduced to one without choosing a priority the topic does not provide.
+5 new-2/clean-7 The topic does not define one verifiable DRAM contract-price figure: it specifies neither a memory product or price series nor how prices across calendar 2026 should be measured. Its outcome also names shortage duration. Choosing a particular contract-price benchmark or annual aggregation would introduce a tracked quantity not identified in the topic or item.
+7 new-2/clean-12 The topic's outcome names several figures—combined NVIDIA chip orders/deployments, total chip orders/deployments, and NVIDIA's share—without identifying one as the main figure tracked. It also covers the two-year period 2026–2027 rather than one fiscal or calendar year, and neither the topic nor the item specifies a publication day for that period's figures.
+8 new-2/clean-13 The topic's outcome names two distinct figures—total U.S. federal AI spending obligations for calendar 2026 and potential, not-yet-awarded federal AI contract value—without identifying either as the main tracked figure.
+12 new-2/clean-15 The topic's outcome tracks both NVIDIA's standalone CPU revenue in calendar 2026 and confirmation that Vera CPUs have begun commercial shipments, without identifying either as the main figure or event.
+14 new-2/clean-16 The tracked Helios deployment capacity covers calendar 2026–2027, not one fiscal or calendar year, and neither the topic nor the item specifies a publication day for that combined figure. The listed disclosures do not establish a dated release that would settle it.
+16 new-2/clean-23 The tracked capacity target belongs to Ooredoo's Zankore platform, and the additional GPU-capacity figure belongs to Indosat Ooredoo Hutchison (IOH), not NVDA. These are other companies' own operating figures, not aggregate AI capital spending; their use of Nvidia technology does not make them NVDA figures. The topic does not specify a separate, measurable NVDA accelerator-demand outcome.
+17 new-2/clean-22 The tracked outcome is U.S. federal restrictions on open-weight or open-source frontier AI models, a matter not covered by any listed theme. It concerns AI model safety regulation, not chip export controls or AI capital spending; potential effects on NVIDIA’s accelerator demand do not make the regulatory decision a company-specific outcome.
+22 new-2/clean-24 The tracked figure covers calendar 2026–2027 rather than one fiscal or calendar year, and neither the topic nor the item supplies a publication date for the resale benchmarks or collateral valuations. The proposed year-end checks are assessment dates, not publication dates, so they do not satisfy the exception for a nonannual period.
+24 new-2/clean-26 The tracked custom-ASIC accelerator capacity covers the two-calendar-year period 2026–2027, not one fiscal or calendar year, and neither the topic nor the item gives a publication day for that combined figure. Quarterly disclosures through 2027 do not supply a publication date for the two-year total.
+25 new-2/clean-27 The topic names several tracked figures without selecting one main figure: combined GPU-neocloud data-center capex for calendar 2026 and 2027, and the portion spent on NVIDIA GPUs in each year. Its outcome does not identify a single figure and year to judge.
+28 new-2/clean-34 The topic names several tracked outcomes without identifying a main one: completion of the Poolside transaction on the reported terms, NVIDIA's disclosed Poolside license payment, its Poolside equity investment, and its cumulative licensing-plus-hire deal spending. These cannot be combined into one judged event or figure.
+34 new-2/clean-37 The tracked outcome is HBM capacity per Rubin Ultra GPU at first commercial shipments, not an annual figure. Neither the topic nor the item gives a publication day for the launch specifications: “late 2027” and checks through 2027–2028 do not establish one. Recasting this as a shipment event would change the tracked outcome.
+38 new-2/clean-41 The topic's outcome names several tracked outcomes—signature of a definitive agreement, completion or collapse of the acquisition, and final purchase price and consideration—without identifying one as primary. A single judged event or figure cannot be selected without changing what the topic tracks.
+39 new-2/clean-43 The topic's outcome tracks both completion of NVIDIA's announced investment in Anthropic and the resulting size of NVIDIA's equity stake, without identifying either as the main outcome. These are separate event and figure questions and cannot be combined into one ladder.
+40 new-2/clean-44 The topic names several tracked outcomes without identifying one as primary: the carrying/fair value of NVIDIA's AI-ecosystem equity investments, unrealized gains embedded in earnings, and the sensitivity of profit and book value to investee de-ratings. These cannot be combined into a ladder for one figure or event.
+44 new-2/clean-49 The topic names several distinct quantities—combined AI-server revenue, orders, backlog and implied NVIDIA GPU demand—without identifying one main tracked figure. The reported figures also belong to HPE, Dell and Supermicro, not NVDA; their connection to NVIDIA demand does not make them NVIDIA's own figures.
+45 new-2/clean-47 The outcome names multiple tracked quantities—calendar-2027 Phase-1 Korean sovereign-AI capacity under contract and/or deployed, and the share filled with NVIDIA accelerators—without designating one as the main quantity. A single judged figure cannot be selected without changing the topic.
+46 new-2/clean-50 The topic names several tracked quantities—awarded or committed EU AI gigafactory funding, capacity in MW or racks, and the number of gigafactories under construction by end-2027—but neither its wording nor its outcome identifies one as the main quantity. Selecting any one would impose a priority the topic does not provide.
+47 new-2/clean-51 The tracked build-cost figure covers calendar 2026–2027, not one fiscal or calendar year, and neither the topic nor the item gives its publication date. The proposed 2027-06-30 checkpoint is an assessment date, not a publication date for the benchmarks or filings that would settle the figure.
+50 new-2/clean-55 The outcome tracks total global AI investment for both calendar 2026 and calendar 2027 without identifying either year's figure as the main one. A single judged figure cannot be selected without changing the topic.
+52 new-2/clean-56 The tracked outcome is TSMC's own advanced-node wafer/foundry pricing change for calendar 2027, not NVIDIA's figure or an aggregate theme quantity. The question therefore belongs to another company, Taiwan Semiconductor Manufacturing Company (TSM).
+53 new-2/clean-57 The topic's outcome tracks two distinct figures—full-year calendar 2026 desktop add-in-board shipment volume and NVIDIA's share of that market—without identifying either as the main figure. A single judged question cannot be selected without arbitrarily dropping one tracked outcome.
+54 new-2/clean-60 The tracked outcomes concern Huawei's own Ascend 960DT and 960PR commercial shipments and its share of China's AI-accelerator demand, not NVIDIA's own figure or event. Huawei's product launches and market share cannot be assigned to a listed theme merely because export controls affect competition with NVIDIA.
+56 new-2/clean-59 The tracked outcome is the combined annualized revenue run rate of Anthropic, OpenAI and xAI/SpaceX, not NVIDIA's own figure. These other companies' revenues are not a matter covered by the listed themes; their relevance to AI capital spending and NVIDIA's demand does not make the tracked figure NVIDIA's revenue or aggregate AI capital spending.
+58 new-2/clean-58 The topic's outcome jointly tracks volume-production launches of Hyperion 10-based Level 2+ and Level 2++ vehicles and the resulting NVIDIA automotive revenue, without identifying one event or figure as the main tracked outcome.
+new-3 Counter({'ladder': 41, 'no ladder': 19})
+3 new-3/clean-4 The topic tracks two annual figures—the four largest AI hyperscalers’ combined data center capital expenditures for calendar 2026 and calendar 2027—without designating either as the main judged figure. They cannot be combined into one annual figure ladder.
+5 new-3/clean-6 The outcome combines shortage persistence and DRAM/GDDR pricing without identifying one main figure or verifiable event. It specifies neither a single memory-price measure nor a concrete shortage-persistence event; choosing either would redefine what is tracked.
+6 new-3/clean-9 The outcome names several tracked results without identifying one as primary: completion of NVIDIA’s Firmus preference-share investment, the final size of that investment, and whether Firmus’s ASX listing and share conversion occur in calendar 2026 or are delayed or scaled back. No single main figure or event is specified.
+9 new-3/clean-12 The topic names several tracked outcomes without identifying a main one: average HBM price per GB in calendar 2027, effective HBM supply available to Nvidia, and the resulting increase in input costs or tightening of GPU supply. Its outcome explicitly tracks both HBM pricing and supply, so selecting either would arbitrarily discard another tracked quantity.
+11 new-3/clean-17 The tracked outcome is US sanctions or restrictions on Chinese AI model developers or their open-weight models, a policy matter not covered by any listed theme. Chip export controls do not cover restrictions on AI models or their use or hosting in the US, and this is not a question about NVIDIA's own business figures or conduct.
+16 new-3/clean-18 The outcome names several tracked results without identifying a main one: the number of state or local restrictions enacted beyond New York, their scope, and whether they block or delay AI data-centre projects. Selecting enactment alone would not preserve the stated outcome as a single judged figure or event.
+17 new-3/clean-21 The topic and its outcome track both NVIDIA's investment amount in Safe Superintelligence and the equity stake it represents, as well as the investment terms, without identifying one figure or event as the main outcome.
+23 new-3/clean-29 The outcome names several measures without identifying one as primary: combined chip production or deployment volume, deployed compute capacity, and comparison with Nvidia GPU shipments. Production, deployment and capacity are not interchangeable figures, so selecting one would redefine what the topic tracks.
+26 new-3/clean-25 The topic's outcome names both the disclosed total value of NVIDIA's fresh round of AI deals/investments and completion of that round, without identifying either as the main tracked outcome. These are a figure and a separate event and cannot share one ladder.
+27 new-3/clean-31 The tracked pricing figure is TSMC's implemented calendar-2027 advanced-node wafer price increase, which belongs to TSMC, not NVDA. Its potential effect on Nvidia's input costs or gross margin does not make TSMC's own pricing figure an NVDA figure or a theme-level outcome.
+31 new-3/clean-34 The topic's outcome names several distinct tracked results—the investment's final amount, its completion, its terms and NVIDIA's equity stake in Anthropic—without identifying one as the main figure or event to judge.
+42 new-3/clean-46 The outcome names investment completion, final investment amount and equity stake or other terms without identifying one as the main tracked outcome. These are separate events or figures and cannot be combined into one ladder.
+43 new-3/clean-47 The tracked outcome is CFTC approval of CME Group's compute-rental futures, a matter of derivatives-market regulation that none of the listed themes covers. It is not an outcome about NVDA's own business merely because the contracts reference Nvidia GPU rental costs.
+46 new-3/clean-48 The topic's outcome tracks completion, final investment size and final terms without identifying one as the main event or figure, so no single judged question can be selected.
+49 new-3/clean-53 The tracked outcome is Nebius's annual contract value per megawatt on Q3 2026 capacity deals, a figure belonging to Nebius (NBIS), not NVDA; peer pricing comparisons do not make it a theme-level figure. It is also a company figure for a quarter, rather than a full fiscal year.
+50 new-3/clean-56 The topic names combined calendar-2026 revenue or unit shipments of China's domestic AI-chip designers without choosing either as the main tracked figure. These are different quantities and cannot share one ladder; the outcome does not establish which one should determine the judgment.
+57 new-3/clean-58 The outcome tracks both NVIDIA signing and disclosing an anchor investment commitment and Anthropic completing its IPO, without identifying either event as the main one. A single judged question cannot be selected without rewriting the topic's outcome.
+58 new-3/clean-59 The tracked figure is the AI labs’ combined annualized revenue run rate at end-2026, not revenue covering one fiscal or calendar year. Neither the topic nor the item gives a publication date for that figure; year-end specifies its measurement date, not when the settling disclosures or reports will be published.
+60 new-3/clean-60 The main tracked event is a bilateral US–China AI understanding or agreement, which concerns AI diplomacy and governance, a matter not covered by any listed theme. The chip-export-controls theme covers a possible accompanying export-control change, not the broader AI agreement; judging only that change would replace the topic's main outcome.
+new-3 pass 3 capex: [('case', 'new-3/clean-4'), ('pass', '3'), ('status', 'ladder'), ('reason', 'None'), ('answer', '{\'no_ladder\': None, \'ladder\': {\'question\': "What will the four largest AI hyperscalers\' combined data center capital expenditures be for calendar 2026, as reported in their quarterly and full-year earnings disclosures?", \'object\': \'ai-capex\', \'not_judged\': [{\'part\': "Whether combined data center capital expenditures reach Nvidia\'s projected $1 trillion in calendar 2027.", \'why\': "This is a separate year\'s figure, while the judged question tracks calendar 2026, the primary year named in the outcome."}], \'event\': None, \'figure\': {\'unit\': \'USD\', \'year\': \'2026\', \'ranges\': [{\'lo\': None, \'hi\': \'500000000000\'}, {\'lo\': \'500000000000\', \'hi\': \'600000000000\'}, {\'lo\': \'600000000000\', \'hi\': \'700000000000\'}, {\'lo\': \'700000000000\', \'hi\': \'800000000000\'}, {\'lo\': \'800000000000\', \'hi\': None}], \'favourable_end\': \'n/a\', \'favourable_why\': \'\'}, \'reference\': {\'words\': \'The big four AI hyperscalers plan to spend around $650 billion on data center capital expenditures this year.\', \'kind\': \'expected\', \'value\': \'650000000000\', \'value_to\': None}, \'due_day\': \'2027-02-28\', \'due_day_basis\': \'expected_publication\'}}'), ('passage', 'The big four AI hyperscalers plan to spend around $650 billion on data center capital expenditures this year.'), ('view', '{\'object_id\': \'ai-capex\', \'object_kind\': \'theme\', \'kind\': \'theme\', \'looks_at\': \'The combined data center capital spending of the big four AI hyperscalers for calendar 2026 (and 2027), as reported in their quarterly results and full-year capex guidance.\', \'question\': "What will the four largest AI hyperscalers\' combined data center capital expenditures be for calendar 2026, as reported in their quarterly and full-year earnings disclosures?", \'due_day\': \'2027-03-31\', \'year\': \'2026\', \'rungs\': [{\'label\': \'below 500,000,000,000 USD\', \'condition\': \'below 500,000,000,000 USD\', \'lo\': None, \'hi\': 500000000000.0}, {\'label\': \'from 500,000,000,000 USD to below 600,000,000,000 USD\', \'condition\': \'from 500,000,000,000 USD to below 600,000,000,000 USD\', \'lo\': 500000000000.0, \'hi\': 600000000000.0}, {\'label\': \'from 600,000,000,000 USD to below 700,000,000,000 USD\', \'condition\': \'from 600,000,000,000 USD to below 700,000,000,000 USD (the reference when the question opened: "The big four AI hyperscalers plan to spend around $650 billion on data center capital expenditures this year.")\', \'lo\': 600000000000.0, \'hi\': 700000000000.0}, {\'label\': \'from 700,000,000,000 USD to below 800,000,000,000 USD\', \'condition\': \'from 700,000,000,000 USD to below 800,000,000,000 USD\', \'lo\': 700000000000.0, \'hi\': 800000000000.0}, {\'label\': \'800,000,000,000 USD or more\', \'condition\': \'800,000,000,000 USD or more\', \'lo\': 800000000000.0, \'hi\': None}], \'reference_status\': \'reference figure\'}')]
+capex raw request answer: {
+  "no_ladder": null,
+  "ladder": {
+    "question": "What will the four largest AI hyperscalers' combined data center capital expenditures be for calendar 2026, as reported in their quarterly and full-year earnings disclosures?",
+    "object": "ai-capex",
+    "not_judged": [
+      {
+        "part": "Whether combined data center capital expenditures reach Nvidia's projected $1 trillion in calendar 2027.",
+        "why": "This is a separate year's figure, while the judged question tracks calendar 2026, the primary year named in the outcome."
+      }
+    ],
+    "event": null,
+    "figure": {
+      "unit": "USD",
+      "year": "2026",
+      "ranges": [
+        {
+          "lo": null,
+          "hi": 500000000000
+        },
+        {
+          "lo": 500000000000,
+          "hi": 600000000000
+        },
+        {
+          "lo": 600000000000,
+          "hi": 700000000000
+        },
+        {
+          "lo": 700000000000,
+          "hi": 800000000000
+        },
+        {
+          "lo": 800000000000,
+          "hi": null
+        }
+      ],
+      "favourable_end": "n/a",
+      "favourable_why": ""
+    },
+    "reference": {
+      "words": "The big four AI hyperscalers plan to spend around $650 billion on data center capital expenditures this year.",
+      "kind": "expected",
+      "value": 650000000000,
+      "value_to": null
+    },
+    "due_day": "2027-02-28",
+    "due_day_basis": "expected_publication"
+  }
+}
+
+codex
+**Keep the old system for release. Do the free check first.** One saved answer already shows why it’s worth doing. The new system produced a valid 2026 capex question on its third attempt. The comparison used the first attempt, which bundled two years and produced no answer choices. [Saved third attempt](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/new-3/ladder/send-3/outcomes.jsonl:6)
+
+1. **Anthropic changes the margin by one in a sensitivity check.** Under the frozen reading, the old-only counts stay **7 and 8**. If we disallow the September deadline as a match for March, they fall to **6 and 7**. Both remain above the five-matter loss threshold. The frozen list also confirms **four** NVIDIA figure matters served by the old system across runs. [Counts](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/reading-diagnostic/diagnostic-count.json:12) · [Anthropic trace](/private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/full-trace.txt:97)
+
+2. **The tests answer different questions.** The free check asks what a perfect repair could recover. The paid test asks whether revised instructions actually recover it. Start free. Some of the 46 refusals concern out-of-scope topics, such as TSMC’s own prices. Shortening those questions solves nothing. The coverage penalty was knowable before launch. The exact loss was still uncertain. [TSMC refusal](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/new-2/ladder/send-1/outcomes.jsonl:52)
+
+3. **Keep the old system and the original 32-matter result.** Dropping the figures still leaves the old system ahead, 6 to 2–3. The earlier experiment that added revenue and margin lost the Rubin shipment question on its control case. [D491](/Users/lchingen/hivemind/docs/DECISIONS.md:835)
+
+**Approve or refuse:** Keep the old system for release and spend $0 checking how many of the 32 matters a one-outcome repair could recover, starting with capex and Anthropic.
+
+DISAGREE: Run the free coverage check before paying to resend the 46 cases.
+tokens used
+198,813
+**Keep the old system for release. Do the free check first.** One saved answer already shows why it’s worth doing. The new system produced a valid 2026 capex question on its third attempt. The comparison used the first attempt, which bundled two years and produced no answer choices. [Saved third attempt](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/new-3/ladder/send-3/outcomes.jsonl:6)
+
+1. **Anthropic changes the margin by one in a sensitivity check.** Under the frozen reading, the old-only counts stay **7 and 8**. If we disallow the September deadline as a match for March, they fall to **6 and 7**. Both remain above the five-matter loss threshold. The frozen list also confirms **four** NVIDIA figure matters served by the old system across runs. [Counts](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/reading-diagnostic/diagnostic-count.json:12) · [Anthropic trace](/private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/full-trace.txt:97)
+
+2. **The tests answer different questions.** The free check asks what a perfect repair could recover. The paid test asks whether revised instructions actually recover it. Start free. Some of the 46 refusals concern out-of-scope topics, such as TSMC’s own prices. Shortening those questions solves nothing. The coverage penalty was knowable before launch. The exact loss was still uncertain. [TSMC refusal](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run/new-2/ladder/send-1/outcomes.jsonl:52)
+
+3. **Keep the old system and the original 32-matter result.** Dropping the figures still leaves the old system ahead, 6 to 2–3. The earlier experiment that added revenue and margin lost the Rubin shipment question on its control case. [D491](/Users/lchingen/hivemind/docs/DECISIONS.md:835)
+
+**Approve or refuse:** Keep the old system for release and spend $0 checking how many of the 32 matters a one-outcome repair could recover, starting with capex and Anthropic.
+
+DISAGREE: Run the free coverage check before paying to resend the 46 cases.

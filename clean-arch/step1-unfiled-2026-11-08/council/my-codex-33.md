@@ -1,0 +1,16 @@
+**Close the dependency-design stretch as a provisional candidate, but do not adopt the proposed stopping rule as a new repository-wide rule.** The slice’s remaining contracts can be carried into the review that opens a build. AGENTS §2 still requires those contracts to be complete before code is built.
+
+Two corrections belong in the record first:
+
+- **A cycle involving stored work can arise during creation through an awaited question.** An existing question can be waiting for a future question; the new question can name that existing question as a dependency. Binding the waiting edge would then close a cycle. `resolve_waiting` checks for it, but the combined creation-and-resolution case is not the same as “nothing reads a question being created.” [Writer](/Users/lchingen/hivemind/src/hivemind/views/writing.py:50)
+- **Theme pairs do occur in the census.** For example, both blind readers marked `v8 ← v7` strongly, and both marked `v14 ← v6` and `v15 ← v6` mutually, weakly; these are theme-to-theme pairs. They do not establish a company-question/theme duplicate, but “no pair names a theme” is too broad. [Census tally](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/dependency-selection/tally.json)
+
+The suite under the seam is useful compatibility evidence. It does not prove every creation event: the theme case and closing without a successor are expressly unexercised, and the old-row comparison checks the service at `2099-12-31`, not every historical as-of date. The two altered-fixture results should remain reported separately from the 285 tests that passed unchanged.
+
+I agree with the *limited* practical principle behind your proposal: a design can be recorded as a provisional candidate, with its evidence and unresolved build contracts, without continuing to elaborate every unbuilt component now. I would not make “a contract depending on an unbuilt piece is written only when that piece opens” a universal rule: some such contracts determine whether the pieces can coexist, as the filing/reading conflict just did.
+
+Close this stretch with the three decision/code gaps, the seed-label stop and the two corrections above visible. No selection-call design or model send follows from these findings. If the slice is reopened, its review must resolve the creation-time waiting cycle, closing behavior, theme duplication, historical readers and label semantics before a build.
+
+**The next task is the bounded consolidation itself:** update the status and decision record so there is one current next-task statement, the default and both paths remain, and D375/D368 remain decided work awaiting implementation and acceptance. I do not see another investigation that presently outranks that closure on the lean path’s system-choice question. This is not a claim that the production goal or system choice has been achieved, and it does not make Alex’s return a prerequisite for future work: a new decision-worthy step can return to council under D439.
+
+Council position: close the dependency stretch as provisional after correcting the waiting-cycle and theme-pair claims; consolidate the current status, send nothing, and do not turn the proposed stopping practice into a general rule.

@@ -1,0 +1,550 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 120: before coding the bound resolver, a missing dimension, the stores it touches (a $0 census)
+
+`service.resolve_bound` serves every store, not only a live new-system one. I counted the stored ledgers by state (`poc/data/**/views.sqlite`):
+
+| State | Ledgers | Example |
+|---|---|---|
+| finished: no step dated after the last completed day | 53 | `poc/data/views.sqlite` |
+| **work after the last completed day** (a run stopped or sealed mid-day) | 26 | **the store the running product serves**, `served-2026-10-28-v34-nvda-3m-through-0828` |
+| steps but no completed day | 5 | `e2e-v83-seedv2-d3` |
+| empty | 59 | — |
+
+**The running product's own store** (the API's and MCP's default `--views`):
+
+- Its last completed day is 2026-08-28. Its steps run to 2026-08-29: 28 articles, which wrote 99 evidence records, 117 links, 59
+  same-claim records and 28 handovers, but no question and no judgement.
+- Today a request with an explicit `as_of` of 2026-08-29 or later is served that half-processed day's evidence. This is open defect
+  10's class, already present in the running product through explicit dates.
+
+**Proposed amendment A1 to row 3:**
+
+1. **A finished store** (nothing after its last completed day): every bound passes as today. The answers are identical.
+2. **A store with work after its last completed day:** an explicit upper bound after that day is **answered as of the last completed
+   day, and the response names the day served** (`served_as_of`). It is not refused.
+   - My reason for changing from refusal: the running product's MCP clients pass dates such as today's. A refusal would break them,
+     while an answer as of the last completed day, labelled, is both correct and not silent.
+   - This changes the running product's answers for explicit dates on or after 2026-08-29: from a partial day to the last completed
+     day, labelled.
+   - That is a change to what the running system shows. It is decided reversibly under D439 and goes on Alex's page.
+3. **Steps but no completed day:** refused as the first day (row 4). A legacy ledger without the tables reads as today.
+4. **An omitted bound** gives the last completed day, as today.
+
+The contract's proofs 2, 3 and 9 are then run on test stores of all four states, plus a copy of the served store's state.
+
+**Asked of you:** clamp-with-label or refusal for row 3 (2); whether changing the running product's explicit-date answers is
+acceptable under D439, reversibly; and anything this census shows that the contract still misses.
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the resolver’s callers and response shapes, then compare clamping with refusal on the stored product path and the council’s authority.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D439|D592|D575|D261|D354' docs/DECISIONS.md | head -25
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -4" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+236:- **Frozen** (D354): the collision judge (`collision-v2`), the judge (`judging-v7`), the matching prompt (`matching-v3`), the judge's
+275:- **The frozen ruler** (D261, D262): the extraction standard (its version 5: version 3 signed in D243, with D248's seven boundaries and
+520:| D176 | 2026-10-25 | Judge business-question coverage, not mandatory project cards | superseded by D243, D261 | Ruler and measurement |
+532:| D188 | 2026-10-26 | The extraction gold: twenty cases labelled by the assistant this round, human review later | superseded by D243, D250, D261, D262 | Ruler and measurement |
+558:| D214 | 2026-10-28 | Reconcile the analyst standard before interpreting scores | in force (amended by D229, D244, D261) | §11 The ruler and measurement |
+573:| D229 | 2026-10-29 | The analyst standard for extraction is signed off and does not drift; measure Haiku against it | superseded by D243, D261 | Ruler and measurement |
+585:| D241 | 2026-10-29 | One unified definition of the ledger's types, question opening and evidence levels, with a traced golden se… | in force (amended by D243, D261) | §11 The ruler and measurement |
+587:| D243 | 2026-10-29 | The extraction standard is signed: proposal 5 stricter, the other eleven at their leans; lean cautious, cat… | in force (amended by D248, D250, D261, D369; #4 overridden for the system by D385, frozen files unchanged) | §11 The ruler and measurement |
+588:| D244 | 2026-10-29 | Claude sets the dev/test split; scores are leads and Claude reads the traces every time; first the role-v29… | in force (amended by D261) | §11 The ruler and measurement |
+594:| D250 | 2026-10-31 | Four evidence boundaries and the counting unit settled; the ruler is fixed before any further measurement (… | in force (amended by D261) | §11 The ruler and measurement |
+602:| D258 | 2026-11-02 | Question identity brought in line with D248: a part of an open question is filed under it; `event` and `pol… | in force (amended by D354) | §7 Thesis library |
+605:| D261 | 2026-11-02 | A ruler or gold that is built and reviewed is never changed again | in force | §11 The ruler and measurement |
+607:| D263 | 2026-11-02 | The judge is written to the frozen gold's own reasoning (judging-v7, poc-v91); a gap to the gold is closed… | in force (amended by D354, D359) | §7 Thesis library |
+698:| D354 | 2026-11-03 | Steps 3 and 4 (opening and matching questions, judging them) are frozen as `poc-v108` runs them, after thre… | in force (amended by D359) | §7 Thesis library |
+783:| D439 | 2026-11-13 | While Alex is not active, the council (independent Codex review + Claude) decides by consensus on the data and the PRD's goals; recorded, executed, measured, traces read, each round logged with its lesson; AGENTS limits stay; paid spending within $40 (Claude's setting) | in force | AGENTS.md, Authority and scope |
+786:| D442 | 2026-11-13 | Next step (council consensus, D439): D431's same-day end-to-end comparison as a diagnostic (clean path against production as it now runs (poc-v118, D370; corrected from v116), unseeded, three draws each, graded questions one by one, every lost answer read back); design frozen, $0 replay, cost estimate and council review before any send | in force | `clean-arch/step1-unfiled-2026-11-08/council/mk-codex-2.md` |
+787:| D443 | 2026-11-13 | Shape B' (council consensus, D439): the stored clean chain against fresh production v118 draws as an exploratory census of final-answer losses; one-day slice first; one $5 shared ledger (conditional on stated bounds); shape A stays owed for D427 | in force | `clean-arch/e2e-comparison-2026-11-13/DESIGN.md` |
+788:| D444 | 2026-11-13 | D443's draws stopped at the $5 ledger (an over-conservative Jev charge, $4.999 ledger against $0.98 recorded); three fresh draws from empty under a new $3 ledger with Jev settled at three times its usage (council consensus, D439); stopped draws kept as records | in force | `clean-arch/step1-unfiled-2026-11-08/council/ml-codex-9.md` |
+789:| D445 | 2026-11-13 | Census: level on graded questions, every loss at opening; next a $0 path trace of the clean path's 17 graded opening losses, memory first, no repair until a cause is found (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/RESULT.md` |
+790:| D446 | 2026-11-13 | Trace: no single mechanism; 7 certain and 2 uncertain breaches of the standard's unit rules; next a $0 audit of a narrow typed-unit contract on stored losses and correct controls, with a stop rule (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/AUDIT-CONTRACT.md` |
+791:| D447 | 2026-11-13 | Typed-unit line stopped (audit: 2 of 16 detectable, none recovered); next a reviewed $0 design for the ladder step wired end to end and a diagnostic same-day run; the send decided after its review (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/AUDIT-RESULT.md` |
+792:| D448 | 2026-11-13 | Wiring contract settled (design v4); build the wiring and its $0 proof, then code review; the slice and the full run each by its own later decision (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md` |
+793:| D449 | 2026-11-13 | Wiring code review: shared stops read before every send, launcher liveness by its registered lock, the agreed reservation bound, the real orchestration proved; redo of Step 1, Step 2, production only by a reasoned relaunch; a crash stops the run (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/run_fresh.py` |
+794:| D450 | 2026-11-13 | Launch the slice: 2026-07-01 through the wired clean path (ladder pass 1) and production v118, live, on its own $1.50 ledger; a wiring check, every trace read; the full run by a later decision (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/preflight/PREFLIGHT-SLICE.md` |
+795:| D451 | 2026-11-13 | Launch the full run: clean c1–c3 (ladder three passes) and production p1–p3 for 2026-07-01..07-14, same day, ledger $14.84; readings committed before the send (council consensus, D439) | in force | `clean-arch/e2e-comparison-2026-11-13/READING-COMMITMENT.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '40,64p'
+rg -n 'def (default_as_of|summaries|views|view|evidence|history|record|changes|evaluate)|default_as_of\\(' src/hivemind/service.py src/hivemind/bundle.py src/hivemind/idea.py src/hivemind/search.py scripts/hivemind_api.py scripts/hivemind_mcp.py
+nl -ba scripts/hivemind_api.py | sed -n '45,200p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    40	     empty or stale answer in its place.
+    41	   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+    42	     example while the WAL index is being rebuilt.
+    43	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+    44	2. **One committed state per request, one connection per concurrent request.**
+    45	   - Each API request and each MCP tool call runs every read inside one explicit read transaction: `BEGIN`, the reads, the end.
+    46	   - The transaction always ends, failure included (`finally`).
+    47	   - **MCP opens a connection per tool call,** as the API does per request, in place of today's one process-wide `LEDGER`.
+    48	     Overlapping calls under streamable HTTP each hold their own transaction and never share one.
+    49	   - The service's start-up reads run the same way. MCP's object list is computed per call.
+    50	3. **Every date bound, resolved in one function.**
+    51	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    52	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    53	     explicit date bypasses any check placed in `default_as_of`.
+    54	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    55	     caller's read transaction.
+    56	     - An omitted bound gives the last completed day.
+    57	     - An explicit bound later than the last completed day is refused, naming that day.
+    58	     - An explicit bound on or before it passes.
+    59	   - Every one of the 13 sites calls it, and lower bounds (`from_day`, `since_day`) are unaffected.
+    60	   - **A structural check** fails the suite when any module calls `default_as_of` outside `resolve_bound`, or resolves a bound by
+    61	     `or`. A behaviour test per caller gives each an explicit future bound and an omitted one.
+    62	4. **The first day** (open defect 10).
+    63	   - Before any day completes, every request and tool call is refused, including the streamed Idea route before any header.
+    64	   - An empty store (no step) and a legacy ledger read as today.
+scripts/hivemind_mcp.py:41:OBJECTS = idea_module.object_list(LEDGER, service.default_as_of(LEDGER), ALIASES)
+scripts/hivemind_mcp.py:78:def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+scripts/hivemind_mcp.py:84:def view(view_id: str, as_of: str = '') -> dict:
+scripts/hivemind_mcp.py:95:def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+scripts/hivemind_mcp.py:102:def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+scripts/hivemind_mcp.py:109:def record(view_id: str, as_of: str = '') -> dict:
+scripts/hivemind_mcp.py:116:def changes(since_day: str, to_day: str = '') -> list:
+scripts/hivemind_mcp.py:122:def evaluate(view_id: str, comparator: str, value_usd: float, as_of: str = '') -> dict:
+src/hivemind/search.py:46:def view_text(record, rungs):
+src/hivemind/search.py:230:    as_of = as_of or service.default_as_of(ledger)
+src/hivemind/idea.py:222:    as_of = as_of or service.default_as_of(ledger)
+src/hivemind/bundle.py:98:def view_bundle(views_db, item_of, view_id, as_of=None):
+src/hivemind/bundle.py:177:    as_of = as_of or service.default_as_of(views_db)
+src/hivemind/bundle.py:220:        as_of = as_of or service.default_as_of(views_db)
+src/hivemind/service.py:23:def default_as_of(conn):
+src/hivemind/service.py:60:def view_exists(conn, record, as_of):
+src/hivemind/service.py:87:def summaries(conn, as_of=None, include_closed=False):
+src/hivemind/service.py:91:    as_of = as_of or default_as_of(conn)
+src/hivemind/service.py:106:def views(conn, object_id=None, as_of=None, include_closed=False):
+src/hivemind/service.py:107:    as_of = as_of or default_as_of(conn)
+src/hivemind/service.py:142:def view(conn, view_id, as_of=None, record=None):
+src/hivemind/service.py:143:    as_of = as_of or default_as_of(conn)
+src/hivemind/service.py:166:def evidence_record(conn, evidence_id, as_of, arrived_seq=None):
+src/hivemind/service.py:180:def evidence(conn, view_id, as_of=None, tier=None):
+src/hivemind/service.py:182:    as_of = as_of or default_as_of(conn)
+src/hivemind/service.py:199:def history(conn, view_id, from_day=None, to_day=None):
+src/hivemind/service.py:200:    to_day = to_day or default_as_of(conn)
+src/hivemind/service.py:255:def record(conn, view_id, as_of=None):
+src/hivemind/service.py:257:    as_of = as_of or default_as_of(conn)
+src/hivemind/service.py:269:def changes(conn, since_day, to_day=None):
+src/hivemind/service.py:271:    to_day = to_day or default_as_of(conn)
+src/hivemind/service.py:463:def evaluate(conn, view_id, comparator, value_usd, as_of=None):
+src/hivemind/service.py:467:    as_of = as_of or default_as_of(conn)
+    45	    if isinstance(error, KeyError):
+    46	        return 404, f'not found: {error}'
+    47	    if isinstance(error, service.LedgerError):
+    48	        return 500, str(error)
+    49	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    50	        return 502, f'{type(error).__name__}: {str(error)[:200]}'
+    51	    return 400, str(error)
+    52	
+    53	
+    54	class Connections:
+    55	    """The databases one request reads: opened on entry, closed on exit, never shared between threads."""
+    56	
+    57	    def __init__(self, read_only=False):
+    58	        self.read_only = read_only
+    59	
+    60	    def __enter__(self):
+    61	        self.ledger = service.open_ledger(PATHS['views'])
+    62	        self.index = None if self.read_only else search.open_index(PATHS['index'])
+    63	        self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+    64	        self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+    65	        return self
+    66	
+    67	    def __exit__(self, *exc):
+    68	        for conn in (self.ledger, self.index, self.items):
+    69	            if conn is not None:
+    70	                conn.close()
+    71	
+    72	
+    73	class Handler(http.server.BaseHTTPRequestHandler):
+    74	    def log_message(self, fmt, *args):   # one line per request, no query text or body (an idea can carry anything)
+    75	        sys.stderr.write(f'{self.address_string()} {self.command} {self.path.split("?")[0]}\n')
+    76	
+    77	    def _send(self, status, payload):
+    78	        body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+    79	        self.send_response(status)
+    80	        self.send_header('Content-Type', 'application/json; charset=utf-8')
+    81	        self._cors()
+    82	        self.send_header('Content-Length', str(len(body)))
+    83	        self.end_headers()
+    84	        self.wfile.write(body)
+    85	
+    86	    def _cors(self):
+    87	        self.send_header('Access-Control-Allow-Origin', '*')
+    88	        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    89	        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+    90	
+    91	    def do_OPTIONS(self):          # a browser's preflight before a JSON POST
+    92	        self.send_response(204)
+    93	        self._cors()
+    94	        self.end_headers()
+    95	
+    96	    def _answer(self, work, read_only=False):
+    97	        try:
+    98	            with Connections(read_only) as db:
+    99	                self._send(200, work(db))
+   100	        except REQUEST_ERRORS as error:
+   101	            status, message = error_response(error)
+   102	            self._send(status, {'error': message})
+   103	
+   104	    def _stream_answer(self, work):
+   105	        self.send_response(200)
+   106	        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+   107	        self.send_header('Cache-Control', 'no-store')
+   108	        self._cors()
+   109	        self.end_headers()
+   110	
+   111	        def emit(event):
+   112	            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+   113	            self.wfile.flush()
+   114	
+   115	        try:
+   116	            with Connections() as db:
+   117	                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+   118	                emit({'type': 'result', 'data': card})
+   119	        except (BrokenPipeError, ConnectionResetError):
+   120	            return
+   121	        except REQUEST_ERRORS as error:
+   122	            status, message = error_response(error)
+   123	            try:
+   124	                emit({'type': 'error', 'status': status, 'message': message})
+   125	            except (BrokenPipeError, ConnectionResetError):
+   126	                pass
+   127	
+   128	    def do_GET(self):
+   129	        url = urllib.parse.urlsplit(self.path)
+   130	        q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
+   131	        parts = [p for p in url.path.split('/') if p]
+   132	        self._answer(lambda db: route(db, parts, q), read_only=parts in (['library'], ['thesis-bundles']))
+   133	
+   134	    def do_POST(self):
+   135	        parts = [p for p in urllib.parse.urlsplit(self.path).path.split('/') if p]
+   136	        length = int(self.headers.get('Content-Length') or 0)
+   137	        raw = self.rfile.read(length) if length else b''
+   138	
+   139	        def work(db, on_progress=None):
+   140	            if parts != ['ideas']:
+   141	                raise KeyError('/'.join(parts))
+   142	            try:
+   143	                body = json.loads(raw or b'{}')
+   144	            except json.JSONDecodeError as error:
+   145	                raise ValueError(f'the body is not JSON: {error}')
+   146	            if not isinstance(body, dict) or not str(body.get('text') or '').strip():
+   147	                raise ValueError('POST /ideas needs a JSON body with text')
+   148	            if CFG is None:
+   149	                raise config.ConfigError('the server was started without --config, so it cannot read ideas')
+   150	            return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
+   151	                                  int(body.get('k') or 10), aliases=ALIASES, semantic=SEMANTIC, bundles=body.get('bundles', True) is not False,
+   152	                                  on_progress=on_progress)
+   153	        accepted = [part.split(';', 1)[0].strip() for part in self.headers.get('Accept', '').split(',')]
+   154	        if parts == ['ideas'] and 'application/x-ndjson' in accepted:
+   155	            self._stream_answer(work)
+   156	        else:
+   157	            self._answer(work)
+   158	
+   159	
+   160	def flag(value):
+   161	    return str(value).lower() in ('1', 'true', 'yes')
+   162	
+   163	
+   164	def route(db, parts, q):
+   165	    ledger, as_of = db.ledger, q.get('as_of') or None
+   166	    if parts == ['library']:
+   167	        return bundle.library(ledger, db.items, as_of)
+   168	    if parts == ['thesis-bundles']:
+   169	        return bundle.thesis_bundles(ledger, db.items, [id.strip() for id in q.get('ids', '').split(',') if id.strip()], as_of)
+   170	    if parts == ['search']:
+   171	        return search.search(ledger, db.index, q.get('q', ''), int(q.get('k', 10)), as_of, flag(q.get('include_closed', '')), aliases=ALIASES, semantic=SEMANTIC)
+   172	    if parts == ['views']:
+   173	        return service.views(ledger, q.get('object') or None, as_of, flag(q.get('include_closed', '')))
+   174	    if len(parts) == 2 and parts[0] == 'views':
+   175	        record = service.view(ledger, parts[1], as_of)
+   176	        if record is None:
+   177	            raise KeyError(parts[1])
+   178	        return record
+   179	    if len(parts) == 3 and parts[0] == 'views':
+   180	        view_id, what = parts[1], parts[2]
+   181	        if what == 'history':
+   182	            return service.history(ledger, view_id, q.get('from') or None, q.get('to') or None)
+   183	        if what == 'evidence':
+   184	            return service.evidence(ledger, view_id, as_of, q.get('tier') or None)
+   185	        if what == 'record':
+   186	            return service.record(ledger, view_id, as_of)
+   187	        raise KeyError(what)
+   188	    if parts == ['changes']:
+   189	        if not q.get('since'):
+   190	            raise ValueError('changes needs since=YYYY-MM-DD')
+   191	        return service.changes(ledger, q['since'], q.get('to') or None)
+   192	    if parts == ['evaluate']:
+   193	        if not all(k in q for k in ('view_id', 'comparator', 'value_usd')):
+   194	            raise ValueError('evaluate needs view_id, comparator and value_usd')
+   195	        answer = service.evaluate(ledger, q['view_id'], q['comparator'], float(q['value_usd']), as_of)
+   196	        if answer is None:
+   197	            raise KeyError(q['view_id'])
+   198	        return answer
+   199	    if parts == ['days']:
+   200	        row = ledger.execute('select min(day), max(day) from days_completed').fetchone()
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'incomplete day|after the last completed|53.*26|99 evidence|117 links|served_as_of' docs/research/2026-11-14-use-acceptance/live-service docs/CURRENT_STATE.md | head -45
+nl -ba src/hivemind/service.py | sed -n '197,235p;255,285p'
+nl -ba src/hivemind/bundle.py | sed -n '170,235p'
+nl -ba scripts/hivemind_api.py | sed -n '195,212p'
+nl -ba scripts/hivemind_mcp.py | sed -n '64,122p'
+rg -n 'D439' docs/DECISIONS-log.md | head -5" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/CURRENT_STATE.md:134:- **Measured:** one company (NVDA) over one 14-day window (2026-07-01 to 07-14), the judgement scored at the window end on the frozen ruler (AGENTS §7.1). Three draws of `poc-v116` against three of `poc-v108` run in the same hours: 53 against 45 agreements of 57; operating margin and capex agree in 3 of 3 draws, never judged without the coverage-start reading ([acceptance](research/2026-11-04-filing-end-to-end/acceptance-design.md)).
+docs/CURRENT_STATE.md:138:- **Repository:** `main` holds the product, the frozen ruler and the research records; run databases, logs and model archives stay on disk (D353), located by the [data manifest](research/2026-10-25-english/data-manifest.md). Worktrees: `/Users/lchingen/hivemind` is the main checkout, where slice branches are cut from `main`; `/Users/lchingen/hivemind-extraction-quality-2026-10-28` (the extraction branch, merged on 2026-11-03) keeps in its ignored folders the stored end-to-end runs of `poc-v91` to `poc-v95` that later comparisons read (D359); `/Users/lchingen/hivemind-run-v109-2026-11-04` is the finished judging-v8 run's worktree. Older branches stay in Git without worktrees (D359); none is merged work in progress. The clean source-text comparison and its condition-hidden review are complete; council discussion of next steps is ongoing.
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:121:     steps, after the last completed day, so it is outside every allowed bound.
+   197	# ---------- history
+   198	
+   199	def history(conn, view_id, from_day=None, to_day=None):
+   200	    to_day = to_day or default_as_of(conn)
+   201	    from_day = from_day or '0000-00-00'
+   202	    judgements = []
+   203	    previous = None
+   204	    for row in conn.execute('select * from judgements where view_id=? order by judgement_id', (view_id,)):
+   205	        entry = {'day': row['publication_day'], 'seq': row['seq'], 'position': row['rung'], 'changed': bool(row['changed']), 'moved_from': previous if previous is not None and previous != row['rung'] else None,
+   206	                 'why_changed': row['why_changed'], 'reasons': row['reasons'], 'cited': _unique(_json(row['cited_evidence_json'])), 'pushes': _json(row['pushes_json']),
+   207	                 'theme_pushes': _json(row['theme_pushes_json'] if 'theme_pushes_json' in row.keys() else None), 'round': row['input_id']}
+   208	        previous = row['rung']
+   209	        if from_day <= row['publication_day'] <= to_day:
+   210	            judgements.append(entry)
+   211	    arrivals = {}
+   212	    for link in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,)):
+   213	        day = day_of_seq(conn, link['seq'])
+   214	        if day and from_day <= day <= to_day:
+   215	            piece = store.evidence(conn, link['evidence_id'])
+   216	            bucket = arrivals.setdefault(day, {'evidence': 0, 'facts': 0})
+   217	            bucket['evidence'] += 1
+   218	            bucket['facts'] += int(vocabulary.canonical('tier', piece['tier']) == TIER_FACT)
+   219	    replacements = [{'day': day_of_seq(conn, r['seq']), 'old': r['old_evidence_id'], 'new': r['new_evidence_id'], 'said_day': r['said_day']}
+   220	                    for r in conn.execute('select r.* from replacements r join evidence_links l on l.evidence_id=r.new_evidence_id where l.view_id=?', (view_id,))
+   221	                    if day_of_seq(conn, r['seq']) and from_day <= day_of_seq(conn, r['seq']) <= to_day]
+   222	    switches = [{'day': day_of_seq(conn, s['after_seq']), 'open': bool(s['open']), 'reason': s['reason']}
+   223	                for s in conn.execute('select * from view_switches where view_id=? order by id', (view_id,)) if day_of_seq(conn, s['after_seq']) and from_day <= day_of_seq(conn, s['after_seq']) <= to_day]
+   224	    return {'view_id': view_id, 'from_day': from_day, 'to_day': to_day, 'judgements': judgements,
+   225	            'changes': [j for j in judgements if j['moved_from'] is not None], 'arrivals': dict(sorted(arrivals.items())),
+   226	            'replacements': replacements, 'switches': switches}
+   227	
+   228	
+   229	class LedgerError(ValueError):
+   230	    """A ledger record the service cannot read (corrupt JSON): refused, never read as empty."""
+   231	
+   232	
+   233	def _unique(ids):
+   234	    """A judgement's cites as the UI contract reads them: each id once, first occurrence kept. The writer stores the set from
+   235	    2026-10-28; the sealed ledger sealed-2026-10-28-v34-nvda-3m-through-0828 holds one judgement (v2, id 736) that cites an id twice."""
+   255	def record(conn, view_id, as_of=None):
+   256	    """The last check of the view on or before the day: when, by which round, how much came in that day."""
+   257	    as_of = as_of or default_as_of(conn)
+   258	    row = conn.execute('select input_id, publication_day, seq from judgements where view_id=? and publication_day<=? order by judgement_id desc limit 1', (view_id, as_of)).fetchone()
+   259	    if not row:
+   260	        return {'view_id': view_id, 'as_of': as_of, 'last_check': None}
+   261	    day = row['publication_day']
+   262	    items = [r['input_id'] for r in conn.execute("select distinct input_id from processing_steps where publication_day=? and step='handed_over' and result='ok' and input_id not like 'day:%'", (day,))]
+   263	    arrived = sum(1 for link in conn.execute('select seq from evidence_links where view_id=?', (view_id,)) if day_of_seq(conn, link['seq']) == day)
+   264	    return {'view_id': view_id, 'as_of': as_of, 'last_check': {'day': day, 'round': row['input_id'], 'items_processed_that_day': len(items), 'evidence_arrived_that_day': arrived}}
+   265	
+   266	
+   267	# ---------- changes since a day
+   268	
+   269	def changes(conn, since_day, to_day=None):
+   270	    """Judgements that said 'changed' after since_day (exclusive) up to to_day, with their cited evidence."""
+   271	    to_day = to_day or default_as_of(conn)
+   272	    out = []
+   273	    previous = {}
+   274	    for row in conn.execute('select * from judgements order by judgement_id'):
+   275	        before = previous.get(row['view_id'])
+   276	        previous[row['view_id']] = row['rung']
+   277	        if not row['changed'] or not (since_day < row['publication_day'] <= to_day):
+   278	            continue
+   279	        cited = [piece for piece in (evidence_record(conn, e, row['publication_day']) for e in _unique(_json(row['cited_evidence_json']))) if piece]
+   280	        out.append({'view_id': row['view_id'], 'day': row['publication_day'], 'from_position': before, 'to_position': row['rung'],
+   281	                    'position_moved': before is not None and before != row['rung'], 'why_changed': row['why_changed'], 'cited': cited})
+   282	    return out
+   283	
+   284	
+   285	# ---------- a claim against a ladder
+   170	def days(views_db, as_of=None):
+   171	    """The completed days the front end's time axis runs over, up to as_of."""
+   172	    return [r[0] for r in views_db.execute('select day from days_completed order by day') if as_of is None or r[0] <= as_of]
+   173	
+   174	
+   175	def _bundles(views_db, items_db, view_ids, as_of=None, coverage='selection'):
+   176	    """Complete, dated UI inputs for caller-selected theses; no search, model call or ledger write."""
+   177	    as_of = as_of or service.default_as_of(views_db)
+   178	    date.fromisoformat(as_of)
+   179	    if not isinstance(view_ids, list) or not view_ids or any(not isinstance(id, str) or not id for id in view_ids):
+   180	        raise ValueError('thesis_bundles needs a non-empty list of view ids')
+   181	    lookup = item_lookup(items_db)
+   182	    records = []
+   183	    for view_id in dict.fromkeys(view_ids):
+   184	        row = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   185	        if row is None or not service.view_exists(views_db, row, as_of):
+   186	            raise KeyError(f'{view_id} is not available as of {as_of}')
+   187	        records.append(view_bundle(views_db, lookup, view_id, as_of))
+   188	    return {'as_of': as_of, 'days': days(views_db, as_of), 'views': records,
+   189	            'coverage': coverage, 'groups': research_groups(views_db, view_ids, as_of)}
+   190	
+   191	
+   192	def research_groups(conn, view_ids, as_of):
+   193	    """Stored groups, with dated memberships limited to the envelope's loaded theses."""
+   194	    if not conn.execute('pragma table_info(thesis_groups)').fetchone():
+   195	        return []
+   196	    loaded = set(view_ids)
+   197	    result = []
+   198	    for row in conn.execute('select * from thesis_groups order by created_seq, rowid'):
+   199	        if not service.visible(conn, row['created_seq'], as_of):
+   200	            continue
+   201	        members = [{'thesis_id': m['view_id'], 'day': service.day_of_seq(conn, m['seq']), 'basis': m['basis'] or ''}
+   202	                   for m in conn.execute('select * from thesis_group_members where group_id=? order by id', (row['group_id'],))
+   203	                   if m['view_id'] in loaded and service.visible(conn, m['seq'], as_of)]
+   204	        if members:
+   205	            result.append({'id': row['group_id'], 'name': row['name'], 'scope': row['scope'],
+   206	                           'aliases': json.loads(row['aliases'] or '[]') if 'aliases' in row.keys() else [],
+   207	                           'created_day': service.day_of_seq(conn, row['created_seq']), 'members': members})
+   208	    return result
+   209	
+   210	
+   211	def thesis_bundles(views_db, items_db, view_ids, as_of=None):
+   212	    """Selected complete thesis records, pinned to one read transaction."""
+   213	    with read_snapshot(views_db, items_db):
+   214	        return _bundles(views_db, items_db, view_ids, as_of)
+   215	
+   216	
+   217	def library(views_db, items_db, as_of=None):
+   218	    """All theses, including closed ones, and stored groups; no search or model call."""
+   219	    with read_snapshot(views_db, items_db):
+   220	        as_of = as_of or service.default_as_of(views_db)
+   221	        if not as_of:
+   222	            raise ValueError('The library has no completed day; supply as_of')
+   223	        date.fromisoformat(as_of)
+   224	        view_ids = [r['view_id'] for r in views_db.execute('select * from views order by created_seq, rowid')
+   225	                    if service.view_exists(views_db, r, as_of)]
+   226	        if not view_ids:
+   227	            return {'as_of': as_of, 'days': days(views_db, as_of), 'views': [], 'coverage': 'library', 'groups': []}
+   228	        return _bundles(views_db, items_db, view_ids, as_of, coverage='library')
+   195	        answer = service.evaluate(ledger, q['view_id'], q['comparator'], float(q['value_usd']), as_of)
+   196	        if answer is None:
+   197	            raise KeyError(q['view_id'])
+   198	        return answer
+   199	    if parts == ['days']:
+   200	        row = ledger.execute('select min(day), max(day) from days_completed').fetchone()
+   201	        return {'first_day': row[0], 'last_day': row[1]}
+   202	    raise KeyError('/'.join(parts))
+   203	
+   204	
+   205	def main():
+   206	    global ALIASES, CFG, SEMANTIC
+   207	    parser = argparse.ArgumentParser()
+   208	    parser.add_argument('--views', default=os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite'))
+   209	    parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'), help='the items database, for source titles in the idea card')
+   210	    parser.add_argument('--index', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'search-index.sqlite'))
+   211	    parser.add_argument('--archive', default=os.path.join(ROOT, 'poc', 'data', 'service-english', 'idea-archive.sqlite'), help='where idea model calls are archived for replay')
+   212	    parser.add_argument('--config', default=os.path.join(ROOT, 'poc', 'config', 'poc-v118-idea.json'), help='the config whose idea settings name the mapping and final assessment models and prompts')
+    64	    """Complete UI inputs for selected thesis ids: dated states, assessments, sources, evidence and relationships.
+    65	    Pass this envelope to the frontend's fromBundles adapter. Read-only; does not call a model."""
+    66	    return bundle.thesis_bundles(LEDGER, ITEMS, view_ids, as_of or None)
+    67	
+    68	
+    69	@mcp.tool()
+    70	def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+    71	    """Top-k views for an idea or sentence: id, object, kind, what it looks at, the question, due day, dependencies
+    72	    (the views it is judged after) and dependants, with the score and its parts. Views, never evidence: evidence is
+    73	    anchored under its view."""
+    74	    return search_module.search(LEDGER, INDEX, query, k, as_of or None, include_closed, aliases=ALIASES, semantic=not ARGS.lexical)
+    75	
+    76	
+    77	@mcp.tool()
+    78	def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+    79	    """The views of one object (a ticker like NVDA or a theme id like ai-capex), or all views, as of a day."""
+    80	    return service.views(LEDGER, object or None, as_of or None, include_closed)
+    81	
+    82	
+    83	@mcp.tool()
+    84	def view(view_id: str, as_of: str = '') -> dict:
+    85	    """One view as of a day: the question, the ladder (positions 1..5, position 1 the most bullish outcome; or 2 for
+    86	    yes/no), the judged position with its label and condition and since when, whether open, dependencies and
+    87	    dependants, counts of rounds, evidence and facts."""
+    88	    record = service.view(LEDGER, view_id, as_of or None)
+    89	    if record is None:
+    90	        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+    91	    return record
+    92	
+    93	
+    94	@mcp.tool()
+    95	def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+    96	    """Every judgement round in the span (day, position, whether it changed, why, the cited evidence ids and the push
+    97	    each gave), evidence arrivals per day, position changes, replacements of guidance, open/close switches."""
+    98	    return service.history(LEDGER, view_id, from_day or None, to_day or None)
+    99	
+   100	
+   101	@mcp.tool()
+   102	def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+   103	    """Evidence in force under the view as of a day: one line, the source's own words, tier (发生的事 fact, 当事人说的
+   104	    party statement, 第三方看法 third-party view, 传闻 rumour), speaker, when it arrived, its sources."""
+   105	    return service.evidence(LEDGER, view_id, as_of or None, tier or None)
+   106	
+   107	
+   108	@mcp.tool()
+   109	def record(view_id: str, as_of: str = '') -> dict:
+   110	    """The last check of the view on or before the day: when, by which round, how many items were processed that
+   111	    day and how much evidence arrived under the view."""
+   112	    return service.record(LEDGER, view_id, as_of or None)
+   113	
+   114	
+   115	@mcp.tool()
+   116	def changes(since_day: str, to_day: str = '') -> list:
+   117	    """Judgements that said 'changed' after since_day, each with the view, from/to position and the evidence cited."""
+   118	    return service.changes(LEDGER, since_day, to_day or None)
+   119	
+   120	
+   121	@mcp.tool()
+   122	def evaluate(view_id: str, comparator: str, value_usd: float, as_of: str = '') -> dict:
+4871:## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+4874:- **Decided (his words):** while he is not active, every choice or next step that would have gone to him goes to the council: an independent read-only Codex review and Claude argue it on the data, the PRD and its quantified goals until they reach a consensus; the consensus is recorded as a decision citing D439, executed, measured, every trace read by Claude itself, and every round logged with a learning summary so the same mistake is not made twice; the loop iterates until the PRD's production goals are met.
+4875:- **Settled by Claude (wording and limits, not confirmed by Alex):** the standing limits of AGENTS.md stay (the frozen ruler never changes; nothing pushed, deployed, published or committed unasked; credentials and provider caps untouched). Opening a new version of a piece frozen for "a new version only Alex opens" is a council decision under D439; the frozen ruler is not. A disagreement the council cannot settle is recorded with both positions and the cheaper, reversible course is taken. **Spending ceiling:** paid model calls in this period stay within $40 at published rates in total, each paid step with its own ceiling in its council-agreed design; this figure is Claude's setting, not Alex's, and is reported in every status update.
+4876:- **Where written:** AGENTS.md, "Authority and scope" (the D439 bullet) and §7.3 "Own the loop"; `docs/CURRENT_STATE.md`; the memory file `feedback-council-decides-while-alex-away.md`. The session goal itself is set by Alex's `/goal` command; the replacement text is given to him in the reply.
+4879:## D440 · 2026-11-13 · Gate 2 failed; a memory diagnostic decides whether c15yc goes on (council consensus under D439)
+
+codex
+**I would not adopt A1 as written.** Clamping can be a useful compatibility option, but only if every caller can see the date actually served. Until that contract is designed and checked, refusal is the clearer behavior for an explicit date that includes unfinished work.
+
+The reason is visible in the existing interfaces: `/views`, `/evidence`, and `/changes` return arrays, including empty arrays, with no place for `served_as_of`. Several MCP tools return those arrays directly. Adding a label therefore requires a deliberate response-contract change or another reliably exposed channel; it cannot be accomplished solely inside `resolve_bound`. A range request whose `since` or `from` is after the clamped end also needs an explicit outcome: an unlabelled empty result could be mistaken for “nothing changed.” [API routes](/Users/lchingen/hivemind/scripts/hivemind_api.py:164), [MCP tools](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:77), [changes](/Users/lchingen/hivemind/src/hivemind/service.py:269).
+
+There is also a gap in A1’s state rule. A store that has no unfinished work *now* may acquire an unfinished day immediately after the request’s snapshot. Allowing future bounds on that basis changes the earlier contract’s rule for a live store, and clients may receive different treatment for the same date depending on when they ask. Specify finished and live stores independently of whether partial rows happen to be present, and test the transition. [Current contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:50).
+
+D439 permits the council to decide a reversible service change while Alex is inactive, provided the decision is reviewed, recorded and measured within its limits. It does **not** itself authorize deploying or publishing the changed running service. I would bring the product-facing response and compatibility design back to the council before implementation, and record the eventual choice for Alex. [D439](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4871).
+
+The census is a material reason to do that design: the proposed resolver affects historical and production stores as well as new-system live stores. I verified the default store path in the API and the relevant code paths; I did **not** independently reproduce the database census or the 99/117 counts. [API default](/Users/lchingen/hivemind/scripts/hivemind_api.py:205).
+
+CONSENSUS: no, because clamp-with-label is not yet defined for every response shape or range, and the live-to-finished transition needs a consistent rule.
+tokens used
+3,199,054
+**I would not adopt A1 as written.** Clamping can be a useful compatibility option, but only if every caller can see the date actually served. Until that contract is designed and checked, refusal is the clearer behavior for an explicit date that includes unfinished work.
+
+The reason is visible in the existing interfaces: `/views`, `/evidence`, and `/changes` return arrays, including empty arrays, with no place for `served_as_of`. Several MCP tools return those arrays directly. Adding a label therefore requires a deliberate response-contract change or another reliably exposed channel; it cannot be accomplished solely inside `resolve_bound`. A range request whose `since` or `from` is after the clamped end also needs an explicit outcome: an unlabelled empty result could be mistaken for “nothing changed.” [API routes](/Users/lchingen/hivemind/scripts/hivemind_api.py:164), [MCP tools](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:77), [changes](/Users/lchingen/hivemind/src/hivemind/service.py:269).
+
+There is also a gap in A1’s state rule. A store that has no unfinished work *now* may acquire an unfinished day immediately after the request’s snapshot. Allowing future bounds on that basis changes the earlier contract’s rule for a live store, and clients may receive different treatment for the same date depending on when they ask. Specify finished and live stores independently of whether partial rows happen to be present, and test the transition. [Current contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:50).
+
+D439 permits the council to decide a reversible service change while Alex is inactive, provided the decision is reviewed, recorded and measured within its limits. It does **not** itself authorize deploying or publishing the changed running service. I would bring the product-facing response and compatibility design back to the council before implementation, and record the eventual choice for Alex. [D439](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4871).
+
+The census is a material reason to do that design: the proposed resolver affects historical and production stores as well as new-system live stores. I verified the default store path in the API and the relevant code paths; I did **not** independently reproduce the database census or the 99/117 counts. [API default](/Users/lchingen/hivemind/scripts/hivemind_api.py:205).
+
+CONSENSUS: no, because clamp-with-label is not yet defined for every response shape or range, and the live-to-finished transition needs a consistent rule.

@@ -90,7 +90,7 @@ class ParallelDay:
         return metadata
 
     def __call__(self, conn, archive, cfg, universe, items, *, day, transport=None, log=print):
-        if cfg.matching.engine != 'jev' and self.jev_workers != 1:
+        if cfg.matching.engine not in ('jev', 'jev-links') and self.jev_workers != 1:
             raise ValueError('parallel matching is only implemented for Jev')
         metadata = self._manifest(conn, cfg, universe, items, day)
         frozen_cfg, frozen_universe = copy.deepcopy(cfg), copy.deepcopy(universe)

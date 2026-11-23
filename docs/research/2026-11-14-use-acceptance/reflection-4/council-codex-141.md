@@ -1,0 +1,5 @@
+**Yes: build and run proof 10 with the revised design.** The January snapshot is now described as a pre-closing state, first-day 503 is a readiness result, and the MCP and historical-comparison limits are explicit. [Proof design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:557).
+
+One qualification for the result: the timing brackets show that a response is **compatible with** a completed-day snapshot. A completion having *started* before a response arrived does not by itself prove it had committed before the request’s read. The dated JSON comparison and pause checks provide additional evidence, but the report should not claim the brackets alone prove the exact commit time. [Timing checks](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:592).
+
+CONSENSUS: yes

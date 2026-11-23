@@ -1,0 +1,11 @@
+**Do not send this design.** It spends up to $7.50 while dropping the fresh control, and even a clean Astra result would be too small to establish that gate 1 is reachable.
+
+1. **Use a fresh Sol control.** The stored draws are useful context, but AGENTS §7.3 requires samples beside a fresh control. Re-reading them blind does not control for changes between the two sends. A smaller paired probe fits better: choose **12 topics before looking at their results**, covering figures, events, refusals and multi-part topics; send three fresh draws per model under one fixed cap. Do not select only Sol’s failures. This would be a screening test, with a separate later decision if it shows promise.
+
+2. **The proposed verdict overclaims.** Even **zero faults in 78 independent sends** leaves an approximate one-sided 95% upper bound of **3.8% per send**; one fault leaves a higher bound. The actual sends share 26 topics, so independence is not established. At most one fault can identify a promising candidate, not demonstrate a reliable zero-fault pass on 131 sends.
+
+   Strict counting should be reported with its own prewritten outcome: if the apparent advantage depends on counting every disputed mark in Astra’s favour, the result is **inconclusive**. Also, three Astra faults should close **this candidate under this test**, not the entire same-provider model route or all work until Alex returns. [Design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/DESIGN.md)
+
+3. **The code has two evidence limits.** The stored-request check compares canonical hashes of the **first** request, not the exact transmitted bytes or any repair request. Also, mutant M6 produced file-not-found errors; the repository rule says an error is not a caught defect merely because it stops a test. The first-request projection is a useful stop, but one request’s cost is not a reliable estimate for all 78. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/astra_probe.py), [mutants](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/mutants.txt)
+
+**CONSENSUS: no, because the fresh control and a decision rule proportionate to the sample are needed; prepare a smaller paired Astra-versus-Sol screen with those limits before a separate send decision.**

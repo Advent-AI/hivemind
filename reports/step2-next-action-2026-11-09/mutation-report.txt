@@ -1,0 +1,140 @@
+candidate_not_applied count=1 return=1
+test_original_identity_candidate_only_and_preserved_historical_outcome (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_original_identity_candidate_only_and_preserved_historical_outcome (test_probe.ProbeTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpfb3x1wpk/test_probe.py", line 33, in test_original_identity_candidate_only_and_preserved_historical_outcome
+    self.assertEqual(new['questions'][q]['criteria']['supersedes'],self.candidate.read_text())
+AssertionError: "a la[232 chars]statement on the same topic is not this" != "a la[232 chars]statement on the same topic is not this Test-only instruction."
+Diff is 881 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 1 test in 0.125s
+
+FAILED (failures=1)
+
+
+lock_skipped count=1 return=1
+test_locked_process_refuses_before_credentials (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_locked_process_refuses_before_credentials (test_probe.ProbeTest)
+----------------------------------------------------------------------
+ValueError: missing_key
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpv0eu_h7p/test_probe.py", line 76, in test_locked_process_refuses_before_credentials
+    with self.assertRaisesRegex(ValueError,'experiment_locked'):probe.launch(*args,key_reader=lambda:reads.append(1),sender=self.fake_response,state_check=lambda:None,preflight_fn=lambda:(probe.HERE/'preflight-v108-current.log').read_text(),lock_path=lock,hard_exit=False)
+AssertionError: "experiment_locked" does not match "missing_key"
+
+----------------------------------------------------------------------
+Ran 1 test in 0.487s
+
+FAILED (failures=1)
+
+
+registration_hash_skipped count=1 return=1
+test_changed_registration_review_and_preflight_refuse_before_credentials (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_changed_registration_review_and_preflight_refuse_before_credentials (test_probe.ProbeTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpunczlw2_/test_probe.py", line 86, in test_changed_registration_review_and_preflight_refuse_before_credentials
+    self.assertEqual(reads,[]);self.assertFalse(args[3].exists())
+AssertionError: Lists differ: [1] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+1
+
+- [1]
+?  -
+
++ []
+
+----------------------------------------------------------------------
+Ran 1 test in 0.481s
+
+FAILED (failures=1)
+
+
+preflight_hash_skipped count=1 return=1
+test_changed_registration_review_and_preflight_refuse_before_credentials (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_changed_registration_review_and_preflight_refuse_before_credentials (test_probe.ProbeTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmp86zdaf5l/test_probe.py", line 86, in test_changed_registration_review_and_preflight_refuse_before_credentials
+    self.assertEqual(reads,[]);self.assertFalse(args[3].exists())
+AssertionError: Lists differ: [1] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+1
+
+- [1]
+?  -
+
++ []
+
+----------------------------------------------------------------------
+Ran 1 test in 0.845s
+
+FAILED (failures=1)
+
+
+secret_scan_skipped count=1 return=1
+test_failed_or_secret_response_stops_after_first_batch (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_failed_or_secret_response_stops_after_first_batch (test_probe.ProbeTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmplxm7xnwz/test_probe.py", line 61, in test_failed_or_secret_response_stops_after_first_batch
+    dest=self.root/name;self.assertFalse(probe.execute(self.plan,dest,SECRET,send,lambda:None));self.assertLessEqual(len(calls),8);self.assertFalse((dest/'complete').exists());self.assertNotIn(SECRET,(dest/'events.jsonl').read_text())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 1.218s
+
+FAILED (failures=1)
+
+
+no_hard_exit count=2 return=1
+test_inflight_journal_failure_hard_stops_real_entry (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_inflight_journal_failure_hard_stops_real_entry (test_probe.ProbeTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpnv4xysy8/test_probe.py", line 112, in test_inflight_journal_failure_hard_stops_real_entry
+    self.assertIsInstance(caught,SystemExit);self.assertEqual(caught.code,2);stop.assert_called_once_with(2)
+AssertionError: OSError('simulated disk failure') is not an instance of <class 'SystemExit'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.418s
+
+FAILED (failures=1)
+
+
+submission_interrupt_unprotected count=1 return=1
+test_interrupted_submission_hard_stops_without_untracked_threads (test_probe.ProbeTest) ... FAIL
+
+======================================================================
+FAIL: test_interrupted_submission_hard_stops_without_untracked_threads (test_probe.ProbeTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/lm/gw2hxzg52rd1brqm_bnlv6b00000gn/T/tmpwoqei21g/test_probe.py", line 127, in test_interrupted_submission_hard_stops_without_untracked_threads
+    self.assertIsInstance(caught,SystemExit);self.assertEqual(caught.code,2);stop.assert_called_once_with(2)
+AssertionError: KeyboardInterrupt() is not an instance of <class 'SystemExit'>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.363s
+
+FAILED (failures=1)

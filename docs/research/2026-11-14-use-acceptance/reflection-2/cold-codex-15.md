@@ -1,0 +1,31 @@
+**I would continue work on the new system and make the next step a $0 boundary study of the refused topics.** I do not agree to design the proposed “first named” rule: Alex explicitly chose to decline a topic with no main part, and the council has already rejected ordering alone as a way to identify that part.
+
+For example, the question about cloud companies’ spending asks for both 2026 and 2027. Picking 2026 because it appears first would create an answer, but it would not establish that 2026 is the main thing the topic asks. It would also leave the 2027 figure unjudged.
+
+The [reading report](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/proofs/reading-report.txt) and [account](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/proofs/second-week-account.json) support the central result: the week is **not clean**, even when every unresolved mark is counted in the system’s favour. On the wider count, 9 of 12 topics are right twice and 6 have written choices, against the proposed diagnostic thresholds of 10 and 8. Lines 1, 2 and 4 have agreed failures. The strict count also misses. This is a diagnostic, not a failure of Alex’s full Stage A acceptance.
+
+I checked the topic wording and sample raw answers. The guarantee question can lose the identity of the guarantee; the two spending topics are declined three times each; and the commitment topic is answered once and declined twice. I have **not independently reproduced the full 60-topic refusal census**, so I would treat its 22-of-37 breakdown as the recorded census rather than a count I have verified.
+
+The important distinction within that census is between a topic that truly gives no main figure and one where a main figure can be identified but the step declines anyway. D397 permits the former refusal; it does not require the latter. Topic 13 is evidence of disagreement at that boundary, but its wording asks both how much is funded and how much remains, so its first-listed balance alone is not enough to settle the boundary.
+
+**D439 gives us authority to decide a new version; it does not make “first named” Alex’s rule.** [D397](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) says that a topic with no main part gets no judged question. [D469](/Users/lchingen/hivemind/docs/DECISIONS-log.md:5286) already rejected a candidate based on order because it was wider than that rule; D470’s blind boundary check found risks of combining separately tracked things. The nearer year is not necessarily the more important year either. D436 keeps two sides of one bet together; it does not make every two-year question a single bet. Nor does D248 say that all periods of a bet must always be one question: its specific deadline rule and its general test of whether answers can move apart must be applied to the case.
+
+The next step I would open is therefore:
+
+- **At $0, read the nine no-main topics and the prior D469–D470 boundary cases beside their source articles, requests, refusals and other attempts.** Separate repeated runs of the same matter. For each, decide whether the source supports a question an analyst would track, whether the topic actually identifies a main part, and whether a permissible question can be written without discarding a separately important bet. Include the two July topics judged unworthy of opening as guards.
+- **The decision it enables:** whether there is a general, evidence-backed candidate consistent with D397 and D436, or whether the remaining loss needs the already-recorded splitting work or a separately argued product decision. Examine splitting as a possibility, not as permission to build it.
+- **Stop condition:** if no candidate recovers a question on at least two distinct worthwhile matters while preserving the unworthy-topic guards and D397’s no-main refusal, record that result and return to the council. If one does, bring the candidate and its prompt audit back for review; do not change the frozen step or send a test yet. The sample is for finding a candidate, not proving it works.
+
+I rank this above a form correction because it addresses the largest *recorded refusal class* and potentially whether worthwhile matters receive any answer. But I would record and resolve the reading issue before relying on a later acceptance score.
+
+The [result page](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/second-week/RESULT.md) needs several qualifications for a cold reader:
+
+- “The difference is in how the first step shaped the topics, not in the step that writes the choices” states a cause too strongly. Topic shape explains the two repeated spending refusals under the present rule; it does not explain all nine refusals, including the contested theme and main-figure cases.
+- The 23 open due-day points do **not all** arise from the February-versus-April annual-figure conflict. The report also shows disputes about approximate dates for events and whether a point-in-time rental price is a yearly figure. D414 supports the 60-day rule for qualifying yearly figures; it does not settle all 23.
+- “No question” on the two spending matters should say **no answer-choice question was written in this diagnostic**. The topics existed, while matching and judging were not run. The claim that both are worthwhile remains a reader judgment, not a measured downstream result.
+- The line-2 omissions are agreed marks, but the earlier audit did not prove that the undefined term caused each omission. D550 calls for tracing the new omissions against their sources and requests before treating them as one mechanism.
+- The six third-reader sessions exceeded the **planned session count**, even if each stayed within the per-session token limit. The page does disclose this; the total cost of those sessions remains unknown.
+
+The existing note and reading form are in tension on annual-report dates. Clarifying that conflict should preserve the original marks and report any revised interpretation alongside them; it must not silently change the frozen ruler or the verdict.
+
+Position: Continue the new system; conduct the $0 refusal-boundary study, with no first-named rule, frozen-step change, or model send authorized yet.

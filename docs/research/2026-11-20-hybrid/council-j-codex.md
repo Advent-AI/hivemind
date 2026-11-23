@@ -1,0 +1,8 @@
+**Send a five-case H1 diagnostic. The fresh test correctly stopped at one target.**
+
+- **Census.** Of the five jointly rejected, worth-tracking answers on September 6, four were exposed numeric answers and one was the fresh H200 question. OpenAI financing was marked duplicate. The pool still has five fresh, worth-tracking numeric bets, including 2026 hyperscaler capex and H100 rental prices. None was jointly rejected. The September 6 pool excludes cases based on what the design saw on September 20, so 7% versus 17% cannot establish that errors accumulate. [Census marks](/Users/lchingen/hivemind/poc/data/hybrid-2026-11-20/marks-fresh-census.json:1372) · [Selection code](/Users/lchingen/hivemind/docs/research/2026-11-20-hybrid/fresh_test.py:240)
+- **Next send.** Use old-3 Q3, old-3 Q37 and old-1 Q7. They cover three distinct bets where v7 kept the rejected answer 3/3 and removing the prior answer moved it 3/3. Add two previously supported controls with carried evidence. Send three repeats each under H1 and same-day v7, then blind-read all 30 answers. [DESIGN-J2.md:219](/Users/lchingen/hivemind/docs/research/2026-11-20-hybrid/DESIGN-J2.md:219)
+- **Falsifier.** Require two net target repairs jointly supported in at least two repeats, no lost controls and no extra refusals. If v7 leaves fewer than two repairable targets, call the diagnostic inconclusive. Eight extra range changes is the wrong bar. A changed range can still be unsupported, and a sound derivation can keep the same range.
+- **Skip the 48-case movement-only send.** A whole-window replay also waits until H1 shows a supported repair and clears the planned regression guard.
+
+CONSENSUS: Run one small, blinded H1 diagnostic before spending on a wider replay.

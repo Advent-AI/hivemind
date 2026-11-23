@@ -1,0 +1,15 @@
+**The two findings are real, but I would not build both changes as proposed yet.** The first changes the default date for every service reader, and the second needs a defined outcome when the live library is unavailable.
+
+1. **First day: fix the partial default view, with a complete reader contract.** The saved test shows `/library` returning two in-progress judgements before any day completed. Returning no default date would make `bundle.library` refuse, as proposed. But `default_as_of` also feeds views, search summaries, history, changes, evaluation and MCP startup. Some readers compare a date with the result directly; `None` can turn the intended “not ready” state into a `TypeError`. Define and test the response of each affected entry point, including MCP startup. [Result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/page-contract/SERVING-WHILE-WRITING-RESULT.md:10), [service.py](/Users/lchingen/hivemind/src/hivemind/service.py:87), [MCP](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:41)
+
+   “Any processing step” is a proposed way to distinguish a day-aware store; it is not proof of provenance. A quick read-only census found **zero stores with processing steps, judgements and no completed day among 143 `views.sqlite` files found**, but that does not establish the rule for every legacy or partial store. Test the actual legacy shapes and first-day states, including before the first processing record. State separately whether an explicitly supplied `as_of` may expose an unfinished day.
+
+   Also, refusing `/library` alone leaves the page silently displaying its embedded snapshot. The product needs a visible indication that the live library is unavailable or that the displayed snapshot is older; otherwise the partial view is replaced by another potentially misleading view. [bootstrap.js](/Users/lchingen/hivemind/poc/ui/src/bootstrap.js:246)
+
+2. **Startup date: use the served `as_of` on the initial successful load**, subject to one timing rule: if the person has selected a date while the request is in flight, preserve that selection rather than overwrite it. Later dataset replacements can retain the existing clamp. Update the UI contract because it currently says the supplied snapshot defines the displayed date. [thesis-ui.md](/Users/lchingen/hivemind/docs/poc/thesis-ui.md:11)
+
+   Strengthen the browser check: its present assertion compares only the number of cards, so a different date with the same count could pass. Assert the displayed date and question identities against the served response, with a delayed-response case and the existing replacement/clamp control. [serving_while_writing.py](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/page-contract/serving_while_writing.py:151)
+
+The next step is a $0 design and proof for these two observed failures, including the reader table above, followed by the same paused-writer test. No new model run is needed.
+
+CONSENSUS: no, because changing the shared default can break other readers, and an unavailable live library would still be silently presented as the embedded snapshot.

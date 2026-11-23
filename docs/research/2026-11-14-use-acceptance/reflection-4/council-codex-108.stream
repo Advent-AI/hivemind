@@ -1,0 +1,358 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 108: the postponement census (`unlisted-parts/fresh-a2/postponement/RESULT.md`, `frozen-step-tally.txt`). Three proposals
+
+## What the census found
+
+- **The screen** (`postponement_census.py`) catches the known positive but is too wide: both families passed R on 104 of its 135
+  picks. It also misses "during calendar 2028" forms. So it was used only for validation samples.
+- **The counts come from the stored marks,** read reason by reason:
+  - 92 event answers failed on R by at least one reader, 18 of them for timing reasons, all 18 read;
+  - every timing-type Ruled-out first sentence in the frozen step's outputs (run 4 onward), 296 event answers.
+- **An authority's proceeding with "will not adopt … by <due day>": 1 answer** (fresh Taiwan p3). Its two sibling sends name
+  abandonment or withdrawal, as D420 asks. It is a misapplication in one send of three of a rule already in the request.
+- **A company's announced delay on a deadline question** ("deferred until 2027", "will not close by …"): **37 answers.**
+  - Both families pass R on 29, both fail 3, and 5 split; third readers are mixed.
+  - No decision covers it. D416 replaced the day *passing* with a typed decision (who, what), and a company's announced delay names
+    both. The brief's R row excludes "the event's merely being still awaited".
+- **The day-passing kind** that D416 targeted appears only in runs 2 and 3, not in the frozen step's outputs.
+
+## Proposals
+
+1. **The Taiwan miss:** the model's own account on that one stored send.
+   - One continuation call (about $0.003, inside D439): which instruction led it to write the timing statement, and which it set
+     aside.
+   - No change unless the account points to a request sentence. A misapplication in 1 of 3 sends of an existing rule is otherwise
+     not a prompt defect (prompt audit: "misread").
+2. **The company-delay meaning: record a reversible reading under D439/D544.**
+   - The reading: for a "will X happen by <day>" question, a company's formal announcement that it will happen later is a decision
+     against the event as asked, so "Ruled out" holds.
+   - Why: it is the readers' majority, and it fits D416's typed decision.
+   - Reversal: Alex rules otherwise; it goes on his page as one question with this lean.
+   - No product or brief change now. Gate reports list these answers.
+3. **The re-rank: what remains between the answer-choice step and Alex's gate is now mostly his rulings.**
+   - On fresh material the clear model faults are 1 L topic and 1 R send. The rest of line 5 rests on the reference mark (XR; his
+     choice 2), the meaning above, and the reader-family splits his Deck 1 calibrates.
+   - I propose a one-page "what stands between this step and your gate" for his page, with the numbers.
+   - The council's next production work then moves to a blocker it can act on: a $0 design for the final-answer test's control
+     shortfall (D576: 4 comparable questions, 8 needed; re-running the judge cannot change that).
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the census and its examples against the stored decisions, then assess each proposed course and the claim about what remains at the gate.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 23 '"'^## D(403|409|416|420|543|544|576)'"\\b' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/RESULT.md; cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/frozen-step-tally.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/postponement_census.py | head -140; cat docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md | tail -35' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Ruled-out rungs that catch a postponement: the census (D590; $0)
+
+**In one line:** the fresh week's line-3 failure (Taiwan, control p3) is the only answer of its kind in 296 event answers of the
+frozen step. The step named a timing statement as the ruling out of an authority's proceeding, which D420 calls the wait. A second,
+much larger kind (37 answers) is a company's announced delay on a deadline question. Readers mostly pass it (29 of 37 by both
+families), but not consistently, and no decision of Alex's covers it.
+
+## Method
+
+- **`postponement_census.py`** lists every event answer of the 14 stored gate-1 readings with its Ruled-out rung's first sentence:
+  424 answers over 43 topics.
+  - Its screen picked 135 answers. It catches the known positive (fresh clean-17 p3).
+  - It is too wide: both families passed R on 104 of the 135.
+  - It misses forms such as "no … shipments during calendar 2028", seen in the unpicked sample.
+  - The screen was therefore not used for counts (`census-output.txt` keeps its validation samples).
+- **The counts come from two readings of the stored marks:**
+  1. **Every event answer at least one first reader failed on R** (92 answers over 23 topics), read reason by reason. 18, over 12
+     topics, give a reason about waiting, delay or timing. I read each against the brief's R row, D409, D416 and D420.
+  2. **The frozen step's outputs only** (run 4 and every reading after it: 296 event answers;
+     `frozen-step-tally.txt`). Each rung whose first sentence is a timing statement is classed by its decider
+     (`ruled_out_by`): an authority or the company.
+
+## What the frozen step writes
+
+| Kind | Answers | First readers on R (both hold / both fail / split) | Third readers | Rule |
+|---|---|---|---|---|
+| An authority's proceeding: "will not adopt … by <due day>" | 1 (Taiwan p3; p1 and p2 name abandonment or withdrawal) | 0 / 0 / 1 | both fail | D420: the proceeding still going on is the wait; only formal abandonment or withdrawal rules it out |
+| The company announces the event will come later than a deadline question's day ("deferred until 2027", "will not close by …") | 37 | 29 / 3 / 5 | mixed (2 both hold, 3 split) | No decision covers it. D416 replaced the day *passing* with a typed decision (who decides, what), and a company's announced delay names both. The brief's R row excludes "the event's merely being still awaited" |
+
+The earlier runs (Stage A runs 2 and 3, before D416) carry the day-passing kind ("The end of December 31, 2026 has passed …"). It
+does not appear in the frozen step's outputs.
+
+## What it means for line 3
+
+- **The authority kind is one answer of 296.** The rule (D420) is already in the request, and the step's other two sends on the
+  topic follow it. It is a misapplication in one send of three. By AGENTS §1 and the prompt audit, such a miss needs the model's own
+  account before any change.
+- **The company kind is a question of meaning, not a model error.** For "will X happen by <day>", should a company's formal
+  announcement that it will happen later show as "Ruled out" (a decision against the event as asked) or "Still open" (the event
+  still awaited)?
+  - The readers mostly say "Ruled out".
+  - A minority says "Still open", including both families on two stored answers. The two answers are the Hugging Face deal's "will
+    not close by March 24, 2028" and Vera Rubin's "will not reach volume shipments during FY2027".
+  - The answer changes what the card tells an analyst: a product delayed versus a product dropped.
+296 frozen-step event answers
+37 ('company', 'timing ruling out')
+4 ('company', 'first readers R', ('fails', 'holds'))
+2 ('company', 'third', (('claude', 'holds'), ('codex', 'fails')))
+3 ('company', 'first readers R', ('fails', 'fails'))
+29 ('company', 'first readers R', ('holds', 'holds'))
+1 ('authority', 'timing ruling out')
+1 ('authority', 'first readers R', ('fails', 'holds'))
+1 ('authority', 'third', (('claude', 'fails'), ('codex', 'fails')))
+2 ('company', 'third', (('claude', 'holds'), ('codex', 'holds')))
+1 ('company', 'first readers R', ('holds', 'fails'))
+1 ('company', 'third', (('claude', 'fails'), ('codex', 'holds')))
+
+('authority', 'clean-fresh-a2-2026-11-16/choices/reading', 30, ('fails', 'holds'), {'codex': 'fails', 'claude': 'fails'}, 'Taiwan’s Ministry of Economic Affairs or Bureau of Foreign T', 'The authority formally announces that it will not adopt tighter export controls on high-end AI processors and servers by January 31, 2027.')
+
+ succeeded in 0ms:
+4414:## D403 · 2026-11-10 · An event's due day is a stated date or the last day of the thesis's period; the model picks no other day
+4415-
+4416-- **Asked:** "事件类问题（比如“监管机构会不会批准这笔收购”）的到期日怎么定？我现在的设计只允许取两种日子：文章或题目里写明的日期，或题目所说期间的最后一天；模型不能自己估一个日子。这比老系统的说法更严（老系统只说“写明这件事在哪一天评定”）。你同意吗？"
+4417-  - Options: keep it narrower (recommended): the day comes from the period Step 1 set, the same thesis gets the same day on every
+4418-    send, and a reader can check it; the cost is that an event with no date in the article and no period in the thesis is
+4419-    declined. Or production's wider sentence: the model judges when the matter will be settled and sets a day; more flexible, and
+4420-    three sends of one thesis may set three days.
+4421-  - Alex: "保持更严 (Recommended)".
+4422-- **Decided:** on the clean path's ladder step, an event's due day is the date the thesis or the article gives, or the last day of
+4423-  the period the thesis names (the company's current fiscal year-end for a pending regulatory decision with no date, as v74i line
+4424-  16 has it). The model chooses no other day; an event that gives neither is declined as "nothing in the topic can be checked on
+4425-  a date". This is narrower than v74i line 26 by his decision.
+4426-- **Scope:** the clean path's ladder step. Production's frozen sentence is unchanged.
+4427-
+4428-## D404 · 2026-11-10 · After the probe: change the request for its three classes, send the same six again, then build
+4429-
+4430-- **Asked:** "试发读完了：提示词主干管用，但有三类问题（1. 引用文章原话时会改词或抄错来源；2. 问题里写“本文提到的……”，离开文章就看不懂；3. 世界大事类的题被贴了看涨看跌标签，程序检查拦不住）。下一步怎么走？"
+4431-  - Options: change and send once more (recommended): "我针对这三类问题改提示词（各一句）和一条程序检查，先花 2 美分问模型“你当时是依据哪句话这么做的”来定位原因，然后把同样 6 道题再发一次（约 1 美分）看是否改好。改好了就按原授权动手写程序。"; build at once, with the three classes changed in the request and the check, and see in Stage A whether they are fixed; stop and let him read the answers.
+4432-  - Alex: "改完再试发一次 (Recommended)".
+4433-- **Decided:** (1) the model is asked, on the stored conversations of the probe, which instruction led it to each fault (about two
+4434-  cents); (2) the request gets one change for each of the three classes, and the check on a theme's state names refuses the
+4435-  company's labels; (3) the same six theses are sent once more (about one cent) and read as the first six were; (4) when the three
+4436-  classes are gone from those answers, the ladder step is built and Stage A sent on D401's terms (capped at $3; a missed line
+4437-  stops and goes to him; Stage B needs his word), with no further round of design review before the build. If they are not gone,
+--
+4502:## D409 · 2026-11-10 · An event is answered in three outcomes: it happened, it is ruled out, or neither by the due day
+4503-
+4504-- **Asked:** "事件类的题（比如“监管会不会批准”“调查会不会罚款”），答案要分几种结局？现在让模型自己写五种状态，这是最容易出漏洞的地方：两家读者都认定的 7 个漏洞里，6 个出在第四、第五种状态的细分上。"
+4505-  - Options: three outcomes (recommended): "发生了 / 明确落空（被否决、被放弃）/ 到期还没结果。第三种由程序写成“前两种都不是”，所以不会有遗漏。保住了“否决”和“还在等”的区别；更细的区别（如“附条件批准”）列为“不判”。这是我的建议，写法还要先免费验证。"; yes or no only (the simplest; "rejected" and "still waiting" become one No, which the council held loses a difference an analyst cares about); several outcomes where they are needed, the number not fixed (the council's recommendation; a new structure, one more round of design).
+4506-  - Alex: "分三种 (Recommended)".
+4507-- **Decided:** on the clean ladder step an event's answer has at most three outcomes: the event has happened by the due day; the
+4508-  event is ruled out (decided against, abandoned); neither. The third is written by code as "neither of the two holds", so no
+4509-  outcome is without a rung. A finer difference (an approval with conditions against one without) is listed as not judged
+4510-  (D397). The wording of the request, the schema and the checks are designed, checked at no cost and reviewed before any send
+4511-  (D408).
+4512-- **Supersedes:** D399 (the request teaches how to build an event's five states) and, with it, the five states of an event in
+4513-  the clean ladder step; D404's rule on naming a theme's five states has nothing left to apply to.
+4514-- **Evidence put to him:** five states for the company are faulted by both reader families in 10 of 17 ladders, yes/no in 2 of
+4515-  24; of the seven gaps both found, six sit in the division beyond three outcomes and one in a Yes that needs a confirmation
+4516-  its No does not. The council's dissent (several outcomes where needed) was put to him as the third option.
+4517-- **Scope:** the clean path's ladder step.
+4518-
+4519-## D410 · 2026-11-10 · A group named in a judged question and not listed member by member is not a fault of the question
+4520-
+4521-- **Asked:** "题目里写“四大云厂商”（the big four hyperscalers）但没有列出是哪四家，算不算“问题没说清楚”？严的读者判不合格，松的读者和我认为这是通用叫法。按裁决“问错题”的 11 份里有 8 份是这一类，所以需要你定一个读法，下次两家读者才能按同一把尺子评。"
+4522-  - Options: not a fault (recommended): "行业里通用的叫法可以直接用，不要求列出成员。按这个读法，这 8 份不再算“问错题”。"; a fault, the members must be listed.
+4523-  - Alex: "不算问题 (Recommended)".
+4524-- **Decided:** in reading a judged question (mark Q of the Stage A form), a group named as the trade names it ("the big four AI
+4525-  hyperscalers", "the top five hyperscalers") is a name the question gives; a question is not failed for not listing the
+--
+4593:## D416 · 2026-11-10 · The lines stay; the ruling out of an event as a typed answer is proved small before anything else
+4594-
+4595-- **Asked:** "第三次正式测试里，两类读者都判错的最大一类是：把“到期还没发生”写成“明确落空”（例如“2026年12月31日已过，Vera Rubin 还没出货”被当成明确落空）。140 份已存事件题答案里共 7 份。我的建议是把“明确落空”从一句自由写的话改成两格必填：“谁作出决定”和“决定是什么”。在已存答案上对照，7 份错的里 6 份没地方填，但第 7 份（“当局决定继续调查”）挡不住；模型会不会老实填，只有真发才知道。这一步怎么走？"
+4596-  - Options: prove the change small first (recommended): "线保持不变。在 6 道“产品能否按期出货”的题上，新旧两种格式同时各发三遍（约 4 美分），不通过的条件事先写死，我自己逐份读。这只是候选改法，不是已证明的修法；通过了再谈第四次正式测试。"; stop here and change nothing.
+4597-  - Alex: "先小额验证这个改法 (Recommended)".
+4598-- **Decided:** Alex's six lines stay as they are. The ruling out of an event is tried as a typed answer (who decides; what they
+4599-  decide) in place of one free sentence: the six product-deadline theses, the present shape and the typed one sent in the same
+4600-  minutes, three sends each, what does not pass written before the send, every answer read by Claude. It is a candidate, said
+4601-  so to him: it has no place for six of the seven stored faults, does not exclude the seventh, and only a send shows whether
+4602-  the model fills it rightly.
+4603-- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-3/RESULT.md`, `wait-as-ruling-out-hand-read.md`, `wait-accounts.json`.
+4604-- **Scope:** the clean path's ladder step. It amends the shape D409 gave an event's answer, if it passes.
+4605-
+4606-## D417 · 2026-11-10 · A figure for a rolling twelve months with no publication day in the texts is declined
+4607-
+4608-- **Asked:** "有两道题问的是“某项调查统计的未来 12 个月里，中国企业把多少 AI 芯片预算给国产”。这不是整年数字，文章也没说后续调查哪天公布。到期日改由程序定之后，系统对这两道题基本不出题了（6 次里 5 次），理由是“没有能核对的公布日期”。这是新出现的行为，你还没确认过；两位裁决读者对它也意见相反，第 4 条线过不过就取决于它。怎么定？"
+4609-  - Options: confirm, no judged question (recommended): "滚动 12 个月、又没有公布日期的数字，不写成判断题，如实说明理由。代价：这两道题不再有可判的问题。"; write the question with the period's last day as its due day (the follow-up survey may not exist that day; a further rule to build and prove).
+4610-  - Alex: "确认：这类题不出题 (Recommended)".
+4611-- **Decided:** a figure that covers a period which is not one fiscal or calendar year (a survey's rolling twelve months) and
+4612-  for which neither the topic nor the item gives a publication day is declined, with that reason. The cost he was shown: such
+4613-  topics get no judged question. This confirms the behaviour D414's refusal produced and that was reported as not confirmed.
+4614-- **Scope:** the clean path's ladder step; mark N of the readers' form.
+4615-
+4616-## D418 · 2026-11-10 · A government's permission or ban on a class of product belongs to the theme, not to the company
+--
+4638:## D420 · 2026-11-10 · A proceeding that formally ends without the conclusion the question asks for is ruled out; the question stays
+4639-
+4640-- **Asked:** "题目问的是“法国竞争管理局会不会在 2027 年 1 月 31 日前公布对英伟达反垄断调查的结论”。到期前可能有三种情况：① 公布结案决定（哪怕不处罚），算“发生了”；③ 调查还在继续，算“还在等”。这两点没有争议。有争议的是 ②：当局正式宣布放弃或撤回调查，但没有公布题目问的那种结论。模型每次写法不一样，读者也各执一词。② 算什么？"
+4641-  - Options: it is ruled out (recommended): "题目保持原样，问的仍是“有没有公布结论”。这类题固定有三种结果：公布了／当局正式放弃且没有结论／还在查。这也是目前多数已存答案的写法，且符合现有规则“判题目点名追踪的那件事”。不写“明确落空”的答案将算错。"; ask instead whether the investigation is over (two outcomes; it tracks another event than the conclusion the thesis names).
+4642-  - Alex: "② 算“明确落空” (Recommended)".
+4643-- **Decided:** for a proceeding an authority conducts and whose asked-for event is its published decision or conclusion: a
+4644-  published closing decision, with or without a penalty, is the event happened; the authority formally abandoning or
+4645-  withdrawing the proceeding without that decision or conclusion is the event ruled out; the proceeding still going on the due
+4646-  day is the wait. Such an event always has a ruling out, and an answer that names none, or that writes the authority's
+4647-  decision to go on as the ruling out, is at fault. The judged question stays the one the thesis's outcome names.
+4648-- **Scope:** the clean path's ladder step; mark R of the readers' form.
+4649-
+4650-## D421 · 2026-11-10 · Each further change is tested alone; all passing, the fourth Stage A is sent without asking again
+4651-
+4652-- **Asked:** "接下来怎么走？我建议每项改动单独测，不再捆在一起：(a) 把你上一题的定义写进提示词，在三道法国调查题上单独测；(b) 把归属规则收窄成“题目追踪的是政府决定本身才归行业主题，追踪公司自己销售的仍归公司”，单独测；(c) 在 (a) 之后把“分两格填”再单独测一次，停止条件不变。调查题不出题那条直接并入。三项合计约 10 美分；第四次正式测试约 11 美分；目前累计 0.90 美元，上限 3 美元。"
+4653-  - Options: test the three apart and send the fourth Stage A when all pass (recommended): "(a)(b)(c) 各自小额验证并过评审。全部通过就直接发第四次正式测试；任何一项没通过就停下来找你。"; drop the typed shape and do (a) and (b) only; test the three and ask before the fourth Stage A; stop here.
+4654-  - Alex: "三项分别测，全过就直接发第四次 (Recommended)".
+4655-- **Decided:** D417 goes into the working request. Then, each beside the working request and on its own: (a) D420's rule in the
+4656-  request, on the three French theses; (b) D418's sentence narrowed (the theme when the tracked outcome is the government's
+4657-  decision; the company when it is the company's own sales under it); (c) after (a), the typed ruling out once more, the same
+4658-  stop condition as before. Each is reviewed in the council. When all three pass, the fourth Stage A (the same 44 theses,
+4659-  three sends each, within D401's $3) is sent without asking again; one that does not pass stops the line and goes to him.
+4660-  Stage B still needs his word. This replaces D419's terms for these changes.
+4661-- **Scope:** the clean path's ladder step.
+--
+6589:## D543 · 2026-11-15 · Under D439: the cold reflection on the lean path: D518 stands with its reasons, the choice of system is not made in Alex's place, and no investigation is opened (reflection council consensus)
+6590-
+6591-- **The council** (`docs/research/2026-11-14-use-acceptance/reflection-2/`): Claude's own reflection written first
+6592-  (`own-reflection.md`); a fresh independent Codex session reading the whole record cold (`handoff-cold.md`, `cold-codex-1.md`);
+6593-  one challenge round (`cold-challenge-1.md`, `cold-codex-2.md`). Both readings, made apart, reached the same place.
+6594-- **Why the path did not reach its goal (agreed):** the fresh week mixed a difference of product policy with a comparison of
+6595-  quality (three of the old system's four covered matters are questions Alex's rule forbids the new system, D505); the evidence
+6596-  was too thin to rank answers (one run a system, seven answers against fifteen, readers' bars apart); the work followed each
+6597-  newly exposed defect instead of asking whether resolving it would select a system (the dependency stretch is the clearest
+6598-  case); and the council often corrected work already framed on a premise that the stored request, an earlier decision or the
+6599-  order of events contradicted.
+6600-- **Conclusions marked as weaker than they look:** "no eligible judgement disagrees" in the July comparison (few were eligible);
+6601-  "36 of 438" (repeated daily readings on a few question paths, not an error rate); the three unsupported answers with a
+6602-  missing stored figure (two matters, cause not shown); the new system's three confirmed missing pairs (a minimum; the one test
+6603-  was inconclusive); the dependency connection (a conditional replay; it also removes seven filing links).
+6604-- **Decided, citing D439:** D518 stands, restated with its reasons: the old system stays the default and both systems stay,
+6605-  for continuity and because the new system's answer-choice step has not passed its tests and it is not integrated with
+6606-  production storage. The quality of the two systems' answers is not ranked and **the choice of a foundation is not made in
+6607-  Alex's place** (the reviewer withdrew "carry the old system forward provisionally" as readable for such a choice). No
+6608-  investigation is opened: no bounded test on the record is likely to change the choice at a justified cost, and no narrow
+6609-  defect is reopened to postpone it. The two problems that do not depend on the choice stay recorded: related facts reaching
+6610-  the question that needs them (no common cause or tested general fix among the known cases), and the judge's amounts with
+6611-  nothing sizing them (what the product shows is Alex's choice). The pages were corrected where a cold reader could be misled
+6612-  (the advice's reasons; "the one test that could decide"; a stale "waiting on Alex" and an unsourced spend figure on the
+--
+6616:## D544 · 2026-11-15 · Under D439: the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates (council consensus; D543's deferral of the choice is withdrawn)
+6617-
+6618-- **Why D543 was reopened the same day:** its consensus left the path's own question (which system carries forward) to Alex.
+6619-  His words in D439 give that job to the council ("自行的根据数据和目标做决策 ... 掰扯直到你们能达到共识为止再下去执行 ... 持续迭代完成我们的PRD生产目标";
+6620-  D509: "下来你自行按照我的准则操作"), and where it cannot settle a question it takes the cheaper, reversible course; it does not hand
+6621-  the question back. Claude had argued the independent reviewer out of a position; that was Claude's error, recorded here.
+6622-- **The council** (`docs/research/2026-11-14-use-acceptance/reflection-2/cold-challenge-2.md`, `cold-codex-3.md`): the evidence set
+6623-  out by Alex's own criteria; Claude's position; the reviewer's decision with two qualifications.
+6624-- **Decided, citing D439:** **the work toward production goes on the new system (the rebuild under `clean-arch/`). The old
+6625-  system stays the running default until the new one passes its gates; both remain; nothing that runs is switched, deleted or
+6626-  deployed by this decision.** It does not establish that the new system's answers are better. Reasons: Alex had reopened work
+6627-  on the rebuild (2026-11-06) and D439's scope names its steps; its treatment of the company's financial figures follows the
+6628-  product rule he last confirmed (D505); the fresh week gives no demonstrated reason to abandon it and shows fewer trivial or
+6629-  duplicate questions in that one run; the old system's known defects sit in frozen pieces whose fixes are each a new version.
+6630-- **Qualifications kept:** D505's rule was given for the new system; whether it applies to the old one stays open and is not
+6631-  claimed. The rebuild's cost and time to production are unknown: its step that writes answer choices has not met its lines on
+6632-  the original or the fresh questions, Stage B did not pass, integration is undone, and several of its pieces are frozen or
+6633-  stopped and need their own decisions.
+6634-- **What reverses it:** Alex's word (it overrides this at any time); Alex changing the product rule; a sound comparison on the
+6635-  subjects both systems track that materially favours the old system; the rebuild failing to meet its unchanged gates within a
+6636-  bound agreed later; cost, only after correctness is established and the cost examined.
+6637-- **A first checkpoint:** $5 of further spending on this direction; reaching it without a candidate that passes its prewritten
+6638-  small test returns the direction to the council (it does not prove the rebuild cannot work).
+6639-- **The one next step, $0 of model calls (ceiling $1 for the step):** a bounded review of the new system's answer choices in
+--
+7393:## D576 · 2026-11-16 · Under D439: Stage B's control line cannot be exercised by re-sending the judge; no delivery check; next, at $0, a census of the unlisted-parts class now that the page reads the list (council consensus, rounds 53 to 58)
+7394-
+7395-- **Alex's page** (`docs/research/2026-11-14-use-acceptance/DECISION-PAGE-2026-11-16.md`) checked against the records in four rounds
+7396-  (53 to 56) and stands.
+7397-- **The census** (`docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md`, `control_census.py`): of the 15 controls (Ohio
+7398-  apart) 4 count; eligibility and the material shown were set before the judge ran, so an unchanged judge-only re-send stays at 4; on
+7399-  paper, a combined repair of the opening and ladder step for u1/clean-6 and the delivery of three items could reach 8, exercising the
+7400-  line, not passing it, each step unproved. It repeats `clean-arch/step4-2026-11-10/stage_b/CONTROL_TRACE.md` (2026-11-12), whose
+7401-  attributions govern; not reading that trace first was a process error (the fifth miss of the search-earlier-traces rule).
+7402-- **Not opened:** a delivery check for the three items not shown. The trace already holds them; the three controls agree with reader
+7403-  B without them (which does not prove they would stay unchanged if delivered); D511 paused that line.
+7404-- **Decided, citing D439:** no unchanged judge-only Stage B send. D558 deferred the repair of the unlisted parts (line 2) as "a
+7405-  candidate for the day the list has a reader"; since D570 the page shows each question's parts not judged. Next, at $0: the class
+7406-  counted across the stored readings (distinct topics and repeated attempts apart), each case read with its source, whole request and
+7407-  output, including attempts that list the part and clauses that should stay context; back to the council before any arm is designed
+7408-  or sent. Stop: no common, product-relevant mechanism explains a meaningful share without adding false parts or splitting a bet. Any
+7409-  later arm carries harm controls and fresh material, respects D426's restriction on tuning against Alex's 44 topics, and leaves the
+7410-  six lines unchanged; a narrow probe's success would not pass the gate.
+7411-
+7412-## D577 · 2026-11-16 · Under D439: the unlisted-parts probe of arm A is sent and read as designed (council consensus, rounds 59 to 65)
+7413-
+7414-- **The class** (`docs/research/2026-11-14-use-acceptance/unlisted-parts/CENSUS.md`): across four stored readings, a second figure or
+7415-  event, or a difference inside an outcome, left out of the list of parts not judged: 12 failing attempts on 7 matters, plus 2
+7416-  disputed. 10 of the 12 are clauses only in the topic's `outcome`. Every one of the 7 topics read here lists the clause in another
+
+ succeeded in 0ms:
+cat: docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/postponement_census.py: No such file or directory
+| Blocker | Controls | Where the difference first appears |
+|---|---|---|
+| none: counted | u1/clean-3, u2/clean-2, u3/clean-3 (Rubin by 2026, q07); u2/clean-5 (Kyber by 2027, q18) | — |
+| eligible, a decisive item not shown | u1/clean-4, u3/clean-6 (2027 hyperscaler capex, q13); u2/clean-4 (2026 capex, q04) | below |
+| in the opened thesis | u1/clean-1, u3/clean-1 (q09: one programme inside the total); u2/clean-7 (q16: four named companies, one not a cloud provider); u3/clean-7 (q18: the article's reported 2028 date) | Step 1's thesis; the ladder keeps it |
+| in the opened thesis's outcome | u2/clean-3, u3/clean-5 (q08: NVIDIA's own sales or disclosure can settle it without an authorization) | Step 1's outcome |
+| both | u1/clean-6 (q18: Step 1's period 2028 became the ladder's due day; the ladder's "during calendar 2027" adds a restriction) | Step 1 and the ladder step |
+| the ladder step's wording, disputed | u1/clean-11 (q08: company scope; third readers split) | the ladder step, unresolved |
+
+## The three items not shown (CONTROL_TRACE.md, re-checked in the stores)
+
+- **Analysts' 82% and 41% NVIDIA revenue growth (q13):** kept in each draw (u1 e86, e131; u2 e97, e141; u3 e88, e135), filed under
+  no question. In u1 and u3 one copy was stored by the very call that opened the capex question.
+- **Half of 2027 data-centre spend going to memory (q13):** kept in each draw (u1 e145, u2 e155, u3 e149), filed under no question,
+  by a later call while the capex question was open.
+- **Management's "accelerating growth rates" near $100 billion a quarter (q04):** kept in u1 (e486, unfiled); no record in u2 or u3.
+  Its source article left no record in u2; whether it was read is not traced, so no extraction failure is claimed.
+- **Both q13 controls agree with reader B without these items** (as does u2/clean-4): delivering them would make the controls count;
+  on this record it would not change their answers.
+
+## What would reach 8, within the fixed population (paper bounds)
+
+- An unchanged judge-only re-send: 4.
+- Plus u1/clean-6, if both its opened thesis (period 2028) and the ladder step's question and day matched the ruler and its shown
+  material held: 5. A ladder repair alone cannot supply it; this is an unproved combined change.
+- Plus the three eligible controls, if their items were delivered: 8, which would exercise the line, not pass it (all but one of the
+  eight must agree). u3/clean-5 and u1/clean-11 also lack material and would need their own traced changes.
+- Each step assumes the readers' marks carry over to changed questions, days and requests; none is demonstrated.
+
+## What this means for the next step
+
+No unchanged judge-only paid send of Stage B is proposed. Any later Stage B test on a changed upstream version or another population
+needs its own reviewed design and decision, and a reconciliation with the frame's "no further paid test on the frozen ruler". The
+12 of 15 agreement with reader B includes differently worded questions: it is an overlap with the reference, not evidence that those
+answers are right, and the four counted controls alone cannot establish the judge's quality.
+
+codex
+**Take the Taiwan account as the next bounded diagnostic; do not yet adopt a general company-delay reading or claim that the remaining gate failures are mostly Alex’s rulings.**
+
+1. **The Taiwan case merits the model’s account.** The stored rung says the authority will not adopt tighter controls **by the due day**; both third readers failed it. The account can help locate the instruction the model applied, but it remains the model’s retrospective explanation, not proof of cause. Also, D420 expressly concerns an authority’s proceeding seeking a published conclusion; Taiwan’s prospective rule adoption is not automatically that case. The broader D409/D416 distinction between a decision against an event and continued waiting is the relevant boundary to examine. [Census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/RESULT.md>), [D420](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4638>)
+
+2. **Do not record the proposed company-delay rule as settled yet.** The 29/37 agreement is a lead, but the sends include repeats and the readers disagree on some cases. A formal decision to defer beyond a deadline can be read as a decision against the *deadline question*; it can also leave the underlying event pending. D409 distinguishes “ruled out” from waiting, but the record cited does not settle that boundary for every deadline question. Work through representative full questions, the announcement and what the closed card would say, including a positive and a counterexample, before recommending a reversible interpretation. [D409](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4502>), [tally](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/frozen-step-tally.txt>)
+
+3. **Qualify the gate summary.** The fresh comparison stopped and contained five topics; its L failure was on a development matter. XR and D disputes affect the strict count, but the record does not establish that the other faults are resolved or that Deck 1 will calibrate the families’ interpretation of this event boundary. A one-page status for Alex is useful if it preserves those limits. [Fresh result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md>)
+
+The Stage B shortfall remains worth designing, but D576’s four-to-eight paper bound is **exercise, not a demonstrated pass**. Any alternative control population or change to the frozen ruler needs its own reviewed design; it should not be presumed council-authorized merely because the current line is blocked. [Stage B census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md>)
+
+CONSENSUS: no, because the Taiwan case does not automatically fall under D420, and the proposed general treatment of announced delays needs representative cases and a resolved boundary before it is recorded as a rule.
+tokens used
+2,967,296
+**Take the Taiwan account as the next bounded diagnostic; do not yet adopt a general company-delay reading or claim that the remaining gate failures are mostly Alex’s rulings.**
+
+1. **The Taiwan case merits the model’s account.** The stored rung says the authority will not adopt tighter controls **by the due day**; both third readers failed it. The account can help locate the instruction the model applied, but it remains the model’s retrospective explanation, not proof of cause. Also, D420 expressly concerns an authority’s proceeding seeking a published conclusion; Taiwan’s prospective rule adoption is not automatically that case. The broader D409/D416 distinction between a decision against an event and continued waiting is the relevant boundary to examine. [Census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/RESULT.md>), [D420](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4638>)
+
+2. **Do not record the proposed company-delay rule as settled yet.** The 29/37 agreement is a lead, but the sends include repeats and the readers disagree on some cases. A formal decision to defer beyond a deadline can be read as a decision against the *deadline question*; it can also leave the underlying event pending. D409 distinguishes “ruled out” from waiting, but the record cited does not settle that boundary for every deadline question. Work through representative full questions, the announcement and what the closed card would say, including a positive and a counterexample, before recommending a reversible interpretation. [D409](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4502>), [tally](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/postponement/frozen-step-tally.txt>)
+
+3. **Qualify the gate summary.** The fresh comparison stopped and contained five topics; its L failure was on a development matter. XR and D disputes affect the strict count, but the record does not establish that the other faults are resolved or that Deck 1 will calibrate the families’ interpretation of this event boundary. A one-page status for Alex is useful if it preserves those limits. [Fresh result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md>)
+
+The Stage B shortfall remains worth designing, but D576’s four-to-eight paper bound is **exercise, not a demonstrated pass**. Any alternative control population or change to the frozen ruler needs its own reviewed design; it should not be presumed council-authorized merely because the current line is blocked. [Stage B census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/CENSUS.md>)
+
+CONSENSUS: no, because the Taiwan case does not automatically fall under D420, and the proposed general treatment of announced delays needs representative cases and a resolved boundary before it is recorded as a rule.

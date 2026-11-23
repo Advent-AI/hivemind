@@ -1,0 +1,15 @@
+the unbroken run: 235 articles; cut after article 120; mutant: skipped-article
+  ok    the proof's cut row is empty in the same columns as the real run's cut row | ['raw_response', 'result', 'after_state', 'error', 'retry_reason']
+  FAIL  the second part holds the remaining articles in order, the cut one first | 114 articles
+  ok    it starts from the library as it stood after the last complete article | 6 topics
+  ok    its limits are the run's less what the first part used | 178 calls, 25200 seconds
+  ok    the second part completes | {"status": "complete", "error": null, "reserved_usd": 13.661859000000003, "calls": 114}
+  FAIL  every request it sent is byte-identical to the stored request of the same article, in order, and none is unknown | 114 sent, 0 unknown
+  ok    every send was reserved and settled on the shared ledger | 114 attempts, spent 1.0276
+  FAIL  article by article, the second part equals the unbroken run: identity, library before, request, answer, result, library after | 114 articles, first differences [(1, 'input_id'), (1, 'request'), (1, 'raw_response')]
+  ok    the merge refuses a second part that is truncated (its last ten articles missing) | the second part's articles are not the first part's remaining articles in order
+  ok    the merge refuses a second part that is stopped on a failure at its last article | the second part's articles are not the first part's remaining articles in order
+  ok    the merge refuses a second part that is out of order (two articles exchanged) | the second part's articles are not the first part's remaining articles in order
+  FAIL  the two parts merge | the second part's articles are not the first part's remaining articles in order
+  ok    with a ledger below one reservation nothing is sent, the run stops on the ledger and the ledger is stopped | {"status": "failed", "input_id": "gnews:4c4c114117f5c7acb7be91f7", "error": "ValueError: live run limit reached before send: the shared ledger refused", "reserv
+13 expectations, 4 failed

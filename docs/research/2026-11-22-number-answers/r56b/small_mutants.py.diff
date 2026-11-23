@@ -1,0 +1,18 @@
+--- small_mutants.py	2026-11-22 19:42:29
++++ /private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/s4tree/small_mutants.py	2026-11-22 20:11:04
+@@ -7,7 +7,7 @@
+ from pathlib import Path
+ 
+ HERE = Path(__file__).resolve().parent
+ M = [
+     ('S1 value', "            ok = _same(f.get('value'), parsed['value'])\n", "            ok = True\n"),
+     ('S1 qualifier', "        if q not in written:\n", "        if False:\n"),
+@@ -26,6 +26,8 @@
+     ('S4 two forecasts', "        if len(ids) > 1:\n            errors.append(('S4'", "        if False:\n            errors.append(('S4'"),
+     ('S4 adopted only', "        if k not in keys:\n            tops.add(fid)", "        if True:\n            tops.add(fid)"),
+     ('S4 bypass', "            if bypass:\n", "            if False:\n"),
++    ('S4 benchmark exemption [D742]', "and node[0] in _beneath_inputs(figs, ins[0]):", "and False:"),
++    ('S4 exemption needs the forecast as base [D742]', "and node[0] in _beneath_inputs(figs, ins[0]):", ":"),
+     ('S5 estimate under reference', "            if any(figs[g]['kind'] == 'estimate' for g in chain):", "            if False:"),
+     ('S5 forecast under reference', "            elif any(figs[g]['basis'] == 'forecast' for g in chain):", "            elif False:"),
+     ('S5 outside source', "            elif not any(figs[g]['kind'] == 'source' and figs[g]['basis'] in EXTERNAL for g in chain):", "            elif False:"),

@@ -1,0 +1,436 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e644-b971-7f91-8f4b-858dfea93a67
+--------
+user
+# Challenge 2: D609's trace result (`delivery-trace/RESULT.md`)
+
+**Done as agreed.** The population is 325 company statements with any figure, all matched, in 88 groups; per member, with time
+boundaries.
+
+**Results:**
+
+- **49 groups have no home at all:** the company's results, with no question about them (D382, D384).
+- **Bearing and undelivered: 5 statements on 3 questions, 2 matters.**
+  - **v12's residual-value guarantee:** Nvidia's own "no more than 25%" (the request shows Morningstar's estimate of 25%) and Nvidia's
+    earlier residual-value guarantee for SB Energy. Both were kept away by Step 3's look-back boundary: linked to v1 before v12 opened.
+  - **v5 and v9, hyperscaler capex:** NVIDIA's 44% capex-share projection and its cloud sales. Both were kept away by model link
+    judgements (Step 1, and the look-back judge).
+- **The second reader** (fresh Codex, blind, controls behaved) says every candidate bears and every one is unlikely to move the answer.
+  My own prior read agrees, and so does reading 4.
+
+**My conclusion:** the company-figure repair route closes. The omissions are few, come from two mechanisms and have no predicted
+answer effect.
+
+**The look-back boundary now has three instances over two runs:** v7's stop order and v12's two. Its effect is unshown, since D511's
+six-call test was inconclusive.
+
+**Asked of you:**
+
+1. Agree the closure?
+2. Then the next step from the goal. My candidates:
+   - **(a)** A test of the look-back boundary's effect on v12: the stored last request with e990 and e995 added, three sends against
+     three unchanged. That is a few cents. It moves the path if the rung or the stated firmness shifts consistently, and closes the
+     boundary as a confidence-only gap if it does not.
+   - **(b)** Accept that delivery is not the binding constraint. The remaining production blockers are then the gates' own lines (gate
+     1, gate 2's controls), opening (the 49 homeless groups are Alex's D382/D384 design), and Alex's adoption call.
+
+   Which, or something else?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the source passages, the two guarantee facts and the prior six-call result before deciding whether another paid test can distinguish an effect.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Does one missing fact change one stored judgement? Result of the six-call test (D510, under D439), 2026-11-15
+
+Design: `EFFECT-TEST-DESIGN.md` (version 2, frozen before the send). Script: `effect_test.py`. Raw replies, answers and spend:
+`poc/data/clean-effect-test-2026-11-15/v7-e379/`. Blind rankings: `codex-stance.jsonl`, `claude-stance.jsonl`. Tally:
+`tally_effect.py`, `tally-effect.txt`.
+
+## The outcome, by the rule written before the send: inconclusive
+
+- Six calls, six HTTP attempts, all six answers valid (the judge's schema and its own check against the request sent). **$0.0093** at
+  the published rates (ceiling $0.25). Spend recorded under D439: about $18.4 before, about $18.41 after.
+- **The answer did not move:** all three controls and all three answers with the fact are answer 1 (yes).
+- **The rankings did not separate:** in both blind readers' rankings the conditions overlap: the firmest is a control, the least
+  firm is a control, and the answers with the fact lie between (one reader ties a control and an answer with the fact). The controls
+  alone span the whole range, so the control's own variation is as large as anything between the conditions. The readers were not
+  told the conditions, but the packet showed each answer's cited ids, e379 among them for two answers: the result is that the
+  rankings did not separate, not that the conditions could not be told apart.
+- By the design this is inconclusive: it does not show the gap is without effect. One request, three sends a condition.
+
+## Every answer
+
+| Answer | Rung | Cites e379 | Marks e379 as pushing | Codex rank | Claude rank | Its words on doubt |
+|---|---|---|---|---|---|---|
+| control 3 | 1 | - | - | 1 | 1 | "a possible cap or staged approval, but the thesis requires approval of a purchase" |
+| with the fact 1 | 1 | no | toward the last answer | 2 | 2 | "These reports are unverified and repeated coverage ... is not independent confirmation" |
+| with the fact 3 | 1 | yes | toward the last answer | 3 | 3 | "The reported shipment plan and domestic-policy constraints temper confidence" |
+| control 2 | 1 | - | - | 4 | 4 | "Domestic-chip preferences, possible bundling, and the H200 precedent temper the forecast" |
+| with the fact 2 | 1 | yes | toward the last answer | 4 | 5 | "Domestic substitution, possible bundling, and the H200 precedent temper confidence" |
+| control 1 | 1 | - | - | 6 | 6 | "The reporting is unconfirmed ... U.S. export uncertainty, domestic-silicon preferences, possible bundling, and the H200 precedent" |
+
+## What Claude read in the six answers and the two requests (every trace)
+
+- **The judge registered the added statement and did not weigh it in words.** In all three answers with the fact, its list of how
+  each statement pushes marks e379 "toward the last answer" (against "yes"); two of the three cite it. None of the three names the
+  RTX Pro 6000D or a September 2025 stop order in its reasons.
+- **The request already held a precedent of a like kind.** Under this question the judge was already shown that Chinese regulators
+  mostly blocked imports of Nvidia's H200 after Washington had approved them (e566), and that H200 use was restricted. The stored
+  answer and two of the three controls already temper "yes" with "the H200 precedent". This is a reason the test may not have been
+  able to show an effect; it is not proof that the added stop order added nothing.
+- All six answers rest "yes" on one reported signal (MIIT told firms it intends to approve) and on the question needing only one
+  approved purchase by the deadline; each says no formal decision against is reported.
+
+## A fault in the reading, found after the send
+
+The blind readers' second mark, `uses_precedent`, was worded as "an earlier Chinese order telling firms to stop buying a related
+Nvidia chip". The H200 blocking already in the request fits those words, so the readers marked "yes" for two controls and one answer
+with the fact, all of which name the H200 and none the RTX Pro 6000D. The mark could not tell the added fact from what the request
+already had. It decides nothing here (the rankings do not separate), but it was written without first checking what the stored
+request and the stored answer already said on the point; the stored answer's "the H200 precedent" was on screen before the send.
+
+## What this result may and may not be said to show
+
+- Shown: for this one request, adding the missing statement did not move the answer in three sends, and two blind rankings of
+  firmness did not separate the conditions; the judge's structured output marked the statement as pushing against "yes" in all
+  three, an observed change in what it wrote, not in what it chose.
+- Not shown: that the delivery gap of D506 and D508 is without effect on judgements (one case, three sends; this case's request
+  already carried a like precedent); a rate; anything about which system carries forward.
+
+## Council (thread mx, round 23, under D439; `clean-arch/step1-unfiled-2026-11-08/council/mx-challenge-22.md`, `mx-codex-23.md`): consensus
+
+- The council checked all six raw replies against the recorded answers and re-ran the schema and the judge's check: all match and
+  pass. The outcome is inconclusive.
+- The omission is real as delivery (kept, absent from the question's requests, judged relevant by both census readers) and the
+  judge's marks on it are an observed change in its structured output; no change of answer and no separated change of confidence
+  was established.
+- The other confirmed cases are not shown to be weaker, and a fix is not shown to be a patch: neither can be said without a
+  mechanism and its share. What is supported is "do not build on this evidence now".
+- **Decided under D439 (D511):** no further send and no change on this delivery line now; the confirmed omissions, the 23 open pairs
+  and this inconclusive test stay open evidence; the decision D507 left for after the sizing ("then decide whether to change") is
+  taken as: defer. The next step is a cold reflection council over the whole record, which ranks the remaining losses from the
+  product goal and proposes one next test with its falsifier.
+
+## Lessons
+
+1. **Read the control for facts of the same kind before writing the measure.** The stored answer's "the H200 precedent" was on
+   screen before the send, and the reader's mark was still worded so that it fits.
+2. **A reader's "bears" is not a judge's changed answer.** The census counts the first; only a send shows the second.
+3. **The judge's structured marks moved while its answer and reasons did not.** They are a cheaper and more sensitive observable
+   than a reading of reasons, and belong in the outcomes written before a send, with what they can and cannot show.
+4. **Stepping back is a decision.** After several results that separated nothing, the next step is chosen from the goal by the
+   council, not from the last result.
+
+
+ succeeded in 0ms:
+# The company's own figures on the carried fortnight: where they went (D609's trace), 2026-11-16, $0
+
+**Material:** the stored carried fortnight (`poc/data/clean-carried-run-2026-11-16/`), with its Step 1 trace, the Step 3 library
+(`step2/library.json`), the writer's store and all 95 judging requests.
+
+## Identity, by code (`trace_figures.py` → `trace-output.txt`, `pairs.jsonl`, `groups.txt`)
+
+- **Population:** every kept statement whose party is NVIDIA and which carries any figure, with no measure list: 325 statements.
+  - All 325 match a store record (0 unmatched).
+  - They fall in 88 repeat groups.
+- **Against the 12 judged questions:** 3,773 fact-question pairs available by each question's last judgement.
+  - Of these, 3,534 never reached that question: 835 because they were linked to another question, and 2,699 because they were
+    linked to none.
+  - Most are about matters other than the question. Code makes no claim about bearing.
+
+## Bearing, read by hand (`groups.txt`, then each candidate's source quote and the question's last request)
+
+**49 of the 88 groups are linked to no question.** They are the company's own results: revenue, net income, margins, EPS, buybacks,
+dividends, cash flow. None of the 12 questions asks about them; under D382 and D384, figures are evidence, not questions. So they
+have no home in this library: a matter of which questions exist (D559, gate 4), not of delivery.
+
+**Bearing and not delivered: 5 statements on 3 questions over 2 matters.**
+
+| Question | Statement | In the last request? | What kept it away (the library's own record) |
+|---|---|---|---|
+| v12, a residual-value guarantee finalized | e990: Nvidia "could carry a residual-value guarantee of no more than 25%" | partly: Morningstar's estimate of 25% is shown | **Step 3's look-back rule:** linked to v1 on 2026-10-03, and a group that arrived under another question is not reconsidered for a question opened later (D514) |
+| v12 | e995: Nvidia "previously provided a residual-value guarantee" for SB Energy's Ohio financing (S&P, Moody's; no figure, read because it shares e990's day and link) | no | the same look-back rule |
+| v5 and v9, top-five hyperscalers' data-center capex (2026, 2027) | e489: NVIDIA's projected share of their IT capex, 11% to 44% by 2027 | no | **model judgements:** Step 1 linked it to nothing while v5 was open; the look-back judge said no for v9 |
+| v5 and v9 | e648: sales to the largest cloud companies, $49 billion in a quarter | no | the same two judgements |
+| v5 and v9 | e767: hyperscale revenues $48.71 billion, +117% | no | the same |
+
+Weaker leads, not counted: revenue per gigawatt for the U.S. gigawatt question (v10), and the 45% consensus beside the 70% growth
+outlook for the Vera Rubin question (v4).
+
+## The independent second reader (`brief-second-reader.md` → `codex-second-reader.jsonl`; key outside the repository)
+
+A fresh Codex session read the three questions' last requests and 14 statements blind, with a negative control (a dividend raise) and
+a positive control (a statement already shown) per question.
+
+- **Controls:** all three negatives "does not bear"; all three positives "already in the request".
+- **Candidates:**
+  - every one "bears", agreeing with my own reading (`own-read-before-reader.md`);
+  - "not in the request", except e990, "partly";
+  - **every one "unlikely" to move the answer.** For example, e995: "a relevant precedent, but the request already favors a finalized
+    guarantee."
+  - The fortnight's reading 4 found the same: confidence only.
+
+## What it gives (D609's criterion)
+
+- **Delivery of the company's own figures is largely established where they bear.** The bearing groups are linked and shown: the
+  credit-support, purchase-commitment, Vera Rubin, export, memory and Hugging Face figures.
+- **The undelivered bearing ones are few** (5 statements on 3 questions). **They come from two mechanisms:**
+  - Step 3's look-back boundary, a code rule;
+  - the model's link judgements.
+- **Neither reader predicts any of them would move an answer.**
+- **This closes the company-figure repair route.** The look-back boundary now has a third instance: the fresh week's MIIT stop order
+  (D508) and v12's two here. Its effect on an answer is still not shown (D511 was inconclusive). D517's reason not to widen it
+  ("reach and effect not established") is narrowed on reach and unchanged on effect.
+- **The 49 homeless groups are the opening question, not delivery.** Under Alex's D382 and D384 they get no question of their own.
+
+exec
+/opt/homebrew/bin/zsh -lc "ls docs/research/2026-11-14-use-acceptance/delivery-trace; rg -n 'e990|e995|v12|SB Energy|25%' docs/research/2026-11-14-use-acceptance/delivery-trace -g '*.md' -g '*.txt'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+RESULT.md
+brief-second-reader.md
+codex-second-reader.jsonl
+codex-second-reader.stream
+groups.txt
+own-read-before-reader.md
+packet-second-reader.json
+pairs.jsonl
+trace-output.txt
+trace_figures.py
+unmatched.jsonl
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:2:G1 [e18] 2026-09-22 members=5 linked=['v1'] shown_in=['v1'] | NVIDIA management expects roughly a quarter (about 25%) of the company's fiscal 2028 business to come from AI labs that NVIDIA will back with its own balance sheet. | measures=['Share of fiscal 2028 business expected from AI labs NVIDIA will back with its own balance sheet']
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:7:G6 [e39] 2026-09-22 members=1 linked=['v1'] shown_in=['v1'] | NVIDIA had already invested $1.5 billion in SB Energy and committed another $1.5 billion tied to the developer's IPO. | measures=["additional commitment tied to SB Energy's IPO", 'equity investment in SB Energy']
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:25:G24 [e117] 2026-09-24 members=2 linked=['v12', 'v4'] shown_in=['v12', 'v4'] | NVIDIA management said Vera Rubin, its newest platform, is expected to be the fastest product ramp in the company's history, and put NVIDIA's revenue opportunity at about $40 billion per gigawatt of capacity with Vera Rubin versus | measures=['Revenue opportunity per gigawatt of capacity with Blackwell', 'Revenue opportunity per gigawatt of capacity with Vera Rubin']
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:58:G57 [e648] 2026-09-29 members=3 linked=[] shown_in=[] | In NVIDIA's fiscal Q2 2027, sales to the largest cloud companies were $49 billion, up 13% from the prior quarter, while sales to all other data center customers were $40 billion, up 25% from the prior quarter. | measures=['sales to all other data center customers', 'sales to all other data center customers, change from prior quarter', 'sales to the largest cloud companies', 'sales to the largest cloud companies, change from prior quarter']
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:70:G69 [e796] 2026-10-01 members=2 linked=['v1', 'v12'] shown_in=['v1', 'v12'] | NVIDIA outlined more than US$500 billion of compute financing agreements and plans with partners including Apollo, BlackRock, Blackstone, Brookfield, Goldman Sachs and KKR, intended to mobilize more than US$500 billion of third-pa | measures=['compute financing agreements and plans with partners', 'third-party capital to be mobilized for AI infrastructure']
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:81:G80 [e990] 2026-10-03 members=1 linked=['v1'] shown_in=['v1'] | Nvidia has said some deals under its $500 billion financing initiative could carry a residual-value guarantee of no more than 25%, arguing the initiative is designed to address concerns over circular financing. | measures=['residual-value guarantee cap']
+docs/research/2026-11-14-use-acceptance/delivery-trace/groups.txt:85:G84 [e1106] 2026-10-05 members=1 linked=['v1'] shown_in=['v1'] | Nvidia is backing AI infrastructure by providing credit support for 4.25 GW at SB Energy's Ohio campus and investing $1.5 billion in the developer, according to the article. | measures=['investment in SB Energy']
+docs/research/2026-11-14-use-acceptance/delivery-trace/trace-output.txt:13:  v12 (last 2026-10-05, 3 requests): {'shown_last': 2, 'shown_earlier': 0, 'group_shown': 2, 'never': 321} | Will Nvidia sign and disclose a finalized hardware residual-value guarantee for its AI inf
+docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md:26:| v12, a residual-value guarantee finalized | e990: Nvidia "could carry a residual-value guarantee of no more than 25%" | partly: Morningstar's estimate of 25% is shown | **Step 3's look-back rule:** linked to v1 on 2026-10-03, and a group that arrived under another question is not reconsidered for a question opened later (D514) |
+docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md:27:| v12 | e995: Nvidia "previously provided a residual-value guarantee" for SB Energy's Ohio financing (S&P, Moody's; no figure, read because it shares e990's day and link) | no | the same look-back rule |
+docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md:43:  - "not in the request", except e990, "partly";
+docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md:44:  - **every one "unlikely" to move the answer.** For example, e995: "a relevant precedent, but the request already favors a finalized
+docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md:57:  (D508) and v12's two here. Its effect on an answer is still not shown (D511 was inconclusive). D517's reason not to widen it
+docs/research/2026-11-14-use-acceptance/delivery-trace/own-read-before-reader.md:5:| v12, a residual-value guarantee finalized by 2028-04-03 | e990: "Nvidia has said some deals under its $500 billion financing initiative could carry a residual-value guarantee of no more than 25%" | yes | partly: Morningstar's "may backstop up to 25%" is shown, an estimate where this is the company's own statement | confidence at most |
+docs/research/2026-11-14-use-acceptance/delivery-trace/own-read-before-reader.md:6:| v12 | e995: "Nvidia previously provided a residual-value guarantee to support financing for SB Energy's Ohio data center project, according to S&P and Moody's" | yes: a precedent of the very instrument | no ("SB Energy" is not in the request) | possibly toward yes; cannot tell without a send |
+docs/research/2026-11-14-use-acceptance/delivery-trace/own-read-before-reader.md:15:- **v12:** the two statements are kept away by Step 3's look-back rule. Both were linked to the credit-support question (v1) on
+docs/research/2026-11-14-use-acceptance/delivery-trace/own-read-before-reader.md:16:  2026-10-03, and a group that arrived under another question is not reconsidered when v12 opens (D514).
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/delivery-trace/own-read-before-reader.md docs/research/2026-11-14-use-acceptance/delivery-trace/brief-second-reader.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/delivery-trace/trace_figures.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""D609's $0 trace, the identity part: the company's own figures on the carried fortnight against the 12 judged questions. Code decides
+only identity (whose statement, whether it carries a figure, which store record, which repeat group, which day, which request showed it,
+which question it is linked to); whether a statement bears on a question is read by hand, beside its source, afterwards.
+
+Population: every Step 1 evidence item whose original party is the company and which carries at least one figure of any measure (no
+measure list), each item separately. Reconciled to the store by (article, summary); unmatched items are listed, not called dropped.
+
+For each judged question and each population member whose first source day is on or before the question's last judgement day:
+  shown_last    the member's own record is in the last judging request;
+  shown_earlier its own record is in an earlier request of that question only (its conclusion is carried forward);
+  group_shown   another member of its repeat group was shown (the substance is compared by hand later, not assumed equal);
+  linked_to     the questions its record is linked to;
+  never         none of the above for this question.
+
+  python3 trace_figures.py <run root> <output folder>
+"""
+import collections
+import json
+import re
+import sqlite3
+import sys
+from pathlib import Path
+
+COMPANY = re.compile(r'^\s*(nvidia|nvda)\b', re.I)
+
+
+def main(run_root, out):
+    run_root, out = Path(run_root), Path(out)
+    trace = sqlite3.connect(f"file:{run_root / 'c1/step1/trace.sqlite'}?mode=ro", uri=True)
+    population = []
+    for input_id, result in trace.execute("select input_id, result from trace where status='complete' order by sequence"):
+        for evidence in json.loads(result).get('evidence', []):
+            if COMPANY.match(evidence.get('original_party') or '') and evidence.get('figures'):
+                population.append({'input_id': input_id, 'summary': evidence['summary'], 'figures': evidence['figures'],
+                                   'passages': evidence.get('passages') or evidence.get('quotes') or evidence.get('quote')})
+    store = sqlite3.connect(f"file:{run_root / 'c1/judge/draw-c1/views.sqlite'}?mode=ro", uri=True)
+    by_text = collections.defaultdict(list)
+    for evidence_id, input_id, one_line in store.execute('select evidence_id, created_from_input, one_line from evidence'):
+        by_text[(input_id, one_line)].append(evidence_id)
+    parent = {}
+
+    def root(x):
+        while parent.get(x, x) != x:
+            x = parent[x]
+        return x
+    for old, new in store.execute('select old_evidence_id, new_evidence_id from same_claims'):
+        parent[root(new)] = root(old)
+    day_of = dict(store.execute('select evidence_id, min(publication_day) from evidence_sources group by evidence_id'))
+    links = collections.defaultdict(set)
+    for evidence_id, view_id in store.execute('select evidence_id, view_id from evidence_links'):
+        links[evidence_id].add(view_id)
+    members, unmatched = [], []
+    for item in population:
+        ids = by_text.get((item['input_id'], item['summary']))
+        if not ids:
+            unmatched.append(item)
+            continue
+        for evidence_id in ids:
+            members.append(dict(item, evidence_id=evidence_id, group=root(evidence_id), day=day_of.get(evidence_id)))
+    group_ids = collections.defaultdict(set)
+    for member in members:
+        group_ids[member['group']].add(member['evidence_id'])
+    requests = collections.defaultdict(list)
+    for request in json.loads((run_root / 'c1/judge/draw-c1/judge-requests.json').read_text()):
+        requests[request['view']].append(request)
+    questions = {view_id: (question, due) for view_id, question, due in store.execute('select view_id, question, due_day from views')}
+    rows = []
+    for view_id, its_requests in requests.items():
+        its_requests.sort(key=lambda r: (r['day'], r['seq']))
+        last = its_requests[-1]
+        shown_last, shown_any = set(last['shown']), set().union(*(set(r['shown']) for r in its_requests))
+        for member in members:
+            if member['day'] is None or member['day'] > last['day']:
+                continue
+            others = group_ids[member['group']] - {member['evidence_id']}
+            status = ('shown_last' if member['evidence_id'] in shown_last else 'shown_earlier' if member['evidence_id'] in shown_any
+                      else 'group_shown' if others & shown_any else 'never')
+            rows.append({'view': view_id, 'question': questions[view_id][0], 'last_day': last['day'], 'requests': len(its_requests),
+                         'evidence_id': member['evidence_id'], 'group': member['group'], 'day': member['day'], 'status': status,
+                         'linked_to': sorted(links.get(member['evidence_id'], ())), 'summary': member['summary'], 'figures': member['figures'],
+                         'input_id': member['input_id'], 'group_shown_ids': sorted(others & shown_any)})
+    out.mkdir(parents=True, exist_ok=True)
+    (out / 'pairs.jsonl').write_text('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n')
+    (out / 'unmatched.jsonl').write_text('\n'.join(json.dumps(u, ensure_ascii=False) for u in unmatched) + '\n')
+    print(f'population: {len(population)} company statements with a figure; matched to store records: {len(members)} members '
+          f'in {len(group_ids)} repeat groups; unmatched items: {len(unmatched)}')
+    print(f'judged questions with requests: {len(requests)}; fact-question pairs available by the last judgement: {len(rows)}')
+    tally = collections.Counter((r['view'], r['status']) for r in rows)
+    for view_id in sorted(requests, key=lambda v: int(v[1:]) if v[1:].isdigit() else v):
+        counts = {s: tally[(view_id, s)] for s in ('shown_last', 'shown_earlier', 'group_shown', 'never')}
+        print(f'  {view_id} (last {requests[view_id][-1]["day"]}, {len(requests[view_id])} requests): {counts} | {questions[view_id][0][:90]}')
+    linked = collections.Counter(('linked elsewhere' if r['linked_to'] and r['view'] not in r['linked_to'] else
+                                  'linked here' if r['view'] in r['linked_to'] else 'unlinked') for r in rows if r['status'] == 'never')
+    print('never-shown pairs by link state:', dict(linked))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1], sys.argv[2])
+
+ succeeded in 0ms:
+# My own reading, written before the second reader (D609)
+
+| Question | Statement | Bears? | Already in the request in substance? | Would it move the answer? |
+|---|---|---|---|---|
+| v12, a residual-value guarantee finalized by 2028-04-03 | e990: "Nvidia has said some deals under its $500 billion financing initiative could carry a residual-value guarantee of no more than 25%" | yes | partly: Morningstar's "may backstop up to 25%" is shown, an estimate where this is the company's own statement | confidence at most |
+| v12 | e995: "Nvidia previously provided a residual-value guarantee to support financing for SB Energy's Ohio data center project, according to S&P and Moody's" | yes: a precedent of the very instrument | no ("SB Energy" is not in the request) | possibly toward yes; cannot tell without a send |
+| v5, top-five hyperscalers' data-center capex in calendar 2026 | e489: NVIDIA's projected share of the top-five cloud providers' IT capex, 11% to 44% by 2027 | weakly: an inference through NVIDIA's own sales | no | unlikely: the request holds the hyperscalers' own capex |
+| v5 | e648: sales to the largest cloud companies $49 billion in fiscal Q2 2027 | weakly: a floor on part of their spending | no | unlikely |
+| v5 | e767: hyperscale revenues $48.71 billion, +117% | weakly, the same as e648 | no | unlikely |
+| v9, the same in calendar 2027 | e489 | yes, more directly: NVIDIA's own projection for 2027 | no | confidence at most |
+| v9 | e648, e767 | weakly | no | unlikely |
+
+**My lead:**
+
+- **v12:** the two statements are kept away by Step 3's look-back rule. Both were linked to the credit-support question (v1) on
+  2026-10-03, and a group that arrived under another question is not reconsidered when v12 opens (D514).
+- **v5 and v9:** the statements are kept away by model judgements: Step 1's link choice and, for v9, the look-back judge, which both
+  said no.
+# Brief: does a stored statement bear on a question, and did the judge already have it?
+
+You are an independent reader, read-only. You did not write the system or this packet. The packet is
+`docs/research/2026-11-14-use-acceptance/delivery-trace/packet-second-reader.json`. It holds three questions; for each, the whole
+request the judge was last shown (`last_judging_request`) and a few stored statements (`candidates`), each with its quote from its
+source article.
+
+For each statement, answer from the question, the request and the quote only:
+
+- `bears`: `yes`, `no` or `cannot tell`. Would an analyst holding this question weigh this statement as evidence, including evidence
+  that only changes how likely an answer is?
+- `in_request`: `yes`, `partly` or `no`. Is its substance (the same fact, figure, period and attribution) already in the request?
+  `partly` when the request has the figure or the fact from another source or attribution.
+- `moves_answer`: `likely`, `unlikely` or `cannot tell`. Given everything in the request, would adding it plausibly change the
+  answer the judge gives, as opposed to only its confidence?
+- `why`: one sentence naming the words that decide it.
+
+Write one JSON object per line, `{"ref": "Q-…/S…", "bears": …, "in_request": …, "moves_answer": …, "why": …}`, for every statement in
+the packet, and nothing else.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'D609|D606|D544|D592|D608' docs/DECISIONS.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+887:| D543 | 2026-11-15 | Under D439 (a cold reflection council on the whole lean path): D518 stands with its reasons (continuity; the new path not ready), the quality of the two systems' answers is not ranked, the choice of system is not made in Alex's place, and no investigation is opened; the pages corrected for a cold reader | in force, except its deferral of the choice of system, withdrawn by D544 | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-1.md` |
+888:| D544 | 2026-11-15 | Under D439 (council consensus): the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates; both remain; reversal conditions and a $5 checkpoint recorded; next, a $0 review of the fresh week's answer choices against the six lines | in force | `docs/research/2026-11-14-use-acceptance/reflection-2/cold-codex-3.md` |
+900:| D556 | 2026-11-15 | Under D439 (council consensus): no candidate for the "no main part" refusals among those considered; next, at $0, one map of every stored topic short of the first gate (104 topics, four readings kept apart), with overlapping and unresolved causes, reconciled to each report; it cannot by itself prove the gate out of reach or trigger D544's reversal | in force | `docs/research/2026-11-14-use-acceptance/second-week/NO-MAIN-BOUNDARY-STUDY.md` |
+936:| D592 | 2026-11-16 | Stage B's control line: an unchanged re-send stays at 4 of 8, delivery of three facts reaches at most 7, the eighth needs an unproven two-step change; the 7-control course is not started for the line's sake; the live-service operating contract resumed as a $0 design (D575's rows, a falsifier), back to the council before any build | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md` |
+950:| D606 | 2026-11-16 | Under D439 (council round 148), reversibly: next product test from a real earlier library (empty starts as diagnostics); Alex's six lines and accounting stay in force; postponement provisionally reads Still open (reversed by D607); D520/D571 running behaviour retained; P1 not taken; next a $0 audit of the postponed-event class (by topic and matter, full rungs, guards) | in force | `reflection-4/council-codex-148.md` |
+951:| D607 | 2026-11-16 | Under D439 (council round 149): D606's postponement reading reversed provisionally (a formal decision that a dated event will not happen by its due day rules it out; authorities by D420; forecast-versus-decision guard kept); the postponement repair route closes (no missing general rule; Taiwan p3 isolated); next a $0 audit of the shared fiscal-year note's consumers and effects | in force | `unlisted-parts/fresh-a2/postponement/AUDIT-RESULT.md` |
+952:| D608 | 2026-11-16 | Under D439 (council round 150): the fiscal-note lead closes as cleanup-only (no demonstrated product effect; the clause is not inert because check 5 refuses a pre-year-end day; the reader split's cause not established); a reflection council (fresh Codex, cold read) follows | in force | `unlisted-parts/fresh-a2/fiscal-note/RESULT.md` |
+953:| D609 | 2026-11-16 | Under D439 (reflection council, cold Codex read): the next production step is a $0 source-to-request trace of the company's own figures on the carried fortnight (D505), by member, with time, duplicate, population and relevance controls and an independent second reader on bearing cases; moves only on a shared, consequential delivery mechanism | in force | `reflection-5/codex-cold.md`, `reflection-5/codex-challenge-1.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"docs/research/2026-11-14-use-acceptance/delivery-trace/packet-second-reader.json\"; x=json.load(open(p)); print(json.dumps(x,ensure_ascii=False,indent=1)[:18000])'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+[
+ {
+  "question_ref": "Q-v12",
+  "question": "Will Nvidia sign and disclose a finalized hardware residual-value guarantee for its AI infrastructure financing platform by 2028-04-03?",
+  "last_judging_request": "Thesis v12 (NVDA, asset, focus \"Whether the proposed up-to-$125 billion hardware residual-value guarantee is signed and disclosed, and at what amount, versus remaining a proposal or being reduced or withdrawn.\", 2028, due 2028-04-03): Will Nvidia sign and disclose a finalized hardware residual-value guarantee for its AI infrastructure financing platform by 2028-04-03?\nLadder: rung 1 Yes: By 2028-04-03, Nvidia has entered into a definitive hardware residual-value guarantee for its AI infrastructure financing platform and disclosed its finalized terms in a definitive agreement or SEC filing. / rung 2 Ruled out: After 2026-10-03 and before 2028-04-03, Nvidia formally abandons or withdraws the proposed hardware residual-value guarantee without finalizing it. This rung holds when that, or any other decision against the event of rung 1 as a whole, or a formal abandonment or withdrawal of it as a whole, was made after 2026-10-03 and stands on 2028-04-03, and only when rung 1 does not. / rung 3 Still open: Neither rung 1 nor rung 2 holds on 2028-04-03.\n\n[Evidence in view under this thesis, 13 items]\n- e1011 [party_statement; finance.biggo.com; original source Nvidia ; from gnews:bca40137e0cfa49b30e5b0f7 2026-10-03] Nvidia announced in August 2026 a plan with six financial partners—Apollo, BlackRock, Blackstone, Brookfield, Goldman Sachs and KKR—to build an AI infrastructure financing platform intended to attract more than $500 billion in third-party capital, and proposed sharing up to $125 billion in risk by guaranteeing hardware residual values.\n    Quote: Nvidia is also building out a chip-based financing market, partnering with Wall Street financial firms to create large-scale AI infrastructure financing platforms. … In August, Nvidia announced plans with six financial partners—Apollo, BlackRock, Blackstone, Brookfield, Goldman Sachs, and KKR—to build a platform that would attract more than $500 billion in third-party capital. Nvidia also proposed\n    Opinion, not verified: the matcher read this as the same claim as e796; the argument counts one claim, one more outlet.\n- e1013 [party_statement; finance.biggo.com; original source Amazon ; from gnews:bca40137e0cfa49b30e5b0f7 2026-10-03] Amazon tells investors that each generation of semiconductors has a useful life of at least five years, and that starting in 2025 it shortened the useful life of certain server and networking equipment from six years to five years.\n    Quote: Amazon tells investors that each generation of semiconductors has a useful life of at least five years. Starting in 2025, the company also shortened the useful life of certain server and networking equipment from six years to five years.\n- e1017 [rumour; finance.biggo.com; original source Unnamed lenders (reported) ; from gnews:01dc582fbe53203eaeac2c61 2026-10-03] The article reports, without naming the lenders or citing a source, that some lenders involved in Nvidia's AI infrastructure financing plan are seeking stronger collateral than the company originally outlined, as they try to calculate how long chip revenue will be sustainable.\n    Quote: However, Nvidia's ambitious financing plan has sparked debate on Wall Street about the real value of its advanced chips and associated infrastructure. Some lenders are seeking stronger collateral than originally outlined by the company, even given its industry-leading processing power, as they try to calculate how long chip revenue will be sustainable.\n    Opinion, not verified: the matcher read this as the same claim as e961; the argument counts one claim, one more outlet.\n- e1034 [rumour; bhaskarenglish.in (citing unnamed banking sources and credit managers); original source  ; from gnews:4588a36d112063025acf1bb1 2026-10-03] According to unnamed banking sources and credit managers, some lenders are demanding substantial guarantees from NVIDIA against the value of its advanced chips and infrastructure, and are assessing how long the revenue generated from those chips will remain sustainable, amid a debate among analysts and lenders over NVIDIA's financing plan.\n    Quote: Meanwhile, a debate has begun among analysts and lenders on the US market, or Wall Street, over Nvidia's financing plan. … According to banking sources and credit managers, some lenders are demanding substantial guarantees from the company against the value of its advanced chips and infrastructure. They are assessing how long the revenue generated from these chips will remain sustainable.\n    Opinion, not verified: the matcher read this as the same claim as e961; the argument counts one claim, one more outlet.\n- e1042 [rumour; Financial Times (via Yahoo Finance); original source Amazon ; from gnews:ed14a9d1371ea43f3c5dcd3d 2026-10-04] Amazon is in talks, according to a Financial Times report, to move $8 billion of NVIDIA Grace Blackwell chips into a special purpose vehicle that would sell debt to outside investors, buy the chips and lease them back to Amazon, with Amazon keeping up to 10% of the equity; the chips are already installed in data centers across at least five states.\n    Quote: Amazon ( NASDAQ:AMZN ) is in talks to move $8 billion of NVIDIA ( NASDAQ:NVDA ) Grace Blackwell chips into a special purpose vehicle, the Financial Times reported. The vehicle would sell debt to outside investors, buy the chips, and lease them back to Amazon. The hardware stays where it is. It is already installed in data centers across at least five states, and Amazon would keep up to 10% of the \n    Opinion, not verified: the matcher read this as the same claim as e760; the argument counts one claim, one more outlet.\n- e1046 [party_statement; Yahoo Finance; original source NVIDIA ; from gnews:ed14a9d1371ea43f3c5dcd3d 2026-10-04] NVIDIA says Grace Blackwell is already one generation behind Vera Rubin and that Vera Rubin delivers 35 times lower token costs than Grace Blackwell Ultra; NVIDIA estimates about $25 billion of revenue per gigawatt for Grace Blackwell and roughly $40 billion per gigawatt for Vera Rubin.\n    Quote: Grace Blackwell is already one generation behind Vera Rubin. NVIDIA says Vera Rubin delivers 35X lower token costs than Grace Blackwell Ultra. NVIDIA estimates about $25 billion per gigawatt of revenue for Grace Blackwell and roughly $40 billion for Vera Rubin.\n    Opinion, not verified: the matcher read this as the same claim as e117; the argument counts one claim, one more outlet.\n- e1047 [party_statement; Yahoo Finance; original source Amazon (Andy Jassy) ; from gnews:ed14a9d1371ea43f3c5dcd3d 2026-10-04] Amazon CEO Andy Jassy said on the July earnings call that servers take \"a little less than three years\" to break even and last at least five to six years.\n    Quote: On the July earnings call, Jassy said servers take \"a little less than three years\" to break even and last at least five to six years.\n- e1049 [fact; Yahoo Finance; original source NVIDIA ; from gnews:ed14a9d1371ea43f3c5dcd3d 2026-10-04] NVIDIA is building financing structures similar to Amazon's sale-leaseback and signed up six asset managers and banks to raise more than $500 billion of outside capital for AI infrastructure; management said: \"We know some will call this circular financing.\"\n    Quote: NVIDIA is building similar structures. … It signed up six asset managers and banks to raise more than $500 billion of outside capital for AI infrastructure. Management said: \"We know some will call this circular financing.\"\n    Opinion, not verified: the matcher read this as the same claim as e796; the argument counts one claim, one more outlet.\n- e1129 [fact; Morningstar; original source Nvidia ; from gnews:62b41f9768d1b65460f326ca 2026-10-05] Nvidia has pledged $500 billion to its partnership with Apollo Global Management, BlackRock, Blackstone, Brookfield, Goldman Sachs and KKR, aimed at supporting enterprises such as AI laboratories, cloud storage providers and data-center operators that purchase or operate Nvidia-based compute. Morningstar notes the partnership is not a fully committed fund and that Nvidia is not a direct investor, with funding expected to come primarily from banks, insurers, asset managers and private credit investors.\n    Quote: Nvidia alone has pledged $500 billion in its partnership with Apollo Global Management APO , BlackRock BLK , Blackstone BX , Brookfield BN , Goldman Sachs GS , and KKR KKR . This and other efforts are intended to support enterprises—such as AI laboratories, cloud storage providers, and data center operators purchasing or operating Nvidia-based compute—while positioning AI infrastructure as an asse\n    Opinion, not verified: the matcher read this as the same claim as e796; the argument counts one claim, one more outlet.\n- e1130 [third_party_view; Morningstar; original source Morningstar 2026-10-05; from gnews:62b41f9768d1b65460f326ca 2026-10-05] Morningstar estimates that Nvidia may backstop up to 25% of qualifying financings under its partnership with Apollo, BlackRock, Blackstone, Brookfield, Goldman Sachs and KKR, equivalent to a maximum potential exposure of $125 billion if applied across the full target. It adds that Nvidia's actual balance-sheet exposure will depend on its collateral, the transaction volume and structure, and the final allocation of credit and residual-value risk.\n    Quote: In addition, Nvidia may backstop up to 25% of qualifying financings (equivalent to a maximum potential exposure of $125 billion), if applied across the full target. The company’s actual balance sheet exposure will depend on its collateral, the transaction volume and structure, and the final allocation of credit and residual-value risk.\n    Opinion, not verified: the matcher read this as the same claim as e990; the argument counts one claim, one more outlet.\n- e1145 [third_party_view; Trefis (citing Reuters); original source Reuters 2026-10-01; from gnews:02fb6007185a3496e48b4046 2026-10-05] Reuters reported on 1 October 2026 that banks and investors appear to value NVIDIA's chips, and the infrastructure around them, at less than NVIDIA does; the article offers no figures and characterises the outside money as more cautious.\n    Quote: Outside money looks more cautious. Reuters reported on October 1, 2026, that banks and investors seem to value NVIDIA’s chips, and the infrastructure around them, at less than NVIDIA does.\n- e1154 [fact; Darryn Pollock, beincrypto.com (republished by Yahoo Finance), citing CNBC; original source Nvidia (announcement), as reported by CNBC ; from gnews:76c7aa5a044eaaa4dbb5521c 2026-10-05] Nvidia announced in August [2026] preliminary agreements with six financial firms for about $500 billion in customer financing, according to CNBC, aimed at funding customers that buy its chips. The agreements were described as preliminary; the item gives no signing or closing date and does not state how much of the financing, if any, Nvidia itself guarantees or backstops.\n    Quote: Nvidia invests in customers that buy its chips. In August, it announced preliminary agreements with six financial firms for about $500 billion in customer financing, CNBC reported.\n    Opinion, not verified: the matcher read this as the same claim as e989; the argument counts one claim, one more outlet.\n- e1164 [fact; The Motley Fool (Daniel Foelber); original source NVIDIA (with a consortium of six financial institutions) ; from gnews:b0cf215ea487392e67e586be 2026-10-05] The Motley Fool reported that Nvidia is partnering with a consortium of six financial institutions to fund $500 billion in AI infrastructure, an arrangement that enables customers to finance their compute needs rather than buying chips directly. The item does not state how much of the $500 billion Nvidia itself bears or whether Nvidia guarantees any of the financing.\n    Quote: Demand is so massive that Nvidia is partnering with a consortium of six financial institutions to fund $500 billion in AI infrastructure, enabling customers to finance their compute needs rather than buying chips directly.\n    Opinion, not verified: the matcher read this as the same claim as e796; the argument counts one claim, one more outlet.\n\n[Themes in force, 6]\n- v10 (ai-capex, due 2027-03-31) How many gigawatts of new data-center capacity will be added in the United States during calendar 2026, as determined by full-year 2026 grid-operator and utility interconnection/capacity data and industry data-center capacity reports?: now rung 2 from 10 GW to below 15 GW; judged 2026-10-05; updated since this thesis was last judged; reasons: The reference is Huang’s rough 10–20 GW annual estimate: its 10–<15 portion is rung 2, its 15–<20 portion is rung 3, and 20 GW reaches rung 4; the midpoint, 15 GW, is rung 3. I forecast below that midpoint because the quantified trades shortfall, the stated net power shortfall, and the two-to-three-\n- v11 (semiconductor-cycle, due 2027-03-31) What is the percentage change in average DRAM (including HBM) contract prices in calendar 2026 versus calendar 2025, according to TrendForce/DRAMeXchange full-year 2026 contract-price data?: now rung 5 30 percent or more; judged 2026-10-05; updated since this thesis was last judged; reasons: The reference is the opening no-reference position, rung 3 (10% to below 20%); no consensus, company guidance, or TrendForce/DRAMeXchange full-year figure for this measure is supplied. The forecast is above that reference: Micron says the DRAM imbalance has no visible return-to-balance date and that\n- v3 (chip-export-controls, due 2027-01-31) Will U.S. authorities authorize exports of Nvidia’s current Blackwell-generation AI chips to China and Chinese authorities allow those shipments by January 31, 2027, as verified by official export-control or licensing decisions, Chinese regulatory or customs actions, or Nvidia disclosures?: now rung 3 Still open; judged 2026-10-05; reasons: The nearest observable market reference is NVIDIA’s Q3 FY2027 guidance, which assumes no China Data Center compute revenue; that sits at rung 3, Still open, rather than establishing that approval is formally ruled out by the due date. The evidence implies no verified U.S. authorization for Blackwell\n- v5 (ai-capex, due 2027-03-31) What will the five largest AI hyperscalers' combined data-center capital expenditure be in calendar 2026, according to their full-year earnings and capital-expenditure disclosures?: now rung 3 from 750,000,000,000 USD to below 850,000,000,000 USD; judged 2026-10-05; reasons: The reference is Nvidia's estimate of nearly $800 billion for the big five in calendar 2026, which sits in rung 3. Amazon's approximately $220 billion 2026 capex projection, versus its previous $200 billion level, supports about a $20 billion increase to that reference: roughly $820 billion, still w\n- v7 (chip-export-controls, due 2027-01-31) Will China's Ministry of Industry and Information Technology (MIIT) formally approve purchases of Nvidia's RTX Pro 5500 by Alibaba, ByteDance, and other Chinese firms by January 31, 2027?: now rung 1 Yes; judged 2026-09-30; reasons: The reference is rung 3: no market consensus or formal decision is supplied, and the reported status is still deliberation rather than approval or rejection. The forecast nevertheless favors rung 1: the specific report says officials indicated purchases were likely to be approved and MIIT intended t\n- v9 (ai-capex, due 2028-03-30) How much will the five largest AI hyperscalers spend in total on data centers in calendar 2027, as shown by their capex disclosures and reported 2027 results?: now rung 3 from 1,200,000,000,000 USD to below 1,400,000,000,000 USD; judged 2026-10-05; updated since this thesis was last judged; reasons: The reference is Nvidia's projection of $1.3 trillion for calendar 2027, which sits in rung 3. Barclays' approximately $1.1 trillion figure is for cloud capital spending and is not a like-for-like estimate of the five hyperscalers' data-center capex; the demand evidence, including the new customer-g\n\n[Previous conclusion, for comparison only] rung 1; reasons: The reference is Nvidia’s proposal to share up to $125 billion in hardware residual-value risk, which is rung 3: a proposal is neither a definitive agreement nor finalized disclosed terms. The most likely outcome by April 3, 2028 is that Nvidia signs and discloses a definitive guarantee for some non-zero amount, likely within that proposed cap. The evidence supports an active financing platform and lender demand for guarantees, while Amazon’s reported sale-leaseback talks show a concrete financing structure; none establishes that Nvidia has signed its own guarantee. Hardware obsolescence and useful-life concerns are meaningful execution risks, but do not outweigh the proposal, lender pressure, and time remaining. The evidence does not allow a reliable estimate of the finalized amount, so I\n\nAnswer per the JSON schema. cites may name only the evidence ids listed above; cites_views must be empty: this thesis depends on no other thesis; theme_pushes only the theme ids listed above; a theme id goes only in theme_pushes, never in cites or cites_views.",
+  "candidates": [
+   {
+    "ref": "S1",
+    "statement": "Nvidia told shareholders in May 2026 that it would raise its quarterly dividend to $0.25 per share from $0.01 per share, an increase the Morningstar author calculates at 2,400%. The author estimates roughly $25 billion per year would be returned to shareholders through the dividend, which would make Nvidia one of the largest dividend payers in the US market; that annual figure is the author's approximation, not a company-disclosed total.",
+    "quote_from_source": "In May, Nvidia told shareholders that it would increase its quarterly payout to $
+
+codex
+**I agree to close the company-figure repair route for this fortnight.** I would not run option (a) now; the stronger next step is to determine whether a meaningful product comparison can be made from a real carried library.
+
+The v12 test is weakly positioned to decide the boundary. The request already contains Morningstar’s 25% estimate and a proposal to share up to $125 billion in risk. The missing NVIDIA statement would improve attribution, and the SB Energy case adds a precedent, but both readers predict the answer is unlikely to move. Three sends per condition could produce another inconclusive result like D511. Even if none moved, that would **not** establish that the boundary causes only confidence-level losses elsewhere. [D609 trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md), [D511 test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md).
+
+The closure is deliberately narrow. Five statements on three questions remain relevant and undelivered, across two mechanisms. The trace used the statements’ own party and figure fields and one company’s fortnight; it cannot establish delivery in general or rule out figures missing from those fields. The second reader checked the selected candidates, not every possible statement–question pair. I would record the omissions and the look-back boundary as open evidence, with no repair or paid test supported now.
+
+I lean toward **(b), with one correction**: this result does not establish that delivery is never binding. It says this investigation did not find a sufficiently consequential, shared company-figure delivery mechanism to justify a repair. The 49 groups without links are also an observed starting point for an opening question, not proof that each needs its own question; D505 says figures should inform related questions, while D382 and D384 remain in force.
+
+**Next: a $0 feasibility review for a same-news product comparison starting from an established library.** Check whether the stored material can supply comparable, independently established starting libraries and enough meaningful questions and answers for both systems, without changing the frozen ruler. Specify in advance what analyst-visible coverage and answer evidence the comparison can decide.
+
+- **Moves:** a feasible, bounded comparison has comparable starting conditions, enough cases, and controls capable of exposing both missed matters and unsupported answers.
+- **Closes:** the available libraries are not comparable, or the sample and controls cannot distinguish an important product difference. Do not spend on a run that cannot decide.
+- **Cost now:** $0. Any later send needs its own reviewed design and ceiling.
+
+Gate 1 remains unmet, gate 2’s control shortfall remains, and neither is solved by this review. The council’s current direction remains to carry the rebuild forward while the running system stays the default; adoption still requires the gates and release decisions. [D544](/Users/lchingen/hivemind/docs/DECISIONS.md:888), [D606](/Users/lchingen/hivemind/docs/DECISIONS.md:950).
+
+**CONSENSUS: Close the bounded company-figure repair route; do not send the v12 test; next assess at $0 whether a meaningful carried-library product comparison is feasible.**
+tokens used
+155,315
+**I agree to close the company-figure repair route for this fortnight.** I would not run option (a) now; the stronger next step is to determine whether a meaningful product comparison can be made from a real carried library.
+
+The v12 test is weakly positioned to decide the boundary. The request already contains Morningstar’s 25% estimate and a proposal to share up to $125 billion in risk. The missing NVIDIA statement would improve attribution, and the SB Energy case adds a precedent, but both readers predict the answer is unlikely to move. Three sends per condition could produce another inconclusive result like D511. Even if none moved, that would **not** establish that the boundary causes only confidence-level losses elsewhere. [D609 trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-trace/RESULT.md), [D511 test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md).
+
+The closure is deliberately narrow. Five statements on three questions remain relevant and undelivered, across two mechanisms. The trace used the statements’ own party and figure fields and one company’s fortnight; it cannot establish delivery in general or rule out figures missing from those fields. The second reader checked the selected candidates, not every possible statement–question pair. I would record the omissions and the look-back boundary as open evidence, with no repair or paid test supported now.
+
+I lean toward **(b), with one correction**: this result does not establish that delivery is never binding. It says this investigation did not find a sufficiently consequential, shared company-figure delivery mechanism to justify a repair. The 49 groups without links are also an observed starting point for an opening question, not proof that each needs its own question; D505 says figures should inform related questions, while D382 and D384 remain in force.
+
+**Next: a $0 feasibility review for a same-news product comparison starting from an established library.** Check whether the stored material can supply comparable, independently established starting libraries and enough meaningful questions and answers for both systems, without changing the frozen ruler. Specify in advance what analyst-visible coverage and answer evidence the comparison can decide.
+
+- **Moves:** a feasible, bounded comparison has comparable starting conditions, enough cases, and controls capable of exposing both missed matters and unsupported answers.
+- **Closes:** the available libraries are not comparable, or the sample and controls cannot distinguish an important product difference. Do not spend on a run that cannot decide.
+- **Cost now:** $0. Any later send needs its own reviewed design and ceiling.
+
+Gate 1 remains unmet, gate 2’s control shortfall remains, and neither is solved by this review. The council’s current direction remains to carry the rebuild forward while the running system stays the default; adoption still requires the gates and release decisions. [D544](/Users/lchingen/hivemind/docs/DECISIONS.md:888), [D606](/Users/lchingen/hivemind/docs/DECISIONS.md:950).
+
+**CONSENSUS: Close the bounded company-figure repair route; do not send the v12 test; next assess at $0 whether a meaningful carried-library product comparison is feasible.**

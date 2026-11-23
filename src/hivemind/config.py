@@ -43,10 +43,12 @@ class Setting:
     prompt_version: str
     reasoning_effort: str
     max_output_tokens: int
-    engine: str = 'llm'       # matching only: 'llm' (the generative call) or 'jev' (TypeSafe Jev, views/jev_matching.py)
+    engine: str = 'llm'       # matching only: 'llm' (the generative call), 'jev' (TypeSafe Jev, views/jev_matching.py) or 'jev-links' (Jev, and the reading links of views/links.py, D694)
+    link_questions: str = ''  # matching under 'jev-links' only: the version of the link questions (views/links.py), 'links-v1' when unnamed (D705)
 
 
-ENGINES = ('llm', 'jev')
+ENGINES = ('llm', 'jev', 'jev-links')
+LINK_QUESTIONS = ('links-v1', 'links-v2')     # the link question versions views/links.py builds (D694, D705)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -84,9 +86,18 @@ def _setting(name, raw):
     engine = str(raw.get('engine', 'llm'))
     if engine not in ENGINES:
         raise ConfigError(f'setting {name}: engine {engine!r} is not one of {ENGINES}')
+    link_questions = ''
+    if 'link_questions' in raw:              # named: only in matching, only under jev-links, only one of the exact version strings
+        if name != 'matching' or engine != 'jev-links':
+            raise ConfigError(f'setting {name}: link_questions is read only by matching under the engine jev-links')
+        link_questions = raw['link_questions']
+        if not isinstance(link_questions, str) or link_questions not in LINK_QUESTIONS:
+            raise ConfigError(f'setting {name}: link_questions {link_questions!r} is not one of {LINK_QUESTIONS}')
+    elif name == 'matching' and engine == 'jev-links':
+        link_questions = 'links-v1'          # unnamed: the first version (poc-v119)
     return Setting(name=name, model=str(raw['model']), prompt_version=str(raw['prompt_version']),
                    reasoning_effort=str(raw['reasoning_effort']),
-                   max_output_tokens=int(raw['max_output_tokens']), engine=engine)
+                   max_output_tokens=int(raw['max_output_tokens']), engine=engine, link_questions=link_questions)
 
 
 def load(path):

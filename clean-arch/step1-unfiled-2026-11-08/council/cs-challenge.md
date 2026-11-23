@@ -1,0 +1,1 @@
+Revised for your findings: read the "Revision" section at the end of `council/cp-claude.md`, then the current `focused/closing.txt`, `focused/schema.json` and `check()` and `send()` in `focused/focused_probe.py`. Under 200 words: is anything still blocking? End with SEND, SEND WITH CHANGES, or DO NOT SEND.

@@ -1,0 +1,25 @@
+The earlier review’s specific findings are closed, but version 7 overstates what it knows about the second class. The year change is a reasonable first proposal for Alex once that explanation is corrected.
+
+For example, one thesis names a spending split and adds a capacity figure in brackets. The recorded fault is that the next step wrongly refused it, even though the spending figure was clearly the main one. That does not by itself show that Step 1 broke its rule or that removing the bracketed context would have prevented the fault. [Diagnosis, line 59](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:59); [Stage A result, lines 43–46](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/result-4/RESULT.md:43).
+
+1. **The `lh-codex.md` findings**
+
+   - **The omitted Stage A faults are accounted for.** Version 7 identifies the lidar theme error, the $105 billion ceiling used as a reference, and the two Kyber answers due at the end of 2028. It distinguishes the ladder step’s fault from Step 1’s contribution in each case. [Diagnosis, lines 74–84](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:74); [Stage A result, lines 56–69](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/result-4/RESULT.md:56).
+   - **The comparison control now checks meaning.** A blind reader must distinguish a question about a single year from a question about the change between years, as well as count unlinked price statements. That closes the specific gap: links alone no longer determine whether the comparison survived. [Diagnosis, line 176](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:176).
+   - **The points previously marked closed remain closed.** The diagnosis retains the corrected refusal count and Kyber attribution, source words for the survey cases, the qualified Stage B findings, the warning that the model’s later explanations are leads, and fresh c8 sends alongside the candidate. [Diagnosis, lines 29–34](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:29), [lines 59–60](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:59), [lines 93–100](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:93), [lines 164–166](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:164).
+
+   The comparison stop allows a difference of up to two sends. That is a declared tolerance, not proof that no comparison was lost; the individual results should still be reported. [Diagnosis, lines 176–180](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:176).
+
+2. **The new serious issue**
+
+   The diagnosis groups two genuine outcomes, a second figure in brackets, an alternative, and a comparison with an earlier schedule into one “second thing” class, then calls it a Step 1 fault and says it needs a structural fix. [Diagnosis, lines 86–90](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:86), [lines 122–127](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:122).
+
+   That conclusion is stronger than the evidence. The Kyber review explicitly attributes the loss of the distinction between 2027 and a delay to 2028 to the ladder step. The Stage A accounts likewise describe the *ladder model* slipping rules; they do not establish why Step 1 wrote each thesis that way or that one fix would address them all. [Kyber review, lines 82–83](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-second-look-2026-11-10/RESULT.md:82); [Stage A result, lines 70–72](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/result-4/RESULT.md:70). D397 also distinguishes two real bets from wording with a main question and additional parts. [D397](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4326).
+
+   Correct the page to say these shapes are **a class to investigate**, with some demonstrated Step 1 issues and some demonstrated ladder errors. Remove the assertion that a sentence cannot hold the rule and that a structural fix is already the answer. The cited c9 result concerns the separate unsigned-obligation issue; it does not prove that conclusion for all these shapes. [D388](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4172).
+
+The choice to propose the **year change first** remains sound as a candidate: it targets three observed missed annual questions, has a direct source in Alex’s year decision, and has a controlled first test. Its effect is unproved, and the unmeasured effect on the eventual judgement should remain labelled as expected, as the page does. [Diagnosis, lines 104–107](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:104), [lines 156–170](/Users/lchingen/hivemind/clean-arch/step1-diagnosis-2026-11-12/DIAGNOSIS.md:156). Alex’s decision is still required before a new version is built or sent. [D432](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4806).
+
+No wording-only findings.
+
+The diagnosis stands with corrections; ready to put to Alex: yes with changes.

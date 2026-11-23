@@ -1,0 +1,19 @@
+The trace is worth doing: Reading 4 narrows the concern, but does not answer whether all relevant company figures reached the questions that needed them.
+
+For example, Reading 4 excluded an entire repeat group if any member appeared in the final request. A different member might contain a qualification or figure the shown member lacks. The proposed member-by-member, source-backed read can discover that. It still cannot establish whether delivering the fact would change the answer without a later test.
+
+I agree with your scope, with four refinements:
+
+1. **Set the time boundary per statement and question.** Include only statements available by that question’s last judgement, and check whether the fact appeared in an *earlier* request whose conclusion the last request carries forward. “Not in the last request” alone is not the same as “never reached the judge.”
+
+2. **Treat a repeat as already delivered only after comparing its substance.** A shown member closes the gap only if it conveys the relevant figure, period, qualification and attribution. Group membership alone is not enough. Count distinct facts and fact–question pairs separately from repeat members.
+
+3. **Make the population claim precise.** “Every statement with a populated financial-figure field and a company party” removes the measure list, but cannot find a financial figure that Step 1 failed to put in that field, or attributed to someone else. Reconcile the selected statements to the stored writer records and report unmatched records; do not call those dropped without tracing them. A statement can be linked elsewhere *and* absent from this question, so its fate and the reason it missed this question should be separate observations. The earlier census found that an already-linked group was excluded from later linking; the [library code](/Users/lchingen/hivemind/clean-arch/step3/library.py:77) confirms that boundary.
+
+4. **Keep relevance and effect separate.** Read each source and the question for whether the fact bears on it, including whether it changes confidence. Then compare it with everything the judge had, including the previous conclusion. An independent second reader should check the proposed bearing cases and disputed boundaries before a change is designed. Reading 4’s “no predicted answer movement” remains evidence; this trace does not overturn it merely by finding relevant omissions. [Reading 4](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/carried-run/RESULT.md), [earlier census](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/delivery-class/CLASS-CENSUS-RESULT.md).
+
+The result that **moves the path** is a source-backed set of distinct, genuinely undelivered bearing facts across several questions, with one identifiable step responsible for a meaningful share. The trace should state the share and the counterexamples. A stored-data replay must then deliver that class without comparable wrong links before a paid test is designed.
+
+The result that **closes this candidate** is that the newly examined material adds no meaningful class beyond what the judge already received, or that the real omissions are too few or arise from different mechanisms for one bounded change to address. That closes this proposed repair route, not the general possibility of delivery failures. The prior six-call test also remains inconclusive about answer impact. [Effect test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/effect/EFFECT-TEST-RESULT.md).
+
+**CONSENSUS: Proceed with the $0 trace, using these time, duplicate, population and relevance controls; design a repair only if a shared, consequential delivery mechanism is demonstrated.**

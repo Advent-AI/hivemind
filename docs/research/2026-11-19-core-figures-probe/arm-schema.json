@@ -1,0 +1,277 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "new_theses",
+  "evidence"
+ ],
+ "properties": {
+  "new_theses": {
+   "type": "array",
+   "description": "New thesis proposals, each referenced by at least one evidence link.",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "local_id",
+     "description",
+     "outcome",
+     "period",
+     "opens_as",
+     "settled_by",
+     "closest_open_thesis",
+     "why_a_separate_bet"
+    ],
+    "properties": {
+     "local_id": {
+      "type": "string",
+      "description": "Local reference for this new thesis in the answer; not a database ID."
+     },
+     "description": {
+      "type": "string",
+      "description": "The proposed research question, stated clearly."
+     },
+     "outcome": {
+      "type": "string",
+      "description": "The outcome or event being tracked by this thesis."
+     },
+     "period": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The period or check date that settles the thesis: the one the item supports, or the one its reason fixes (section 3), with how it was set."
+     },
+     "opens_as": {
+      "type": "string",
+      "enum": [
+       "product_node",
+       "binding_obligation",
+       "shared_quantity",
+       "policy_stage",
+       "main_driver"
+      ],
+      "description": "The reason this thesis opens, one of the five in section 3."
+     },
+     "settled_by": {
+      "type": "string",
+      "description": "The public material that will settle the answer on a date (a filing, an official decision, a shipment confirmation, a statistics release).",
+      "pattern": "\\S"
+     },
+     "closest_open_thesis": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Exact ID of the open thesis closest to this one; null when the open list is empty."
+     },
+     "why_a_separate_bet": {
+      "type": "string",
+      "description": "Why an analyst would bet on this question separately from the closest open thesis: how their answers can move apart."
+     }
+    }
+   }
+  },
+  "evidence": {
+   "type": "array",
+   "description": "Evidence statements extracted from this item, with their thesis links.",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "local_id",
+     "summary",
+     "source_passages",
+     "original_party",
+     "reporting_speaker",
+     "tier",
+     "statement_date",
+     "statement_date_text",
+     "evidence_period",
+     "links",
+     "figures"
+    ],
+    "properties": {
+     "local_id": {
+      "type": "string",
+      "description": "Local reference for this evidence in the answer; not a database ID."
+     },
+     "summary": {
+      "type": "string",
+      "description": "Standalone faithful summary naming the actor and preserving relevant figures, periods and conditions."
+     },
+     "source_passages": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Contiguous verbatim passages from this source item that jointly support the summary; return each passage separately.",
+      "items": {
+       "type": "string"
+      }
+     },
+     "original_party": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Party whose action, figure or claim is reported; null if unknown. Use the reporting outlet or author as the original party only for its own estimate, analysis or unnamed-source report."
+     },
+     "reporting_speaker": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Person or outlet making or reporting the statement in this item, when known; null if unknown."
+     },
+     "statement_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Original statement day as YYYY-MM-DD when known; null if the full day is unknown."
+     },
+     "figures": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "measure",
+        "period",
+        "value",
+        "kind",
+        "basis"
+       ],
+       "properties": {
+        "measure": {
+         "type": "string",
+         "description": "The financial measure as the passage states it."
+        },
+        "period": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "description": "The period as stated; null when none is given."
+        },
+        "value": {
+         "type": "string",
+         "description": "The figure copied exactly from one of this item's passages, with its unit."
+        },
+        "kind": {
+         "type": "string",
+         "enum": [
+          "actual",
+          "guidance",
+          "estimate"
+         ],
+         "description": "actual: reported, including a balance as of a date; guidance: the company's own outlook; estimate: a named party's or consensus forecast."
+        },
+        "basis": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "description": "Scope and qualifications as stated (GAAP or non-GAAP, segment or company, conditions); null when none."
+        }
+       }
+      },
+      "description": "The company's own useful financial figures this statement states (section 2, CONDITION); empty for any other statement. A statement with several useful figures stays one item and lists them all."
+     },
+     "links": {
+      "type": "array",
+      "minItems": 0,
+      "description": "The existing or proposed theses this evidence informs; empty when it is material but no thesis takes it yet: it is kept in the company's record and linked when a covering thesis opens.",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "target_type",
+        "target_id",
+        "relevance"
+       ],
+       "properties": {
+        "target_type": {
+         "type": "string",
+         "enum": [
+          "existing",
+          "new"
+         ],
+         "description": "Whether the reference identifies an open thesis or a new proposal."
+        },
+        "target_id": {
+         "type": "string",
+         "description": "Exact supplied ID when existing, or local_id of a new thesis in this answer."
+        },
+        "relevance": {
+         "type": "string",
+         "description": "How this evidence informs the referenced thesis, distinguishing source claims from inference."
+        }
+       }
+      }
+     },
+     "tier": {
+      "type": "string",
+      "enum": [
+       "fact",
+       "party_statement",
+       "third_party_view",
+       "rumour"
+      ],
+      "description": "Source tier of the statement; an unconfirmed or unnamed-source claim takes precedence as rumour."
+     },
+     "statement_date_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Original date or partial date as stated in the item; null when absent."
+     },
+     "evidence_period": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Period the fact, plan or forecast describes, as supported by the item; null when unknown."
+     }
+    }
+   }
+  }
+ }
+}

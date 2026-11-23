@@ -1,0 +1,1131 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Council check of the matter list before it is frozen (read-only, $0)
+
+**Context:** the blind matter census of the release comparison (plan `../../RUN-PLAN-v10.md` §1.3; D668, D670) read the 410 kept articles.
+- Two families read them apart in 22 closed sessions. Each family merged its own lists, the two families were reconciled pair by pair, and
+  third readers judged the one-family matters.
+- That gave 38 entries (`matters-entries.json`). The pair-by-pair reconciliation left same-bet entries apart, for example three entries for
+  NVIDIA's Anthropic IPO investment that differ only in their deadline.
+- **A de-duplication step was added** (`census_merge.py dedup`), before any system output exists. Both families group the 38 entries by
+  D248's one-bet rule, and entries grouped by either family become one matter, so no matter is counted twice. The count under agreed groups
+  only is reported beside.
+- **Result:** N = 30, or 33 under agreed groups only (`matters-final.json`, listed in `matters-final-list.md`), with 7 company-figure matters.
+
+**Check, reading the files and the source articles where needed** (`batches/*.json` hold the article texts by number):
+1. Is the de-duplication rule (merge on either family's grouping) faithful to D665's "the grouping of repeats, what counts as the same
+   question" and to D248? Or should only agreed groups merge?
+2. In `matters-final-list.md`, is any remaining pair still one bet, counted twice? Look in particular at the 2026 and 2027 hyperscaler capital
+   expenditure entries (five companies, four companies, data-centre only, Alphabet alone).
+3. Is any merged group in fact two bets (for example, the Hugging Face group)?
+4. Anything that would let the list move after system outputs are seen.
+
+End with `FREEZE` or `CHANGE: <the smallest changes>`. Under about 400 words. Do not open anything under `/private/tmp` or `~/.codex/memories`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check whether each disputed group shares one outcome, then verify what the freeze will lock before the comparison runs.
+exec
+/opt/homebrew/bin/zsh -lc "rg --files --hidden -g '"'!*.stream'"' -g '"'!*.stderr'"' -g '"'!batches/*'"' | sort; nl -ba matters-final-list.md; rg -n 'def |dedup|sha256|freeze' census_merge.py" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+answers/claude-batch-01.txt
+answers/claude-batch-02.txt
+answers/claude-batch-03.txt
+answers/claude-batch-04.txt
+answers/claude-batch-05.txt
+answers/claude-batch-06.txt
+answers/claude-batch-07.txt
+answers/claude-batch-08.txt
+answers/claude-batch-09.txt
+answers/claude-batch-10.txt
+answers/claude-batch-11.txt
+answers/codex-batch-01.txt
+answers/codex-batch-02.txt
+answers/codex-batch-03.txt
+answers/codex-batch-04.txt
+answers/codex-batch-05.txt
+answers/codex-batch-06.txt
+answers/codex-batch-07.txt
+answers/codex-batch-08.txt
+answers/codex-batch-09.txt
+answers/codex-batch-10.txt
+answers/codex-batch-11.txt
+census_merge.py
+census_readers.py
+dedup-check-brief.md
+dedup-check-codex.md
+dedup/claude.jsonl
+dedup/codex.jsonl
+launches.jsonl
+matters-entries.json
+matters-entries.json.sha256
+matters-final-list.md
+matters-final.json
+matters-final.json.sha256
+matters.json
+matters.json.sha256
+memory-probe.txt
+merge.log
+merged/claude.jsonl
+merged/codex.jsonl
+numbering.json
+prompts.sha256
+prompts/batch-01.md
+prompts/batch-02.md
+prompts/batch-03.md
+prompts/batch-04.md
+prompts/batch-05.md
+prompts/batch-06.md
+prompts/batch-07.md
+prompts/batch-08.md
+prompts/batch-09.md
+prompts/batch-10.md
+prompts/batch-11.md
+read.log
+reconciled/claude.jsonl
+reconciled/codex.jsonl
+third/claude--big4-hyperscaler-capex-2027--claude.json
+third/claude--big4-hyperscaler-capex-2027--codex.json
+third/claude--china-approves-nvda-dc-imports--claude.json
+third/claude--china-approves-nvda-dc-imports--codex.json
+third/claude--dram-contract-price-2027--claude.json
+third/claude--dram-contract-price-2027--codex.json
+third/claude--fed-funds-end-2026--claude.json
+third/claude--fed-funds-end-2026--codex.json
+third/claude--h100-rental-price-dec-2026--claude.json
+third/claude--h100-rental-price-dec-2026--codex.json
+third/claude--huawei-ascend-960dt-launch--claude.json
+third/claude--huawei-ascend-960dt-launch--codex.json
+third/claude--nvda-anthropic-ipo-anchor--claude.json
+third/claude--nvda-anthropic-ipo-anchor--codex.json
+third/claude--nvda-china-dc-sales-resume--claude.json
+third/claude--nvda-china-dc-sales-resume--codex.json
+third/claude--nvda-fy2027-gross-margin--claude.json
+third/claude--nvda-fy2027-gross-margin--codex.json
+third/claude--nvda-fy2027-revenue--claude.json
+third/claude--nvda-fy2027-revenue--codex.json
+third/claude--nvda-hugging-face-close--claude.json
+third/claude--nvda-hugging-face-close--codex.json
+third/claude--nvda-residual-value-support--claude.json
+third/claude--nvda-residual-value-support--codex.json
+third/claude--wti-2026-average--claude.json
+third/claude--wti-2026-average--codex.json
+third/codex--alphabet_capex_2026--claude.json
+third/codex--alphabet_capex_2026--codex.json
+third/codex--anthropic_existing_commitment_fy27--claude.json
+third/codex--anthropic_existing_commitment_fy27--codex.json
+third/codex--anthropic_ipo_investment_mar2028--claude.json
+third/codex--anthropic_ipo_investment_mar2028--codex.json
+third/codex--anthropic_ipo_investment_nov2026--claude.json
+third/codex--anthropic_ipo_investment_nov2026--codex.json
+third/codex--broadcom_ai_revenue_fy26--claude.json
+third/codex--broadcom_ai_revenue_fy26--codex.json
+third/codex--broadcom_ai_revenue_fy28--claude.json
+third/codex--broadcom_ai_revenue_fy28--codex.json
+third/codex--coreweave_revenue_2026--claude.json
+third/codex--coreweave_revenue_2026--codex.json
+third/codex--five_hyperscalers_datacenter_capex_2026--claude.json
+third/codex--five_hyperscalers_datacenter_capex_2026--codex.json
+third/codex--five_hyperscalers_datacenter_capex_2027--claude.json
+third/codex--five_hyperscalers_datacenter_capex_2027--codex.json
+third/codex--groq_doj_enforcement--claude.json
+third/codex--groq_doj_enforcement--codex.json
+third/codex--huggingface_agreement_mar2028--claude.json
+third/codex--huggingface_agreement_mar2028--codex.json
+third/codex--huggingface_completion_jan2027--claude.json
+third/codex--huggingface_completion_jan2027--codex.json
+third/codex--huggingface_completion_mar2028--claude.json
+third/codex--huggingface_completion_mar2028--codex.json
+third/codex--huggingface_eu_review--claude.json
+third/codex--huggingface_eu_review--codex.json
+third/codex--huggingface_obligation_fy27--claude.json
+third/codex--huggingface_obligation_fy27--codex.json
+third/codex--huggingface_regulatory_action_fy27--claude.json
+third/codex--huggingface_regulatory_action_fy27--codex.json
+third/codex--huggingface_us_review--claude.json
+third/codex--huggingface_us_review--codex.json
+third/codex--ibm_revenue_2026--claude.json
+third/codex--ibm_revenue_2026--codex.json
+third/codex--marvell_custom_ai_fy28--claude.json
+third/codex--marvell_custom_ai_fy28--codex.json
+third/codex--marvell_revenue_fy27--claude.json
+third/codex--marvell_revenue_fy27--codex.json
+third/codex--marvell_revenue_fy28--claude.json
+third/codex--marvell_revenue_fy28--codex.json
+third/codex--micron_revenue_fy27--claude.json
+third/codex--micron_revenue_fy27--codex.json
+third/codex--nvidia_cpu_fy28--claude.json
+third/codex--nvidia_cpu_fy28--codex.json
+third/codex--nvidia_datacenter_cpu_fy28--claude.json
+third/codex--nvidia_datacenter_cpu_fy28--codex.json
+third/codex--nvidia_gross_margin_fy28--claude.json
+third/codex--nvidia_gross_margin_fy28--codex.json
+third/codex--nvidia_neocloud_revenue_guarantees_fy27--claude.json
+third/codex--nvidia_neocloud_revenue_guarantees_fy27--codex.json
+third/codex--nvidia_vera_cpu_fy27--claude.json
+third/codex--nvidia_vera_cpu_fy27--codex.json
+third/codex--nvidia_vera_cpu_fy28--claude.json
+third/codex--nvidia_vera_cpu_fy28--codex.json
+third/codex--soundhound_revenue_2026--claude.json
+third/codex--soundhound_revenue_2026--codex.json
+third/codex--ti_capex_2026--claude.json
+third/codex--ti_capex_2026--codex.json
+third/codex--wall_street_residual_support--claude.json
+third/codex--wall_street_residual_support--codex.json
+third/pair--groq_doj_action_or_settlement|doj-nvda-groq-action--claude.json
+third/pair--groq_doj_action_or_settlement|doj-nvda-groq-action--codex.json
+third/pair--nvidia_cloud_guarantees_fy27|nvda-total-guarantees-fy2027--claude.json
+third/pair--nvidia_cloud_guarantees_fy27|nvda-total-guarantees-fy2027--codex.json
+third/pair--nvidia_neocloud_commitments_fy27|nvda-cloud-capacity-commitments-fy2027--claude.json
+third/pair--nvidia_neocloud_commitments_fy27|nvda-cloud-capacity-commitments-fy2027--codex.json
+     1	1. [both · merged by both] Broadcom FY2027 AI semiconductor revenue
+     2	2. [both · merged by both] Five major hyperscalers' combined 2026 capital expenditure
+     3	3. [both · merged by both] Five major hyperscalers' combined 2027 capital expenditure
+     4	4. [both · merged by both] Four hyperscalers' combined 2026 capital expenditure
+     5	5. [both · merged by both] Worldwide semiconductor sales in 2026
+     6	6. [both · company figure · merged by both] NVIDIA FY2027 data-center revenue
+     7	7. [both · company figure · merged by both] NVIDIA FY2028 data-center revenue
+     8	8. [both · merged by both] NVIDIA future investment commitments at FY2027 year-end
+     9	9. [both · company figure · merged by both] NVIDIA FY2027 data-center networking revenue
+    10	10. [both,codex · company figure · merged by both] NVIDIA FY2028 non-GAAP gross margin || NVIDIA FY2028 gross margin
+    11	11. [both · company figure · merged by both] NVIDIA FY2028 total revenue
+    12	12. [both · merged by both] NVIDIA OpenAI Ohio lease guarantee at FY2027 year-end
+    13	13. [both · merged by both] NVIDIA supply and capacity purchase commitments at FY2027 year-end
+    14	14. [claude · merged by both] Combined calendar-2027 capex of Amazon, Microsoft, Alphabet and Meta amid AI-slowdown debate
+    15	15. [claude · merged by both] Whether China formally permits imports of NVIDIA data center chips (H200) by 2027-01-31
+    16	16. [claude · merged by both] Calendar-2027 average DRAM (incl. HBM) contract price change vs 2026
+    17	17. [claude,codex · merged by both] Whether NVIDIA commits an up-to-$10B anchor investment in Anthropic's IPO || NVIDIA Anthropic IPO investment by March 2028 || NVIDIA Anthropic IPO investment by November 2026
+    18	18. [claude · company figure · merged by both] NVIDIA FY2027 gross margin under memory-cost pressure (Q3 guide 74%, Q4 71-72%)
+    19	19. [claude,codex · merged by one reader] Whether NVIDIA closes the ~$12.9B Hugging Face acquisition (incl. regulatory clearance) || EU regulatory review of the Hugging Face acquisition || NVIDIA Hugging Face acquisition obligation at FY2027 year-end || Regulatory action on NVIDIA's Hugging Face acquisition || U.S. antitrust review of the Hugging Face acquisition
+    20	20. [claude,codex · merged by both] Whether NVIDIA signs up to $125B residual-value support for Goldman Sachs/Blackstone AI infrastructure partnerships || NVIDIA residual-value support for AI infrastructure partnerships
+    21	21. [codex · merged by both] Alphabet 2026 capital expenditure
+    22	22. [codex · merged by both] Broadcom FY2026 AI semiconductor revenue
+    23	23. [codex · merged by both] CoreWeave fiscal 2026 revenue
+    24	24. [codex · merged by both] Five major hyperscalers' combined 2026 data-center capital expenditure
+    25	25. [codex · merged by both] Five major hyperscalers' combined 2027 data-center capital expenditure
+    26	26. [codex · merged by both] DOJ enforcement over NVIDIA's Groq arrangement
+    27	27. [codex · merged by both] Marvell FY2028 revenue
+    28	28. [codex · company figure · merged by both] NVIDIA FY2028 Vera CPU revenue
+    29	29. [pair · merged by both] NVIDIA AI cloud partner guarantee obligations at FY2027 year-end / NVIDIA total third-party guarantees and credit support for cloud/AI partners in the FY2027 10-K (vs up to $108.5B)
+    30	30. [pair · merged by both] NVIDIA neocloud capacity commitments at FY2027 year-end / NVIDIA cloud-service/neocloud capacity commitments, take-or-pay and revenue-floor backstops in the FY2027 10-K (vs $36B)
+6:    python3 census_merge.py freeze       # matters.json: both-listed matters, and one-family matters both third readers accept; N
+7:    python3 census_merge.py dedup        # both families group the frozen entries that are one bet (D248); matters-final.json; N
+92:def json_lines(text):
+104:def batch_lists(family):
+115:def closed(family, prompt, check):
+126:def merge():
+141:def reconcile():
+148:    def check(answer):
+165:def pair_sets():
+173:def pairs_agreed():
+178:def pairs_half():
+195:def third():
+222:    def one(job):
+230:        def check(answer):
+244:def freeze():
+272:    doc = {'frozen': 'stage 0, before any system output', 'kept_articles_sha256': hashlib.sha256((HERE.parent / 'kept-articles.json').read_bytes()).hexdigest(),
+276:    (HERE / 'matters.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters.json\n')
+300:def dedup():
+306:        out = HERE / 'dedup' / f'{family}.jsonl'
+310:                raise SystemExit(f'{family} dedup void twice: {void}')
+320:    def components(pairs):
+322:        def root(i):
+343:    doc = {'frozen': 'stage 0, before any system output', 'entries_sha256': hashlib.sha256((HERE / 'matters-entries.json').read_bytes()).hexdigest(),
+349:    (HERE / 'matters-final.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters-final.json\n')
+356:    {'merge': merge, 'reconcile': reconcile, 'third': third, 'freeze': freeze, 'dedup': dedup}[sys.argv[1]]()
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D(248|665|668|670) '"' docs/DECISIONS-log.md; rg -n 'one bet|freeze|reconcil|sha256|matter' docs/research/2026-11-17-product-comparison/RUN-PLAN-v10.md | head -42; nl -ba docs/prd/10-filing-phase.md | sed -n '12,30p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2954:## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
+9398:## D665 · 2026-11-17 · Council (D664, Alex's "run your council to determine"): the six lines stop blocking release; one product comparison against the running pipeline decides readiness, its verdict written before the first send (council consensus)
+9519:## D668 · 2026-11-17 · Under D667 (council): the old replays are all reads; the scored window is 08-31 to 09-20; every kept article in it is read for the census
+9570:## D670 · 2026-11-17 · Under D669 (council check): 410 of the 502 articles of 09-07 to 09-20 are kept and frozen
+15:- Everything build-level is checked on the built artifacts at the stage-0 **freeze review**: code with its tests and mutants, the frozen
+22:- the blind matter census;
+39:`manifest.json` holds the sha256 of:
+64:     - A table is exempt only when it is a **verified raw copy** of a listed build: the same rows, by `input_id` and `content_sha256`. That
+100:### 1.3 Blind matter census (articles only; frozen before any send)
+102:1. **Sample (D668).** Every kept article in the scored window 2026-08-31 to 09-20, read in batches of about 40 per session. Each family merges across every batch and week before reconciling. The warm-up is 07-01 to 08-30, unfiltered: the exclusion filter applies to the scored window only. Read with week reading A1's
+105:3. **Merge.** One matter is one bet. Two entries are one matter only when the same outcome settles both and their answers cannot move apart.
+106:   Another year of a figure is another matter.
+108:   - Two reconcilers, one per family, map every matter across the two families' lists (`same` or `none`). A matter is listed by both when
+109:     both reconcilers say `same`.
+110:   - A one-family matter goes to two third readers (one per family) with its articles. It joins the list when both say it is worth a question.
+111:4. **The company-figure flag.** Each family marks every listed matter `company figure` or not, using D505's own list: 营收、毛利率的指引、市场预期、实际业绩.
+113:5. **N** is every listed matter (D665). The flagged subgroup is printed beside the verdict with its own a, b and N, because by D505 the new
+116:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+121:1. **The cutoff:** one for every matter, the end of the invocation's last day (09-20 in the full run). Libraries are read as they stand then.
+125:   - **The rule:** both families mark the question `opened`, or `narrower` with both saying it carries the matter's main outcome
+146:5. **Served in a draw:** at least one covering question is marked `worth` and supported, in each counting after item 7's resolution. A matter **served by a system** is served in
+148:6. **The quantities:** a = served only by the new system; b = served only by the old; N = all listed matters.
+    12	## 0. Checklist before every start (Alex: "每次开始前都需要revisit")
+    13	
+    14	Before starting any step, finish these in order; if one cannot be done, do not start:
+    15	
+    16	1. Read §§1–8 of this page in full; read the last three rows of `log.md`, and confirm where the previous step stopped and why.
+    17	2. Check against §3, "not in scope": what this step does is not in that table. If it is in the table, stop and take it to Alex.
+    18	3. Check against §4, "constraints": this step changes nothing frozen; a change to the frozen extraction prompt is the one place §5 names, and Alex's
+    19	   word for it is already given.
+    20	4. If this step costs money: its predictions and stop conditions are written down and frozen as §7 says (with their sha256 recorded beside them); the
+    21	   requests are rebuilt byte for byte as §6 says; the control is re-sent the same day.
+    22	5. What goes to Alex: one conclusion, one recommendation, one test, after §7's rounds of review; no menu of options; in plain words (the opening of
+    23	   AGENTS, "Explain and answer as to a sixteen-year-old").
+    24	
+    25	## 1. Goal (end to end)
+    26	
+    27	Each question's judgement must receive the facts that can change its answer; facts that no question receives, those that bear on no question, must
+    28	not be piled into some one question. What is measured is the final judgement (the frozen judgement ruler, reader B, at the window end 2026-07-14), not
+    29	any one step's own score.
+    30	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba dedup/codex.jsonl; nl -ba dedup/claude.jsonl; nl -ba census_merge.py | sed -n '244,358p'; nl -ba dedup-check-brief.md" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+     1	{"group":[10,34],"why":"Both ask for NVIDIA’s FY2028 gross margin; one specifies the non-GAAP measure."}
+     2	{"group":[17,22,23],"why":"All concern NVIDIA’s participation in Anthropic’s IPO; the wordings and check dates vary."}
+     3	{"group":[19,29,31,32],"why":"Regulatory reviews and clearance are milestones in the proposed Hugging Face acquisition."}
+     4	{"group":[20,36],"why":"Both ask whether NVIDIA will provide residual-value support for the proposed AI infrastructure partnerships, with different check dates."}     1	{"group": [10, 34], "why": "Same NVIDIA FY2028 gross margin figure; GAAP and non-GAAP margins move together, so analysts treat them as one bet."}
+     2	{"group": [17, 22, 23], "why": "Same bet on NVIDIA investing in Anthropic's IPO; only the deadline and sizing detail differ."}
+     3	{"group": [20, 36], "why": "Same bet on NVIDIA residual-value support for the Goldman Sachs/Blackstone AI infrastructure partnerships; only the deadline differs."}
+     4	{"group": [19, 30, 31], "why": "Closing the Hugging Face deal, overall regulatory action, and the remaining obligation are milestones of one bet on completion."}   244	def freeze():
+   245	    lists = {family: {r['matter']: r for r in json_lines((HERE / 'merged' / f'{family}.jsonl').read_text())} for family in FAMILIES}
+   246	    matters, splits = [], []
+   247	    for x, y in sorted(pairs_agreed()):
+   248	        a, b = lists['codex'][x], lists['claude'][y]
+   249	        flag = (a.get('company_figure') is True) and (b.get('company_figure') is True)
+   250	        if a.get('company_figure') != b.get('company_figure'):
+   251	            splits.append({'matter': f'{x}|{y}', 'company_figure': {'codex': a.get('company_figure'), 'claude': b.get('company_figure')}})
+   252	        matters.append({'key': f'{x}|{y}', 'listed_by': 'both', 'name': a.get('name'), 'name_other': b.get('name'),
+   253	                        'example_question': a.get('example_question'), 'articles': sorted(set(a.get('articles', [])) | set(b.get('articles', []))),
+   254	                        'first_day': min([d for d in (a.get('first_day'), b.get('first_day')) if d], default=None), 'company_figure': flag})
+   255	    third_marks = {}
+   256	    for path in (HERE / 'third').glob('*.json'):
+   257	        row = json.loads(path.read_text())
+   258	        third_marks.setdefault((row['family'], row['matter']), {})[row['reader']] = row['mark'] or {}
+   259	    for (family, key), marks in sorted(third_marks.items()):
+   260	        if all(marks.get(r, {}).get('worth') is True for r in FAMILIES):
+   261	            if family == 'pair':
+   262	                x, y = key.split('|', 1)
+   263	                a, b = lists['codex'][x], lists['claude'][y]
+   264	                m = dict(a, name=f"{a.get('name')} / {b.get('name')}", articles=sorted(set(a.get('articles', [])) | set(b.get('articles', []))))
+   265	            else:
+   266	                m = lists[family][key]
+   267	            flags = [marks[r].get('company_figure') for r in FAMILIES]
+   268	            if len(set(flags)) > 1:
+   269	                splits.append({'matter': key, 'company_figure': dict(zip(FAMILIES, flags))})
+   270	            matters.append({'key': key, 'listed_by': family, 'name': m.get('name'), 'example_question': m.get('example_question'),
+   271	                            'articles': m.get('articles', []), 'first_day': m.get('first_day'), 'company_figure': all(f is True for f in flags)})
+   272	    doc = {'frozen': 'stage 0, before any system output', 'kept_articles_sha256': hashlib.sha256((HERE.parent / 'kept-articles.json').read_bytes()).hexdigest(),
+   273	           'N': len(matters), 'company_figure_subgroup': sum(m['company_figure'] for m in matters), 'matters': matters, 'flag_splits': splits}
+   274	    text = json.dumps(doc, indent=1, ensure_ascii=False) + '\n'
+   275	    (HERE / 'matters.json').write_text(text)
+   276	    (HERE / 'matters.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters.json\n')
+   277	    print(f"N = {doc['N']} (both-listed {sum(m['listed_by'] == 'both' for m in matters)}, one-family accepted "
+   278	          f"{sum(m['listed_by'] != 'both' for m in matters)}); company-figure subgroup {doc['company_figure_subgroup']}; flag splits {len(splits)}")
+   279	    if doc['N'] < 20:
+   280	        print('TOO SMALL: N < 20. Return to Alex before any paid send (D667, D668).')
+   281	
+   282	
+   283	DEDUP = """# Group the entries that are one underlying bet (read-only)
+   284	
+   285	You are a senior hedge-fund analyst covering NVIDIA. Below is a numbered list of matters two readers listed from news of 2026-09-07 to
+   286	09-20. Some entries are the same bet written differently. Group them by the signed standard's rule (D248):
+   287	- wordings, deadlines, milestones and periods of one bet are one question;
+   288	- another year of a figure is another matter;
+   289	- two entries stay apart only when their answers can move apart and an analyst would bet on each separately.
+   290	
+   291	Write one JSON object per line, and nothing else: {{"group": [entry numbers that are one bet], "why": "<= 25 words"}} for every group of two or
+   292	more entries. Entries you do not name stand alone.
+   293	
+   294	## The entries
+   295	
+   296	{entries}
+   297	"""
+   298	
+   299	
+   300	def dedup():
+   301	    entries = json.loads((HERE / 'matters-entries.json').read_text())['matters']
+   302	    listing = '\n'.join(f"{i}. {m['name']} | e.g. {m.get('example_question') or ''}" for i, m in enumerate(entries, 1))
+   303	    prompt = DEDUP.format(entries=listing)
+   304	    edges = {}
+   305	    for family in FAMILIES:
+   306	        out = HERE / 'dedup' / f'{family}.jsonl'
+   307	        if not out.exists():
+   308	            answer, void = closed(family, prompt, lambda a: None if json_lines(a) or a.strip() else 'empty')
+   309	            if void:
+   310	                raise SystemExit(f'{family} dedup void twice: {void}')
+   311	            out.parent.mkdir(exist_ok=True)
+   312	            out.write_text(answer)
+   313	        pairs = set()
+   314	        for row in json_lines(out.read_text()):
+   315	            members = sorted({int(n) for n in row.get('group', []) if str(n).isdigit() and 1 <= int(n) <= len(entries)})
+   316	            pairs |= {(a, b) for a in members for b in members if a < b}
+   317	        edges[family] = pairs
+   318	    agreed, either = edges['codex'] & edges['claude'], edges['codex'] | edges['claude']
+   319	
+   320	    def components(pairs):
+   321	        parent = list(range(len(entries) + 1))
+   322	        def root(i):
+   323	            while parent[i] != i:
+   324	                parent[i] = parent[parent[i]]
+   325	                i = parent[i]
+   326	            return i
+   327	        for a, b in pairs:
+   328	            parent[root(a)] = root(b)
+   329	        groups = {}
+   330	        for i in range(1, len(entries) + 1):
+   331	            groups.setdefault(root(i), []).append(i)
+   332	        return sorted(groups.values())
+   333	    final_groups, agreed_groups = components(either), components(agreed)
+   334	    matters = []
+   335	    for group in final_groups:
+   336	        members = [entries[i - 1] for i in group]
+   337	        flags = {m['company_figure'] for m in members}
+   338	        matters.append({'entries': group, 'names': [m['name'] for m in members], 'listed_by': sorted({m['listed_by'] for m in members}),
+   339	                        'articles': sorted({a for m in members for a in m.get('articles', [])}, key=lambda a: int(a) if str(a).isdigit() else 0),
+   340	                        'first_day': min([m['first_day'] for m in members if m.get('first_day')], default=None),
+   341	                        'company_figure': flags == {True}, 'company_figure_mixed': len(flags) > 1,
+   342	                        'merged_by': 'both' if all((a, b) in agreed for a in group for b in group if a < b) else ('one reader' if len(group) > 1 else '')})
+   343	    doc = {'frozen': 'stage 0, before any system output', 'entries_sha256': hashlib.sha256((HERE / 'matters-entries.json').read_bytes()).hexdigest(),
+   344	           'rule': 'entries grouped by either family are one matter (no matter counted twice); the count under agreed groups only is reported',
+   345	           'N': len(matters), 'N_agreed_groups_only': len(agreed_groups), 'company_figure_subgroup': sum(m['company_figure'] for m in matters),
+   346	           'matters': matters}
+   347	    text = json.dumps(doc, indent=1, ensure_ascii=False) + '\n'
+   348	    (HERE / 'matters-final.json').write_text(text)
+   349	    (HERE / 'matters-final.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters-final.json\n')
+   350	    print(f"entries {len(entries)} -> N = {doc['N']} (agreed groups only: {doc['N_agreed_groups_only']}); company-figure {doc['company_figure_subgroup']}")
+   351	    if doc['N'] < 20:
+   352	        print('TOO SMALL: N < 20. Return to Alex before any paid send (D667, D668).')
+   353	
+   354	
+   355	if __name__ == '__main__':
+   356	    {'merge': merge, 'reconcile': reconcile, 'third': third, 'freeze': freeze, 'dedup': dedup}[sys.argv[1]]()
+     1	# Council check of the matter list before it is frozen (read-only, $0)
+     2	
+     3	**Context:** the blind matter census of the release comparison (plan `../../RUN-PLAN-v10.md` §1.3; D668, D670) read the 410 kept articles.
+     4	- Two families read them apart in 22 closed sessions. Each family merged its own lists, the two families were reconciled pair by pair, and
+     5	  third readers judged the one-family matters.
+     6	- That gave 38 entries (`matters-entries.json`). The pair-by-pair reconciliation left same-bet entries apart, for example three entries for
+     7	  NVIDIA's Anthropic IPO investment that differ only in their deadline.
+     8	- **A de-duplication step was added** (`census_merge.py dedup`), before any system output exists. Both families group the 38 entries by
+     9	  D248's one-bet rule, and entries grouped by either family become one matter, so no matter is counted twice. The count under agreed groups
+    10	  only is reported beside.
+    11	- **Result:** N = 30, or 33 under agreed groups only (`matters-final.json`, listed in `matters-final-list.md`), with 7 company-figure matters.
+    12	
+    13	**Check, reading the files and the source articles where needed** (`batches/*.json` hold the article texts by number):
+    14	1. Is the de-duplication rule (merge on either family's grouping) faithful to D665's "the grouping of repeats, what counts as the same
+    15	   question" and to D248? Or should only agreed groups merge?
+    16	2. In `matters-final-list.md`, is any remaining pair still one bet, counted twice? Look in particular at the 2026 and 2027 hyperscaler capital
+    17	   expenditure entries (five companies, four companies, data-centre only, Alphabet alone).
+    18	3. Is any merged group in fact two bets (for example, the Hugging Face group)?
+    19	4. Anything that would let the list move after system outputs are seen.
+    20	
+    21	End with `FREEZE` or `CHANGE: <the smallest changes>`. Under about 400 words. Do not open anything under `/private/tmp` or `~/.codex/memories`.
+
+exec
+/opt/homebrew/bin/zsh -lc "ls -l batches | head -15; sed -n '1,25p' matters-entries.json; sed -n '1,29p' matters-final.json; nl -ba merge.log | tail -25; rg -n 'Anthropic|Hugging Face|hyperscaler' matters-entries.json | head -50" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+total 3672
+-rw-r--r--@ 1 lchingen  staff  132161 Nov 17 18:40 batch-01.json
+-rw-r--r--@ 1 lchingen  staff  178525 Nov 17 18:40 batch-02.json
+-rw-r--r--@ 1 lchingen  staff  139337 Nov 17 18:40 batch-03.json
+-rw-r--r--@ 1 lchingen  staff  168734 Nov 17 18:40 batch-04.json
+-rw-r--r--@ 1 lchingen  staff  170088 Nov 17 18:40 batch-05.json
+-rw-r--r--@ 1 lchingen  staff  175869 Nov 17 18:40 batch-06.json
+-rw-r--r--@ 1 lchingen  staff  172316 Nov 17 18:40 batch-07.json
+-rw-r--r--@ 1 lchingen  staff  167411 Nov 17 18:40 batch-08.json
+-rw-r--r--@ 1 lchingen  staff  181539 Nov 17 18:40 batch-09.json
+-rw-r--r--@ 1 lchingen  staff  198474 Nov 17 18:40 batch-10.json
+-rw-r--r--@ 1 lchingen  staff  170912 Nov 17 18:40 batch-11.json
+{
+ "frozen": "stage 0, before any system output",
+ "kept_articles_sha256": "6999d037b6e0789bbbf4940907022402e990d0d7236924397dc85dbe843e624e",
+ "N": 38,
+ "company_figure_subgroup": 8,
+ "matters": [
+  {
+   "key": "broadcom_ai_revenue_fy27|avgo-fy2027-ai-revenue",
+   "listed_by": "both",
+   "name": "Broadcom FY2027 AI semiconductor revenue",
+   "name_other": "Broadcom FY2027 AI semiconductor revenue vs ~$115B outlook",
+   "example_question": "What will Broadcom's AI semiconductor revenue be in FY2027?",
+   "articles": [
+    6,
+    14,
+    123,
+    130,
+    144,
+    203,
+    317,
+    343,
+    366
+   ],
+   "first_day": "2026-09-07",
+   "company_figure": false
+{
+ "frozen": "stage 0, before any system output",
+ "entries_sha256": "4cb55c547ddad2f4f3bf40c561bcb423eda382a8ff01f062263fcb1cb5d32d17",
+ "rule": "entries grouped by either family are one matter (no matter counted twice); the count under agreed groups only is reported",
+ "N": 30,
+ "N_agreed_groups_only": 33,
+ "company_figure_subgroup": 7,
+ "matters": [
+  {
+   "entries": [
+    1
+   ],
+   "names": [
+    "Broadcom FY2027 AI semiconductor revenue"
+   ],
+   "listed_by": [
+    "both"
+   ],
+   "articles": [
+    6,
+    14,
+    123,
+    130,
+    144,
+    203,
+    317,
+    343,
+    366
+   ],
+    77	claude nvda-hugging-face-close claude marked
+    78	claude china-approves-nvda-dc-imports codex marked
+    79	claude china-approves-nvda-dc-imports claude marked
+    80	claude nvda-china-dc-sales-resume codex marked
+    81	claude nvda-china-dc-sales-resume claude marked
+    82	claude nvda-anthropic-ipo-anchor codex marked
+    83	claude nvda-anthropic-ipo-anchor claude marked
+    84	claude nvda-residual-value-support codex marked
+    85	claude nvda-residual-value-support claude marked
+    86	claude huawei-ascend-960dt-launch codex marked
+    87	claude huawei-ascend-960dt-launch claude marked
+    88	claude h100-rental-price-dec-2026 codex marked
+    89	claude h100-rental-price-dec-2026 claude marked
+    90	claude fed-funds-end-2026 codex marked
+    91	claude fed-funds-end-2026 claude marked
+    92	claude wti-2026-average codex marked
+    93	claude wti-2026-average claude marked
+    94	pair groq_doj_action_or_settlement|doj-nvda-groq-action codex marked
+    95	pair groq_doj_action_or_settlement|doj-nvda-groq-action claude marked
+    96	pair nvidia_cloud_guarantees_fy27|nvda-total-guarantees-fy2027 codex marked
+    97	pair nvidia_cloud_guarantees_fy27|nvda-total-guarantees-fy2027 claude marked
+    98	pair nvidia_neocloud_commitments_fy27|nvda-cloud-capacity-commitments-fy2027 codex marked
+    99	pair nvidia_neocloud_commitments_fy27|nvda-cloud-capacity-commitments-fy2027 claude marked
+   100	N = 38 (both-listed 13, one-family accepted 25); company-figure subgroup 8; flag splits 0
+   101	exit 0
+28:   "key": "five_hyperscalers_capex_2026|top5-hyperscaler-capex-2026",
+30:   "name": "Five major hyperscalers' combined 2026 capital expenditure",
+31:   "name_other": "Combined calendar-2026 capex of the top five hyperscalers incl. Oracle (~$800B)",
+32:   "example_question": "What will the five major hyperscalers' combined capital expenditure be in calendar 2026?",
+51:   "key": "five_hyperscalers_capex_2027|top5-hyperscaler-capex-2027",
+53:   "name": "Five major hyperscalers' combined 2027 capital expenditure",
+54:   "name_other": "Combined calendar-2027 capex of the top five hyperscalers incl. Oracle (~$1.08-1.3T)",
+55:   "example_question": "What will the five major hyperscalers' combined capital expenditure be in calendar 2027?",
+74:   "key": "four_hyperscalers_capex_2026|big4-hyperscaler-capex-2026",
+76:   "name": "Four hyperscalers' combined 2026 capital expenditure",
+281:   "key": "big4-hyperscaler-capex-2027",
+329:   "name": "Whether NVIDIA commits an up-to-$10B anchor investment in Anthropic's IPO",
+330:   "example_question": "Will NVIDIA sign or fund an anchor investment of about $10B in Anthropic's IPO by 2027-03-14 (researcher-set check date), and if so of what size?",
+360:   "name": "Whether NVIDIA closes the ~$12.9B Hugging Face acquisition (incl. regulatory clearance)",
+361:   "example_question": "Will NVIDIA complete its ~$12.9B acquisition of Hugging Face, including US/EU regulatory clearance, by 2027-06-30 (end of the company's H1 2027 close target)?",
+410:   "name": "NVIDIA Anthropic IPO investment by March 2028",
+411:   "example_question": "Will NVIDIA agree to invest in Anthropic's planned IPO by March 15, 2028?",
+422:   "name": "NVIDIA Anthropic IPO investment by November 2026",
+423:   "example_question": "Will NVIDIA agree to invest in Anthropic's proposed IPO by November 3, 2026?",
+456:   "key": "five_hyperscalers_datacenter_capex_2026",
+458:   "name": "Five major hyperscalers' combined 2026 data-center capital expenditure",
+459:   "example_question": "What will combined 2026 data-center capital expenditure be for the five largest AI hyperscalers?",
+468:   "key": "five_hyperscalers_datacenter_capex_2027",
+470:   "name": "Five major hyperscalers' combined 2027 data-center capital expenditure",
+471:   "example_question": "What will combined 2027 data-center capital expenditure be for the five largest AI hyperscalers?",
+495:   "name": "EU regulatory review of the Hugging Face acquisition",
+496:   "example_question": "By January 31, 2027, what stage will EU regulatory review of NVIDIA's Hugging Face acquisition have reached?",
+506:   "name": "NVIDIA Hugging Face acquisition obligation at FY2027 year-end",
+507:   "example_question": "How much of NVIDIA's agreed Hugging Face acquisition obligation remains outstanding at FY2027 year-end?",
+521:   "name": "Regulatory action on NVIDIA's Hugging Face acquisition",
+522:   "example_question": "By NVIDIA's FY2027 year-end, what action have the relevant regulators taken on the Hugging Face acquisition?",
+534:   "name": "U.S. antitrust review of the Hugging Face acquisition",
+535:   "example_question": "By January 31, 2027, what stage will U.S. antitrust review of NVIDIA's Hugging Face acquisition have reached?",
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '2954,2985p;9410,9434p;9519,9543p;9570,9605p'; nl -ba docs/research/2026-11-17-product-comparison/RUN-PLAN-v10.md | sed -n '35,44p;100,131p'; rg -n --glob '*.py' 'matters-final\\.json|matters\\.json|matters-entries\\.json' docs/research/2026-11-17-product-comparison clean-arch/e2e-comparison-2026-11-13" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  2954	## D248 · 2026-10-30 · What counts as one question and one piece of evidence: seven boundaries, chosen one by one
+  2955	
+  2956	- Alex, on the census of duplicate and trivial questions: "我们的标准要收口"; then "你要不要深度的写好plan, 怎么测量，golden 是怎么，我们来解决这个问题；整体不能regress，你要秉持我们过往工程的原则，以及作为一个hedge fund analyst 到底怎么判断合并，去重，这个标准很重要，不能观点爆炸"; then, not following the plan's table, "我没理解每个难点，我需要一个一个和你过，你讲人话给我例子". Each boundary was put to him with an example and two options; his replies are quoted per row. Plan, census and review rounds: [question-identity plan](research/2026-10-30-question-identity/plan.md) §0–§4, §11b, §12.
+  2957	- The class ($0, `census/`): the sealed three-month run opened 69 questions in 59 days; Claude's reading of the first 50 (not reviewed by Alex) marks 12 duplicates and 10 that should not have opened, 5 borderline. Matching merged 39 of 122 candidates; the candidates opened new fall in three verdict classes (parsed from the decisions' reason text, not yet verified case by case): the collision judge's "distinct question in one matter", "same question" verdicts the code still opened (two traced to a model-written period start), and twins never compared.
+  2958	- The principle, Alex after the seven answers: "我觉得核心就是这个颗粒度的把控要符合一个高端的hedge fund analyst 的思维。不要搜集一堆鸡毛蒜皮的事情，要看重要的大事，合并整合关键的信息，这个是这个步骤的原则" (written into AGENTS §8, "A senior analyst's granularity").
+  2959	- Decided (the general rule under all seven: two questions are one when the same outcome settles both; they are kept apart only when their answers can move apart and an analyst would bet on each separately):
+  2960	  1. **One plan, several wordings** (H1, "A"): wordings of one plan whose final check is the same number are one question; two numbers that move on their own and are watched separately stay apart; a single deal under a plan already opened by amount merges into it. Not put to Alex: a not-yet-signed deal's yes/no signing question (D210; PRD 06 keeps number and event questions apart) stays as it is and does not merge into a plan's amount question (the Ohio lease guarantee and the cloud-customer total in v38 both stay). Narrows the standard §4 "another quantity in the same deal (a guarantee beside a financing)" sentence taken from D190; consistent with D210.
+  2961	  2. **One event, several deadlines** (H2, "A"): while the earlier-deadline question is open, a later deadline is its evidence, not a new question; when the earlier one falls due unresolved and the matter is still live, the system opens the next-deadline successor with the merged evidence, without waiting for a new article (new work for pull mode, D14, D54).
+  2962	  3. **One product generation, several milestones** (H3, "A"): one question per generation, asked at the step that brings revenue (shipments begin); sampling and launch are its evidence; only milestones an analyst bets on separately (a drug's phase-3 data and its approval) are separate questions.
+  2963	  4. **A company's own quantity by fiscal and by calendar year** (H4, "A"): only the fiscal year opens (PRD 06 ladder rule 5); a calendar-year estimate is evidence to the fiscal question, weighed lower when the years differ much.
+  2964	  5. **A model-written period start** (H5, "A"): for event and policy questions it no longer blocks a merge; object, event and due day are still checked.
+  2965	  6. **Small matters opened as questions** (H6, "A， A"): a deal, product or project (the question was put about small deals and products) opens a question only when its scale can change the company's revenue, profit, cash or credit risk; otherwise no question opens, and whether its statement is kept follows the evidence rule (standard §5). Done in this round together with the merge changes, each measured as its own arm, then together on the holdout. Narrows the standard §3 class C ("a sized, not yet completed stake or acquisition").
+  2966	  7. **The same statement carried by several outlets** (H7, "A"): code treats pieces with the same known original speaker, original day and figures as one (an unknown speaker or day never matches: 297 of the sealed run's 4,298 pieces have both unknown); the judge sees it once with the outlet count; every piece is still stored. Changes D204's "both shown to the judge" for this case, and is a chosen exception to AGENTS §3 "equal values alone never establish identity"; the risk put to him with the question (a qualification such as "excluding China sales" hidden; D204's 8 of 40 wrong merges) is measured on the G3 gold before it is switched on, as is the accuracy of the original-speaker and original-day fields it relies on.
+  2967	- Next, in this order: the signed standard page (§3 class C, §4 "same question, succession or another question") carries these rules, then a read-only Codex drift review; then the plan's step 1 (structured census, the fixed-extraction replay harness, gold G1–G3, the September holdout week on Alex's go).
+  2968	
+  2969	## D249 · 2026-10-30 · A test the model applies to each statement is a check at the end of the same request; role-v63 (`poc-v79`) measured, the default stays role-v53
+  2970	
+  2971	- Alex, after a second-turn probe judged statements by standard 5.1 correctly that the one-pass answer had kept: "那为什么你不在prompt 里面要求做完自己复核一边就好，这样就是一个call完成"; then "你尝试一组先吧，这个完全就是再prompt 的最后面要求做完一遍基于"你刚才说的复核条件"再跑一次；写在同一个提示词里面"; then "可以，但是这个做法是有效的对吧，那你应该好好地写复核的侧重点然后跑；这个如果有效可以记录下来这个做法"; then the goal "你需要让这个加到prompt里面的方式improve performance. 一定要improve but don't hardcode or break our principles".
+  2972	- Decided (the method, written at AGENTS §6): from role-v59 the extraction request ends with a check that reads the evidence list back by standard 5.1 (`prompts/review-v<N>.txt`, `extraction.REVIEW_FROM`) and names no empty-answer condition; the role text of role-v59 to role-v63 is role-v53's. Every line of the check cites the standard (§5.1, §5.3, §6, D238, D243, D240); six read-only Codex rounds (`research/2026-10-30-noise/codex-review-*`); examples from other industries.
+  2973	- Measured (run Y3, role-v53 and role-v63 sent together, development 118 + test 30 articles, three draws; `loop-log.md` rows 34–48): gold-rejected statements kept per draw 94.3 → 77.3 (−17, interval −33 to −2); core kept in every draw 72 → 74 of 86 and supporting in at least two draws 152 → 154 of 181 once a blind reader judged the 58 entries the counting aid scored differently (core draws 31 → 34, supporting 85 → 85); test supporting in at least two draws 38 → 41 of 42.
+  2974	- Not decided: switching the default to `poc-v79`. Alex's reply to the report was "你可以commit push", with further noise work asked ("但是还是有70多篇被留下"), not an answer to the switch; `scripts/replay.py` stays on `poc-v69`.
+  2975	
+  2976	## D250 · 2026-10-31 · Four evidence boundaries and the counting unit settled; the ruler is fixed before any further measurement (standard version 5)
+  2977	
+  2978	- Alex, on the ruler check of the not-kept statements role-v63 keeps (`research/2026-10-30-noise/ruler-check-2026-10-31.md`; a blind reader agreed with the gold on 93–95% of the controls and on 70% of the entries v63 kept) and the five places put to him with a lean each: "五处都按你的倾向定，计数单位也改; 你要修正尺子；你已经多次因为尺子标准问题陷入假的测量".
+  2979	- Decided (each is the lean he was given):
+  2980	  1. **An arrangement retold without a new step** (Nokia AI-RAN collaboration, a carmaker's model on the platform, labs using a system): the lean as put: "只描述一个现成安排、没有新动作的，算背景，不收". An arrangement the item only describes as already in place (a collaboration, a customer using a product, a deployment), with no new step, is background and not kept, even when the item gives no date; everything else under the retelling row (D243 item 6, "看不出是旧事的不算重提") is judged as before, and guidance and a forecast or plan still in force keep their weight when retold.
+  2981	  2. **How close another company's matter must be** (a lidar maker's price cut, a partner's reactor going critical): the lean as put: "说不出它通过需求、供给、竞争、定价这类路径动了英伟达哪个问题的，不收". Another company's matter that one cannot say moves a question about the company through a path such as demand, supply, competition or pricing is not kept; a party next to the company only by sharing an article, an event or an ecosystem is not kept.
+  2982	  3. **A comparison the company, a partner or a third party publishes** ("10x lower cost than closed models", "40% more GPUs in the same power budget", a third party's test): the lean as put: "标准只说'对手拿来和本公司比'的要按 5.1 判；其余的都算产品细节，不收". A partner's or customer's adoption or integration in the same sentence is not dropped by this rule and is judged by 5.1 as before (the lean says nothing about it; an unconditional keep would be a new rule); ruling 4 (a competitor's 2.4x, supporting) unchanged.
+  2983	  4. **A named analyst's view of a new event** ("a Kyber delay widens the window for alternatives"): the lean as put: "只是解读一件已经记下的事、没有新事实或推算的，不收". One that adds a new fact or calculation is judged by 5.1; the conditional valuation (5.3) is unchanged.
+  2984	  5. **The counting unit**: the lean as put: "只有当那条记录本身不是该留的事，才算留了杂音". A not-kept gold entry counts as kept only when the record that carries it is not itself the same matter as a core, supporting or optional gold entry (optional is never penalised); not-kept words that ride inside the quote of a kept matter are one record of that matter ("一件事用几句话说仍是一条", standard §2).
+  2985	- The ruler (Alex: "你要修正尺子"): the standard page goes to version 5 with these rules, then a read-only drift review; the gold's evidence part is re-derived for version 5 (version 4 changed no evidence entry, `gold-v4-evidence-check.md`) by two independent readers with every disagreement decided against the article, written as a new frozen file with every change listed (before, after, reason), the version-3 file untouched (D243 item 11); the opening part of the gold is not re-derived here and the scorer reports no question score until it is. The scorer refuses a gold whose evidence part was made for another version of the page: `final_scores.py` had bypassed `score_gold.py`'s version check and scored rounds since D248 on the version-3 gold, which is the false measurement Alex names.
+  9410	- **Decided:** as written in `clean-arch/PRD.md` §1.5, which now owns the rule.
+  9411	  1. **The product comparison is the release decision.**
+  9412	     - poc-v118 is replayed against the hashed new system (astra-frozen; v5.5 excluded). Both start from empty over 07-01 to 07-19, three draws
+  9413	       each, and are scored on unread weeks from 07-20 up to 09-20, as far as the full exposure census supports. The exclusion list is frozen.
+  9414	     - **The main quantity:** big matters served, paired per matter.
+  9415	     - **Verdicts:**
+  9416	       - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both split
+  9417	         countings.
+  9418	       - **Practical loss:** the mirror, or a guardrail breach confirmed under both countings.
+  9419	       - **No practical winner, too small or invalid**, as written.
+  9420	     - **Guardrails:** unsupported shares (figure and yes/no apart) and the not-worth-tracking share, each within 10 points of the old system's.
+  9421	       D428's limits are printed beside them.
+  9422	     - **Illustrative only:** a sign test and an interval.
+  9423	     - **Frozen and hashed before the first send:** the matter list (blind), the credit rules (one cutoff per matter, the grouping of repeats,
+  9424	       what counts as the same question), the controls, the versions and the rule.
+  9425	  2. **What changes, explicitly:**
+  9426	     - D548's use of D400's six lines as a release gate is superseded. The lines are reported on every ladder run.
+  9427	     - The parts code decides stay hard: figure ranges meet end to end; the favourable end is stable; the due day is consistent at D400's 90%.
+  9428	     - D431's frozen-reference reading of 07-01 to 07-14 is still produced and printed beside the comparison, not deciding. D665 supersedes D431
+  9429	       on that point only.
+  9430	     - Step 2's three checks stay as D427 and D431 set them.
+  9431	     - Gate 2's unsupported lines become the guardrails, and its control line waits (D658).
+  9432	     - Gate 4 folds in.
+  9433	     - Gate 5 waits for a practical lead and Alex's word.
+  9434	     - The absolute floors stay proposals, reported beside.
+  9519	## D668 · 2026-11-17 · Under D667 (council): the old replays are all reads; the scored window is 08-31 to 09-20; every kept article in it is read for the census
+  9520	
+  9521	- **Replay classification** (`docs/research/2026-11-17-product-comparison/stage0/replay-folders.json`, frozen with its sha before any
+  9522	  article hit was read): every old-system replay folder reaching the scored span is a read.
+  9523	  - Two independent readers chose D667's folder-level reading: a fresh Codex session (`classify-codex.md`) and a closed Claude reader.
+  9524	  - **Their grounds:**
+  9525	    - the article-level reading cannot be decided before the hits;
+  9526	    - the three-month runs (v29-3m, v34-3m) and the run3 family were served as the product, but their traces drove changes: D151, D198,
+  9527	      D199 (a quoted national-lab case), D201–D204 (gold built from v29's ledger), D205–D207 (a 26-article gold from v34's snapshot) and
+  9528	      D358.
+  9529	  - Claude's own lean was the article-level reading (`classify-own.md`). Withdrawn on those records.
+  9530	- **The scored window** is frozen as **2026-08-31 to 09-20**, by date only:
+  9531	  - v34-3m read to 08-28;
+  9532	  - the split-v3 trial and the v117 smoke read 08-29 and 08-30.
+  9533	
+  9534	  The full census still decides which articles in the window are kept (D613 already counts 10 and 4 in the weeks of 09-07 and 09-14).
+  9535	- **The warm-up** is 07-01 to 08-30. Both systems start empty at 07-01 and read the same unfiltered history. The exclusion filter applies to
+  9536	  the scored window only. The cutoff stays 09-20.
+  9537	- **The census reads every kept article in the window,** not 40 a week (plan §1.3 item 1 amended).
+  9538	  - **Why:** three weeks sampled at 40 a week is about 120 articles, which risks N < 20 from sampling alone.
+  9539	  - **Unchanged:** the same brief (A1), the same two families, and batches of about 40 articles per session. Each family merges across
+  9540	    every batch and week before reconciling.
+  9541	  - N < 20 still stops before any paid send.
+  9542	- **Codex council** (`stage0/amend-census-codex.md`): AGREE. It changes how the matter list is built, not the minimum or the verdict rules.
+  9543	  No comparison output had been seen.
+  9570	## D670 · 2026-11-17 · Under D669 (council check): 410 of the 502 articles of 09-07 to 09-20 are kept and frozen
+  9571	
+  9572	- **Check** of D669's rule (`stage0/classify_reads.py`):
+  9573	  - a fresh read of every not-read location by the Codex council thread (`stage0/reads-check-codex.md`) and by a closed Claude checker;
+  9574	  - each finding was confirmed against the files before it was used.
+  9575	- **Agreed by both, applied:**
+  9576	  - **Four kept articles were reads.** Their own text was shown without an id to the source-loss council's reader, in that folder's
+  9577	    `round1.jsonl` and `round3.jsonl`. Each is confirmed by finding its text in the session. They are named in `READER_SHOWN` with the
+  9578	    session.
+  9579	  - Nine more showed only page boilerplate (a promotion, an advertisement, a breadcrumb), not the article, and are not reads.
+  9580	  - Two misclassed kinds change no count: the d369 three-row probe selection and the sample contexts.
+  9581	- **Split, the cheaper and safer course taken (D439):**
+  9582	  - 37 articles whose only reads are the source-lineage and context-restoration bulk outputs and their two viewers stay excluded.
+  9583	  - Codex would keep them, since the human review covered 30 packets and none of these 37. The Claude checker would not change the rule,
+  9584	    since a viewer page was built for a person (`clean-arch/STEP1-SOURCE-CONTEXT-OBSERVATIONS.md`).
+  9585	  - With them, kept would be 447. Disclosed with the result.
+  9586	- **Frozen:** `stage0/kept-articles.json` (sha 6999d037…): **410 articles**, 172 in the week of 09-07 and 238 in the week of 09-14.
+  9587	- **Next:** the blind matter census reads every kept article (D668). N < 20 returns to Alex before any paid send.
+    35	## 1. Stage 0 ($0): built, proved, frozen, then reviewed
+    36	
+    37	### 1.1 Versions manifest
+    38	
+    39	`manifest.json` holds the sha256 of:
+    40	- every file either system runs, including poc-v118's configuration and the frozen ladder request;
+    41	- the filtered items copy;
+    42	- every instrument below.
+    43	
+    44	The launchers refuse a file that differs.
+   100	### 1.3 Blind matter census (articles only; frozen before any send)
+   101	
+   102	1. **Sample (D668).** Every kept article in the scored window 2026-08-31 to 09-20, read in batches of about 40 per session. Each family merges across every batch and week before reconciling. The warm-up is 07-01 to 08-30, unfiltered: the exclusion filter applies to the scored window only. Read with week reading A1's
+   103	   brief (`../2026-11-14-use-acceptance/week/brief-A1.md`), unchanged except for the file names.
+   104	2. **Readers.** Codex (memories off, closed, D661) and Claude (closed command line), apart. Nine weeks × 2 families, in fresh sessions.
+   105	3. **Merge.** One matter is one bet. Two entries are one matter only when the same outcome settles both and their answers cannot move apart.
+   106	   Another year of a figure is another matter.
+   107	   - Each family merges its own nine lists in one session.
+   108	   - Two reconcilers, one per family, map every matter across the two families' lists (`same` or `none`). A matter is listed by both when
+   109	     both reconcilers say `same`.
+   110	   - A one-family matter goes to two third readers (one per family) with its articles. It joins the list when both say it is worth a question.
+   111	4. **The company-figure flag.** Each family marks every listed matter `company figure` or not, using D505's own list: 营收、毛利率的指引、市场预期、实际业绩.
+   112	   The flag is set when both say yes; a split is listed.
+   113	5. **N** is every listed matter (D665). The flagged subgroup is printed beside the verdict with its own a, b and N, because by D505 the new
+   114	   system does not open such questions. Alex sees how much of any gap that rule makes. (D431: the comparison is of the products as
+   115	   configured.)
+   116	6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+   117	7. **Too small at once:** if N < 20, the verdict is "too small" and goes to Alex before any paid send.
+   118	
+   119	### 1.4 The verdict rule (`verdict-rule.json`, hashed; `score_comparison.py` with a test and a mutant per rule)
+   120	
+   121	1. **The cutoff:** one for every matter, the end of the invocation's last day (09-20 in the full run). Libraries are read as they stand then.
+   122	   - Closed questions still count.
+   123	   - Timeliness is not scored. The days from first source to opening are printed beside.
+   124	2. **Covers (mapping, A2's form, blind):**
+   125	   - **The rule:** both families mark the question `opened`, or `narrower` with both saying it carries the matter's main outcome
+   126	     (ACCEPTANCE-DESIGN A; `tally_week.covered`). `broader` and `missed` do not cover.
+   127	   - **Blinding:** the readers see each draw's library under a random X/Y label, the key outside the repository, and are told to ignore
+   128	     style.
+   129	   - **Disagreements:** two third readers, one per family. A remaining split is resolved per counting (item 7, order: covers > does not
+   130	     cover).
+   131	3. **Same question:**
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:6:    python3 census_merge.py freeze       # matters.json: both-listed matters, and one-family matters both third readers accept; N
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:7:    python3 census_merge.py dedup        # both families group the frozen entries that are one bet (D248); matters-final.json; N
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:275:    (HERE / 'matters.json').write_text(text)
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:276:    (HERE / 'matters.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters.json\n')
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:301:    entries = json.loads((HERE / 'matters-entries.json').read_text())['matters']
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:343:    doc = {'frozen': 'stage 0, before any system output', 'entries_sha256': hashlib.sha256((HERE / 'matters-entries.json').read_bytes()).hexdigest(),
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:348:    (HERE / 'matters-final.json').write_text(text)
+docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:349:    (HERE / 'matters-final.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters-final.json\n')
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'one question|another question|same outcome|move apart' docs/prd/05-extraction-standard.html | head -30; nl -ba clean-arch/PRD.md | sed -n '126,151p'; rg -n 'D67[1-9]|matters-final|matter census' docs/CURRENT_STATE.md docs/research/2026-11-17-product-comparison/{RUN-LOG.md,ROUND-LOG.md}" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   126	### 1.5 What decides that it replaces the running pipeline (D665, superseding D548's gate order)
+   127	
+   128	Alex asked the council to determine whether the six lines still make sense and what decides readiness (D664: "does it make sense now run your
+   129	council to determine"). The council's consensus is D665.
+   130	
+   131	**The release decision is one product comparison against the running pipeline.**
+   132	- **The systems.** poc-v118 is replayed against the new system as configured and hashed (astra-frozen; v5.5 excluded). Both start from empty
+   133	  over 2026-07-01 to 07-19, three draws each, and are scored on the unread weeks from 07-20 up to 09-20, as far as the full exposure census
+   134	  supports.
+   135	- **The main quantity: big matters served.**
+   136	  - Both reader families list the scored weeks' big matters from the articles, blind to any output, and freeze the list.
+   137	  - A system serves a matter when, in at least two of three draws, it holds a question both families mark worth tracking and whose latest
+   138	    answer both mark supported. The cards are read by the council (D663), with Alex spot-checking splits.
+   139	  - With a = matters served only by the new system, b = only by the old, and N = all listed matters, written before the first send and computed
+   140	    under both split countings:
+   141	    - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both
+   142	      countings.
+   143	    - **Practical loss:** the mirror of the lead, or a guardrail breach confirmed under both countings.
+   144	    - **No practical winner:** everything else, including a verdict a split could change, or a guardrail that was not exercised.
+   145	    - **Too small:** fewer than 20 distinct matters, or fewer than 30 distinct questions per system per draw.
+   146	    - **Invalid:** a planted wrong answer accepted, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same.
+   147	- **The guardrails:** the unsupported share for figures, the unsupported share for yes/no questions, and the not-worth-tracking share, none
+   148	  more than 10 points above the old system's. D428's original limits are printed beside them.
+   149	- **Printed beside the verdict, not deciding:** a sign test and an interval (illustrative unless the frozen grouping supports them); the
+   150	  frozen-reference reading of 07-01 to 07-14 (D431, superseded on this point only); and the proposed absolute floors.
+   151	- **Kept from the earlier gates:**
+docs/CURRENT_STATE.md:438:  - the blind matter census (N < 20 goes to Alex);
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import json
+from pathlib import Path
+e=json.loads(Path('\\''matters-entries.json'\\'').read_text())['\\''matters'\\'']; f=json.loads(Path('\\''matters-final.json'\\'').read_text())['\\''matters'\\'']
+for i,m in enumerate(e,1):print(i,m['\\''name'\\''],'\\''|'\\'',m.get('\\''name_other'\\'','\\'''\\''),'\\''|'\\'',m['\\''example_question'\\''],'\\''|'\\'',m['\\''articles'\\''])
+for i,m in enumerate(f,1):
+ if len(m['\\''entries'\\''])>1:print('\\''FINAL'\\'',i,m['\\''entries'\\''])
+b=json.loads(Path('\\''batches/batch-01.json'\\'').read_text()); print('\\''batch'\\'',type(b), list(b)[:4] if isinstance(b,dict) else [(len(b),list(b[0]))]); a=(b.get('\\''articles'\\'') or b.get('\\''items'\\'')) if isinstance(b,dict) else b
+if a:print(list(a[0]))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+1 Broadcom FY2027 AI semiconductor revenue | Broadcom FY2027 AI semiconductor revenue vs ~$115B outlook | What will Broadcom's AI semiconductor revenue be in FY2027? | [6, 14, 123, 130, 144, 203, 317, 343, 366]
+2 Five major hyperscalers' combined 2026 capital expenditure | Combined calendar-2026 capex of the top five hyperscalers incl. Oracle (~$800B) | What will the five major hyperscalers' combined capital expenditure be in calendar 2026? | [40, 48, 114, 138, 223, 236, 254, 256, 267, 275, 344, 363]
+3 Five major hyperscalers' combined 2027 capital expenditure | Combined calendar-2027 capex of the top five hyperscalers incl. Oracle (~$1.08-1.3T) | What will the five major hyperscalers' combined capital expenditure be in calendar 2027? | [40, 42, 48, 114, 138, 223, 236, 254, 256, 267, 344, 363]
+4 Four hyperscalers' combined 2026 capital expenditure | Combined calendar-2026 capex of Amazon, Microsoft, Alphabet and Meta (~$720-745B) | What will Amazon, Alphabet, Microsoft and Meta spend in aggregate on capital expenditures in calendar 2026? | [13, 167, 181, 190]
+5 Worldwide semiconductor sales in 2026 | Worldwide semiconductor sales, calendar 2026 (WSTS ~$1.51T) | What will worldwide semiconductor sales be in calendar 2026? | [285]
+6 NVIDIA FY2027 data-center revenue | NVIDIA FY2027 (ending Jan 2027) Data Center segment revenue | What is NVIDIA's data-center revenue in FY2027? | [28, 177, 181, 285, 322, 344]
+7 NVIDIA FY2028 data-center revenue | NVIDIA FY2028 (ending Jan 2028) Data Center segment revenue | What will NVIDIA's data-center revenue be in FY2028? | [181, 189, 203, 223, 232, 254, 259, 285, 289, 307, 312, 314, 317, 319, 321, 322]
+8 NVIDIA future investment commitments at FY2027 year-end | NVIDIA unfunded equity-investment commitments in the FY2027 10-K (vs $25B) | How much are NVIDIA's outstanding future investment commitments at FY2027 year-end? | [118]
+9 NVIDIA FY2027 data-center networking revenue | NVIDIA FY2027 data center networking revenue (vs $31.38B FY2026, $32.3B H1 FY2027) | What is NVIDIA's data-center networking revenue in FY2027? | [11]
+10 NVIDIA FY2028 non-GAAP gross margin | NVIDIA FY2028 gross margin vs 72-73% guide | What will NVIDIA's non-GAAP gross margin be in FY2028? | [36, 40, 59, 108, 160, 181, 247, 256, 285, 307, 342]
+11 NVIDIA FY2028 total revenue | NVIDIA FY2028 (ending Jan 2028) total revenue vs ~70% growth guide (~$673-700B) | What will NVIDIA's total revenue be in FY2028? | [9, 30, 36, 39, 40, 42, 48, 54, 56, 57, 58, 59, 66, 75, 81, 84, 87, 89, 91, 94, 108, 114, 118, 126, 128, 130, 132, 138, 145, 151, 160, 167, 340, 342, 346, 348, 349, 351, 354, 363, 366, 383, 387, 408, 410]
+12 NVIDIA OpenAI Ohio lease guarantee at FY2027 year-end | Amount of NVIDIA's guarantee of OpenAI's Ohio data-center lease in the FY2027 10-K (reported up to $105B) | What amount of NVIDIA's financial backstop for OpenAI's SB Energy Ohio data-center lease remains outstanding at FY2027 year-end? | [9, 17, 118, 322]
+13 NVIDIA supply and capacity purchase commitments at FY2027 year-end | NVIDIA supply/capacity purchase commitments in the FY2027 10-K (vs $279B at Q2) | How much will NVIDIA's outstanding supply and capacity purchase commitments total at the end of FY2027? | [4, 94, 98, 104, 162, 232, 235, 254]
+14 Combined calendar-2027 capex of Amazon, Microsoft, Alphabet and Meta amid AI-slowdown debate |  | What combined calendar-2027 capital expenditure will Amazon, Microsoft, Alphabet and Meta report, compared with 2026? | [183, 191, 307, 323]
+15 Whether China formally permits imports of NVIDIA data center chips (H200) by 2027-01-31 |  | Will China's government formally permit domestic companies to import NVIDIA H200/data center chips by 2027-01-31 (researcher-set check date: NVIDIA FY2027 year-end)? | [75, 77, 384]
+16 Calendar-2027 average DRAM (incl. HBM) contract price change vs 2026 |  | Will 2027 average DRAM contract prices be higher than, flat with, or lower than 2026, and by how much? | [40, 59, 149, 196, 235, 247, 256, 285, 322]
+17 Whether NVIDIA commits an up-to-$10B anchor investment in Anthropic's IPO |  | Will NVIDIA sign or fund an anchor investment of about $10B in Anthropic's IPO by 2027-03-14 (researcher-set check date), and if so of what size? | [189, 193, 195, 214, 233, 300, 310]
+18 NVIDIA FY2027 gross margin under memory-cost pressure (Q3 guide 74%, Q4 71-72%) |  | What full-year non-GAAP gross margin will NVIDIA report for FY2027 (ending January 2027), given guides of 74% in Q3 and 71-72% in Q4? | [75, 84, 196, 203]
+19 Whether NVIDIA closes the ~$12.9B Hugging Face acquisition (incl. regulatory clearance) |  | Will NVIDIA complete its ~$12.9B acquisition of Hugging Face, including US/EU regulatory clearance, by 2027-06-30 (end of the company's H1 2027 close target)? | [3, 9, 20, 48, 56, 60, 95, 105, 146, 149, 187, 189, 214, 215, 224, 277, 398]
+20 Whether NVIDIA signs up to $125B residual-value support for Goldman Sachs/Blackstone AI infrastructure partnerships |  | Will NVIDIA sign residual-value support agreements (up to $125B) for the Goldman Sachs/Blackstone AI infrastructure partnerships by 2027-03-31 (researcher-set check date)? | [322]
+21 Alphabet 2026 capital expenditure |  | What is Alphabet's capital expenditure in fiscal 2026? | [13, 120]
+22 NVIDIA Anthropic IPO investment by March 2028 |  | Will NVIDIA agree to invest in Anthropic's planned IPO by March 15, 2028? | [214, 233]
+23 NVIDIA Anthropic IPO investment by November 2026 |  | Will NVIDIA agree to invest in Anthropic's proposed IPO by November 3, 2026? | [193, 195, 310]
+24 Broadcom FY2026 AI semiconductor revenue |  | What will Broadcom's AI semiconductor revenue be in FY2026? | [317, 343]
+25 CoreWeave fiscal 2026 revenue |  | What will CoreWeave's total revenue be in fiscal 2026? | [57]
+26 Five major hyperscalers' combined 2026 data-center capital expenditure |  | What will combined 2026 data-center capital expenditure be for the five largest AI hyperscalers? | [114, 138]
+27 Five major hyperscalers' combined 2027 data-center capital expenditure |  | What will combined 2027 data-center capital expenditure be for the five largest AI hyperscalers? | [114, 138]
+28 DOJ enforcement over NVIDIA's Groq arrangement |  | By January 31, 2027, will the U.S. Department of Justice bring an antitrust enforcement action over NVIDIA's Groq arrangement? | [88, 101, 105]
+29 EU regulatory review of the Hugging Face acquisition |  | By January 31, 2027, what stage will EU regulatory review of NVIDIA's Hugging Face acquisition have reached? | [398]
+30 NVIDIA Hugging Face acquisition obligation at FY2027 year-end |  | How much of NVIDIA's agreed Hugging Face acquisition obligation remains outstanding at FY2027 year-end? | [3, 9, 20, 277, 398]
+31 Regulatory action on NVIDIA's Hugging Face acquisition |  | By NVIDIA's FY2027 year-end, what action have the relevant regulators taken on the Hugging Face acquisition? | [3, 9, 20]
+32 U.S. antitrust review of the Hugging Face acquisition |  | By January 31, 2027, what stage will U.S. antitrust review of NVIDIA's Hugging Face acquisition have reached? | [398]
+33 Marvell FY2028 revenue |  | What will Marvell's total revenue be in FY2028? | [58, 181, 366, 377]
+34 NVIDIA FY2028 gross margin |  | What will NVIDIA's gross margin be in FY2028? | [59, 108, 160, 247, 256, 285, 307, 342]
+35 NVIDIA FY2028 Vera CPU revenue |  | How much revenue will NVIDIA generate from Vera CPUs in FY2028? | [72, 148]
+36 NVIDIA residual-value support for AI infrastructure partnerships |  | Will NVIDIA agree to provide residual-value support for the proposed Wall Street AI infrastructure partnerships by December 31, 2027? | [322]
+37 NVIDIA AI cloud partner guarantee obligations at FY2027 year-end / NVIDIA total third-party guarantees and credit support for cloud/AI partners in the FY2027 10-K (vs up to $108.5B) |  | How much will NVIDIA report in guarantee obligations tied to AI cloud partners in its FY2027 annual report? | [51, 57, 61, 118, 126, 128, 254, 255, 320]
+38 NVIDIA neocloud capacity commitments at FY2027 year-end / NVIDIA cloud-service/neocloud capacity commitments, take-or-pay and revenue-floor backstops in the FY2027 10-K (vs $36B) |  | How much will NVIDIA's outstanding neocloud cloud-service commitments total at FY2027 year-end? | [126, 186, 187, 193, 247, 403]
+FINAL 10 [10, 34]
+FINAL 17 [17, 22, 23]
+FINAL 19 [19, 29, 30, 31, 32]
+FINAL 20 [20, 36]
+batch <class 'list'> [(35, ['id', 'day', 'published_at', 'publisher', 'title', 'text', 'article'])]
+['id', 'day', 'published_at', 'publisher', 'title', 'text', 'article']
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import json,re
+from pathlib import Path
+tests={13:r'\\''capital spend|capex|Alphabet'\\'',40:r'\\''capex|capital expend'\\'',42:r'\\''capex|capital expend'\\'',114:r'\\''capital spend|capex|Oracle|1\\.3 trillion'\\'',120:r'\\''capital spend|capex'\\'',138:r'\\''capital spend|capex|Oracle'\\'',181:r'\\''capital spend|capex'\\'',183:r'\\''capital spend|capex'\\'',191:r'\\''capital spend|capex'\\'',307:r'\\''capital spend|capex'\\'',323:r'\\''capital spend|capex'\\'',398:r'\\''regulat|close|clearanc|agreement|antitrust|initiat|completion'\\'',277:r'\\''Hugging Face|obligation'\\'',3:r'\\''Hugging Face|obligation'\\'',9:r'\\''Hugging Face|obligation|guarantee'\\'',20:r'\\''Hugging Face|obligation|acquir'\\'',118:r'\\''guarante|Hugging|commitment'\\'',322:r'\\''guarante|residual'\\'',126:r'\\''guarante|commitment'\\'',214:r'\\''anthropic|Hugging'\\'',193:r'\\''anthropic|commitment'\\'',342:r'\\''margin'\\'',59:r'\\''margin'\\'',187:r'\\''Hugging Face|commitment'\\''}
+for f in sorted(Path('\\''batches'\\'').glob('\\''*.json'\\'')):
+ rows=json.loads(f.read_text())
+ start=None
+ for row in rows:
+  i=row['\\''article'\\'']
+  if i not in tests:continue
+  matches=[]
+  for txt in row['\\''text'\\''].splitlines():
+   if re.search(tests[i],txt,re.I): matches.extend([m.group(0)[:950] for m in [re.search(r'\\''.{0,160}(?:'\\''+tests[i]+r'\\'').{0,425}'\\'',txt,re.I)] if m])
+  print(i,f.name,row['\\''title'\\''])
+  print('\\''\\n'\\''.join(matches[:10]))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+3 batch-01.json 'The planets aligned': Nvidia confirms $12.9bn Hugging Face deal in potentially huge AI shake-up
+'The planets aligned': Nvidia confirms $12.9bn Hugging Face deal in potentially huge AI shake-up
+Hugging Face snapped up by Nvidia in $12.9 billion deal
+Nvidia pays $11.9 billion for Hugging Face, and a further $1 billion in equity-based retention
+The company promises to keep Hugging Face "an open platform for the entire AI ecosystem"
+Nvidia has confirmed plans to acquire Hugging Face for $12.9 billion subject to regulatory approval, marking a major expansion for the chipmaker as it snaps up one of the most important AI model distribution platforms.
+In a post , the company asserted it plans to keep Hugging Face as it is: "Hugging Face will remain an open platform for the entire AI ecosystem," CEO Jensen Huang wrote.
+Huang explained Nvidia's "infrastructure, engineering and global reach" will help improve Hugging Face's "reliability, safety, model evaluation, inference and deployment capabilities."
+Nvidia confirms Hugging Face acquisition
+"Hugging Face will continue to support open source and open weight models from across the ecosystem, from every model builder," Huang stressed again, noting his public backing for open weight models. Ordinarily in an acquisition, questions would be raised over whether, in this instance, Nvidia's own GPUs and software could receive preferential treatment, but the company is doing everything it can to assure us that won't be the case. A
+Nvidia also claims to be the biggest contributor to Hugging Face, having shared more than 500+ models and around half as many open datasets.
+9 batch-01.json Weekly Recap: NVIDIA (NVDA) $86B revenue and Hugging Face $12.9B deal
+/ Weekly Recap: NVIDIA (NVDA) $86B revenue and Hugging Face $12.9B deal
+Weekly Recap: NVIDIA (NVDA) $86B revenue and Hugging Face $12.9B deal
+NVIDIA Corporation (NASDAQ:NVDA) posted record $86B revenue and massive growth guidance while striking deals—from a $12.9B Hugging Face buy to GPU supply and financing pacts with Nscale, Lambda, SB Energy and MediaTek—amid U.S. export curbs and claims of GPT-6 AGI readiness.
+NVIDIA To Buy Hugging Face : NVIDIA agreed to buy Hugging Face for about $12.9B. Deal faces regulatory approval and aims to close H1 2027. Hugging Face reports ~18M developers, 3M models, 500K datasets.
+13 batch-01.json Not Nvidia, Not Micron. This Magnificent Warren Buffett Stock Could Be the Quiet Winner of the AI Arms Race -- Here's the Case.
+, while Micron is one of only three companies that make the memory stacks that sit next to Nvidia's chips. As long as Amazon , Microsoft , Meta Platforms , and Alphabet ( GOOGL -0.56% ) ( GOOG -0.70% ) keep building data centers, Nvidia and Micron will continue cashing the invoices.
+That story is not wrong, but it is incomplete. The quiet winner of the infrastructure cycle may be one of the companies writing a lot of these checks. Alphabet already dominates the consumer and enterprise demand side, the software side, and, increasingly, it's designing its own silicon. Wall Street has spent nearly four years treating all of that as a footnote. Warren Buffett and his new successor, Greg Abel, are not.
+Berkshire Hathaway is plowing into Alphabet stock
+Berkshire Hathaway's first disclosed purchase of Alphabet stock showed up in the third quarter of 2025, a position of 17.8 million shares. The conglomerate sat on that stake through the end of the year before it accelerated its buying activity. During the first quarter of 2026, it nearly tripled its position in Alphabet. During the second quarter, Berkshire once again added shares on the open market and, more tellingly, wrote a $10 billion check for new shares as part of a larg
+Buffett has been quite blunt about the origin story of Berkshire's position in Alphabet. "I initiated it," he told CNBC's Becky Quick during a recent interview.
+Greg Abel, who succeeded Buffett as CEO at the start of 2026, has been aggressively adding to the position. Berkshire now holds around 106 million Alphabet shares worth nearly $38 billion. The position comprises about 13% of Berkshire's total stock portfolio, behind only Apple and American Express .
+What makes Alphabet an attractive AI investment?
+Nvidia sells the engine that powers AI models, and Micron sells the tanks for the fuel that keeps the engine running. Alphabet, by contrast, is building the car, the roads, and a growing share of alternative engines. Google Search is a money-printing machine, while YouTube draws the attention of billions of viewers. Meanwhile, Android sells smartphones and other consumer hardware around the globe. On top of these assets sit Gemini, Google Cloud , Tensor Processing Units (TPUs), and the Waymo autonomous vehicle fleet.
+of 36%. Moreover, Google Cloud's backlog was a jaw-dropping $514 billion at the end of the second quarter. Cloud infrastructure is not a little side hustle for Alphabet -- it's turning into a second core profit engine alongside the core advertising segment.
+s started selling some to enterprise customers that want the custom silicon that trains Gemini models in their own data centers. This is another example of how Alphabet is turning what was once a cost center into a monetized product.
+20 batch-01.json Jim Cramer Discusses NVIDIA (NVDA) Acquiring Hugging Face
+Next, I know NVIDIA's up 22% for the year and that would be a lot for every other company, but not for NVIDIA. This is NVIDIA, for heaven's sake… NVIDIA bought Hugging Face today. I know it sounds like a foreign version of Kleenex, but it's a kind of open-source AI. I think it's a brilliant move, and it'll put to rest all the nonsense that NVIDIA's technology is only good at training, not inference. It's foundational... But what matters is that NVIDIA sells at less than 15 times next year, I'm going to say that again: less than 15 times next year's earning estimates… Hey, look, I nailed Del
+The Hugging Face Acquisition and Inference Expansion
+NVIDIA Corporation's (NASDAQ:NVDA) agreement to acquire open-source platform Hugging Face for approximately $12.9 billion represents a significant strategic shift deeper into the software deployment ecosystem. By acquiring one of the leading platforms for open AI models and developer communities, NVIDIA could gain an important position in model distribution and deployment. The transaction directly addresses long-standing skeptics by strengthening NVIDIA's position in inference workloads, showing that hardware
+Despite the strategic benefits, the acquisition could introduce regulatory and operational risks. Because Hugging Face has historically operated as neutral ground for the entire developer community, bringing the platform under NVIDIA Corporation's (NASDAQ:NVDA) corporate umbrella risks alienating rival hardware vendors and independent model builders. It remains to be seen whether the deal creates unfair distribution advantages or forces developers down proprietary software paths, introducing potential closing delays or compliance hurdles
+NVIDIA Corporation (NASDAQ:NVDA) combines dominant hardware infrastructure with a strengthening software moat through the proposed Hugging Face acquisition, all while trading at an attractive forward earnings multiple. Although regulatory headwinds and ecosystem neutrality concerns warrant careful observation, Cramer's commentary highlights how strategic software expansion strengthens the company's long-term market leadership.
+40 batch-02.json Nvidia Earnings Blow Everyone Away
+d deliver more revenue growth in the coming year, we can't, so we're saying around 70%. Unbelievable, the top five hyperscalars spending roughly 800 billion in capex this year. Many investors believe that's been unsustainable that pace, but Nvidia saying they expect the hyperscalers to spend 1.3 trillion in the coming year, so 500 billion more than what they are going to spend this year. There's your headline numbers.
+ design electric systems for data centers. We've talked about comfort systems. It's a similar story here, among other end markets they serve. If hyperscaler or capex goes from $800 billion to $1.3 trillion next year, power is a big constraint for data center development. Companies like this are going to have not only a lot to do, but a lot of pricing power. But on the losers' end,
+42 batch-02.json Prediction: Sept. 10 Will Be a Big Day for Nvidia Shareholders. Here’s What to Watch.
+a's revenue soared 106% to $96 billion. And profit followed, advancing 126% to $59 billion. Nvidia is benefiting from massive investments in AI infrastructure; capital expenditures by the company's top five customers are forecast to reach $1.3 trillion next year.
+59 batch-02.json Did You Already Pay For NVIDIA’s Bigger Guide?
+The $17.0 billion revenue step equates to roughly $0.45 a share at a 63.7% net margin, versus the $14.93 per-share move in the stock. That does not prove the guidance is fully priced in, but it shows why the headline revenue increase alone is not enough to establish upside.
+So the gross margin for fiscal Q3 2027 was guided 0.9 percentage points below the guide given for fiscal Q2 2027. Management expects margin to bottom at 71% to 72% in fiscal Q4 2027 before settling at 72% to 73% in fiscal 2028, and it guided operating expenses higher in the same release. The volume is guided; the cost of it has just been reset.
+data center business, grew 138% year over year to $40 billion in fiscal Q2 2027. Neither points to a demand problem, and memory is the supply that now sets the margin.
+114 batch-04.json Apple, Microsoft, and Nvidia Top the List of Largest Companies by Market Cap. Here's the One I'm Buying Now.
+estimates that the big five will spend nearly $800 billion on data center capital expenditures this year alone. Next year, that figure is projected to rise to $1.3 trillion. That's enough demand for Nvidia to guide for 70% revenue growth next year, easily making it one of the fastest-growing companies in the world, let alone among the top three.
+118 batch-04.json Nvidia's Huang Dismisses Circular Financing Worries, Touts $100 Billion Contract Backlog
+y and Jim Chanos, who have raised alarms about circular spending and GPU depreciation. Nvidia disclosed $99 billion in equity investments as of July 26 and has guaranteed up to $105 billion for OpenAI's Ohio data center lease. The company's second-quarter revenue rose 106% year over year to $96.2 billion.
+"Is that circular? If that is, let's do more of that," Huang said when Goldman analyst Jim Schneider pressed him on the company's guarantees and financial backing for AI labs and cloud providers.
+ross the AI stack has grown substantially. The company disclosed $99 billion of equity investments as of July 26, plus another $25 billion in future investment commitments. In January, it put $2 billion into CoreWeave, a cloud provider that rents out Nvidia GPUs and has borrowed billions against them. The company also agreed to guarantee up to $105 billion so OpenAI can lease a data center campus in Ohio that will run on Nvidia chips. Nvidia pays nothing unless OpenAI defaults, but its total guarantees could reach $108.5 billion.
+rms aimed at mobilizing more than $500 billion of third-party capital for AI infrastructure. That figure is a target for outside financing, not a direct Nvidia commitment. "Hopefully, most of that $500 billion is going to be asset-backed," Huang said on Thursday.
+p and $50 billion from Amazon. Huang said that same month that an earlier, widely discussed plan for Nvidia to invest up to $100 billion in OpenAI "was never a commitment." For SoftBank, the bet has meant reshuffling its own portfolio: the Japanese group sold its entire $5.83 billion Nvidia stake in October 2025 to help fund its OpenAI investment, and it has been paying in its $30 billion commitment in $10 billion tranches, the second of which was funded by a bridge loan.
+120 batch-04.json Google’s $15 Billion Finland AI Build Is Good News for Nvidia, With One Important Catch
+Google's Capex Does Not All Flow to Nvidia
+But investors should not assume Google's entire capex budget becomes Nvidia revenue. Google is also one of the world's most sophisticated designers of custom AI accelerators. Its TPU strategy gives Alphabet leverage over Nvidia and allows it to route appropriate workloads onto internally designed silicon.
+126 batch-04.json What Happens To NVIDIA Stock If The Buyers It Funds Cannot Pay?
+NVIDIA (NVDA) now sits on both sides of its own boom. It has put nearly $50 billion into the frontier AI labs, has guaranteed a revenue floor at cloud sites hosting its chips, and will provide selective credit enhancement for nearly two gigawatts of compute at another lab. Management acknowledged on its August call that some would call this circular financing. So what if the buyers it funds cannot pay?
+In part, and management has been open about the mechanics. At a NeoCloud site, NVIDIA provides a take-or-pay commitment on a slice of the capacity, which hands lenders a minimum revenue guarantee and collects a share of the rental revenue above that floor. It has also announced financing platforms with six infrastructure capital providers meant to raise over $500 billion of third-party capital.
+None of that is small. OpenAI’s existing and planned commitments come to about 12 gigawatts of NVIDIA compute, and management said in August that the labs leaning on its balance sheet should be about a quarter of the business in fiscal 2028. Management’s line is that independent capital still underwrites each deal and that NVIDIA is not lending.
+138 batch-04.json Prediction: Nvidia Stock Could Be Worth This Much by January 2028
+due to a mix of things: growing competition from custom silicon at the major cloud players, lingering questions about whether hyperscaler capital expenditures (capex) can stay this aggressive, the law of large numbers, and some trepidation around circular financing deals .
+Two engines are running hotter than Nvidia's official outlook implies. First, capex for the top five hyperscalers -- Amazon , Alphabet , Microsoft , Meta Platforms , and Oracle -- is estimated to land around $800 billion this calendar year and $1.3 trillion in 2027. Nvidia already captures a healthy slice of this spend, and its next-generation Vera Rubin platform should allow it to take even more as big tech's budget gets deployed.
+181 batch-06.json NVIDIA vs. Marvell: Which AI Infrastructure Stock Is the Better Buy?
+
+183 batch-06.json Why I Bought Nvidia Into Monday’s AI Panic
+
+187 batch-06.json Prediction: The Next Nvidia-Backed Stock to Go Parabolic Could Be Hiding in Plain Sight
+ this, the company aims to play a role in every part of the AI ecosystem, and that's reflected in its latest move: its offer to acquire AI open-source platform Hugging Face.
+, revenue surged 112% to a record high of $2.6 billion, and backlog reached $104 billion. And the company said it won more than $25 billion in net new customer commitments in the early days of the third quarter.
+ar-term capacity remains effectively sold out," chief executive officer Michael Intrator said during the recent earnings call. "That is translating into signed commitments on increasingly favorable terms from a broadening set of customers and is positioning CoreWeave to gain market share for years to come."
+191 batch-06.json Nvidia and other chipmakers suffer as AI warnings raise spending concerns
+
+193 batch-06.json Nvidia Mulls $10B Role in Anthropic's Mega IPO
+Anthropic aims to raise up to US$100 billion before the US midterm elections in November, setting up the largest IPO in history.
+Anthropic is negotiating to secure NVIDIA (NASDAQ:NVDA) as an anchor investor for a record-breaking initial public offering (IPO) that could value the startup at roughly US$2 trillion.
+According to a Reuters exclusive , the chipmaker is weighing a US$10 billion commitment to the offering, serving as an early backer that could signal strong institutional confidence to public markets preparing to absorb the astronomical valuations and capital demands of frontier artificial intelligence labs.
+Anthropic’s push for public capital follows an explosive surge in sales. The company’s annualized revenue run rate eclipsed US$65 billion by late July, skyrocketing from approximately US$9 billion at the end of 2025.
+The IPO discussions expand existing operational ties between Anthropic and NVIDIA.
+In November 2025, NVIDIA pledged up to US$10 billion to the startup, tied to an agreement requiring Anthropic to purchase US$30 billion in NVIDIA-powered Microsoft (NASDAQ:MSFT) Azure computing capacity.
+More recently, NVIDIA has deployed its own balance sheet to directly broker physical infrastructure access for Anthropic. In late August, Anthropic signed a US$35 billion cloud-computing contract with Lambda, a cloud provider backed by NVIDIA.
+se on the 700 megawatt Nueces County, Texas, data center being developed by Hut 8 (TSX:HUT,NASDAQ:HUT) . This guarantees the space and allows Lambda to service Anthropic without procuring the real estate itself.
+Earlier in August, Anthropic executed a similar US$45 billion agreement with another NVIDIA-backed cloud provider, Nscale, to lease capacity in West Virginia.
+Despite its reliance on NVIDIA graphics processing units, Anthropic continues to diversify its supply chain.
+214 batch-07.json Nvidia (NVDA) Is Discussing Up To $10 Billion For An AI IPO
+Nvidia (NasdaqGS: NVDA) is in advanced talks to invest up to US$10b in Anthropic's planned IPO, according to people familiar with the discussions.
+The chipmaker is also exploring a potential acquisition of AI platform Hugging Face for up to US$14b, in a deal that would expand its software footprint.
+These possible Anthropic and Hugging Face deals matter, but investors need to weigh them alongside Nvidia's broader risk profile. Take a look at 2 warning signs (1 major) we have identified for NVIDIA.
+NVIDIA runs large scale AI infrastructure across data centers in the US and internationally, so deeper ties to Anthropic and Hugging Face would plug the hardware giant directly into the model and tooling layer that relies on its chips. The group already operates at a scale where software ecosystems can influence how effectively customers use its compute platforms.
+Do Anthropic and Hugging Face pull Nvidia deeper into the AI stack, or just reinforce the existing story?
+it is building a full-stack AI infrastructure platform, not just selling chips, and that this breadth keeps customers tied into its ecosystem. The push to back Anthropic's IPO and potentially buy Hugging Face plugs straight into that thesis by tying capital to the software and model layers that run on its hardware.
+The Anthropic talks align with that full-stack story. Funding a major model provider while already supplying compute extends Nvidia's role from supplier to financial partner, which fits the Narrative's focus on deeper customer reliance and recurring software-like economics. It also leans into the same AI infrastructure commitments that analysts see as supporting multi-year data center demand.
+The Hugging Face discussions cut both ways for the thesis. Owning a widely used open-source hub could strengthen CUDA centric workflows and differentiate Nvidia further from AMD and Intel, yet it also sharpens existing risks around regulatory scrutiny, customer vertical integration and energy intensive AI factory buildouts that analysts already flag in the Narrative.
+In the end, these Anthropic and Hugging Face moves only matter to you in the context of which Nvidia story you buy into, from long runway AI infrastructure platform to a hardware leader stretching its risk profile to stay ahead.
+277 batch-08.json What Is Hugging Face, Nvidia's Latest Acquisition?
+What Is Hugging Face, Nvidia's Latest Acquisition?
+n AI go well beyond selling processors, and those contributions may be intensifying following the recent announcement that Nvidia agreed to acquire the company Hugging Face . The agreement was made public on September 2, 2026, and the $12.9 billion deal, set to finalize in the first half of 2027, brings one of the most prominent figureheads in open AI development under Team Green's purview.
+Hugging Face is a community for over 18 million developers and power users to come together, collaborate, and share AI models (among other resources like tutorials) built for various solutions in data science and machine learning. Visit the Hugging Face website , and you'll see that one of its most prominent features is the Hugging Face Hub , a massive repository where creators can find and share apps, models, and datasets. It's simi
+t's not just for individuals. According to Nvidia , "more than 200,000 companies use the platform to discover, evaluate, customize and deploy AI," so acquiring Hugging Face is a two-pronged attack strategy. acquire a major AI player ingrained into a significant portion of corporate tech, and gain a direct access line to a passionate community of creators and their projects.
+Why would Nvidia buy Hugging Face?
+Device Architecture), which is a major perk of switching to Nvidia GPUs according to owners , and a growing slate of tools, libraries, and AI models. Acquiring Hugging Face gives Nvidia ownership of a platform millions of developers use to discover, customize, and deploy those models, furthering the company's reach beyond the hardware and software infrastructure that powers those applications.
+Hugging Face's emphasis on open models is particularly important to Nvidia here — unlike proprietary services that keep architecture and weights behind closed doors, open-source and open-weight models give developers considerably more freedom to access, modify, and distribute AI models on their own infrastructure. Hugging Face has quickly become a bustling distribution point for those models.
+Nvidia CEO Jensen Huang has also been a vocal supporter of open models , and Nvidia itself has already contributed hundreds of models and datasets to Hugging Face, including GR00T training data which rose to the top 10 most-downloaded datasets on the entire platform. Aside from expanding Nvidia's grip on the AI sector, there is also a defensive aspect to the acquisition. Major Nvidia customers are developing their own AI processors, including Microsoft ( Maia 200 ), Google ( Tensor Processing Units ), and Amazon ( Trainium 3 ), potentially reducing their reliance on Nvidia's produ
+What this means for Hugging Face developers
+For now, developers shouldn't expect Hugging Face to become an Nvidia-only ecosystem. Huang has explicitly stated that "Hugging Face will remain an open platform for the entire AI ecosystem. Developers will choose the models they want, the frameworks they want, the clouds and inference service providers they want and the computing platforms they want." In other words, you will not have to jump through Nvidia-shaped hoops to build on or deploy to the Hugging Face community.
+307 batch-09.json Nvidia Stock Split in 2026? My Prediction: It's Unlikely, but the Stock Is Still a Buy.
+
+322 batch-09.json Analysis: What Nvidia’s Massive Supply-Demand Gap Says About AI Mania
+For instance, the company agreed last month to provide a guarantee of up to $105 billion for a massive data center in Ohio that will be leased to OpenAI, with payments by Nvidia set to trigger in case the frontier AI lab defaulted on the lease or failed to make lease payments, according to a filing with the U.S. Securities and Exchange Commission.
+The AI infrastructure giant may also put up as much as $125 billion in “residual-value support” for partnerships with several Wall Street heavyweights, including Goldman Sachs and Blackstone, which plan to pool $500 billion in capital for AI infrastructure buying.
+323 batch-09.json Brad Gerstner Says AI Labs Need $180B Revenue Run Rate to Keep Nvidia Trade Alive
+"If you're going to build a trillion and a half dollars a year in capex, somebody has to pay for it," he said.
+The labs, he argued, need enough revenue from consumers and businesses to keep paying for that capacity. "Otherwise, we can't build this much capex," he said.
+Gerstner called the boom "the largest capex buildout, the largest super cycle in the history of technology," and said semiconductors have generated 70% of the Nasdaq's return this year.
+342 batch-10.json Jensen Huang Calls Nvidia the "World's First and Only Growth Value Stock," Pointing to Its 70% Revenue Growth Forecast Next Year. Here's Why That Framing Matters for How Investors Price NVDA.
+With Nvidia guiding for roughly 70% revenue growth in fiscal 2028 and gross margins of 72% to 73%, the business is seemingly poised for another year of strong sales and earnings growth. The company has also tended to be conservative in its guidance. With that in mind, there are good reasons to think that Huang is correct to highlight the striking "growth value" characteristic of his company's stock.
+398 batch-11.json NVIDIA to Acquire Hugging Face for Approximately $12.7 Billion in Strategic Pivot After Earlier Investment Rejection
+IDIA in 2025, personally approached CEO Jensen Huang in summer 2026 to propose the acquisition. The decision was driven by a sense of urgency about the rise of closed AI companies, firsthand experience defending against cyberattacks using open models, and ideological alignment between the two companies on supporting open-weight AI. The acquisition price represents roughly 86 times annualized revenue, with access to a community of 18 million developers and 200,000 enterprises seen as the primary value. The deal requires regulatory approval from U.S. and European authorities, and conce
+uctor giant NVIDIA (NVDA) announced it will acquire U.S.-based open-source AI platform Hugging Face for approximately $12.9 billion (¥2 trillion). A definitive agreement was signed on September 2, 2026, and CEO Jensen Huang disclosed the deal in an official blog post on September 3. In terms of cash outlay, this ranks as NVIDIA's second-largest transaction in company history and its largest outright acquisition.
+Notably, it was not NVIDIA that initiated the acquisition. Hugging Face CEO Clément Delangue personally visited Huang in summer 2026 to propose a collaboration aimed at expanding open-source AI. The company had previously rejected a roughly $500 million (approximately ¥78 billion) investment from NVIDIA in 2025. The shift from defending independence to voluntarily seeking shelter reflects structural changes in the AI industry and a sense of urgency about maint
+From Investment Rejection to Acquisition Agreement
+ occurred simultaneously that changed his thinking. He directly told Huang that he wanted to "seriously scale open-source AI," and within weeks, an acquisition agreement was reached.
+First, the industry's inflection point became clear. As two paths emerged—one where the world outsources AI to closed APIs, and another where anyone can become a "builder and owner" of AI—Microsoft CEO Satya Nadella and Palantir Technologies CEO Alex Karp began arguing that companies should "build and own their own AI." With closed companies like Anthropic growing massive and preparing for an initial public offering (IPO), Delangue felt a growing sense of crisis that Hugging Face's current scale was insufficient for the open side to be
+Second, a hands-on security experience that summer. Delangue recounted that when Hugging Face itself faced a cyberattack, closed APIs could not protect them, and they defended using open models. Closed models often restrict dangerous use cases as a safety measure, making it difficult to see from outside how attackers exploited them. In contrast, open models with publicly available weights (parameters) allow defenders to test the same capabilities locally, infer attack methods, and build countermeasures more easily. This reinforced the view that e
+Community Concerns and Regulatory Outlook
+On the regulatory front, the transaction meets the mandatory filing threshold under the Hart-Scott-Rodino Antitrust Improvements Act, requiring notification to the U.S. Federal Trade Commission (FTC) and the Department of Justice. Deal completion is targeted for the first half of 2027, but approvals from regulators in multiple jurisdictions, including the EU, are also required. UK technology publication The Register published an article titled "Hugging Face is too important to fall into NVIDIA's hands," arguing that regulators should 
+ng explained that he initially wanted Hugging Face to remain independent, but with multiple competing bidders in play, $12.9 billion was the price necessary to close the deal. He denied the view that the purpose of bidding was to prevent Hugging Face from falling into a competitor's hands.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -o 'estimates that the big five will spend nearly \\"'$800 billion on data center capital expenditures this year alone|capex for the top five hyperscalers|Nvidia pays nothing unless OpenAI defaults, but its total guarantees could reach '"\\"'$108.5 billion|A definitive agreement was signed on September 2, 2026|Deal completion is targeted for the first half of 2027|NVIDIA pledged up to US'"\\"'$10 billion|may also put up as much as '"\\"'$125 billion'"' batches/batch-{04,06,09,11}.json; shasum -a 256 -c matters-entries.json.sha256 matters-final.json.sha256; rg -n 'matters.*json|blind.*matter' ../.. -g '*.md' -g '"'!**/*stream*'"' -g '"'!ROUND-LOG.md'"' | tail -32" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+batches/batch-09.json:269:may also put up as much as $125 billion
+batches/batch-06.json:188:NVIDIA pledged up to US$10 billion
+batches/batch-11.json:233:A definitive agreement was signed on September 2, 2026
+batches/batch-11.json:233:Deal completion is targeted for the first half of 2027
+batches/batch-04.json:80:estimates that the big five will spend nearly $800 billion on data center capital expenditures this year alone
+batches/batch-04.json:116:Nvidia pays nothing unless OpenAI defaults, but its total guarantees could reach $108.5 billion
+batches/batch-04.json:296:capex for the top five hyperscalers
+matters.json: OK
+matters-final.json: OK
+../../RUN-PLAN-v3.md:20:- the blind matter census;
+../../RUN-PLAN-v3.md:97:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN-v2.md:20:- the blind matter census;
+../../RUN-PLAN-v2.md:72:### 1.3 The blind matter census (reads articles only; frozen before any send)
+../../RUN-PLAN-v2.md:91:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles and its first source day, with the sha.
+../../review-brief-3.md:12:4. a company-figure flag frozen in `matters.json`;
+../../RUN-PLAN-v7.md:22:- the blind matter census;
+../../RUN-PLAN-v7.md:109:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN-v6.md:22:- the blind matter census;
+../../RUN-PLAN-v6.md:109:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN-v5.md:22:- the blind matter census;
+../../RUN-PLAN-v5.md:104:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN-v9.md:22:- the blind matter census;
+../../RUN-PLAN-v9.md:116:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN-v10.md:22:- the blind matter census;
+../../RUN-PLAN-v10.md:116:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../review-codex-1.md:3:1. **D665 and scope.** Move the blind matter census, cross-week grouping, and per-matter cutoffs to stage 0 and hash them **before the paid slice**. Stage 3 currently runs during the full replay, and stage 4 substitutes one end-date snapshot. Remove the four-week veto. D665 sets a minimum of 20 distinct matters and 30 distinct questions per system per draw, not a minimum number of weeks. Add the missing D400 reporting and hard checks, Step 2’s three measurements, the July 14 frozen-reference readout, and the source checks needed to report the proposed absolute floors. Naming those outputs in the report does not produce them. [Plan](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v1.md:97) · [Four-week veto](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v1.md:159) · [D665](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9410) · [Step 2 measurements](/Users/lchingen/hivemind/clean-arch/PRD.md:338) · [Source checks](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md:31)
+../../RUN-PLAN-v1.md:14:- the blind matter census;
+../../RUN-PLAN-v1.md:97:## 4. Stage 3: the blind matter census (runs during stage 2; it reads articles only)
+../../RUN-PLAN-v8.md:22:- the blind matter census;
+../../RUN-PLAN-v8.md:114:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN.md:22:- the blind matter census;
+../../RUN-PLAN.md:116:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../RUN-PLAN-v4.md:22:- the blind matter census;
+../../RUN-PLAN-v4.md:103:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+../../stage0/census/dedup-check-brief.md:3:**Context:** the blind matter census of the release comparison (plan `../../RUN-PLAN-v10.md` §1.3; D668, D670) read the 410 kept articles.
+../../stage0/census/dedup-check-brief.md:6:- That gave 38 entries (`matters-entries.json`). The pair-by-pair reconciliation left same-bet entries apart, for example three entries for
+../../stage0/census/dedup-check-brief.md:11:- **Result:** N = 30, or 33 under agreed groups only (`matters-final.json`, listed in `matters-final-list.md`), with 7 company-figure matters.
+
+exec
+/opt/homebrew/bin/zsh -lc 'for f in third/*huggingface* third/*hugging-face-close* third/*hyperscaler* third/*alphabet_capex*; do if [[ "$f" == *completion* || "$f" == *agreement* ]]; then continue; fi; printf '"'%s\\n' \""'$f"; rg -n '"'worth|why|reason' \""'$f" | cut -c1-320; done' in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+third/codex--huggingface_eu_review--claude.json
+1:{"family": "codex", "matter": "huggingface_eu_review", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "EU sign-off can block or delay NVIDIA's $12.9B Hugging Face deal and its developer-ecosystem position. This is a policy stage, with Commission decisions as the official set
+third/codex--huggingface_eu_review--codex.json
+1:{"family": "codex", "matter": "huggingface_eu_review", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "EU approval is required for the approximately $12.9 billion acquisition, which could materially affect NVIDIA’s competitive position. An official regulatory decision can est
+third/codex--huggingface_obligation_fy27--claude.json
+1:{"family": "codex", "matter": "huggingface_obligation_fy27", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Signed, sized ($12.9B), not-yet-closed acquisition is a §3 Class C binding obligation. It is NVIDIA's largest deal, material to cash and competitive position, and the
+third/codex--huggingface_obligation_fy27--codex.json
+1:{"family": "codex", "matter": "huggingface_obligation_fy27", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "NVIDIA signed a $12.9 billion acquisition agreement that could materially affect cash and its competitive position. The next annual filing can be used to check the out
+third/codex--huggingface_regulatory_action_fy27--claude.json
+1:{"family": "codex", "matter": "huggingface_regulatory_action_fy27", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "A pending regulatory review of NVIDIA's $12.9B Hugging Face deal, its largest ever, bears on cash and competitive position. Official decisions can settle it, w
+third/codex--huggingface_regulatory_action_fy27--codex.json
+1:{"family": "codex", "matter": "huggingface_regulatory_action_fy27", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Regulatory approval could determine whether NVIDIA gains a strategically important AI model distribution platform or faces restrictions affecting its competitiv
+third/codex--huggingface_us_review--claude.json
+1:{"family": "codex", "matter": "huggingface_us_review", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "A $12.9B signed but uncompleted acquisition, NVIDIA's largest, bears on cash and developer-ecosystem position. HSR review is a named regulatory process (FTC/DOJ). A second 
+third/codex--huggingface_us_review--codex.json
+1:{"family": "codex", "matter": "huggingface_us_review", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "U.S. antitrust review could determine whether NVIDIA can complete a roughly $12.9 billion acquisition with strategic implications for its competitive position. Its stage can
+third/claude--nvda-hugging-face-close--claude.json
+1:{"family": "claude", "matter": "nvda-hugging-face-close", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Sized, uncompleted $12.9B acquisition, NVIDIA's largest ever (class C): it would change NVIDIA's cash and competitive position, faces antitrust review, and a closing ann
+third/claude--nvda-hugging-face-close--codex.json
+1:{"family": "claude", "matter": "nvda-hugging-face-close", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "The pending acquisition could materially change NVIDIA’s cash and competitive position in AI model distribution. Its H1 2027 close target provides a dated checkpoint; a c
+third/claude--big4-hyperscaler-capex-2027--claude.json
+1:{"family": "claude", "matter": "big4-hyperscaler-capex-2027", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Class D shared quantity: hyperscaler combined capex drives NVIDIA data-center demand. Calendar 2027 is next year relative to the September 2026 articles. The article
+third/claude--big4-hyperscaler-capex-2027--codex.json
+1:{"family": "claude", "matter": "big4-hyperscaler-capex-2027", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Combined hyperscaler capital spending is a shared quantity that could materially affect demand for NVIDIA’s chips. The articles discuss spending by these companies an
+third/codex--five_hyperscalers_datacenter_capex_2026--claude.json
+1:{"family": "codex", "matter": "five_hyperscalers_datacenter_capex_2026", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Class D shared quantity (standard's own example). Big-five capex (~$800B in 2026) drives NVIDIA data-center demand and many suppliers. The five companies'
+third/codex--five_hyperscalers_datacenter_capex_2026--codex.json
+1:{"family": "codex", "matter": "five_hyperscalers_datacenter_capex_2026", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Combined hyperscaler spending is a shared industry quantity that drives demand for NVIDIA’s products. The articles support the five companies and 2026 peri
+third/codex--five_hyperscalers_datacenter_capex_2027--claude.json
+1:{"family": "codex", "matter": "five_hyperscalers_datacenter_capex_2027", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Class D shared quantity: big-five hyperscaler 2027 capex ($1.3T est.) drives NVIDIA data-center demand and many suppliers; calendar next year, settled by 
+third/codex--five_hyperscalers_datacenter_capex_2027--codex.json
+1:{"family": "codex", "matter": "five_hyperscalers_datacenter_capex_2027", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "The five hyperscalers’ 2027 spending is a shared demand driver that can materially affect NVIDIA’s revenue and competitive position. The articles support t
+third/codex--alphabet_capex_2026--claude.json
+1:{"family": "codex", "matter": "alphabet_capex_2026", "reader": "claude", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Alphabet FY2026 capex ($195–205B guided) drives GPU, TPU and memory demand for NVIDIA and others. Alphabet's 10-K settles it. Per D187 it is Alphabet's own question (class A 
+third/codex--alphabet_capex_2026--codex.json
+1:{"family": "codex", "matter": "alphabet_capex_2026", "reader": "codex", "void": null, "mark": {"worth": true, "company_figure": false, "why": "Alphabet’s 2026 capital expenditure is large enough to affect its cash flow and NVIDIA’s potential infrastructure demand. Alphabet’s annual public filings can settle the amoun
+
+codex
+The Hugging Face group joins a closing event, a dollar amount, and separate U.S. and EU reviews. I’ll check the remaining overlaps and make sure the scorer has one clearly designated list.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -o '\\"'$195 billion|'"\\"'$205 billion|'"\\"'$195–205|'"\\"'$195 to '"\\"'$205|'"\\"'$279 billion|'"\\"'$36 billion|'"\\"'$108.5 billion|72% to 73%'"' batches/batch-{01,04,05,06,07,09,10}.json | head -40; rg -n 'Ohio|单笔|担保' /Users/lchingen/hivemind/docs/research/2026-10-30-question-identity/plan.md | head -17; rg -n 'matters-final|matters\\.json' ../../RUN-PLAN-v10.md census_merge.py" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+batches/batch-07.json:179:$279 billion
+batches/batch-07.json:206:$279 billion
+batches/batch-07.json:314:72% to 73%
+batches/batch-10.json:89:72% to 73%
+batches/batch-01.json:35:$279 billion
+batches/batch-01.json:116:$195 billion
+batches/batch-01.json:116:$205 billion
+batches/batch-06.json:125:$36 billion
+batches/batch-05.json:179:72% to 73%
+batches/batch-05.json:197:$279 billion
+batches/batch-04.json:116:$108.5 billion
+batches/batch-04.json:134:$195 billion
+batches/batch-04.json:134:$205 billion
+15:   - "另一题：同一件事里答案能分开走的：有自己驱动的组成部分、同一笔交易里的另一个量（担保和融资）"（抄自 D190 的碰撞裁决）。
+71:| v38 一周 | v1 给云客户的担保 | 52 | 27 |
+84:| M5 | 小事开成问题：单笔小投资、一栋楼的租约、游戏卡型号、某客户的数据中心投产 | 我读的 50 个里 10 个，另 5 个边缘（未经你复核） | 没追完：标准 C 类把"写明规模、尚未完成的入股"算约束性义务；"值得追"测试有没有被模型执行，要读原始答案才知道 | 开题（抽取） |
+94:| H1 | 同一个计划下的不同说法 | 一家保险公司"为合资公司债务担保的总额" vs "给合资公司的信用支持"；英伟达"给云客户的担保" vs "兜底安排的融资承诺" vs "算力框架下的信用支持义务" | A 一个计划一题（D210）；B 担保、融资、信用支持各一题（第 4 节"另一题"那句） | **A**（已拍。没问过 Alex 的一种：还没签的单笔交易是"签不签"的是非题，D210 让它可以开、PRD 06 让数字题和事件题分开，这次照旧，不并进计划的金额题，比如 v38 的俄亥俄租约担保 v2 和云客户担保总额 v1 各自留着）：同一个计划、最后核对的是同一个数（这个计划的义务总额），是一题；同一份附注里两个各自会变、你会分别下注的数（比如担保额和已经借出去的钱），分开。一笔交易如果是某个已按金额开题的计划的一部分，并进去（标准第 4 节、D210，比如 Firmus、Sharon AI 的兜底属于云客户兜底计划）；不属于任何已开计划的另一笔交易才分开。给 OpenAI 俄亥俄租约兜底算不算云客户兜底计划的一部分，按材料判，放进 G1 | 标准第 4 节两句；D190、D210 |
+193:| E | 开题门槛（H6 定了：单笔交易、产品、项目，规模要能影响公司的收入、利润、现金或信用风险才开）：先读 M5 的原始答案找到模型为什么没执行"值得追"，再改抽取提示词（不变长或写明理由）；和 A–D 同一轮做，单独量。它改了抽取，固定抽取的 G1 盖不住它的新输出，所以另量：对照和新臂各发三次，每一次的每一个候选由没写改动的读者对着原文判"值不值得开、是不是已开问题的重复"，按文章里的研究事项把各次输出对起来；停止条件（对抽取金标的必开项和读者判"值得开"的事项一样用）：对照和新臂各发六次；对照提出过的事项，新臂六次里一次都没提，就停；比对照少两次或以上，就停；少一次的逐条读原始答案，读者确认是值得开的事项丢了就停（不只看金标里有的）。标准第 9 节的达标线（比如兜底计划金额题每次都要提）照样要过；收的条件：不值得开的候选要少 | 约 2 美元（对照和新臂各六次） | 治 M5 |
+235:| H1 同一个计划下的不同说法 | A：只是说法不同、最后核对同一个数的算一题；两个数各自会变、会分别盯的才分开；计划里的单笔交易并进计划那一题 | "A"（回答"你选 A 还是 B"） |
+303:G3 和 F 实际合的组没对齐，留出集也没查 F（改：按 F 的规则跑出全部组再读；留出集上同样跑）；H1 对还没签的单笔交易写得自相矛盾——这一种没问过 Alex，照旧按 D210 单独开（改）；
+312:标准页的冲突表还写着"只作证据"（改）；规模门槛被写成管所有问题，而问 Alex 的是小交易、小产品（改：门槛只管单笔交易、产品、项目，测试 1 的其余理由包括竞争位置不变；D248 同步）；
+../../RUN-PLAN-v10.md:116:6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+census_merge.py:6:    python3 census_merge.py freeze       # matters.json: both-listed matters, and one-family matters both third readers accept; N
+census_merge.py:7:    python3 census_merge.py dedup        # both families group the frozen entries that are one bet (D248); matters-final.json; N
+census_merge.py:275:    (HERE / 'matters.json').write_text(text)
+census_merge.py:276:    (HERE / 'matters.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters.json\n')
+census_merge.py:348:    (HERE / 'matters-final.json').write_text(text)
+census_merge.py:349:    (HERE / 'matters-final.json.sha256').write_text(hashlib.sha256(text.encode()).hexdigest() + '  matters-final.json\n')
+
+exec
+/opt/homebrew/bin/zsh -lc "shasum -a 256 matters.json matters-entries.json matters-final.json; rg -n -o '\"example_question\"|Five major hyperscalers|How much of NVIDIA.s agreed Hugging Face|What will NVIDIA.s gross margin|What amount of NVIDIA.s financial backstop|How much will NVIDIA report in guarantee obligations' matters-entries.json | rg 'Five|obligation|gross margin|backstop|guarantee'; rg -n '\"N\"|\"names\"|\"first_day\"' matters-final.json | head -9" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census
+ succeeded in 0ms:
+4cb55c547ddad2f4f3bf40c561bcb423eda382a8ff01f062263fcb1cb5d32d17  matters.json
+4cb55c547ddad2f4f3bf40c561bcb423eda382a8ff01f062263fcb1cb5d32d17  matters-entries.json
+2af5072d0d5d1aa721f6ec273bbaedf27e055a891deef49ee81c43c5198bcd51  matters-final.json
+30:Five major hyperscalers
+53:Five major hyperscalers
+251:What amount of NVIDIA's financial backstop
+458:Five major hyperscalers
+470:Five major hyperscalers
+560:What will NVIDIA's gross margin
+601:How much will NVIDIA report in guarantee obligations
+5: "N": 30,
+13:   "names": [
+30:   "first_day": "2026-09-07",
+39:   "names": [
+59:   "first_day": "2026-09-08",
+68:   "names": [
+88:   "first_day": "2026-09-08",
+97:   "names": [
+109:   "first_day": "2026-09-07",
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '5835,5846p'; rg -n '§4|same-day' docs/prd/10-filing-phase.md | head" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  5835	## D505 · 2026-11-15 · Alex: the kept financial figures should reach the judgements of related questions; first a $0 check
+  5836	
+  5837	- **Asked** (after D504, his reply to this exact question, several answers allowed): "对公司的主要财务数字（营收、毛利率的指引、市场预期、实际业绩），新系统已经存下来了，但现在既不展示也不判断。
+  5838	  你希望读者能用它们做什么？（可多选）" Options: reach the judgements of related questions (recommended); be looked up in a table; tracked questions
+  5839	  with judgements; none for now.
+  5840	- **Alex:** "进入相关问题的判断 (Recommended)" (the only option he chose). The option as shown: "符合你定的规则：财务数字是观点的证据，不单独开成问题。第一步不花钱（$0）：检查现有问题做
+  5841	  判断时，有没有系统存了、本该用到、却没送进去的财务数字。有就报给你，没有就停。"
+  5842	- **Decided:** the company's kept financial figures are evidence for the judgements of related questions; they are not opened as
+  5843	  questions of their own (D382 and D384 stand), and he did not choose the table or tracked financial questions. The first step is a
+  5844	  $0 check on the stored fresh-week run of the new system: for each existing question's judgement, is a kept financial figure it
+  5845	  should have received absent from its request. A finding is reported to him; none ends the line. Nothing is sent to a model;
+  5846	  nothing changes in the system by this check.
+10:> 2026-11-05 (D368): translated into English on Alex's word ("不，用英文吧"); §4 corrected to name the frozen standard's version 5 and §5 given a status line, on his delegation ("你要来帮我看到底做不做").
+18:3. Check against §4, "constraints": this step changes nothing frozen; a change to the frozen extraction prompt is the one place §5 names, and Alex's
+187:| 5 | Test once: development set + held-out set, the new rule and the same-day control 3 times each | `answers-links.json`, `log.md` | Done (2026-11-04): failed: facts that matter reaching the right question, development set +7 (p 0.26); every other condition passed |
+191:| 9 | **Historical; superseded by D370.** (D363, Alex: "乙") At coverage start, record each question's starting figure once from the company's latest earnings report; the daily path still takes no restatements: design, rounds of self-checks and independent checks, validated first on the archive in the simplest way | `baseline-design.md` | Validated on two questions: the frozen extraction does not read the report's tables (0/3); with each question reading the report once on its own, the operating-margin question read its starting figure 2/3 and the capital-spending question 3/3, and the judgement then judged right (2/3, 3/3), about 2.5 cents. All 22 questions tested once (2026-11-05, Alex: "你充分验证"; files chosen by code, a same-day control, about $0.43): v10 and v12 judged right 9/9 each; no question already judged right turned wrong; but 5 of the 53 figures read were other quantities (the Vera CPU question and the Blackwell and Rubin question took a larger or neighbouring revenue line), so it failed condition 3, written beforehand. The model itself pointed to the reading instructions' sentence "write the lines it is computed from, or the line the report uses for it"; stopped, to Alex. Alex: "改"; only this sentence was changed ("write only the lines it is computed from, or the same quantity under another name; never a broader line or a line next to it"), tried on 4 questions first, then tested on all 22 (about $0.36): all three conditions passed: v10 and v12 9/9 each, no question judged right turned wrong, and all 46 figures were the questions' own quantities. Checked after an independent reader's challenge: the new sentence made the reading miss the capital-spending line in 3 of 12 reads, and it had been tested only on the one May report; the fourth version (a line-by-line re-check after writing) removed too much and failed; after a census of every failure trace (Alex: "我需要你深度看完所有失败trace给我准信"), the third version with the repaired quote check was chosen (D365): 0 wrong figures on the held-out August report; built into the production system (poc-v116; the $0 checks and the tests all pass). The full acceptance, three 14-day draws (Alex: "跑验收"; a same-day control; about $4.79): all passed: operating margin and capital spending judged right 3/3 each (the control never judged them), 53 against 45 in total (of 57); for the China-share question, the only one two fewer, both readers found the starting figures did not lead it astray. Alex: "都做": poc-v116 became the default (D366); the code was committed and a PR opened |
+
+codex
+**CHANGE.** The list counts the same five-company spending forecast twice in each year, while the Hugging Face group combines questions that can settle differently. [Matter list](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters-final-list.md:14)
+
+1. **Use agreement or source-based adjudication to merge.** The code joins every group linked by either family. For Hugging Face, one reader linked closing to the U.S. and EU reviews, and the other linked closing to the outstanding obligation. That creates a five-entry group neither endorsed. Keep agreed merges provisionally and resolve disputed pairs blind against the articles. D248 requires the same outcome to settle both questions. [Group code](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:313) · [D248](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2959)
+
+2. **Merge the five-company capex duplicates within each year.** List items 2/24 and 3/25 cite the same $800B and $1.3T forecasts. The two source articles describe those figures as data-center capex and general capex, respectively, without establishing a separately measured data-center total. Keep the four-company totals, Alphabet alone, and the two years distinct. Also fold the **Ohio guarantee amount** into the total guarantees matter. The source puts the $105B Ohio guarantee inside the $108.5B total, and D248 puts a component deal under the existing amount question. [Capex sources](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/batches/batch-04.json:80) · [Ohio source](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/batches/batch-04.json:116) · [D248](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2959)
+
+3. **Split Hugging Face.** Keep closing, the outstanding dollar obligation, and the separately accepted U.S. and EU reviews distinct. Use the generic regulatory entry as evidence for closing. U.S. clearance can arrive while EU review is pending, and neither settles the year-end dollar amount. Keep Anthropic’s deadline variants together around the single commitment decision. [Hugging Face source](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/batches/batch-11.json:233) · [Anthropic entries](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters-entries.json:329)
+
+4. **Pin one scoring list before the first send.** The plan names the 38-entry `matters.json`. The dedup code writes a separate file and drops the example questions. Freeze one canonical question per matter, name the corrected file in the plan, and require its manifest hash when scoring. [Plan](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v10.md:116) · [Final-file writer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:334)
+
+CHANGE: adjudicate disputed merges, fix the capex, Ohio and Hugging Face groups, and pin the corrected scoring list.
+tokens used
+2,353,938
+**CHANGE.** The list counts the same five-company spending forecast twice in each year, while the Hugging Face group combines questions that can settle differently. [Matter list](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters-final-list.md:14)
+
+1. **Use agreement or source-based adjudication to merge.** The code joins every group linked by either family. For Hugging Face, one reader linked closing to the U.S. and EU reviews, and the other linked closing to the outstanding obligation. That creates a five-entry group neither endorsed. Keep agreed merges provisionally and resolve disputed pairs blind against the articles. D248 requires the same outcome to settle both questions. [Group code](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:313) · [D248](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2959)
+
+2. **Merge the five-company capex duplicates within each year.** List items 2/24 and 3/25 cite the same $800B and $1.3T forecasts. The two source articles describe those figures as data-center capex and general capex, respectively, without establishing a separately measured data-center total. Keep the four-company totals, Alphabet alone, and the two years distinct. Also fold the **Ohio guarantee amount** into the total guarantees matter. The source puts the $105B Ohio guarantee inside the $108.5B total, and D248 puts a component deal under the existing amount question. [Capex sources](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/batches/batch-04.json:80) · [Ohio source](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/batches/batch-04.json:116) · [D248](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2959)
+
+3. **Split Hugging Face.** Keep closing, the outstanding dollar obligation, and the separately accepted U.S. and EU reviews distinct. Use the generic regulatory entry as evidence for closing. U.S. clearance can arrive while EU review is pending, and neither settles the year-end dollar amount. Keep Anthropic’s deadline variants together around the single commitment decision. [Hugging Face source](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/batches/batch-11.json:233) · [Anthropic entries](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters-entries.json:329)
+
+4. **Pin one scoring list before the first send.** The plan names the 38-entry `matters.json`. The dedup code writes a separate file and drops the example questions. Freeze one canonical question per matter, name the corrected file in the plan, and require its manifest hash when scoring. [Plan](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v10.md:116) · [Final-file writer](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/census_merge.py:334)
+
+CHANGE: adjudicate disputed merges, fix the capex, Ohio and Hugging Face groups, and pin the corrected scoring list.

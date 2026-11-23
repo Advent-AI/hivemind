@@ -1,0 +1,7 @@
+**No-go yet: the recorded design still specifies a $5.00 ceiling**, not the proposed $6.50. Update and freeze it before sending so the launcher, ledger and reviewed plan agree. [Fresh comparison design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md:37>)
+
+The launcher proof addresses my round-99 objection: it exercises the shared ledger through `run_live.py`, including settlement, a retried network loss and an incomplete stop. Its $0.157 maximum reservation is **the maximum among 25 requests with an unchanged 13-topic library**, not a proven maximum for the week; real answers can grow the library and cost more than the repeated “nothing kept” answer. The ledger may therefore stop before completion, as the plan allows. [Launcher proof](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/launcher-proof-output.txt>)
+
+With that limit explicit, I consider the bounded run worth trying: it can test A2 on new material, although it may yield too few independent topics to decide the comparison. The answer-choice send remains a separate review.
+
+CONSENSUS: no, because the reviewed design still records a different spending ceiling from the proposed send.

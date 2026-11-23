@@ -1,0 +1,124 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 136: your three points
+
+1. **No-replace publication:** the snapshot is published by a hard link from the temporary file to the destination, which fails
+   if the destination exists, and the temporary file is then removed. A new test creates the destination just before publication:
+   it stays untouched, and the helper refuses and removes its temporary copy.
+2. **The D597 index line** now says "a partial-day exception inside the writer's process (not a killed process; that proof is 4b's)".
+3. **Cleanup inside the opening path:** `open_wal_store` closes any connection it opened and releases the lock before raising, if
+   anything fails after the lock is taken. So `replay` only ever owns a fully opened store. Tested by making `store.open_db` fail
+   after the lock is taken: the lock is free at once and no connection is open.
+
+End with `CONSENSUS: yes` (build 4b) or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify those changes in the written design and decision index, including the failure path before ownership passes to `replay`.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '438,505p'
+rg -n 'D597' docs/DECISIONS.md
+nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '175,190p'
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   438	or preflight beside one, safe. P1 stays unresolved.
+   439	
+   440	## Who writes, and copies: slice 4b (council rounds 134 and 135)
+   441	
+   442	**The lock's owner and life.**
+   443	
+   444	- `replay` owns both the writer's connection and its lock, in one `try`/`finally`. It acquires the lock in `open_wal_store` before
+   445	  the first write.
+   446	- **`open_wal_store` cleans up after itself:** if anything fails after it has taken the lock and before it returns (the WAL pragma,
+   447	  `store.open_db`, the identity check), it closes whatever connection it opened and releases the lock before raising. So `replay`
+   448	  only ever owns a fully opened store. Tested by making `store.open_db` fail after the lock is taken: afterwards the lock is free at
+   449	  once and no connection is open.
+   450	- **On every exit** (a normal end, `WriterStopped`, a judge or schema error, a spending stop, an interrupt, a failure while opening)
+   451	  it first closes the writer's connection, then releases the lock. No writable connection outlives the lock.
+   452	- No caller uses the runner's connection after `replay` returns (searched: `stage_b/*.py`, `serving_while_writing.py`).
+   453	- Tested on each exit: afterwards the connection is closed, and a new `acquire` takes the lock at once.
+   454	- **A killed writer process** (a subprocess running `replay`, ended with `SIGKILL` after committed partial-day writes) leaves the
+   455	  lock released by the operating system:
+   456	  - preflight then takes it and copies;
+   457	  - the copy answers as the last completed day;
+   458	  - this replaces 4a's in-process interrupt as the crash proof for the lock.
+   459	
+   460	**The snapshot helper** (`live_lock.snapshot(store_path, destination)`, used by `scripts/snapshot_store.py`, its user-facing entry
+   461	point).
+   462	
+   463	- **The same path rules as `acquire`:** the source's `realpath`, and a source with more than one hard link refused. It takes no lock,
+   464	  since it is AGENTS §9's route beside a running writer.
+   465	- **The destination must be a new path:**
+   466	  - it must not exist, and must not resolve to the source;
+   467	  - the copy is made into a temporary file beside it, converted out of WAL mode (`journal_mode=delete`, checked) and integrity
+   468	    checked;
+   469	  - it is then published **without replacing**: a hard link from the temporary file to the destination, which fails if the
+   470	    destination exists, then the temporary file is removed. A plain rename could replace a file that appeared during the copy
+   471	    (round 135).
+   472	  - on any failure (the backup, the conversion, the check) the temporary file is removed, nothing is left at the destination, and
+   473	    the helper raises.
+   474	  - An incomplete copy is never offered as a snapshot.
+   475	- **Tested through `scripts/snapshot_store.py`:**
+   476	  - a snapshot while the writer commits;
+   477	  - a refused hard-linked source;
+   478	  - an existing destination;
+   479	  - a destination equal to the source;
+   480	  - a failing conversion (made to fail by a test hook on the helper's conversion step), leaving nothing at the destination;
+   481	  - a destination created just before publication, which stays untouched while the helper refuses and removes its temporary
+   482	    copy.
+   483	
+   484	**The filesystem-full proof is separate from the suite.**
+   485	
+   486	- It is `live-service/filesystem_full_proof.py`, run explicitly. It never fills the workspace's filesystem.
+   487	- It creates a unique small disk image and mount point under the session's temporary folder (`hdiutil create`, a few MB;
+   488	  `hdiutil attach`), and always detaches and deletes them in a `finally`.
+   489	- It runs the writer on a store there until the filesystem is full. It checks that the writer exits as a crash and that readers
+   490	  serve the last completed day, and it reports whether the reason was recorded.
+   491	- If the image cannot be created or mounted, it reports **unexercised**, never passed.
+   492	
+   493	## Not covered
+   494	
+   495	- Resuming a stopped live store.
+   496	- The Idea planner on a new-system ledger.
+   497	- A long-running service's restart and monitoring.
+   498	- The page's note when its live read fails, which is Alex's presentation choice.
+941:| D597 | 2026-11-16 | Slice 4a built and proven at $0 on isolated test stores: the writer's store in WAL mode (set before its schema) with a 64 MB size limit on its connection; a stop before a day on low space or three failed checkpoints, recorded with its reason and last completed day and never resent; a partial-day exception inside the writer's process (not a killed process; that proof is 4b's) leaving answers equal to a backup at the last completed day; an orderly end; 327 + 172 tests, 7 of 7 mutants; no writer lock yet | in force | `clean-arch/step4-2026-11-10/stage_b/test_writer_store.py` |
+   175	
+   176	def open_wal_store(path):
+   177	    """The new store, created empty and exclusively, put in WAL mode (checked) before `store.open_db` writes its schema, with the -wal
+   178	    size limit set on the writer's own connection."""
+   179	    path = Path(path)
+   180	    os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
+   181	    first = sqlite3.connect(str(path))
+   182	    try:
+   183	        mode = first.execute('pragma journal_mode=wal').fetchone()[0]
+   184	    finally:
+   185	        first.close()
+   186	    if mode != 'wal':
+   187	        raise SystemExit(f'{path}: the journal mode is {mode!r}, not wal: refused')
+   188	    conn = store.open_db(str(path))
+   189	    conn.execute(f'pragma journal_size_limit={STORE_SIZE_LIMIT}')
+   190	    return conn
+
+codex
+**Yes: build slice 4b and return with the proofs.** The design now specifies cleanup before ownership passes to `replay`, no-replace snapshot publication, a real process-kill test, and a separate filesystem-full proof. [Slice 4b design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:440).
+
+One wording clarification: on failure, the helper must leave **no destination created by that invocation**; an existing or concurrently created destination must remain untouched. The planned race test captures that distinction.
+
+CONSENSUS: yes
+tokens used
+3,550,179
+**Yes: build slice 4b and return with the proofs.** The design now specifies cleanup before ownership passes to `replay`, no-replace snapshot publication, a real process-kill test, and a separate filesystem-full proof. [Slice 4b design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:440).
+
+One wording clarification: on failure, the helper must leave **no destination created by that invocation**; an existing or concurrently created destination must remain untouched. The planned race test captures that distinction.
+
+CONSENSUS: yes

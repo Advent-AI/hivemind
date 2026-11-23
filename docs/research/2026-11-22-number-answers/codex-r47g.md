@@ -1,0 +1,5 @@
+**NOT READY**
+
+The attempt journal can still make a completed comparison `INCOMPLETE`. In a $0 replay with all 36 scored attempts recorded, an interrupted diagnostic retry left the verdict at `PASS`. Adding only that retry’s partially written final record changed it to `INCOMPLETE`, with the same 9–3 count. A second replay showed that a valid Unicode line separator inside an answer was mistaken for a record break, causing a completed scored attempt to be reported as interrupted. [paid_gate.py:150](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/paid_gate.py:150) · [paid_gate.py:204](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/paid_gate.py:204) · [paid_gate.py:698](/Users/lchingen/hivemind/docs/research/2026-11-22-number-answers/paid_gate.py:698)
+
+Read records using the exact newline delimiter the writer uses, and separate scored records from diagnostic records so damage to a retry stays visible without changing the verdict. Rehearse both cases and keep the existing control where a damaged scored record makes the verdict `INCOMPLETE`.

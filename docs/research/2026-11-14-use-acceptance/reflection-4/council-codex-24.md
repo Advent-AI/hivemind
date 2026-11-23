@@ -1,0 +1,7 @@
+**Go to build and prove version 3.** I verified the correction to my previous finding: `not_shown_of` compares the judgement sequence with records from the same views store, so it does not cross into trace article numbers. My search found no code reading `clean_ladders.article_seq`; retaining it as the source article number is consistent with that evidence. [stored_judgements.py](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/stored_judgements.py:38), [ladder_adapter.py](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:180)
+
+One wording correction belongs in the design: after an empty-day closing uses a sequence, **not necessarily every later article moves up**. A later gap in trace article numbers can let `max(k, next_sequence)` return to `k`. The formula handles that; the prose and value table should say so. [CLOSING-DESIGN.md](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md:20)
+
+For the collision proof, ensure the fixture actually makes the closing take the next completed article’s `k`; otherwise a gap could absorb it and the `k` mutant would not exercise the defect. The revised plan also covers the overdue-opening date, revision, closed theme and closed dependency distinctions. These are **planned checks**, not results yet. [CLOSING-DESIGN.md](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/carried-run/CLOSING-DESIGN.md:90)
+
+CONSENSUS: yes

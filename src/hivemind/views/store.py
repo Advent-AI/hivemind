@@ -22,7 +22,7 @@ TABLES = {
     'replacements': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',   # history: written before D202, read as before
     'revisions': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, said_day text, seq integer',      # D202: the new piece revises the old; both stay in force
     'same_claims': 'id integer primary key autoincrement, old_evidence_id text, new_evidence_id text, seq integer',                    # D204: the matcher read the new piece as the same claim as the old; both stored, both in force
-    'dependencies': 'dependency_id integer primary key autoincrement, view_id text, depends_on text, wait_chain_view_id text, wait_year text, direction text, seq integer',
+    'dependencies': 'dependency_id integer primary key autoincrement, view_id text, depends_on text, wait_chain_view_id text, wait_year text, direction text, seq integer, kind text default \'\'',   # kind: '' (a seed's or the generative matcher's row, read as before) or 'reads' (a chosen reading link, D694)
     'dependency_resolutions': 'id integer primary key autoincrement, dependency_id integer, resolved_to text, reason text, seq integer',
     'successions': 'id integer primary key autoincrement, view_id text, succeeds text, seq integer',
     'handovers': 'id integer primary key autoincrement, input_id text, seq integer, handover_json text',
@@ -31,6 +31,8 @@ TABLES = {
     'review_pool_entries': 'id integer primary key autoincrement, kind text, key text, example_json text, seq integer',
     'late_statements': 'id integer primary key autoincrement, input_id text, evidence_quote text, reason text, seq integer',
     'days_completed': 'id integer primary key autoincrement, day text, seq integer, at text',
+    # D694: how the links of an article were chosen (views/links.py), append-only per attempt: proposed, then committed or failed
+    'link_selections': 'id integer primary key autoincrement, attempt_id text, seq integer, input_id text, config_checksum text, status text, record_json text',
     # D149 research groups: an ongoing business subject several distinct theses belong to; membership is decided by extraction and written with the thesis
     'thesis_groups': 'group_id text primary key, name text, scope text, aliases text, created_seq integer, created_from_input text',
     'thesis_group_members': 'id integer primary key autoincrement, group_id text, view_id text, seq integer, input_id text, basis text',
@@ -150,6 +152,8 @@ def ensure_writable_columns(conn):
     for field in ('reference', 'implied_outcome'):
         if field not in judgement_columns:
             conn.execute(f'alter table judgements add column {field} text')        # D260: judgements written before the stance fields read as null
+    if 'kind' not in {r[1] for r in conn.execute('pragma table_info(dependencies)')}:
+        conn.execute("alter table dependencies add column kind text default ''")   # D694: every row written before reads ''
 
 
 def view_key(conn, view_id):
@@ -213,15 +217,25 @@ def has_judgement(conn, view_id, seq):
     return conn.execute('select 1 from judgements where view_id=? and seq=?', (view_id, seq)).fetchone() is not None
 
 
+READ_BUSY_TIMEOUT_SECONDS = 5.0     # a reader's busy timeout: SQLite's busy handler retries SQLITE_BUSY within it (live-service row 1)
+
+
 def open_read_only(path):
-    """The views database for a reader (the agent layer, reports): no schema creation, no writes."""
-    conn = sqlite3.connect(f'file:{os.path.abspath(path)}?mode=ro', uri=True)
+    """The views database for a reader (the agent layer, reports): no schema creation, no writes. Opened by its own path: a symlink
+    resolved, a store with another hard link refused (`live_lock.LockRefused`; live-service/OPERATING-CONTRACT.md, row 7), since
+    SQLite finds a WAL store's side files by the opened path."""
+    from hivemind import live_lock
+    real, _ = live_lock.own_path(path)
+    conn = sqlite3.connect(f'file:{real}?mode=ro', uri=True, timeout=READ_BUSY_TIMEOUT_SECONDS)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def current_state(conn, view_id):
-    row = conn.execute('select judgement_id, rung, reasons, changed, seq, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+    """The latest judgement: rung, reasons, changed, seq and day, and its reference and implied outcome (D260) where the ledger has them."""
+    columns = {r[1] for r in conn.execute('pragma table_info(judgements)')}
+    stance = ''.join(f', {field}' for field in ('reference', 'implied_outcome') if field in columns)
+    row = conn.execute(f'select judgement_id, rung, reasons, changed, seq, publication_day{stance} from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
     return dict(row) if row else None
 
 
@@ -242,7 +256,8 @@ def dependencies_of(conn, view_id):
 def direct_parents(conn, view_id, seq=None):
     """The views this view depends on directly (a driver's root, D208; the seeds' depends_on), written at or before `seq` when given.
     The filing reads it to keep a statement under the narrower of two linked questions (D207's narrowest rule, extraction.file_reading)."""
-    rows = conn.execute("select depends_on from dependencies where view_id=? and depends_on != '' and (? is null or seq <= ?) order by dependency_id", (view_id, seq, seq))
+    reads = " and coalesce(kind, '') != 'reads'" if 'kind' in {r[1] for r in conn.execute('pragma table_info(dependencies)')} else ''
+    rows = conn.execute(f"select depends_on from dependencies where view_id=? and depends_on != '' and (? is null or seq <= ?){reads} order by dependency_id", (view_id, seq, seq))
     return list(dict.fromkeys(r[0] for r in rows))
 
 

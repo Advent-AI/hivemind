@@ -1,0 +1,38 @@
+**Not ready.** The $2 limit is shared correctly, but a call refused by the limit does not immediately stop other judge threads from sending. The launcher can also continue to later draws after a draw is already known to be incomplete.
+
+For example, if one judge request is too large for the remaining allowance, another thread can still send a smaller request before the refusal reaches the launcher. That smaller request remains within the budget, but it violates the plan’s instruction that a cap stop ends the whole send. [Budget check](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:67), [judge thread pool](/Users/lchingen/hivemind/src/hivemind/views/judging.py:317), [stop rule](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RUN.md:64)
+
+1. **Third review, point by point**
+
+| Finding | Status | Evidence |
+|---|---|---|
+| A later launch ignores a recorded cap stop | **Closed for a recorded stop.** The launcher checks `stopped` before constructing the limit or starting a draw. The refusal is not recorded until the exception reaches the launcher, so a crash before that write leaves the stop unrecorded. | [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:61), [recording the stop](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:82) |
+| A draw with no judgements can count as complete | **Closed.** A returned draw is complete only if it has at least one judgement; the new test covers zero. | [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:100), [test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:272) |
+| A crash leaves an ambiguous restart | **Partly closed.** A folder without an outcome is recorded as a crash, is not resumed, and counts as an attempt. The tests cover a crashed first attempt and redo. A cap refusal that happens before the crash is still indistinguishable from another crash if the launcher has not recorded it. | [Folder handling](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:69), [tests](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:284) |
+| Preflight result and skipped cases were missing | **Closed as a record; limited as evidence.** The saved output states zero extraction and matching cases, none skipped, and exit 1 because checks were unexercised. The separate replay reports 159 stored judge answers accepted. Neither result should be described as a passing preflight of extraction and matching. | [Preflight](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/preflight.output.txt:3), [judge replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/judge-answer-replay.output.txt:1) |
+| Per-draw spend label could incorrectly say all charges came from tokens | **Closed.** The label now states that a charge comes from tokens or the reserve when usage is absent. | [Draw counts](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:270) |
+| Case identity and failure-path evidence | **Partly closed, as before.** The case check compares description, outcome, period and opening day, but associates the answer by case name. The crash test constructs an outstanding reservation; it does not kill a process with calls in flight or establish partial judge commits. | [Identity](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:185), [crash test](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:229) |
+| Mutant evidence | **Partly closed as independently verified evidence.** The saved summary reports 16 caught, and the runner checks for assertion failures in the named tests. I did not run it or inspect the individual scratch tracebacks. | [Summary](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/mutants.output.txt:1), [runner](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/mutants.py:72) |
+
+The third review’s already-closed points remain closed on inspection: the due-day guard runs before judging, the configuration is read from the ladder archive, the identified counts have distinct names, and D430 resolves the control date rule. [Guard](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:252), [configuration](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:211), [D430](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4784)
+
+2. **Can it spend past $2?**
+
+I found **no ordinary path past $2 through the specified launcher**, provided the ledger remains readable and each reservation covers the provider’s eventual charge. Judge threads reserve under one lock; overlapping launchers are excluded; later launches reconstruct spending and count an unanswered call at its reserve. [Reservation](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:67), [ledger](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:101), [launch lock](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:42)
+
+The billing boundary remains: the reservation is calculated from request bytes and the output limit; the code does not prove that reported usage can never exceed it. [Reservation calculation](/Users/lchingen/hivemind/clean-arch/e2e-2026-11-09/budget.py:30)
+
+3. **Does the result or send differ materially from the design?**
+
+Yes, in two stop paths:
+
+- **A cap refusal does not immediately stop other threads.** The budget raises for that request but has no shared stop flag. Other queued judge calls can still reserve and send while the pool finishes. The design expects calls already in flight to finish; the plan says the cap stops further sends. [Budget](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:69), [design](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/DESIGN.md:1013)
+- **An incomplete draw does not stop later draws.** After a deterministic failure, a failed redo, or a zero-judgement return, the launcher marks that draw incomplete and continues the outer loop. The plan says an incomplete draw misses line 1 and the line stops for Alex. [Launcher](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:88), [plan](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/STAGE_B_RUN.md:57)
+
+Otherwise, the main replay writes the stored first-send ladders before the opening article’s records, commits the day, and invokes the frozen judge. Stage A **has not passed**; D429 authorizes measuring these known-faulty ladders once review clears. [Replay](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:252), [D429](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4771)
+
+4. **Serious work remains.** The two stop-path departures affect what is sent after the stated stopping condition and need correction and focused verification. The remaining identity, crash-test and mutant-evidence limitations are narrower; they do not by themselves establish that the current stored inputs are wrong.
+
+This review was read-only. I did not run tests, model calls, or Stage B.
+
+**Not ready — stop further sends as soon as the cap refuses a request, preserve that stop across a crash, and stop later draws once a draw is incomplete.**

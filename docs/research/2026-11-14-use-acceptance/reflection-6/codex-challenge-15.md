@@ -1,0 +1,13 @@
+**Choose the complementary screen**, because the first screen did not exercise the answer-choice faults that remain central to gate 1. Prepare and review it before any send; the existing launcher is fixed to 12 topics and does not yet run the proposed 14.
+
+1. **I accept the main hand-read with two qualifications.** The stored outcomes support Astra’s three written Hugging Face questions, the shared refusals on Reflection AI and commitments, and the disputed new supply-commitments refusal. The agreed **4 versus 1** failures are all refusals; neither arm’s written ladders drew a hard-line mark. [Result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT.md), [scores](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/score-output.txt)
+
+   The boundary issue persists, but the screen does not prove only Alex can resolve every future case: D439 allows the council to decide reversibly without changing the frozen ruler. Also, Astra’s one memory-price ladder invents an **equal-weighted mean**; both readers left it unflagged, but whether that is a faithful, usable question remains uncertain. [Stored outcomes](/Users/lchingen/hivemind/poc/data/clean-astra-screen-2026-11-16/astra-d3/outcomes.jsonl)
+
+2. **The complementary 14 are worth screening** because they include the cases where earlier ladders failed. This is a targeted, exposed development set chosen after the first result; even a positive result would make Astra a stronger *candidate lead*, not establish a general fault rate or pass gate 1.
+
+   Before a send, freeze the exact complement and verify it against the first 12; adapt and test the launcher, spending guards and blind packets; retain both readings and the existing controls; and preflight. Read every changed or failed answer against its source, including the memory aggregation issue above.
+
+   The proposed **$6 maximum** would leave only about **$1.45** of the stated remainder, although $1.80 is the estimate. A close at three Astra failures closes this screen under its fixed rule; it does not prove Astra is worse on the full population. “No further paid send” can be the present budget plan, not a rule preventing a later council decision.
+
+**CONSENSUS: Prepare the complementary 14-topic screen with fresh matched controls and fixed outcomes; make a separate send decision after its $0 proofs and cost check.**

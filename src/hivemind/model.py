@@ -8,6 +8,7 @@ replay costs nothing and gives the same answers. The provider key is read from t
 never appears in the archive, logs or arguments.
 """
 import dataclasses
+import base64
 import hashlib
 import http.client
 import json
@@ -23,10 +24,15 @@ CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
 ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
              'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
 # USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+# gpt-6.1-sol: the published standard rates on 2026-11-16 (developers.openai.com/api/docs/models: "$2 / $10" per million input and output
+# tokens; D628's model comparison only). gpt-6-astra: the published standard rates on 2026-11-16 (developers.openai.com/api/docs/models/
+# gpt-6-astra: "$10 input … $50 output" per million tokens; D632's comparison only).
+# claude-opus-5-5: Anthropic's first-party list price, $4 input and $20 output per million tokens (the claude-api skill's model table,
+# cached 2026-11-03); Alex's Opus trial only (2026-11-16, "你试试看opus"). Cache reads ($0.20) are priced at CACHED_INPUT_SHARE, an over-estimate.
 # gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
 # cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
 # the published rate; the token columns are the measurement, the bill is the provider's.
-PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+PRICES = {'gpt-6-luna': (0.10, 0.50), 'gpt-6.1-sol': (2.00, 10.00), 'gpt-6-astra': (10.00, 50.00), 'claude-opus-5-5': (4.00, 20.00), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
           'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
 CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
 
@@ -122,29 +128,62 @@ def build_request(setting, system, user, schema, schema_name, provider):
     return request
 
 
-def openai_transport(provider, request, timeout=180):   # the slowest honest answers take about 40 s (judge) to 60 s; a call past 180 s is a stalled server and is retried (2026-11-02)
+def openai_transport(provider, request, timeout=180, max_attempts=3):   # the default preserves the production retry behavior
     url, _ = ENDPOINTS[provider]
     body = json.dumps(request).encode('utf-8')
     headers = {'Authorization': f'Bearer {_key(provider)}', 'Content-Type': 'application/json'}
     last = None
-    for attempt in range(3):
+    last_http = None
+    if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or max_attempts < 1:
+        raise ValueError('max_attempts must be a positive integer')
+    for attempt in range(max_attempts):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, data=body, headers=headers, method='POST'), timeout=timeout) as response:
-                return json.loads(response.read().decode('utf-8'))
+                raw_bytes = response.read()
+                try:
+                    raw = raw_bytes.decode('utf-8')
+                except UnicodeDecodeError:
+                    if max_attempts != 1:
+                        raise
+                    failure = TransportError('invalid UTF-8 HTTP response')
+                    failure.response_body = raw_bytes.decode('utf-8', 'replace')
+                    failure.response_body_base64 = base64.b64encode(raw_bytes).decode('ascii')
+                    failure.http_status = response.status
+                    raise failure
+                try:
+                    return json.loads(raw)
+                except json.JSONDecodeError:
+                    if max_attempts != 1:
+                        raise
+                    failure = TransportError('malformed HTTP response')
+                    failure.response_body = raw
+                    failure.http_status = response.status
+                    raise failure
         except urllib.error.HTTPError as error:
-            text = error.read().decode('utf-8', 'ignore')[:600]
-            last = f'HTTP {error.code}: {text}'
+            body_bytes = error.read()
+            body_text = body_bytes.decode('utf-8', 'replace' if max_attempts == 1 else 'ignore')
+            last_http = (error.code, body_text, base64.b64encode(body_bytes).decode('ascii'))
+            last = f'HTTP {error.code}: {body_text[:600]}'
             if error.code in (400, 401, 403, 404):
-                raise TransportError(last)
+                failure = TransportError(last)
+                failure.response_body = body_text
+                failure.response_body_base64 = last_http[2]
+                failure.http_status = error.code
+                raise failure
         except (urllib.error.URLError, TimeoutError, ConnectionError, OSError, http.client.HTTPException) as error:   # a dropped or truncated response is retried like a network error
             last = repr(error)[:200]
-        time.sleep(5 * (attempt + 1))
-    raise TransportError(last or 'no answer')
+            last_http = None   # the final failure describes the last attempt only
+        if max_attempts == 3 or attempt + 1 < max_attempts:
+            time.sleep(5 * (attempt + 1))
+    failure = TransportError(last or 'no answer')
+    if last_http:
+        failure.http_status, failure.response_body, failure.response_body_base64 = last_http
+    raise failure
 
 
 def check_schema(value, schema, path='$', root=None):
     """A small validator for the subset of JSON Schema the prompts use: object/required/additionalProperties,
-    array/items/minItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
+    array/items/minItems/maxItems, string/enum/pattern, integer, number, boolean, null in anyOf, and $ref into the root's $defs."""
     root = root if root is not None else schema
     if '$ref' in schema:
         name = schema['$ref'].rsplit('/', 1)[1]
@@ -181,6 +220,8 @@ def check_schema(value, schema, path='$', root=None):
         errors = []
         if len(value) < schema.get('minItems', 0):
             errors.append(f'{path}: fewer than {schema["minItems"]} items')
+        if 'maxItems' in schema and len(value) > schema['maxItems']:
+            errors.append(f'{path}: more than {schema["maxItems"]} items')
         for index, item in enumerate(value):
             errors.extend(check_schema(item, schema.get('items', {}), f'{path}[{index}]', root))
         return errors

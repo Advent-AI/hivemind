@@ -1,0 +1,881 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 137: slice 4b built and proven (D598); next, proof 10 (serving while the real writer runs)
+
+## Slice 4b (D598)
+
+- **Built:**
+  - `src/hivemind/live_lock.py`;
+  - the writer's lock life in `ladder_adapter` (`open_wal_store`, the check before each day, `LadderAdapter.close`, the `finally`
+    around `replay`);
+  - preflight's `locked_copy` and `store_copies`;
+  - `scripts/snapshot_store.py`;
+  - the conftests' temporary lock folder.
+- **Tests:** `tests/test_live_lock.py` (12) and `stage_b/test_writer_lock.py` (14), including a real `SIGKILL` of a writer process
+  on its third day and a snapshot taken beside the writer holding uncheckpointed commits. The suite passes (339), the new system's
+  folders (186), and the frozen checks. Mutants: 17 of 17 caught (`live-service/lock-mutants.txt`).
+- **The filesystem-full proof** ran separately, each variant on its own 2 MB image, both detached
+  (`live-service/filesystem-full-proof.output.txt`):
+  - **A, the stop switched off:** the disk filled on the tenth day and the writer crashed with "database or disk is full". Nine days
+    were kept and served by readers and by preflight's copy, and the lock was free.
+  - **B, the stop as built:** it stopped before the first day with its reason recorded.
+- **Found and fixed in the slice** (contract, "Found while building 4b"):
+  1. **A WAL-mode store without side files cannot be opened read-only**, and the product's own readers open `mode=ro`.
+     - Reproduced on scratch stores. The writer now leaves WAL on every exit, not only its normal end.
+     - Tested: the mode is `delete` after every exit.
+     - I did not see the state left by the writer itself in two direct checks; the side files remained after a stop in both. So
+       this is a guard on a reachable state (the last closer read-write in WAL mode), not an observed failure of the writer. Say
+       whether it is warranted.
+  2. **Preflight's part E reread each store unlocked.** One locked copy now feeds both parts, tested through `main`.
+  3. **`verify` now names a missing store or a new hard link** as `PathChanged`.
+- **My errors:** a fixture that built the unreadable state itself; an after-open test that failed inside `acquire`'s own `verify`;
+  the first filesystem-full run sharing one disk.
+
+**Asked of you:** anything in 4b that departs from row 7 or rounds 134 to 136, and whether fix 1 is a warranted guard or a mechanism
+for a case no one named.
+
+## Next: proof 10
+
+Re-run `page-contract/serving_while_writing.py` on the built code. Today it pauses a writer and serves the page. Proposed change: the
+writer is the real `replay` (WAL, lock), and the API and MCP serve from its store while it writes. Each request is checked to answer
+as one completed day, never the half-processed day, and never a mixed state within one request. I will read the harness before
+proposing its exact steps.
+
+End with `CONSENSUS: yes` (4b accepted; proof 10 next) or `CONSENSUS: no, because …`.
+
+codex
+I’ll review the lock and copy code against the agreed design, check the saved crash and disk-full evidence, and then assess the proposed next proof.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba src/hivemind/live_lock.py | sed -n '1,260p'
+nl -ba scripts/snapshot_store.py | sed -n '1,180p'
+rg -n 'open_wal_store|def close\\(|live_lock|def replay\\(|leave_wal' clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py
+rg -n 'locked_copy|store_copies|part_e\\(|part_c\\(' scripts/preflight.py
+rg -n 'D598' docs/DECISIONS.md
+cat docs/research/2026-11-14-use-acceptance/live-service/filesystem-full-proof.output.txt
+cat docs/research/2026-11-14-use-acceptance/live-service/lock-mutants.txt" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Who writes a store, and how it is copied (docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md, row 7 and "Who
+     2	writes, and copies: slice 4b").
+     3	
+     4	The writer and preflight take one operating-system lock (`flock`) named by the store file's device and inode, in one folder; the
+     5	operating system releases it when its process ends, a crash included. A store is opened only by its own path (a symlink is resolved;
+     6	a store with another hard link is refused, since SQLite finds a WAL store's side files by the opened path). The holder checks that the
+     7	path still names the locked file on both sides of an open and at each later check point; a path swapped away and back around an open
+     8	is not detected (the contract's operating precondition excludes it).
+     9	
+    10	`snapshot` is AGENTS §9's route to read a store being written: SQLite's backup API, taken out of WAL mode, integrity checked, and
+    11	published without replacing anything.
+    12	"""
+    13	import fcntl
+    14	import os
+    15	import sqlite3
+    16	import tempfile
+    17	
+    18	LOCK_FOLDER = os.path.expanduser('~/.hivemind-locks')
+    19	
+    20	
+    21	class LockRefused(RuntimeError):
+    22	    """The store is being written (its lock is held), its lock folder cannot be used, or its path is not its own."""
+    23	
+    24	
+    25	class PathChanged(RuntimeError):
+    26	    """The store's path, or its lock file's path, no longer names the file that was locked."""
+    27	
+    28	
+    29	def lock_folder():
+    30	    """The one lock folder, owner-only; refused (never skipped) when it cannot be created or written."""
+    31	    try:
+    32	        os.makedirs(LOCK_FOLDER, mode=0o700, exist_ok=True)
+    33	    except OSError as error:
+    34	        raise LockRefused(f'the lock folder {LOCK_FOLDER} cannot be created: {error}') from error
+    35	    if not os.access(LOCK_FOLDER, os.W_OK | os.X_OK):
+    36	        raise LockRefused(f'the lock folder {LOCK_FOLDER} cannot be written')
+    37	    return LOCK_FOLDER
+    38	
+    39	
+    40	def own_path(store_path):
+    41	    """(the store's real path, (device, inode)); a store with another hard link is refused."""
+    42	    real = os.path.realpath(store_path)
+    43	    status = os.stat(real)
+    44	    if status.st_nlink > 1:
+    45	        raise LockRefused(f'{real} has {status.st_nlink} hard links: a store is opened only by its own path')
+    46	    return real, (status.st_dev, status.st_ino)
+    47	
+    48	
+    49	class Held:
+    50	    """A held lock: the store's real path and identity, the lock file's path, descriptor and inode."""
+    51	
+    52	    def __init__(self, real_path, identity, lock_path, descriptor):
+    53	        self.real_path, self.identity, self.lock_path, self.descriptor = real_path, identity, lock_path, descriptor
+    54	        self.lock_inode = os.fstat(descriptor).st_ino
+    55	
+    56	
+    57	def acquire(store_path):
+    58	    """The store's lock, without waiting: refused when another process holds it."""
+    59	    real, identity = own_path(store_path)
+    60	    lock_path = os.path.join(lock_folder(), f'{identity[0]}-{identity[1]}.writer.lock')
+    61	    descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+    62	    try:
+    63	        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    64	    except BlockingIOError:
+    65	        os.close(descriptor)
+    66	        raise LockRefused(f'{real} is being written (its lock is held): read a snapshot of it instead (scripts/snapshot_store.py)') from None
+    67	    held = Held(real, identity, lock_path, descriptor)
+    68	    try:
+    69	        verify(held)
+    70	    except BaseException:
+    71	        release(held)
+    72	        raise
+    73	    return held
+    74	
+    75	
+    76	def verify(held):
+    77	    """The store's path still names the locked file with no other hard link, and the lock file's path still names the locked lock
+    78	    file; otherwise `PathChanged`."""
+    79	    try:
+    80	        status = os.stat(held.real_path)
+    81	    except FileNotFoundError:
+    82	        raise PathChanged(f'{held.real_path} no longer exists') from None
+    83	    if os.path.realpath(held.real_path) != held.real_path or (status.st_dev, status.st_ino) != held.identity:
+    84	        raise PathChanged(f'{held.real_path} no longer names the locked store')
+    85	    if status.st_nlink > 1:
+    86	        raise PathChanged(f'{held.real_path} now has {status.st_nlink} hard links')
+    87	    try:
+    88	        lock_inode = os.stat(held.lock_path).st_ino
+    89	    except FileNotFoundError:
+    90	        lock_inode = None
+    91	    if lock_inode != held.lock_inode:
+    92	        raise PathChanged(f'the lock file {held.lock_path} was replaced')
+    93	
+    94	
+    95	def release(held):
+    96	    try:
+    97	        fcntl.flock(held.descriptor, fcntl.LOCK_UN)
+    98	    finally:
+    99	        os.close(held.descriptor)
+   100	
+   101	
+   102	def leave_wal_mode(connection):
+   103	    """The copy out of WAL mode, so a read-only reader can open it; refused unless the mode becomes rollback."""
+   104	    mode = connection.execute('pragma journal_mode=delete').fetchone()[0]
+   105	    if mode != 'delete':
+   106	        raise RuntimeError(f'the snapshot could not leave WAL mode (it is {mode!r})')
+   107	
+   108	
+   109	def snapshot(store_path, destination):
+   110	    """A consistent copy of a store, even while it is written: only to a new path (so never onto the store itself); made in a temporary
+   111	    file beside the destination, taken out of WAL mode, integrity checked, then published by a hard link that fails if the destination
+   112	    has appeared meanwhile. On any failure nothing created by this call is left. Returns the destination."""
+   113	    real, _ = own_path(store_path)
+   114	    destination = os.path.abspath(destination)
+   115	    if os.path.lexists(destination):
+   116	        raise FileExistsError(f'{destination} exists: a snapshot is written only to a new path')
+   117	    descriptor, temporary = tempfile.mkstemp(prefix='.snapshot-', suffix='.sqlite', dir=os.path.dirname(destination) or '.')
+   118	    os.close(descriptor)
+   119	    try:
+   120	        source = sqlite3.connect(f'file:{real}?mode=ro', uri=True)
+   121	        target = sqlite3.connect(temporary)
+   122	        try:
+   123	            source.backup(target)
+   124	            leave_wal_mode(target)
+   125	            check = target.execute('pragma integrity_check').fetchone()[0]
+   126	            if check != 'ok':
+   127	                raise RuntimeError(f'the snapshot failed its integrity check: {check}')
+   128	        finally:
+   129	            target.close()
+   130	            source.close()
+   131	        os.link(temporary, destination)                      # fails if the destination appeared during the copy: nothing is replaced
+   132	        return destination
+   133	    finally:
+   134	        for leftover in (temporary, temporary + '-journal', temporary + '-wal', temporary + '-shm'):
+   135	            if os.path.exists(leftover):
+   136	                os.remove(leftover)
+     1	"""A snapshot of a store, even while it is written (AGENTS §9's route; live-service/OPERATING-CONTRACT.md, row 7): SQLite's backup API,
+     2	taken out of WAL mode, integrity checked, published at a new path without replacing anything. Nothing is left on failure.
+     3	
+     4	  python3 scripts/snapshot_store.py <store> <new destination>
+     5	"""
+     6	import os
+     7	import sys
+     8	
+     9	sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src'))
+    10	from hivemind import live_lock  # noqa: E402
+    11	
+    12	
+    13	def main(arguments):
+    14	    if len(arguments) != 2:
+    15	        print(__doc__, file=sys.stderr)
+    16	        return 2
+    17	    try:
+    18	        destination = live_lock.snapshot(arguments[0], arguments[1])
+    19	    except (OSError, RuntimeError) as error:          # LockRefused is a RuntimeError
+    20	        print(f'snapshot refused: {error}', file=sys.stderr)
+    21	        return 1
+    22	    print(f'snapshot: {destination}')
+    23	    return 0
+    24	
+    25	
+    26	if __name__ == '__main__':
+    27	    sys.exit(main(sys.argv[1:]))
+38:from hivemind import config, live_lock, model, pull  # noqa: E402
+176:def open_wal_store(path):
+177:    """The new store, created empty and exclusively, locked (live_lock: refused if another process holds it), put in WAL mode
+185:    held = live_lock.acquire(path)
+189:            raise live_lock.PathChanged(f'{path} was replaced between its creation and its lock')
+199:        live_lock.verify(held)
+204:        live_lock.release(held)
+226:def leave_wal(conn):
+239:        self.conn, self.lock = open_wal_store(views_path)
+248:    def close(self):
+255:                mode = leave_wal(self.conn)
+260:            live_lock.release(self.lock)
+408:def replay(run, output_folder, *, transport=None, cap_usd=0.66, sleep=None, limit=None, inputs=None, shared=None, end_day=None):
+455:            runner.counts['store journal mode at the end'] = leave_wal(runner.conn)
+465:                live_lock.verify(runner.lock)                # the store and its lock file still the ones locked (OPERATING-CONTRACT row 7)
+466:            except live_lock.PathChanged as changed:
+491:        mode = leave_wal(runner.conn)
+183:def locked_copy(path, scratch):
+210:def store_copies(views_paths):
+211:    """One locked copy of each store (`locked_copy`), made before any part reads it; parts C and E read these, never the stores."""
+215:        locked_copy(path, copy)
+220:def part_c(archive_conn, views_paths, uni):
+228:        shutil.copy(path, scratch)                  # `path` is already preflight's own locked copy (`store_copies`), never a live store
+299:def part_e(views_paths):
+341:    copies = store_copies(views_paths)
+342:    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, copies, uni), part_d()]
+343:    part_e(copies)          # informational for unkeyed ledgers; judged counts are reported per ledger
+942:| D598 | 2026-11-16 | Slice 4b built and proven at $0: an operating-system lock per store (device and inode) taken by the writer before its first write and by preflight before its one locked copy; path checks before each day; the connection closed (after leaving WAL mode when no reader holds it) before the lock is released on every exit; a killed writer's lock released by the system; `scripts/snapshot_store.py` never replaces; filesystem-full proof run separately (A crash keeps nine days; B stops first); 339 + 186 tests, 17 of 17 mutants; P1 still only proposed | in force | `src/hivemind/live_lock.py`; `live-service/OPERATING-CONTRACT.md` |
+{
+ "work folder": "/private/tmp/claude-501/-Users-lchingen-hivemind/f1ea972d-85a1-4f27-8010-cf0b60054109/scratchpad/hivemind-filesystem-full-i5v4mufg",
+ "A-disk-fills-inside-a-day: free bytes on the empty disk": 1912832,
+ "A-disk-fills-inside-a-day": {
+  "exit status": 1,
+  "last error line": "sqlite3.OperationalError: database or disk is full",
+  "free bytes on the disk after": 167936,
+  "reason recorded beside the store": null,
+  "completed days in the store": 9,
+  "readers serve": "2026-07-09",
+  "lock free after the process ended": true,
+  "preflight copy serves": "2026-07-09"
+ },
+ "A-disk-fills-inside-a-day: detached": true,
+ "B-free-space-stop: free bytes on the empty disk": 1912832,
+ "B-free-space-stop": {
+  "exit status": 1,
+  "last error line": "ladder_adapter.WriterStopped: free space below 20 times the store (17633760 bytes needed) before 2026-07-01",
+  "free bytes on the disk after": 1630208,
+  "reason recorded beside the store": "free space below 20 times the store (17633760 bytes needed) before 2026-07-01",
+  "completed days in the store": 0,
+  "readers serve": "nothing (no day completed)",
+  "lock free after the process ended": true,
+  "preflight copy serves": null
+ },
+ "B-free-space-stop: detached": true,
+ "A passes": true,
+ "B passes": true,
+ "work folder removed": true
+}
+control: 34 passed in 7.85s
+L1 the lock excludes no one: CAUGHT | 1 failed in 0.13s
+L2 a hard-linked store is accepted: CAUGHT | 1 failed in 0.14s
+L3 the path check ignores the identity: CAUGHT | 1 failed, 3 passed in 0.17s
+L4 a replaced lock file goes unseen: CAUGHT | 1 failed, 22 passed in 3.03s
+L5 an unwritable lock folder is not refused: CAUGHT | 1 failed, 6 passed in 0.20s
+L6 the snapshot replaces the destination: CAUGHT | 1 failed, 10 passed in 0.29s
+L7 the snapshot leaves its temporary file: CAUGHT | 1 failed, 9 passed in 0.32s
+L8 the snapshot stays in WAL mode: CAUGHT | 1 failed, 7 passed in 0.26s
+P1 preflight copies without the lock: CAUGHT | 1 failed, 1 passed in 0.15s
+P2 preflight part E reads the store: CAUGHT | 1 failed, 11 passed in 0.30s
+P3 preflight keeps a copy of a changed path: CAUGHT | 1 failed, 4 passed in 0.19s
+W8 no path check before a day: CAUGHT | 1 failed, 22 passed in 2.99s
+W9 the lock released before the connection closes: CAUGHT | 1 failed, 12 passed in 0.71s
+W10 replay never closes: CAUGHT | 1 failed, 12 passed in 0.74s
+W11 no identity check after creation: CAUGHT | 1 failed, 19 passed in 1.77s
+W12 an opening failure keeps the lock: CAUGHT | 1 failed, 17 passed in 1.26s
+W13 close leaves WAL mode in place: CAUGHT | 1 failed, 14 passed in 1.01s
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py | sed -n '175,265p;435,510p'
+nl -ba scripts/preflight.py | sed -n '180,220p;320,355p'
+nl -ba tests/test_live_lock.py | sed -n '1,220p'
+rg -n 'own_path|live_lock' src/hivemind/service.py src/hivemind/views/store.py scripts/hivemind_api.py scripts/hivemind_mcp.py tests/test_live_lock.py
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -55" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   175	
+   176	def open_wal_store(path):
+   177	    """The new store, created empty and exclusively, locked (live_lock: refused if another process holds it), put in WAL mode
+   178	    (checked) before `store.open_db` writes its schema, with the -wal size limit on the writer's own connection; its identity checked
+   179	    after the open. Returns (connection, held lock). Anything failing after the lock is taken closes what was opened and releases the
+   180	    lock before raising, so the caller only ever owns a fully opened store."""
+   181	    path = Path(path)
+   182	    descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+   183	    created = os.fstat(descriptor)
+   184	    os.close(descriptor)
+   185	    held = live_lock.acquire(path)
+   186	    conn = None
+   187	    try:
+   188	        if held.identity != (created.st_dev, created.st_ino):
+   189	            raise live_lock.PathChanged(f'{path} was replaced between its creation and its lock')
+   190	        first = sqlite3.connect(str(path))
+   191	        try:
+   192	            mode = first.execute('pragma journal_mode=wal').fetchone()[0]
+   193	        finally:
+   194	            first.close()
+   195	        if mode != 'wal':
+   196	            raise SystemExit(f'{path}: the journal mode is {mode!r}, not wal: refused')
+   197	        conn = store.open_db(str(path))
+   198	        conn.execute(f'pragma journal_size_limit={STORE_SIZE_LIMIT}')
+   199	        live_lock.verify(held)
+   200	        return conn, held
+   201	    except BaseException:
+   202	        if conn is not None:
+   203	            conn.close()
+   204	        live_lock.release(held)
+   205	        raise
+   206	
+   207	
+   208	def store_bytes(path):
+   209	    path = Path(path)
+   210	    return sum(p.stat().st_size for p in (path, path.with_name(path.name + '-wal')) if p.exists())
+   211	
+   212	
+   213	def free_bytes(folder):
+   214	    return shutil.disk_usage(folder).free
+   215	
+   216	
+   217	def truncate_checkpoint(conn):
+   218	    """A truncating checkpoint with a short wait; True when it completed (no reader held it back)."""
+   219	    conn.execute('pragma busy_timeout=1000')
+   220	    try:
+   221	        return conn.execute('pragma wal_checkpoint(TRUNCATE)').fetchone()[0] == 0
+   222	    except sqlite3.OperationalError:
+   223	        return False
+   224	
+   225	
+   226	def leave_wal(conn):
+   227	    """The writer's orderly end: rollback-journal mode when no reader holds the store; otherwise WAL is kept. Returns the mode."""
+   228	    conn.execute('pragma busy_timeout=1000')
+   229	    try:
+   230	        return conn.execute('pragma journal_mode=delete').fetchone()[0]
+   231	    except sqlite3.OperationalError:
+   232	        return 'wal'
+   233	
+   234	
+   235	class LadderAdapter(adapter.Adapter):
+   236	    """The Stage 2 adapter in its ladder mode: no seed, no ruler view; views come only from the ladder step's answers."""
+   237	
+   238	    def __init__(self, views_path, archive_path, ledger_path, *, transport=None, cap_usd=0.66, sleep=None, limit=None, shared=None):
+   239	        self.conn, self.lock = open_wal_store(views_path)
+   240	        try:
+   241	            self.conn.execute(f"create table if not exists clean_ladders ({', '.join(LADDER_COLUMNS)}, primary key (thesis_id))")
+   242	            self.conn.commit()
+   243	            self._finish_init(archive_path, ledger_path, transport, cap_usd, sleep, limit, shared)
+   244	        except BaseException:
+   245	            self.close()
+   246	            raise
+   247	
+   248	    def close(self):
+   249	        """The writer's end on every path: the store taken out of WAL mode when no reader holds it (so no WAL-mode store is left
+   250	        without its side files, which a read-only reader could not open), its connection closed, then its lock released (no
+   251	        writable connection outlives it). Returns the store's journal mode at the end."""
+   252	        mode = None
+   253	        if self.conn is not None:
+   254	            try:
+   255	                mode = leave_wal(self.conn)
+   256	            finally:
+   257	                self.conn.close()
+   258	                self.conn = None
+   259	        if self.lock is not None:
+   260	            live_lock.release(self.lock)
+   261	            self.lock = None
+   262	        return mode
+   263	
+   264	    def _finish_init(self, archive_path, ledger_path, transport, cap_usd, sleep, limit, shared):
+   265	        self.archive = model.Archive(archive_path)
+   435	    if list(days) != sorted(days):
+   436	        raise SystemExit('the Step 1 articles are not in day order')
+   437	    runner = LadderAdapter(output / 'views.sqlite', output / 'archive.sqlite', output / 'spend.jsonl', transport=transport, cap_usd=cap_usd, sleep=sleep,
+   438	                           limit=limit, shared=shared)
+   439	    try:
+   440	        spent_before = runner.budget.spent_usd
+   441	        runner.counts['articles not completed by Step 1'] = len(failed)
+   442	        runner.counts['ladder configuration'] = source
+   443	        runner.counts['ladder answers file sha256'] = hashlib.sha256(ladders_path.read_bytes()).hexdigest()
+   444	        inputs_of = article_inputs(trace_path)
+   445	        last_article_day = list(days)[-1]
+   446	        end_day = end_day or last_article_day
+   447	        if end_day < last_article_day:
+   448	            raise SystemExit(f'the end day {end_day} is before the last article day {last_article_day}: refused')
+   449	        sequences = {}                                   # the trace's article number k -> the store's sequence (CLOSING-DESIGN.md §1)
+   450	        views_path, failed_checkpoints = output / 'views.sqlite', 0
+   451	
+   452	        def stop(reason):
+   453	            """Record the stop and the store's last completed day beside the store, then stop before the day."""
+   454	            last = store.last_completed_day(runner.conn)
+   455	            runner.counts['store journal mode at the end'] = leave_wal(runner.conn)
+   456	            runner.counts['stopped'] = reason
+   457	            runner.counts['last completed day'] = last
+   458	            (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   459	            raise WriterStopped(reason, last)
+   460	
+   461	        for day in calendar_days(list(days)[0], end_day):
+   462	            if failed_checkpoints >= CHECKPOINT_FAILURES_TO_STOP:
+   463	                stop(f'the truncating checkpoint failed after {failed_checkpoints} consecutive completed days (a reader held the store)')
+   464	            try:
+   465	                live_lock.verify(runner.lock)                # the store and its lock file still the ones locked (OPERATING-CONTRACT row 7)
+   466	            except live_lock.PathChanged as changed:
+   467	                stop(f'{changed} before {day}')
+   468	            needed = FREE_SPACE_FACTOR * store_bytes(views_path)
+   469	            if free_bytes(output) < needed:
+   470	                stop(f'free space below {FREE_SPACE_FACTOR} times the store ({needed} bytes needed) before {day}')
+   471	            articles = days.get(day, [])
+   472	            runner.overdue_invariant(day)
+   473	            changed = set()
+   474	            for k in articles:
+   475	                seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+   476	                input_id = by_article[k][0]['input_id'] if k in by_article else f'article:{k}'
+   477	                opened_here = sorted(opened.get(k, {}), key=lambda name: int(name.split('-', 1)[1]))
+   478	                for thesis_id in opened_here:
+   479	                    runner.open_thesis(thesis_id, ladders[thesis_id], k, seq, day, input_id, source)
+   480	                runner.article(seq, by_article.get(k, []), library, revisions_by_record, later_by_article.get(k, []), changed)
+   481	                runner.record_article(seq, inputs_of[k], day)       # after its records are written, as production marks a handover
+   482	                for thesis_id in opened_here:
+   483	                    for view_id in runner.mapping.get(thesis_id, []):
+   484	                        if runner.conn.execute('select count(*) from evidence_links where view_id=?', (view_id,)).fetchone()[0] == 0:
+   485	                            runner.counts['views with no opening evidence'] += 1
+   486	            runner.conn.commit()
+   487	            if changed:
+   488	                runner.judge(day, sequences[max(articles)], changed)
+   489	            runner.close_and_complete(day)
+   490	            failed_checkpoints = 0 if truncate_checkpoint(runner.conn) else failed_checkpoints + 1
+   491	        mode = leave_wal(runner.conn)
+   492	        runner.counts['store journal mode at the end'] = mode
+   493	        if mode != 'delete':
+   494	            runner.counts['stopped in order'] = 'WAL kept: a reader held the store at the end'
+   495	        (output / 'sequences.json').write_text(json.dumps({str(k): seq for k, seq in sequences.items()}, indent=1) + '\n')
+   496	        runner.counts['judging usd this draw (charged: from tokens, or the reserve when no usage came back)'] = round(runner.budget.spent_usd - spent_before, 4)
+   497	        runner.counts['judging usd of the whole limit so far (from its ledger)'] = round(ledger_total(runner.budget.ledger_path), 4)
+   498	        (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+   499	        (output / 'judge-requests.json').write_text(json.dumps(runner.sent, indent=1))
+   500	    finally:
+   501	        runner.close()                                   # every exit: the connection closed, then the lock released
+   502	    return runner
+   503	
+   504	
+   505	if __name__ == '__main__':
+   506	    raise SystemExit('Stage B is sent through run_stage_b.py, which runs the three draws under one spending limit')
+   180	    return None
+   181	
+   182	
+   183	def locked_copy(path, scratch):
+   184	    """A store copied for preflight (live-service/OPERATING-CONTRACT.md, row 7): its writer lock taken without waiting, so a store being
+   185	    written is refused with the snapshot route named; the path checked on both sides of the open and after the copy; the copy made by
+   186	    SQLite's backup API from a read-only source and taken out of WAL mode; the lock released."""
+   187	    held = live_lock.acquire(path)
+   188	    try:
+   189	        source = sqlite3.connect(f'file:{held.real_path}?mode=ro', uri=True)
+   190	        try:
+   191	            live_lock.verify(held)
+   192	            target = sqlite3.connect(scratch)
+   193	            try:
+   194	                source.backup(target)
+   195	                live_lock.leave_wal_mode(target)
+   196	            finally:
+   197	                target.close()
+   198	        finally:
+   199	            source.close()
+   200	        live_lock.verify(held)
+   201	    except BaseException:
+   202	        for leftover in (scratch, scratch + '-journal', scratch + '-wal', scratch + '-shm'):
+   203	            if os.path.exists(leftover):
+   204	                os.remove(leftover)                  # what was copied from a path that changed is discarded
+   205	        raise
+   206	    finally:
+   207	        live_lock.release(held)
+   208	
+   209	
+   210	def store_copies(views_paths):
+   211	    """One locked copy of each store (`locked_copy`), made before any part reads it; parts C and E read these, never the stores."""
+   212	    copies = []
+   213	    for path in views_paths:
+   214	        copy = os.path.join(tempfile.mkdtemp(), 'views.sqlite')
+   215	        locked_copy(path, copy)
+   216	        copies.append(copy)
+   217	    return copies
+   218	
+   219	
+   220	def part_c(archive_conn, views_paths, uni):
+   320	        print(f'\n== E. keyed views in {os.path.basename(path)}: open views {len(open_ids)}, keyed {keyed}, duplicate keys {len(collisions)} groups, review pool {pool} candidates outside the watch list')
+   321	        for k, v in list(collisions.items())[:10]:
+   322	            print(f'      {k[:3]} {k[3]}..{k[4]} → {v}')
+   323	    return judged
+   324	
+   325	
+   326	def main():
+   327	    parser = argparse.ArgumentParser()
+   328	    frozen_draw = os.path.join(ROOT, 'poc', 'data', 'e2e-r9-frozen-v108-2026-11-03', 'd1')
+   329	    parser.add_argument('--archive', default=os.path.join(frozen_draw, 'archive.sqlite'))
+   330	    parser.add_argument('--items', default=os.path.join(ROOT, 'poc', 'data', 'items-nvda-2026-07-01-10-27.sqlite'))
+   331	    parser.add_argument('--views', nargs='*', default=None)
+   332	    parser.add_argument('--universe', default=os.path.join(ROOT, 'poc', 'universe.json'))
+   333	    args = parser.parse_args()
+   334	    views_paths = args.views or [os.path.join(frozen_draw, 'views.sqlite')]
+   335	    archive_conn = sqlite3.connect(f'file:{args.archive}?mode=ro', uri=True)
+   336	    archive_conn.row_factory = sqlite3.Row
+   337	    items_conn = testdb.open_db(args.items)
+   338	    uni = universe.load(args.universe)
+   339	    print('preflight over', args.archive, 'and', len(views_paths), 'views databases:', ', '.join(os.path.basename(os.path.dirname(p)) for p in views_paths))
+   340	    part_a(archive_conn)
+   341	    copies = store_copies(views_paths)
+   342	    counts = [part_b(archive_conn, items_conn, uni), part_c(archive_conn, copies, uni), part_d()]
+   343	    part_e(copies)          # informational for unkeyed ledgers; judged counts are reported per ledger
+   344	    if min(counts) == 0:
+   345	        print('\nUNEXERCISED: a check judged no case')
+   346	        sys.exit(1)
+   347	    print('\npreflight done')
+   348	
+   349	
+   350	if __name__ == '__main__':
+   351	    main()
+     1	"""Who writes a store, and how it is copied (docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md, row 7 and "Who
+     2	writes, and copies: slice 4b"): the lock's aliases, the path checks, the lock folder, preflight's locked copy and the snapshot entry
+     3	point (`scripts/snapshot_store.py`), on a copy of the sealed run's real store put in WAL mode. The writer's side is proven in
+     4	`clean-arch/step4-2026-11-10/stage_b/test_writer_lock.py`."""
+     5	import fcntl
+     6	import importlib.util
+     7	import os
+     8	import sqlite3
+     9	import subprocess
+    10	import sys
+    11	
+    12	import pytest
+    13	
+    14	from hivemind import live_lock, service
+    15	
+    16	ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    17	FINISHED = os.path.join(ROOT, 'poc', 'data', 'sealed-2026-10-24-run3-through-0815', 'views.sqlite')
+    18	SNAPSHOT = os.path.join(ROOT, 'scripts', 'snapshot_store.py')
+    19	
+    20	
+    21	def load(name, path):
+    22	    spec = importlib.util.spec_from_file_location(name, path)
+    23	    module = importlib.util.module_from_spec(spec)
+    24	    spec.loader.exec_module(module)
+    25	    return module
+    26	
+    27	
+    28	preflight = load('preflight', os.path.join(ROOT, 'scripts', 'preflight.py'))
+    29	snapshot_store = load('snapshot_store', SNAPSHOT)
+    30	
+    31	
+    32	WRITERS = []
+    33	
+    34	
+    35	@pytest.fixture(autouse=True)
+    36	def close_writers():
+    37	    yield
+    38	    while WRITERS:
+    39	        WRITERS.pop().close()
+    40	
+    41	
+    42	def wal_store(folder, name='views.sqlite'):
+    43	    """The sealed run's store, copied by the backup API and put in WAL mode, with a connection left open on it as a running writer
+    44	    keeps one (its side files exist, as they do while a writer runs or after it crashed)."""
+    45	    path = os.path.join(folder, name)
+    46	    source, target = service.open_ledger(FINISHED), sqlite3.connect(path)
+    47	    source.backup(target)
+    48	    assert target.execute('pragma journal_mode=wal').fetchone()[0] == 'wal'
+    49	    target.execute('select count(*) from views').fetchone()                  # the side files exist once the connection reads
+    50	    source.close()
+    51	    WRITERS.append(target)
+    52	    return path
+    53	
+    54	
+    55	def last_day(path):
+    56	    with sqlite3.connect(f'file:{path}?mode=ro', uri=True) as conn:
+    57	        return conn.execute('select max(day) from days_completed').fetchone()[0]
+    58	
+    59	
+    60	def lock_is_free(lock_path):
+    61	    descriptor = os.open(lock_path, os.O_RDWR)
+    62	    try:
+    63	        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    64	        return True
+    65	    except BlockingIOError:
+    66	        return False
+    67	    finally:
+    68	        os.close(descriptor)
+    69	
+    70	
+    71	def test_the_store_and_a_symlink_to_it_meet_one_lock_and_a_hard_linked_store_is_refused_by_the_lock_preflight_and_the_snapshot(tmp_path):
+    72	    path = wal_store(tmp_path)
+    73	    os.symlink(path, tmp_path / 'alias.sqlite')
+    74	    held = live_lock.acquire(path)
+    75	    with pytest.raises(live_lock.LockRefused, match='being written'):
+    76	        live_lock.acquire(tmp_path / 'alias.sqlite')
+    77	    live_lock.release(held)
+    78	    os.link(path, tmp_path / 'second-name.sqlite')
+    79	    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+    80	        live_lock.acquire(path)
+    81	    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+    82	        preflight.store_copies([path])
+    83	    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1 and not (tmp_path / 'snap.sqlite').exists()
+    84	
+    85	
+    86	def test_preflight_refuses_a_store_being_written_and_names_the_snapshot_route(tmp_path):
+    87	    path = wal_store(tmp_path)
+    88	    writer = live_lock.acquire(path)
+    89	    with pytest.raises(live_lock.LockRefused, match='snapshot_store.py'):
+    90	        preflight.store_copies([path])
+    91	    live_lock.release(writer)
+    92	
+    93	
+    94	def test_preflight_copies_a_wal_store_under_the_lock_into_a_copy_a_read_only_reader_opens_and_releases_the_lock(tmp_path):
+    95	    path = wal_store(tmp_path)
+    96	    [copy] = preflight.store_copies([path])
+    97	    with sqlite3.connect(f'file:{copy}?mode=ro', uri=True) as conn:
+    98	        assert conn.execute('pragma journal_mode').fetchone()[0] == 'delete'
+    99	    assert last_day(copy) == last_day(path) == '2026-08-15'
+   100	    live_lock.release(live_lock.acquire(path))                               # free at once
+   101	
+   102	
+   103	def test_a_store_path_replaced_after_its_stat_is_refused_and_the_lock_released(tmp_path, monkeypatch):
+   104	    path, other = wal_store(tmp_path), wal_store(tmp_path, 'other.sqlite')
+   105	    real_folder = live_lock.lock_folder
+   106	    seen = {}
+   107	
+   108	    def replace_then_folder():
+   109	        seen['identity'] = live_lock.own_path(path)[1]
+   110	        os.replace(other, path)                                               # after acquire's stat, before its lock
+   111	        return real_folder()
+   112	    monkeypatch.setattr(live_lock, 'lock_folder', replace_then_folder)
+   113	    with pytest.raises(live_lock.PathChanged, match='no longer names the locked store'):
+   114	        live_lock.acquire(path)
+   115	    device, inode = seen['identity']
+   116	    assert lock_is_free(os.path.join(real_folder(), f'{device}-{inode}.writer.lock'))
+   117	
+   118	
+   119	def test_a_store_path_replaced_during_preflights_copy_discards_the_copy_and_releases_the_lock(tmp_path, monkeypatch):
+   120	    path, other = wal_store(tmp_path), wal_store(tmp_path, 'other.sqlite')
+   121	    real = live_lock.leave_wal_mode
+   122	
+   123	    def replace_during_the_copy(connection):
+   124	        os.replace(other, path)
+   125	        return real(connection)
+   126	    monkeypatch.setattr(live_lock, 'leave_wal_mode', replace_during_the_copy)
+   127	    scratch = tmp_path / 'scratch.sqlite'
+   128	    with pytest.raises(live_lock.PathChanged):
+   129	        preflight.locked_copy(path, str(scratch))
+   130	    assert not scratch.exists()
+   131	    live_lock.release(live_lock.acquire(path))                               # the new file's lock is free too
+   132	
+   133	
+   134	@pytest.mark.parametrize('unusable', ['cannot be created', 'cannot be written'])
+   135	def test_an_unusable_lock_folder_refuses_the_lock_and_preflight(tmp_path, monkeypatch, unusable):
+   136	    path = wal_store(tmp_path)
+   137	    parent = tmp_path / 'locked-parent'
+   138	    parent.mkdir()
+   139	    folder = parent / 'locks'
+   140	    if unusable == 'cannot be written':
+   141	        folder.mkdir()
+   142	        folder.chmod(0o500)
+   143	    else:
+   144	        parent.chmod(0o500)
+   145	    monkeypatch.setattr(live_lock, 'LOCK_FOLDER', str(folder))
+   146	    try:
+   147	        with pytest.raises(live_lock.LockRefused, match=unusable):
+   148	            live_lock.acquire(path)
+   149	        with pytest.raises(live_lock.LockRefused, match=unusable):
+   150	            preflight.store_copies([path])
+   151	    finally:
+   152	        parent.chmod(0o700)
+   153	        if folder.exists():
+   154	            folder.chmod(0o700)
+   155	
+   156	
+   157	def test_the_snapshot_entry_point_writes_a_new_read_only_readable_copy_out_of_wal_mode(tmp_path):
+   158	    path = wal_store(tmp_path)
+   159	    finished = subprocess.run([sys.executable, SNAPSHOT, path, str(tmp_path / 'snap.sqlite')], capture_output=True, text=True)
+   160	    assert finished.returncode == 0, finished.stderr
+   161	    with sqlite3.connect(f'file:{tmp_path / "snap.sqlite"}?mode=ro', uri=True) as conn:
+   162	        assert conn.execute('pragma journal_mode').fetchone()[0] == 'delete'
+   163	        assert conn.execute('pragma integrity_check').fetchone()[0] == 'ok'
+   164	    assert last_day(tmp_path / 'snap.sqlite') == '2026-08-15'
+   165	
+   166	
+   167	def leftovers(folder):
+   168	    return sorted(name for name in os.listdir(folder) if name.startswith('.snapshot-'))
+   169	
+   170	
+   171	def test_the_snapshot_never_writes_over_an_existing_path_or_the_store_itself(tmp_path):
+   172	    path = wal_store(tmp_path)
+   173	    (tmp_path / 'taken.sqlite').write_text('someone else')
+   174	    before = open(path, 'rb').read()
+   175	    assert snapshot_store.main([path, str(tmp_path / 'taken.sqlite')]) == 1
+   176	    assert snapshot_store.main([path, path]) == 1
+   177	    assert (tmp_path / 'taken.sqlite').read_text() == 'someone else' and open(path, 'rb').read() == before
+   178	    assert leftovers(tmp_path) == []
+   179	
+   180	
+   181	def test_a_failed_conversion_leaves_nothing_at_the_destination(tmp_path, monkeypatch):
+   182	    path = wal_store(tmp_path)
+   183	
+   184	    def fail(connection):
+   185	        raise RuntimeError('the snapshot could not leave WAL mode (test)')
+   186	    monkeypatch.setattr(live_lock, 'leave_wal_mode', fail)
+   187	    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1
+   188	    assert not (tmp_path / 'snap.sqlite').exists() and leftovers(tmp_path) == []
+   189	
+   190	
+   191	def test_a_destination_created_just_before_publication_stays_untouched_and_the_temporary_copy_is_removed(tmp_path, monkeypatch):
+   192	    path = wal_store(tmp_path)
+   193	    real = live_lock.leave_wal_mode
+   194	
+   195	    def someone_takes_the_destination(connection):
+   196	        real(connection)
+   197	        (tmp_path / 'snap.sqlite').write_text('someone else')
+   198	    monkeypatch.setattr(live_lock, 'leave_wal_mode', someone_takes_the_destination)
+   199	    assert snapshot_store.main([path, str(tmp_path / 'snap.sqlite')]) == 1
+   200	    assert (tmp_path / 'snap.sqlite').read_text() == 'someone else' and leftovers(tmp_path) == []
+   201	
+   202	
+   203	def test_preflights_entry_point_hands_its_store_checks_only_its_locked_copies(tmp_path, monkeypatch):
+   204	    """Parts C and E read preflight's locked copy, never the store (a writer could start between them); the parts' own checks are
+   205	    covered by tests/test_preflight_replay.py, so here they only record what they were given."""
+   206	    path = wal_store(tmp_path)
+   207	    given = {}
+   208	    for name in ('part_a', 'part_b', 'part_d'):
+   209	        monkeypatch.setattr(preflight, name, lambda *arguments: 1)
+   210	    monkeypatch.setattr(preflight, 'part_c', lambda archive, paths, uni: given.setdefault('c', list(paths)) and 1)
+   211	    monkeypatch.setattr(preflight, 'part_e', lambda paths: given.setdefault('e', list(paths)))
+   212	    from hivemind import model
+   213	    model.Archive(str(tmp_path / 'archive.sqlite'))
+   214	    monkeypatch.setattr(sys, 'argv', ['preflight.py', '--archive', str(tmp_path / 'archive.sqlite'), '--items', str(tmp_path / 'items.sqlite'),
+   215	                                      '--views', path])
+   216	    preflight.main()
+   217	    assert given['c'] == given['e'] and path not in given['c'] and len(given['c']) == 1
+   218	    with sqlite3.connect(f'file:{given["c"][0]}?mode=ro', uri=True) as conn:
+   219	        assert conn.execute('pragma journal_mode').fetchone()[0] == 'delete'
+tests/test_live_lock.py:14:from hivemind import live_lock, service
+tests/test_live_lock.py:74:    held = live_lock.acquire(path)
+tests/test_live_lock.py:75:    with pytest.raises(live_lock.LockRefused, match='being written'):
+tests/test_live_lock.py:76:        live_lock.acquire(tmp_path / 'alias.sqlite')
+tests/test_live_lock.py:77:    live_lock.release(held)
+tests/test_live_lock.py:79:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:80:        live_lock.acquire(path)
+tests/test_live_lock.py:81:    with pytest.raises(live_lock.LockRefused, match='2 hard links'):
+tests/test_live_lock.py:88:    writer = live_lock.acquire(path)
+tests/test_live_lock.py:89:    with pytest.raises(live_lock.LockRefused, match='snapshot_store.py'):
+tests/test_live_lock.py:91:    live_lock.release(writer)
+tests/test_live_lock.py:100:    live_lock.release(live_lock.acquire(path))                               # free at once
+tests/test_live_lock.py:105:    real_folder = live_lock.lock_folder
+tests/test_live_lock.py:109:        seen['identity'] = live_lock.own_path(path)[1]
+tests/test_live_lock.py:112:    monkeypatch.setattr(live_lock, 'lock_folder', replace_then_folder)
+tests/test_live_lock.py:113:    with pytest.raises(live_lock.PathChanged, match='no longer names the locked store'):
+tests/test_live_lock.py:114:        live_lock.acquire(path)
+tests/test_live_lock.py:121:    real = live_lock.leave_wal_mode
+tests/test_live_lock.py:126:    monkeypatch.setattr(live_lock, 'leave_wal_mode', replace_during_the_copy)
+tests/test_live_lock.py:128:    with pytest.raises(live_lock.PathChanged):
+tests/test_live_lock.py:131:    live_lock.release(live_lock.acquire(path))                               # the new file's lock is free too
+tests/test_live_lock.py:145:    monkeypatch.setattr(live_lock, 'LOCK_FOLDER', str(folder))
+tests/test_live_lock.py:147:        with pytest.raises(live_lock.LockRefused, match=unusable):
+tests/test_live_lock.py:148:            live_lock.acquire(path)
+tests/test_live_lock.py:149:        with pytest.raises(live_lock.LockRefused, match=unusable):
+tests/test_live_lock.py:186:    monkeypatch.setattr(live_lock, 'leave_wal_mode', fail)
+tests/test_live_lock.py:193:    real = live_lock.leave_wal_mode
+tests/test_live_lock.py:198:    monkeypatch.setattr(live_lock, 'leave_wal_mode', someone_takes_the_destination)
+   466	  - it must not exist, and must not resolve to the source;
+   467	  - the copy is made into a temporary file beside it, converted out of WAL mode (`journal_mode=delete`, checked) and integrity
+   468	    checked;
+   469	  - it is then published **without replacing**: a hard link from the temporary file to the destination, which fails if the
+   470	    destination exists, then the temporary file is removed. A plain rename could replace a file that appeared during the copy
+   471	    (round 135).
+   472	  - on any failure (the backup, the conversion, the check) the temporary file is removed, nothing is left at the destination, and
+   473	    the helper raises.
+   474	  - An incomplete copy is never offered as a snapshot.
+   475	- **Tested through `scripts/snapshot_store.py`:**
+   476	  - a snapshot while the writer commits;
+   477	  - a refused hard-linked source;
+   478	  - an existing destination;
+   479	  - a destination equal to the source;
+   480	  - a failing conversion (made to fail by a test hook on the helper's conversion step), leaving nothing at the destination;
+   481	  - a destination created just before publication, which stays untouched while the helper refuses and removes its temporary
+   482	    copy.
+   483	
+   484	**The filesystem-full proof is separate from the suite.**
+   485	
+   486	- It is `live-service/filesystem_full_proof.py`, run explicitly. It never fills the workspace's filesystem.
+   487	- It creates a unique small disk image and mount point under the session's temporary folder (`hdiutil create`, a few MB;
+   488	  `hdiutil attach`), and always detaches and deletes them in a `finally`.
+   489	- It runs the writer on a store there until the filesystem is full. It checks that the writer exits as a crash and that readers
+   490	  serve the last completed day, and it reports whether the reason was recorded.
+   491	- If the image cannot be created or mounted, it reports **unexercised**, never passed.
+   492	
+   493	**Found while building 4b (D598).**
+   494	
+   495	- **A store in WAL mode with no side files cannot be opened by a read-only reader,** the product's own readers included
+   496	  (`store.open_read_only` opens `mode=ro`): "unable to open database file". The state arises when the last connection to close is
+   497	  a read-write one and the mode is still WAL.
+   498	  - So the writer now leaves WAL mode on **every** exit (`LadderAdapter.close`), not only at its normal end: before closing its
+   499	    connection it tries `journal_mode=delete`, and keeps WAL only when a reader holds the store. Such a reader is read-only, so it
+   500	    leaves the side files in place when it closes.
+   501	  - Tested on each exit: the store's mode is `delete` afterwards.
+   502	- **Preflight read each store twice:** once for its checks (now under the lock) and once more, unlocked, for its keyed-views count.
+   503	  It now makes one locked copy of each store before any part runs (`preflight.store_copies`), and both parts read that copy.
+   504	  - Tested through `preflight.main` with the parts recording what they were given.
+   505	- **`verify` reports a missing store and a newly added hard link** as a changed path (`PathChanged`), so the writer stops at its
+   506	  next day instead of failing with another error.
+   507	- **The filesystem-full proof** (`filesystem_full_proof.py`, run separately; `filesystem-full-proof.output.txt`), each variant on its
+   508	  own new 2 MB disk image, both detached and deleted:
+   509	  - **A, the free-space stop switched off:** the disk filled inside the tenth day. The writer exited with "database or disk is
+   510	    full", and no reason was recorded beside the store (as expected for a crash). Nine completed days were kept; readers and
+   511	    preflight's copy both serve 2026-07-09; the lock was free once the process had ended.
+   512	  - **B, the stop as built:** before the first day the writer stopped with its reason recorded, because it needed 17.6 MB free
+   513	    (20 times the 0.88 MB store, schema and `-wal` included) and the disk had 1.9 MB.
+   514	
+   515	## Not covered
+   516	
+   517	- Resuming a stopped live store.
+   518	- The Idea planner on a new-system ledger.
+   519	- A long-running service's restart and monitoring.
+   520	- The page's note when its live read fails, which is Alex's presentation choice.
+
+codex
+**Not yet.** The lock and preflight tests cover much of slice 4b, and the WAL-exit change is warranted as a guard for the named, reproduced unreadable state. But row 7’s hard-link rule is not enforced at the product’s read entry points.
+
+1. **API and MCP can still open a hard-linked store.** The contract says a store with multiple hard links is refused by every entry point. `live_lock.acquire` and the snapshot helper check it, but the API and MCP open their ledgers through `service.open_ledger` / `store.open_read_only`, which do not call that check. That leaves the WAL-sidecar case the rule was designed to prevent. Test refusal through the actual API and MCP entry points before accepting 4b. [Path rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:163), [service open](/Users/lchingen/hivemind/src/hivemind/service.py:18).
+
+2. **The no-side-files finding needs a narrower statement.** The writer did not itself leave that state in the two checks, as you report. The scratch reproduction supports trying to leave WAL on exit, but the document’s categorical “cannot be opened” should state the tested conditions, including the reader’s inability to create the required side files. Keep the busy-reader outcome distinct: WAL may remain when the mode change cannot complete. [Finding](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:493).
+
+3. **Cleanup still has an untested failure path.** In `LadderAdapter.close`, an exception from `leave_wal` other than the caught SQLite `OperationalError`, or from closing the connection, can skip the subsequent lock release. Likewise, if opening the snapshot target fails after its source opens, the source is not inside the cleanup block yet. Specify and test cleanup in those paths, while preserving the rule that a writable connection must not outlive its lock. [Writer close](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:248), [snapshot](/Users/lchingen/hivemind/src/hivemind/live_lock.py:109).
+
+The saved disk-image report supports the stated two outcomes: with the stop disabled, nine completed days remained readable after the full-disk error; with it enabled, the writer stopped before day one. I inspected the saved report and code, but did not rerun the proofs. [Disk proof](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/filesystem-full-proof.output.txt).
+
+After those fixes, proof 10 is the right next integration check. Its design should name the real API and MCP calls and pause points before running it; P1 still remains unresolved.
+
+CONSENSUS: no, because the reader path does not enforce the agreed hard-link rule and cleanup failures remain unproved.
+tokens used
+3,563,902
+**Not yet.** The lock and preflight tests cover much of slice 4b, and the WAL-exit change is warranted as a guard for the named, reproduced unreadable state. But row 7’s hard-link rule is not enforced at the product’s read entry points.
+
+1. **API and MCP can still open a hard-linked store.** The contract says a store with multiple hard links is refused by every entry point. `live_lock.acquire` and the snapshot helper check it, but the API and MCP open their ledgers through `service.open_ledger` / `store.open_read_only`, which do not call that check. That leaves the WAL-sidecar case the rule was designed to prevent. Test refusal through the actual API and MCP entry points before accepting 4b. [Path rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:163), [service open](/Users/lchingen/hivemind/src/hivemind/service.py:18).
+
+2. **The no-side-files finding needs a narrower statement.** The writer did not itself leave that state in the two checks, as you report. The scratch reproduction supports trying to leave WAL on exit, but the document’s categorical “cannot be opened” should state the tested conditions, including the reader’s inability to create the required side files. Keep the busy-reader outcome distinct: WAL may remain when the mode change cannot complete. [Finding](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:493).
+
+3. **Cleanup still has an untested failure path.** In `LadderAdapter.close`, an exception from `leave_wal` other than the caught SQLite `OperationalError`, or from closing the connection, can skip the subsequent lock release. Likewise, if opening the snapshot target fails after its source opens, the source is not inside the cleanup block yet. Specify and test cleanup in those paths, while preserving the rule that a writable connection must not outlive its lock. [Writer close](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:248), [snapshot](/Users/lchingen/hivemind/src/hivemind/live_lock.py:109).
+
+The saved disk-image report supports the stated two outcomes: with the stop disabled, nine completed days remained readable after the full-disk error; with it enabled, the writer stopped before day one. I inspected the saved report and code, but did not rerun the proofs. [Disk proof](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/filesystem-full-proof.output.txt).
+
+After those fixes, proof 10 is the right next integration check. Its design should name the real API and MCP calls and pause points before running it; P1 still remains unresolved.
+
+CONSENSUS: no, because the reader path does not enforce the agreed hard-link rule and cleanup failures remain unproved.

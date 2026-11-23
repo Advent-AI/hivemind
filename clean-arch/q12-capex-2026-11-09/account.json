@@ -1,0 +1,29 @@
+[
+ {
+  "label": "clean-d1",
+  "trace": "/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d1/trace.sqlite+/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d1-segment-2/trace.sqlite",
+  "input_id": "gnews:25d0b1d2a9dfe0bb99432e1a",
+  "sentence": "During the first quarter, NVIDIA generated $50.3 billion in operating cash flow and $48.6 billion in free cash flow.",
+  "reply": "The CONDITION clause: \"a cash-rich company's cash balance or cash flow usually changes none of these when the item ties it to nothing,\" reinforced by the closing check: \"a cash-rich company's balance or cash flow that the item ties to nothing usually cannot.\"\n\nTwo other statements rejected:\n\n1. \"It ended the quarter with $80.6 billion in cash, cash equivalents and marketable securities, up from $62.6 billion in the previous quarter.\" Same CONDITION instruction — a cash-rich company's balance tied to nothing.\n\n2. \"NVIDIA Corporation NVDA shares have declined 6.6% over the past month...\" Rejected under: \"a share-price move, an investor's position or trade, or the market value (\"shares fell 13% this month\"...)\" is not kept.\n\n(Also dropped on the same basis: the 18.87 forward P/E — \"a target price or valuation of the company is not kept\" — and the peer declines of Marvell, Broadcom and STMicroelectronics under \"another company's matter.\")",
+  "input_tokens": 11908,
+  "output_tokens": 415
+ },
+ {
+  "label": "clean-d2",
+  "trace": "/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d2/trace.sqlite+/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d2-segment-2/trace.sqlite",
+  "input_id": "gnews:25d0b1d2a9dfe0bb99432e1a",
+  "sentence": "During the first quarter, NVIDIA generated $50.3 billion in operating cash flow and $48.6 billion in free cash flow.",
+  "reply": "The omitted sentence is a \"cash-rich company's cash flow\" that \"the item ties to nothing.\" Quoted from section 2, CONDITION: \"a cash-rich company's cash balance or cash flow usually changes none of these when the item ties it to nothing.\" Repeated in the closing check: \"a cash-rich company's balance or cash flow that the item ties to nothing usually cannot.\"\n\nTwo rejected statements:\n\n1. \"It ended the quarter with $80.6 billion in cash, cash equivalents and marketable securities, up from $62.6 billion in the previous quarter.\" Same instruction: a cash balance tied to nothing material — it is not linked to funding need, credit risk or any commitment.\n\n2. \"NVIDIA Corporation NVDA shares have declined 6.6% over the past month, underperforming the broader Zacks Computer and Technology sector, which slipped 2.2% during the same period.\" Instruction: \"a share-price move, an investor's position or trade, or the market value\" is not kept.\n\nLikewise the forward P/E of 18.87 was dropped under \"a target price or valuation of the company is not kept.\"",
+  "input_tokens": 11713,
+  "output_tokens": 478
+ },
+ {
+  "label": "clean-d3",
+  "trace": "/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d3/trace.sqlite+/Users/lchingen/hivemind/poc/data/clean-e2e-2026-11-09/stage2-clean-d3-segment-2/trace.sqlite",
+  "input_id": "gnews:25d0b1d2a9dfe0bb99432e1a",
+  "sentence": "During the first quarter, NVIDIA generated $50.3 billion in operating cash flow and $48.6 billion in free cash flow.",
+  "reply": "The instruction is the CONDITION row: \"a cash-rich company's cash balance or cash flow usually changes none of these when the item ties it to nothing,\" and the closing check repeating that such a balance or cash flow \"the item ties to nothing usually cannot\" change what an analyst expects of revenue, profitability, funding, credit risk or competitive position. The $50.3 billion operating and $48.6 billion free cash flow are tied to no thesis.\n\nTwo rejected statements:\n\n1. \"It ended the quarter with $80.6 billion in cash, cash equivalents and marketable securities, up from $62.6 billion in the previous quarter\" — same CONDITION instruction on a cash-rich company's balance tied to nothing.\n\n2. \"NVIDIA Corporation NVDA shares have declined 6.6% over the past month...\" (with the peer price moves) — the row: \"A share-price move, an investor's position or trade, or the market value...\"; it \"does not cover the news behind the move.\"",
+  "input_tokens": 11796,
+  "output_tokens": 445
+ }
+]

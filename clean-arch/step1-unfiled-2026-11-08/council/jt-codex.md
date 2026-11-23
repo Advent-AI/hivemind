@@ -1,0 +1,11 @@
+1. **The survey arm contradicts itself.** [survey-system.txt](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-d416-d418-2026-11-10/survey-system.txt:6) adds a seventh reason to decline; [survey-schema.json](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-d416-d418-2026-11-10/survey-schema.json:19) still lists only the original six. The model reads both. Also, a non-year period *with* a stated publication day is not declined by the new sentence, but the figure schema can express only a year; that pre-existing boundary remains unresolved.
+
+   The typed arm’s instruction is consistent across its paragraph, schema and closing check. The code checks that both strings are nonempty; it does not check that the named party made the decision or that the decision rules out the event. “The authority decided to continue investigating” can still fit. The merger example is general, not taken from a test article.
+
+   The object arm follows D418. Its vaccine example uses a different industry from the test case, though whether a permit concerns a product class or a company-specific proceeding can still require judgment. The company’s own sales case is a useful boundary.
+
+2. **The registered comparison has two coverage gaps.** In [REGISTERED.md](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-d416-d418-2026-11-10/REGISTERED.md), the object arm can pass when all French and company-event answers decline: the “under a theme” condition only fires on ladders. Require readable event ladders on those controls, or report the arm as unproved. The survey arm can likewise pass its yearly-figure safeguard without a control thesis producing three ladders; report insufficient controls as unproved.
+
+   Three draws can make a stop condition fire on one faulty answer, but they cannot establish a rate. The page says so for the typed arm. The French events, theme figures, own-sales question and proceedings are included; their answers must actually be read, including declines and the full generated conditions, not just the abbreviated output of [read.py](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/probe-d416-d418-2026-11-10/read.py).
+
+**Do not send:** first make the survey schema agree with its seventh reason, and make missing readable controls an unproved result.

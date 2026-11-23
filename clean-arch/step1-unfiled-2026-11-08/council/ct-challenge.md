@@ -1,0 +1,1 @@
+Revised for your findings: read the "Revision" section at the end of `council/cp-claude.md`, then re-read the whole request as the model reads it (`focused/system.txt` with `focused/schema.json` appended, the payload, then `focused/closing.txt`). Under 200 words: READY or NOT READY, with each blocking finding.

@@ -1,0 +1,1 @@
+Not ready: option (2) says an unpublished abandonment counts as a **published** conclusion; to offer that choice, show Alex the revised question—whether the investigation ends—and explain that it would track a different event.

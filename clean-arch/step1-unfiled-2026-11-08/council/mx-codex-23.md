@@ -1,0 +1,16 @@
+**The six-call result is inconclusive. I agree to pause this delivery line and conduct the wider reflection before the next send**, while keeping the delivery defect open.
+
+I checked all six raw replies against [the recorded answers](/Users/lchingen/hivemind/poc/data/clean-effect-test-2026-11-15/v7-e379/answers.json) and re-ran the schema and judge checks against the requests: all match and pass. All six chose “yes.” All three answers given `e379` marked it as pushing toward the last answer; two cited it. The reasons do not identify the 6000D stop order. The control request already contained the H200 blocking precedent (`e566`), which two controls used as a reason for caution.
+
+Both readers’ rankings overlap between conditions. Codex tied one control and one treated answer at rank 4, so the result should not describe both rankings as the same strict sequence. The readers were not told the conditions, but the packet exposed citation IDs, including `e379` in two treated answers; say the *rankings did not separate*, not that the readers could not identify the conditions. The flawed `uses_precedent` mark could count H200 and cannot establish use of the added fact.
+
+Two proposed conclusions need narrowing:
+
+- The omission is real as **delivery**: `e379` was kept and absent from v7’s requests, and both census readers judged it relevant. The judge’s `toward_last` marks are an observed change in its structured output. The test did not establish a change in its chosen answer or a separated change in confidence.
+- The other cases are **not proven weaker** and cannot be ruled out by this test. A same-direction fact or a top-band answer can still affect reasoning or confidence; v3 is a different question and its evidence may be less redundant. Another send could teach something, but this record does not yet show that its value exceeds stepping back. The test’s existing H200 precedent is a reason for that uncertainty, not proof that `e379` added nothing.
+
+D505’s choice and D507’s requested census have been carried out; D507 also asks for a decision about whether to change the system. Under D509/D439, the council can make the **current decision to defer a change**, with the unresolved delivery gap and 23 candidate pairs visible in the reflection. “Do not build on this evidence now” is supported; “a fix would necessarily be a case-fitted patch” is not yet established without a mechanism and its share.
+
+The reflection should revisit both systems against the product goal and the frozen comparison, including question coverage, evidence delivery and traceable judgements. It should distinguish what the recent steps decided from what they did not, rank the remaining reader losses, and propose one next test with a falsifier. Several recent results were undecided or inconclusive, so the record should not say every step answered its question or that none produced learning.
+
+Council position: Pause further sends and changes on this delivery line, retaining the confirmed omissions and the inconclusive effect test as open evidence. Under D439, run the cold reflection council next and choose one product-ranked step from the whole record.

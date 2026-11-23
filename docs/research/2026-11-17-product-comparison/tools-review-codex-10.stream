@@ -1,0 +1,528 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 10, confirmation only (read-only, $0)
+
+Your round 9 (`tools-review-codex-9.md`) asked for two changes. A Claude reader's round 9 asked for bookkeeping, design wording and two
+D431 points. D675's "Round 9" entry in `docs/DECISIONS-log.md` records how each was fixed. It is committed at 547ea98e.
+
+Check, citing file and line, only that each of those points is fixed:
+- `stage0/d400_reader_lines.py`: exhausted sessions are terminal, and a missing session makes the draw's lines 1–5 "not measured";
+- `stage0/step2_lines.py`: `CONTENT_ONLY` is in both key prompts;
+- `DESIGN-1.6.md`: no leftover attribution sentence, and the key and eligibility wording match the code;
+- `stage0/d431_reading.py`: packet field parity, and terminal missing sessions.
+
+End with `READY` (the §1.6 tools may read the run's outputs) or `NOT READY: <the smallest changes>`. Keep it under about 200 words.
+
+Do not open:
+- anything under `/private/tmp`, `~/.codex/memories`, `~/.hivemind-keys` or `stage0/downloaded_files`;
+- anything under `poc/data/comparison-2026-11-17/run`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll verify the round-nine fixes at commit `547ea98e` without opening the run folder.
+exec
+/opt/homebrew/bin/zsh -lc "git show 547ea98e:docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py | nl -ba | rg -n 'terminal|exhaust|CONTENT_ONLY|missing sessions|not measured|attribution|same_due|def control_item|def opened_rows|def match_third_prompt|fields|def session|def read_store|no_unit|no unit|figure.*unit'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "git show 547ea98e:docs/research/2026-11-17-product-comparison/stage0/step2_lines.py | nl -ba | rg -n 'terminal|exhaust|CONTENT_ONLY|missing sessions|not measured|attribution|same_due|def control_item|def opened_rows|def match_third_prompt|fields|def session|def read_store|no_unit|no unit|figure.*unit'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "git show 547ea98e:docs/research/2026-11-17-product-comparison/DESIGN-1.6.md | nl -ba | rg -n 'terminal|exhaust|CONTENT_ONLY|missing sessions|not measured|attribution|same_due|def control_item|def opened_rows|def match_third_prompt|fields|def session|def read_store|no_unit|no unit|figure.*unit'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "git show 547ea98e:docs/research/2026-11-17-product-comparison/stage0/d431_reading.py | nl -ba | rg -n 'terminal|exhaust|CONTENT_ONLY|missing sessions|not measured|attribution|same_due|def control_item|def opened_rows|def match_third_prompt|fields|def session|def read_store|no_unit|no unit|figure.*unit'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'git show 547ea98e:docs/DECISIONS-log.md | nl -ba | tail -45
+git show --format=short --stat 547ea98e' in /Users/lchingen/hivemind
+ succeeded in 1898ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-7uvFgdcR' (errno=Operation not permitted)
+2026-11-18 01:01:41.124 xcodebuild[88916:59308645]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.371 xcodebuild[88916:59308635] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-iKVoygs7' (errno=Operation not permitted)
+2026-11-18 01:01:41.849 xcodebuild[88929:59308682]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.995 xcodebuild[88929:59308679] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+10:    10	status: passed, failed or not measured. A void session, or an answer outside its closed form, is retried once and then reported
+11:    11	missing; a line with a missing mark is not measured. Which pair or rendering a packet id names is written to `--keys`
+24:    24	labelled in waves until the first 100 labelled records in draw order are known or the strata are exhausted; the labels are frozen
+26:    26	is among the record's Step 2 candidates. Fewer than 100: not measured.
+31:    31	packet goes in the prompt in place of the file path. Pass: the third reader's `wrong` at most 4 of 200. Fewer than 200: not measured.
+35:    35	publisher and publication date are context for reading, never details); the attribution fields `group_text` drops for a later report (tier, stated day, period, speaker) are not shown to the key readers, so the key
+36:    36	holds content only, and code counts the later reports whose attribution fields differ from their original's, printed beside. Two key
+124:   124	CONTENT_ONLY = (" Count only facts the later record's statement itself adds: its summary and quotes. Use its publisher and publication "
+130:   130	              'For each LATER record, independently: ' + DETAIL_DEFINITION + CONTENT_ONLY + '\n\nReturn only a JSON array with one object '
+136:   136	                    'open any file.\n\nEach reader was asked, for each LATER record, to ' + DETAIL_DEFINITION + CONTENT_ONLY + '\n\nFor every '
+186:   186	    fields), and the manifest's length. Only passages Step 1 found in the source give source context."""
+287:   287	def rows_check(ids, fields):
+295:   295	            for field, accepts in fields.items():
+302:   302	def sessions(folder, jobs):
+331:   331	def session_counts(folder):
+379:   379	    """Records drawn in rounds, one at random from each stratum per round until the strata are exhausted; the first 4 drawn in each
+564:   564	        result.update(status='not measured', reason=f'a missing mark on {missing_at} before 100 labelled records')
+566:   566	        result.update(status='not measured', reason=f'{len(labelled)} labelled records of {LINE1_RECORDS} with the strata exhausted')
+580:   580	        return finish(out, 2, folder, {'status': 'not measured', 'reason': f'{len(population)} repeats, fewer than {LINE2_MERGES}',
+626:   626	        result.update(status='not measured', reason=f'{len(unjudged)} merges with a missing mark (first {unjudged[0]})')
+636:   636	    """A record's statement as a key reader sees it: its summary, passages, party, publication date and publisher. The attribution
+637:   637	    fields the frozen dossier drops for a later report (tier, stated day, period, speaker) are left out, so the key holds content."""
+642:   642	def attribution_differences(groups):
+643:   643	    """Later reports whose tier, stated day, period or speaker differ from their original's: the fields `group_text` does not print
+649:   649	            fields = [f for f in ATTRIBUTION_FIELDS if member.get(f) != group['original'].get(f)]
+650:   650	            by_field.update(fields)
+651:   651	            differing += bool(fields)
+689:   689	              'attribution differences, all groups with a later report': attribution_differences([stored['groups'][g] for g in eligible])}
+691:   691	        return finish(out, 3, folder, {'status': 'not measured', 'reason': f'{len(eligible)} groups with a later report, fewer than {LINE3_GROUPS}',
+694:   694	    beside['attribution differences, sampled groups'] = attribution_differences([stored['groups'][g] for g in sample])
+741:   741	        return finish(out, 3, folder, {'status': 'not measured', 'reason': f'{len(unkeyed)} later reports with no settled key (first {unkeyed[0]})',
+795:   795	        result.update(status='not measured', reason=f'{len(missing)} rendering sessions missing (first {missing[0]})')
+811:   811	    """`step2-lines.json`: each line's status, and the release line D675 prints beside the verdict (a failed line ahead of one not measured)."""
+815:   815	        lines[str(line)] = json.loads(path.read_text()) if path.exists() else {'line': line, 'status': 'not measured', 'reason': 'not run'}
+817:   817	    status = 'failed' if 'failed' in statuses else 'not measured' if 'not measured' in statuses else 'passed'
+819:   819	               + [f'release not cleared: Step 2 line {n} not measured' for n, r in lines.items() if r['status'] == 'not measured']
+
+ succeeded in 1898ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-7s1cowV9' (errno=Operation not permitted)
+2026-11-18 01:01:41.124 xcodebuild[88919:59308641]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.371 xcodebuild[88919:59308636] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-vpgezyPG' (errno=Operation not permitted)
+2026-11-18 01:01:41.849 xcodebuild[88927:59308683]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.995 xcodebuild[88927:59308678] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+24:    24	    failed, and "release not cleared: <check> not measured" for a check that could not be measured (D665: "a release blocker reported
+27:    27	- **A hard check that is not measured cannot clear release.**
+29:    29	    line "not measured" below 3 company-figure theses or 20 laddered theses.
+49:    49	  - A skipped ladder component (no question opened) is "not measured".
+57:    57	    scaled minimums. `accounting.py` hard-codes 35 and 28, so its own line 5 is not read. N = 0 reads "not measured" (D452). `collect_readings.py` reads one ladder folder and its packet files:
+67:    67	  100 have a labelled counterpart or the strata are exhausted. The first 100 labelled records in draw order are the sample.
+82:    82	  of 100 labelled records. Fewer than 100: **not measured**.
+90:    90	- **Pass:** the third reader's `wrong` count is at most 4 of 200. Fewer than 200 repeats: **not measured**.
+102:   102	  - The record's own attribution fields (tier, stated day, period, reporting speaker) are not shown to the key readers. The publisher
+103:   103	    and publication date are shown as context only, and the prompts say they are never details (`CONTENT_ONLY`). A party or period
+115:   115	  - Fewer than 30 groups: **not measured**.
+116:   116	- **Printed beside:** the count of later reports whose tier, stated day, period or speaker differs from the original's (the fields
+137:   137	  - A figure rung with no bound: "no comparison". A unit that differs from the ruler question's, or that cannot be established:
+153:   153	Wrong citations and answer-changing omissions: **not measured**.
+172:   172	| A reader session voids | Retried once, then reported missing. A line with a missing mark is not measured |
+
+ succeeded in 1898ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-4CSVoYys' (errno=Operation not permitted)
+2026-11-18 01:01:41.124 xcodebuild[88918:59308648]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.371 xcodebuild[88918:59308637] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-WeGSqs5P' (errno=Operation not permitted)
+2026-11-18 01:01:41.849 xcodebuild[88926:59308681]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.995 xcodebuild[88926:59308676] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+10:    10	  it: the old system's `view_keys.unit`, the new system's checked answer `figure.unit` (one closed list in both: `hivemind/extraction.py`
+11:    11	  UNITS, `ladder/candidate-schema.json`; "n/a" and "other" name no unit).
+18:    18	  "unresolved"; else "not opened in the ruler's shape". A missing mark (a session void twice) is "not measured", never a split.
+19:    19	- **Step 5, eligibility** of each judged view of a graded question (D430): `same_question` and `same_due` by both families (the precedent's
+21:    21	  the stored word names no unit, so both systems' "no unit" words look the same; the output keeps the stored value), the same
+26:    26	  (vii) "no judgement" by 07-14; (viii) for a figure question, "no comparison (unit)" when the view's stored unit and the ruler question's
+38:    38	again, and the marks it would have given stay not measured. Stores are opened read-only
+70:    70	FIELDS = ('same_question', 'same_due')
+166:   166	2. `same_due`: for an **event** (a yes-or-no question), **yes** only when the judged question's deadline is the ruler's
+175:   175	`{{"control": 3, "same_question": "yes"|"no", "same_due": "yes"|"no", "why": "one sentence naming what decides each no"}}`.
+186:   186	You are a third reader. Two readers differed on the points each item lists under `points_to_rule` (`same_question` or `same_due`); you
+189:   189	`{{"control": 3, "field": "same_due", "ruling": "yes"|"no", "why": "one sentence"}}`. There are {count} points.
+219:   219	    """A new-system view's unit: its one `clean_ladders` row, and the checked answer's figure unit. A split child's row carries its year
+231:   231	    return {'thesis': row['thesis_id'], 'split_year': row.get('period') or None, 'unit': figure.get('unit') if figure else None}
+266:   266	def read_store(entry, day=DAY):
+304:   304	def session_name(phase, family, prompt):
+314:   314	def session(out, name, family, prompt, problem):
+316:   316	    recorded missing by its marker, and that is final: a later run never sends it again (its marks stay not measured)."""
+390:   390	def opened_rows(run, views):
+434:   434	def match_third_prompt(frozen, disputes):
+449:   449	    """Two third readers' rulings: agreed, or unresolved; a missing ruling is not measured."""
+451:   451	        return 'not measured'
+472:   472	def control_item(number, frozen, question_id, view):
+475:   475	    judged['unit'] = view['unit'] if view['unit'] not in (None, 'other') else 'n/a'     # both systems' "no unit" words look alike
+482:   482	        if set(r) != {'control', 'same_question', 'same_due', 'why'} or r['same_question'] not in YES_NO or r['same_due'] not in YES_NO:
+483:   483	            return 'a row is {control, same_question, same_due, why}, each answer "yes" or "no"'
+575:   575	        """{draw: {(neutral id, question): 'same' | 'not same' | 'unresolved' | 'not measured'}}, or a draw's value None when its first
+608:   608	                    out[draw][question] = {'resolution': 'not measured', 'detail': 'a matching session is missing', 'judged': None,
+618:   618	                elif any(status == 'not measured' for _, status in candidates):
+619:   619	                    entry = {'resolution': 'not measured', 'detail': 'a third matching session is missing', 'judged': None, 'listed': []}
+678:   678	        """{control: {'same_question', 'same_due'}}, each 'yes', 'no', 'unresolved' or 'not measured'."""
+694:   694	                    decided[control][field] = 'not measured'
+721:   721	        figure = self.frozen['questions'][question]['unit'] != 'yes/no'
+722:   722	        if stage_b != 'no judgement' and figure and not same_unit(self.frozen, question, view):
+745:   745	                    fields = decided[control_of[(draw, question)]]
+749:   749	                                  eligibility=dict(fields, literal_due_same=literal), answer_vs_reader_b=answer,
+753:   753	                    values = [fields[f] for f in FIELDS]
+754:   754	                    noes = [f.split('_')[1] for f in FIELDS if fields[f] == 'no']
+755:   755	                    if 'not measured' in values:
+756:   756	                        record.update(outcome='not measured', detail='an eligibility session is missing')
+764:   764	                    literal_eligible = fields['same_question'] if fields['same_question'] != 'yes' else ('yes' if literal else 'no')
+814:   814	        print('missing sessions (their marks are not measured):', ', '.join(result['missing_sessions']))
+
+ succeeded in 1898ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-FctbRC9E' (errno=Operation not permitted)
+2026-11-18 01:01:41.124 xcodebuild[88920:59308640]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.371 xcodebuild[88920:59308639] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-qktyn246' (errno=Operation not permitted)
+2026-11-18 01:01:41.849 xcodebuild[88930:59308685]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.995 xcodebuild[88930:59308680] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+24:    24	ladder component not completed (skipped: the draw opened no question) is not measured. Every file is read only through
+35:    35	beside its answer file (`<answer>.missing`, which no glob of the collector reads). Exhaustion is terminal: `read` and `third` skip a
+37:    37	1–5 not measured, and the collector's lines are not read for it. There is no ask-again round (Stage A's item-by-item `-again-<k>` step):
+77:    77	NO_ASK_AGAIN = ('not measured for a missing session: there is no ask-again round, by the council\'s choice (round 8), since the reader '
+89:    89	with the `item` number the packet gives and the fields the brief lists, and nothing else: no prose before or after, no code fence.
+230:   230	def session(draw_folder, name, family, prompt, problem_of):
+300:   300	            plans[draw] = {'status': f"not measured: the ladder component is {ladder.get('state')!r}"}
+342:   342	    jobs, exhausted = [], []
+358:   358	                    exhausted.append(f'{draw} {answer_file.stem}')
+359:   359	    return run_sessions(jobs, exhausted)
+368:   368	    jobs, exhausted = [], []
+387:   387	                    exhausted.append(f'{draw} {answer_file.stem}')
+388:   388	    return run_sessions(jobs, exhausted)
+397:   397	    """A session runs only when it has neither an answer nor a record that it was reported missing: exhaustion is terminal."""
+401:   401	def run_sessions(jobs, exhausted):
+410:   410	    print(f'{len(jobs)} sessions to run; {len(exhausted)} reported missing earlier, not run again: {exhausted}', flush=True)
+438:   438	    scaling; a draw with a session missing has lines 1–5 not measured and the no-ask-again note. Written to `<out>/d400-reader-lines.json`
+454:   454	            result['draws'][draw] = {'status': 'not measured: a session is missing', 'missing sessions': missing, 'note': NO_ASK_AGAIN,
+461:   461	            result['draws'][draw] = {'status': f'not measured: collect_readings.py report refused: {reason}',
+490:   490	        if entry.get('missing sessions'):
+491:   491	            print(f"   sessions missing: {entry['missing sessions']}")
+
+ succeeded in 3281ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-DBqbFT6v' (errno=Operation not permitted)
+2026-11-18 01:01:41.124 xcodebuild[88917:59308642]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.371 xcodebuild[88917:59308638] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-Ss7YtsZc' (errno=Operation not permitted)
+2026-11-18 01:01:41.850 xcodebuild[88928:59308688]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:41.995 xcodebuild[88928:59308677] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+  9826	      does.
+  9827	  - **The new definition:** a detail is what a later report's statement adds — "a figure, condition, party, date or qualification an
+  9828	    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+  9829	    condition"; the recorded test's "detail" category, in which attribution was a separate category outside the line).
+  9830	  - **How the key is made:** key readers do not see the four attribution fields. A party or period that changes the claim still counts
+  9831	    when the statement's text says it.
+  9832	  - **Printed beside:** the differences in the four fields are counted by code and printed beside the line.
+  9833	  - **The pass rule:** the line passes on the two families' pooled totals, as the recorded test summed both readers.
+  9834	  - **Disclosed with the result:** the line now checks that grouping loses no content against the readers' own noise; it is weaker
+  9835	    than the recorded unprompted questions.
+  9836	  - **The reason rests on** the recorded test and the PRD. It does not rest on the judge, which sees tier, speaker and stated day but no
+  9837	    period, and quotes cut at 400 characters (`judging.py:130`); the Claude reader corrected the lean's first reason on this.
+  9838	- **Round 8, also decided:**
+  9839	  - **D431 at 07-14:** identity matching uses two third readers, one per family, as the full run did (`READING-COMMITMENT.md`), and a
+  9840	    split stays unresolved. Numeric agreement is withheld when the units differ or cannot be established ("no comparison (unit)"), with
+  9841	    no conversion.
+  9842	  - **D400's reader lines** have no ask-again round; a missing session leaves them "not measured". They are printed beside only.
+  9843	  - **The shared launcher** (`census_readers.run`) now returns a void on a timeout instead of raising, so every tool's retry applies.
+  9844	  - **Codex's tool fixes,** sent to the three builders:
+  9845	    - packet validation as the collector reads it;
+  9846	    - strata by manifest position;
+  9847	    - unverified quotes flagged;
+  9848	    - the same surrounding dossier in both renderings;
+  9849	    - units in the eligibility packets.
+  9850	- **The three remaining §1.6 tools are built to design v7, with round 8's fixes in place:**
+  9851	  - `d400_reader_lines.py`: 10 tests, 16 mutants;
+  9852	  - `step2_lines.py`: 15 tests, 25 mutants;
+  9853	  - `d431_reading.py`: 9 tests, 22 mutants.
+  9854	- Each was built by a subagent with fake readers and no model call, and dry-run on stored draws. The mutants were run by each builder on
+  9855	  scratch copies, and each was caught by its own test.
+  9856	- In all: 88 stage0 tests, and the frozen-file tests green.
+  9857	- On c1, line 3's rendering prompts reach at most 29 KB, and 205 of 206 later reports differ in attribution fields (printed beside).
+  9858	- **Round 9.** Codex and a Claude reader each confirmed round 8's points against the code. Their remaining points are all fixed:
+  9859	  - **D400:** a session exhausted after its retry is final (a `.missing` marker) and is never sent again. Any missing session makes that
+  9860	    draw's reader lines 1–5 "not measured"; the collector's partial lines are not kept.
+  9861	  - **Step 2 line 3:** both key prompts say to count only facts the later statement adds; the publisher and publication date are context,
+  9862	    never details (`CONTENT_ONLY`).
+  9863	  - **D431:**
+  9864	    - a missing session is final, as in D400;
+  9865	    - the "period" a Claude reader saw empty was an output-only split-child year, never shown in a packet. It was renamed `split_year`, and a
+  9866	      test checks that both systems' packets carry the same fields.
+  9867	  - **The design:** v7's leftover sentence counting attribution fields against line 3 is deleted, and the key's and the eligibility
+  9868	    step's wording now match the code.
+  9869	  - **Counts:** D400 11 tests and 19 mutants; Step 2 16 tests and 27 mutants; D431 11 tests and 25 mutants; 98 stage0 tests in all,
+  9870	    with the frozen-file tests green.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-axWnanjN' (errno=Operation not permitted)
+2026-11-18 01:01:42.942 xcodebuild[88942:59308749]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:43.058 xcodebuild[88942:59308748] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-A7lh5OIm' (errno=Operation not permitted)
+2026-11-18 01:01:43.391 xcodebuild[88944:59308757]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-18 01:01:43.506 xcodebuild[88944:59308756] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+commit 547ea98e63d75a0cc0881e6e5a4927e04d67ae92
+Author: Alex Lee <alex@adventai.io>
+
+    §1.6 tools: round-9 fixes (terminal missing sessions, content-only key prompts, packet field parity); design v7 aligned (D675)
+
+ docs/DECISIONS-log.md                              |   13 +
+ .../2026-11-17-product-comparison/DESIGN-1.6.md    |   10 +-
+ .../stage0/d400_reader_lines.py                    |   79 +-
+ .../stage0/d431_reading.py                         |   44 +-
+ .../stage0/step2_lines.py                          |   13 +-
+ .../stage0/test_d400_reader_lines.py               |   47 +-
+ .../stage0/test_d431_reading.py                    |   59 +
+ .../stage0/test_step2_lines.py                     |   23 +-
+ .../tools-review-brief-9.md                        |   17 +
+ .../tools-review-codex-9.md                        |    5 +
+ .../tools-review-codex-9.stream                    | 1518 ++++++++++++++++++++
+ 11 files changed, 1768 insertions(+), 60 deletions(-)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py | sed -n '348,418p;446,463p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   348	            packet_text = packet_file.read_text()
+   349	            packet_sends = {item['item']: tuple(key[str(item['item'])]) for item in json.loads(packet_text)}
+   350	            prompt = READER_PROMPT.format(count=len(packet_sends), themes=themes, brief=brief, packet=packet_text)
+   351	            for family in FAMILIES:
+   352	                answer_file = folder / 'readers-answers' / f'reader-{family}-packet-{number_of(packet_file)}.jsonl'
+   353	                if still_to_run(answer_file):
+   354	                    jobs.append((draw, folder, answer_file, family, prompt,
+   355	                                 lambda answer, family=family, packet_sends=packet_sends, key=key, outcomes=outcomes:
+   356	                                 rows_problem(answer, family, packet_sends, key, outcomes)))
+   357	                elif missing_marker(answer_file).exists():
+   358	                    exhausted.append(f'{draw} {answer_file.stem}')
+   359	    return run_sessions(jobs, exhausted)
+   360	
+   361	
+   362	def read_disputes(out):
+   363	    """Every ruling packet `collect_readings.py disputes` writes, read by one third reader of each family; returns [(draw, session, void
+   364	    or None)]. A draw whose rows are missing or not valid gets no ruling packet: `disputes` refuses it, and the refusal is printed."""
+   365	    out = Path(out)
+   366	    manifest = load_manifest(out)
+   367	    brief, third_brief, themes = READER_BRIEF.read_text(), THIRD_READER_BRIEF.read_text(), theme_list_text()
+   368	    jobs, exhausted = [], []
+   369	    for draw, folder, key_path in draws_to_read(out, manifest):
+   370	        if not (folder / 'third-reader').exists():
+   371	            disputes = run_stage_a_tool([COLLECT_READINGS, 'disputes', folder, key_path], cwd=out)
+   372	            print(f"{draw}: {disputes.stdout.strip() if disputes.returncode == 0 else 'disputes refused: ' + disputes.stderr.strip()}")
+   373	            if disputes.returncode != 0:
+   374	                continue
+   375	        for packet_file in sorted((folder / 'third-reader').glob('ruling-packet-*.json'), key=number_of):
+   376	            packet_text = packet_file.read_text()
+   377	            packet = json.loads(packet_text)
+   378	            mark_of_point = {point['id']: point['mark'] for entry in packet for point in entry['to_rule']}
+   379	            prompt = THIRD_READER_PROMPT.format(items=len(packet), points=len(mark_of_point), themes=themes, third_brief=third_brief,
+   380	                                                brief=brief, packet=packet_text)
+   381	            for family in FAMILIES:
+   382	                answer_file = folder / 'third-reader' / f'rulings-{family}-{number_of(packet_file)}.jsonl'
+   383	                if still_to_run(answer_file):
+   384	                    jobs.append((draw, folder, answer_file, family, prompt,
+   385	                                 lambda answer, mark_of_point=mark_of_point: rulings_problem(answer, mark_of_point)))
+   386	                elif missing_marker(answer_file).exists():
+   387	                    exhausted.append(f'{draw} {answer_file.stem}')
+   388	    return run_sessions(jobs, exhausted)
+   389	
+   390	
+   391	def missing_marker(answer_file):
+   392	    """Where a session reported missing is recorded: beside its answer file, named so that no glob of the collector reads it."""
+   393	    return answer_file.with_suffix('.missing')
+   394	
+   395	
+   396	def still_to_run(answer_file):
+   397	    """A session runs only when it has neither an answer nor a record that it was reported missing: exhaustion is terminal."""
+   398	    return not answer_file.exists() and not missing_marker(answer_file).exists()
+   399	
+   400	
+   401	def run_sessions(jobs, exhausted):
+   402	    def one(job):
+   403	        draw, folder, answer_file, family, prompt, problem_of = job
+   404	        answer, void = session(folder, answer_file.stem, family, prompt, problem_of)
+   405	        if answer is not None:
+   406	            answer_file.write_text(answer)
+   407	        else:
+   408	            missing_marker(answer_file).write_text(json.dumps({'void after two attempts': void}) + '\n')
+   409	        return draw, answer_file.stem, void
+   410	    print(f'{len(jobs)} sessions to run; {len(exhausted)} reported missing earlier, not run again: {exhausted}', flush=True)
+   411	    results = []
+   412	    with concurrent.futures.ThreadPoolExecutor(max_workers=SESSIONS_AT_ONCE) as pool:
+   413	        for draw, name, void in pool.map(one, jobs):
+   414	            print(f'{draw} {name}: {"VOID after two attempts, reported missing: " + void if void else "answered"}', flush=True)
+   415	            results.append((draw, name, void))
+   416	    return results
+   417	
+   418	
+   446	            result['draws'][draw] = {'status': entry['status'], **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
+   447	            continue
+   448	        folder, key_path = to_read[draw]
+   449	        stored_path = folder / 'stage-a-report.json'
+   450	        for earlier in (stored_path, folder / 'report.txt'):    # an earlier report must not be read as this one
+   451	            earlier.unlink(missing_ok=True)
+   452	        missing = missing_sessions(folder)
+   453	        if missing:                                             # none of the collector's lines is kept for this draw
+   454	            result['draws'][draw] = {'status': 'not measured: a session is missing', 'missing sessions': missing, 'note': NO_ASK_AGAIN,
+   455	                                     **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
+   456	            continue
+   457	        collected = run_stage_a_tool([COLLECT_READINGS, 'report', folder, key_path], cwd=out)
+   458	        (folder / 'report.txt').write_text(collected.stdout + (f'\n[exit {collected.returncode}] {collected.stderr}' if collected.returncode else ''))
+   459	        if collected.returncode != 0:
+   460	            reason = collected.stderr.strip().splitlines()[-1] if collected.stderr.strip() else f'exit {collected.returncode}'
+   461	            result['draws'][draw] = {'status': f'not measured: collect_readings.py report refused: {reason}',
+   462	                                     **{f'line {number}': accounting.NOT_MEASURED for number in (1, 2, 3, 4, 5)}}
+   463	            continue
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/d431_reading.py | sed -n '304,355p;390,397p;470,479p'
+rg -n 'parity|exhausted|terminal|def test_' docs/research/2026-11-17-product-comparison/stage0/test_d431_reading.py | tail -14" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   304	def session_name(phase, family, prompt):
+   305	    """A session is named by its phase, family and prompt: a packet that changes (a mark filled in later) is a new session."""
+   306	    return f'{phase}-{family}-{sha256_text(prompt)[:12]}'
+   307	
+   308	
+   309	def missing_marker(out, name):
+   310	    """Where a session reported missing is recorded (as D400's reader lines record one): beside where its answer would be."""
+   311	    return Path(out) / 'sessions' / f'{name}.missing'
+   312	
+   313	
+   314	def session(out, name, family, prompt, problem):
+   315	    """One closed session, reused when already answered on this very prompt. A void answer is retried once; a session still void is
+   316	    recorded missing by its marker, and that is final: a later run never sends it again (its marks stay not measured)."""
+   317	    path, marker = Path(out) / 'sessions' / f'{name}.json', missing_marker(out, name)
+   318	    digest = sha256_text(prompt)
+   319	    if marker.exists():
+   320	        return None
+   321	    if path.exists():
+   322	        saved = json.loads(path.read_text())
+   323	        if saved['prompt_sha256'] != digest:
+   324	            raise SystemExit(f'refused: session {name} holds an answer to another prompt')
+   325	        return saved['answer']
+   326	    voids, answer = [], None
+   327	    for _ in (1, 2):
+   328	        answer, void = census_readers.run(family, prompt)
+   329	        if answer and not void:
+   330	            void = problem(answer)
+   331	        if not void:
+   332	            break
+   333	        voids.append(void)
+   334	        answer = None
+   335	    path.parent.mkdir(parents=True, exist_ok=True)
+   336	    (Path(out) / 'prompts').mkdir(exist_ok=True)
+   337	    (Path(out) / 'prompts' / f'{name}.md').write_text(prompt)
+   338	    record = {'name': name, 'family': family, 'prompt_sha256': digest, 'voids': voids}
+   339	    if answer is None:
+   340	        marker.write_text(json.dumps(record, indent=1, ensure_ascii=False) + '\n')
+   341	    else:
+   342	        path.write_text(json.dumps(dict(record, answer=answer), indent=1, ensure_ascii=False) + '\n')
+   343	    return answer
+   344	
+   345	
+   346	def stored_answer(out, name, prompt):
+   347	    """A session's answer for the result: None when missing; refused when it answered another prompt."""
+   348	    path = Path(out) / 'sessions' / f'{name}.json'
+   349	    if not path.exists():
+   350	        return None
+   351	    saved = json.loads(path.read_text())
+   352	    if saved['prompt_sha256'] != sha256_text(prompt):
+   353	        raise SystemExit(f'refused: session {name} holds an answer to another prompt')
+   354	    return saved['answer']
+   355	
+   390	def opened_rows(run, views):
+   391	    """The precedent's row shape (`extract_opened_prod.py`), under neutral ids t01.. in creation order."""
+   392	    return [{'run': run, 'id': f't{n:02d}', 'article': v['created_from_input'], 'description': v['question'], 'outcome': v['looks_at'],
+   393	             'period': f"year {v['year']}; due {v['due_day']}"} for n, v in enumerate(views, 1)]
+   394	
+   395	
+   396	def match_prompt(frozen, run, rows):
+   397	    return MATCH_BRIEF.format(count=len(rows), rule=frozen['rule'], run=run,
+   470	
+   471	
+   472	def control_item(number, frozen, question_id, view):
+   473	    ruler = frozen['questions'][question_id]
+   474	    judged = {key: view[key] for key in ('question', 'looks_at', 'due_day', 'year', 'kind')}
+   475	    judged['unit'] = view['unit'] if view['unit'] not in (None, 'other') else 'n/a'     # both systems' "no unit" words look alike
+   476	    return {'control': number, 'ruler_question': {key: ruler[key] for key in ('question', 'unit', 'due_day', 'rungs')},
+   477	            'judged_question': judged, 'judged_rungs': view['rungs']}
+   478	
+   479	
+109:def test_the_0714_listing_keeps_a_view_closed_before_it_and_drops_one_created_after_it(tmp_path):
+121:def test_several_same_views_the_first_created_is_judged_and_the_others_listed(tmp_path, monkeypatch):
+132:def test_outcomes_take_the_first_that_applies_in_d442_order(tmp_path, monkeypatch):
+165:def test_a_still_open_answer_counts_no(tmp_path, monkeypatch):
+183:def test_a_figure_answer_is_withheld_when_the_units_differ_or_cannot_be_established(tmp_path, monkeypatch):
+212:def test_both_systems_no_unit_words_look_the_same_in_every_packet(tmp_path, monkeypatch):
+237:def test_no_packet_carries_a_view_or_thesis_id(tmp_path, monkeypatch):
+262:def test_both_systems_packets_have_the_same_fields(tmp_path, monkeypatch):
+287:def test_a_session_reported_missing_is_not_run_again(tmp_path, monkeypatch):
+312:def test_the_command_reads_the_stores_the_run_records_name_and_refuses_a_changed_one(tmp_path, monkeypatch):
+354:def test_a_figure_rung_with_no_bound_is_no_comparison(tmp_path, monkeypatch):
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/stage0/step2_lines.py | sed -n '122,139p'
+nl -ba docs/research/2026-11-17-product-comparison/DESIGN-1.6.md | sed -n '92,104p;128,142p'
+rg -n 'Round 9' docs/DECISIONS-log.md | tail -1" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   122	MERGE_THIRD_READ = f'Read {build_merge_packets.OLD_RUN}merge-third-packet.json. '
+   123	VERDICTS = tuple(re.findall(r'^- "([a-z]+)":', MERGE_THIRD_TEXT, re.M))
+   124	CONTENT_ONLY = (" Count only facts the later record's statement itself adds: its summary and quotes. Use its publisher and publication "
+   125	                "date only as context for reading; never list them as details.")
+   126	KEY_PROMPT = ('You are an independent reader for a hedge-fund research system, building an answer key. Read-only task: do not edit files or '
+   127	              'run model calls.\n\nRead PACKET. Each entry is one group of stored evidence records about NVIDIA: "earlier", the first record '
+   128	              'of a statement, and "later", the later records grouped with it, each with its summary, verbatim source passages, original '
+   129	              'party, publication date and publisher. Do not open any file.\n\n'
+   130	              'For each LATER record, independently: ' + DETAIL_DEFINITION + CONTENT_ONLY + '\n\nReturn only a JSON array with one object '
+   131	              'per later record, in packet order: [{"id": "K..", "details": ["..."]}].\n')
+   132	KEY_THIRD_PROMPT = ('You are the third reader settling an answer key. Read-only task: do not edit files or run model calls.\n\nRead PACKET. '
+   133	                    'Each entry is one group of stored evidence records about NVIDIA: "earlier", the first record of a statement, and "later", '
+   134	                    'the later records grouped with it, each with its summary, verbatim source passages, original party, publication date and '
+   135	                    'publisher. Under "drafts", each later record carries two independent readers\' lists of its details, A and B. Do not '
+   136	                    'open any file.\n\nEach reader was asked, for each LATER record, to ' + DETAIL_DEFINITION + CONTENT_ONLY + '\n\nFor every '
+   137	                    'LATER record, '
+   138	                    'compare the two drafts against the records. Keep once each detail both drafts name, in either wording. Decide each '
+   139	                    'detail only one draft names from the records: keep it if it is such a fact, otherwise drop it.\n\nReturn only a JSON '
+    92	**Line 3, later details: the shipped renderer, as the Step 2 log §12 measured it.**
+    93	- **Population:** groups whose original has at least one later report.
+    94	- **Sample:** 30 at random.
+    95	- **The two renderings:**
+    96	  - "grouped": the frozen dossier, `step3/library.group_text(member_text=True)`;
+    97	  - "apart": each member as its own entry, `record_text`.
+    98	- **An independent detail key, of content only** (the council's round-8 consensus, D675):
+    99	  - **A detail** is what a later report's statement adds to its group's original: "a figure, condition, party, date or qualification an
+   100	    analyst would want to keep" (the Step 2 reference's question 2; PRD §6, "details a later report adds, such as a guidance
+   101	    condition"; the recorded test's "detail" category).
+   102	  - The record's own attribution fields (tier, stated day, period, reporting speaker) are not shown to the key readers. The publisher
+   103	    and publication date are shown as context only, and the prompts say they are never details (`CONTENT_ONLY`). A party or period
+   104	    that changes the claim still counts when the statement's own text says it.
+   128	- **The as-of state:** every view created on or before 2026-07-14 is listed first: by `created_seq` up to the last sequence of 07-14,
+   129	  closed views included. Then `service.state_as_of` at 2026-07-14 is read for each one. New-system units are joined by
+   130	  `clean_ladders.view_id`, split children included.
+   131	- **Step 4, matching:** MATCHING-v2's SAME rule, two blind families, and two third readers, one per family, on each disagreement, as the
+   132	  full run did (`READING-COMMITMENT.md`). A split stays unresolved. D442's rule for a ruler question's candidates applies.
+   133	- **Step 5, eligibility:** question, period and quantity the ruler's, and due day the ruler's (D430). Decided by two blind readers, with
+   134	  two third readers, one per family, on a disagreement; a split stays unresolved. The literal reading (the same due day) is printed beside.
+   135	- **Step 6, outcomes:** the first that applies, (i) to (ix).
+   136	  - Several SAME views: the first created is judged and the others listed.
+   137	  - A figure rung with no bound: "no comparison". A unit that differs from the ruler question's, or that cannot be established:
+   138	    "no comparison (unit)". No conversion is made.
+   139	  - Agreement by the frozen scorer's rule (`prod_records.outcome` for the old system; for the new system the same rule, as Stage B counted
+   140	    it: "Ruled out" and "Still open" answer no, `stage_b/control_theses.py`).
+   141	- **Printed:** per ruler question and draw, its outcome; and per draw and system, the agreements on the seven graded questions.
+   142	
+9858:- **Round 9.** Codex and a Claude reader each confirmed round 8's points against the code. Their remaining points are all fixed:
+
+codex
+Confirmed all four round-nine fixes at `547ea98e`.
+
+- **D400** skips exhausted sessions on later invocations. Any missing session makes the draw’s lines 1–5 `not measured`, and the collector’s partial results are discarded. [Sessions](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:391) · [Report](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:448)
+- **Step 2** includes `CONTENT_ONLY` in both key prompts. The design removes the leftover attribution sentence and matches the content-only key and two-reader eligibility adjudication. [Prompts](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:124) · [Key design](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:92) · [Eligibility wording](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:131)
+- **D431** uses the same packet fields for both systems and keeps `split_year` out of reader packets. A missing-session marker prevents another send. [Packet parity test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_d431_reading.py:262) · [Terminal sessions](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:314)
+
+READY
+tokens used
+3,690,203
+Confirmed all four round-nine fixes at `547ea98e`.
+
+- **D400** skips exhausted sessions on later invocations. Any missing session makes the draw’s lines 1–5 `not measured`, and the collector’s partial results are discarded. [Sessions](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:391) · [Report](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:448)
+- **Step 2** includes `CONTENT_ONLY` in both key prompts. The design removes the leftover attribution sentence and matches the content-only key and two-reader eligibility adjudication. [Prompts](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:124) · [Key design](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:92) · [Eligibility wording](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:131)
+- **D431** uses the same packet fields for both systems and keeps `split_year` out of reader packets. A missing-session marker prevents another send. [Packet parity test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_d431_reading.py:262) · [Terminal sessions](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:314)
+
+READY

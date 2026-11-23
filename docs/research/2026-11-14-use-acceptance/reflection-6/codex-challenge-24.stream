@@ -1,0 +1,257 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 24: the twice-refused path is handled (`reflection-6/due-day/`)
+
+**What changed:**
+- **A lost answer:** an answer code refuses twice (`no ladder: refused`) is stored as `lost` and kept out of the blind review. The
+  packet holds only the readable sends and the four controls.
+- **Its effect on the verdict:** a lost v2 answer on any topic fails `fixed` or `kept`, because no topic's allowed outcomes include a
+  lost answer.
+- **The test** runs the real runner and limit with a fake transport that gives v2 an impossible due day ("2027-02-30") twice on the
+  MIIT topic. It checks four things:
+  - the row is `no ladder: refused` with two requests;
+  - the packet holds 38 items, without that send;
+  - the readings validate;
+  - the verdict closes.
+- **Mutants:** 13 caught, among them L1 (the lost answer sent to the review crashes the builder, as you predicted).
+- **One equivalent mutant:** L2 (lost read as a decline) changes no verdict, only the report's word (`mutants.txt`).
+- **The check passes again.** The preflight is unchanged: no code check moved, and the same 95 stored attempts agree.
+
+**Asked:** send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify that the lost-answer path is counted in the verdict and that the new test exercises the real runner, then give the send decision.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/DESIGN.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/mutants.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+9 topics; the requests are the stored frozen ones and differ only in the clause: True; worst-case reserve of one attempt $1.13; cap $3.20
+check passed
+
+ succeeded in 0ms:
+# The due-day probe (council rounds 19 to 22): design
+
+**The candidate.** `candidate-system-v2.txt` is the frozen system text with one clause changed. "for an obligation already taken on,
+its next annual filing" becomes "for the **amount** of an obligation already taken on, its next annual filing".
+- **Sources:** D210 (the next-annual-filing rule is for "a financing_amount question on the amount") and D403 (an event takes its
+  stated date or period end, and "the model chooses no other day").
+- **Blind audit** (`audit.md`): the changed clause is consistent; the frozen one keeps wider than D210 and conflicts with D403.
+- **Outside the change, recorded:** the reader brief's D row still holds the wide rule (the reading form stays unchanged), and a
+  pre-existing D414 tension.
+
+**The arms.** Astra on the frozen request (a fresh control) against astra on v2, interleaved, 2 draws.
+- **The 9 topics:**
+  - a signed completion, with a stated date and with a closing window (one matter, two forms);
+  - a guarantee with a stated date;
+  - three obligation amounts;
+  - an unsigned acquisition;
+  - two period-end events.
+- **Spend:** a cap of $3.20, against an estimate of about $1.5.
+
+**The verdict, fixed before.** It is read on the **stored** day, the view's due_day, which code sets for a year's figure (D414).
+- **Inconclusive** when the frozen arm does not store the fortnight completion in Feb or Mar 2027.
+- **Moves**, when all of these hold:
+  - v2 stores 2028-03-24 and 2027-06-30 for the two completion forms, in both draws;
+  - the guarantee stays at 2028-04-03 and the amounts at 2027-04-01 (basis expected_publication), in both arms;
+  - the event controls stay within every stored draw's outcomes.
+- **The review,** two blind reviewers, Codex and Claude, over all 36 answers mixed (`review-brief.md`, key outside the repository):
+  - no topic has more material defects in v2 than in the frozen arm;
+  - v2's completion questions have none;
+  - no new v2 decline is flagged unjustified.
+- **Counting:** "agreed" (both reviewers) and "either" (one reviewer). When they lead to different verdicts, the result is
+  inconclusive.
+- **Closes:** otherwise.
+- **What it is:** one matter in two forms, a small diagnostic, not a gate pass.
+
+**Proofs:** tests 11 of 11; seven mutants each caught by a failing assertion (`mutants.txt`); the check passes (`check-output.txt`).
+
+ succeeded in 0ms:
+D0 control (unmutated): 17 passed in 0.30s
+D1 the raw day read instead of the stored one: 2 failed, 15 passed in 0.34s | failed: ['test_a_fixed_completion_with_every_control_kept_and_sound_reviews_moves', 'test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive'] | first: ["E       AssertionError: assert 'closes' == 'moves'"]
+D2 the frozen mechanism not required: 1 failed, 16 passed in 0.33s | failed: ['test_no_annual_filing_date_in_the_frozen_arm_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D3 new declines not reviewed: 1 failed, 16 passed in 0.35s | failed: ['test_an_unjustified_new_decline_closes_even_where_the_frozen_ladder_was_flagged'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D4 completion questions not reviewed: 1 failed, 16 passed in 0.33s | failed: ['test_a_flagged_fixed_completion_question_closes_even_when_the_frozen_ones_are_flagged_too'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D5 a reviewer disagreement not made inconclusive: 1 failed, 16 passed in 0.33s | failed: ['test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D6 the v2 arm sends the frozen text: 2 failed, 15 passed in 0.32s | failed: ['test_each_arm_sends_its_own_system_text_and_nothing_else_differs', 'test_an_answer_code_refuses_twice_is_lost_kept_out_of_the_review_and_closes'] | first: ['E       AssertionError: assert (36 >= 18 and 0 >= 18)']
+D7 per-topic comparison dropped: 1 failed, 16 passed in 0.34s | failed: ['test_a_new_material_fault_on_another_topic_closes'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+V1 one reviewer accepted: 1 failed, 16 passed in 0.35s | failed: ['test_one_reviewer_alone_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V2 controls not checked: 1 failed, 16 passed in 0.36s | failed: ['test_a_reviewer_who_misses_a_planted_defect_voids_the_reading'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V3 missing rows accepted: 1 failed, 16 passed in 0.36s | failed: ['test_a_reviewer_missing_a_row_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V4 malformed rows accepted: 1 failed, 16 passed in 0.35s | failed: ['test_a_malformed_verdict_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+L1 a lost answer sent to the review: 1 failed, 16 passed in 0.33s | failed: ['test_an_answer_code_refuses_twice_is_lost_kept_out_of_the_review_and_closes'] | first: ["E       TypeError: 'NoneType' object is not subscriptable"]
+L2 a lost answer read as a decline: 17 passed in 0.31s
+(L2 survives as an equivalent mutant on the verdict: a lost v2 answer fails `fixed` or `kept` whether it is called lost or a decline, since no topic lists either for v2 except week c1/clean-11's decline, where a lost answer is also outside ALLOWED. It changes the report's wording only.)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 65 'twice|lost|impossible' docs/research/2026-11-14-use-acceptance/reflection-6/due-day/test_dueday_probe.py" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 6 'lost|def reading|def material|def final|def tally' docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+145-            row = json.loads(line)
+146-            rows[row['case']] = row
+147-    return rows
+148-
+149-
+150-def stored_day(row):
+151:    """The day the product stores for a send; `decline` for the model's decline; `lost` for an answer code refused twice."""
+152-    if row['status'] == 'no ladder: refused':
+153:        return 'lost'
+154-    return 'decline' if row['status'] != 'ladder' else row['view']['due_day']
+155-
+156-
+157:def tally(folder):
+158-    """Each topic's stored days per arm, and the date conditions of the verdict: (mechanism seen, completion fixed, controls kept,
+159-    new declines as (arm-draw case, matched frozen topic) pairs)."""
+160-    rows = outcomes(folder)
+161-    days = {(topic, arm): [stored_day(rows[f'{arm}-d{draw}|{topic}']) for draw in (1, 2)] for topic in TOPICS for arm in ARMS}
+162-    mechanism = any(day[:7] in ('2027-02', '2027-03') for day in days[('fortnight:c1/clean-6', 'frozen')])
+163-    fixed = all(days[(topic, 'v2')] == [RENDERED[topic]] * 2 for topic in COMPLETION)
+164-    kept = all(days[(topic, arm)] == [RENDERED[topic]] * 2 for topic in ('fortnight:c1/clean-12',) + AMOUNTS for arm in ARMS) and all(
+165-        rows[f'{arm}-d{draw}|{topic}']['answer']['ladder']['due_day_basis'] == 'expected_publication'
+166-        for topic in AMOUNTS for arm in ARMS for draw in (1, 2) if rows[f'{arm}-d{draw}|{topic}']['status'] == 'ladder')
+167-    kept = kept and all(set(days[(topic, 'v2')]) <= ALLOWED[topic] for topic in ALLOWED)
+168-    new_declines = [f'v2-d{draw}|{topic}' for topic in TOPICS for draw in (1, 2)
+169-                    if days[(topic, 'v2')][draw - 1] == 'decline' and days[(topic, 'v2')].count('decline') > days[(topic, 'frozen')].count('decline')]
+170:    new_losses = [topic for topic in TOPICS if days[(topic, 'v2')].count('lost') > days[(topic, 'frozen')].count('lost')]
+171-    for (topic, arm), stored in days.items():
+172-        print(f'{topic:24} {arm:6} {stored}')
+173-    return {'mechanism': mechanism, 'fixed': fixed, 'kept': kept, 'new_declines': new_declines, 'new_losses': new_losses, 'days': days}
+174-
+175-
+176-CONTROLS = {   # stored answers outside the probe's sends, each with the verdict both reviewers must give (or the reading is void)
+177-    'control|completion-at-filing': ('clean-astra-rest-2026-11-16', 'sol-d1|fortnight:c1/clean-6', 'material'),
+178-    'control|unjustified-decline': ('clean-model-probe-2026-11-16', 'sol-d2|week-10-06:c1/clean-5', 'material'),
+179-    'control|sound-stated-date': ('clean-astra-rest-2026-11-16', 'astra-d1|fortnight:c1/clean-12', 'sound'),
+180-    'control|justified-decline': ('clean-astra-screen-2026-11-16', 'astra-d1|week-10-06:c1/clean-12', 'sound'),
+181-}
+182-VERDICTS, CLASSES = {'sound', 'defect'}, {None, 'unjustified_decline', 'period_changed', 'measure_invented', 'measure_changed',
+183:                                           'condition_lost', 'condition_added', 'choices_unusable', 'other'}
+184-READERS = ('codex', 'claude')
+185-
+186-
+187-def control_rows():
+188-    rows = {}
+189-    for control, (run, send, _) in CONTROLS.items():
+--
+192-        if len(found) != 1:
+193-            raise SystemExit(f'{control}: the stored send {send} is not found once')
+194-        rows[control] = dict(found[0], case=control)
+195-    return rows
+196-
+197-
+198:def reading(folder, key_folder):
+199-    """The blind review packet: the 36 sends of both arms and the four controls in a fixed shuffle, each as the gate's readers see an
+200-    item (the topic with opens_as, the article, the fiscal-year note, the question and rungs as the product shows them, the stored due
+201-    day, the other fields); the key outside the repository."""
+202-    import random
+203-    import build_reader_packets
+204-    folder, key_folder = Path(folder), Path(key_folder)
+205-    if key_folder.resolve().is_relative_to(base.ROOT.resolve()):
+206-        raise SystemExit('the key folder must sit outside the repository')
+207-    cases = {f'{s}:{n}': c for s, n, c, _ in refcontrol.population()}
+208:    sent = {send: row for send, row in outcomes(folder).items() if row['status'] != 'no ladder: refused'}     # a lost answer is not read
+209-    rows = sent | control_rows()
+210-    sources = {send: send.split('|', 1)[1] for send in sent} | {control: CONTROLS[control][1].split('|', 1)[1] for control in CONTROLS}
+211-    order = sorted(rows)
+212-    random.Random(REVIEW_SEED).shuffle(order)
+213-    rl = refcontrol.research_list()
+214-    items, key = [], {}
+--
+219-    (folder / 'review' / 'packet.json').write_text(json.dumps(items, indent=1, ensure_ascii=False) + '\n')
+220-    key_folder.mkdir(parents=True, exist_ok=True)
+221-    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+222-    print(f'{len(items)} items ({len(CONTROLS)} controls)')
+223-
+224-
+225:def material(review_files, key):
+226-    """{send: [True for a material defect, per reviewer]} over the 36 sends, after checking two complete valid readings and the
+227-    controls; refuses anything else."""
+228-    if len(review_files) != len(READERS):
+229-        raise SystemExit(f'NOT SCORED: {len(READERS)} review files are needed, got {len(review_files)}')
+230-    marks = {}
+231-    for path in review_files:
+--
+241-            if send in CONTROLS and flagged != (CONTROLS[send][2] == 'material'):
+242-                raise SystemExit(f'VOID: {path} misses the {send}')
+243-            marks.setdefault(send, []).append(flagged)
+244-    return {send: values for send, values in marks.items() if send not in CONTROLS}
+245-
+246-
+247:def final(folder, key_folder, review_files):
+248-    """The verdict fixed before the send (council rounds 20 and 21)."""
+249-    dates = tally(folder)
+250-    key = json.loads((Path(key_folder) / 'key.json').read_text())
+251-    marks = material(review_files, key)
+252-    verdicts = {}
+253-    for counting in ('agreed', 'either'):
+--
+255-        per_topic = all(sum(f'v2-d{d}|{topic}' in flagged for d in (1, 2)) <= sum(f'frozen-d{d}|{topic}' in flagged for d in (1, 2))
+256-                        for topic in TOPICS)
+257-        completion_sound = not any(f'v2-d{d}|{topic}' in flagged for topic in COMPLETION for d in (1, 2))
+258-        declines_justified = not any(send in flagged for send in dates['new_declines'])
+259-        if not dates['mechanism']:
+260-            verdicts[counting] = 'inconclusive (the frozen arm did not date the signed completion at the annual filing)'
+261:        elif dates['fixed'] and dates['kept'] and per_topic and completion_sound and declines_justified:   # a lost v2 answer fails `fixed` or `kept`: no topic lists `lost`
+262-            verdicts[counting] = 'moves'
+263-        else:
+264-            verdicts[counting] = 'closes'
+265-    verdict = verdicts['agreed'] if verdicts['agreed'] == verdicts['either'] else 'inconclusive (the reviewers disagree on a deciding item)'
+266-    print(f'mechanism {dates["mechanism"]}; completion fixed {dates["fixed"]}; controls kept {dates["kept"]}; new declines {dates["new_declines"]}; '
+267-          f'new losses {dates["new_losses"]}')
+
+ succeeded in 0ms:
+192:def test_an_answer_code_refuses_twice_is_lost_kept_out_of_the_review_and_closes(tmp_path, monkeypatch):
+193:    """The real runner on a v2 answer whose due day is not a date, twice: `no ladder: refused`, counted as lost, not read."""
+194-    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+195-    probe.check()
+196-    good = transport()
+197-
+198-    def breaking(provider, request):
+199-        answer = good(provider, request)
+200-        if probe.V2_CLAUSE in request['messages'][0]['content'] and 'Ministry of Industry and Information Technology' in request['messages'][1]['content']:
+201-            text = json.loads(answer['choices'][0]['message']['content'])
+202-            text['ladder']['due_day'] = '2027-02-30'
+203-            answer = dict(answer, choices=[{'message': {'content': json.dumps(text)}}])
+204-        return answer
+205-    probe.send(tmp_path / 'run', transport=breaking)
+206-    row = next(json.loads(line) for line in (tmp_path / 'run' / 'v2-d1' / 'outcomes.jsonl').read_text().splitlines()
+207-               if json.loads(line)['case'] == 'v2-d1|fortnight:c1/clean-7')
+208-    assert row['status'] == 'no ladder: refused' and len(row['requests']) == 2
+209-    copy = rewrite(tmp_path, FIXED)
+210-    keys, files = reviews(copy, tmp_path)
+211-    key = json.loads((keys / 'key.json').read_text())
+212-    assert len(key) == 38 and not any(send.endswith('fortnight:c1/clean-7') and send.startswith('v2-') for send in key.values())
+213-    assert probe.final(copy, keys, files) == 'closes'
+
+codex
+**Send the probe under the $3.20 cap.** The revised path keeps twice-refused answers out of the blind packet and makes a lost v2 answer fail the registered date conditions. The new test exercises that path through the runner and checks the resulting verdict. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py), [test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/test_dueday_probe.py:192)
+
+One proof detail should be reported accurately: mutant L1 produced a `TypeError`; it demonstrates the crash path, while the unmutated runner test demonstrates the fix. L2 survived because it changes the reported label but not this probe’s verdict. [Mutant record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/mutants.txt)
+
+A completed result remains a diagnostic on one deal in two forms. Keep the frozen reading form and D426 unchanged. I have not started the run.
+
+**CONSENSUS: Send the matched due-day probe within its $3.20 cap and registered stop rules.**
+tokens used
+1,015,840
+**Send the probe under the $3.20 cap.** The revised path keeps twice-refused answers out of the blind packet and makes a lost v2 answer fail the registered date conditions. The new test exercises that path through the runner and checks the resulting verdict. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py), [test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/test_dueday_probe.py:192)
+
+One proof detail should be reported accurately: mutant L1 produced a `TypeError`; it demonstrates the crash path, while the unmutated runner test demonstrates the fix. L2 survived because it changes the reported label but not this probe’s verdict. [Mutant record](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/mutants.txt)
+
+A completed result remains a diagnostic on one deal in two forms. Keep the frozen reading form and D426 unchanged. I have not started the run.
+
+**CONSENSUS: Send the matched due-day probe within its $3.20 cap and registered stop rules.**

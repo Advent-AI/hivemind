@@ -1,0 +1,24 @@
+30 requests rebuilt byte-identical to the stored ones; 60 arm requests built; the edit found once in each
+Traceback (most recent call last):
+  File "/Users/lchingen/hivemind/docs/research/2026-11-13-shared-quantity-price/resend_shared.py", line 114, in <module>
+    main()
+  File "/Users/lchingen/hivemind/docs/research/2026-11-13-shared-quantity-price/resend_shared.py", line 108, in main
+    results = list(pool.map(one, jobs))
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/_base.py", line 621, in result_iterator
+    yield _result_or_cancel(fs.pop())
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/_base.py", line 319, in _result_or_cancel
+    return fut.result(timeout)
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/_base.py", line 451, in result
+    return self.__get_result()
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/_base.py", line 403, in __get_result
+    raise self._exception
+  File "/Users/lchingen/.pyenv/versions/3.10.10/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/lchingen/hivemind/docs/research/2026-11-13-shared-quantity-price/resend_shared.py", line 82, in one
+    reserved = ledger.reserve(body)
+  File "/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/identity-probe/probe_identity.py", line 118, in reserve
+    amount = self.estimate(request)
+  File "/Users/lchingen/hivemind/clean-arch/e2e-comparison-2026-11-13/identity-probe/probe_identity.py", line 115, in estimate
+    return ((2 * len(json.dumps(request).encode('utf-8')) + 4096) * self.price_in + request['max_tokens'] * self.price_out) / 1e6
+KeyError: 'max_tokens'
+exit 1

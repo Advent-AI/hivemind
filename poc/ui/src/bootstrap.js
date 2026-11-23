@@ -2,13 +2,14 @@ import { createThesisExplorer, createLibrary } from './index.js';
 import { fromBundles } from './adapters/bundle.js';
 import { parseDataset } from './model/contract.js';
 import { readIdea, readBundles, idsOf, graphOf, ideaCard } from './idea/idea.js';
-import { score } from './model/thesis.js';
+import { score, undirected } from './model/thesis.js';
 import { createIdeaDetail } from './idea/analysis.js';
 import {
   prepareCompositeTrial,
   prepareIdeaComposite,
   compositeAt,
   confidenceFromScore,
+  CompositeUnavailable,
 } from './idea/composite.js';
 import { DEFAULT_TRIGGER_CONDITION } from './model/trigger.js';
 import { advanceIdeaProgress } from './idea/progress.js';
@@ -135,7 +136,10 @@ if (input && root && libraryRoot) {
           const thesis = app
             ?.getDataset()
             .theses.find((t) => t.id === idea.card?.reading?.chosen[0]?.view_id);
-          return thesis ? score(thesis, position) : `position ${position}`;
+          if (!thesis) return `position ${position}`;
+          return undirected(thesis)
+            ? (thesis.rungs.find((r) => r.position === position)?.label ?? `position ${position}`)
+            : score(thesis, position);
         },
       });
     async function run(event) {
@@ -197,13 +201,22 @@ if (input && root && libraryRoot) {
         if (mine !== requestNumber) return;
         const next = bundles ? fromBundles(bundles) : null;
         const chartData = next || { as_of: card.idea.as_of, days: card.days, theses: [] };
+        let composite = null,
+          compositeNote = '';
+        try {
+          composite =
+            prepareIdeaComposite(card, chartData) ||
+            (next ? prepareCompositeTrial(compositeTrials, card, next) : null);
+        } catch (error) {
+          if (!(error instanceof CompositeUnavailable)) throw error;
+          compositeNote = error.message; // the Idea stays; only its composite is not computed
+        }
         Object.assign(idea, {
           card,
           state: 'answered',
           day: card.idea.as_of,
-          composite:
-            prepareIdeaComposite(card, chartData) ||
-            (next ? prepareCompositeTrial(compositeTrials, card, next) : null),
+          composite,
+          compositeNote,
         });
         const weightPercents = ['idea-composite/3', 'idea-composite/4'].includes(
           idea.composite?.version,
@@ -246,7 +259,7 @@ if (input && root && libraryRoot) {
         if (next.coverage !== 'library')
           throw new Error('The service did not return a complete library');
         if (libraryRequest.signal.aborted) return;
-        library.setDataset(next);
+        library.setDataset(next, { day: next.as_of }); // the supplied snapshot defines the displayed date (thesis-ui.md)
         data = next;
       } catch {
         // Keep the displayed snapshot when the optional live read is unavailable.

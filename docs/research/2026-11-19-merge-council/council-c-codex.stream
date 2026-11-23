@@ -1,0 +1,920 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f606-eda2-75b3-bce7-0b9ff6bb7c71
+--------
+user
+# Challenge round on the execution plan (read-only, $0). Alex has now said to execute: "write the plan, execute the plan, and don't do full blown runs, validate it works based on metrics we meassure for quality".
+
+Read `EXECUTION-PLAN.md` and `articles.json` in this folder.
+
+**One change from the consensus.** The 11 census articles carry almost none of old's window evidence.
+- old-2 v5 drew window links from 24 other articles, old-3 v6 from 27, and the Anthropic questions from 4–5 others.
+- None of the 11 was linked by old to its own target question; only control 223 was.
+- So the set becomes the union of the articles either system tied to these matters: 126 articles, about $2.55 for 252 c8 sends.
+- Check this against `poc/data/comparison-2026-11-17/run/old-2/prod/views.sqlite` (`evidence_links` and `evidence_sources`) yourself.
+
+**Challenge:**
+1. Is the union fair to both sides, or is a different set better?
+2. The open-list conversion: old view to Step 1 thesis, as in step 1.
+3. The judging-copy truncation (step 5): does it leak a later state or starve the judge?
+4. Are the five lines right, and is any line one the old system itself would fail?
+5. Anything that makes a pass meaningless.
+
+Under 300 words. End `CONSENSUS: EXECUTE` or `CONSENSUS: CHANGE <smallest change>`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check the article list against the stored evidence links, then audit what the judge would see at each cutoff.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'def |previous|cited_views|since|as_of|closed' ../../../src/hivemind/views/{judging.py,store.py} | tail -105" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+../../../src/hivemind/views/judging.py:32:UPDATED_MARK = 'updated since this thesis was last judged'
+../../../src/hivemind/views/judging.py:35:def require_supported(prompt_version):
+../../../src/hivemind/views/judging.py:41:def evidence_in_view(conn, view_id):
+../../../src/hivemind/views/judging.py:54:def schema_for(prompt_version):
+../../../src/hivemind/views/judging.py:76:def themes_in_force(conn, view_id):
+../../../src/hivemind/views/judging.py:102:def topological(conn, view_ids):
+../../../src/hivemind/views/judging.py:121:def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidden=0):
+../../../src/hivemind/views/judging.py:127:        lines.append(f'[Not shown: {hidden} more pieces in force, read in earlier judgements; the previous conclusion carries them]')
+../../../src/hivemind/views/judging.py:146:            flag = 'historical only' if d['resolution'] == 'history_only' else ('closed' if not store.is_open(conn, target) else 'open')
+../../../src/hivemind/views/judging.py:166:def build_prompt(conn, view_id, prompt_version):
+../../../src/hivemind/views/judging.py:178:def retry_note(errors):
+../../../src/hivemind/views/judging.py:179:    return '\n\nThe code returned the previous answer because: ' + '; '.join(errors) + '\nCorrect it and answer again, citing only the listed ids.'
+../../../src/hivemind/views/judging.py:182:def themes_shown_in(request_text):
+../../../src/hivemind/views/judging.py:188:def evidence_shown_in(request_text):
+../../../src/hivemind/views/judging.py:194:def check_answer(conn, view_id, data, request_text=None):
+../../../src/hivemind/views/judging.py:196:    closed or opened since); without it, against what the ledger would show now."""
+../../../src/hivemind/views/judging.py:206:    # the closed set is what the request showed (D198), read from the text that was sent, else computed from the ledger
+../../../src/hivemind/views/judging.py:234:def _record(conn, cfg, view_id, seq, item, answer):
+../../../src/hivemind/views/judging.py:237:                                reasons=data['reasons'], cited_evidence_json=json.dumps(data['cites']), cited_views_json=json.dumps(data['cites_views']),
+../../../src/hivemind/views/judging.py:250:def upstream(conn, view_id):
+../../../src/hivemind/views/judging.py:262:def open_asset_views(conn):
+../../../src/hivemind/views/judging.py:266:def queued_by_change(conn, view_id):
+../../../src/hivemind/views/judging.py:275:def queued_by_ledger(conn, seq):
+../../../src/hivemind/views/judging.py:284:def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transport=None):
+../../../src/hivemind/views/judging.py:300:    def eligible(view_id):
+../../../src/hivemind/views/judging.py:303:    def is_theme(view_id):
+../../../src/hivemind/views/judging.py:313:        def ask(view_id, note=''):
+../../../src/hivemind/views/store.py:18:    'judgements': 'judgement_id integer primary key autoincrement, view_id text, seq integer, input_id text, rung integer, reasons text, cited_evidence_json text, cited_views_json text, pushes_json text, changed integer, why_changed text, config_checksum text, call_id integer, request_sha256 text, publication_day text, theme_pushes_json text, reference text, implied_outcome text',
+../../../src/hivemind/views/store.py:55:def open_db(path):
+../../../src/hivemind/views/store.py:73:def insert(conn, table, **fields):
+../../../src/hivemind/views/store.py:81:def create_view(conn, *, view_id, object_id, object_kind, kind, looks_at, question, due_day, year, rungs, seq, input_id, created_at):
+../../../src/hivemind/views/store.py:90:def view(conn, view_id):
+../../../src/hivemind/views/store.py:95:def rungs_of(conn, view_id):
+../../../src/hivemind/views/store.py:103:def add_key(conn, view_id, key, seq):
+../../../src/hivemind/views/store.py:113:def ensure_key_columns(conn):
+../../../src/hivemind/views/store.py:123:def ensure_group_tables(conn):
+../../../src/hivemind/views/store.py:139:def ensure_writable_columns(conn):
+../../../src/hivemind/views/store.py:155:def view_key(conn, view_id):
+../../../src/hivemind/views/store.py:167:def open_views_with_key(conn, object_id, measure, scope_key, period_start, period_end, basis='n/a', unit='n/a', event_type=None):
+../../../src/hivemind/views/store.py:181:def exact_key_views(conn, candidate):
+../../../src/hivemind/views/store.py:192:def is_open(conn, view_id):
+../../../src/hivemind/views/store.py:197:def close_view(conn, view_id, reason, by_whom, seq):
+../../../src/hivemind/views/store.py:201:def open_views(conn):
+../../../src/hivemind/views/store.py:206:def views_of_object(conn, object_id, only_open=True):
+../../../src/hivemind/views/store.py:212:def has_judgement(conn, view_id, seq):
+../../../src/hivemind/views/store.py:219:def open_read_only(path):
+../../../src/hivemind/views/store.py:221:    resolved, a store with another hard link refused (`live_lock.LockRefused`; live-service/OPERATING-CONTRACT.md, row 7), since
+../../../src/hivemind/views/store.py:230:def current_state(conn, view_id):
+../../../src/hivemind/views/store.py:235:def dependencies_of(conn, view_id):
+../../../src/hivemind/views/store.py:249:def direct_parents(conn, view_id, seq=None):
+../../../src/hivemind/views/store.py:256:def dependants_of(conn, view_id):
+../../../src/hivemind/views/store.py:263:def would_cycle(conn, view_id, depends_on):
+../../../src/hivemind/views/store.py:279:def day_start_seq(conn, day):
+../../../src/hivemind/views/store.py:286:def views_open_at_day_start(conn, object_ids, day):
+../../../src/hivemind/views/store.py:302:def views_for_prompt(conn, object_ids, themes=False):
+../../../src/hivemind/views/store.py:303:    """05-extraction block 5: the objects' open views plus every view they depend on, open or closed, with who
+../../../src/hivemind/views/store.py:332:def search_views(conn, text, top_n):
+../../../src/hivemind/views/store.py:347:def add_evidence(conn, *, evidence_id, quote, one_line, speaker, original_who, original_day, tier, event_time, seq, input_id):
+../../../src/hivemind/views/store.py:352:def add_source(conn, evidence_id, input_id, category, publication_day, location, seq):
+../../../src/hivemind/views/store.py:356:def link(conn, evidence_id, view_id, seq):
+../../../src/hivemind/views/store.py:364:def replace(conn, old_id, new_id, said_day, seq):
+../../../src/hivemind/views/store.py:369:def revise(conn, old_id, new_id, said_day, seq):
+../../../src/hivemind/views/store.py:374:def relate_same(conn, old_id, new_id, seq):
+../../../src/hivemind/views/store.py:379:def same_claim_group(conn, evidence_id):
+../../../src/hivemind/views/store.py:387:def revision_of(conn, evidence_id):
+../../../src/hivemind/views/store.py:395:def recent_judgements(conn, view_id, n):
+../../../src/hivemind/views/store.py:401:def is_replaced(conn, evidence_id):
+../../../src/hivemind/views/store.py:405:def predecessor_of(conn, evidence_id):
+../../../src/hivemind/views/store.py:410:def evidence(conn, evidence_id):
+../../../src/hivemind/views/store.py:419:def evidence_in_force(conn, view_id):
+../../../src/hivemind/views/store.py:420:    """Evidence linked to the view and not replaced (history), each with its replaced predecessor when there is one and, since D202,
+../../../src/hivemind/views/store.py:428:        previous = predecessor_of(conn, evidence_id)
+../../../src/hivemind/views/store.py:429:        record['replaced'] = evidence(conn, previous) if previous else None
+../../../src/hivemind/views/store.py:437:def views_linked_to(conn, evidence_id):
+../../../src/hivemind/views/store.py:441:def evidence_ids_under(conn, view_id):
+../../../src/hivemind/views/store.py:447:def mark_step(conn, input_id, sequence_no, step, result, reason, publication_day, at):
+../../../src/hivemind/views/store.py:451:def last_step(conn, input_id):
+../../../src/hivemind/views/store.py:456:def is_processed(conn, input_id):
+../../../src/hivemind/views/store.py:460:def next_sequence(conn):
+../../../src/hivemind/views/store.py:465:def pool(conn, kind, key, example, seq):
+../../../src/hivemind/views/store.py:469:def last_check(conn, view_id):
+../../../src/hivemind/views/store.py:478:def complete_day(conn, day, seq, at):
+../../../src/hivemind/views/store.py:482:def last_completed_day(conn):
+../../../src/hivemind/views/store.py:489:def add_group(conn, *, group_id, name, scope, seq, input_id, object_ids=(), aliases=()):
+../../../src/hivemind/views/store.py:496:def add_group_aliases(conn, group_id, aliases, seq, input_id):
+../../../src/hivemind/views/store.py:512:def add_member(conn, group_id, view_id, seq, input_id, basis='model'):
+../../../src/hivemind/views/store.py:520:def _group_record(row, conn=None):
+../../../src/hivemind/views/store.py:534:def group(conn, group_id):
+../../../src/hivemind/views/store.py:539:def groups_of_view(conn, view_id):
+../../../src/hivemind/views/store.py:543:def groups_of_view_at(conn, view_id, seq):
+../../../src/hivemind/views/store.py:555:def members_of_group(conn, group_id):
+../../../src/hivemind/views/store.py:559:def groups_for_prompt(conn, object_ids, text, top_n=10):
+
+exec
+/opt/homebrew/bin/zsh -lc 'pwd && ls -l && cat EXECUTION-PLAN.md' in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+total 1352
+-rw-r--r--@ 1 lchingen  staff    5889 Nov 19 16:16 EXECUTION-PLAN.md
+-rw-r--r--@ 1 lchingen  staff    2994 Nov 19 15:02 MERGE-PLAN.md
+-rw-r--r--@ 1 lchingen  staff    4859 Nov 19 16:16 articles.json
+-rw-r--r--@ 1 lchingen  staff    2715 Nov 19 14:56 claude-proposal.md
+-rw-r--r--@ 1 lchingen  staff    2096 Nov 19 14:56 council-a-brief.md
+-rw-r--r--@ 1 lchingen  staff    3444 Nov 19 14:59 council-a-codex.md
+-rw-r--r--@ 1 lchingen  staff  565664 Nov 19 14:59 council-a-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1838 Nov 19 15:00 council-b-brief.md
+-rw-r--r--@ 1 lchingen  staff    1894 Nov 19 15:01 council-b-codex.md
+-rw-r--r--@ 1 lchingen  staff   61314 Nov 19 15:01 council-b-codex.stream
+-rw-r--r--@ 1 lchingen  staff    1295 Nov 19 16:16 council-c-brief.md
+-rw-r--r--@ 1 lchingen  staff       0 Nov 19 16:16 council-c-codex.md
+-rw-r--r--@ 1 lchingen  staff    2436 Nov 19 16:16 council-c-codex.stream
+# Merge test: execution plan (written before any send, 2026-11-19)
+
+**Alex, 2026-11-19 (the goal):** "write the plan, execute the plan, and don't do full blown runs, validate it works based on metrics we
+meassure for quality". This plan carries out D678's test. D677 stopped paid sends; this goal lifts that stop for this test only (D679).
+
+## What is tested
+This is the merge's one new piece of wiring.
+- Clean Step 1 (c8, unchanged) reads each article with the **old system's open questions** as its open theses.
+- The evidence it files under an old question reaches the **frozen production judge** with that question's old answer choices.
+- The judge then answers.
+
+| | Old draw (as stored) | Hybrid (this test) |
+|---|---|---|
+| Questions and choices | Old opening and ladder | **The same rows**, unchanged |
+| History to 09-06 | Old evidence and judgements | **The same rows** |
+| Window evidence, 09-07..09-20 | Old extraction and filing | **c8's filing** under the old questions |
+| Judge | Frozen judging (poc-v118) | **The same code and configuration**, on the target questions only |
+
+## A finding that changed the article set (checked on the stored runs, $0)
+D678 fixed the 11 census articles for M04 and M17 plus control 223. The stored runs show that this set misses where the evidence is.
+- The old system filed **none** of the 11 under its own target questions; only control 223 reached v5 and v6.
+- Old's window evidence for these questions came from 24 articles (old-2 v5), 27 (old-3 v6) and 4–5 (the Anthropic questions).
+- Almost none of those articles are in the census list.
+
+A test on the 12 articles alone would give the hybrid far less material than old had, and could only show a loss that the design did
+not cause.
+
+**The set therefore becomes every window article that either system tied to these matters:**
+- the census articles and the control;
+- the articles old linked to the five target questions;
+- the articles new-2 and new-3 linked to their own capex and Anthropic theses.
+
+That is **126 articles**: 120 for capex and 14 for Anthropic, with some overlap. The list is in `articles.json`.
+
+## The questions (stored rows)
+| Draw | Matter | Question | Old answer at 09-20 |
+|---|---|---|---|
+| old-2 | M04 | v5: four largest hyperscalers' data-center capex, calendar 2026 (5 rungs) | rung 4, $700–800B |
+| old-2 | M17 | v40: NVIDIA invests $10B to anchor Anthropic's IPO by 2026-09-20 (yes/no) | rung 2, No |
+| old-3 | M04 | v6: the same as v5 | rung 4 |
+| old-3 | M17 | v47 (by 2026-09-20) and v48 (by 2027-03-14) | v47 rung 2; v48 rung 1 |
+
+## Steps
+1. **$0. The open list per article.**
+   - For each draw and article, take the old views open at that article's old sequence number: created at or before it and not
+     switched off before it.
+   - Each becomes a Step 1 thesis (code-owned conversion):
+     - `id` is the view id;
+     - `description` is the question;
+     - `outcome` is the focus plus the answer choices;
+     - `period` is the key's period and the due day.
+   - c8's own new theses are recorded but **not opened**, because opening is the old system's job.
+2. **$0. Preflight.**
+   - One request is built per draw with the stored c8 settings. Its system text and closing check must equal new-2's stored request,
+     byte for byte.
+   - A synthetic answer linking to `v5` must pass Step 1's checks.
+3. **Paid, about $2.55.** 252 c8 sends: 126 articles × 2 draws.
+   - Each article is its own one-item Step 1 run, 8 at a time.
+   - They go on a new ledger with a $5 ceiling.
+4. **$0. Filing census.**
+   - For each target question: the c8 evidence linked to it, by article.
+   - c8's proposed new theses, checked for NVIDIA's own figures.
+5. **Paid, about $0.15. Judging.**
+   - On a copy of each old store, the target questions' window links and judgements are removed. Everything else in the window is
+     removed too, so no later state leaks in: other views keep their 09-06 state.
+   - Day by day, c8's evidence for the target questions is written, and the frozen judge's own round judges the target questions
+     only.
+6. **Readers.**
+   - Each answer is turned into a card in the deck's format: question, choices, final answer, reasons and the material it was given.
+   - The hybrid cards are mixed with the five old cards for the same questions and with deck controls, under shuffled labels.
+   - Two blind readers read them, Claude and Codex, with the comparison's reader brief.
+7. **Score** against the lines below. Claude reads every trace behind a failed line.
+
+## Quality lines (written before any send)
+| # | Line | Pass when |
+|---|---|---|
+| P1 | Delivery | In both draws, each target question receives c8 evidence carrying the matter's decisive statement. For capex, that is the four companies' 2026 capex figures or an aggregate of them. For Anthropic, it is the reported $10B anchor-investment talks |
+| P2 | No meaning drift | No five-company or 2027 figure is presented as the answer to the four-company 2026 question. A total-capex figure used for "data-center" capex is named as a proxy |
+| P3 | Talks stay talks | No Anthropic answer treats reported talks as a signed or completed investment |
+| P4 | Opening rule | c8 proposes no standalone question on NVIDIA's own financial figures (D382) on any of the 252 sends |
+| P5 | Supported answer | Both readers mark every hybrid answer supported, and the readers pass their controls |
+
+- **Pass** means all five lines hold in both draws.
+- **Also reported:**
+  - whether the hybrid's answer matches old's;
+  - the material's size;
+  - the share of material about the question, read by Claude: one draw each and descriptive. The PRD's old-system problem was 24–44%
+    of citations about other companies or the whole market.
+- **What this cannot show:** automatic opening, repeat grouping (Steps 2–3 are not run), the other 30 matters, or release readiness.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import json
+x=json.load(open(\"articles.json\"))
+print(type(x),len(x))
+if isinstance(x,list): print(x[:5])
+else:
+ for k,v in x.items(): print(k,type(v),len(v) if hasattr(v,\"__len__\") else \"\",str(v)[:900])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+<class 'dict'> 2
+capex <class 'list'> 120 ['gnews:0785b2a386dcfc3c9cb02b29', 'gnews:088ae5b30011a76744333371', 'gnews:089f44e073a5c6aff0be9d32', 'gnews:0ae0159ebec0676230f670fb', 'gnews:0ba93692dc5df4b999fe3729', 'gnews:0beb3ab08443b78b66485a72', 'gnews:0c19765ee99d1f808e0834ec', 'gnews:0c5749b10e712291b3d5f7a2', 'gnews:106a61a1ef10fb3ba6adb1cd', 'gnews:109fc9fd6937796c01c45a8c', 'gnews:12a943c49b0c41542e6110b5', 'gnews:13952dff579190ce77353acd', 'gnews:145e8986dda2283044f1ab1c', 'gnews:1d3bc1ba4c2df5e998884bdb', 'gnews:2052184744bec4b89ecab744', 'gnews:29261e892efef38906097afb', 'gnews:2b808ce1f229051e1f82b056', 'gnews:3337ca32305f307a1439d775', 'gnews:33edf25ec336133783ceead0', 'gnews:3425a2c7d70bccfb0d0589cb', 'gnews:383f38f0b4b6a98e3eef0ef9', 'gnews:3a284e233d8b31c62dc66b33', 'gnews:3f21db1f9791e20f80909da8', 'gnews:3f69a17dc0ba27583e1dbd92', 'gnews:4256ae7ea51b8cf4d4bb371b', 'gnews:4b9d896e45760b709997fcab', 'gnews:4dca50e2
+anthropic <class 'list'> 14 ['gnews:06b55f52d782a58df06d9f4f', 'gnews:4256ae7ea51b8cf4d4bb371b', 'gnews:4dca50e22bd9f158d2a04186', 'gnews:65814ac898f65c6b360be321', 'gnews:767d795fbdf40bc90ce11e15', 'gnews:80abc09fcf944169f89ac8d0', 'gnews:81badd809629cf7b5ba30af9', 'gnews:828f1602f11f811239b48aef', 'gnews:8ca64f3ce8dc4aa84cb585fe', 'gnews:941e635f03cf933cbbeb3718', 'gnews:a1af1bb8840fa4ec9e52bcb0', 'gnews:bd6c7bc4ca65a252d0997735', 'gnews:c4a73d01dd25ea7ac9065c35', 'gnews:df74df86a5a6cfd06fe7cbb3']
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '35,105p;121,176p;245,335p' ../../../src/hivemind/views/judging.py
+sed -n '145,168p;189,201p;230,258p;395,438p' ../../../src/hivemind/views/store.py
+rg -n 'D678|D679' ../../DECISIONS.md" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+def require_supported(prompt_version):
+    """Refuses a judging prompt version this code does not build, before any request is made."""
+    if prompt_version not in SUPPORTED_VERSIONS:
+        raise ValueError(f'judging {prompt_version!r} is not built; this code builds only {", ".join(SUPPORTED_VERSIONS)} (D354)')
+
+
+def evidence_in_view(conn, view_id):
+    """(the pieces a judgement of this thesis reads, how many pieces in force are not shown): the arrivals (linked after the
+    READINGS-th most recent judgement, or all when there are fewer) and the basis (cited by one of the last BASIS judgements),
+    both among the evidence in force."""
+    in_force = store.evidence_in_force(conn, view_id)
+    recent = store.recent_judgements(conn, view_id, BASIS)
+    arrivals_after = recent[READINGS - 1]['seq'] if len(recent) >= READINGS else -1
+    basis = {evidence_id for j in recent for evidence_id in j['cites']}
+    linked_at = {r['evidence_id']: r['seq'] for r in conn.execute('select evidence_id, seq from evidence_links where view_id=?', (view_id,))}
+    shown = [p for p in in_force if linked_at.get(p['evidence_id'], -1) > arrivals_after or p['evidence_id'] in basis]
+    return shown, len(in_force) - len(shown)
+
+
+def schema_for(prompt_version):
+    require_supported(prompt_version)
+    pushes = PUSHES
+    schema = {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['rung', 'reasons', 'cites', 'cites_views', 'pushes', 'changed', 'why_changed'],
+        'properties': {
+            'rung': {'type': 'integer'}, 'reasons': {'type': 'string'},
+            'cites': {'type': 'array', 'items': {'type': 'string'}}, 'cites_views': {'type': 'array', 'items': {'type': 'string'}},
+            'pushes': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['evidence_id', 'push'],
+                                                  'properties': {'evidence_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}},
+            'changed': {'type': 'boolean'}, 'why_changed': {'type': 'string'},
+        },
+    }
+    schema['required'].append('theme_pushes')
+    schema['properties']['theme_pushes'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['view_id', 'push'],
+                                                                       'properties': {'view_id': {'type': 'string'}, 'push': {'type': 'string', 'enum': pushes}}}}
+    schema['required'][1:1] = STANCE_FIELDS           # after rung: the reference and the implied outcome are written before the reasons
+    schema['properties'].update({field: {'type': 'string'} for field in STANCE_FIELDS})
+    return schema
+
+
+def themes_in_force(conn, view_id):
+    """The theme block of an asset thesis: every open theme thesis with a current state, with its rung label and whether a
+    changed conclusion was recorded after this thesis's last judgement. Empty for a theme thesis."""
+    if store.view(conn, view_id)['object_kind'] == 'theme':
+        return []
+    last = store.current_state(conn, view_id)
+    out = []
+    for row in conn.execute("select view_id from views where object_kind='theme' order by view_id"):
+        theme_id = row['view_id']
+        state = store.current_state(conn, theme_id)
+        if not state or not store.is_open(conn, theme_id):
+            continue
+        updated = bool(last) and bool(conn.execute('select 1 from judgements where view_id=? and changed=1 and judgement_id>? limit 1',
+                                                   (theme_id, last['judgement_id'])).fetchone())
+        rung = store.rungs_of(conn, theme_id)[state['rung'] - 1]
+        out.append({'view_id': theme_id, 'view': store.view(conn, theme_id), 'state': state, 'rung_label': rung['label'], 'updated': updated})
+    return out
+
+
+STANCE_FIELDS = ['reference', 'implied_outcome']   # D260: what the market expects, and the figure or date the evidence implies
+
+
+class JudgementRefused(Exception):
+    pass
+
+
+def topological(conn, view_ids):
+    """Dependencies first: a view comes after every view it depends on that is also in the set."""
+    remaining = list(dict.fromkeys(view_ids))
+    ordered, placed = [], set()
+def _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes=(), hidden=0):
+    """hidden: how many pieces in force are not shown."""
+    lines = [f'Thesis {view_id} ({v["object_id"]}, {v["kind"]}, focus "{v["looks_at"]}", {v["year"] or ""}, due {v["due_day"]}): {v["question"]}',
+             'Ladder: ' + ' / '.join(f'rung {r["position"]} {r["label"]}: {r["condition"]}' for r in rungs), '',
+             f'[Evidence in view under this thesis, {len(pieces)} items]']
+    if hidden:
+        lines.append(f'[Not shown: {hidden} more pieces in force, read in earlier judgements; the previous conclusion carries them]')
+    for p in pieces:
+        src = p['sources'][0] if p['sources'] else {}
+        lines.append(f'- {p["evidence_id"]} [{p["tier"]}; {p["speaker"]}; original source {p["original_who"]} {p["original_day"]}; from {src.get("input_id")} {src.get("publication_day")}] {p["one_line"]}\n    Quote: {p["quote"][:400]}')
+        if p.get('replaced'):
+            lines.append(f'    It replaces {p["replaced"]["evidence_id"]} ({p["replaced"]["original_day"]}): {p["replaced"]["one_line"]}')
+        if p.get('same_as'):
+            lines.append(f'    Opinion, not verified: the matcher read this as the same claim as {", ".join(p["same_as"])}; the argument counts one claim, one more outlet.')
+        if p.get('revises'):
+            lines.append(f'    Opinion, not verified: the matcher read it as a later version of {p["revises"]["evidence_id"]} ({p["revises"]["original_day"]}); both are in force: {p["revises"]["one_line"]}')
+    if deps:
+        lines.append('\n[Current conclusions of the theses it depends on]')
+        for d in deps:
+            target = d['resolved_to']
+            if not target:
+                lines.append(f'- the {d["wait_year"]} thesis on chain {d["wait_chain_view_id"]}: not yet created ({d["direction"]})')
+                continue
+            tv = store.view(conn, target)
+            state = store.current_state(conn, target)
+            flag = 'historical only' if d['resolution'] == 'history_only' else ('closed' if not store.is_open(conn, target) else 'open')
+            rung_label = store.rungs_of(conn, target)[state['rung'] - 1]['label'] if state else 'not judged yet'
+            lines.append(f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"] if state else "-"} {rung_label}; reasons: {(state or {}).get("reasons", "")[:600]}')
+    if themes:
+        lines.append(f'\n[Themes in force, {len(themes)}]')
+        for theme in themes:
+            tv, state = theme['view'], theme['state']
+            mark = f'; {UPDATED_MARK}' if theme['updated'] else ''
+            lines.append(f'- {theme["view_id"]} ({tv["object_id"]}, due {tv["due_day"]}) {tv["question"]}: now rung {state["rung"]} {theme["rung_label"]}; '
+                         f'judged {state["publication_day"]}{mark}; reasons: {(state["reasons"] or "")[:THEME_REASONS_CHARS]}')
+    if last:
+        lines.append(f'\n[Previous conclusion, for comparison only] rung {last["rung"]}; reasons: {last["reasons"][:800]}')
+    else:
+        lines.append('\n[Previous conclusion] none: this is the first judgement, so changed must be true.')
+    lines.append('\nAnswer per the JSON schema. cites may name only the evidence ids listed above; '
+                 + ('cites_views only the dependency thesis ids listed above' if deps else 'cites_views must be empty: this thesis depends on no other thesis')
+                 + ('; theme_pushes only the theme ids listed above; a theme id goes only in theme_pushes, never in cites or cites_views' if themes else '') + '.')
+    return lines
+
+
+def build_prompt(conn, view_id, prompt_version):
+    require_supported(prompt_version)
+    v = store.view(conn, view_id)
+    rungs = store.rungs_of(conn, view_id)
+    pieces, hidden = evidence_in_view(conn, view_id)
+    deps = store.dependencies_of(conn, view_id)
+    last = store.current_state(conn, view_id)
+    lines = _lines_english(conn, view_id, v, rungs, pieces, deps, last, themes_in_force(conn, view_id), hidden=hidden)
+    with open(config.prompt_path(prompt_version + '.txt'), encoding='utf-8') as handle:
+        return handle.read(), '\n'.join(lines)
+
+
+
+JUDGE_WORKERS = 32     # a day's round is up to 40 judgements of about 16 s each in two dependency levels (themes, then assets); 32 at a time makes a round about two calls long (2026-11-02)
+
+
+def upstream(conn, view_id):
+    """Every view this one depends on, directly or through its dependencies."""
+    seen, stack = set(), [view_id]
+    while stack:
+        for dep in store.dependencies_of(conn, stack.pop()):
+            target = dep['resolved_to']
+            if target and target not in seen:
+                seen.add(target)
+                stack.append(target)
+    return seen
+
+
+def open_asset_views(conn):
+    return [v for v in store.open_views(conn) if store.view(conn, v)['object_kind'] != 'theme']
+
+
+def queued_by_change(conn, view_id):
+    """What a changed conclusion of this view queues: its dependants and, for a theme thesis, every open asset thesis. The one rule,
+    read for a live judgement and for the judgements a resumed round finds committed."""
+    queued = store.dependants_of(conn, view_id)
+    if store.view(conn, view_id)['object_kind'] == 'theme':
+        queued = queued + open_asset_views(conn)
+    return queued
+
+
+def queued_by_ledger(conn, seq):
+    """What the judgements already committed at this sequence number queued; a fresh round finds nothing here, a resumed round
+    finds what the interrupted one had queued in memory."""
+    queued = []
+    for row in conn.execute('select view_id from judgements where seq=? and changed=1 order by judgement_id', (seq,)):
+        queued.extend(queued_by_change(conn, row['view_id']))
+    return queued
+
+
+def round_of_judgements(archive, cfg, conn, changed_views, seq, item, *, transport=None):
+    """Judge the open views in changed_views, dependencies first; a changed conclusion queues open dependants.
+
+    Views that do not depend on each other are judged at the same time: each level of the dependency order is sent
+    to the model concurrently (the prompts are built and the answers checked and written in this thread, so the
+    database connection never crosses threads). A view waits while anything upstream of it is still pending, so a
+    dependant always reads this round's conclusion of its dependency. A view with no evidence in force stays
+    unjudged (D59), and a view already judged at this sequence number (a resumed round) is not judged twice.
+
+    Among the views ready to be judged, theme theses go first, so an asset thesis reads this round's theme conclusions; a theme judgement that says changed queues every open asset thesis with
+    evidence in force. The starting queue adds what the ledger says earlier commits at this sequence number queued."""
+    import concurrent.futures
+
+    version = cfg.rejudging.prompt_version
+    schema = schema_for(version)
+
+    def eligible(view_id):
+        return store.is_open(conn, view_id) and not store.has_judgement(conn, view_id, seq) and bool(store.evidence_in_force(conn, view_id))
+
+    def is_theme(view_id):
+        return store.view(conn, view_id)['object_kind'] == 'theme'
+
+    pending = [v for v in topological(conn, list(changed_views) + queued_by_ledger(conn, seq)) if eligible(v)]
+    done, results = set(), []
+    while pending:
+        ready = [v for v in pending if upstream(conn, v).isdisjoint(set(pending) - {v})] or pending[:1]
+        level = [v for v in ready if is_theme(v)] or ready
+        prompts = {v: build_prompt(conn, v, version) for v in level}
+
+        def ask(view_id, note=''):
+            system, user = prompts[view_id]
+            return model.call(archive, cfg, cfg.rejudging, system, user + note, schema, 'judgement', 'judge', transport=transport)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=JUDGE_WORKERS) as pool_:
+            answers = dict(zip(level, pool_.map(ask, level)))
+        for view_id in level:
+            answer = answers[view_id]
+            errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+            if errors:
+                archive.retire(answer.call_id)                 # a refused answer never answers the same request again (a resume re-samples)
+                answer = ask(view_id, retry_note(errors))
+                errors = check_answer(conn, view_id, answer.data, prompts[view_id][1])
+                if errors:
+                    archive.retire(answer.call_id)
+                    raise JudgementRefused(f'{view_id}: ' + '; '.join(errors))
+            result = _record(conn, cfg, view_id, seq, item, answer)
+            done.add(view_id)
+            results.append(result)
+            if result['changed']:
+                for dependant in queued_by_change(conn, view_id):
+                    if dependant not in done and dependant not in pending and eligible(dependant):
+                        pending.append(dependant)
+        if field not in columns:
+            conn.execute(f'alter table rungs add column {field} real')
+    judgement_columns = {r[1] for r in conn.execute('pragma table_info(judgements)')}
+    if 'theme_pushes_json' not in judgement_columns:
+        conn.execute('alter table judgements add column theme_pushes_json text')     # D195: judgements written before the theme block read as []
+    for field in ('reference', 'implied_outcome'):
+        if field not in judgement_columns:
+            conn.execute(f'alter table judgements add column {field} text')        # D260: judgements written before the stance fields read as null
+
+
+def view_key(conn, view_id):
+    if not conn.execute('pragma table_info(view_keys)').fetchone():
+        return None
+    row = conn.execute('select * from view_keys where view_id=?', (view_id,)).fetchone()
+    if not row:
+        return None
+    key = dict(row)
+    if not key.get('scope_source'):
+        key['scope_source'] = 'none' if not key['scope'] else 'model'
+    return key
+
+
+def open_views_with_key(conn, object_id, measure, scope_key, period_start, period_end, basis='n/a', unit='n/a', event_type=None):
+    """Open views of the object with the same measure, scope and unit whose period overlaps: the ones a candidate must
+    return [r['view_id'] for r in rows if automatic_key(dict(r), r['object_id']) == target and is_open(conn, r['view_id'])]
+
+
+def is_open(conn, view_id):
+    row = conn.execute('select open from view_switches where view_id=? order by id desc limit 1', (view_id,)).fetchone()
+    return bool(row and row['open'])
+
+
+def close_view(conn, view_id, reason, by_whom, seq):
+    insert(conn, 'view_switches', view_id=view_id, open=0, reason=reason, by_whom=by_whom, after_seq=seq)
+
+
+def open_views(conn):
+def current_state(conn, view_id):
+    row = conn.execute('select judgement_id, rung, reasons, changed, seq, publication_day from judgements where view_id=? order by judgement_id desc limit 1', (view_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def dependencies_of(conn, view_id):
+    """Each dependency with its current target: the resolved view, or the waiting chain and year."""
+    out = []
+    for dep in conn.execute('select * from dependencies where view_id=? order by dependency_id', (view_id,)):
+        dep = dict(dep)
+        resolution = conn.execute('select resolved_to, reason from dependency_resolutions where dependency_id=? order by id desc limit 1', (dep['dependency_id'],)).fetchone()
+        if resolution:
+            dep['resolved_to'], dep['resolution'] = resolution['resolved_to'], resolution['reason']
+        else:
+            dep['resolved_to'], dep['resolution'] = dep['depends_on'], ('direct' if dep['depends_on'] else 'waiting')
+        out.append(dep)
+    return out
+
+
+def direct_parents(conn, view_id, seq=None):
+    """The views this view depends on directly (a driver's root, D208; the seeds' depends_on), written at or before `seq` when given.
+    The filing reads it to keep a statement under the narrower of two linked questions (D207's narrowest rule, extraction.file_reading)."""
+    rows = conn.execute("select depends_on from dependencies where view_id=? and depends_on != '' and (? is null or seq <= ?) order by dependency_id", (view_id, seq, seq))
+    return list(dict.fromkeys(r[0] for r in rows))
+
+
+def dependants_of(conn, view_id):
+    direct = [r['view_id'] for r in conn.execute('select view_id from dependencies where depends_on=?', (view_id,))]
+    resolved = [r['view_id'] for r in conn.execute(
+def recent_judgements(conn, view_id, n):
+    """The thesis's last n judgements, newest first: (seq, cited evidence ids)."""
+    rows = conn.execute('select seq, cited_evidence_json from judgements where view_id=? order by judgement_id desc limit ?', (view_id, n)).fetchall()
+    return [{'seq': r['seq'], 'cites': json.loads(r['cited_evidence_json'] or '[]')} for r in rows]
+
+
+def is_replaced(conn, evidence_id):
+    return bool(conn.execute('select 1 from replacements where old_evidence_id=?', (evidence_id,)).fetchone())
+
+
+def predecessor_of(conn, evidence_id):
+    row = conn.execute('select old_evidence_id from replacements where new_evidence_id=? order by id desc limit 1', (evidence_id,)).fetchone()
+    return row['old_evidence_id'] if row else None
+
+
+def evidence(conn, evidence_id):
+    row = conn.execute('select * from evidence where evidence_id=?', (evidence_id,)).fetchone()
+    if not row:
+        return None
+    record = dict(row)
+    record['sources'] = [dict(s) for s in conn.execute('select input_id, category, publication_day, location from evidence_sources where evidence_id=? order by id', (evidence_id,))]
+    return record
+
+
+def evidence_in_force(conn, view_id):
+    """Evidence linked to the view and not replaced (history), each with its replaced predecessor when there is one and, since D202,
+    the piece it revises (both in force)."""
+    out = []
+    for row in conn.execute('select evidence_id from evidence_links where view_id=? order by id', (view_id,)):
+        evidence_id = row['evidence_id']
+        if is_replaced(conn, evidence_id):
+            continue
+        record = evidence(conn, evidence_id)
+        previous = predecessor_of(conn, evidence_id)
+        record['replaced'] = evidence(conn, previous) if previous else None
+        revised = revision_of(conn, evidence_id)
+        record['revises'] = evidence(conn, revised) if revised else None
+        record['same_as'] = [x for x in same_claim_group(conn, evidence_id) if not is_replaced(conn, x)]
+        out.append(record)
+    return out
+
+
+def views_linked_to(conn, evidence_id):
+    return [r['view_id'] for r in conn.execute('select view_id from evidence_links where evidence_id=? order by id', (evidence_id,))]
+1022:| D678 | 2026-11-19 | Merge design (council consensus): old opens questions, clean Steps 1–3 read and organise evidence, the frozen judge answers; figures by D382/D505 unless Alex's exception; a 12-article test ($0.33–0.42, 5 lines) awaits Alex's approval | in force | `docs/research/2026-11-19-merge-council/MERGE-PLAN.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import json,sqlite3
+p=Path(\"../../../poc/data/comparison-2026-11-17\")
+st=Path(\"../2026-11-17-product-comparison/stage0\")
+f=json.load(open(\"articles.json\"));n=json.loads((st/\"census/numbering.json\").read_text());m={x[\"matter\"]:x for x in json.loads((st/\"census/matters.json\").read_text())[\"matters\"]}
+seed={n[str(x)]:x for mid in (\"M04\",\"M17\") for x in m[mid][\"articles\"]};seed[n[\"223\"]]=223
+print(\"articles\",len(set(f[\"capex\"]+f[\"anthropic\"])),len(set(f[\"capex\"])&set(f[\"anthropic\"])))
+def read(path):
+ db=sqlite3.connect(f\"file:{path}?mode=ro&immutable=1\",uri=True)
+ db.row_factory=sqlite3.Row
+ return db
+old={\"capex\":set(),\"anthropic\":set()}
+for draw,pairs in ((\"old-2\",[(5,\"capex\"),(40,\"anthropic\")]),(\"old-3\",[(6,\"capex\"),(47,\"anthropic\"),(48,\"anthropic\")])):
+ db=read(p/f\"run/{draw}/prod/views.sqlite\")
+ cut=db.execute(\"select max(seq) from days_completed where day < ?\",(\"2026-09-07\",)).fetchone()[0]
+ print(draw,cut)
+ for num,tag in pairs:
+  q=f\"v{num}\"
+  view=dict(db.execute(\"select * from views where view_id=?\",(q,)).fetchone())
+  print(q,view[\"kind\"],view[\"looks_at\"],view[\"created_seq\"],[dict(x) for x in db.execute(\"select * from view_keys where view_id=?\",(q,))], [dict(x) for x in db.execute(\"select * from dependencies where view_id=?\",(q,))])
+  query=\"\"\"select distinct s.input_id from evidence_links l join evidence_sources s using(evidence_id) where l.view_id=? and s.publication_day between ? and ?\"\"\"
+  ids={x[0] for x in db.execute(query,(q,\"2026-09-07\",\"2026-09-20\"))};old[tag]|=ids
+  print(\"all sources\",len(ids),\"missing plan\",len(ids-set(f[tag])),\"census overlap\",sorted(seed[s] for s in ids&seed.keys()))
+  rows=[tuple(x) for x in db.execute(\"\"\"select l.evidence_id, l.seq,s.seq,s.input_id,s.publication_day from evidence_links l join evidence_sources s using(evidence_id) where l.view_id=? and s.input_id in (?,?)\"\"\",(q,n[\"181\"],n[\"233\"]))]
+  print(\"anchors rows\",rows)
+  ids2={x[0] for x in db.execute(query+\" and l.seq > ?\",(q,\"2026-09-07\",\"2026-09-20\",cut))}
+  print(\"window links only\",len(ids2),\"overlap\",sorted(seed[s] for s in ids2&seed.keys()))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+articles 126 8
+old-2 1474
+v5 theme Combined data-center capital expenditures by the four largest AI hyperscalers 42 [{'view_id': 'v5', 'measure': 'spend_total', 'scope': 'Data-center capital expenditures by the four largest AI hyperscalers', 'scope_key': 'data-center capital expenditures by the four largest ai hyperscalers', 'period_start': '2026-01-01', 'period_end': '2026-12-31', 'basis': 'n/a', 'unit': 'USD', 'event_type': 'n/a', 'seq': 42, 'scope_source': 'shared', 'key_version': 2}] []
+all sources 24 missing plan 0 census overlap [13, 167, 181, 223]
+anchors rows [('e4696', 1680, 1680, 'gnews:1d3bc1ba4c2df5e998884bdb', '2026-09-14')]
+window links only 24 overlap [13, 167, 181, 223]
+v40 asset NVIDIA's potential equity investment in Anthropic through its proposed IPO 1664 [{'view_id': 'v40', 'measure': 'event', 'scope': 'NVIDIA investment anchoring Anthropic IPO', 'scope_key': 'nvidia investment anchoring anthropic ipo', 'period_start': '2026-01-01', 'period_end': '2026-09-20', 'basis': 'n/a', 'unit': 'n/a', 'event_type': 'other', 'seq': 1664, 'scope_source': 'model', 'key_version': 2}] []
+all sources 4 missing plan 0 census overlap [189, 214, 233, 310]
+anchors rows [('e4721', 1694, 1694, 'gnews:a1af1bb8840fa4ec9e52bcb0', '2026-09-15')]
+window links only 4 overlap [189, 214, 233, 310]
+old-3 1474
+v6 theme Combined data-center capital expenditures of the four largest AI hyperscalers 42 [{'view_id': 'v6', 'measure': 'spend_total', 'scope': 'Data-center capital expenditures of the four largest AI hyperscalers', 'scope_key': 'data-center capital expenditures of the four largest ai hyperscalers', 'period_start': '2026-01-01', 'period_end': '2026-12-31', 'basis': 'n/a', 'unit': 'USD', 'event_type': 'n/a', 'seq': 42, 'scope_source': 'shared', 'key_version': 2}] []
+all sources 27 missing plan 0 census overlap [13, 167, 181, 223]
+anchors rows [('e5014', 1680, 1680, 'gnews:1d3bc1ba4c2df5e998884bdb', '2026-09-14')]
+window links only 27 overlap [13, 167, 181, 223]
+v47 asset NVIDIA investment in Anthropic 1664 [{'view_id': 'v47', 'measure': 'event', 'scope': 'NVIDIA investment to anchor Anthropic IPO', 'scope_key': 'nvidia investment to anchor anthropic ipo', 'period_start': '2026-01-01', 'period_end': '2026-09-20', 'basis': 'n/a', 'unit': 'n/a', 'event_type': 'other', 'seq': 1664, 'scope_source': 'model', 'key_version': 2}] []
+all sources 4 missing plan 0 census overlap [189, 214, 233, 310]
+anchors rows [('e5040', 1694, 1694, 'gnews:a1af1bb8840fa4ec9e52bcb0', '2026-09-15')]
+window links only 4 overlap [189, 214, 233, 310]
+v48 asset NVIDIA investment in Anthropic 1668 [{'view_id': 'v48', 'measure': 'event', 'scope': 'NVIDIA investment in Anthropic IPO', 'scope_key': 'nvidia investment in anthropic ipo', 'period_start': '2027-01-01', 'period_end': '2027-03-14', 'basis': 'n/a', 'unit': 'n/a', 'event_type': 'deal_close', 'seq': 1668, 'scope_source': 'model', 'key_version': 2}] []
+all sources 4 missing plan 0 census overlap [193, 214, 233, 310]
+anchors rows [('e5040', 1694, 1694, 'gnews:a1af1bb8840fa4ec9e52bcb0', '2026-09-15')]
+window links only 4 overlap [193, 214, 233, 310]
+
+exec
+/opt/homebrew/bin/zsh -lc "cat MERGE-PLAN.md
+sed -n '75,116p' ../../../src/hivemind/views/store.py
+rg -n 'def close|def late|close_due|def select' ../../../src/hivemind/views/*.py | head -45
+rg -n 'READINGS =|BASIS =' ../../../src/hivemind/views/judging.py" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+# Merging the two systems: the council's design and its small test (2026-11-19)
+
+**Sources:**
+- Claude's proposal (`claude-proposal.md`), written first;
+- Codex's independent design (`council-a-codex.md`, thread 01a1f606…);
+- one challenge round (`council-b-codex.md`), which ended in consensus.
+
+## The merge
+| Piece | From | Measured reason |
+|---|---|---|
+| Opening questions, and their answer choices | Old (v118 proposals, matcher, duplicate check) | It serves 10 of 32 frozen matters, against 2–3. Its choices are kept when they pass the clean range, reference and direction checks |
+| A refused proposal | — | Stays out of the open list. This is the refusal-cascade lesson |
+| Reading and extraction | Clean Step 1 (c8), given the old system's accepted questions as its open list | It keeps more of what matters (211–214 against 162–171 of 234) |
+| Earlier versions, repeats and unlinked facts | Clean Steps 2–3 and D383 | 141 of 143 earlier versions found; repeats grouped with each source kept; useful facts kept |
+| Judging and closing | The frozen judge (the same in both) | Differences come only from what reaches it |
+
+- **The figures.** Under D382/D505, NVIDIA's own figures inform the related questions. Standalone revenue and margin questions need Alex's
+  exception.
+- **Ceilings** on the stored results: 6 of 32 under D382/D505; 10 with the exception.
+- **The main risk is meaning drift.** A question about four-company 2026 data-center capex could take five-company, 2027 or total-spending
+  figures as its answer.
+
+## The small test (consensus; awaiting Alex's approval)
+- **Articles:** the 11 frozen articles of 09-07..09-20 behind M04 (four-hyperscaler 2026 capex) and M17 (the Anthropic anchor
+  investment), plus article 223 as a control for five companies and 2027.
+- **What runs:**
+  - the 12 articles are re-sent through c8 against old-2's and old-3's question lists as they stood at the start of each day, with the old
+    answer choices and the history to 09-06 kept;
+  - one frozen-judge request per question per run is built from the evidence c8 filed, giving 4 answers;
+  - both card readers judge the 4 answers blind, beside the archived old answers.
+- **Pass lines, written now:**
+  1. All 4 judge requests carry the decisive, source-verified passages that c8 filed.
+  2. No five-company, 2027 or total-spending figure is offered as a direct answer to four-company 2026 data-center capex.
+  3. The Anthropic talks stay unconfirmed: talks are not a signed commitment.
+  4. No standalone NVIDIA financial question is proposed, including on article 181, which carries NVIDIA's revenue.
+  5. Both readers support all 4 answers.
+- **Attainable:** 4 of 4 deliveries and up to 4 of 4 supported answers. The passages exist in both clean runs.
+- **Cost:** $0.33–0.42 before retries, from archived token use: 24 c8 calls and 4 judge calls.
+- **It cannot decide:** automatic opening, repeat grouping, performance over the full window, or release readiness.
+    cursor = conn.execute(f'insert into {table} ({",".join(columns)}) values ({",".join("?" * len(columns))})', [fields[c] for c in columns])
+    return cursor.lastrowid
+
+
+# ---------- views ----------
+
+def create_view(conn, *, view_id, object_id, object_kind, kind, looks_at, question, due_day, year, rungs, seq, input_id, created_at):
+    insert(conn, 'views', view_id=view_id, object_id=object_id, object_kind=object_kind, kind=kind, looks_at=looks_at,
+           question=question, due_day=due_day, year=year, created_seq=seq, created_from_input=input_id, created_at=created_at)
+    for position, rung in enumerate(rungs, start=1):
+        insert(conn, 'rungs', view_id=view_id, position=position, label=rung['label'], condition=rung['condition'], lo=rung.get('lo'), hi=rung.get('hi'))
+    insert(conn, 'view_switches', view_id=view_id, open=1, reason='created', by_whom='matching', after_seq=seq)
+    conn.execute('insert into views_fts (view_id, text) values (?, ?)', (view_id, f'{object_id} {looks_at} {question}'))
+
+
+def view(conn, view_id):
+    row = conn.execute('select * from views where view_id=?', (view_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def rungs_of(conn, view_id):
+    """The rungs with their bounds when the ledger has them (keyed views); a ledger written before keys has no lo/hi columns."""
+    rows = [dict(r) for r in conn.execute('select * from rungs where view_id=? order by position', (view_id,))]
+    has_bounds = any(r.get('lo') is not None or r.get('hi') is not None for r in rows) or view_key(conn, view_id) is not None
+    return [dict(position=r['position'], label=r['label'], condition=r['condition'],
+                 **({'lo': r.get('lo'), 'hi': r.get('hi')} if has_bounds else {})) for r in rows]
+
+
+def add_key(conn, view_id, key, seq):
+    """The view's key (keyed-views-plan.md 2.1), written once with the view."""
+    from .. import universe as _universe
+    from .identity import is_shared
+    scope_source = 'shared' if is_shared(key) else key.get('scope_source', 'model')      # D197: an aggregate's scope is wording
+    insert(conn, 'view_keys', view_id=view_id, measure=key['measure'], scope=key.get('scope', ''), scope_key=_universe.scope_key(key.get('scope', '')),
+           period_start=key.get('period_start', ''), period_end=key.get('period_end', ''), basis=key.get('basis', 'n/a'), unit=key.get('unit', 'n/a'),
+           event_type=key.get('event_type', 'n/a'), seq=seq, scope_source=scope_source, key_version=key.get('key_version'))
+
+
+def ensure_key_columns(conn):
+    """A keyed ledger written before `scope_source` gains the column (append-only forbids updates, not new columns); its
+    earlier keys read as model-owned scopes unless the scope is empty."""
+    columns = [r[1] for r in conn.execute('pragma table_info(view_keys)')]
+../../../src/hivemind/views/store.py:197:def close_view(conn, view_id, reason, by_whom, seq):
+29:READINGS = 5                      # a piece is shown in the thesis's first five judgements after it arrives
+30:BASIS = 10                        # and while one of the last ten judgements cited it
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+from collections import defaultdict
+import sqlite3,json
+b=Path(\"../../../poc/data/comparison-2026-11-17\"); f={k:set(v) for k,v in json.load(open(\"articles.json\")).items()}
+p=Path(\"../2026-11-17-product-comparison/stage0/census\")
+num=json.loads((p/\"numbering.json\").read_text()); mats={x[\"matter\"]:x for x in json.loads((p/\"matters.json\").read_text())[\"matters\"]};cens={k:{num[str(n)] for n in mats[m][\"articles\"]} for k,m in [(\"capex\",\"M04\"),(\"anthropic\",\"M17\")]}
+def conn(path):return sqlite3.connect(f\"file:{path}?mode=ro&immutable=1\",uri=True)
+u=defaultdict(set)
+for d,pairs in ((\"old-2\",[(\"v5\",\"capex\"),(\"v40\",\"anthropic\")]),(\"old-3\",[(\"v6\",\"capex\"),(\"v47\",\"anthropic\"),(\"v48\",\"anthropic\")])):
+ c=conn(b/f\"run/{d}/prod/views.sqlite\");a=conn(b/f\"run/{d}/prod/archive.sqlite\")
+ cutoff=c.execute(\"select max(seq) from days_completed where day<\\\"2026-09-07\\\"\").fetchone()[0]
+ upcoming=c.execute(\"select max(seq) from days_completed where day<=\\\"2026-09-20\\\"\").fetchone()[0]
+ def opened(s):
+  return {v for v, in c.execute(\"select v.view_id from views v where v.created_seq<=? and (select open from view_switches s where s.view_id=v.view_id and s.after_seq<=? order by s.id desc limit 1)=1\",(s,s))}
+ print(d,\"seqs\",cutoff,upcoming,\"view count\",len(opened(cutoff)),len(opened(upcoming)))
+ for v,tag in pairs:
+  ids={x[0] for x in c.execute(\"select distinct s.input_id from evidence_links l join evidence_sources s using(evidence_id) where l.view_id=? and s.publication_day between \\\"2026-09-07\\\" and \\\"2026-09-20\\\"\",(v,))}
+  u[tag]|=ids
+  call,day=c.execute(\"select call_id,publication_day from judgements where view_id=? order by seq desc limit 1\",(v,)).fetchone()
+  req=json.loads(a.execute(\"select request_json from model_calls where call_id=?\",(call,)).fetchone()[0]); ptxt=req[\"messages\"][-1][\"content\"]
+  print(v,len(ids),len(ids&cens[tag]),\"date\",day,\"calls_window\",c.execute(\"select count(*) from judgements where view_id=? and seq>?\",(v,cutoff)).fetchone()[0],\"theme days\",sorted({x.split(\"judged \")[1][:10] for x in ptxt.splitlines() if \"; judged 2026-\" in x.split(\"reasons: \")[0]}))
+ print(\"new own figure views on selected inputs\",[(v,i,q) for v,i,q in c.execute(\"select view_id,created_from_input,question from views\") if i in f[\"capex\"]|f[\"anthropic\"] and any(k in q.lower() for k in [\"revenue\",\"margin\",\"eps\",\"free cash flow\"])])
+ print(\"late site changes by table\",[(table,c.execute(f\"select count(*) from {table} where {key}>?\",(cutoff,)).fetchone()[0]) for table,key in [(\"view_switches\",\"after_seq\"),(\"dependency_resolutions\",\"seq\"),(\"same_claims\",\"seq\"),(\"revisions\",\"seq\"),(\"replacements\",\"seq\")]])
+print(\"old union incl census/control\",len(set.union(*u.values(),*cens.values(),{num[\"223\"]})))
+for draw in (\"new-2\",\"new-3\"):
+ lib=json.loads((b/f\"run/{draw}/step2/library.json\").read_text())
+ cas=json.loads((b/f\"run/{draw}/cases/cases.json\").read_text())
+ out=defaultdict(set)
+ for g in lib[\"groups\"].values():
+  for e in [g[\"original\"],*g[\"members\"]]:
+   if \"2026-09-07\"<=e[\"publication_date\"]<=\"2026-09-20\":
+    for k in e[\"thesis_ids\"]: out[k].add(e[\"input_id\"])
+ print(draw)
+ for c in cas:
+  t=c[\"thesis\"]; desc=t[\"description\"].lower();k=t[\"id\"]
+  if (\"hyperscaler\" in desc and \"cap\" in desc) or \"anthropic\" in desc:
+   print(k,len(out[k]),len(out[k]&f[\"capex\"]),len(out[k]&f[\"anthropic\"]),t[\"description\"][:175])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 33ms:
+old-2 seqs 1474 1884 view count 38 42
+v5 24 3 date 2026-09-19 calls_window 12 theme days []
+v40 4 4 date 2026-09-20 calls_window 7 theme days ['2026-07-28', '2026-08-19', '2026-08-25', '2026-09-17', '2026-09-19', '2026-09-20']
+new own figure views on selected inputs []
+late site changes by table [('view_switches', 6), ('dependency_resolutions', 0), ('same_claims', 493), ('revisions', 17), ('replacements', 0)]
+old-3 seqs 1474 1884 view count 43 47
+v6 27 3 date 2026-09-19 calls_window 13 theme days []
+v47 4 4 date 2026-09-20 calls_window 7 theme days ['2026-07-07', '2026-07-28', '2026-08-19', '2026-08-25', '2026-08-29', '2026-09-16', '2026-09-19', '2026-09-20']
+v48 4 4 date 2026-09-20 calls_window 7 theme days ['2026-07-07', '2026-07-28', '2026-08-19', '2026-08-25', '2026-08-29', '2026-09-16', '2026-09-19', '2026-09-20']
+new own figure views on selected inputs []
+late site changes by table [('view_switches', 6), ('dependency_resolutions', 0), ('same_claims', 541), ('revisions', 14), ('replacements', 0)]
+old union incl census/control 40
+new-2
+clean-5 41 41 2 What will the big-four AI hyperscalers' combined data-center capital expenditures be over 2026 and 2027 — the aggregate demand pool underpinning NVIDIA's data-center revenue?
+clean-16 10 5 1 How much AI-accelerator deployment capacity will the named AI labs (Microsoft, Meta, Oracle, OpenAI, Anthropic) commit to AMD's Helios rack-scale system in 2026–2027 — i.e., h
+clean-26 40 40 4 How much of the 2026–2027 AI-accelerator demand pool at the big hyperscalers and AI labs will go to in-house or custom ASICs — Google's TPUs, Amazon's Trainium, Microsoft's Ma
+clean-27 23 9 2 What will the major GPU neoclouds' (CoreWeave, Nebius and comparable operators) combined data-center capex and NVIDIA-GPU purchases be in calendar 2026 and 2027 — the debt-fin
+clean-43 6 5 6 Will NVIDIA complete its announced investment of up to US$10 billion in Anthropic, and how large will its equity stake in the AI lab become?
+clean-44 17 6 2 How large is NVIDIA's equity exposure to companies sitting on the same AI demand curve — AI labs (xAI/SpaceX, OpenAI, Anthropic), neoclouds (Nebius, CoreWeave) and silicon/opt
+clean-51 8 8 0 What will the prevailing all-in capital cost of building one gigawatt of AI data-center capacity be in calendar 2026–2027 — the unit build cost that determines how much AI cap
+clean-59 1 1 1 Will the leading AI labs' (Anthropic, OpenAI and xAI/SpaceX) combined annualized revenue run rate reach at least $180 billion by year-end 2026 — the level Brad Gerstner says i
+new-3
+clean-4 46 46 2 Will the four largest AI hyperscalers' combined data center capital expenditures reach roughly $650 billion in calendar 2026, and Nvidia's projected $1 trillion in calendar 20
+clean-30 18 8 1 How much combined data-centre capital expenditure will the major AI neoclouds — CoreWeave, Nebius and comparable operators — commit to in calendar 2026, the AI-infrastructure 
+clean-34 6 6 6 How much will NVIDIA ultimately invest in Anthropic under the reported commitment of up to $10 billion, and what equity stake will it hold, as disclosed in its periodic filing
+clean-58 5 4 5 Will NVIDIA sign and fund its reported US$10 billion anchor investment in Anthropic's initial public offering, and will Anthropic complete that listing on its targeted pre-Nov
+clean-59 1 1 1 What will the combined annualized revenue run rate of the leading AI labs (Anthropic, OpenAI and xAI/SpaceX) be at the end of calendar 2026, and does it reach the roughly $180
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import sqlite3,json
+p=Path(\"../../../poc/data/comparison-2026-11-17\")
+read=json.loads((p/\"reading-diagnostic/deck/readings.json\").read_text())
+for d,qs in ((\"old-2\",[\"Q5\",\"Q40\"]),(\"old-3\",[\"Q6\",\"Q47\",\"Q48\"])):
+ for q in qs: print(d,q,read[\"cards\"][d][q])
+for d in (\"old-2\",\"old-3\"):
+ c=sqlite3.connect(f\"file:{p}/run/{d}/prod/views.sqlite?mode=ro&immutable=1\",uri=True)
+ for s in (1474,1884):
+  n=c.execute(\"\"\"select count(*) from views v where v.created_seq<=? and v.object_kind "'!= "theme" and (select open from view_switches t where t.view_id=v.view_id and t.after_seq<=? order by id desc limit 1)=1 and exists(select 1 from evidence_links l where l.view_id=v.view_id and l.seq<=?)""",(s,s,s)).fetchone()[0]
+  print(d,s,n)
+'"'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+old-2 Q5 {'worth': 'worth', 'answer': 'supported', 'type': 'figure', 'guardrail': True, 'covering': True, 'opened': '2026-07-04'}
+old-2 Q40 {'worth': 'worth', 'answer': 'supported', 'type': 'yes/no', 'guardrail': True, 'covering': True, 'opened': '2026-09-14'}
+old-3 Q6 {'worth': 'worth', 'answer': 'supported', 'type': 'figure', 'guardrail': False, 'covering': True, 'opened': '2026-07-04'}
+old-3 Q47 {'worth': 'worth', 'answer': 'supported', 'type': 'yes/no', 'guardrail': False, 'covering': True, 'opened': '2026-09-14'}
+old-3 Q48 {'worth': 'duplicate', 'answer': 'unsupported', 'type': 'yes/no', 'guardrail': True, 'covering': True, 'opened': '2026-09-14'}
+old-2 1474 31
+old-2 1884 33
+old-3 1474 34
+old-3 1884 37
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+from collections import defaultdict
+import sqlite3,json
+b=Path(\"../../../poc/data/comparison-2026-11-17\"); f={k:set(v) for k,v in json.load(open(\"articles.json\")).items()}
+p=Path(\"../2026-11-17-product-comparison/stage0/census\")
+num=json.loads((p/\"numbering.json\").read_text());mat={x[\"matter\"]:x for x in json.loads((p/\"matters.json\").read_text())[\"matters\"]}
+u={k:{num[str(i)] for i in mat[m][\"articles\"]} for k,m in ((\"capex\",\"M04\"),(\"anthropic\",\"M17\"))}
+u[\"capex\"].add(num[\"223\"])
+for d,pairs in ((\"old-2\",[(\"v5\",\"capex\"),(\"v40\",\"anthropic\")]),(\"old-3\",[(\"v6\",\"capex\"),(\"v47\",\"anthropic\"),(\"v48\",\"anthropic\")])):
+ c=sqlite3.connect(f\"file:{b}/run/{d}/prod/views.sqlite?mode=ro&immutable=1\",uri=True)
+ for v,tag in pairs:u[tag]|={x[0] for x in c.execute(\"select distinct s.input_id from evidence_links l join evidence_sources s using(evidence_id) where l.view_id=? and s.publication_day between \\\"2026-09-07\\\" and \\\"2026-09-20\\\"\",(v,))}
+for d,pairs in ((\"new-2\",{\"capex\":{\"clean-5\"},\"anthropic\":{\"clean-43\"}}),(\"new-3\",{\"capex\":{\"clean-4\"},\"anthropic\":{\"clean-34\",\"clean-58\"}})):
+ l=json.loads((b/f\"run/{d}/step2/library.json\").read_text())
+ for g in l[\"groups\"].values():
+  for e in [g[\"original\"],*g[\"members\"]]:
+   if \"2026-09-07\"<=e[\"publication_date\"]<=\"2026-09-20\":
+    for tag,ids in pairs.items():
+     if ids.intersection(e[\"thesis_ids\"]): u[tag].add(e[\"input_id\"])
+print(\"exact-thesis union\",len(u[\"capex\"]),len(u[\"anthropic\"]),len(u[\"capex\"]|u[\"anthropic\"]),\"outside plan\",len((u[\"capex\"]|u[\"anthropic\"])-(f[\"capex\"]|f[\"anthropic\"])))
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 21ms:
+exact-thesis union 65 8 70 outside plan 1
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import json,sqlite3
+b=Path(\"../../../poc/data/comparison-2026-11-17\");f=json.load(open(\"articles.json\")); ids=set(f[\"capex\"]+f[\"anthropic\"]);p=Path(\"../2026-11-17-product-comparison/stage0\");kept=set(json.loads((p/\"kept-articles.json\").read_text())[\"kept_ids\"])
+for d,scope in [(\"new-2\",{\"clean-5\",\"clean-43\"}),(\"new-3\",{\"clean-4\",\"clean-34\",\"clean-58\"})]:
+ lib=json.loads((b/f\"run/{d}/step2/library.json\").read_text())
+ for g in lib[\"groups\"].values():
+  for e in [g[\"original\"],*g[\"members\"]]:
+   if \"2026-09-07\"<=e[\"publication_date\"]<=\"2026-09-20\" and scope.intersection(e[\"thesis_ids\"]) and e[\"input_id\"] not in ids:
+    print(d,e[\"input_id\"],e[\"input_id\"] in kept,e[\"publication_date\"],e[\"thesis_ids\"],e[\"title\"],e[\"summary\"][:450])
+print(\"plan outside kept\",len(ids-kept))
+for d in (\"old-2\",\"old-3\"):
+ db=sqlite3.connect(f\"file:{b}/run/{d}/prod/views.sqlite?mode=ro&immutable=1\",uri=True)
+ for q, in db.execute(\"select question from views where created_seq<=1474 and question like \\\"%nvidia%revenue%\\\" limit 5\"):print(d,q)
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 19ms:
+plan outside kept 0
+old-2 How much will NVIDIA's total revenue grow in FY2028?
+old-2 How much will NVIDIA's total revenue grow in FY2027?
+old-3 What will NVIDIA report as total revenue for FY2027?
+old-3 What will NVIDIA report as total revenue for FY2028?
+old-3 What will NVIDIA report as total CPU revenue for FY2027?
+old-3 What will NVIDIA report as Vera CPU revenue for FY2027?
+old-3 What will NVIDIA report as data-center revenue for FY2027?
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import json
+p=Path(\"../2026-11-17-product-comparison/stage0/census\");no=json.loads((p/\"numbering.json\").read_text()); m={a[\"matter\"]:a for a in json.loads((p/\"matters.json\").read_text())[\"matters\"]}
+x=json.load(open(\"articles.json\")); ids=set(x[\"capex\"]+x[\"anthropic\"])
+print([(k,no[str(k)]) for v in [\"M04\",\"M17\"] for k in m[v][\"articles\"] if no[str(k)] not in ids])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+[(190, 'gnews:5b5789904f4f73d216143129')]
+
+codex
+**Change the plan before sending.** I checked `evidence_links` against `evidence_sources`. Old-2’s capex and Anthropic questions have 24 and four window sources, respectively. Seven of the 11 census articles already reached their target questions, as did control 223. Article 181 supplied the $720–745B estimate.
+
+1. **Articles.** Use the **70-source union** of both systems’ directly corresponding questions, the census articles, and control 223. The 126-source list includes adjacent topics such as custom chips and omits census article 190. The smaller union retains all old evidence. Its results apply to these cases.
+
+2. **Open questions.** Restore the agreed day-start list. Preserve each ID, question and observable outcome. Keep the reporting period distinct from the deadline, and leave answer choices with the judge.
+
+3. **Judging.** Build from September 6 snapshots and restore target openings and closings in order. Cut later switches, source links and evidence relationships as well as answers. Use the same frozen non-target context for an old-evidence control. The archived Anthropic requests saw themes updated through September 20. Explicitly restrict the judge queue, since a changed capex theme can otherwise trigger every open asset question.
+
+4. **Pass lines.** Check P1 in the actual judge requests. Keep P2’s proxy label as a higher bar and disclose that the old capex answers did not explicitly label it. Keep P3. Treat P4 as diagnostic because the open lists already contain standalone revenue questions. For P5, score four primary cards. Old-3 v48 was rated duplicate and unsupported, so keep it as a negative control.
+
+5. **Validity.** Require readers to pass the controls and support the reconstructed old-evidence cards before interpreting the hybrid result. This review cost $0.
+
+CONSENSUS: CHANGE use the 70-source union and cutoff-matched controls.
+tokens used
+321,428
+**Change the plan before sending.** I checked `evidence_links` against `evidence_sources`. Old-2’s capex and Anthropic questions have 24 and four window sources, respectively. Seven of the 11 census articles already reached their target questions, as did control 223. Article 181 supplied the $720–745B estimate.
+
+1. **Articles.** Use the **70-source union** of both systems’ directly corresponding questions, the census articles, and control 223. The 126-source list includes adjacent topics such as custom chips and omits census article 190. The smaller union retains all old evidence. Its results apply to these cases.
+
+2. **Open questions.** Restore the agreed day-start list. Preserve each ID, question and observable outcome. Keep the reporting period distinct from the deadline, and leave answer choices with the judge.
+
+3. **Judging.** Build from September 6 snapshots and restore target openings and closings in order. Cut later switches, source links and evidence relationships as well as answers. Use the same frozen non-target context for an old-evidence control. The archived Anthropic requests saw themes updated through September 20. Explicitly restrict the judge queue, since a changed capex theme can otherwise trigger every open asset question.
+
+4. **Pass lines.** Check P1 in the actual judge requests. Keep P2’s proxy label as a higher bar and disclose that the old capex answers did not explicitly label it. Keep P3. Treat P4 as diagnostic because the open lists already contain standalone revenue questions. For P5, score four primary cards. Old-3 v48 was rated duplicate and unsupported, so keep it as a negative control.
+
+5. **Validity.** Require readers to pass the controls and support the reconstructed old-evidence cards before interpreting the hybrid result. This review cost $0.
+
+CONSENSUS: CHANGE use the 70-source union and cutoff-matched controls.

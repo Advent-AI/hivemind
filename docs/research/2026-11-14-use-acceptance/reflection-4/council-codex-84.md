@@ -1,0 +1,11 @@
+**No-go on building v5 yet.** The three-arm comparison is useful, but its main success condition can pass without exercising the behavior A3 is meant to change.
+
+- **The removal check needs an exercise condition.** If A2 produces zero entries marked `already_judged` on the four event topics, A3’s count of zero is “at most half” of zero. Require a predeclared minimum number of eligible entries in A2; below it, report the removal test as inconclusive. Report both counts and the actual entries. [A3 design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md>)
+
+- **The audit is not the whole-request audit required after a measurement.** It explicitly scopes itself to sentences that fill `not_judged`. The blind reader also identified a conflict with the existing closing check, which asks for *every* other part, while A3 asks to remove some. Review the complete system, schema, payload and closing check against the decisions, including that interaction, before writing the arm. [Prompt audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/PROMPT-AUDIT-A3.md>), [AGENTS §6](</Users/lchingen/hivemind/AGENTS.md:200>)
+
+- **“From A2’s definition” still overstates attribution.** Seeing a fault in the freshly sampled A2 arm establishes that it is present there, not that the definition caused it or that A3 did not affect its frequency. Label it as present in A2 and show both arms’ sends. Likewise, the three-arm comparison can *estimate* the sentence’s effect on this sample; it does not isolate causation perfectly. [A3 attribution](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A3.md>)
+
+The event-only scope avoids the blind reader’s specific figure examples, but it should also be checked for event-shaped second sides under D436; the decision to preserve those as context is not limited to figures. Keep the grouped-choice test explicitly untested if it cannot be exercised, as v5 proposes. [D436](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4847>)
+
+CONSENSUS: no, because the central removal test can pass at zero and the required whole-request audit has not yet been recorded.

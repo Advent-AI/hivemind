@@ -1,0 +1,5 @@
+Failed controls now skip the size check. The updated regression test passed in memory and confirmed that a bad opening date leaves the counts and floors in the report. [Size check](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:345) · [Regression test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_score_comparison.py:309)
+
+One gap remains. I reproduced a malformed worth mark that made the floors calculation fail and discarded the sign test, even though the scorer had already computed it. [Grouped diagnostics](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:203) · [Sign test and floors](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/score_comparison.py:217)
+
+NOT READY: On `invalid` and `too small`, record each diagnostic as it succeeds and flag failures individually.

@@ -80,7 +80,22 @@
           "maximum": 5
         },
         "score": {
-          "enum": ["+2", "+1", "0", "\u22121", "\u22122", "Yes", "No"]
+          "enum": [
+            "+2",
+            "+1",
+            "0",
+            "\u22121",
+            "\u22122",
+            "Yes",
+            "No",
+            "Ruled out",
+            "Still open",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+          ]
         },
         "label": {
           "type": "string"
@@ -400,6 +415,32 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/succession"
+          }
+        },
+        "answerShape": {
+          "description": "How to read the stored answer choices (page-contract/DESIGN.md): event, figure, unrecorded (a new-system store with no ladder row for the question), or null for a legacy ledger.",
+          "enum": ["event", "figure", "unrecorded", null]
+        },
+        "favourableEnd": {
+          "description": "D398: a figure's registered favourable end; n/a for a theme; null for an event or a legacy ledger.",
+          "enum": ["higher", "lower", "n/a", null]
+        },
+        "notJudged": {
+          "description": "D397: the parts of the topic this question does not judge, with their reasons; null when not recorded or before the question opens.",
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["part", "why"],
+            "properties": {
+              "part": {
+                "type": "string",
+                "minLength": 1
+              },
+              "why": {
+                "type": "string"
+              }
+            }
           }
         }
       },

@@ -1,0 +1,17 @@
+**Close this stretch of the lean investigation, but do not make waiting for Alex the next task.** The dependency trace meets its stated stop condition for the missing-figure lead. The next work I recommend is a separate, $0 assessment of **D368’s already-decided dependency slice**, not another attempt to make it explain these omissions.
+
+The trace needs narrower wording before it is recorded:
+
+- The fact list contains **22** facts filed under another question, including **three for which no question on the matter was opened**. The trial’s **19** are the subset never delivered despite a later judgement. Keep those populations distinct. [Dependency trace](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/missing-input/DEPENDENCY-TRACE-RESULT.md)
+- The one directionally valid example carries an **unsized** negotiation report. It does not deliver a sizing figure; that alone does not prove the report has no value to a reader.
+- “D368 is not a remedy for this class” is stronger than the trace. Say **this trace found no directionally valid case in which the dependency conclusion would supply the needed figure**. Some relationships were not recorded, and no counterfactual judgement was run.
+
+Your summary otherwise stands with the existing qualifications: the later-arriving fresh-week facts were traced for the selected cases, not every possible fact; D375 was neither shown nor ruled out as a way to recover the first-day omission; and the three unsupported answers share only two matters, with the two custom-chip answers sharing the same underlying evidence. The $0.0134 is the four accounts plus the earlier six-call test, not the cost of the full lean path.
+
+Consolidate the page as proposed, but describe D375 and D368 as **Alex’s decisions awaiting implementation and acceptance**, not questions to ask him again. D505 remains his rule for the clean system. The cross-system decision and what to show when an amount is not sized remain unresolved. D439 permits the council to decide a new version or paid step while he is away; a frozen piece or a several-dollar estimate is not, by itself, a reason to wait. No such step is approved by this review.
+
+For the next separate slice, use stored data to identify an existing **supporting question → supported question** pair under D368, and inspect what conclusion and shortened reasons would actually reach the supported question at the relevant time. Include the Ohio example as an unsized case, without assuming it can size the total. The question is whether the decided channel can convey useful information in a real, correctly directed case—not whether it repairs the 19 trial omissions.
+
+**Stop:** if no stored case establishes both the direction and what the receiving judge would see, report the exercise as unexercised and return to council before designing a measurement. Do not cancel D368’s decided build on that absence. If a case is established, use it to frame the separate design and its controls; do not infer an improved answer without testing. This work is outside PRD 10’s filing slice, as that PRD itself says. [PRD 10](/Users/lchingen/hivemind/docs/prd/10-filing-phase.md:57) · [D368](/Users/lchingen/hivemind/docs/DECISIONS-log.md:3960)
+
+Council position: close and consolidate this lean investigation with the trace’s limits; keep the default and both systems; next assess D368’s decided dependency channel separately at $0, with no model send or frozen-piece change before council review.

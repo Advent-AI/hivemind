@@ -1,0 +1,730 @@
+2026-11-09T02:17:01.964006Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+2026-11-09T02:17:01.970122Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1bde6-88ee-7fe2-b771-854ce4bf476d
+--------
+user
+Review revised EXPERIMENT-DESIGN.md and actual probe_prepare.py / probe_send.py before any paid send. User authorized isolated score experiment. Scope only Jev comparison, no production/Step1 changes. Check factual score/query mapping and historical pre-article replay, frozen request reconstruction, case/answer identity, metadata labels, archive isolation/real cache misses, fake controls, interruption and ambiguous calls, Jev API contracts, compare.outcome, safe handling and the need for source-blind review. Find any serious failure, including 11-case selection and C vs T semantics; quote code. Read-only, no edits, no paid calls. Return READY or NOT READY.
+
+2026-11-09T02:17:07.147683Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+2026-11-09T02:17:59.660040Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+codex
+我会逐项核对设计和两份实际脚本，重点检查送出的分数、历史候选、缓存隔离和中断后的行为是否真的符合实验要求。只做只读检查，不发付费请求。
+exec
+/opt/homebrew/bin/zsh -lc 'cat -n reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Step 2 score experiment — design for review
+     2	
+     3	Alex asks whether sending embedding similarity to Jev helps, given existing high retrieval recall and merge quality. This is an isolated fixed-history diagnostic, not a product change, adoption, a fresh held-out acceptance, or a comparison of search recall. Prior recorded acceptance 141/143 is search recall, 1/57 clearly wrong merges is not recall of Jev's repeat decisions. The fresh frozen reference and old labels do not change. Start with 11 archived c8 fresh comparison requests, selected before sending, covering the clearly wrong merge, disputed overlaps, accepted repeats, and new-evidence controls: `22:ev-11`, `13:e11`, `38:ev-2`, `18:e2`, `43:e3`, `3:e1`, `9:e6`, `14:e3`, `5:e1`, `9:e1`, `19:ev-guidance-70`. Two arms times three draws = 66 calls, with the original candidate sets and state fixed. This is a selected diagnostic and cannot measure overall precision or recall. A larger comparison is considered only if the cheap probe reveals a useful signal (AGENTS §7.3); the raw articles are already used, so neither probe is fresh acceptance.
+     4	
+     5	## What is sent and why
+     6	
+     7	C control: exact archived model/state/questions. T: each candidate instruction adds a newline and factual metadata: `Retrieval metadata (not part of the stored piece; cosine, not a probability): query 1 [thesis search]: 0.xxxx; query 2 [own-text search]: 0.xxxx`. Each query corresponds in order to the existing caller's query_vectors; its label and query type are made explicit without disclosing thesis text otherwise not sent. Include a score for each query, including non-retrieving queries; retrieval origins are recorded in the manifest, not sent. Jev returns no textual reasoning, so do not infer why its choice changes. Query type labels expose information C did not have, so any observed effect is the joint effect of score metadata and labels. No shuffled-score arm: it would describe intentionally incorrect scores as real, and its interpretation as a formatting control is uncertain. The test compares the practical intervention of adding real scores against the current request; it does not establish how Jev uses the numbers. Freeze this representation; do not infer importance from cosine or set thresholds. Decimal precision 4, cosine computed with existing compare.py and cached exact text vectors. Retrieval always uses original queries, no candidate changes. User requests testing this candidate, not deployment or any new rule.
+     8	
+     9	## State × event
+    10	
+    11	| Event | State and action | Date/time |
+    12	|---|---|---|
+    13	| Preflight | Read archives read-only; rebuild all 185 request bytes and answers; compare identity and score reconstruction. Abort on missing keys, candidates, requests or inconsistent data. | No wall-clock data in requests |
+    14	| First send | Separate research archive for each arm/draw; interleave all 6 requests per case in fixed seeded order; fresh transport, no archived cache hit. | Same day for all arms; timestamps metadata only |
+    15	| Transport failure | Record actual error; bounded underlying transport retry; incomplete case remains failed, no replacement or analysis as different. | No date decision |
+    16	| Crash or interruption | Durable per-arm archive; no unrecorded retry; resume only missing planned requests, preserving planned ordering where possible; disclose interruption/time. | Save identifiers, not wall-clock ordering |
+    17	| Completed response | Validate with current Jev validator; record raw response and costs; malformed/refusal stops case and is reported. | Original dates stay unchanged |
+    18	| Analysis | Compare each request on fixed original library; no advance to newly grouped state; reviewed changes and controls with source, not self-scorer claims. | Historical source dates preserved |
+    19	| Later run/config change/another writer/two scopes | Refuse existing output on rerun absent exact frozen manifest and explicit resume; do not access live data or concurrent Step 1 writes. Different scopes use different research directories and archives. | No runtime time used as identity |
+    20	
+    21	## Values × readers
+    22	
+    23	| Value | Origin | Reader | Consequence |
+    24	|---|---|---|---|
+    25	| query and record text | saved Step 1 trace | existing query construction, Jev | Preserve bytes and record identity |
+    26	| query-to-group cosine | cached embeddings and current cosine | T Jev question only | Keep query provenance; numeric score is not truth |
+    27	| Jev choice/probabilities | model per candidate | original outcome function | Compare same candidate ids and code; no probability gate |
+    28	| group outcome | original outcome | read-only analysis and blind readers | Compare mergers, target group, revisions and omissions, including changed outcomes and controls |
+    29	| article and source | archived Step 1 input | independent blind reader | Judge whether actual statements are same, revised, or different; no score/arm/model decision shown |
+    30	| cost/failure | archives | report | Never infer zero from missing response |
+    31	
+    32	## New path × old checks
+    33	
+    34	| Check | C | T |
+    35	|---|---|---|
+    36	| model, state, candidate order, choice criteria | exact archive equality | identical, only question text lines appended |
+    37	| request JSON identity | equal per archived request | first strip appended metadata, equals original |
+    38	| score alignment | not sent | raw values recomputed against exact query and candidate; reconstructed historical top-ten union and origin membership must equal saved candidate sequence |
+    39	| Jev choice set and probability validation | current validator | same validator |
+    40	| missing input / empty population | refuse | refuse |
+    41	| stored historical answers | replay baseline 185 exact requests/answers without live calls | original answer passes current validator |
+    42	| outcome function | original candidates and order | same; group state frozen |
+    43	| unrelated later-link Jev calls | excluded | excluded |
+    44	
+    45	## Acceptance and analysis
+    46	
+    47	1. Report every request, candidate, transport failure, cost and baseline variability. Quantify disagreements C vs T and change in wrong merges, missed repeats, revisions and target group, by request, comparing the three draws in each arm. Score-sensitivity is not proof of accuracy. No search recall improvement can be attributed to this intervention because search is held fixed.
+    48	2. As Jev and saved references are incomplete, blind readers inspect all eleven incoming records against their full candidate sets and source articles, including unchanged cases. Candidate order is randomized; scores, arm labels, retrieval rank and model decisions are hidden. Two independent reviews and adjudication of disagreements; do not use a new score program as semantic judge. If workload exceeds available reviewer context, partition into bounded batches and report coverage.
+    49	3. The original fresh run returned 3 supersedes answers attached to repeat outcomes; it did not exercise a standalone revision outcome. One selected case has a supersedes decision, so describe it as an individual diagnostic, not revision performance. A separate case set of documented real revisions may be read and assessed; it cannot stand in for the full product path.
+    50	4. One draw can expose mechanism; 3 same-day control draws characterize instability, not guarantee statistical power. State the counts and losses; no unregistered win threshold. Effect would justify a later separately approved, forward full-path validation; no effect is not proof of equivalence. Predeclare a compact decision before send with council, not after output.
+    51	
+    52	## Prior decisions and limits
+    53	
+    54	D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+    55	
+    56	## Probe prediction and stop
+    57	
+    58	Hypothesis: score information moves at least one relevant comparison and makes at least one source-backed decision better without a source-backed decision getting worse. Prediction: the clearly wrong X22 grouping becomes separate more often in T than C, while the selected accepted-repeat controls remain correctly grouped. We do not predict a perfect result. Predeclare individual decision comparisons, 3 samples per arm and show all 66 outcomes and errors. For each outcome and selected source-backed candidate, count correct and incorrect choices across three draws per arm. A repeatable improvement requires at least one agreed previously incorrect decision to become correct in at least 2 of 3 T draws and fewer than 2 of 3 C draws, with no agreed previously correct decision becoming wrong in at least 2 of 3 T draws while correct in at least 2 of 3 C draws. A repeatable regression stops the line. If neither occurs or independent readers disagree, report inconclusive. This is a screening rule for selected examples, not a quantitative estimate of product impact. Blind-read all eleven incoming records against all their candidate sets and source articles, including unchanged controls; report gaps. Register case ids and score mapping and historical top-ten replay before any send; send no paid calls until council review and preflight pass.
+    59	
+    60	## Review amendments and exact contract
+    61	
+    62	The read-only Codex reviewer cleared harness design but not sending. Claude reviewed the earlier 10-case/three-arm draft and found lack of revision coverage, unsupported X22 direction and number presentation ambiguity; an eleventh recorded revision-bearing case was added. Its conclusion that 40 borderline probabilities bound opportunity is a hypothesis; confident outputs can also be wrong. The X22 prediction is a falsifiable probe hypothesis, not evidence of likely improvement. The shuffled arm is removed due to false attribution; C versus T assesses the total intervention, not score causation.
+    63	
+    64	Literal metadata is appended after a newline: `Retrieval metadata (not part of the stored piece; cosine, not a probability): query 1 [thesis search]: 0.1234; query 2 [own-text search]: 0.5678`. Four-decimal Python formatting. The label is `thesis search` for every thesis query, `own-text search` for the extra document query, never the thesis content. One score per query against each candidate group's original. Do not claim all queries retrieved that candidate. The manifest records all query identities, full top-ten lists, origin query indices per candidate, all vectors' computed scores and union order. Reconstruct the pre-article group order by replaying saved outcomes article by article, with no same-article visibility, and require union order and saved answer outcome to match all selected cases; fail on missing input. The manifest and source request/answer identities and case list are frozen with hashes before send.
+    65	
+    66	Negative controls: mutate a query vector, candidate score, candidate id, and retrieval origin separately; each must trigger the independent check. A known multi-query case must have every query and origin checked, not only the union. A fake transport must pass 3 separate control draws with 3 calls, fail a malformed response and cover interruption; a missing input and empty population must fail. If an actual send ends ambiguously after dispatch, record it as unresolved and do not silently resend it; incomplete calls are not success. The only retries are the underlying transport's bounded policy, recorded separately where possible.
+    67	
+    68	Readers independently classify each new-versus-old statement as same / revision / different / overlapping / unable to decide, using both source articles. Candidate order is shuffled in the reading packet. A multiple-target repeat is acceptable if any source-supported candidate is selected; a revision link must itself be supported; a missing supported revision and a wrong extra revision are errors separately from grouping. Overlap or absent source makes that pair unresolved; it cannot establish improvement or regression. Resolve disagreements by a third reader, and report unresolved without counting correct or wrong. Each of the six draws per case is scored against the same frozen blinded judgments; evaluate repeat target and revision links, not only outcome kind. If model failures or blind review coverage prevent a comparison, report incomplete, never success.
+
+exec
+/opt/homebrew/bin/zsh -lc "cat -n clean-arch/step2/compare.py | sed -n '25,70p;96,151p'; cat -n src/hivemind/jev.py | sed -n '28,112p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    25	
+    26	
+    27	def stated(record):
+    28	    return record['statement_date'] or record.get('statement_date_text') or 'unknown'
+    29	
+    30	
+    31	def doc_text(record):
+    32	    return '\n'.join([record['summary'], ' '.join(record['passages']), f"party: {record['original_party'] or 'unknown'}",
+    33	                      f"stated: {stated(record)}", f"period: {record['evidence_period'] or 'unknown'}"])
+    34	
+    35	
+    36	def query_text(record, thesis_question):
+    37	    return f"thesis: {thesis_question}\n{record['summary']}\n{' '.join(record['passages'])}"
+    38	
+    39	
+    40	def piece_text(record, label):
+    41	    return (f"{label} [{record['tier']}; {record['reporting_speaker']}; original source {record['original_party']}, stated "
+    42	            f"{stated(record)}] {record['summary']} | quote: {' '.join(record['passages'])}")
+    43	
+    44	
+    45	def query_vectors(vectors, record, thesis_questions):
+    46	    """The search queries of one record, in order: one per thesis association, then its own text when it has no association or lists
+    47	    the company's figures."""
+    48	    queries = [vectors[query_text(record, thesis_questions[t])] for t in record['thesis_ids']]
+    49	    if not record['thesis_ids'] or record.get('figures'):
+    50	        queries.append(vectors[doc_text(record)])
+    51	    return queries
+    52	
+    53	
+    54	# Jev's piece criteria aligned with the Step 2 merge line's own test (PRD §5 line 2; AGENTS §7.1, one ruler): a repeat is a later report
+    55	# of the stored piece's main statement. Production's wording (views/jev_matching.PIECES) judged "the same evidence", so a later report of
+    56	# only a secondary statement inside a stored record (an official's denial carried in the report it denies) was merged as a repeat.
+    57	PIECES = {'same_statement': "the INCOMING PIECE reports the STORED PIECE's main statement: a retelling, another outlet carrying it, the "
+    58	                            "same number in text or a table, or the same speaker repeating it; wording, precision and extra detail may "
+    59	                            "differ. If the stored piece carries several statements and the incoming piece reports only a secondary one, "
+    60	                            "this is not it",
+    61	          'supersedes': "a later version of the stored piece's main statement, changed: the same speaker revises that guidance, "
+    62	                        "forecast or event-progress statement, an official confirms or denies that reported claim, or the original "
+    63	                        "source revises it; another statement on the same topic is not this",
+    64	          'different': "a different fact, figure or matter, a figure for another period or quantity, or only a secondary statement of "
+    65	                       "the stored piece, even if on the same topic"}
+    66	
+    67	
+    68	def piece_question(text):
+    69	    return {'type': 'choice', 'criteria': PIECES,
+    70	            'instructions': 'How does the INCOMING PIECE relate to the STORED PIECE below? Use only the supplied text. STORED PIECE:\n' + text}
+    96	def cosine(a, b):
+    97	    return sum(x * y for x, y in zip(a, b)) / (math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b)) or 1)
+    98	
+    99	
+   100	def search(library, vectors, record, thesis_questions):
+   101	    """Candidate group ids: each query's top 10 by cosine against the groups' original records, merged in rank order."""
+   102	    candidates = []
+   103	    for query in query_vectors(vectors, record, thesis_questions):
+   104	        ranked = sorted(library.order, key=lambda g: -cosine(query, vectors[doc_text(library.groups[g]['original'])]))[:TOP]
+   105	        candidates += [g for g in ranked if g not in candidates]
+   106	    return candidates
+   107	
+   108	
+   109	def outcome(answers, order):
+   110	    """answers: {group id: {'choice', 'probabilities'}}; order: group ids in creation order."""
+   111	    same = [g for g, a in answers.items() if a['choice'] == 'same_statement']
+   112	    later = [g for g, a in answers.items() if a['choice'] == 'supersedes']
+   113	    if same:
+   114	        best = max(same, key=lambda g: (answers[g]['probabilities']['same_statement'], -order.index(g)))
+   115	        return {'kind': 'repeat', 'repeat_of': [best], 'revises': later}
+   116	    if later:
+   117	        return {'kind': 'revision', 'revises': later}
+   118	    return {'kind': 'new'}
+   119	
+   120	
+   121	def forward(articles, library, vectors, thesis_questions, ask, workers=8, opened=None):
+   122	    """articles: lists of Step 3 records in article order. ask(state, questions) returns Jev's answers by question id, or raises.
+   123	    opened: per article, the thesis ids it opened; after the article's records are written, each is linked later to the stored groups
+   124	    that arrived unlinked from earlier articles (`Library.link_later`). A thesis written to with pairs still pending is judged again,
+   125	    against its opening boundary. Returns one decision per record."""
+   126	    decisions = []
+   127	    for index, records in enumerate(articles):
+   128	        def decide(record):
+   129	            candidates = search(library, vectors, record, thesis_questions)
+   130	            if not candidates:
+   131	                return record, candidates, {}, {'kind': 'new'}
+   132	            questions = {f'q{i}': piece_question(piece_text(library.groups[g]['original'], 'STORED PIECE'))
+   133	                         for i, g in enumerate(candidates)}
+   134	            incoming = piece_text(record, 'INCOMING PIECE')
+   135	            try:
+   136	                raw = ask(incoming, questions)
+   137	            except Exception as first:   # retried once; a second failure is reported, never silently saved as new
+   138	                try:
+   139	                    raw = ask(incoming, questions)
+   140	                except Exception as error:
+   141	                    return record, candidates, {}, {'kind': 'failed', 'reason': f'{type(first).__name__}: {first}; retry: {type(error).__name__}: {error}'}
+   142	            answers = {g: {'choice': raw[f'q{i}']['choice'], 'probabilities': raw[f'q{i}']['probabilities']} for i, g in enumerate(candidates)}
+   143	            return record, candidates, answers, outcome(answers, library.order)
+   144	        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+   145	            results = list(pool.map(decide, records))
+   146	        for record, candidates, answers, result in results:
+   147	            entry = {'id': record['id'], 'candidates': candidates, 'answers': answers, 'outcome': result}
+   148	            try:
+   149	                entry['group'] = library.apply(record, result)
+   150	            except Exception as error:
+   151	                entry['refused'] = f'{type(error).__name__}: {error}'
+    28	def transport(request, timeout=60):
+    29	    """POST the request; up to three attempts, pausing before each retry, on a rate-limit or overload status or a
+    30	    connection that fails without a reply; any other failure is a TransportError. The body is the same sorted text the
+    31	    archive digests, so a cache hit is byte-identical to what was sent."""
+    32	    body = json.dumps(request, sort_keys=True, ensure_ascii=False).encode('utf-8')
+    33	    key = _key()
+    34	    for attempt in range(ATTEMPTS):
+    35	        req = urllib.request.Request(ENDPOINT, body, {'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'})
+    36	        try:
+    37	            with urllib.request.urlopen(req, timeout=timeout) as response:
+    38	                raw = response.read()
+    39	            break
+    40	        except urllib.error.HTTPError as error:
+    41	            if error.code not in RETRY_STATUSES or attempt == ATTEMPTS - 1:
+    42	                raise model.TransportError(f'Jev HTTP {error.code}') from None
+    43	        except (urllib.error.URLError, OSError, http.client.HTTPException) as error:   # a dropped or truncated reply
+    44	            if attempt == ATTEMPTS - 1:
+    45	                raise model.TransportError(f'Jev transport failed: {type(error).__name__}') from None
+    46	        time.sleep(2 * (attempt + 1))
+    47	    if key.encode('utf-8') in raw:
+    48	        raise model.TransportError('Jev response echoed the credential; not archived')
+    49	    return json.loads(raw.decode('utf-8'))
+    50	
+    51	
+    52	# Jev reports each probability rounded to two decimals independently of the choice it made on the unrounded values, so the
+    53	# chosen option may print one unit below another (0.47 against 0.48; 1 of 2,353 archived choice answers on 2026-10-25).
+    54	ROUNDING = 0.01
+    55	
+    56	
+    57	def validate(answers, questions):
+    58	    """The answers of a response against the request's questions; a list of problems."""
+    59	    problems = []
+    60	    if not isinstance(answers, dict) or set(answers) != set(questions):
+    61	        return ['answer set differs from the questions asked']
+    62	    for qid, question in questions.items():
+    63	        answer = answers[qid]
+    64	        if not isinstance(answer, dict) or answer.get('type') != question['type']:
+    65	            problems.append(f'{qid}: answer type mismatch')
+    66	            continue
+    67	        if question['type'] == 'noul':
+    68	            if not isinstance(answer.get('noul'), (int, float)) or not 0 <= answer['noul'] <= 1:
+    69	                problems.append(f'{qid}: noul out of range')
+    70	        elif question['type'] == 'choice':
+    71	            probabilities = answer.get('probabilities')
+    72	            if answer.get('choice') not in question['criteria'] or not isinstance(probabilities, dict) or set(probabilities) != set(question['criteria']):
+    73	                problems.append(f'{qid}: choice or probabilities do not match the criteria')
+    74	            elif any(not isinstance(v, (int, float)) or isinstance(v, bool) or not 0 <= v <= 1 for v in probabilities.values()) \
+    75	                    or abs(sum(probabilities.values()) - 1) > 0.005 * len(probabilities) + 1e-9:
+    76	                problems.append(f'{qid}: probabilities are not a distribution')
+    77	            elif probabilities[answer['choice']] < max(probabilities.values()) - ROUNDING - 1e-9:
+    78	                problems.append(f'{qid}: choice is not the most probable option')
+    79	    return problems
+    80	
+    81	
+    82	def request_for(setting, state, questions):
+    83	    """The complete Jev request used both for dispatch and in-flight identity."""
+    84	    return {'model': setting.model, 'state': state, 'questions': questions}
+    85	
+    86	
+    87	def ask(archive, cfg, setting, state, questions, purpose, *, transport=None):
+    88	    """One Jev request, archived; returns model.Answer whose data is the `answers` map."""
+    89	    request = request_for(setting, state, questions)
+    90	    request_json, sha = model.request_identity(request)
+    91	    prompt_chars = len(request_json)
+    92	    hit = archive.lookup(sha)
+    93	    if hit:
+    94	        call_id, answer_json, _, input_tokens, output_tokens = hit
+    95	        return model.Answer(json.loads(answer_json), call_id, sha, True, prompt_chars, input_tokens or 0, output_tokens or 0, 0.0)
+    96	    started = time.time()
+    97	    response = (transport or globals()['transport'])(request)
+    98	    seconds = round(time.time() - started, 2)
+    99	    answers = response.get('answers') if isinstance(response, dict) else None
+   100	    problems = validate(answers, questions)
+   101	    usage = response.get('usage') or {} if isinstance(response, dict) else {}
+   102	    input_tokens, output_tokens = int(usage.get('input_tokens') or 0), int(usage.get('output_tokens') or 0)
+   103	    price_in, _ = model.PRICES.get(setting.model, (0.0, 0.0))
+   104	    cost = round(input_tokens / 1e6 * price_in, 6)
+   105	    call_id = archive.record(purpose=purpose, config_version=cfg.version, config_checksum=cfg.checksum, model=setting.model,
+   106	                             request_sha256=sha if not problems else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+   107	                             response_json=json.dumps(response, ensure_ascii=False)[:200000], answer_json=json.dumps(answers, ensure_ascii=False) if answers is not None else None,
+   108	                             prompt_chars=prompt_chars, input_tokens=input_tokens, output_tokens=output_tokens, cost_usd=cost,
+   109	                             seconds=seconds, created_at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+   110	    if problems:
+   111	        raise model.SchemaError('; '.join(problems[:5]))
+   112	    return model.Answer(answers, call_id, sha, False, prompt_chars, input_tokens, output_tokens, cost)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files | rg 'probe_(prepare|send)\\.py"'$|score-council.*(test|manifest)'"'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+reports/step2-score-council-2026-11-08/probe-manifest.json
+reports/step2-score-council-2026-11-08/probe_send.py
+reports/step2-score-council-2026-11-08/probe_prepare.py
+
+2026-11-09T02:18:18.005535Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+exec
+/opt/homebrew/bin/zsh -lc 'cat -n reports/step2-score-council-2026-11-08/probe_send.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat -n reports/step2-score-council-2026-11-08/probe_prepare.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	"""Isolated Jev probe; offline checks by default, live only with --send."""
+     2	import hashlib,importlib.util,json,random,sys,tempfile
+     3	from pathlib import Path
+     4	from types import SimpleNamespace
+     5	HERE=Path(__file__).resolve().parent; ROOT=Path('/Users/lchingen/hivemind');sys.path.insert(0,str(ROOT/'src'))
+     6	spec=importlib.util.spec_from_file_location('prepare',HERE/'probe_prepare.py');prep=importlib.util.module_from_spec(spec);spec.loader.exec_module(prep)
+     7	from hivemind import jev,model
+     8	CONFIG=SimpleNamespace(version='clean-step2-score-probe',checksum='experimental');SETTING=prep.run.SETTING
+     9	
+    10	def ask(archive,req,transport=None):
+    11	 return jev.ask(archive,CONFIG,SETTING,req['state'],req['questions'],'clean_step2_score_probe',transport=transport)
+    12	
+    13	def fake_checks(manifest):
+    14	 example=manifest[0];calls=[]
+    15	 def fake(req):calls.append(req);return {'answers':example['old_answers'],'usage':{'input_tokens':10,'output_tokens':0}}
+    16	 with tempfile.TemporaryDirectory() as directory:
+    17	  for n in range(3):
+    18	   ar=model.Archive(str(Path(directory)/f'{n}.sqlite')); answer=ask(ar,example['control'],fake)
+    19	   if answer.cached:raise AssertionError('unexpected cache hit')
+    20	   ar.conn.close()
+    21	  if len(calls)!=3:raise AssertionError('not three independent fake calls')
+    22	  interrupted=Path(directory)/'interrupted'; interrupted.mkdir()
+    23	  try:interrupted.mkdir(exist_ok=False)
+    24	  except FileExistsError:pass
+    25	  else:raise AssertionError('unsafe restart after interrupted dispatch')
+    26	  ar=model.Archive(str(Path(directory)/'bad.sqlite'))
+    27	  try:ask(ar,example['control'],lambda req:{'answers':{},'usage':{}})
+    28	  except model.SchemaError:pass
+    29	  else:raise AssertionError('malformed answer accepted')
+    30	  ar.conn.close()
+    31	 print('fake transport: 3 separate cache misses, malformed answer refused, interrupted run refuses restart')
+    32	
+    33	def main():
+    34	 manifest=json.loads((HERE/'probe-manifest.json').read_text());prep.check(manifest,prep.build());fake_checks(manifest)
+    35	 if sys.argv[1:]!=['--send']:
+    36	  if sys.argv[1:]:raise SystemExit('usage: probe_send.py [--send]')
+    37	  return
+    38	 dest=HERE/'live-probe';dest.mkdir(exist_ok=False); order=[]
+    39	 for item in manifest:
+    40	  plan=[(arm,draw) for arm in ('control','treatment') for draw in range(3)];random.Random(42031+len(order)).shuffle(plan);order += [(item['id'],arm,draw) for arm,draw in plan]
+    41	 (dest/'plan.json').write_text(json.dumps(order,indent=2)+'\n'); data={x['id']:x for x in manifest}; archives={(arm,n):model.Archive(str(dest/f'{arm}-{n}.sqlite')) for arm in ('control','treatment') for n in range(3)}
+    42	 with (dest/'events.jsonl').open('x',buffering=1) as out:
+    43	  for i,(key,arm,draw) in enumerate(order):
+    44	   req=data[key][arm];event={'id':key,'arm':arm,'draw':draw,'sequence':i,'request_sha256':prep.digest(req)}
+    45	   out.write(json.dumps({**event,'status':'dispatching'})+'\n')
+    46	   try:
+    47	    res=ask(archives[arm,draw],req)
+    48	    if res.cached:raise RuntimeError('unexpected cached result')
+    49	    out.write(json.dumps({**event,'status':'complete','answers':res.data,'input_tokens':res.input_tokens,'cost_usd':res.cost_usd})+'\n')
+    50	   except Exception as e:
+    51	    out.write(json.dumps({**event,'status':'failed_or_ambiguous','error':type(e).__name__})+'\n');print('Stopped on incomplete request',i,key,arm,draw,type(e).__name__,flush=True);return 1
+    52	   print(f'{i+1}/{len(order)} {key} {arm} draw {draw+1}',flush=True)
+    53	 (dest/'complete').write_text('complete\n')
+    54	 for a in archives.values():a.conn.close()
+    55	 return 0
+    56	if __name__=='__main__':raise SystemExit(main() or 0)
+
+ succeeded in 0ms:
+     1	"""Reconstruct selected c8 comparisons without service calls; refuse mismatches."""
+     2	import copy,hashlib,importlib.util,json,math,sqlite3,sys
+     3	from pathlib import Path
+     4	ROOT=Path('/Users/lchingen/hivemind');HERE=Path(__file__).resolve().parent; sys.path.insert(0,str(ROOT/'src'))
+     5	def load(path):
+     6	 spec=importlib.util.spec_from_file_location('step_runner',path); m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+     7	run=load(ROOT/'clean-arch/step2/run_forward.py'); cmp=run.compare
+     8	from hivemind import jev
+     9	SOURCE=ROOT/'poc/data/clean-acceptance-2026-11-09'; STEP=SOURCE/'step2';IDS=['22:ev-11','13:e11','38:ev-2','18:e2','43:e3','3:e1','9:e6','14:e3','5:e1','9:e1','19:ev-guidance-70']
+    10	def serial(obj):return json.dumps(obj,sort_keys=True,ensure_ascii=False)
+    11	def digest(obj):return hashlib.sha256(serial(obj).encode()).hexdigest()
+    12	def build():
+    13	 arts,questions,_=run.step1_records(str(SOURCE/'step1/trace.sqlite')); decisions=json.loads((STEP/'decisions.json').read_text()); byid={x['id']:x for x in decisions}; vectors=json.loads((STEP/'embeddings.json').read_text());db=sqlite3.connect('file:'+str(STEP/'jev.sqlite')+'?mode=ro',uri=True); rows=db.execute("select request_json,answer_json from model_calls where purpose='clean_step2'").fetchall(); original={r:json.loads(a) for r,a in rows}; lib=run.library.Library(); output=[]
+    14	 if not arts or not decisions or not vectors or len(IDS)!=len(set(IDS)):raise ValueError('missing or empty input')
+    15	 for article in arts:
+    16	  for record in article:
+    17	   if record['id'] not in IDS:continue
+    18	   d=byid[record['id']]; ids=d['candidates']; qvec=cmp.query_vectors(vectors,record,questions); labels=['thesis search']*len(record['thesis_ids'])+(['own-text search'] if not record['thesis_ids'] or record.get('figures') else [])
+    19	   if not ids or len(qvec)!=len(labels):raise ValueError('missing candidates or queries')
+    20	   qrows=[]; union=[]
+    21	   for q,label in zip(qvec,labels):
+    22	    values={g:cmp.cosine(q,vectors[cmp.doc_text(lib.groups[g]['original'])]) for g in lib.order};ranked=sorted(lib.order,key=lambda g:-values[g])[:cmp.TOP];qrows.append({'type':label,'vector_sha256':digest(q),'ranked_top10':ranked,'scores':{g:values[g] for g in ids}})
+    23	    union.extend(g for g in ranked if g not in union)
+    24	   if union!=ids:raise ValueError('historical union mismatch '+record['id'])
+    25	   qs={f'q{i}':cmp.piece_question(cmp.piece_text(lib.groups[g]['original'],'STORED PIECE')) for i,g in enumerate(ids)}; req=jev.request_for(run.SETTING,cmp.piece_text(record,'INCOMING PIECE'),qs); encoded=serial(req)
+    26	   if encoded not in original:raise ValueError('request not in archive '+record['id'])
+    27	   answer=original[encoded]; problems=jev.validate(answer,qs)
+    28	   if problems:raise ValueError('saved answer invalid '+str(problems))
+    29	   mapped={g:{'choice':answer[f'q{i}']['choice'],'probabilities':answer[f'q{i}']['probabilities']} for i,g in enumerate(ids)}
+    30	   if mapped!=d['answers'] or cmp.outcome(mapped,lib.order)!=d['outcome']:raise ValueError('saved outcome mismatch '+record['id'])
+    31	   treatment=copy.deepcopy(req); origins={g:[i+1 for i,row in enumerate(qrows) if g in row['ranked_top10']] for g in ids}
+    32	   for i,g in enumerate(ids):
+    33	    bits=[f"query {j+1} [{row['type']}]: {row['scores'][g]:.4f}" for j,row in enumerate(qrows)]
+    34	    treatment['questions'][f'q{i}']['instructions']+='\nRetrieval metadata (not part of the stored piece; cosine, not a probability): '+'; '.join(bits)
+    35	   output.append({'id':record['id'],'group_order':list(lib.order),'candidates':ids,'queries':qrows,'origins':origins,'control':req,'treatment':treatment,'archive_sha256':digest(req),'old_answers':answer})
+    36	  for r in article:
+    37	   d=byid[r['id']];lib.apply(r,d['outcome'])
+    38	 if {x['id'] for x in output}!=set(IDS):raise ValueError('selected population incomplete')
+    39	 return output
+    40	
+    41	def check(manifest,expected):
+    42	 if not manifest or len(manifest)!=len(expected):raise ValueError('empty or wrong population')
+    43	 for got,want in zip(manifest,expected):
+    44	  if got!=want:raise ValueError('manifest differs for '+str(got.get('id')))
+    45	def main():
+    46	 a=build();b=build();check(a,b)
+    47	 for kind in ('score','candidate','origin','query'):
+    48	  mutated=copy.deepcopy(a);x=mutated[0]
+    49	  if kind=='score':x['queries'][0]['scores'][x['candidates'][0]]+=0.1
+    50	  if kind=='candidate':x['candidates'][0]='not-a-candidate'
+    51	  if kind=='origin':x['origins'][x['candidates'][0]]=[]
+    52	  if kind=='query':x['queries'][0]['ranked_top10'].reverse()
+    53	  try:check(mutated,b)
+    54	  except ValueError:print('negative control caught:',kind)
+    55	  else:raise RuntimeError('negative control failed '+kind)
+    56	 try:check([],b)
+    57	 except ValueError:print('negative control caught: empty input')
+    58	 else:raise RuntimeError('empty control failed')
+    59	 output=HERE/'probe-manifest.json';output.write_text(json.dumps(a,ensure_ascii=False,indent=1)+'\n');print('selected cases',len(a),'candidate pairs',sum(len(x['candidates']) for x in a),'multiquery',sum(len(x['queries'])>1 for x in a),'manifest sha256',hashlib.sha256(output.read_bytes()).hexdigest())
+    60	if __name__=='__main__':main()
+
+exec
+/opt/homebrew/bin/zsh -lc "ls -l reports/step2-score-council-2026-11-08/probe* && rg -n 'preflight|mutation|fake|passed|manifest|probe_prepare' reports/step2-score-council-2026-11-08 -g '*.md' -g '*.txt' | tail -45" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+-rw-r--r--@ 1 lchingen  staff  391613 Nov  8 18:10 reports/step2-score-council-2026-11-08/probe-manifest.json
+-rw-r--r--@ 1 lchingen  staff     883 Nov  8 17:22 reports/step2-score-council-2026-11-08/probe-review-handoff.txt
+-rw-r--r--@ 1 lchingen  staff  342952 Nov  8 17:30 reports/step2-score-council-2026-11-08/probe-review.jsonl
+-rw-r--r--@ 1 lchingen  staff       0 Nov  8 17:22 reports/step2-score-council-2026-11-08/probe-review.stderr
+-rw-r--r--@ 1 lchingen  staff    5030 Nov  8 18:10 reports/step2-score-council-2026-11-08/probe_prepare.py
+-rw-r--r--@ 1 lchingen  staff    3471 Nov  8 18:18 reports/step2-score-council-2026-11-08/probe_send.py
+reports/step2-score-council-2026-11-08/CONCLUSIONS.md:19:Reconstruct identical saved candidate requests; interleave fresh no-score controls with true-score requests and a score-shuffled control, with fixed score representation and randomization, repeated draws, cache misses, and identical model, candidates and question content except score lines. Make each score's query origin explicit: multiple search queries may yield different scores. A shuffled control tests sensitivity to a number but needs care with singleton/equal-score cases and preserving query origin. A source-blind independent reader judges differing pairs and controls without seeing arm, score, or prior decision. Report wrong merges, missed repeats, incorrect revision classifications and group choices separately, all cases, with same-arm variability, cost and limitations; fixed-candidate comparisons do not prove forward-run performance. The fresh set has few or no revisions; use separately identified stored revision cases without presenting isolated pair results as product-path evidence. Freeze design, audit and preflight under repository rules before any paid send. A score can also encode context Jev did not directly receive (e.g. thesis wording or period), so improvement would not itself establish the mechanism.
+reports/step2-score-council-2026-11-08/codex-review.md:13:   **Recommendation:** before sending, replay each selected article’s historical pre-article library and calculate each query’s complete ranked top ten, union order, all retrieval origins and every displayed score from exact cached vectors. Require equality with the saved candidate IDs and archived request. Freeze a per-case manifest and show a multi-query example, including a candidate retrieved by more than one query and a non-retrieving query.
+reports/step2-score-council-2026-11-08/codex-review.md:23:5. **The new path’s decisive tests remain promises.** The design lists replay and refusal controls but gives no passing test evidence for score mapping, mutation detection, archive isolation or three genuinely fresh draws. [Design]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:32). This matters because `jev.ask` returns an archived answer for an identical request, and the archive keeps one row per request identity. [Jev archive lookup]( /Users/lchingen/hivemind/src/hivemind/jev.py:87), [archive behavior]( /Users/lchingen/hivemind/src/hivemind/model.py:74).
+reports/step2-score-council-2026-11-08/codex-review.md:25:   **Recommendation:** run a no-cost replay and negative controls that deliberately swap a score, query, candidate or origin and must fail; verify a known multi-query case and outcome tie handling; prove three separate archive misses with a fake transport; and test interruption, malformed answers and resume without silent replacement. Compare the complete serialized control request to the saved request. The existing Jev transport sorts the request before sending, so that comparison should use its actual serialization. [Transport]( /Users/lchingen/hivemind/src/hivemind/jev.py:28).
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:7:C control: exact archived model/state/questions. T: each candidate instruction adds a newline and factual metadata: `Retrieval metadata (not part of the stored piece; cosine, not a probability): query 1 [thesis search]: 0.xxxx; query 2 [own-text search]: 0.xxxx`. Each query corresponds in order to the existing caller's query_vectors; its label and query type are made explicit without disclosing thesis text otherwise not sent. Include a score for each query, including non-retrieving queries; retrieval origins are recorded in the manifest, not sent. Jev returns no textual reasoning, so do not infer why its choice changes. Query type labels expose information C did not have, so any observed effect is the joint effect of score metadata and labels. No shuffled-score arm: it would describe intentionally incorrect scores as real, and its interpretation as a formatting control is uncertain. The test compares the practical intervention of adding real scores against the current request; it does not establish how Jev uses the numbers. Freeze this representation; do not infer importance from cosine or set thresholds. Decimal precision 4, cosine computed with existing compare.py and cached exact text vectors. Retrieval always uses original queries, no candidate changes. User requests testing this candidate, not deployment or any new rule.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:19:| Later run/config change/another writer/two scopes | Refuse existing output on rerun absent exact frozen manifest and explicit resume; do not access live data or concurrent Step 1 writes. Different scopes use different research directories and archives. | No runtime time used as identity |
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:54:D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:58:Hypothesis: score information moves at least one relevant comparison and makes at least one source-backed decision better without a source-backed decision getting worse. Prediction: the clearly wrong X22 grouping becomes separate more often in T than C, while the selected accepted-repeat controls remain correctly grouped. We do not predict a perfect result. Predeclare individual decision comparisons, 3 samples per arm and show all 66 outcomes and errors. For each outcome and selected source-backed candidate, count correct and incorrect choices across three draws per arm. A repeatable improvement requires at least one agreed previously incorrect decision to become correct in at least 2 of 3 T draws and fewer than 2 of 3 C draws, with no agreed previously correct decision becoming wrong in at least 2 of 3 T draws while correct in at least 2 of 3 C draws. A repeatable regression stops the line. If neither occurs or independent readers disagree, report inconclusive. This is a screening rule for selected examples, not a quantitative estimate of product impact. Blind-read all eleven incoming records against all their candidate sets and source articles, including unchanged controls; report gaps. Register case ids and score mapping and historical top-ten replay before any send; send no paid calls until council review and preflight pass.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:64:Literal metadata is appended after a newline: `Retrieval metadata (not part of the stored piece; cosine, not a probability): query 1 [thesis search]: 0.1234; query 2 [own-text search]: 0.5678`. Four-decimal Python formatting. The label is `thesis search` for every thesis query, `own-text search` for the extra document query, never the thesis content. One score per query against each candidate group's original. Do not claim all queries retrieved that candidate. The manifest records all query identities, full top-ten lists, origin query indices per candidate, all vectors' computed scores and union order. Reconstruct the pre-article group order by replaying saved outcomes article by article, with no same-article visibility, and require union order and saved answer outcome to match all selected cases; fail on missing input. The manifest and source request/answer identities and case list are frozen with hashes before send.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:66:Negative controls: mutate a query vector, candidate score, candidate id, and retrieval origin separately; each must trigger the independent check. A known multi-query case must have every query and origin checked, not only the union. A fake transport must pass 3 separate control draws with 3 calls, fail a malformed response and cover interruption; a missing input and empty population must fail. If an actual send ends ambiguously after dispatch, record it as unresolved and do not silently resend it; incomplete calls are not success. The only retries are the underlying transport's bounded policy, recorded separately where possible.
+reports/step2-score-council-2026-11-08/codex-review-2-handoff.txt:1:We revised EXPERIMENT-DESIGN.md in response: dropped shuffled arm, fixed 10-case 60-call small probe, specify all-query scores + complete pre-article top-ten reconstruction and manifest, blind source review of all ten full candidate sets, explicit 2-of-3 screening conditions, mandatory no-cost negative controls for mapping/archive/refusal. Independently re-read the revised document and review whether ready to implement isolated harness. Do not run paid calls or edit. Identify remaining blockers and whether rules can actually be checked. Challenge any overclaim; do not demand proving the result in advance. Return READY or NOT READY with reasons.
+reports/step2-score-council-2026-11-08/harness-review-handoff.txt:1:Review revised EXPERIMENT-DESIGN.md and actual probe_prepare.py / probe_send.py before any paid send. User authorized isolated score experiment. Scope only Jev comparison, no production/Step1 changes. Check factual score/query mapping and historical pre-article replay, frozen request reconstruction, case/answer identity, metadata labels, archive isolation/real cache misses, fake controls, interruption and ambiguous calls, Jev API contracts, compare.outcome, safe handling and the need for source-blind review. Find any serious failure, including 11-case selection and C vs T semantics; quote code. Read-only, no edits, no paid calls. Return READY or NOT READY.
+
+2026-11-09T02:18:30.278911Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+codex
+脚本确实按文章重建历史候选，并给每个候选附上各查询的分数；但我发现所谓“查询向量”负向测试实际上只反转了排名列表。接下来核对中断后的真实请求行为、清单冻结和第 11 个案例的选择。
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'probe-manifest|fake transport|negative control caught|243 extraction|170 matching' reports/step2-score-council-2026-11-08 -g '"'!*.jsonl'"' -g '"'!probe-manifest.json'"'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step3/library.py | sed -n '1,135p'; nl -ba src/hivemind/model.py | sed -n '15,90p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+reports/step2-score-council-2026-11-08/codex-review-2.stderr:81:    54	D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/codex-review.out:25:   **Recommendation:** run a no-cost replay and negative controls that deliberately swap a score, query, candidate or origin and must fail; verify a known multi-query case and outcome tie handling; prove three separate archive misses with a fake transport; and test interruption, malformed answers and resume without silent replacement. Compare the complete serialized control request to the saved request. The existing Jev transport sorts the request before sending, so that comparison should use its actual serialization. [Transport]( /Users/lchingen/hivemind/src/hivemind/jev.py:28).
+reports/step2-score-council-2026-11-08/codex-review.md:25:   **Recommendation:** run a no-cost replay and negative controls that deliberately swap a score, query, candidate or origin and must fail; verify a known multi-query case and outcome tie handling; prove three separate archive misses with a fake transport; and test interruption, malformed answers and resume without silent replacement. Compare the complete serialized control request to the saved request. The existing Jev transport sorts the request before sending, so that comparison should use its actual serialization. [Transport]( /Users/lchingen/hivemind/src/hivemind/jev.py:28).
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:54:D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:66:Negative controls: mutate a query vector, candidate score, candidate id, and retrieval origin separately; each must trigger the independent check. A known multi-query case must have every query and origin checked, not only the union. A fake transport must pass 3 separate control draws with 3 calls, fail a malformed response and cover interruption; a missing input and empty population must fail. If an actual send ends ambiguously after dispatch, record it as unresolved and do not silently resend it; incomplete calls are not success. The only retries are the underlying transport's bounded policy, recorded separately where possible.
+reports/step2-score-council-2026-11-08/probe_send.py:31: print('fake transport: 3 separate cache misses, malformed answer refused, interrupted run refuses restart')
+reports/step2-score-council-2026-11-08/probe_send.py:34: manifest=json.loads((HERE/'probe-manifest.json').read_text());prep.check(manifest,prep.build());fake_checks(manifest)
+reports/step2-score-council-2026-11-08/probe_prepare.py:54:  except ValueError:print('negative control caught:',kind)
+reports/step2-score-council-2026-11-08/probe_prepare.py:57: except ValueError:print('negative control caught: empty input')
+reports/step2-score-council-2026-11-08/probe_prepare.py:59: output=HERE/'probe-manifest.json';output.write_text(json.dumps(a,ensure_ascii=False,indent=1)+'\n');print('selected cases',len(a),'candidate pairs',sum(len(x['candidates']) for x in a),'multiquery',sum(len(x['queries'])>1 for x in a),'manifest sha256',hashlib.sha256(output.read_bytes()).hexdigest())
+reports/step2-score-council-2026-11-08/harness-review.stderr:77:    54	D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/harness-review.stderr:89:    66	Negative controls: mutate a query vector, candidate score, candidate id, and retrieval origin separately; each must trigger the independent check. A known multi-query case must have every query and origin checked, not only the union. A fake transport must pass 3 separate control draws with 3 calls, fail a malformed response and cover interruption; a missing input and empty population must fail. If an actual send ends ambiguously after dispatch, record it as unresolved and do not silently resend it; incomplete calls are not success. The only retries are the underlying transport's bounded policy, recorded separately where possible.
+reports/step2-score-council-2026-11-08/harness-review.stderr:287:reports/step2-score-council-2026-11-08/probe-manifest.json
+reports/step2-score-council-2026-11-08/harness-review.stderr:327:    31	 print('fake transport: 3 separate cache misses, malformed answer refused, interrupted run refuses restart')
+reports/step2-score-council-2026-11-08/harness-review.stderr:330:    34	 manifest=json.loads((HERE/'probe-manifest.json').read_text());prep.check(manifest,prep.build());fake_checks(manifest)
+reports/step2-score-council-2026-11-08/harness-review.stderr:408:    54	  except ValueError:print('negative control caught:',kind)
+reports/step2-score-council-2026-11-08/harness-review.stderr:411:    57	 except ValueError:print('negative control caught: empty input')
+reports/step2-score-council-2026-11-08/harness-review.stderr:413:    59	 output=HERE/'probe-manifest.json';output.write_text(json.dumps(a,ensure_ascii=False,indent=1)+'\n');print('selected cases',len(a),'candidate pairs',sum(len(x['candidates']) for x in a),'multiquery',sum(len(x['queries'])>1 for x in a),'manifest sha256',hashlib.sha256(output.read_bytes()).hexdigest())
+reports/step2-score-council-2026-11-08/harness-review.stderr:419:-rw-r--r--@ 1 lchingen  staff  391613 Nov  8 18:10 reports/step2-score-council-2026-11-08/probe-manifest.json
+reports/step2-score-council-2026-11-08/harness-review.stderr:428:reports/step2-score-council-2026-11-08/codex-review.md:25:   **Recommendation:** run a no-cost replay and negative controls that deliberately swap a score, query, candidate or origin and must fail; verify a known multi-query case and outcome tie handling; prove three separate archive misses with a fake transport; and test interruption, malformed answers and resume without silent replacement. Compare the complete serialized control request to the saved request. The existing Jev transport sorts the request before sending, so that comparison should use its actual serialization. [Transport]( /Users/lchingen/hivemind/src/hivemind/jev.py:28).
+reports/step2-score-council-2026-11-08/harness-review.stderr:431:reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:54:D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/harness-review.stderr:434:reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:66:Negative controls: mutate a query vector, candidate score, candidate id, and retrieval origin separately; each must trigger the independent check. A known multi-query case must have every query and origin checked, not only the union. A fake transport must pass 3 separate control draws with 3 calls, fail a malformed response and cover interruption; a missing input and empty population must fail. If an actual send ends ambiguously after dispatch, record it as unresolved and do not silently resend it; incomplete calls are not success. The only retries are the underlying transport's bounded policy, recorded separately where possible.
+reports/step2-score-council-2026-11-08/codex-review.stderr:534:    54	D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/codex-review.stderr:1014:    54	D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/codex-review.stderr:2547:   **Recommendation:** run a no-cost replay and negative controls that deliberately swap a score, query, candidate or origin and must fail; verify a known multi-query case and outcome tie handling; prove three separate archive misses with a fake transport; and test interruption, malformed answers and resume without silent replacement. Compare the complete serialized control request to the saved request. The existing Jev transport sorts the request before sending, so that comparison should use its actual serialization. [Transport]( /Users/lchingen/hivemind/src/hivemind/jev.py:28).
+
+ succeeded in 0ms:
+     1	"""Isolated Step 3 evidence library for the clean path (PRD §6): an in-memory logical store and its dossier text, not the live writer.
+     2	
+     3	A group is one stored statement. Its original record keeps its id and fields unchanged and gives the group its id. A later record that
+     4	Step 2 judged a repeat joins the group as a member and keeps its own id, text, fields and source article. Thesis links belong to the
+     5	group and remember the record that brought each one. A revision is its own group, linked to every group it revises; a repeat that also
+     6	revises another group adds that link to its own group, naming the member that established it.
+     7	
+     8	The writer refuses rather than guesses: a failed comparison, several repeat targets, an unknown group, or a replayed record whose
+     9	placement differs from the first time raise `Refused` and write nothing. Physical storage and crash recovery are not provided here.
+    10	
+    11	Later linking (Alex, 2026-11-08: a material statement no thesis takes is kept and linked when a related thesis opens; design
+    12	STEP1-CONDITIONS-DESIGN.md §§11.1, 17): when a thesis opens, every group whose original arrived with no link, from an earlier article,
+    13	is judged against it in batches. Each judged (thesis, group) pair is recorded once in `judged`; a batch that fails twice stays pending,
+    14	is reported, and is judged again on the next write to that thesis, against the same opening boundary (`opened_at`)."""
+    15	import copy
+    16	
+    17	RECORD_FIELDS = ('id', 'article', 'publisher', 'publication_date', 'summary', 'passages', 'original_party', 'reporting_speaker', 'tier',
+    18	                 'statement_date', 'evidence_period', 'thesis_ids')
+    19	
+    20	
+    21	class Refused(Exception):
+    22	    """A Step 2 outcome the library will not write; nothing was changed."""
+    23	
+    24	
+    25	class Library:
+    26	    def __init__(self):
+    27	        self.groups = {}       # group id → {'original': record, 'members': [record], 'links': {thesis id: record id}, 'revises': [{'group', 'by'}]}
+    28	        self.placement = {}    # record id → group id
+    29	        self.order = []        # group ids in the order they were created
+    30	        self.judged = {}       # (thesis id, group id) → True | False, the later-linking ledger
+    31	        self.later_log = []    # one entry per later-linking call: thesis, article, linked, pending, judged
+    32	        self.opened_at = {}    # thesis id → the article that opened it: the boundary of its later linking
+    33	        self.pending = {}      # thesis id → group ids whose judgement failed twice and waits for the next write to the thesis
+    34	
+    35	    def apply(self, record, outcome):
+    36	        """Write one record with its Step 2 outcome: {'kind': 'new' | 'repeat' | 'revision' | 'failed', 'repeat_of': [group ids],
+    37	        'revises': [group ids], 'reason': text}. Returns the id of the group that holds the record."""
+    38	        missing = [f for f in RECORD_FIELDS if f not in record]
+    39	        if missing:
+    40	            raise Refused(f'record lacks {missing}')
+    41	        kind, repeat_of, revises = outcome['kind'], list(outcome.get('repeat_of') or []), list(outcome.get('revises') or [])
+    42	        if kind == 'failed':
+    43	            raise Refused(f"comparison failed for {record['id']}: {outcome.get('reason', 'no reason given')}")
+    44	        if kind not in ('new', 'repeat', 'revision'):
+    45	            raise Refused(f'unknown outcome {kind!r}')
+    46	        if (kind == 'repeat') != bool(repeat_of) or len(repeat_of) > 1:
+    47	            raise Refused(f"a repeat names exactly one group; got {repeat_of} for outcome {kind}")
+    48	        if kind == 'revision' and not revises:
+    49	            raise Refused('a revision names the group it revises')
+    50	        for group_id in repeat_of + revises:
+    51	            if group_id not in self.groups:
+    52	                raise Refused(f'unknown group {group_id}')
+    53	        target = repeat_of[0] if repeat_of else record['id']
+    54	        if record['id'] in self.placement:
+    55	            if self.placement[record['id']] != target:
+    56	                raise Refused(f"{record['id']} was placed in {self.placement[record['id']]}, not {target}")
+    57	            group = self.groups[target]
+    58	            stored = next(r for r in [group['original']] + group['members'] if r['id'] == record['id'])
+    59	            if {k: v for k, v in stored.items() if k != 'thesis_ids'} != {k: v for k, v in record.items() if k != 'thesis_ids'}:
+    60	                raise Refused(f"{record['id']} names a stored record with different content; a changed record needs a new id")
+    61	            self._link(group, record)
+    62	            return target
+    63	        if kind == 'repeat':
+    64	            group = self.groups[target]
+    65	            group['members'].append(copy.deepcopy(record))
+    66	        else:
+    67	            group = {'original': copy.deepcopy(record), 'members': [], 'links': {}, 'revises': []}
+    68	            self.groups[target] = group
+    69	            self.order.append(target)
+    70	        self.placement[record['id']] = target
+    71	        self._link(group, record)
+    72	        for revised in revises:
+    73	            if revised != target and not any(r['group'] == revised for r in group['revises']):
+    74	                group['revises'].append({'group': revised, 'by': record['id']})
+    75	        return target
+    76	
+    77	    def link_later(self, thesis_id, judge, before_article, batch=10):
+    78	        """Judge every group whose original arrived unlinked from an article before `before_article` against a newly opened thesis.
+    79	        judge(group ids) returns {group id: True | False} or raises. Returns {'linked': [...], 'pending': [...], 'judged': n}."""
+    80	        self.opened_at.setdefault(thesis_id, before_article)
+    81	        before_article = self.opened_at[thesis_id]
+    82	        todo = [g for g in self.order if not self.groups[g]['original']['thesis_ids']
+    83	                and self.groups[g]['original']['article'] < before_article and (thesis_id, g) not in self.judged]
+    84	        linked, pending = [], []
+    85	        for start in range(0, len(todo), batch):
+    86	            ids = todo[start:start + batch]
+    87	            answers = None
+    88	            for _attempt in range(2):
+    89	                try:
+    90	                    answers = judge(ids)
+    91	                    break
+    92	                except Exception:   # tried twice, then reported as pending, never saved as a judgement
+    93	                    answers = None
+    94	            if answers is None:
+    95	                pending += ids
+    96	                continue
+    97	            for group_id in ids:
+    98	                self.judged[(thesis_id, group_id)] = bool(answers[group_id])
+    99	                if answers[group_id]:
+   100	                    self.groups[group_id]['links'].setdefault(thesis_id, self.groups[group_id]['original']['id'])
+   101	                    linked.append(group_id)
+   102	        if pending:
+   103	            self.pending[thesis_id] = pending
+   104	        else:
+   105	            self.pending.pop(thesis_id, None)
+   106	        return {'linked': linked, 'pending': pending, 'judged': len(todo) - len(pending)}
+   107	
+   108	    @staticmethod
+   109	    def _link(group, record):
+   110	        for thesis_id in record['thesis_ids']:
+   111	            group['links'].setdefault(thesis_id, record['id'])
+   112	
+   113	    @staticmethod
+   114	    def articles(group):
+   115	        """Distinct source articles of a group, oldest first; two records from one article count once."""
+   116	        seen = []
+   117	        for record in [group['original']] + group['members']:
+   118	            if record['article'] not in seen:
+   119	                seen.append(record['article'])
+   120	        return seen
+   121	
+   122	    def dossier(self, thesis_id):
+   123	        """Group ids linked to a thesis, in creation order."""
+   124	        return [g for g in self.order if thesis_id in self.groups[g]['links']]
+   125	
+   126	
+   127	def labelled_passages(record):
+   128	    """Each passage as a reader sees it: the source text Step 1 found, labelled 'Quote', or, when Step 1 did not find it (verified
+   129	    value None), the model's text labelled 'Unverified quote'. The model's own text stays in the record's `passages`. A record stored
+   130	    before verification was carried shows its passages as 'Quote'."""
+   131	    verified = record.get('verified_passages') or record['passages']
+   132	    return [('Quote', found) if found is not None else ('Unverified quote', passage) for passage, found in zip(record['passages'], verified)]
+   133	
+   134	
+   135	def record_text(record, label):
+    15	import re
+    16	import os
+    17	import sqlite3
+    18	import time
+    19	import uuid
+    20	import urllib.error
+    21	import urllib.request
+    22	
+    23	CREDENTIALS = os.path.expanduser('~/.config/hivemind/credentials.json')
+    24	ENDPOINTS = {'openai': ('https://api.openai.com/v1/chat/completions', 'OPENAI_API_KEY'),
+    25	             'deepseek': ('https://api.deepseek.com/chat/completions', 'DEEPSEEK_API_KEY')}
+    26	# USD per million tokens, for the cost column only (an estimate; the provider's bill is the measurement)
+    27	# gpt-6-luna: the published standard rates on 2026-10-25 (developers.openai.com/api/docs/models/gpt-6-luna: $0.10/M input, $0.50/M output,
+    28	# cached input $0.01/M). Until this date the table carried (1.25, 10.0), so every cost_usd recorded before it is 12.5x (input) to 20x (output)
+    29	# the published rate; the token columns are the measurement, the bill is the provider's.
+    30	PRICES = {'gpt-6-luna': (0.10, 0.50), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+    31	          'jev-1.14.0': (0.042, 0.0)}   # Jev: docs.typesafe.ai/models, 2026-10-25; output free   # DeepSeek: peak-hour list prices, cache misses (2026-10-23 pricing page)
+    32	CACHED_INPUT_SHARE = 0.10          # cached input tokens are priced at 10% of the input rate (gpt-6-luna page, read again 2026-10-27)
+    33	
+    34	SCHEMA_SQL = """
+    35	create table if not exists model_calls (
+    36	  call_id integer primary key autoincrement, purpose text, config_version text, config_checksum text, model text,
+    37	  request_sha256 text unique, request_json text, response_json text, answer_json text, prompt_chars integer,
+    38	  input_tokens integer, output_tokens integer, cost_usd real, seconds real, created_at text
+    39	);
+    40	create index if not exists model_calls_sha on model_calls(request_sha256);
+    41	"""
+    42	
+    43	
+    44	class SchemaError(ValueError):
+    45	    pass
+    46	
+    47	
+    48	class TransportError(RuntimeError):
+    49	    pass
+    50	
+    51	
+    52	@dataclasses.dataclass
+    53	class Answer:
+    54	    data: dict
+    55	    call_id: int
+    56	    request_sha256: str
+    57	    cached: bool
+    58	    prompt_chars: int
+    59	    input_tokens: int
+    60	    output_tokens: int
+    61	    cost_usd: float
+    62	
+    63	
+    64	class Archive:
+    65	    """Shared by the extraction worker threads: one connection, every access under a lock."""
+    66	
+    67	    def __init__(self, path):
+    68	        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    69	        self.conn = sqlite3.connect(path, check_same_thread=False)
+    70	        self.conn.executescript(SCHEMA_SQL)
+    71	        import threading
+    72	        self.lock = threading.Lock()
+    73	
+    74	    def lookup(self, sha):
+    75	        with self.lock:
+    76	            return self.conn.execute('select call_id, answer_json, prompt_chars, input_tokens, output_tokens from model_calls where request_sha256=?', (sha,)).fetchone()
+    77	
+    78	    def record(self, **fields):
+    79	        """One row per distinct request; a second identical request recorded at the same moment (two threads, or a
+    80	        failed answer repeated within the same second) keeps the first row's id instead of failing."""
+    81	        columns = list(fields)
+    82	        with self.lock:
+    83	            cursor = self.conn.execute(f'insert or ignore into model_calls ({",".join(columns)}) values ({",".join("?" * len(columns))})',
+    84	                                       [fields[c] for c in columns])
+    85	            self.conn.commit()
+    86	            if cursor.rowcount == 0:
+    87	                return self.conn.execute('select call_id from model_calls where request_sha256=?', (fields['request_sha256'],)).fetchone()[0]
+    88	            return cursor.lastrowid
+    89	
+    90	    def retire(self, call_id):
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '19:ev-guidance-70|revision-bearing|supersedes|preflight' reports/step2-score-council-2026-11-08 -g '*.md' -g '*.txt' | tail -25" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+reports/step2-score-council-2026-11-08/CONCLUSIONS.md:19:Reconstruct identical saved candidate requests; interleave fresh no-score controls with true-score requests and a score-shuffled control, with fixed score representation and randomization, repeated draws, cache misses, and identical model, candidates and question content except score lines. Make each score's query origin explicit: multiple search queries may yield different scores. A shuffled control tests sensitivity to a number but needs care with singleton/equal-score cases and preserving query origin. A source-blind independent reader judges differing pairs and controls without seeing arm, score, or prior decision. Report wrong merges, missed repeats, incorrect revision classifications and group choices separately, all cases, with same-arm variability, cost and limitations; fixed-candidate comparisons do not prove forward-run performance. The fresh set has few or no revisions; use separately identified stored revision cases without presenting isolated pair results as product-path evidence. Freeze design, audit and preflight under repository rules before any paid send. A score can also encode context Jev did not directly receive (e.g. thesis wording or period), so improvement would not itself establish the mechanism.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:3:Alex asks whether sending embedding similarity to Jev helps, given existing high retrieval recall and merge quality. This is an isolated fixed-history diagnostic, not a product change, adoption, a fresh held-out acceptance, or a comparison of search recall. Prior recorded acceptance 141/143 is search recall, 1/57 clearly wrong merges is not recall of Jev's repeat decisions. The fresh frozen reference and old labels do not change. Start with 11 archived c8 fresh comparison requests, selected before sending, covering the clearly wrong merge, disputed overlaps, accepted repeats, and new-evidence controls: `22:ev-11`, `13:e11`, `38:ev-2`, `18:e2`, `43:e3`, `3:e1`, `9:e6`, `14:e3`, `5:e1`, `9:e1`, `19:ev-guidance-70`. Two arms times three draws = 66 calls, with the original candidate sets and state fixed. This is a selected diagnostic and cannot measure overall precision or recall. A larger comparison is considered only if the cheap probe reveals a useful signal (AGENTS §7.3); the raw articles are already used, so neither probe is fresh acceptance.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:49:3. The original fresh run returned 3 supersedes answers attached to repeat outcomes; it did not exercise a standalone revision outcome. One selected case has a supersedes decision, so describe it as an individual diagnostic, not revision performance. A separate case set of documented real revisions may be read and assessed; it cannot stand in for the full product path.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:54:D381 selects the candidate with highest Jev same-statement probability; this experiment retains it. D379 seals old product; no frozen files or production config touched. AGENTS §7.1 historical rulers unchanged; repeat reference is exploratory, not new frozen gold. AGENTS §7.2 read raw answer against source. Current Jev model `jev-1.14.0`. Offline census reconstructs and verifies all 185 comparison requests and answers. Standing preflight run against v108 archive judged 243 extraction answers and 170 matching records, two matching records skipped, 12 extraction records dropped and 2 stored schema refusals; that script does not test the clean Jev score path. The latter needs its own replay and refusal controls before send.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:58:Hypothesis: score information moves at least one relevant comparison and makes at least one source-backed decision better without a source-backed decision getting worse. Prediction: the clearly wrong X22 grouping becomes separate more often in T than C, while the selected accepted-repeat controls remain correctly grouped. We do not predict a perfect result. Predeclare individual decision comparisons, 3 samples per arm and show all 66 outcomes and errors. For each outcome and selected source-backed candidate, count correct and incorrect choices across three draws per arm. A repeatable improvement requires at least one agreed previously incorrect decision to become correct in at least 2 of 3 T draws and fewer than 2 of 3 C draws, with no agreed previously correct decision becoming wrong in at least 2 of 3 T draws while correct in at least 2 of 3 C draws. A repeatable regression stops the line. If neither occurs or independent readers disagree, report inconclusive. This is a screening rule for selected examples, not a quantitative estimate of product impact. Blind-read all eleven incoming records against all their candidate sets and source articles, including unchanged controls; report gaps. Register case ids and score mapping and historical top-ten replay before any send; send no paid calls until council review and preflight pass.
+reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:62:The read-only Codex reviewer cleared harness design but not sending. Claude reviewed the earlier 10-case/three-arm draft and found lack of revision coverage, unsupported X22 direction and number presentation ambiguity; an eleventh recorded revision-bearing case was added. Its conclusion that 40 borderline probabilities bound opportunity is a hypothesis; confident outputs can also be wrong. The X22 prediction is a falsifiable probe hypothesis, not evidence of likely improvement. The shuffled arm is removed due to false attribution; C versus T assesses the total intervention, not score causation.
+
+exec
+/opt/homebrew/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 python3 -B -c 'import importlib.util,json; p=\"reports/step2-score-council-2026-11-08/probe_prepare.py\"; s=importlib.util.spec_from_file_location(\"p\",p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); a=m.build(); b=json.load(open(\"reports/step2-score-council-2026-11-08/probe-manifest.json\")); m.check(a,b); print(\"cases\",len(a),\"candidates\",sum(len(x[\"candidates\"]) for x in a),\"multiquery\",sum(len(x[\"queries\"])>1 for x in a)); print(\"case query counts\",[(x[\"id\"],len(x[\"queries\"]),len(x[\"candidates\"])) for x in a]); print(\"last\",[(x[\"id\"],x[\"origins\"],[(k,v[\"choice\"]) for k,v in x[\"old_answers\"].items() if v[\"choice\"]==\"supersedes\"]) for x in a if x[\"id\"]==\"19:ev-guidance-70\"])'" in /Users/lchingen/hivemind
+ succeeded in 99ms:
+cases 11 candidates 96 multiquery 2
+case query counts [('3:e1', 1, 3), ('5:e1', 1, 3), ('9:e1', 2, 10), ('9:e6', 2, 10), ('13:e11', 1, 10), ('14:e3', 1, 10), ('18:e2', 1, 10), ('19:ev-guidance-70', 1, 10), ('22:ev-11', 1, 10), ('38:ev-2', 1, 10), ('43:e3', 1, 10)]
+last [('19:ev-guidance-70', {'14:e2': [1], '9:e3': [1], '9:e1': [1], '9:e2': [1], '13:e10': [1], '9:e5': [1], '5:e1': [1], '9:e15': [1], '13:e8': [1], '9:e4': [1]}, [('q5', 'supersedes')])]
+
+2026-11-09T02:18:43.973431Z ERROR codex_models_manager::manager: failed to refresh available models: request timed out
+codex
+**NOT READY for a paid send.** The eleven selected requests reconstruct successfully, but the checks do not yet prove that the score mapping is right, and the live transport can automatically resend a request after an ambiguous failure.
+
+For example, if Jev receives a request but the reply is lost, the experiment intends to mark that draw unresolved. The current transport can send it again before the probe records any failure. That makes the number of actual calls and the identity of the resulting draw uncertain.
+
+The blocking issues are:
+
+1. **The score checks compare the implementation with itself.** Preparation runs `a=build(); b=build(); check(a,b)`, and `check` only compares the two manifests. Its mutations alter a finished manifest, so they prove that two unequal objects are detected; they do not catch a shared mistake in query selection, cosine calculation, label assignment or origin construction. The test called `query` reverses `ranked_top10`; it does **not** mutate a query vector as the design requires. [Preparation checks]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/probe_prepare.py:41).
+
+   Before sending, test independently against stored inputs, including an actual altered vector and a known multi-query case. Demonstrate that each mutation produces the expected refusal and that missing input fails.
+
+2. **Ambiguous calls can be retried silently.** The probe calls `jev.ask` without a replacement transport. [Sender]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/probe_send.py:10). The existing transport retries `URLError`, `OSError` and HTTP connection failures, including a dropped or truncated reply, up to three attempts. [Transport]( /Users/lchingen/hivemind/src/hivemind/jev.py:28). This conflicts with the design’s instruction that an ambiguous dispatched call remain unresolved and not be silently resent. [Design]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:66).
+
+   Use a transport whose attempt behavior matches the registered rule, and test a lost reply after dispatch. Record each attempt and stop on ambiguity.
+
+3. **The interruption test does not exercise the sender.** It creates a directory and checks that creating it again fails. [Fake checks]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/probe_send.py:22). The actual sender has no resume path: it always uses `dest.mkdir(exist_ok=False)`. That refusal prevents an accidental restart, but it does not implement the design’s promised resume of safely missing requests, nor test a crash between dispatch and response. Line-buffered event writes also do not establish durable storage through a crash. Either implement and test the documented states, or explicitly register a stop-and-inspect procedure with no resume.
+
+4. **The frozen registration is incomplete.** The design says to freeze the manifest, case list and source request/**answer** identities with hashes. [Design]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/EXPERIMENT-DESIGN.md:64). The manifest stores a request hash and old answer, but no answer hash; the sender rebuilds against the current sources and does not check a separately registered manifest/design hash or record one in the live plan. A consistent change to source data and regenerated manifest could therefore pass. Freeze and verify the manifest, design and relevant input identities before the first dispatch, and include those identities in the run record.
+
+5. **The stated 185-request replay is not performed by this harness.** `build()` skips every unselected record before request and answer validation. [Preparation]( /Users/lchingen/hivemind/reports/step2-score-council-2026-11-08/probe_prepare.py:15). It does replay all saved outcomes to reconstruct the library, but it validates requests and answers for the **11 selected cases**, not all 185 as the design’s preflight table says. Either execute and report the specified broader replay or correct that claim and identify the separate evidence that satisfies it.
+
+What I could verify read-only: rebuilding the saved manifest succeeded for **11 cases, 96 candidate comparisons and two multi-query cases**. The code reconstructs the library before each article, checks the resulting candidate union against the saved order, rebuilds each selected control request, validates its archived answer, and checks its saved outcome with `compare.outcome`. The eleventh case has a saved `supersedes` answer; this establishes why it was selected, not that it is a true revision. Separate arm/draw archives and the `cached` check are appropriate for avoiding ordinary archive reuse. The fake transport demonstrates three misses and malformed-answer refusal, within the limitations above.
+
+The treatment adds real scores **and query-type labels**; its comparison with control measures that combined change. A score is computed using search text that can contain a thesis and stored text that can contain a period, so a change in Jev’s answer would not reveal whether it used the number as intended. The eleven cases are selected, and three draws are a screen, not an accuracy estimate. Two independent source-blind readers still need to examine all eleven full candidate sets, including the added revision-bearing case, before correctness or improvement can be claimed. Unresolved overlaps and unavailable sources must remain unresolved.
+
+No files were edited and no paid calls were made.
+tokens used
+149,231

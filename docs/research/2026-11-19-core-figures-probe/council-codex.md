@@ -1,0 +1,8 @@
+Hold the probe. An article can give next year’s revenue forecast without giving the results date. The new rule allows the question, but the final check can still drop it.
+
+1. **Signed standard.** Current or next fiscal year and a figure that drives company value both trace to Class A. “Carries most” adds a majority test the standard never sets. Class A also covers measures such as bank net interest income and utility rate base. The four company-figure misses support testing a narrower slice. Hyperscaler capex already qualifies as a shared quantity. [Standard](/Users/lchingen/hivemind/docs/prd/05-extraction-standard.html:276) · [Run log](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-LOG.md:154)
+2. **Closed set.** Yes. The retailer and airline examples travel across industries. Add a segment example where its result could change the investment decision independently of total revenue.
+3. **Conflicts.** Specify the annual results release as the check date, using a supported date. Say explicitly that guidance can support opening a question about the annual result. Scope the financial-measure ban to company figures so it cannot veto shared spending. [Proposed wording](/Users/lchingen/hivemind/docs/research/2026-11-19-core-figures-probe/arm-system.txt:108)
+4. **Probe.** Twelve items can show what happens on those cases. Pair both versions on the same day. Swap random guards for a quarterly-only item and a known product opening. The earlier trial lost that opening, 2/3 to 0/3. [Earlier trial](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/main-numbers/RESULT.md:23)
+
+DO NOT SEND: clarify the annual rule and pair the twelve cases with c8, including a known opening.

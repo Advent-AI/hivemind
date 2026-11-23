@@ -1,0 +1,16 @@
+**The bounded serial proof may be called passed, with the limits on its page.** The script now checks individual differing rows and requires the interruption records; the unrelated-link mutant addresses the gap I identified. This is a pass for the tested wiring with labelled fake answers, not for real model behavior, nonempty parent relationships, the parallel runner, or D375 acceptance. I reviewed the code and report; I did not rerun the scratch-store checks. [Proof result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/duplicates/D375-PROOF-RESULT.md)
+
+I select **a narrower first part of (b), at $0**: trace the already identified fresh-week cases through the **actual last judgement requests**, before reading hundreds more July candidates. The reason is that the proposed stop in (a) relies on a keyword lead that has not yet established whether the same fact reached the judge.
+
+For each of the nine distinct dropped statements—and the six non-RTX kept-elsewhere pairs—read the original passage, the supposed later equivalent, its filing and the last judgement request. Record whether the equivalent preserves the figure, period, attribution and qualification; when it arrived; and whether the final judge actually received it. Keep the 17 RTX duplicate-pair findings separate: they involve evidence split between questions, and D375 has not been shown to join them in a real run.
+
+The result should be corrected in two places now:
+
+- **“The cost D375 removes is a first-day delay” is not established.** The stored default omitted facts on the first day; whether D375 would file them is untested.
+- **“Every case” is too strong.** The table includes a statement marked “not checked,” and the later matches are keyword leads, not verified equivalents. The 15 filed items are checks on the readers’ agreement with existing filings, not independently established gold. [Same-day result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/d375-measure/SAME-DAY-CASES-RESULT.md)
+
+**Stop rule:** if this trace finds no source-backed fact absent from the relevant final request, record that the fresh-week *final-judgement* test lacks an identified positive case and stop this measurement line rather than automatically census the July runs. If it finds one, return the case to council with its source and judge request; it is an eligible test case, not proof that D375 recovers it or changes the answer. A wider July reading needs its own reason and scope.
+
+I rank (c) below this trace, but a delayed first-day answer is a real potential reader cost, not something to dismiss because the fact arrives later. A first-day test could measure it; it would need a separately stated purpose and could not be presented as passing PRD 10’s frozen end-of-window measure. I rank (a) below the trace because the existing records can cheaply resolve the key uncertainty before stopping.
+
+Council position: accept the bounded serial proof; trace the already identified fresh-week facts into the actual final judgement requests at $0, with the stated stop rule; send no measurement and make no claim that D375 has recovered a fact.

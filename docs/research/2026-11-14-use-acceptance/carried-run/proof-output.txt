@@ -1,0 +1,27 @@
+1. the first run
+  ok    the first run holds the stored first 120 rows unchanged | 120 rows
+2. the second run, by the real launcher from the inputs extension.py writes
+  ok    the second run's starting library is the first run's last library | 6 topics
+   launcher exit 0 | 8010-cf0b60054109/scratchpad/extension-proof-224053/second/trace.sqlite", "status": "complete", "error": null, "reserved_usd": 13.781315000000003, "calls": 115} 
+  ok    the launcher sent the stored requests byte for byte, starting from the first run's library | 115 requests
+3. the join
+  ok    the joined trace is the stored trace: every column of every row (reservations to a millionth) | 235 rows; differing []
+  ok    the run row's manifest, articles and starting library are the stored run's
+  ok    every call record is the stored one but its timing | 236 calls
+4. mutants of the second run
+  ok    the join refuses the mutant "dropped-article" | the second part's trace does not hold every remaining article once and in order (114 rows for 115 articles)
+  ok    the join refuses the mutant "wrong-start" | the library is not carried unbroken into article 1 of the second part
+  ok    the join refuses the mutant "duplicated-article" | an article is read in both runs
+  ok    the join refuses the mutant "broken-transition" | the library is not carried unbroken into article 10 of the second part
+  ok    the join refuses the mutant "day-back" | the days of the joined articles go back
+5. the later steps on the joined trace, by the unchanged runner
+   runner exit 0 | draw complete | None
+  ok    the draw ends complete; the first step is not run again; the later steps each run once
+  ok    the matching's library and decisions equal the stored draw's
+  ok    the topics equal the stored draw's
+  ok    the answer choices of the three attempts equal the stored draw's | 21 outcomes
+  ok    the judge's requests equal the stored draw's | 37 requests
+  ok    every judgement equals the stored draw's | 37 judgements
+  ok    no judge request holds material dated after its day | 37 requests checked; later material: []
+  ok    every call held a live reservation and was answered from the stored answers: none unreserved, none unknown | 802 trapped calls
+19 expectations, 0 failed

@@ -1,0 +1,424 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 135: slice 4b's lock life, snapshot helper and filesystem-full proof, specified (`live-service/OPERATING-CONTRACT.md`, "Who writes, and copies: slice 4b")
+
+1. **The lock's owner:**
+   - `replay` owns the connection and the lock in one `try`/`finally`. On every exit (normal end, `WriterStopped`, judge or schema
+     error, spending stop, interrupt, opening failure) it closes the connection first, then releases the lock.
+   - No caller uses the runner's connection after it returns (searched).
+   - Tested on each exit: connection closed, lock free at once.
+2. **A real kill:** a subprocess running `replay`, `SIGKILL`ed after committed partial-day writes. The operating system releases the
+   lock, preflight takes it and copies, and the copy answers as the last completed day. It replaces 4a's in-process interrupt as the
+   crash proof (D597's wording is corrected).
+3. **The snapshot helper:**
+   - It applies the same path rules (`realpath`, hard links refused) and takes no lock, as §9's route.
+   - Its destination must be a new path that is not the source. It writes a temporary file beside the destination, converts it out
+     of WAL (checked), checks integrity, then renames atomically. On any failure nothing is left.
+   - It is tested through its entry point `scripts/snapshot_store.py`, including a failing conversion.
+4. **The filesystem-full proof** is a separate script with a unique image and mount point, always detached and deleted. An image
+   that cannot be mounted is reported unexercised.
+
+End with `CONSENSUS: yes` (build 4b) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the new 4b section against the writer’s callers and the snapshot and test-store boundaries before deciding whether it is ready to build.
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'Who writes, and copies: slice 4b|D597|SIGKILL|snapshot_store' docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md docs/DECISIONS.md
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | tail -95
+rg -n 'runner\\.conn|runner\\.counts|runner\\.sent|runner\\.mapping' clean-arch/step4-2026-11-10/stage_b docs/research/2026-11-14-use-acceptance/carried-run --glob '*.py' | head -65
+nl -ba clean-arch/step4-2026-11-10/stage_b/test_writer_store.py | sed -n '105,145p'
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/DECISIONS.md:941:| D597 | 2026-11-16 | Slice 4a built and proven at $0 on isolated test stores: the writer's store in WAL mode (set before its schema) with a 64 MB size limit on its connection; a stop before a day on low space or three failed checkpoints, recorded with its reason and last completed day and never resent; crash bounds equal to a backup at the last completed day; an orderly end; 327 + 172 tests, 7 of 7 mutants; no writer lock yet | in force | `clean-arch/step4-2026-11-10/stage_b/test_writer_store.py` |
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:440:## Who writes, and copies: slice 4b (council rounds 134 and 135)
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:450:- **A killed writer process** (a subprocess running `replay`, ended with `SIGKILL` after committed partial-day writes) leaves the
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:456:**The snapshot helper** (`live_lock.snapshot(store_path, destination)`, used by `scripts/snapshot_store.py`, its user-facing entry
+docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:468:- **Tested through `scripts/snapshot_store.py`:**
+   395	## The writer's start, stops and end (slice 4a; council rounds 131 and 132)
+   396	
+   397	**Opening in WAL mode before anything is written.**
+   398	
+   399	- `store.open_db` creates tables and commits as it opens, so WAL is set before it:
+   400	  1. the writer creates the store file empty and exclusively (create-new);
+   401	  2. it opens it with `sqlite3`, sets `journal_mode=wal` and **checks that the pragma answers `wal`**, refusing to start otherwise;
+   402	  3. it closes;
+   403	  4. it opens the store through `store.open_db`, which writes its schema in WAL mode (the mode is kept in the file);
+   404	  5. **it sets `journal_size_limit` (64 MB) on that writer connection,** since the limit belongs to a connection, not to the file.
+   405	- A test reads both `journal_mode` and `journal_size_limit` back on the writer's own connection after `open_db`, and again after the
+   406	  first day.
+   407	
+   408	**Stops, through the real launcher (`run_stage_b.send`).**
+   409	
+   410	- **The stop:** `ladder_adapter.WriterStopped(reason, last_completed_day)`, an `Exception` that `run_stage_b.resendable` does not
+   411	  accept.
+   412	- **Where it is raised:** in `replay`, before a day when the free space is below 20 times the store's size (main file and `-wal`), or
+   413	  when the truncating checkpoint after a completed day has failed for 3 consecutive days. Before raising, `replay` writes
+   414	  `adapter-counts.json` with the stop's reason and the last completed day, so the partial result is on disk.
+   415	- **What the launcher does with it:** its existing handling of a stop no resend can change, with one small change so the stop's
+   416	  own reason reaches the run (round 132):
+   417	  - `limit.stop(reason)`, where the reason for a `WriterStopped` is `"<run> incomplete: <the stop's reason>"` and not only the
+   418	    exception's name;
+   419	  - the attempt recorded with its reason;
+   420	  - the draw's state `incomplete`;
+   421	  - no redo, and every later launch stopped.
+   422	  - It is never recorded as complete.
+   423	- **The store keeps every completed day,** because the stop comes before a day starts or after a day's checkpoint. Readers keep
+   424	  serving the last completed day.
+   425	- **A stop before the first day** leaves the store empty (its tables, no step), which readers read as an empty store, and is recorded
+   426	  `incomplete` with its reason.
+   427	- **Tests through `run_stage_b.send` with the fake judge:**
+   428	  - low space before the first day;
+   429	  - low space before the third day (the last completed day is the second);
+   430	  - three failed checkpoints;
+   431	  - in each case: the exact reason in the attempt **and** in the run-level record (`stopped`), the draw's state, no redo, the
+   432	    store's last completed day, and the counts file's reason.
+   433	
+   434	**Its end.** After the last day the writer tries `journal_mode=delete` with a short busy timeout. If service readers hold the store,
+   435	it stays in WAL mode and "stopped in order, WAL kept" is recorded in `adapter-counts.json`. Tested with and without a reader.
+   436	
+   437	**Limit of 4a, stated:** until slice 4b the writer takes no lock. 4a's proofs run on isolated test stores and do not make a live run,
+   438	or preflight beside one, safe. P1 stays unresolved.
+   439	
+   440	## Who writes, and copies: slice 4b (council rounds 134 and 135)
+   441	
+   442	**The lock's owner and life.**
+   443	
+   444	- `replay` owns both the writer's connection and its lock, in one `try`/`finally`. It acquires the lock in `open_wal_store` before
+   445	  the first write.
+   446	- **On every exit** (a normal end, `WriterStopped`, a judge or schema error, a spending stop, an interrupt, a failure while opening)
+   447	  it first closes the writer's connection, then releases the lock. No writable connection outlives the lock.
+   448	- No caller uses the runner's connection after `replay` returns (searched: `stage_b/*.py`, `serving_while_writing.py`).
+   449	- Tested on each exit: afterwards the connection is closed, and a new `acquire` takes the lock at once.
+   450	- **A killed writer process** (a subprocess running `replay`, ended with `SIGKILL` after committed partial-day writes) leaves the
+   451	  lock released by the operating system:
+   452	  - preflight then takes it and copies;
+   453	  - the copy answers as the last completed day;
+   454	  - this replaces 4a's in-process interrupt as the crash proof for the lock.
+   455	
+   456	**The snapshot helper** (`live_lock.snapshot(store_path, destination)`, used by `scripts/snapshot_store.py`, its user-facing entry
+   457	point).
+   458	
+   459	- **The same path rules as `acquire`:** the source's `realpath`, and a source with more than one hard link refused. It takes no lock,
+   460	  since it is AGENTS §9's route beside a running writer.
+   461	- **The destination must be a new path:**
+   462	  - it must not exist, and must not resolve to the source;
+   463	  - the copy is made into a temporary file beside it, converted out of WAL mode (`journal_mode=delete`, checked) and integrity
+   464	    checked, then moved into place with an atomic rename;
+   465	  - on any failure (the backup, the conversion, the check) the temporary file is removed, nothing is left at the destination, and
+   466	    the helper raises.
+   467	  - An incomplete copy is never offered as a snapshot.
+   468	- **Tested through `scripts/snapshot_store.py`:**
+   469	  - a snapshot while the writer commits;
+   470	  - a refused hard-linked source;
+   471	  - an existing destination;
+   472	  - a destination equal to the source;
+   473	  - a failing conversion (made to fail by a test hook on the helper's conversion step), leaving nothing at the destination.
+   474	
+   475	**The filesystem-full proof is separate from the suite.**
+   476	
+   477	- It is `live-service/filesystem_full_proof.py`, run explicitly. It never fills the workspace's filesystem.
+   478	- It creates a unique small disk image and mount point under the session's temporary folder (`hdiutil create`, a few MB;
+   479	  `hdiutil attach`), and always detaches and deletes them in a `finally`.
+   480	- It runs the writer on a store there until the filesystem is full. It checks that the writer exits as a crash and that readers
+   481	  serve the last completed day, and it reports whether the reason was recorded.
+   482	- If the image cannot be created or mounted, it reports **unexercised**, never passed.
+   483	
+   484	## Not covered
+   485	
+   486	- Resuming a stopped live store.
+   487	- The Idea planner on a new-system ledger.
+   488	- A long-running service's restart and monitoring.
+   489	- The page's note when its live read fails, which is Alex's presentation choice.
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:402:    runner.counts['articles not completed by Step 1'] = len(failed)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:403:    runner.counts['ladder configuration'] = source
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:404:    runner.counts['ladder answers file sha256'] = hashlib.sha256(ladders_path.read_bytes()).hexdigest()
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:415:        last = store.last_completed_day(runner.conn)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:416:        runner.counts['stopped'] = reason
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:417:        runner.counts['last completed day'] = last
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:418:        (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:431:            seq = sequences[k] = max(k, store.next_sequence(runner.conn))
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:439:                for view_id in runner.mapping.get(thesis_id, []):
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:440:                    if runner.conn.execute('select count(*) from evidence_links where view_id=?', (view_id,)).fetchone()[0] == 0:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:441:                        runner.counts['views with no opening evidence'] += 1
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:442:        runner.conn.commit()
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:446:        failed_checkpoints = 0 if truncate_checkpoint(runner.conn) else failed_checkpoints + 1
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:447:    mode = leave_wal(runner.conn)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:448:    runner.counts['store journal mode at the end'] = mode
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:450:        runner.counts['stopped in order'] = 'WAL kept: a reader held the store at the end'
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:452:    runner.counts['judging usd this draw (charged: from tokens, or the reserve when no usage came back)'] = round(runner.budget.spent_usd - spent_before, 4)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:453:    runner.counts['judging usd of the whole limit so far (from its ledger)'] = round(ledger_total(runner.budget.ledger_path), 4)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:454:    (output / 'adapter-counts.json').write_text(json.dumps(runner.counts, indent=1))
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:455:    (output / 'judge-requests.json').write_text(json.dumps(runner.sent, indent=1))
+clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:121:            entry['attempts'].append({'folder': folder_name, 'judgements': runner.counts['judgements'],
+clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:122:                                      'views': runner.counts['views written from a ladder']})
+clean-arch/step4-2026-11-10/stage_b/run_stage_b.py:123:            if runner.counts['judgements'] == 0:      # design §8: a draw with no judgement is incomplete
+clean-arch/step4-2026-11-10/stage_b/test_writer_store.py:148:    assert runner.counts['store journal mode at the end'] == 'delete' and 'stopped in order' not in runner.counts
+clean-arch/step4-2026-11-10/stage_b/test_writer_store.py:160:    assert runner.counts['store journal mode at the end'] == 'wal'
+clean-arch/step4-2026-11-10/stage_b/test_writer_store.py:161:    assert runner.counts['stopped in order'] == 'WAL kept: a reader held the store at the end'
+clean-arch/step4-2026-11-10/stage_b/mutants.py:21:    'articles written under their trace number': (A, [("            seq = sequences[k] = max(k, store.next_sequence(runner.conn))\n", "            seq = sequences[k] = k\n")],
+clean-arch/step4-2026-11-10/stage_b/mutants.py:47:    'a draw with no judgement counts as complete': (L, [("            if runner.counts['judgements'] == 0:", "            if False:")],
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:99:    judged = {entry['view'] for entry in runner.sent}
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:101:    assert runner.counts['links to an unjudged thesis'] > 0
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:102:    assert runner.counts['links to other clean-opened theses dropped'] == 0
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:129:    assert reserves == charges and len(reserves) == len(runner.sent)
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:169:    assert later > 0 and runner.counts['links to a closed question written (not judged)'] == later
+clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py:204:    assert revised > 0 and runner.counts['links to a closed question written (not judged)'] == later
+docs/research/2026-11-14-use-acceptance/carried-run/closing_replay.py:50:          f'last article day {last_article_day}; counts: closed {runner.counts["questions closed at their due day"]}')
+docs/research/2026-11-14-use-acceptance/carried-run/closing_replay.py:68:    counts_hold = len(calls) == stored_calls and runner.counts['questions closed at their due day'] == due_by_end
+docs/research/2026-11-14-use-acceptance/carried-run/closing_replay.py:69:    print(f'calls {len(calls)} against the stored {stored_calls}; closed {runner.counts["questions closed at their due day"]} against due by the end day {due_by_end}')
+   105	    with service.open_ledger(str(out / 'views.sqlite')) as fresh:
+   106	        assert service.resolve_bound(fresh, None) == days[-1]
+   107	
+   108	
+   109	def test_a_writer_killed_after_committed_partial_day_writes_leaves_every_answer_equal_to_its_last_completed_day(tmp_path, monkeypatch):
+   110	    out = tmp_path / 'out'
+   111	    taken = {}
+   112	    real = ladder_adapter.LadderAdapter.close_and_complete
+   113	
+   114	    def complete_two_days_then_die_in_the_third(self, day):
+   115	        done = len(taken.get('days', []))
+   116	        if done == 2:
+   117	            raise KeyboardInterrupt('killed mid-day, after the day\'s articles were committed')
+   118	        closed = real(self, day)
+   119	        taken.setdefault('days', []).append(day)
+   120	        if len(taken['days']) == 2:
+   121	            target = sqlite3.connect(str(tmp_path / 'backup.sqlite'))
+   122	            self.conn.backup(target)
+   123	            target.execute('pragma journal_mode=delete')
+   124	            target.close()
+   125	        return closed
+   126	    monkeypatch.setattr(ladder_adapter.LadderAdapter, 'close_and_complete', complete_two_days_then_die_in_the_third)
+   127	    with pytest.raises(KeyboardInterrupt):
+   128	        ladder_adapter.replay('u1', out, transport=fake_judge, cap_usd=5.0)
+   129	    live, kept = service.open_ledger(str(out / 'views.sqlite')), service.open_ledger(str(tmp_path / 'backup.sqlite'))
+   130	    partial = live.execute('select count(*) from processing_steps where publication_day > ?', (taken['days'][-1],)).fetchone()[0]
+   131	    assert partial > 0                                                        # the third day's articles are in the file
+   132	    item_of = bundle.item_lookup(None)
+   133	    for name, call in (('views', lambda c: service.views(c, None, None, include_closed=True)),
+   134	                       ('library', lambda c: bundle.library(c, None)),
+   135	                       ('changes', lambda c: service.changes(c, '2000-01-01')),
+   136	                       ('search', lambda c: search.search(c, None, 'revenue data center', 10, semantic=False)),
+   137	                       ('days', lambda c: bundle.days(c))):
+   138	        assert call(live) == call(kept), name
+   139	    sent = []
+   140	    index = search.open_index(str(tmp_path / 'index.sqlite'))
+   141	    search.build_index(live, index, embed=lambda texts, model: (sent.extend(texts) or search.fake_embed(texts, model, dims=8)))
+   142	    visible = {r['view_id'] for r in service.summaries(kept, None, include_closed=True)}
+   143	    assert len(sent) == len(visible)                                          # nothing of the partial day is embedded
+   144	
+   145	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/step4-2026-11-10/stage_b/test_ladder_adapter.py | sed -n '35,105p;150,210p;385,415p'
+rg -n 'crash bounds|in.process|interrupt|D597' docs/DECISIONS-log.md | tail -8
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    35	
+    36	def fake_judge(provider, request):
+    37	    shown = adapter.SHOWN_EVIDENCE.findall(request['messages'][-1]['content'])
+    38	    answer = {'rung': 1, 'reference': 'as stated', 'implied_outcome': 'the figure implied', 'reasons': 'test', 'cites': shown[:1],
+    39	              'cites_views': [], 'pushes': [], 'changed': True, 'why_changed': 'test', 'theme_pushes': []}
+    40	    return {'choices': [{'message': {'content': json.dumps(answer)}}], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 100}}
+    41	
+    42	
+    43	@pytest.fixture(scope='module')
+    44	def replayed(tmp_path_factory):
+    45	    from hivemind import jev, model
+    46	    saved = (model._key, jev._key)
+    47	    def refuse(*arguments):
+    48	        pytest.fail('a test read a credential: a model or Jev call escaped its fake transport')
+    49	    model._key = jev._key = refuse                    # the module-scoped replay runs outside the function-scoped guard
+    50	    try:
+    51	        folder = tmp_path_factory.mktemp('u1') / 'out'
+    52	        runner = ladder_adapter.replay('u1', folder, transport=fake_judge, cap_usd=5.0)
+    53	    finally:
+    54	        model._key, jev._key = saved
+    55	    return runner, folder, sqlite3.connect(folder / 'views.sqlite')
+    56	
+    57	
+    58	def test_u1_has_both_kinds_of_thesis():
+    59	    """Precondition of the tests below: the stored first send gives u1 laddered theses and theses with no ladder."""
+    60	    assert len(U1) == 12 and LADDERED and UNLADDERED
+    61	
+    62	
+    63	def test_every_laddered_thesis_is_a_view_with_its_stored_ladder_and_there_is_no_other_view(replayed):
+    64	    """§5.4: a written ladder is one view v<N> for clean-<N>, carrying the view the ladder step built; no seed and no ruler view."""
+    65	    _, _, conn = replayed
+    66	    views = {row[0] for row in conn.execute('select view_id from views')}
+    67	    assert views == {f"v{thesis.split('-')[1]}" for thesis in LADDERED}
+    68	    for thesis in LADDERED:
+    69	        stored, view_id = U1[thesis]['view'], f"v{thesis.split('-')[1]}"
+    70	        row = conn.execute('select object_id, object_kind, kind, looks_at, question, due_day, year from views where view_id=?', (view_id,)).fetchone()
+    71	        assert row == (stored['object_id'], stored['object_kind'], stored['kind'], stored['looks_at'], stored['question'], stored['due_day'], stored['year'])
+    72	        rungs = conn.execute('select label, condition, lo, hi from rungs where view_id=? order by position', (view_id,)).fetchall()
+    73	        assert rungs == [(r['label'], r['condition'], r.get('lo'), r.get('hi')) for r in stored['rungs']]
+    74	
+    75	
+    76	def test_every_opened_thesis_has_one_ladder_row_and_a_thesis_with_no_ladder_has_no_view(replayed):
+    77	    """§5.4: one clean_ladders row a thesis; a no-ladder row carries the model's reason and no view id."""
+    78	    _, _, conn = replayed
+    79	    rows = {row[0]: row[1:] for row in conn.execute('select thesis_id, view_id, status, reason from clean_ladders')}
+    80	    assert set(rows) == set(U1)
+    81	    checked = {row[0]: row[1] for row in conn.execute('select thesis_id, checked_answer from clean_ladders')}
+    82	    for thesis in UNLADDERED:
+    83	        view_id, status, reason = rows[thesis]
+    84	        assert view_id is None and status == ladder_adapter.STATUS[U1[thesis]['status']]
+    85	        assert reason == (U1[thesis]['reason'] if status == 'no ladder' else None)
+    86	        if status == 'no ladder':
+    87	            assert checked[thesis] is not None, f'{thesis} keeps no answer'
+    88	            assert json.loads(checked[thesis])['ladder'] is None and json.loads(checked[thesis])['no_ladder'] == U1[thesis]['reason']
+    89	    for thesis in LADDERED:
+    90	        assert rows[thesis][:2] == (f"v{thesis.split('-')[1]}", 'ladder')
+    91	
+    92	
+    93	def test_links_reach_a_laddered_view_and_the_judge_and_links_to_a_thesis_with_no_ladder_are_counted_not_written(replayed):
+    94	    """§5.4 Links: a link to clean-<N> with a ladder is written to v<N> and the view is judged; one with no ladder is counted."""
+    95	    runner, _, conn = replayed
+    96	    linked = {row[0] for row in conn.execute('select distinct view_id from evidence_links')}
+    97	    assert linked <= {f"v{thesis.split('-')[1]}" for thesis in LADDERED}
+    98	    assert not linked & set(UNLADDERED)
+    99	    judged = {entry['view'] for entry in runner.sent}
+   100	    assert judged and judged <= linked
+   101	    assert runner.counts['links to an unjudged thesis'] > 0
+   102	    assert runner.counts['links to other clean-opened theses dropped'] == 0
+   103	
+   104	
+   105	def test_the_page_can_place_every_judged_view_in_time(replayed):
+   150	def page_of(folder):
+   151	    page = sqlite3.connect(folder / 'views.sqlite')
+   152	    page.row_factory = sqlite3.Row
+   153	    return page
+   154	
+   155	
+   156	def test_a_question_due_inside_the_window_closes_at_the_end_of_its_due_day_and_is_never_judged_after(tmp_path, monkeypatch):
+   157	    """D566, CLOSING-DESIGN.md §2: production's closing step runs at each day's end; a question due on a day with articles is
+   158	    frozen at its last answer on that day, is not judged later, and later links to it are written, not judged, and counted."""
+   159	    from hivemind import service
+   160	    view_id = with_due_day(tmp_path, monkeypatch, '2026-07-03')
+   161	    runner = ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+   162	    page = page_of(tmp_path / 'out')
+   163	    closing = page.execute("select reason, after_seq from view_switches where view_id=? and open=0", (view_id,)).fetchall()
+   164	    assert len(closing) == 1 and closing[0]['reason'].startswith('due 2026-07-03, frozen on 2026-07-03 at rung 1')
+   165	    assert service.seq_day_map(page)[closing[0]['after_seq']] == '2026-07-03'
+   166	    assert service.is_open_as_of(page, view_id, '2026-07-02') and not service.is_open_as_of(page, view_id, '2026-07-03')
+   167	    assert page.execute("select count(*) from judgements where view_id=? and publication_day > '2026-07-03'", (view_id,)).fetchone()[0] == 0
+   168	    later = page.execute('select count(*) from evidence_links where view_id=? and seq > ?', (view_id, closing[0]['after_seq'])).fetchone()[0]
+   169	    assert later > 0 and runner.counts['links to a closed question written (not judged)'] == later
+   170	
+   171	
+   172	
+   173	def test_a_question_opened_already_due_is_judged_and_closed_on_its_opening_day(tmp_path, monkeypatch):
+   174	    """D566, CLOSING-DESIGN.md §2: production's order: opened, judged in the day's round, closed at that day's end."""
+   175	    opening = {case['case']: case['item']['publication_date'] for case in json.loads(ladder_adapter.CASES.read_text())}
+   176	    day = opening[f'u1/{LADDERED[0]}']
+   177	    view_id = with_due_day(tmp_path, monkeypatch, day)
+   178	    ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+   179	    page = page_of(tmp_path / 'out')
+   180	    assert page.execute('select count(*) from judgements where view_id=? and publication_day=?', (view_id, day)).fetchone()[0] >= 1
+   181	    reason = page.execute("select reason from view_switches where view_id=? and open=0", (view_id,)).fetchone()['reason']
+   182	    assert reason.startswith(f'due {day}, frozen on {day} at rung 1')
+   183	
+   184	
+   185	def test_every_earlier_day_must_close_its_due_questions(tmp_path, monkeypatch):
+   186	    """CLOSING-DESIGN.md §2: the invariant at each day's start refuses a run in which an open question was due before that day."""
+   187	    with_due_day(tmp_path, monkeypatch, '2026-07-03')
+   188	    monkeypatch.setattr(ladder_adapter.pull, 'end_of_day', lambda conn, day, seq: [])
+   189	    with pytest.raises(SystemExit, match='was due 2026-07-03, before 2026-07-04'):
+   190	        ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+   191	
+   192	
+   193	def test_a_revision_of_a_statement_linked_to_a_closed_question_is_linked_to_it_not_judged_and_counted(tmp_path, monkeypatch):
+   194	    """D566, CLOSING-DESIGN.md §2: as production's writer does, a later account of a statement linked to a closed question is linked
+   195	    to it too; the closed question is not judged again; each new link is counted once."""
+   196	    view_id = with_due_day(tmp_path, monkeypatch, '2026-07-05', thesis='clean-3')   # e92, linked on 07-05, is revised on 07-06
+   197	    runner = ladder_adapter.replay('u1', tmp_path / 'out', transport=fake_judge, cap_usd=5.0)
+   198	    page = page_of(tmp_path / 'out')
+   199	    after = page.execute("select after_seq from view_switches where view_id=? and open=0", (view_id,)).fetchone()[0]
+   200	    revised = page.execute('select count(*) from evidence_links l join revisions r on r.new_evidence_id = l.evidence_id '
+   201	                           'join evidence_links o on o.evidence_id = r.old_evidence_id and o.view_id = l.view_id '
+   202	                           'where l.view_id = ? and l.seq > ?', (view_id, after)).fetchone()[0]
+   203	    later = page.execute('select count(*) from evidence_links where view_id=? and seq > ?', (view_id, after)).fetchone()[0]
+   204	    assert revised > 0 and runner.counts['links to a closed question written (not judged)'] == later
+   205	    assert page.execute("select count(*) from judgements where view_id=? and publication_day > '2026-07-05'", (view_id,)).fetchone()[0] == 0
+   206	
+   207	
+   208	def test_a_question_never_judged_by_its_due_day_closes_with_no_data(tmp_path, monkeypatch):
+   209	    """D566, pull.py: a question that has no statement, and so no judgement, by its due day closes "no data to verify" (AGENTS §8).
+   210	    The fixture drops the opening day's links to the first laddered thesis, so its question opens with no statement."""
+   385	def test_an_attempt_whose_reserve_cannot_be_written_is_not_sent(tmp_path, monkeypatch):
+   386	    """D429: the reserve line is written before the call; if it cannot be written, nothing is sent."""
+   387	    sent = []
+   388	    limit = ladder_adapter.LedgerBudget(2.0, tmp_path / 'spend.jsonl', attempt=lambda provider, request: sent.append(1) or fake_judge(provider, request))
+   389	    def broken(line):
+   390	        raise OSError('disk full')
+   391	    monkeypatch.setattr(limit, '_write', broken)
+   392	    request = {'model': next(iter(budget.model.PRICES)), 'messages': [{'role': 'user', 'content': 'x'}], 'max_completion_tokens': 10}
+   393	    with pytest.raises(OSError):
+   394	        limit.send('openai', request)
+   395	    assert sent == []
+   396	
+   397	
+   398	def test_each_draw_reports_its_own_spend_and_the_limit_so_far(tmp_path):
+   399	    """Readability: under one shared limit, a draw's spend is its own; the cumulative figure is labelled as such."""
+   400	    limit = ladder_adapter.LedgerBudget(5.0, tmp_path / 'spend.jsonl', attempt=fake_judge)
+   401	    first = ladder_adapter.replay('u1', tmp_path / 'a', transport=fake_judge, limit=limit)
+   402	    second = ladder_adapter.replay('u2', tmp_path / 'b', transport=fake_judge, limit=limit)
+   403	    total = second.counts['judging usd of the whole limit so far (from its ledger)']
+   404	    assert total == pytest.approx(first.counts[DRAW_SPEND] + second.counts[DRAW_SPEND], abs=2e-4)
+   405	    assert second.counts[DRAW_SPEND] < total
+   406	
+   407	
+   408	def test_a_later_launch_after_the_cap_stop_sends_nothing(tmp_path, monkeypatch):
+   409	    """STAGE_B_RUN.md: the cap ends the whole send; a later launch that finds the stop recorded sends nothing."""
+   410	    monkeypatch.setattr(run_stage_b, 'CAP_USD', 0.0001)
+   411	    run_stage_b.send(tmp_path, transport=fake_judge, sleep=lambda seconds: None)
+   412	    monkeypatch.setattr(run_stage_b, 'CAP_USD', 2.0)
+   413	    sent = []
+   414	    with pytest.raises(run_stage_b.Stopped):
+   415	        run_stage_b.send(tmp_path, transport=lambda provider, request: sent.append(1) or fake_judge(provider, request), sleep=lambda seconds: None)
+6222:  added; recovery needs real interruption and resume through dispatch and the replay loop, not a list rebuilt after a commit;
+6237:  uninterrupted one table by table, because the real failure path records the failed attempt (`round._fail`: a failed
+6254:  unchanged with their stored reading answers held fixed; four interruptions through the bounded replay each resume on the same
+6260:  peers; a later article behind an interrupted one. The parallel runner may stay an explicit limit.
+6275:  check must require its interruption and its failure record, not merely allow them; two stale lines on the result page are
+6946:  him now that he is reachable, with the recommendation that they stay; his "continue" authorised the interrupted run, not a
+7855:## D597 · 2026-11-16 · Slice 4a built and proven at $0 on isolated test stores: the writer's store in WAL mode with its size limit, stops before a day on low space or three failed checkpoints, crash bounds, an orderly end (council rounds 131 to 133)
+7872:  - a writer interrupted inside its own process (`KeyboardInterrupt`) after committed partial-day writes leaves views, library,
+
+codex
+**Not yet.** The lock lifecycle and real-kill proof are specified, but the snapshot’s final publish can still overwrite a file that appears during the backup.
+
+The design checks that the destination is absent, then uses an atomic rename. A normal rename can replace a destination created between those two steps. Use a **no-replace** publication operation and test that a destination created immediately before publication remains untouched, with the temporary copy cleaned up. [Snapshot design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:456).
+
+Two evidence and proof details should accompany that change:
+
+- The full D597 record now describes the in-process `KeyboardInterrupt`, but the [decision index](/Users/lchingen/hivemind/docs/DECISIONS.md:941) still says “crash bounds” without that qualification. Align it with the actual test; the proposed `SIGKILL` test will be the separate process-death proof. [D597 record](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7855).
+- The lock cleanup test needs to cover an exception **after the lock is acquired but before `open_wal_store` returns**. At that point `replay` may not yet have received the connection or lock, so ownership and cleanup must be explicit inside the opening path. [Lock-life design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:442).
+
+The separate disk-image proof and its *unexercised* outcome are appropriate.
+
+CONSENSUS: no, because snapshot publication must refuse a destination created during the copy, and cleanup ownership during opening must be specified.
+tokens used
+3,547,041
+**Not yet.** The lock lifecycle and real-kill proof are specified, but the snapshot’s final publish can still overwrite a file that appears during the backup.
+
+The design checks that the destination is absent, then uses an atomic rename. A normal rename can replace a destination created between those two steps. Use a **no-replace** publication operation and test that a destination created immediately before publication remains untouched, with the temporary copy cleaned up. [Snapshot design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:456).
+
+Two evidence and proof details should accompany that change:
+
+- The full D597 record now describes the in-process `KeyboardInterrupt`, but the [decision index](/Users/lchingen/hivemind/docs/DECISIONS.md:941) still says “crash bounds” without that qualification. Align it with the actual test; the proposed `SIGKILL` test will be the separate process-death proof. [D597 record](/Users/lchingen/hivemind/docs/DECISIONS-log.md:7855).
+- The lock cleanup test needs to cover an exception **after the lock is acquired but before `open_wal_store` returns**. At that point `replay` may not yet have received the connection or lock, so ownership and cleanup must be explicit inside the opening path. [Lock-life design](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:442).
+
+The separate disk-image proof and its *unexercised* outcome are appropriate.
+
+CONSENSUS: no, because snapshot publication must refuse a destination created during the copy, and cleanup ownership during opening must be specified.

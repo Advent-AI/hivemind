@@ -1,0 +1,11 @@
+hold — In `yes_no`’s description, replace “yes_no, states and figure” with “yes_no, company_states, theme_states and figure”; also make the theme-state `name` reject the five company labels, retaining D404’s code check.
+
+For example, the current shape still accepts a theme state named “Bullish”: changing the field from `label` to `name` does not prevent that value. The check must also verify that the chosen states field matches the object. Even then, a human must assess whether each name actually describes an outcome.
+
+1. **D397:** The structure asks the model to list the things and choose the main one, which is the right division of responsibility. The model must judge what is main. Code can check that a non-null `main` exactly matches a `named[].thing`, and that null means `no_ladder` with `ladder` null. Those checks cannot prove the list or choice is right. Other valid refusal reasons can still apply when `main` is non-null.
+
+2. **D38:** Separate company and theme fields express the intended distinction, but the current theme field accepts any nonblank name, including all five company labels. The company enum also does not by itself ensure five distinct labels or the right field for the object. The old `states` reference in `yes_no` is the direct schema-description inconsistency.
+
+3. **False refusals:** “Every figure or event the topic’s outcome names” and “a condition or a comparison … is not an entry” could be read too narrowly. A yes/no signing is an **event**, even without a numeric figure. In Ohio, the signing can be main while the amount and credit-risk condition are listed as not judged. The guard is to read the raw topic and all 15 expected answers: check that the event is listed, the main choice is defensible, and omitted parts are recorded. Do not let code decide importance.
+
+4. **“Steady”:** Your line is a reasonable **predeclared probe threshold**, not proof of general reliability or readiness. Report each topic’s three results: 8/9 can hide one topic declined only twice. Also read whether each answer asks the right thing, lists the omitted parts, and has valid states; merely producing a ladder or using the right field is insufficient. These 24 sends can show what happened on these eight topics, not establish a general error rate.

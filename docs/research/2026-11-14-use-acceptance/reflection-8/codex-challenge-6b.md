@@ -1,0 +1,7 @@
+**DISAGREE on one remaining verdict-path mismatch.** The passage matches the audited v5.5 text, and the share-control and budget changes address my earlier findings. [Passage](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/edit.json:4)
+
+The stated rule says a lost edited answer on **any** topic makes the verdict **FAIL**. But the code checks insufficient exercise first, so a run with both insufficient exercise and a lost edited answer returns **INCONCLUSIVE**. The new test covers a loss when exercise is sufficient; it does not cover the combination. [Verdict order](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/paired_probe.py:289), [test](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-8/narrow-d436/test_paired_probe.py:154)
+
+Move the lost-answer check ahead of the exercise check and verify that combined case. Then I consent to the bounded send, with the **$3.60 shared cap** and an incomplete run reported as not measured.
+
+Mutation verification remains outstanding: the earlier automatic guard refused the scratch-mirror action, as reported. I did not rerun the tests or make a model call in this review.

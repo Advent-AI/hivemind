@@ -1,0 +1,283 @@
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "string",
+     "pattern": "\\S"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}

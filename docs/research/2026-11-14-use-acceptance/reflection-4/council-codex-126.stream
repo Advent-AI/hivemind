@@ -1,0 +1,387 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 126: your four points answered (contract row 2 and row 3's legacy sentence; one new test)
+
+1. **The legacy ledger:**
+   - Today's default (`default_as_of`, unchanged) already queries `days_completed`, so a ledger without the table fails today with
+     "no such table: days_completed".
+   - The new test `test_a_ledger_without_the_completed_day_table_fails_exactly_as_it_did_before` shows four public calls, omitted and
+     explicit bounds, failing with exactly that error. The census of 143 stored ledgers found none without the table.
+   - The contract's sentence now says this instead of "reads as today". The resolver suite passes (10 tests).
+2. **MCP's object list stays in its instructions, labelled with its day:**
+   - It is computed once at start through `idea.object_list`, which resolves its bound. The direct `service.default_as_of` call in
+     `scripts/hivemind_mcp.py` goes.
+   - The text names the start day and says every tool reads the current last completed day.
+   - On a first-day store it says no day has completed, and the tools refuse.
+   - No tool is added. Proof 4 tests, at the actual entry point, that after a later day completes a tool sees that day's views while
+     the instructions keep their start day.
+3. **Concurrent search:** MCP opens its ledger, items and index connections per tool call. The index is written during a search (the
+   query-embedding cache), so overlapping searches never share one. Proof 4 includes two overlapping search calls.
+4. **The API's snapshot pinned:**
+   - `BEGIN`, then a first read (the bound resolution), fixes the committed state in WAL mode before any writer is released in the
+     test.
+   - A failure while opening closes what was already opened inside `__enter__`. Proof 4 includes an opening error leaving no
+     connection open.
+
+End with `CONSENSUS: yes` (build slice 2) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the revised contract and the legacy test, then verify that the MCP and API changes have a clear testable boundary.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '36,70p;185,220p;260,290p'
+rg -n -C 5 'ledger_without_the_completed_day_table|legacy' tests/test_bound_resolver.py
+nl -ba scripts/hivemind_mcp.py | sed -n '25,75p'
+nl -ba src/hivemind/search.py | sed -n '125,150p'
+rg -n 'hivemind.*sqlite|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    36	   - **Opening precondition:** every reader runs as the writer's user, and the store's directory is writable by it. SQLite needs the
+    37	     `-wal` and `-shm` files readable, or permission to create them, to open a WAL store with `mode=ro`.
+    38	   - Readers open with `mode=ro`, never `immutable=1`.
+    39	   - A reader that cannot open the store, or cannot begin a read transaction, fails loudly with the store's path. It never serves an
+    40	     empty or stale answer in its place.
+    41	   - Readers set a busy timeout and retry `SQLITE_BUSY` within it. SQLite documents rare WAL cases where a read returns busy, for
+    42	     example while the WAL index is being rebuilt.
+    43	   - The guarantee is that readers do not block the writer's commits, not that the writer never waits.
+    44	2. **One committed state per request, one connection per concurrent request** (detailed in council rounds 125 and 126).
+    45	   - **Pinned, not only begun:** each API request and each MCP tool call opens its connections and runs `BEGIN`, then a first read,
+    46	     which in WAL mode fixes the committed state the later reads see. The bound resolution is that first read.
+    47	     - The transaction always ends (`finally`).
+    48	     - A failure while opening (for example the items or index file) closes whatever was already opened before the error leaves
+    49	       `__enter__`, since `__exit__` is not called then.
+    50	   - **MCP opens its ledger, items and index connections per tool call,** as the API does per request, in place of today's
+    51	     process-wide `LEDGER`, `ITEMS` and `INDEX`.
+    52	     - The index is written during a search (the query-embedding cache, `query_vectors`), so overlapping searches must not share a
+    53	       connection.
+    54	   - **MCP's object list stays in its server instructions, labelled with its day.**
+    55	     - It is computed once at start-up through `idea.object_list`, which resolves its bound; the direct `service.default_as_of` call
+    56	       in `scripts/hivemind_mcp.py` goes.
+    57	     - The instructions name the day: "objects as of <day>, when this server started; every tool reads the current last completed
+    58	       day".
+    59	     - On a first-day store the instructions say no day has completed yet, and every tool refuses until one has.
+    60	     - No new tool is added, so the public tool list is unchanged.
+    61	3. **Every date bound, resolved in one function.**
+    62	   - Today 13 places resolve a bound as `x or default_as_of(conn)`: `service.py` ×9 (`summaries`, `views`, `view`, `evidence`,
+    63	     `history`'s `to_day`, `record`, `changes`' `to_day`, `evaluate`, …), `bundle.py` ×2, `idea.py` ×1 and `search.py` ×1. An
+    64	     explicit date bypasses any check placed in `default_as_of`.
+    65	   - **The owner:** one function, `service.resolve_bound(conn, bound)`, receives every upper bound, explicit or omitted, in its
+    66	     caller's read transaction.
+    67	     - An omitted bound gives the last completed day.
+    68	     - An explicit bound later than the last completed day is refused, naming that day.
+    69	     - An explicit bound on or before it passes.
+    70	   - Every one of the 13 sites calls it. A lower bound (`from_day`, `since_day`) is checked only against its resolved upper bound,
+   185	     - Journal mode is never used as the sign of a live store; the lock is.
+   186	8. **AGENTS §9 ("Never open a live run's databases") stays in force.**
+   187	   - **Proposed decision P1, to be resolved before any live-service operation and not assumed by any proof:** the product's API and
+   188	     MCP server may read a live WAL store under rows 1 to 7. Every other toucher above uses a backup-API snapshot.
+   189	   - The proofs run on test stores made for them, never on a live run.
+   190	
+   191	## State × event (the store's state at the request's transaction × the request)
+   192	
+   193	| State | Bounds omitted | Upper bound ≤ last completed day | Upper bound > last completed day | Start-up reads | Copy |
+   194	|---|---|---|---|---|---|
+   195	| Empty store | as today | as today | as today | as today | consistent |
+   196	| First day in progress | refused (4) | — | refused (4) | wait; requests refused | consistent (an in-progress copy, read under the same rules) |
+   197	| A later day in progress | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   198	| A day completing during a request | the request's own transaction | same | same | same | consistent |
+   199	| Crashed mid-day, not resumed | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   200	| `-wal`/`-shm` absent and directory not writable | fails loudly (1) | same | same | fails loudly | — |
+   201	
+   202	## Proof plan ($0, on test stores made for it; nothing built until the council accepts the contract)
+   203	
+   204	1. **WAL mode:** the writer's store is in WAL mode with the size limit set; production's stores are unchanged.
+   205	2. **Every upper bound:**
+   206	   - the structural check that no bound is resolved outside `resolve_bound`;
+   207	   - for each of the 13 callers, an explicit future bound is refused naming the last completed day, an explicit past bound passes,
+   208	     and an omitted bound gives the last completed day;
+   209	   - lower bounds are unaffected.
+   210	3. **One state per request:** an API request, its state pinned by its first read, held between its first and last read while the writer commits a judgement and
+   211	   completes a day returns the state at its start, and the writer's commits succeed. Run on a first-day store and a store with one
+   212	   completed day.
+   213	4. **Start-up and MCP concurrency:**
+   214	   - two overlapping MCP calls across a writer's commit each return their own transaction's state, two overlapping **search**
+   215	     calls included (each with its own index connection, both writing the query cache);
+   216	   - after a later day completes, a tool call on the actual MCP entry point sees that day's views; the instructions still name their
+   217	     start day;
+   218	   - an error while opening connections leaves none open;
+   219	   - a call that fails mid-read leaves no open transaction and no open connection;
+   220	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   260	   - a retry after another day has completed reuses exactly the staged rows whose four key parts match;
+   261	   - two stores at the same path with the same first sequence and day but different identities: no staged row of the first is
+   262	     reused for the second, and no published vector of the first is used for the second;
+   263	   - a store restored from an earlier snapshot, with the same identity but a published day after its last completed day: its
+   264	     published vectors are not used until a refresh;
+   265	   - a restored store with the same identity and published day but one view's text changed: that view's vector is not used, and
+   266	     search runs lexically and says so.
+   267	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   268	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   269	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   270	   the last completed day. After the day completes, the index is extended to it, and search names the index's day until then.
+   271	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   272	   same answers before and after `resolve_bound` is introduced.
+   273	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   274	
+   275	## Row 3's product-facing contract (council rounds 120 to 123; A1, clamping, withdrawn)
+   276	
+   277	**The rule.**
+   278	
+   279	- **On every store with a `days_completed` table**, finished or not, partial rows or not, an explicit upper bound later than the last
+   280	  completed day is refused. The same date gets the same answer whenever it is asked.
+   281	- An omitted bound gives the last completed day, as today.
+   282	- **Steps but no completed day:** refused as the first day.
+   283	- **`days_completed` present with no steps and no completed day** (an empty new store): read as today. An omitted bound gives what
+   284	  `default_as_of` gives today (none), and an explicit bound passes.
+   285	- **A ledger without the `days_completed` table:** today's default already queries that table (`store.last_completed_day`), so such
+   286	  a ledger fails today with SQLite's "no such table". It fails the same way through the resolver. The census of 143 stored ledgers
+   287	  found none (proof 9 checks the identical error).
+   288	- **Ranges** (amended in council round 124): a start after its resolved end is refused, for `changes` and `history` alike. A start
+   289	  equal to the end reads as before: an empty window for `changes`, whose start is excluded, so a polling client keeps its empty
+   290	  answer until a day completes; and that one day for `history`, whose start is included.
+147-    assert hivemind_api.error_response(service.RangeNotOrdered('2026-08-21', '2026-08-20')) == (
+148-        409, {'error': 'range start after its end', 'start': '2026-08-21', 'end': '2026-08-20'})
+149-    assert hivemind_api.error_response(KeyError('v9')) == (404, {'error': "not found: 'v9'"})
+150-
+151-
+152:def test_a_ledger_without_the_completed_day_table_fails_exactly_as_it_did_before(tmp_path):
+153-    """Contract row 3: such a ledger reads "as today". Today's default (`default_as_of`, unchanged) already queries `days_completed`,
+154-    so it fails with SQLite's missing-table error; every public function now fails with that same error, not a new one."""
+155-    import sqlite3
+156-    from hivemind import bundle
+157:    path = str(tmp_path / 'legacy.sqlite')
+158-    bound_cases.store.open_db(path).close()
+159-    raw = sqlite3.connect(path)
+160-    raw.execute('drop table days_completed')
+161-    raw.commit()
+162-    raw.close()
+    25	parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
+    26	parser.add_argument('--transport', choices=['stdio', 'streamable-http'], default='stdio', help='stdio for a local agent; streamable-http to serve /mcp over HTTP (Docker)')
+    27	parser.add_argument('--host', default='127.0.0.1')
+    28	parser.add_argument('--port', type=int, default=8789)
+    29	ARGS = parser.parse_args()
+    30	LEDGER = service.open_ledger(ARGS.views)
+    31	INDEX = search_module.open_index(ARGS.index)
+    32	ITEMS = store.open_read_only(ARGS.items) if os.path.exists(ARGS.items) else None
+    33	ALIASES = search_module.object_aliases(ARGS.universe)
+    34	if not ARGS.lexical:
+    35	    _embedded, _unchanged, _tokens, INDEX_ERROR = search_module.ensure_index(LEDGER, INDEX)
+    36	    if INDEX_ERROR:
+    37	        sys.stderr.write(f'hivemind: embedding stopped ({INDEX_ERROR}) after {_embedded} views; search runs lexical until the rest is built\n')
+    38	
+    39	from hivemind import idea as idea_module  # noqa: E402
+    40	
+    41	OBJECTS = idea_module.object_list(LEDGER, service.default_as_of(LEDGER), ALIASES)
+    42	mcp = FastMCP('hivemind', host=ARGS.host, port=ARGS.port, instructions=(
+    43	    'Hivemind is a ledger of research views (a dated question with a five-step ladder, judged every day on evidence) '
+    44	    'with a search engine on top. To read an idea against it: first break the idea into its parts, the one to four '
+    45	    'questions whose answers decide it (each about one concrete quantity, date or event); search with the idea and with '
+    46	    'each part (k=20); map each part to every view whose question answers it or whose outcome would move it, leaving out '
+    47	    'views that only share a company or a word; then read each mapped view (state as of a day, history, evidence) and '
+    48	    'say what the judged positions tell about each part and which parts no view covers. Say judged, never true. Every '
+    49	    'tool takes as_of, a calendar day; the default is the ledger\'s last completed day. Nothing here changes the ledger. '
+    50	    'search matches each view\'s own text (question, what it looks at, ladder conditions; Chinese, English queries work): '
+    51	    'ask for one object and one quantity or event per query; views(object) lists everything under one object. '
+    52	    + OBJECTS))
+    53	
+    54	
+    55	@mcp.tool()
+    56	def thesis_library(as_of: str = '') -> dict:
+    57	    """All collected theses and their stored research groups, including ungrouped and closed theses.
+    58	    Membership is not a dependency or a parent-child relationship. No model call or ledger write."""
+    59	    return bundle.library(LEDGER, ITEMS, as_of or None)
+    60	
+    61	
+    62	@mcp.tool()
+    63	def thesis_bundles(view_ids: list[str], as_of: str = '') -> dict:
+    64	    """Complete UI inputs for selected thesis ids: dated states, assessments, sources, evidence and relationships.
+    65	    Pass this envelope to the frontend's fromBundles adapter. Read-only; does not call a model."""
+    66	    return bundle.thesis_bundles(LEDGER, ITEMS, view_ids, as_of or None)
+    67	
+    68	
+    69	@mcp.tool()
+    70	def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+    71	    """Top-k views for an idea or sentence: id, object, kind, what it looks at, the question, due day, dependencies
+    72	    (the views it is judged after) and dependants, with the score and its parts. Views, never evidence: evidence is
+    73	    anchored under its view."""
+    74	    return search_module.search(LEDGER, INDEX, query, k, as_of or None, include_closed, aliases=ALIASES, semantic=not ARGS.lexical)
+    75	
+   125	    stored = {r['view_id']: (r['text_sha256'], json.loads(r['vector_json'])) for r in index.execute('select view_id, text_sha256, vector_json from view_vectors where model=?', (embedding_model,))}
+   126	    out = {}
+   127	    dims = None
+   128	    for record in ledger.execute('select * from views'):
+   129	        have = stored.get(record['view_id'])
+   130	        if have and have[0] == sha(view_text(record, store.rungs_of(ledger, record['view_id']))) and usable(have[1]) and (dims is None or len(have[1]) == dims):
+   131	            out[record['view_id']] = have[1]
+   132	            dims = len(have[1])
+   133	    return out
+   134	
+   135	
+   136	def query_vector(index, query, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL):
+   137	    digest = sha(query)
+   138	    row = index.execute('select vector_json from query_vectors where text_sha256=? and model=?', (digest, embedding_model)).fetchone()
+   139	    if row:
+   140	        return json.loads(row['vector_json']), True
+   141	    vectors, tokens = embed([query], embedding_model)
+   142	    index.execute('insert or replace into query_vectors (text_sha256, model, vector_json, tokens, built_at) values (?,?,?,?,?)',
+   143	                  (digest, embedding_model, json.dumps(vectors[0]), tokens, time.strftime('%Y-%m-%dT%H:%M:%S')))
+   144	    index.commit()
+   145	    return vectors[0], False
+   146	
+   147	
+   148	def warm_queries(index, queries, embed=openai_embeddings, embedding_model=EMBEDDING_MODEL):
+   149	    """Embed every query not yet in the cache in one embeddings call, so the searches that follow find their vectors
+   150	    locally. Measured 2026-10-24: a never-seen query costs a 0.6–1.9 s round trip and an idea made seven of them in
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba tests/test_bound_resolver.py | sed -n '150,190p'
+nl -ba src/hivemind/service.py | sed -n '103,170p'
+nl -ba src/hivemind/bundle.py | sed -n '65,83p;103,115p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   150	
+   151	
+   152	def test_a_ledger_without_the_completed_day_table_fails_exactly_as_it_did_before(tmp_path):
+   153	    """Contract row 3: such a ledger reads "as today". Today's default (`default_as_of`, unchanged) already queries `days_completed`,
+   154	    so it fails with SQLite's missing-table error; every public function now fails with that same error, not a new one."""
+   155	    import sqlite3
+   156	    from hivemind import bundle
+   157	    path = str(tmp_path / 'legacy.sqlite')
+   158	    bound_cases.store.open_db(path).close()
+   159	    raw = sqlite3.connect(path)
+   160	    raw.execute('drop table days_completed')
+   161	    raw.commit()
+   162	    raw.close()
+   163	    conn = service.open_ledger(path)
+   164	    with pytest.raises(sqlite3.OperationalError) as before:
+   165	        service.default_as_of(conn)
+   166	    for call in (lambda: service.views(conn), lambda: service.changes(conn, '2026-08-01'), lambda: bundle.days(conn),
+   167	                 lambda: service.views(conn, None, '2026-08-01')):
+   168	        with pytest.raises(sqlite3.OperationalError) as now:
+   169	            call()
+   170	        assert str(now.value) == str(before.value) == 'no such table: days_completed'
+   103	    return cache
+   104	
+   105	
+   106	def day_of_seq(conn, seq):
+   107	    return seq_day_map(conn).get(seq)
+   108	
+   109	
+   110	def visible(conn, seq, as_of):
+   111	    day = day_of_seq(conn, seq)
+   112	    return day is not None and day <= as_of
+   113	
+   114	
+   115	# ---------- views
+   116	
+   117	def view_exists(conn, record, as_of):
+   118	    return visible(conn, record['created_seq'], as_of)
+   119	
+   120	
+   121	def is_open_as_of(conn, view_id, as_of):
+   122	    for row in conn.execute('select open, after_seq from view_switches where view_id=? order by id desc', (view_id,)):
+   123	        if visible(conn, row['after_seq'], as_of):
+   124	            return bool(row['open'])
+   125	    return True
+   126	
+   127	
+   128	def state_as_of(conn, view_id, as_of):
+   129	    """The last judgement on or before the day, with the day the current position was first taken."""
+   130	    rows = [dict(r) for r in conn.execute('select * from judgements where view_id=? and publication_day<=? order by judgement_id', (view_id, as_of))]
+   131	    if not rows:
+   132	        return None
+   133	    last = rows[-1]
+   134	    since, previous = last['publication_day'], None
+   135	    for row in reversed(rows[:-1]):
+   136	        if row['rung'] != last['rung']:
+   137	            previous = row['rung']
+   138	            break
+   139	        since = row['publication_day']
+   140	    return {'position': last['rung'], 'judgement_day': last['publication_day'], 'since_day': since, 'previous_position': previous,
+   141	            'rounds': len(rows), 'why_changed': last['why_changed'], 'reasons': last['reasons'], 'theme_pushes': _json(last.get('theme_pushes_json'))}
+   142	
+   143	
+   144	def summaries(conn, as_of=None, include_closed=False):
+   145	    """Every view as of the day as a light record (id, object, kind, what it looks at, the question, due day, open,
+   146	    dependency and dependant ids): what a search ranks. The full record with its evidence counts is `view`; listing
+   147	    92 of those cost 0.29 s per search (1,205 evidence reads), measured 2026-10-24."""
+   148	    as_of = resolve_bound(conn, as_of)
+   149	    out = []
+   150	    for record in conn.execute('select * from views order by created_seq'):
+   151	        record = dict(record)
+   152	        if not view_exists(conn, record, as_of):
+   153	            continue
+   154	        is_open = is_open_as_of(conn, record['view_id'], as_of)
+   155	        if not include_closed and not is_open:
+   156	            continue
+   157	        out.append({'view_id': record['view_id'], 'object': record['object_id'], 'object_kind': record['object_kind'], 'kind': record['kind'],
+   158	                    'looks_at': record['looks_at'], 'question': record['question'], 'due_day': record['due_day'], 'open': is_open,
+   159	                    'dependencies': [d['view_id'] for d in dependencies(conn, record['view_id'], as_of)], 'dependants': dependants(conn, record['view_id'], as_of)})
+   160	    return out
+   161	
+   162	
+   163	def views(conn, object_id=None, as_of=None, include_closed=False):
+   164	    as_of = resolve_bound(conn, as_of)
+   165	    rows = conn.execute('select * from views' + (' where object_id=?' if object_id else '') + ' order by created_seq', (object_id,) if object_id else ()).fetchall()
+   166	    out = []
+   167	    for record in rows:
+   168	        record = dict(record)
+   169	        if not view_exists(conn, record, as_of):
+   170	            continue
+    65	def not_judged(views_db, view_id, created_seq, as_of=None):
+    66	    """D397: the parts of a topic its one judged question leaves out, with their reasons, from the view's ladder row. None for a
+    67	    legacy ledger, for a view with no row, and before the view's creation at as_of; [] when the row lists none. A malformed row,
+    68	    or two rows for one view, is refused. Called directly for a view not visible at the resolved bound, it refuses the view
+    69	    (OPERATING-CONTRACT.md, row 3), so a question created after that day is never returned."""
+    70	    as_of = service.resolve_bound(views_db, as_of, unfiltered=True)
+    71	    if as_of is not None and not _visible(views_db, created_seq, as_of):
+    72	        raise KeyError(f'{view_id} is not available as of {as_of}')
+    73	    ladder = ladder_row(views_db, view_id)
+    74	    if ladder in ('no table', 'no row'):
+    75	        return None
+    76	    parts = ladder.get('not_judged')
+    77	    if not isinstance(parts, list) or not all(isinstance(p, dict) and isinstance(p.get('part'), str) and isinstance(p.get('why'), str) for p in parts):
+    78	        raise ValueError(f'{view_id}: its parts not judged are not a list of {{part, why}} texts')
+    79	    return [{'part': p['part'], 'why': p['why']} for p in parts]
+    80	
+    81	
+    82	def answer_shape(views_db, view_id):
+    83	    """(shape, favourable end) of the view's answer choices, as the page needs them to read the stored labels without inventing a
+   103	    as_of = service.resolve_bound(views_db, as_of, unfiltered=True)
+   104	    v = views_db.execute('select * from views where view_id=?', (view_id,)).fetchone()
+   105	    if v is None:
+   106	        raise KeyError(view_id)
+   107	    if as_of is not None and not service.view_exists(views_db, v, as_of):
+   108	        raise KeyError(f'{view_id} is not available as of {as_of}')
+   109	    columns = {r[1] for r in views_db.execute('pragma table_info(rungs)')}
+   110	    bounds = ', lo, hi' if {'lo', 'hi'} <= columns else ''          # a ledger written before keys has no bounds; the adapter then reads the prose
+   111	    rungs = [dict(r) for r in views_db.execute(f'select position, label, condition{bounds} from rungs where view_id=? order by position', (view_id,))]
+   112	    switches = [dict(r) for r in views_db.execute('select open, reason, after_seq from view_switches where view_id=? order by id', (view_id,))
+   113	                if _visible(views_db, r['after_seq'], as_of)]
+   114	    for switch in switches:
+   115	        switch['day'] = service.day_of_seq(views_db, switch['after_seq'])
+
+codex
+**Yes: build slice 2 and bring its test-store evidence back for review.** The contract now specifies separate MCP connections, a pinned API snapshot, cleanup on opening failure, and how the startup object list remains visible. [Operating contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:44).
+
+One correction to the legacy finding: the new test compares all four *current* calls with `default_as_of`’s error; it does not run the earlier versions of those four calls. Before the resolver, an explicit date could bypass `default_as_of`, so “each failed exactly as before” is not established for that case. The census reports no stored ledger without the table, which limits the practical reach, but the test and contract should state what was actually checked. [Legacy test](/Users/lchingen/hivemind/tests/test_bound_resolver.py:152).
+
+For slice 2’s proof, keep the overlapping **search** calls and the startup-first-day case in the actual MCP entry point. The existing startup calls `ensure_index` before constructing instructions, so the proof must not imply that startup indexing is safe on unfinished data until row 4a is built and tested. [MCP startup](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:29).
+
+CONSENSUS: yes
+tokens used
+3,460,701
+**Yes: build slice 2 and bring its test-store evidence back for review.** The contract now specifies separate MCP connections, a pinned API snapshot, cleanup on opening failure, and how the startup object list remains visible. [Operating contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:44).
+
+One correction to the legacy finding: the new test compares all four *current* calls with `default_as_of`’s error; it does not run the earlier versions of those four calls. Before the resolver, an explicit date could bypass `default_as_of`, so “each failed exactly as before” is not established for that case. The census reports no stored ledger without the table, which limits the practical reach, but the test and contract should state what was actually checked. [Legacy test](/Users/lchingen/hivemind/tests/test_bound_resolver.py:152).
+
+For slice 2’s proof, keep the overlapping **search** calls and the startup-first-day case in the actual MCP entry point. The existing startup calls `ensure_index` before constructing instructions, so the proof must not imply that startup indexing is safe on unfinished data until row 4a is built and tested. [MCP startup](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:29).
+
+CONSENSUS: yes

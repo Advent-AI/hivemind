@@ -42,6 +42,8 @@ document.getElementById('check').onclick=()=>{
   library.setDataset({...data,theses:[],groups:[],days:[]});check(host.textContent.includes('No theses to show'),'empty library renders');
   library.setDataset(data);check(host.querySelector('[data-group=""] .library-count').textContent==='90','library restores');
   const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);check(ids.length===new Set(ids).size,'DOM IDs remain unique');
+  library.setDataset(narrow);library.setDataset(data,{day:data.as_of});check(library.getDay()===data.as_of,'a supplied day is shown instead of the kept one');
+  library.setDataset(narrow);library.setDataset(data);check(library.getDay()==='2026-07-23','without a supplied day the kept day stays');
   result.textContent='Passed '+count+' lifecycle checks. Initial library render '+renderMs.toFixed(1)+' ms.';
  }catch(error){result.textContent='FAILED: '+error.message}
 };

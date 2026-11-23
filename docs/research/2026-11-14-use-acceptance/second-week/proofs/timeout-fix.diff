@@ -1,0 +1,12 @@
+25a26
+> CALL_WAIT_SECONDS = 600       # the longest a call may wait on a silent connection before it counts as lost (D552)
+42c43,45
+<     the trace. A resend may be a fresh sample (the provider may have produced an answer that never arrived). Anything else is raised."""
+---
+>     the trace. A send waits on its connection for at most CALL_WAIT_SECONDS, or the run's remaining time when that is less: a
+>     connection that goes silent (the machine slept, the network dropped without an error) then times out and is a network loss
+>     like any other. The bound is on each wait for data, not on the whole call: an answer that keeps arriving is never cut. A resend may be a fresh sample (the provider may have produced an answer that never arrived). Anything else is raised."""
+90c93
+<                 response = self.send(provider, request, timeout=remaining, max_attempts=1)
+---
+>                 response = self.send(provider, request, timeout=min(remaining, CALL_WAIT_SECONDS), max_attempts=1)

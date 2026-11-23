@@ -1,0 +1,381 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 105: your three points fixed; the D diagnostic frozen and checked before any reader. Go for the four reader sessions?
+
+Everything is in `unlisted-parts/fresh-a2/` (sha256 in `d-diagnostic/sha256.txt`).
+
+1. **The reason breakdown is reviewable.**
+   - `d-split-reasons.jsonl` holds every Codex D failure in the class, one line each: the reading, the item, the kind, the year,
+     the day, Claude's D and the Codex reason.
+   - `d_split_census.py --reasons` writes it, and `d-split-reasons-summary.txt` gives the counts:
+     - 128: an obligation, with the reason dating the next annual filing or report otherwise;
+     - 5 other: the calendar-2027 / FY2028 product items.
+   - The selector is in the script (`obligation_by_the_note`).
+2. **The sentence keeps D414's yearly-figure boundary.** It is inserted after the D row's obligation clause in a copy of the brief,
+   `d-diagnostic/stage-a-reader-brief-d-clarified.md`, and the original is unchanged:
+   > "An obligation's next annual filing is its annual report. Where the question asks for that year's figure and neither the thesis
+   > nor the article states the report's day, the due day is the one code sets for the year's figure (60 days after the fiscal
+   > year-end, D414), even where the fiscal-year note names an earlier month."
+3. **The controls are frozen with their reasons and checked independently.**
+   - **Candidates** (`d_sample.py`, seed fixed, one item per distinct topic, copied whole from stored packets):
+     - 8 obligation yearly figures where the families split;
+     - 4 where both passed;
+     - 6 where both failed D;
+     - 4 with a stated day where both passed.
+   - **The FY2028 items are not used as controls,** as you said.
+   - **`expected.json`:** my expected D and its reason for each item, written from the item against the brief, D414 and D210
+     before any reader.
+   - **`expected-check.jsonl`:** a fresh read-only Codex checker agreed with 21 of 22. It disputed item 16 (a rolling twelve-month
+     figure given its window's last day): the brief gives no rule for that day. Item 16 is dropped from the counted controls and is
+     read and reported only.
+   - The checker's stream shows it opened only the brief and the candidates. It judged from the brief's D row, which carries
+     D414's rule.
+4. **The reading:**
+   - `d-diagnostic/packet.json`: the 22 items shuffled, with no group or earlier marks; the key is outside the repository.
+   - Four fresh sessions, D only, under the whole brief:
+     - Codex with the unchanged brief;
+     - Codex with the clarified brief;
+     - Claude with the unchanged brief;
+     - Claude with the clarified brief.
+5. **Adopt rule, written in `expected.json` before any reading:**
+   - Under the sentence, Codex holds D on at least 10 of items 1 to 12.
+   - Both families still fail D on at least 4 of items 13, 14, 15, 17 and 18.
+   - Both still hold D on at least 3 of items 19 to 22.
+   - **Not adopted** if a fail control flips to holds in both families under the sentence after failing in both under the
+     unchanged brief, or if a stated-day control loses a hold.
+   - **A pass** gives a dated clarification of the brief, plus a re-ruling of the class points in the latest readings by fresh third
+     readers of both families, reported beside the unchanged counts.
+   - **It does not give** an overall reader error rate.
+
+End with `CONSENSUS: yes` (run the four sessions) or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the frozen sample, expected marks and clarified brief, then verify that the decision rule uses the controls as described.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-reasons-summary.txt; cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json; cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected-check.jsonl; cat docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/sha256.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 3 'obligation_by_the_note|--reasons|reason|kind' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py; rg -n -C 3 'An obligation.s next annual filing|due day' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/stage-a-reader-brief-d-clarified.md | tail -20; ls docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+133 Codex D failures in the class: {'obligation: next annual filing dated otherwise': 128, 'other': 5} -> d-split-reasons.jsonl
+{
+ "written": "2026-11-16, by Claude, from each candidate's topic, article and choices against the reader brief's D row, D414 and D210, before any reader of the diagnostic",
+ "candidates_sha256": "see expected-check.md",
+ "expected": {
+  "1": {
+   "D": "holds",
+   "why": "An obligation already taken on, tracked by its FY2027 amount in the next annual report; neither the topic nor the article states the report's day (the topic's '~February 2027' is an estimated month), so D414 sets 2027-04-01."
+  },
+  "2": {
+   "D": "holds",
+   "why": "Purchase and supply commitments as of FY2027 year-end in the FY2027 10-K; no day stated ('expected around February 2027' is an estimate); D414's 2027-04-01."
+  },
+  "3": {
+   "D": "holds",
+   "why": "Supply purchase commitments in the FY2027 annual report; no day stated; D414's 2027-04-01."
+  },
+  "4": {
+   "D": "holds",
+   "why": "The Intel stake's amount as of FY2027 year-end in the FY2027 10-K; no day stated; D414's 2027-04-01 (whether the stake's value is the right quantity is another mark's matter)."
+  },
+  "5": {
+   "D": "holds",
+   "why": "The maximum potential guarantee liability in the FY2027 10-K, a year-end balance; no day stated; D414's 2027-04-01."
+  },
+  "6": {
+   "D": "holds",
+   "why": "Outstanding supply commitments at the end of FY2027 in the 10-K; no day stated ('likely filed early 2027'); D414's 2027-04-01."
+  },
+  "7": {
+   "D": "holds",
+   "why": "Supply purchase commitments for FY2027 in the next 10-K; the topic says the item gives no date; D414's 2027-04-01."
+  },
+  "8": {
+   "D": "holds",
+   "why": "Supply and capacity commitments as of FY2027 year-end in the FY2027 10-K; no day stated; D414's 2027-04-01."
+  },
+  "9": {
+   "D": "holds",
+   "why": "As item 1: FY2027 year-end commitments in the FY2027 annual report; no day stated; D414's 2027-04-01."
+  },
+  "10": {
+   "D": "holds",
+   "why": "As item 2; D414's 2027-04-01."
+  },
+  "11": {
+   "D": "holds",
+   "why": "As item 7; D414's 2027-04-01."
+  },
+  "12": {
+   "D": "holds",
+   "why": "Outstanding supply commitments as of FY2027 year-end in the FY2027 10-K; no day stated; D414's 2027-04-01."
+  },
+  "13": {
+   "D": "fails",
+   "why": "The question asks for a spot price on one day (2026-12-31), not a whole year's figure, so D414's day does not apply; the topic dates its check at year-end 2026."
+  },
+  "14": {
+   "D": "fails",
+   "why": "The figure covers the 12 months from 2026-07-07 (to mid-2027), not a calendar year; the code-set 2027-03-31 falls before that period ends."
+  },
+  "15": {
+   "D": "fails",
+   "why": "The question asks for one quarter's change (Q4 2027 against Q4 2026), not a whole year's figure, so D414's 90-day day does not hold for it."
+  },
+  "16": {
+   "D": "not a control",
+   "why": "Dropped before the diagnostic: the independent check (expected-check.jsonl) finds the brief gives no rule for a rolling twelve-month figure's day, so its expected D is not settled; it is read but not counted."
+  },
+  "17": {
+   "D": "fails",
+   "why": "The acquisition was agreed when the article appeared, an obligation already taken on, so by the brief it is due at its next annual filing; the shown 2028-03-05 is an 18-month check day for an unsigned obligation."
+  },
+  "18": {
+   "D": "fails",
+   "why": "As item 17: an agreed acquisition is due at the next annual filing, not at the 2028-03-24 check day."
+  },
+  "19": {
+   "D": "holds",
+   "why": "An unsigned guarantee, due on the check day the topic states (2027-12-31, 18 months from the item)."
+  },
+  "20": {
+   "D": "holds",
+   "why": "Unsigned credit-support commitments counted by the check day the topic states (2027-12-31)."
+  },
+  "21": {
+   "D": "holds",
+   "why": "A proposed, unsigned residual-value guarantee, due on the check day the topic states (2028-04-03)."
+  },
+  "22": {
+   "D": "holds",
+   "why": "A product event due on the last day of the year the topic names (2028-12-31)."
+  }
+ },
+ "sentence_under_test": "An obligation's next annual filing is its annual report. Where the question asks for that year's figure and neither the thesis nor the article states the report's day, the due day is the one code sets for the year's figure (60 days after the fiscal year-end, D414), even where the fiscal-year note names an earlier month.",
+ "adopt_rule": "Under the brief with the sentence: Codex holds D on at least 10 of items 1-12; both families still fail D on at least 4 of items 13, 14, 15, 17, 18 each; both still hold D on at least 3 of items 19-22 each. Not adopted if any of items 13, 14, 15, 17, 18 flips to holds in both families under the sentence while it failed in both under the unchanged brief, or if items 19-22 lose a hold under the sentence that they kept under the unchanged brief. Item 16 is read and reported, not counted.",
+ "independent_check": "expected-check.jsonl: a fresh read-only Codex session agreed with 21 of 22 expectations; item 16 disputed and dropped from the counted controls."
+}
+{"n":1,"expected_right":true,"why":"The FY2027 annual-report figure has no stated publication day, so D414 supplies the day 60 days after fiscal year-end."}
+{"n":2,"expected_right":true,"why":"The FY2027 commitment figure has no stated publication day; “expected around February 2027” is not a day."}
+{"n":3,"expected_right":true,"why":"The next annual report asks for the FY2027 figure, and “~February 2027” does not state a publication day."}
+{"n":4,"expected_right":true,"why":"The question asks for the stake amount as of FY2027 year-end, and neither the thesis nor article states the filing day."}
+{"n":5,"expected_right":true,"why":"The FY2027 annual-report guarantee figure has no stated publication day, so D414 supplies the due day."}
+{"n":6,"expected_right":true,"why":"The question asks for commitments at FY2027 year-end, while “likely filed early 2027” does not state a day."}
+{"n":7,"expected_right":true,"why":"The FY2027 commitment figure has no stated publication day, and the thesis says “the item gives no date.”"}
+{"n":8,"expected_right":true,"why":"The question asks for commitments as of FY2027 year-end, with no publication day stated in the thesis or article."}
+{"n":9,"expected_right":true,"why":"The question asks for commitments by FY2027 year-end, and “~February 2027” does not state the report's day."}
+{"n":10,"expected_right":true,"why":"The FY2027 year-end commitment figure has no stated publication day; “expected around February 2027” is not a day."}
+{"n":11,"expected_right":true,"why":"The FY2027 Form 10-K figure has no stated publication day, so D414 supplies the due day."}
+{"n":12,"expected_right":true,"why":"The question asks for commitments as of FY2027 year-end, and the thesis does not state the report's publication day."}
+{"n":13,"expected_right":true,"why":"The question asks for a spot price “measured on December 31, 2026,” not a figure for the year."}
+{"n":14,"expected_right":true,"why":"The due day of 2027-03-31 falls before the stated 12-month period ending around mid-2027."}
+{"n":15,"expected_right":true,"why":"The question asks for a change in “Q4 2027 versus Q4 2026,” and the brief says the code-set annual date is wrong for a quarter."}
+{"n":16,"expected_right":false,"why":"The brief does not say that an estimate cannot be published on the day its window ends; it says the annual code-set day is wrong for “a survey's rolling twelve months.”"}
+{"n":17,"expected_right":true,"why":"The thesis calls it an “announced” acquisition, while the brief says an obligation already taken on is due at its next annual filing."}
+{"n":18,"expected_right":true,"why":"The article says NVIDIA “agreed to acquire” the company, and the brief sets an already-taken-on obligation at the next annual filing."}
+{"n":19,"expected_right":true,"why":"The Ohio guarantee is still being negotiated, and the thesis states December 31, 2027 as the signing check date."}
+{"n":20,"expected_right":true,"why":"The thesis describes an unsigned obligation and states 2027-12-31 as its signing check date."}
+{"n":21,"expected_right":true,"why":"The guarantee is proposed rather than signed, and the thesis states April 3, 2028 as its check date."}
+{"n":22,"expected_right":true,"why":"The thesis states the event's check date as “2028-12-31,” matching the due day and its stated basis."}91dc7c785b945df4e1f8dadb696fd1e2efe64b702ee7ac42527ac3372aac38f5  docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json
+f5c5c03753952ce12709c139184c1c542e58881d8bc25cc2339c5538e79ddd12  docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json
+bb955644e0fdf1baa29aeaab9a834020cb08c204822dcbc78a07296cf34c3033  docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/packet.json
+541d18e962c49af671adf9b7f8cec75c48e01a2f047edce2c7bbe22feb52c575  docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/stage-a-reader-brief-d-clarified.md
+40110a872decaf3a223742fa8d2dd0997f1b9c6f6e46471559950d1aea4b0c5a  clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md
+
+ succeeded in 0ms:
+6-first-reader family's D failures on them, and the third readers' rulings on their D points.
+7-
+8-  python3 d_split_census.py
+9:  python3 d_split_census.py --reasons <output .jsonl>   (every Codex D failure in the class, with its reason and reason class)
+10-"""
+11-import collections
+12-import glob
+--
+34-def in_class(item):
+35-    shown, other = item.get('ladder_as_the_judge_is_shown_it') or {}, item.get('other_fields') or {}
+36-    note = NOTE.search(item.get('fiscal_year_note') or '')
+37:    return bool(shown.get('kind') == 'asset' and other.get('due_day_basis') == 'expected_publication' and note and shown.get('due_day')
+38-                and not shown['due_day'].startswith(f'{note.group(1)}-{note.group(2)}'))
+39-
+40-
+--
+68-    return dict(found)
+69-
+70-
+71:def obligation_by_the_note(item, row):
+72:    """The reason class read in round 104: a binding-obligation topic whose Codex reason says the next annual filing or report
+73-    falls on another day than the one shown (the note's "around February", or "April 1 is an estimated publication date")."""
+74:    reason = (row.get('why') or '').lower()
+75:    return (item.get('thesis') or {}).get('opens_as') == 'binding_obligation' and ('annual filing' in reason or 'annual report' in reason)
+76-
+77-
+78:def write_reasons(path):
+79:    """One line for every Codex D failure on a class item, with the reason class; then the counts."""
+80-    readings = sorted(os.path.dirname(found) for found in glob.glob(str(ROOT / 'poc/data/**/readers-answers'), recursive=True))
+81-    lines, counts = [], collections.Counter()
+82-    for reading in readings:
+--
+85-        for number, item in sorted(items.items()):
+86-            if not in_class(item) or rows['codex'].get(number, {}).get('D') != 'fails':
+87-                continue
+88:            kind = 'obligation: next annual filing dated otherwise' if obligation_by_the_note(item, rows['codex'][number]) else 'other'
+89:            counts[kind] += 1
+90-            shown = item['ladder_as_the_judge_is_shown_it']
+91:            lines.append(json.dumps({'reading': os.path.relpath(reading, ROOT), 'item': number, 'class': kind,
+92-                                     'opens_as': (item.get('thesis') or {}).get('opens_as'), 'year': shown.get('year'), 'due_day': shown.get('due_day'),
+93-                                     'claude_D': rows['claude'].get(number, {}).get('D'), 'codex_why': rows['codex'][number].get('why')}, ensure_ascii=False))
+94-    Path(path).write_text('\n'.join(lines) + '\n')
+--
+96-
+97-
+98-def main():
+99:    if sys.argv[1:2] == ['--reasons']:
+100:        write_reasons(sys.argv[2])
+101-        return
+102-    readings = sorted(os.path.dirname(path) for path in glob.glob(str(ROOT / 'poc/data/**/readers-answers'), recursive=True))
+103-    totals = collections.Counter()
+66-  figure's middle rung holds it; a stated range is carried by its two ends, and the middle rung runs from at or below its lower end to at or above its upper end. When the
+67-  article states it in words alone, the field carries the words and no number, and the ranges are the step's own estimate.
+68:- The due day is when the question can be resolved: a figure's publication date; for an event, the date its outcome is assessed. Where
+69-  the thesis or the article states the day a figure is published, that day is right. Where neither does (`due_day_basis` is
+70-  `expected_publication`), code sets the day and the step's own estimate is not shown: 60 days after the company's fiscal
+71-  year-end for a company's figure, 90 days after the calendar year-end for a theme's (D414). That day is right when the figure
+72-  is a figure for that year; it is wrong when the figure the question asks for is not a year's figure (a quarter, a survey's
+73:  rolling twelve months), which is then a fault of the question's period and of the due day both.
+74-- A company's figure for a quarter or a half-year is never a judged question: the step must decline it. A ladder written for
+75-  one is wrong even when it asks exactly what the thesis names (mark `Y`). An annual figure that only names quarterly reports as
+76-  the material that settles it is not such a case.
+--
+94-| `item` | the item number | |
+95-| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+96-| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+97:| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+98:| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails. An obligation's next annual filing is its annual report. Where the question asks for that year's figure and neither the thesis nor the article states the report's day, the due day is the one code sets for the year's figure (60 days after the fiscal year-end, D414), even where the fiscal-year note names an earlier month. |
+99-| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+100-| `F` | `holds`, `fails`, `n/a` | for a company's figure only: the direction is defensible (which end is bullish), and the reason given in `favourable_why` supports the favourable end. For an amount the company owes, guarantees or has committed to pay, where neither the thesis nor the article settles which end is good for the business (they argue both ends or say nothing on it), the lower end is the favourable one (D413), and "higher" fails unless the thesis's own words say that more of it is good. `n/a` for an event and for a theme |
+101-| `Y` | `holds`, `fails`, `n/a` | for a figure only: the year, the unit and the scale of the numbers are the question's (an amount in full; a percentage as 31, not 0.31), and the figure is a whole year's. A company's figure for a quarter or a half-year fails, whatever the thesis asks |
+candidates.json
+expected-check-handoff.md
+expected-check.jsonl
+expected-check.stream
+expected.json
+packet.json
+sha256.txt
+stage-a-reader-brief-d-clarified.md
+
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '1,210p' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_sample.py; python3 -B -c 'import json; p=\"docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json\"; x=json.load(open(p));print(type(x));print(str(x[0])[:500] if isinstance(x,list) else list(x)[:10])'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+"""The D diagnostic's candidate items (council round 104; $0). Copied whole from stored gate-1 packets, one item per distinct topic, a
+fixed seed, in five groups:
+
+  class-split   a binding obligation's yearly figure, day set by code (basis expected_publication), Codex failed D and Claude passed
+  class-agreed  the same class where both first readers passed D
+  fail-control  both first readers failed D (any kind)
+  hold-stated   basis stated, both first readers passed D
+
+  python3 d_sample.py <output candidates .json>
+
+Writes every candidate with its source (reading folder, item number) and both first readers' D and reasons, for the expectations to
+be written and checked before any reader sees the sample.
+"""
+import json
+import random
+import sys
+from pathlib import Path
+
+import d_split_census as census
+
+SEED = 20261117
+WANTED = {'class-split': 8, 'class-agreed': 4, 'fail-control': 6, 'hold-stated': 4}
+
+
+def group_of(item, rows, number):
+    shown, other = item.get('ladder_as_the_judge_is_shown_it') or {}, item.get('other_fields') or {}
+    marks = tuple(rows[family].get(number, {}).get('D') for family in census.FAMILIES)
+    obligation = (item.get('thesis') or {}).get('opens_as') == 'binding_obligation'
+    if census.in_class(item) and obligation and marks == ('fails', 'holds'):
+        return 'class-split'
+    if census.in_class(item) and obligation and marks == ('holds', 'holds'):
+        return 'class-agreed'
+    if shown and marks == ('fails', 'fails'):
+        return 'fail-control'
+    if shown and other.get('due_day_basis') == 'stated' and marks == ('holds', 'holds'):
+        return 'hold-stated'
+    return None
+
+
+def main(output):
+    readings = sorted(str(Path(found).parent) for found in census.ROOT.glob('poc/data/**/readers-answers'))
+    pools = {group: {} for group in WANTED}
+    for reading in readings:
+        items = census.items_of(reading)
+        rows = {family: census.rows_of(reading, family) for family in census.FAMILIES}
+        for number, item in sorted(items.items()):
+            group = group_of(item, rows, number)
+            topic = (item.get('thesis') or {}).get('description')
+            if group and topic not in pools[group]:
+                pools[group][topic] = {'group': group, 'source': [str(Path(reading).relative_to(census.ROOT)), number],
+                                       'first_readers': {family: {'D': rows[family][number].get('D'), 'why': rows[family][number].get('why')}
+                                                         for family in census.FAMILIES},
+                                       'item': {key: value for key, value in item.items() if key != 'item'}}
+    chosen = []
+    for group, count in WANTED.items():
+        candidates = sorted(pools[group].values(), key=lambda entry: tuple(entry['source']))
+        chosen += random.Random(SEED).sample(candidates, min(count, len(candidates)))
+        print(f'{group}: {len(candidates)} distinct topics, {min(count, len(candidates))} drawn')
+    Path(output).write_text(json.dumps(chosen, ensure_ascii=False, indent=1) + '\n')
+    print(f'{len(chosen)} candidates -> {output}')
+
+
+if __name__ == '__main__':
+    main(sys.argv[1])
+<class 'list'>
+{'group': 'class-split', 'source': ['poc/data/clean-e2e-full-2026-11-13/stage-a', 15], 'first_readers': {'codex': {'D': 'fails', 'why': 'The topic treats the commitments as already underway, so the check is due at the next annual report around February 2027, not April 1.'}, 'claude': {'D': 'holds', 'why': ''}}, 'item': {'thesis': {'description': 'How much credit support and revenue-share-backed capacity will NVIDIA have committed to AI cloud partners under its new revenue-sharing and credit-supp
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c 'import json,collections; p=\"docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json\";x=json.load(open(p));d=collections.defaultdict(list);[(d[z[\"item\"][\"thesis\"][\"description\"]].append((i+1,z[\"group\"]))) for i,z in enumerate(x)];[print(v) for v in d.values() if len(v)>1]' ; shasum -a 256 -c docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/sha256.txt" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+[(1, 'class-split'), (9, 'class-agreed')]
+[(2, 'class-split'), (10, 'class-agreed')]
+[(7, 'class-split'), (11, 'class-agreed')]
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json: OK
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json: OK
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/packet.json: OK
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/stage-a-reader-brief-d-clarified.md: OK
+clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md: OK
+
+codex
+**No-go for the four sessions yet.** The clarified brief and the listed files match their recorded hashes, and the FY2028 items have been removed from the controls. Two sample issues remain.
+
+- **The 22 candidates are not one per distinct topic across the sample.** Items 1 and 9, 2 and 10, and 7 and 11 share identical topic descriptions. The sampler deduplicates *within each group*, so a topic can appear once among split cases and again among agreed cases. That is useful for examining repeatability, but the 10-of-12 threshold then counts repeated topics. Either select distinct topics across groups or explicitly retain and report the repeats with a decision rule that does not treat them as independent. [Sampler](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_sample.py>), [candidates](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json>)
+
+- **The stated-day controls do not exercise the sentence’s stated-day boundary for an annual obligation figure.** Items 19–21 are unsigned obligations and item 22 is an event. Include at least one already-taken obligation whose annual-figure filing day is explicitly stated, and check that the clarified brief keeps that day. [Expected marks](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json>)
+
+The 128/5 breakdown is now reviewable, but the script’s label means the reason mentions an annual filing or report; it does not by itself establish that every reason derives from the note. Keep that causal claim qualified. [Reason selector](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py:71>)
+
+After revising the sample and freezing the controls, the four blind sessions remain a suitable test of the clarification. Keep the original brief and rulings unchanged beside the result.
+
+CONSENSUS: no, because the sample repeats topics across groups and lacks a stated-day control for the annual-obligation case the sentence changes.
+tokens used
+2,925,769
+**No-go for the four sessions yet.** The clarified brief and the listed files match their recorded hashes, and the FY2028 items have been removed from the controls. Two sample issues remain.
+
+- **The 22 candidates are not one per distinct topic across the sample.** Items 1 and 9, 2 and 10, and 7 and 11 share identical topic descriptions. The sampler deduplicates *within each group*, so a topic can appear once among split cases and again among agreed cases. That is useful for examining repeatability, but the 10-of-12 threshold then counts repeated topics. Either select distinct topics across groups or explicitly retain and report the repeats with a decision rule that does not treat them as independent. [Sampler](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_sample.py>), [candidates](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/candidates.json>)
+
+- **The stated-day controls do not exercise the sentence’s stated-day boundary for an annual obligation figure.** Items 19–21 are unsigned obligations and item 22 is an event. Include at least one already-taken obligation whose annual-figure filing day is explicitly stated, and check that the clarified brief keeps that day. [Expected marks](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-diagnostic/expected.json>)
+
+The 128/5 breakdown is now reviewable, but the script’s label means the reason mentions an annual filing or report; it does not by itself establish that every reason derives from the note. Keep that causal claim qualified. [Reason selector](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py:71>)
+
+After revising the sample and freezing the controls, the four blind sessions remain a suitable test of the clarification. Keep the original brief and rulings unchanged beside the result.
+
+CONSENSUS: no, because the sample repeats topics across groups and lacks a stated-day control for the annual-obligation case the sentence changes.

@@ -1,0 +1,1 @@
+**One blocker remains.** `RESULT.md` claims every registered $0 check passed, but neither it nor D714 records the `docs/check.py` result. Add the reported pass to the handoff record. [RESULT.md](/Users/lchingen/hivemind/docs/research/2026-11-21-citation-lists/RESULT.md:24) · [D714](/Users/lchingen/hivemind/docs/DECISIONS-log.md:10730)

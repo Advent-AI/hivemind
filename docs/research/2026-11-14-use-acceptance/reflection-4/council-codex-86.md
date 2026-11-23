@@ -1,0 +1,9 @@
+**No-go on v7 as written.** D409 is a reasonable source for excluding a *pure restatement* of an answer outcome from “not judged.” It does not settle every case the design calls a restatement.
+
+For example, “termination of the acquisition” is a finer case if the actual “Ruled out” choice also covers another decision against the deal. The stored reader packet for item 112 includes that broader alternative in the choice. Under v7’s own rule, the termination detail should then remain; the worked case says it is removed without stating that distinction. [Reader packet](</Users/lchingen/hivemind/poc/data/clean-unlisted-probe-a2-2026-11-16/reading/readers/packet-6.json>), [worked cases](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/PROMPT-AUDIT-A3.md>)
+
+I would therefore state the D409 conclusion as an **interpretation**, not as “only a finer difference is listed.” Alex chose three answer outcomes and said finer distinctions are shown as not judged; D397 separately requires other parts of the topic to be shown. Together they support the narrow rule for an exact restatement, while the boundary between a restatement and a finer case still needs to be applied to the actual choice. [D397](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4326>), [D409](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4502>)
+
+Before building, correct the worked cases to include the **complete generated choices**, including their standard appended wording. Then check that the removal measurement counts pure restatements separately from finer cases that the existing readers marked `already_judged`; otherwise halving the combined count could reward removing the very detail v7 says to keep. The three-entry exercise condition and the three-arm comparison can remain.
+
+CONSENSUS: no, because the source supports the narrow interpretation, but the worked termination case and removal measure do not yet distinguish it from a finer outcome.

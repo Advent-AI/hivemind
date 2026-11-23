@@ -1,0 +1,191 @@
+[
+  {
+    "case": "1",
+    "judgments": [
+      {
+        "id": "C1",
+        "relation": "same",
+        "reason": "Both report Nvidia's confirmation of future DLSS 5 support for RTX 40 GPUs; the incoming statement adds the sequence of work.",
+        "source evidence": {
+          "incoming": "we plan to work on expanding official support to the GeForce RTX 40 Series",
+          "candidate": "Nvidia has confirmed that DLSS 5 will eventually make its way onto last-gen silicon as well."
+        }
+      },
+      {
+        "id": "C2",
+        "relation": "different",
+        "reason": "The candidate's main statement is the game debut and native game support, not the RTX 40 support announcement.",
+        "source evidence": null
+      },
+      {
+        "id": "C3",
+        "relation": "different",
+        "reason": "The candidate concerns an unofficial AMD mod, not Nvidia's planned official RTX 40 support.",
+        "source evidence": null
+      }
+    ]
+  },
+  {
+    "case": "2",
+    "judgments": [
+      {
+        "id": "C1",
+        "relation": "different",
+        "reason": "An AMD graphics mod, not Cramer's earnings estimates.",
+        "source evidence": null
+      },
+      {
+        "id": "C2",
+        "relation": "different",
+        "reason": "A game technology debut, not Cramer's earnings estimates.",
+        "source evidence": null
+      },
+      {
+        "id": "C3",
+        "relation": "different",
+        "reason": "Future GPU feature support, not Cramer's earnings estimates.",
+        "source evidence": null
+      }
+    ]
+  },
+  {
+    "case": "3",
+    "judgments": [
+      {
+        "id": "C1",
+        "relation": "different",
+        "reason": "SK Hynix's outlook for memory shortages is distinct from Nvidia's revenue growth forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C2",
+        "relation": "different",
+        "reason": "An AMD graphics mod, not Nvidia's revenue forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C3",
+        "relation": "different",
+        "reason": "Future GPU feature support, not Nvidia's revenue forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C4",
+        "relation": "different",
+        "reason": "Amazon's reported AWS sales, not Nvidia's forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C5",
+        "relation": "different",
+        "reason": "Nvidia's supplier commitments are a separate financial disclosure from its revenue growth forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C6",
+        "relation": "different",
+        "reason": "A game technology debut, not Nvidia's revenue forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C7",
+        "relation": "different",
+        "reason": "Cramer's per-share earnings estimates concern different measures and periods from Nvidia management's revenue forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C8",
+        "relation": "different",
+        "reason": "Micron's memory-market guidance is distinct from Nvidia's revenue forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C9",
+        "relation": "different",
+        "reason": "The Indiana plant's cost and production schedule are distinct from Nvidia's revenue forecast.",
+        "source evidence": null
+      },
+      {
+        "id": "C10",
+        "relation": "different",
+        "reason": "The reported Hugging Face acquisition is distinct from Nvidia's revenue forecast.",
+        "source evidence": null
+      }
+    ]
+  },
+  {
+    "case": "4",
+    "judgments": [
+      {
+        "id": "C1",
+        "relation": "different",
+        "reason": "SK Hynix's plant cost and schedule, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C2",
+        "relation": "different",
+        "reason": "Amazon's AWS sales, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C3",
+        "relation": "different",
+        "reason": "An AMD graphics mod, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C4",
+        "relation": "different",
+        "reason": "Future GPU feature support, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C5",
+        "relation": "different",
+        "reason": "Cramer's earnings estimates, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C6",
+        "relation": "different",
+        "reason": "Micron's memory-market guidance, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C7",
+        "relation": "different",
+        "reason": "A game technology debut, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C8",
+        "relation": "different",
+        "reason": "SK Hynix's memory-shortage outlook, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C9",
+        "relation": "different",
+        "reason": "The reported Hugging Face acquisition, not Nvidia's supplier commitments.",
+        "source evidence": null
+      },
+      {
+        "id": "C10",
+        "relation": "same",
+        "reason": "Both report the same second-quarter increase in Nvidia's supplier commitments; the incoming statement adds the scheduled amounts.",
+        "source evidence": {
+          "incoming": "Nvidia exited the fiscal second quarter with $279 billion of supply and capacity commitments, up sequentially from $119 billion.",
+          "candidate": "The company increased its commitments to suppliers to $279 billion, up from $119 billion in the previous quarter."
+        }
+      }
+    ]
+  },
+  {
+    "reviewed": {
+      "cases": 4,
+      "candidates": 26,
+      "unresolved": 0
+    }
+  }
+]

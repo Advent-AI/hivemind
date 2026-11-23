@@ -46,6 +46,18 @@ The closed schema is [`thesis-ui/2`](../../poc/ui/src/model/thesis.schema.json).
 
 The [D275 design and review resolution](../research/2026-10-26-library-ui/plan.md) owns this slice's state/event, value/reader and path/check tables. The [frontend integration guide](../../poc/ui/README.md) describes its public entry points. The [service specification](service.md) owns read semantics.
 
+**The new system's questions (D570, D571; designs `docs/research/2026-11-14-use-acceptance/page-contract/DESIGN.md` and
+`not-judged-display/DESIGN.md`).** The bundle carries, from a question's ladder row, `not_judged` (D397: the topic's parts this question
+does not judge, with their reasons), `answer_shape` and `favourable_end`; the store decides how they are read: a store without
+`clean_ladders` is a legacy ledger and is read as before. An event's outcomes (Yes / No, or Yes / Ruled out / Still open) are its
+scores and are named once; a theme's range with no favourable end shows its label only; both, and a question whose shape is not
+recorded, are neutral in tone, titled "Current outcome", "Current range" or "Current answer" instead of "AI score", defined in an
+"Answer definitions" table without a score column, and cannot enter an Idea composite: the composite is not computed and the Idea
+card names the driver. The drawer shows "Not judged" beside the assessment, or its absence, from the question's opening day. The page
+and the bundle writer are upgraded together: a new page reads new and older exports; an older built page reading a new export is not
+supported. Production's Yes/No questions still colour Yes positive and No negative, and its theme figures still score the highest
+range +2 by inference: both state a direction the question may not hold, listed for Alex and not changed.
+
 ## Ownership
 
 | Module | Responsibility |

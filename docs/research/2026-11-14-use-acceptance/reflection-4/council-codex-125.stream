@@ -1,0 +1,600 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 125: slice 1 (the bound resolver) built and proven; go for slice 2 (row 2: one read transaction per request, MCP per call, the streamed route)?
+
+## Slice 1 (D594)
+
+- The resolver, the range function and the three exceptions are built. Every public date function routes through them, and the API
+  returns structured 503/409 bodies.
+- `tests/test_bound_resolver.py`:
+  - 176 calls on four real store states compared with today's recorded outcomes. Every difference is a contract change.
+  - The structural check, the range rule on three stores, and the API mapping.
+- The suite passes (308), and so do the new system's folders (164).
+- Mutants (`live-service/resolver-mutants.txt`): 8 caught. M7 is equivalent, because `view_bundle` ends in `not_judged`'s identical
+  refusal; M8 and M9 show that refusal is guarded.
+- The contract's range text is aligned with round 124. Nothing is deployed or restarted.
+
+## Slice 2, as the contract states it
+
+1. **API `Connections`:** `BEGIN` on the ledger on entry, after opening, and the transaction ended in `__exit__` on every path.
+2. **MCP:** a connection opened per tool call (a context manager like the API's), in place of the process-wide `LEDGER`. `OBJECTS`
+   is computed per call. The index connection stays process-wide for now, since the index is row 4a's slice.
+3. **The streamed Idea route:**
+   - connections opened, the transaction begun and `resolve_bound` run on the request's `as_of` (with the first-day check);
+   - then the 200 headers, then the Idea work in the same transaction;
+   - a refusal is a normal status and body before any header.
+4. **Proofs:**
+   - 3: an API request held between its first and last read by a hook, while a writer commits a judgement and completes a day,
+     returns its start state, and the writer commits;
+   - 4: two overlapping MCP calls across a commit, a call failing mid-read leaving no open transaction or connection, and no
+     transaction open between calls;
+   - 2e: the streamed route refused before headers on a first-day store and on a future date.
+   - All on test stores in WAL mode, set by the test.
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll review slice 1’s code and saved evidence, then check slice 2’s transaction ownership and proof against the API and MCP paths.
+exec
+/opt/homebrew/bin/zsh -lc "git diff --stat
+cat docs/research/2026-11-14-use-acceptance/live-service/resolver-mutants.txt
+rg -n 'D594|full suite|308|164' docs/research/2026-11-14-use-acceptance/live-service docs/DECISIONS.md | head -30
+nl -ba scripts/hivemind_mcp.py | sed -n '25,145p'
+nl -ba scripts/hivemind_api.py | sed -n '38,160p'
+nl -ba src/hivemind/bundle.py | sed -n '10,26p'
+rg -n 'hivemind.*snapshot|snapshot.sh' /Users/lchingen/.codex/memories/MEMORY.md | head -3" in /Users/lchingen/hivemind
+ succeeded in 1691ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-nvlz0R9h' (errno=Operation not permitted)
+2026-11-16 11:54:26.957 xcodebuild[87964:53561027]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-16 11:54:27.164 xcodebuild[87964:53561026] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-1rCfTS5K' (errno=Operation not permitted)
+2026-11-16 11:54:27.578 xcodebuild[87966:53561041]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-16 11:54:27.694 xcodebuild[87966:53561040] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+ .claude/skills/council-loop/SKILL.md               |    6 +-
+ .claude/skills/prompt-audit/SKILL.md               |    2 +-
+ AGENTS.md                                          |   17 +-
+ clean-arch/README.md                               |    2 +-
+ clean-arch/architecture.html                       |   84 +-
+ clean-arch/render.mjs                              |    2 +-
+ clean-arch/step1-unfiled-2026-11-08/LOG.md         |  569 ++++
+ clean-arch/step1/live.py                           |   73 +-
+ clean-arch/step1/run_live.py                       |   11 +-
+ clean-arch/step1/runner.py                         |    9 +-
+ clean-arch/step1/test_runner.py                    |   23 +
+ clean-arch/step2-validation-2026-11-07/LOG.md      |  150 +
+ clean-arch/step4-2026-11-10/stage_a/build_cases.py |   48 +-
+ .../stage_a/build_reader_packets.py                |   40 +-
+ clean-arch/step4-2026-11-10/stage_a/stage_a.py     |   38 +-
+ .../step4-2026-11-10/stage_b/STAGE_B_READING.md    |   88 +-
+ clean-arch/step4-2026-11-10/stage_b/STAGE_B_RUN.md |   49 +-
+ .../step4-2026-11-10/stage_b/ladder_adapter.py     |  189 +-
+ .../step4-2026-11-10/stage_b/mutants.output.txt    |   18 +-
+ clean-arch/step4-2026-11-10/stage_b/mutants.py     |   26 +-
+ .../step4-2026-11-10/stage_b/run_codex_readers.py  |   13 +-
+ clean-arch/step4-2026-11-10/stage_b/run_stage_b.py |  136 +-
+ .../step4-2026-11-10/stage_b/stored_judgements.py  |   23 +-
+ .../stage_b/test_ladder_adapter.py                 |  320 ++-
+ docs/CURRENT_STATE.md                              |  375 ++-
+ docs/DECISIONS-log.md                              | 2981 ++++++++++++++++++++
+ docs/DECISIONS.md                                  |  162 ++
+ docs/poc/thesis-ui.md                              |   12 +
+ poc/mock/index.html                                |   51 +-
+ poc/ui/src/adapters/bundle.js                      |   20 +-
+ poc/ui/src/bootstrap.js                            |   25 +-
+ poc/ui/src/components/library.js                   |    5 +-
+ poc/ui/src/components/primitives.js                |    6 +-
+ poc/ui/src/components/thesis-chart.js              |    3 +-
+ poc/ui/src/components/thesis-detail.js             |   27 +-
+ poc/ui/src/idea/composite.js                       |   16 +-
+ poc/ui/src/idea/idea.js                            |    5 +-
+ poc/ui/src/model/contract.js                       |   13 +-
+ poc/ui/src/model/thesis.js                         |   38 +-
+ poc/ui/src/model/thesis.schema.json                |   43 +-
+ poc/ui/verify-library.mjs                          |    2 +
+ scripts/hivemind_api.py                            |   23 +-
+ src/hivemind/bundle.py                             |   73 +-
+ src/hivemind/idea.py                               |    5 +-
+ src/hivemind/replay.py                             |    3 +-
+ src/hivemind/search.py                             |    2 +-
+ src/hivemind/service.py                            |   73 +-
+ 47 files changed, 5565 insertions(+), 334 deletions(-)
+control: 20 passed in 15.28s
+M1 future bound passes: CAUGHT | 1 failed in 23.51s
+M2 view_bundle omitted unfiltered as before: CAUGHT | 1 failed in 14.73s
+M3 a public function that skips the resolver: CAUGHT | 1 failed in 0.09s
+M4 a site resolved by or default_as_of: CAUGHT | 1 failed in 0.09s
+M5 first day not refused: CAUGHT | 1 failed in 15.61s
+M6 a start after the end passes: CAUGHT | 1 failed, 3 passed in 15.31s
+M7 direct pre-creation view_bundle not refused: MISSED | 11 passed in 0.84s
+M7 is an equivalent mutant: view_bundle ends by calling not_judged, which raises the same refusal, so removing view_bundle's early check
+changes no outcome (the early check saves building a record that would be refused). M8 and M9 below show the refusal is guarded:
+M8 not_judged direct check removed: CAUGHT | 1 failed, 10 passed (tests/test_not_judged_bundle.py)
+M9 both direct checks removed (not_judged back to returning None): CAUGHT | 1 failed, 10 passed (tests/test_not_judged_bundle.py)
+docs/DECISIONS.md:217:  on typed keys: a complete key equal, event type included (D154 *(Claude)*, D155, D164); a shared quantity is one question per theme,
+docs/DECISIONS.md:497:| D153 | 2026-10-25 | Keyed views: the structural correction is the direction; the week run is read first | superseded by D155, D164 | Thesis library |
+docs/DECISIONS.md:498:| D154 | 2026-10-25 | The keyed view contract as built and measured on the bootstrap documents (T1–T2d) | in force (amended by D155, D164, D167, D197, D258) | §7 Thesis library |
+docs/DECISIONS.md:499:| D155 | 2026-10-25 | 清单是参考，先修身份，再按顺序验证归组 | in force (amended by D164, D167, D197, D248, D258) | §7 Thesis library |
+docs/DECISIONS.md:508:| D164 | 2026-10-25 | Claude builds the English library on Codex's plan; the watch list is a reference, not a gate | in force (amended by D359) | §7 Thesis library |
+docs/DECISIONS.md:622:| D278 | 2026-10-26 | Inspect the returned Idea analysis | in force (amended by D280, D308, D311) | [frontend](DECISIONS-frontend.md) |
+docs/DECISIONS.md:652:| D308 | 2026-10-26 | Give Idea details Overview, Trace and Response tabs | in force (amended by D310, D311) | [frontend](DECISIONS-frontend.md) |
+docs/DECISIONS.md:938:| D594 | 2026-11-16 | The bound resolver built and proven at $0 (one owner for every upper date bound; future explicit bounds refused; first day refused; the bundle functions' default reads the last completed day; ranges refuse only a start after their end); the served product store's half-processed 2026-08-29 is no longer returned; 308 + 164 tests and 8 mutants; nothing deployed | in force | `docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md`; `tests/test_bound_resolver.py` |
+    25	parser.add_argument('--lexical', action='store_true', help='no embedding at all (no network): search ranks by the trigram index and says mode lexical')
+    26	parser.add_argument('--transport', choices=['stdio', 'streamable-http'], default='stdio', help='stdio for a local agent; streamable-http to serve /mcp over HTTP (Docker)')
+    27	parser.add_argument('--host', default='127.0.0.1')
+    28	parser.add_argument('--port', type=int, default=8789)
+    29	ARGS = parser.parse_args()
+    30	LEDGER = service.open_ledger(ARGS.views)
+    31	INDEX = search_module.open_index(ARGS.index)
+    32	ITEMS = store.open_read_only(ARGS.items) if os.path.exists(ARGS.items) else None
+    33	ALIASES = search_module.object_aliases(ARGS.universe)
+    34	if not ARGS.lexical:
+    35	    _embedded, _unchanged, _tokens, INDEX_ERROR = search_module.ensure_index(LEDGER, INDEX)
+    36	    if INDEX_ERROR:
+    37	        sys.stderr.write(f'hivemind: embedding stopped ({INDEX_ERROR}) after {_embedded} views; search runs lexical until the rest is built\n')
+    38	
+    39	from hivemind import idea as idea_module  # noqa: E402
+    40	
+    41	OBJECTS = idea_module.object_list(LEDGER, service.default_as_of(LEDGER), ALIASES)
+    42	mcp = FastMCP('hivemind', host=ARGS.host, port=ARGS.port, instructions=(
+    43	    'Hivemind is a ledger of research views (a dated question with a five-step ladder, judged every day on evidence) '
+    44	    'with a search engine on top. To read an idea against it: first break the idea into its parts, the one to four '
+    45	    'questions whose answers decide it (each about one concrete quantity, date or event); search with the idea and with '
+    46	    'each part (k=20); map each part to every view whose question answers it or whose outcome would move it, leaving out '
+    47	    'views that only share a company or a word; then read each mapped view (state as of a day, history, evidence) and '
+    48	    'say what the judged positions tell about each part and which parts no view covers. Say judged, never true. Every '
+    49	    'tool takes as_of, a calendar day; the default is the ledger\'s last completed day. Nothing here changes the ledger. '
+    50	    'search matches each view\'s own text (question, what it looks at, ladder conditions; Chinese, English queries work): '
+    51	    'ask for one object and one quantity or event per query; views(object) lists everything under one object. '
+    52	    + OBJECTS))
+    53	
+    54	
+    55	@mcp.tool()
+    56	def thesis_library(as_of: str = '') -> dict:
+    57	    """All collected theses and their stored research groups, including ungrouped and closed theses.
+    58	    Membership is not a dependency or a parent-child relationship. No model call or ledger write."""
+    59	    return bundle.library(LEDGER, ITEMS, as_of or None)
+    60	
+    61	
+    62	@mcp.tool()
+    63	def thesis_bundles(view_ids: list[str], as_of: str = '') -> dict:
+    64	    """Complete UI inputs for selected thesis ids: dated states, assessments, sources, evidence and relationships.
+    65	    Pass this envelope to the frontend's fromBundles adapter. Read-only; does not call a model."""
+    66	    return bundle.thesis_bundles(LEDGER, ITEMS, view_ids, as_of or None)
+    67	
+    68	
+    69	@mcp.tool()
+    70	def search(query: str, k: int = 10, as_of: str = '', include_closed: bool = False) -> dict:
+    71	    """Top-k views for an idea or sentence: id, object, kind, what it looks at, the question, due day, dependencies
+    72	    (the views it is judged after) and dependants, with the score and its parts. Views, never evidence: evidence is
+    73	    anchored under its view."""
+    74	    return search_module.search(LEDGER, INDEX, query, k, as_of or None, include_closed, aliases=ALIASES, semantic=not ARGS.lexical)
+    75	
+    76	
+    77	@mcp.tool()
+    78	def views(object: str = '', as_of: str = '', include_closed: bool = False) -> list:
+    79	    """The views of one object (a ticker like NVDA or a theme id like ai-capex), or all views, as of a day."""
+    80	    return service.views(LEDGER, object or None, as_of or None, include_closed)
+    81	
+    82	
+    83	@mcp.tool()
+    84	def view(view_id: str, as_of: str = '') -> dict:
+    85	    """One view as of a day: the question, the ladder (positions 1..5, position 1 the most bullish outcome; or 2 for
+    86	    yes/no), the judged position with its label and condition and since when, whether open, dependencies and
+    87	    dependants, counts of rounds, evidence and facts."""
+    88	    record = service.view(LEDGER, view_id, as_of or None)
+    89	    if record is None:
+    90	        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+    91	    return record
+    92	
+    93	
+    94	@mcp.tool()
+    95	def history(view_id: str, from_day: str = '', to_day: str = '') -> dict:
+    96	    """Every judgement round in the span (day, position, whether it changed, why, the cited evidence ids and the push
+    97	    each gave), evidence arrivals per day, position changes, replacements of guidance, open/close switches."""
+    98	    return service.history(LEDGER, view_id, from_day or None, to_day or None)
+    99	
+   100	
+   101	@mcp.tool()
+   102	def evidence(view_id: str, as_of: str = '', tier: str = '') -> list:
+   103	    """Evidence in force under the view as of a day: one line, the source's own words, tier (发生的事 fact, 当事人说的
+   104	    party statement, 第三方看法 third-party view, 传闻 rumour), speaker, when it arrived, its sources."""
+   105	    return service.evidence(LEDGER, view_id, as_of or None, tier or None)
+   106	
+   107	
+   108	@mcp.tool()
+   109	def record(view_id: str, as_of: str = '') -> dict:
+   110	    """The last check of the view on or before the day: when, by which round, how many items were processed that
+   111	    day and how much evidence arrived under the view."""
+   112	    return service.record(LEDGER, view_id, as_of or None)
+   113	
+   114	
+   115	@mcp.tool()
+   116	def changes(since_day: str, to_day: str = '') -> list:
+   117	    """Judgements that said 'changed' after since_day, each with the view, from/to position and the evidence cited."""
+   118	    return service.changes(LEDGER, since_day, to_day or None)
+   119	
+   120	
+   121	@mcp.tool()
+   122	def evaluate(view_id: str, comparator: str, value_usd: float, as_of: str = '') -> dict:
+   123	    """A claim against a view's ladder: 'the quantity >= / < / = value_usd'. Returns the ladder position the
+   124	    threshold sits in, the judged position, and the verdict: holds (the judged band is wholly on the claim's side),
+   125	    not_yet (wholly on the other side) or borderline (the threshold cuts through the judged band)."""
+   126	    answer = service.evaluate(LEDGER, view_id, comparator, value_usd, as_of or None)
+   127	    if answer is None:
+   128	        raise ValueError(f'no view {view_id} as of {as_of or "the last completed day"}')
+   129	    return answer
+   130	
+   131	
+   132	if __name__ == '__main__':
+   133	    mcp.run(transport=ARGS.transport)
+    38	ALIASES = {}
+    39	CFG = None
+    40	SEMANTIC = True
+    41	REQUEST_ERRORS = (KeyError, service.LedgerError, model.TransportError, model.SchemaError, config.ConfigError, ValueError, TypeError)
+    42	
+    43	
+    44	def error_response(error):
+    45	    """(status, body) for a request's error. The store's date refusals carry their days (OPERATING-CONTRACT.md, row 3)."""
+    46	    if isinstance(error, service.FirstDayNotCompleted):
+    47	        return 503, {'error': str(error)}
+    48	    if isinstance(error, service.BoundNotCompleted):
+    49	        return 409, {'error': 'day not completed', 'requested': error.requested, 'last_completed_day': error.last_completed_day}
+    50	    if isinstance(error, service.RangeNotOrdered):
+    51	        return 409, {'error': 'range start after its end', 'start': error.start, 'end': error.end}
+    52	    if isinstance(error, KeyError):
+    53	        return 404, {'error': f'not found: {error}'}
+    54	    if isinstance(error, service.LedgerError):
+    55	        return 500, {'error': str(error)}
+    56	    if isinstance(error, (model.TransportError, model.SchemaError, config.ConfigError)):
+    57	        return 502, {'error': f'{type(error).__name__}: {str(error)[:200]}'}
+    58	    return 400, {'error': str(error)}
+    59	
+    60	
+    61	class Connections:
+    62	    """The databases one request reads: opened on entry, closed on exit, never shared between threads."""
+    63	
+    64	    def __init__(self, read_only=False):
+    65	        self.read_only = read_only
+    66	
+    67	    def __enter__(self):
+    68	        self.ledger = service.open_ledger(PATHS['views'])
+    69	        self.index = None if self.read_only else search.open_index(PATHS['index'])
+    70	        self.items = store.open_read_only(PATHS['items']) if PATHS.get('items') and os.path.exists(PATHS['items']) else None
+    71	        self.archive = None if self.read_only else model.Archive(PATHS['archive'])
+    72	        return self
+    73	
+    74	    def __exit__(self, *exc):
+    75	        for conn in (self.ledger, self.index, self.items):
+    76	            if conn is not None:
+    77	                conn.close()
+    78	
+    79	
+    80	class Handler(http.server.BaseHTTPRequestHandler):
+    81	    def log_message(self, fmt, *args):   # one line per request, no query text or body (an idea can carry anything)
+    82	        sys.stderr.write(f'{self.address_string()} {self.command} {self.path.split("?")[0]}\n')
+    83	
+    84	    def _send(self, status, payload):
+    85	        body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+    86	        self.send_response(status)
+    87	        self.send_header('Content-Type', 'application/json; charset=utf-8')
+    88	        self._cors()
+    89	        self.send_header('Content-Length', str(len(body)))
+    90	        self.end_headers()
+    91	        self.wfile.write(body)
+    92	
+    93	    def _cors(self):
+    94	        self.send_header('Access-Control-Allow-Origin', '*')
+    95	        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    96	        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+    97	
+    98	    def do_OPTIONS(self):          # a browser's preflight before a JSON POST
+    99	        self.send_response(204)
+   100	        self._cors()
+   101	        self.end_headers()
+   102	
+   103	    def _answer(self, work, read_only=False):
+   104	        try:
+   105	            with Connections(read_only) as db:
+   106	                self._send(200, work(db))
+   107	        except REQUEST_ERRORS as error:
+   108	            status, body = error_response(error)
+   109	            self._send(status, body)
+   110	
+   111	    def _stream_answer(self, work):
+   112	        self.send_response(200)
+   113	        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+   114	        self.send_header('Cache-Control', 'no-store')
+   115	        self._cors()
+   116	        self.end_headers()
+   117	
+   118	        def emit(event):
+   119	            self.wfile.write((json.dumps(event, ensure_ascii=False) + '\n').encode('utf-8'))
+   120	            self.wfile.flush()
+   121	
+   122	        try:
+   123	            with Connections() as db:
+   124	                card = work(db, lambda stage: emit({'type': 'progress', 'stage': stage}))
+   125	                emit({'type': 'result', 'data': card})
+   126	        except (BrokenPipeError, ConnectionResetError):
+   127	            return
+   128	        except REQUEST_ERRORS as error:
+   129	            status, body = error_response(error)
+   130	            try:
+   131	                emit({'type': 'error', 'status': status, 'message': body['error'], **{k: v for k, v in body.items() if k != 'error'}})
+   132	            except (BrokenPipeError, ConnectionResetError):
+   133	                pass
+   134	
+   135	    def do_GET(self):
+   136	        url = urllib.parse.urlsplit(self.path)
+   137	        q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
+   138	        parts = [p for p in url.path.split('/') if p]
+   139	        self._answer(lambda db: route(db, parts, q), read_only=parts in (['library'], ['thesis-bundles']))
+   140	
+   141	    def do_POST(self):
+   142	        parts = [p for p in urllib.parse.urlsplit(self.path).path.split('/') if p]
+   143	        length = int(self.headers.get('Content-Length') or 0)
+   144	        raw = self.rfile.read(length) if length else b''
+   145	
+   146	        def work(db, on_progress=None):
+   147	            if parts != ['ideas']:
+   148	                raise KeyError('/'.join(parts))
+   149	            try:
+   150	                body = json.loads(raw or b'{}')
+   151	            except json.JSONDecodeError as error:
+   152	                raise ValueError(f'the body is not JSON: {error}')
+   153	            if not isinstance(body, dict) or not str(body.get('text') or '').strip():
+   154	                raise ValueError('POST /ideas needs a JSON body with text')
+   155	            if CFG is None:
+   156	                raise config.ConfigError('the server was started without --config, so it cannot read ideas')
+   157	            return idea.read_idea(db.ledger, db.index, db.items, db.archive, CFG, body['text'], body.get('as_of') or None,
+   158	                                  int(body.get('k') or 10), aliases=ALIASES, semantic=SEMANTIC, bundles=body.get('bundles', True) is not False,
+   159	                                  on_progress=on_progress)
+   160	        accepted = [part.split(';', 1)[0].strip() for part in self.headers.get('Accept', '').split(',')]
+    10	from .views import store
+    11	
+    12	
+    13	@contextmanager
+    14	def read_snapshot(*connections):
+    15	    """Pin each read connection for a complete envelope; preserve a caller's transaction."""
+    16	    owned = []
+    17	    try:
+    18	        for conn in connections:
+    19	            if conn is not None and not conn.in_transaction:
+    20	                conn.execute('begin')
+    21	                owned.append(conn)
+    22	        yield
+    23	    finally:
+    24	        for conn in reversed(owned):
+    25	            conn.rollback()
+    26	
+212:applies_to: cwd=/Users/lchingen/hivemind-no-preseed-evidence-review and /Users/lchingen/hivemind; reuse_rule=reuse the diagnostic separation and stop rules for Hivemind research; snapshot counts and defaults are historical and must be rechecked.
+243:- Handoff begins at `/Users/lchingen/hivemind/reports/claude-handoff-2026-11-05/README.md`; the ~95 MB archive has stopped-run state, source items, databases, raw requests/answers, frozen-ruler references, worktree diffs and checksums. All 2,236 manifest files verified. It is a local-path-dependent snapshot, not a portable runnable checkout; review paid-call scripts before running. [Task 2]
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'legacy|no.*table|first_day_unfinished|read_snapshot|served' tests/test_bound_resolver.py tests/bound_cases.py tests/fixtures/bound-baseline-2026-11-16.json | head -45
+rg -n 'def last_completed_day|def open_read_only' src/hivemind/views/store.py
+nl -ba src/hivemind/views/store.py | sed -n '470,485p'
+nl -ba tests/test_bound_resolver.py | sed -n '1,115p'
+nl -ba src/hivemind/idea.py | sed -n '100,125p'
+nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '245,260p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+tests/bound_cases.py:6:last completed day (the running product's served store: 2026-08-29's steps after 2026-08-28), a first-day store (steps, no completed
+tests/bound_cases.py:18:PARTIAL = os.path.join(ROOT, 'poc', 'data', 'served-2026-10-28-v34-nvda-3m-through-0828', 'views.sqlite')
+tests/test_bound_resolver.py:76:    """The decisive case: before the change an omitted bound on the served store's bundle functions read 2026-08-29's records."""
+216:def open_read_only(path):
+475:def last_completed_day(conn):
+   470	
+   471	def complete_day(conn, day, seq, at):
+   472	    insert(conn, 'days_completed', day=day, seq=seq, at=at)
+   473	
+   474	
+   475	def last_completed_day(conn):
+   476	    row = conn.execute('select day from days_completed order by id desc limit 1').fetchone()
+   477	    return row['day'] if row else None
+   478	
+   479	
+   480	# ---------- research groups (D149) ----------
+   481	
+   482	def add_group(conn, *, group_id, name, scope, seq, input_id, object_ids=(), aliases=()):
+   483	    """A research group, created when the first accepted thesis that cites it is written, with the names it goes by; the
+   484	    search text carries the objects of its members so that an item about those objects finds it."""
+   485	    insert(conn, 'thesis_groups', group_id=group_id, name=name, scope=scope, aliases=json.dumps(list(aliases), ensure_ascii=False), created_seq=seq, created_from_input=input_id)
+     1	"""The bound resolver (docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md, row 3 and its product-facing
+     2	contract; proofs 2b to 2d): one owner for every upper date bound, explicit or omitted.
+     3	
+     4	On four real store states (`bound_cases.py`) every public function that takes a date is called with an omitted, a past and a future
+     5	bound, and each outcome is compared with today's, recorded before the change (`fixtures/bound-baseline-2026-11-16.json`), except where
+     6	the contract changes it:
+     7	- an explicit bound after the last completed day is refused, naming that day (finished and partial stores);
+     8	- a first-day store refuses every call;
+     9	- on a store with work after its last completed day, the bundle functions' omitted bound reads as of that day, so the half-processed
+    10	  day is no longer returned;
+    11	- a range whose start is after its end is refused (council round 124); a start equal to the end reads as before.
+    12	Plus the structural check that no module resolves a bound elsewhere, and the API's mapping of the three refusals."""
+    13	import ast
+    14	import json
+    15	import os
+    16	import sys
+    17	
+    18	import pytest
+    19	
+    20	HERE = os.path.dirname(os.path.abspath(__file__))
+    21	ROOT = os.path.dirname(HERE)
+    22	sys.path[:0] = [HERE, os.path.join(ROOT, 'src'), os.path.join(ROOT, 'scripts')]
+    23	import bound_cases  # noqa: E402
+    24	from hivemind import service  # noqa: E402
+    25	
+    26	BASELINE = json.load(open(os.path.join(HERE, 'fixtures', 'bound-baseline-2026-11-16.json')))
+    27	LAST = {'finished': '2026-08-15', 'partial': '2026-08-28'}
+    28	UNFILTERED = ('bundle.view_bundle', 'bundle.not_judged', 'bundle.days')       # their omitted bound read every record before
+    29	HELPERS = {'service': {'default_as_of', 'resolve_bound', 'resolve_range', 'visible', 'view_exists', 'is_open_as_of', 'state_as_of',
+    30	                       'dependencies', 'dependants', 'evidence_record'},
+    31	           'bundle': {'_bundles', 'research_groups', '_visible'},
+    32	           'search': set(), 'idea': {'judged', 'full_payload', 'lean_payload'}}
+    33	
+    34	
+    35	@pytest.fixture(scope='module')
+    36	def outcomes(tmp_path_factory):
+    37	    """Every call's outcome now, and for the partial store each unfiltered function's outcome with the last completed day given."""
+    38	    folder = str(tmp_path_factory.mktemp('stores'))
+    39	    found, explicit_last = {}, {}
+    40	    for state in bound_cases.STATES:
+    41	        conn = bound_cases.open_state(state, folder)
+    42	        for name, kind, call in bound_cases.calls(conn, state):
+    43	            found[(state, name, kind)] = bound_cases.outcome(call)
+    44	        if state == 'partial':
+    45	            view_id, created_seq = bound_cases.first_view(conn)
+    46	            item_of = bound_cases.bundle.item_lookup(None)
+    47	            explicit_last = {'bundle.view_bundle': bound_cases.outcome(lambda: bound_cases.bundle.view_bundle(conn, item_of, view_id, LAST['partial'])),
+    48	                             'bundle.not_judged': bound_cases.outcome(lambda: bound_cases.bundle.not_judged(conn, view_id, created_seq, LAST['partial'])),
+    49	                             'bundle.days': bound_cases.outcome(lambda: bound_cases.bundle.days(conn, LAST['partial']))}
+    50	        conn.close()
+    51	    return found, explicit_last
+    52	
+    53	
+    54	def expected(state, name, kind, explicit_last):
+    55	    before = BASELINE[f'{state}|{name}|{kind}']
+    56	    if state == 'first_day':
+    57	        return ['error', "FirstDayNotCompleted: the store's first day has not completed"]
+    58	    if kind == 'future' and state in LAST:
+    59	        return ['error', f"BoundNotCompleted: day not completed: {bound_cases.STATES[state]['future']} is after the last completed day {LAST[state]}"]
+    60	    if state == 'partial' and kind == 'omitted' and name in UNFILTERED:
+    61	        return explicit_last[name]
+    62	    if state == 'empty' and name == 'bundle.not_judged' and kind in ('past', 'future'):
+    63	        # the direct-call rule (round 122): a view not visible at an explicit bound is refused, here one the empty store does not hold
+    64	        return ['error', f"KeyError: 'v1 is not available as of {bound_cases.STATES[state][kind]}'"]
+    65	    return before
+    66	
+    67	
+    68	def test_every_call_on_every_state_keeps_todays_outcome_except_where_the_contract_changes_it(outcomes):
+    69	    found, explicit_last = outcomes
+    70	    assert len(found) == len(BASELINE) == 176
+    71	    wrong = {key: (got, expected(*key, explicit_last)) for key, got in found.items() if got != expected(*key, explicit_last)}
+    72	    assert wrong == {}
+    73	
+    74	
+    75	def test_the_partial_store_no_longer_returns_its_half_processed_day_by_default(outcomes):
+    76	    """The decisive case: before the change an omitted bound on the served store's bundle functions read 2026-08-29's records."""
+    77	    found, explicit_last = outcomes
+    78	    changed = [name for name in UNFILTERED if BASELINE[f'partial|{name}|omitted'] != found[('partial', name, 'omitted')]]
+    79	    assert 'bundle.days' not in changed or found[('partial', 'bundle.days', 'omitted')] == explicit_last['bundle.days']
+    80	    assert all(found[('partial', name, 'omitted')] == explicit_last[name] for name in UNFILTERED)
+    81	
+    82	
+    83	def test_a_finished_store_answers_every_omitted_and_past_bound_exactly_as_before(outcomes):
+    84	    found, _ = outcomes
+    85	    for (state, name, kind), got in found.items():
+    86	        if state == 'finished' and kind in ('omitted', 'past', 'from equal to to'):
+    87	            assert got == BASELINE[f'{state}|{name}|{kind}'], (name, kind)
+    88	
+    89	
+    90	def test_the_resolver_is_idempotent_and_refuses_only_after_the_last_completed_day(tmp_path):
+    91	    conn = bound_cases.open_state('finished', str(tmp_path))
+    92	    assert service.resolve_bound(conn, None) == '2026-08-15'
+    93	    assert service.resolve_bound(conn, service.resolve_bound(conn, '2026-08-15')) == '2026-08-15'
+    94	    with pytest.raises(service.BoundNotCompleted) as refused:
+    95	        service.resolve_bound(conn, '2026-08-16')
+    96	    assert (refused.value.requested, refused.value.last_completed_day) == ('2026-08-16', '2026-08-15')
+    97	    assert service.resolve_range(conn, '2026-08-01', '2026-08-01') == '2026-08-01'
+    98	    with pytest.raises(service.RangeNotOrdered):
+    99	        service.resolve_range(conn, '2026-08-02', '2026-08-01')
+   100	    with pytest.raises(service.BoundNotCompleted):
+   101	        service.resolve_range(conn, '2026-08-01', '2026-08-16')
+   102	
+   103	
+   104	@pytest.mark.parametrize('state', ['finished', 'partial', 'empty'])
+   105	def test_a_range_starting_after_its_end_is_refused_on_every_store(tmp_path, state):
+   106	    conn = bound_cases.open_state(state, str(tmp_path))
+   107	    days = bound_cases.STATES[state]
+   108	    for name, kind, call in bound_cases.range_after_end_calls(conn, state):
+   109	        assert bound_cases.outcome(call) == ['error', f"RangeNotOrdered: range start after its end: {days['future']} to {days['past']}"], (name, kind)
+   110	
+   111	
+   112	def _date_functions(module):
+   113	    tree = ast.parse(open(os.path.join(ROOT, 'src', 'hivemind', f'{module}.py')).read())
+   114	    for node in ast.walk(tree):
+   115	        if isinstance(node, ast.FunctionDef) and {a.arg for a in node.args.args + node.args.kwonlyargs} & {'as_of', 'to_day'}:
+   100	        decompose, _, mapping = handle.read().partition('=== map ===')
+   101	    if not mapping.strip():
+   102	        raise config.ConfigError(f'{setting.prompt_version}.txt has no "=== map ===" section')
+   103	    return decompose.strip(), mapping.strip()
+   104	
+   105	
+   106	def object_list(ledger, as_of, aliases=None):
+   107	    """What the library covers, in one line: each object with open views as of the day and its count, then the
+   108	    universe's objects with no view yet. About 250 characters on the sealed ledger against 5,095 for a full catalog."""
+   109	    as_of = service.resolve_bound(ledger, as_of)
+   110	    counts, kinds = {}, {}
+   111	    for record in service.views(ledger, None, as_of):
+   112	        counts[record['object']] = counts.get(record['object'], 0) + 1
+   113	        kinds[record['object']] = record['object_kind']
+   114	    covered = '; '.join(f'{obj} ({kinds[obj]}) {n}' for obj, n in sorted(counts.items(), key=lambda kv: -kv[1]))
+   115	    missing = sorted(o for o in (aliases or {}) if o not in counts)
+   116	    return (f'Objects with open views as of {as_of} (object, kind, number of views): {covered}.'
+   117	            + (f' Objects in the universe with no view yet: {", ".join(missing)}.' if missing else ''))
+   118	
+   119	
+   120	def judged(ledger, view_id, as_of, detailed=False):
+   121	    state = service.state_as_of(ledger, view_id, as_of)
+   122	    if not state:
+   123	        return None
+   124	    rung = next((g for g in store.rungs_of(ledger, view_id) if g['position'] == state['position']), {})
+   125	    result = {'position': state['position'], 'label': rung.get('label', '')}
+   245	   - a retry after another day has completed reuses exactly the staged rows whose four key parts match;
+   246	   - two stores at the same path with the same first sequence and day but different identities: no staged row of the first is
+   247	     reused for the second, and no published vector of the first is used for the second;
+   248	   - a store restored from an earlier snapshot, with the same identity but a published day after its last completed day: its
+   249	     published vectors are not used until a refresh;
+   250	   - a restored store with the same identity and published day but one view's text changed: that view's vector is not used, and
+   251	     search runs lexically and says so.
+   252	8d. **Orderly stop:** with a service reader holding the store, the writer's stop leaves WAL mode in place, records it and releases the
+   253	   lock; preflight then accepts the store. With no reader, the store ends in rollback-journal mode.
+   254	8c. **The index:** on a store with an unfinished day, the views sent to the (fake) embedding service are exactly those visible as of
+   255	   the last completed day. After the day completes, the index is extended to it, and search names the index's day until then.
+   256	9. **The resolver keeps legacy and empty stores as today:** a legacy ledger with no `days_completed` and an empty store give the
+   257	   same answers before and after `resolve_bound` is introduced.
+   258	10. **The paused-writer harness** (`page-contract/serving_while_writing.py`) re-run: every check holds and the first-day case passes.
+   259	
+   260	## Row 3's product-facing contract (council rounds 120 to 123; A1, clamping, withdrawn)
+
+codex
+**Not yet.** Slice 1 has substantial saved evidence, but its legacy-store requirement is still unproved; slice 2 also needs to settle two MCP details before its concurrency proof is meaningful.
+
+- **Slice 1: the legacy case is missing.** The contract calls for a ledger without `days_completed` to retain its previous behavior. The 176-call test covers four states, but not that schema. The resolver calls `last_completed_day`, which queries `days_completed` directly, so a missing table would raise an SQLite error. I have not established whether any such historical ledger exists; the stated contract and proof still need to be reconciled. [Resolver](/Users/lchingen/hivemind/src/hivemind/service.py:52), [store query](/Users/lchingen/hivemind/src/hivemind/views/store.py:475), [required proof](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:256).
+
+- **MCP’s object list is currently server instructions, not a tool result.** It is computed at startup and concatenated into `FastMCP`’s instructions. Say where a per-call object list will be exposed without silently changing that public behavior, and test the actual MCP entry point after a day completes. [MCP startup](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:30).
+
+- **The shared index connection is still used by MCP search.** Two overlapping tool calls can each have their own ledger transaction while sharing `INDEX`; the proposed test must include overlapping **search** calls, including their index access, or explicitly defer concurrent search with a stated restriction. [MCP search](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:69).
+
+For the API proof, pin the snapshot with an actual read before releasing the writer: `BEGIN` alone does not establish which committed state subsequent reads will see. Also test failure during connection setup, since `__exit__` is not called if `__enter__` fails after opening a connection. [Connections](/Users/lchingen/hivemind/scripts/hivemind_api.py:61).
+
+I inspected the code and saved mutant report; I did not rerun the suites. The reported M7 explanation is consistent with the saved evidence, and nothing here implies the service was restarted.
+
+CONSENSUS: no, because the legacy resolver case and the MCP object-list and concurrent-search contracts need to be settled before proceeding.
+tokens used
+3,246,281
+**Not yet.** Slice 1 has substantial saved evidence, but its legacy-store requirement is still unproved; slice 2 also needs to settle two MCP details before its concurrency proof is meaningful.
+
+- **Slice 1: the legacy case is missing.** The contract calls for a ledger without `days_completed` to retain its previous behavior. The 176-call test covers four states, but not that schema. The resolver calls `last_completed_day`, which queries `days_completed` directly, so a missing table would raise an SQLite error. I have not established whether any such historical ledger exists; the stated contract and proof still need to be reconciled. [Resolver](/Users/lchingen/hivemind/src/hivemind/service.py:52), [store query](/Users/lchingen/hivemind/src/hivemind/views/store.py:475), [required proof](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:256).
+
+- **MCP’s object list is currently server instructions, not a tool result.** It is computed at startup and concatenated into `FastMCP`’s instructions. Say where a per-call object list will be exposed without silently changing that public behavior, and test the actual MCP entry point after a day completes. [MCP startup](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:30).
+
+- **The shared index connection is still used by MCP search.** Two overlapping tool calls can each have their own ledger transaction while sharing `INDEX`; the proposed test must include overlapping **search** calls, including their index access, or explicitly defer concurrent search with a stated restriction. [MCP search](/Users/lchingen/hivemind/scripts/hivemind_mcp.py:69).
+
+For the API proof, pin the snapshot with an actual read before releasing the writer: `BEGIN` alone does not establish which committed state subsequent reads will see. Also test failure during connection setup, since `__exit__` is not called if `__enter__` fails after opening a connection. [Connections](/Users/lchingen/hivemind/scripts/hivemind_api.py:61).
+
+I inspected the code and saved mutant report; I did not rerun the suites. The reported M7 explanation is consistent with the saved evidence, and nothing here implies the service was restarted.
+
+CONSENSUS: no, because the legacy resolver case and the MCP object-list and concurrent-search contracts need to be settled before proceeding.

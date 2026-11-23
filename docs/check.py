@@ -445,6 +445,13 @@ def main():
     print(f"English coverage: {len(ENGLISH_FILES)} current files checked, {len(english_problems)} findings")
     problems += english_problems
 
+    clean_arch = subprocess.run(["node", str(DOCS.parent / "clean-arch" / "render.mjs"), "--check"],
+                                capture_output=True, text=True)
+    if clean_arch.returncode:
+        problems.append(clean_arch.stderr.strip() or clean_arch.stdout.strip() or "Clean architecture HTML check failed")
+    else:
+        print(clean_arch.stdout.strip())
+
     bundle = subprocess.run([sys.executable, str(PRD / "build_bundle.py")], capture_output=True, text=True)
     print(bundle.stdout.strip())
     check = subprocess.run([sys.executable, str(PRD / "build_bundle.py"), "--check"], capture_output=True, text=True)

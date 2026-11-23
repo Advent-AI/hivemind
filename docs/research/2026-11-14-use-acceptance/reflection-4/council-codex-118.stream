@@ -1,0 +1,199 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 118: the operating contract, version 8 (`live-service/OPERATING-CONTRACT.md`): your two findings answered
+
+1. **The file locked is the file used** (row 7):
+   - The holder reads the store's device and inode, takes their lock, opens the store, and reads the path's device and inode again.
+     Preflight checks once more after its copy.
+   - Any difference discards what was opened or copied, releases and refuses. An open SQLite connection keeps its file, so a store
+     verified on both sides of the open is the one read or written.
+   - The writer creates its file empty and exclusively (create-new), locks it, opens and verifies, and only then writes.
+   - Proof 8 adds: the path replaced after `stat` and before open, the path replaced during the copy, and the path replaced between
+     the writer's create and open.
+2. **The lock folder's lifecycle** (row 7):
+   - One function gives both entry points one folder (`~/.hivemind-locks/`, 0700), and both fail closed if it is unusable.
+   - Lock files are never deleted or replaced by the system.
+   - Each holder rechecks its lock file's identity at its check points (the writer before each day; preflight after its copy).
+   - **Stated honestly:** a hand deletion while a lock is held breaks exclusion until the next check point. It is detected there, not
+     prevented; the rule against deletion is what prevents it.
+   - Proof 8 covers the unwritable folder and the replaced lock file.
+
+Also added, as you asked: proof 8b's restored store with the same identity and a changed view text.
+
+End with `CONSENSUS: yes` (ready for its $0 proof build, which comes back to you) or `CONSENSUS: no, because …`.
+
+codex
+I’ll re-read the version 8 contract and check whether its verification points establish the file identity and lock guarantees it claims.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md | sed -n '112,230p'
+nl -ba AGENTS.md | sed -n '421,433p'
+rg -n 'snapshot.sh|hivemind.*sqlite' /Users/lchingen/.codex/memories/MEMORY.md | head -5" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   112	     - a write that still meets a full filesystem mid-day (extending the store, its `-wal` or a side file) fails, and the writer
+   113	       exits non-zero as in a crash (row 6);
+   114	     - its stop reason may then be lost too, if the run's log is on the full disk;
+   115	     - **the guarantee in that case is the readers' boundedness** (they keep the last completed day), not the record.
+   116	       The process's exit status, seen by its supervisor, is the signal.
+   117	6. **A crash.**
+   118	   - WAL drops the unfinished transaction. The day's **already committed writes stay** in the store.
+   119	   - Readers stay bounded to the last completed day. Every row written during the unfinished day is dated by that day's processing
+   120	     steps, after the last completed day, so it is outside every allowed bound.
+   121	   - **The writer does not resume** (today's loop). The store is served as of its last completed day until it is replaced.
+   122	   - Resuming a stopped live store is a separate design, not covered here.
+   123	7. **Who is writing: a signal outside the store, and copies.**
+   124	   - **The lock folder: one owner, fixed, fail closed.**
+   125	     - One function (`live_lock.lock_folder()`) gives the folder to both the writer and preflight: `~/.hivemind-locks/`,
+   126	       created on first use with owner-only permissions (0700).
+   127	     - If it cannot be created, opened or written, both refuse and name it. Neither falls back to running without a lock.
+   128	     - **Lock files are never deleted or replaced** by any part of the system; only a person removes them, by hand, when no process
+   129	       runs.
+   130	     - After taking a lock, and again at each later check point (the writer before each day; preflight after its copy), the holder
+   131	       checks that the lock file's path still names the inode it locked. If not (someone replaced the file by hand), it stops or
+   132	       discards and refuses.
+   133	     - A hand deletion while a lock is held is detected at the next check point, not prevented: the rule against deleting lock
+   134	       files is what prevents it.
+   135	   - **The lock, named by the store file, not its path:** `<device>-<inode>.writer.lock` in that folder. Both numbers are read with
+   136	     `stat`, which reads no content of the store. A symlink resolves to the same file and a hard link shares its inode, so every alias
+   137	     reaches one lock.
+   138	   - **The file locked is the file used, checked at each step:**
+   139	     - the holder reads the store's device and inode, takes their lock, opens the store, and reads its path's device and inode
+   140	       again;
+   141	     - preflight checks once more after its copy;
+   142	     - a difference at any check (the path replaced in between) discards whatever was opened or copied, releases the lock and
+   143	       refuses, naming the change.
+   144	     - An open SQLite connection keeps the file it opened, so a store verified on both sides of the open is the one read or
+   145	       written.
+   146	   - **The writer locks before it writes:**
+   147	     - it creates its store file empty and exclusively (create-new, failing if the path exists);
+   148	     - it takes that file's lock without waiting;
+   149	     - it opens it as a database and verifies its identity as above, and only then writes;
+   150	     - if the lock is held (by preflight), it refuses to start, with that reason.
+   151	     - It holds the lock (`flock`) for its whole life; the operating system releases it on any exit, crash included.
+   152	   - **Preflight, before it touches a store, always takes that store's lock without waiting,** creating the lock file if it is
+   153	     absent. There is no "no lock file" branch:
+   154	     - **if the lock is held, a writer is running:** preflight refuses, naming the run's snapshot script (AGENTS §9's sanctioned way);
+   155	     - otherwise it keeps the lock through its verified copy (the backup API, from a `mode=ro` source) and releases it after;
+   156	     - historical stores and production's are copied the same way; taking a fresh lock on them is harmless.
+   157	     - AGENTS §9 remains the only protection for production's own writer, which takes no such lock; changing it is out of scope.
+   158	   - **Snapshots:** the snapshot script is the one toucher that copies a store while its writer runs, with the backup API.
+   159	     Preflight accepts its snapshots like any store with no writer.
+   160	   - **Orderly stop:**
+   161	     - at its last day the writer tries to leave the store in rollback-journal mode (`journal_mode=delete`, with a short busy
+   162	       timeout);
+   163	     - if service readers hold it, the store stays in WAL mode and the writer records "stopped in order, WAL kept" in its run's
+   164	       outcome;
+   165	     - either way it then releases its lock.
+   166	     - Journal mode is never used as the sign of a live store; the lock is.
+   167	8. **AGENTS §9 ("Never open a live run's databases") stays in force.**
+   168	   - **Proposed decision P1, to be resolved before any live-service operation and not assumed by any proof:** the product's API and
+   169	     MCP server may read a live WAL store under rows 1 to 7. Every other toucher above uses a backup-API snapshot.
+   170	   - The proofs run on test stores made for them, never on a live run.
+   171	
+   172	## State × event (the store's state at the request's transaction × the request)
+   173	
+   174	| State | Bounds omitted | Upper bound ≤ last completed day | Upper bound > last completed day | Start-up reads | Copy |
+   175	|---|---|---|---|---|---|
+   176	| Empty store | as today | as today | as today | as today | consistent |
+   177	| First day in progress | refused (4) | — | refused (4) | wait; requests refused | consistent (an in-progress copy, read under the same rules) |
+   178	| A later day in progress | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   179	| A day completing during a request | the request's own transaction | same | same | same | consistent |
+   180	| Crashed mid-day, not resumed | the last completed day | that bound | refused (3) | the last completed day | consistent |
+   181	| `-wal`/`-shm` absent and directory not writable | fails loudly (1) | same | same | fails loudly | — |
+   182	
+   183	## Proof plan ($0, on test stores made for it; nothing built until the council accepts the contract)
+   184	
+   185	1. **WAL mode:** the writer's store is in WAL mode with the size limit set; production's stores are unchanged.
+   186	2. **Every upper bound:**
+   187	   - the structural check that no bound is resolved outside `resolve_bound`;
+   188	   - for each of the 13 callers, an explicit future bound is refused naming the last completed day, an explicit past bound passes,
+   189	     and an omitted bound gives the last completed day;
+   190	   - lower bounds are unaffected.
+   191	3. **One state per request:** an API request held between its first and last read while the writer commits a judgement and
+   192	   completes a day returns the state at its start, and the writer's commits succeed. Run on a first-day store and a store with one
+   193	   completed day.
+   194	4. **Start-up and MCP concurrency:**
+   195	   - two overlapping MCP calls across a writer's commit each return their own transaction's state;
+   196	   - a call that fails mid-read leaves no open transaction and no open connection;
+   197	   - a service started on a first-day store refuses requests and builds its index after the first day completes;
+   198	   - MCP's object list after a later day includes that day's objects;
+   199	   - no transaction is open between MCP calls.
+   200	5. **Checkpoint and disk:**
+   201	   - below the free-space minimum, the writer stops before the day with its reason, and readers serve the last completed day;
+   202	   - a database-full error mid-day (a test store with `max_page_count`) stops the writer as a crash, and readers are unaffected;
+   203	   - a filesystem-full error mid-day: the store on a small disk image (`hdiutil`, a few MB), filled while the `-wal` grows. The
+   204	     writer exits non-zero, and readers serve the last completed day. Whether its reason was recorded is reported, not required;
+   205	   - with a long read held, the writer commits;
+   206	   - after the read ends, a checkpoint completes, and a reset brings the `-wal` within the limit;
+   207	   - with a reader held across three completed days, the writer stops before the fourth with its reason recorded, and readers serve
+   208	     the last completed day.
+   209	6. **Opening precondition:** with `-wal`/`-shm` absent and the directory read-only, a reader fails loudly. A busy read is retried
+   210	   within the timeout.
+   211	7. **A crash:** the writer is killed after committed writes mid-day.
+   212	   - Every route's answer, at every allowed bound, equals the answer from a backup taken at the last completed day.
+   213	   - The search index and the text sent to the embedding service (recorded by a fake transport) equal the backup's.
+   214	   - The partial day's rows are present in the file and invisible to every route and to the index.
+   215	8. **Copies:**
+   216	   - a backup taken while the writer commits passes an integrity check;
+   217	   - preflight refuses a store whose writer holds the lock under any alias (the store's own path, a symlink and a hard link
+   218	     elsewhere);
+   219	   - preflight arriving just before the writer: whichever takes the lock first wins. A writer finding preflight's lock refuses to
+   220	     start and writes nothing; preflight finding the writer's lock refuses to copy;
+   221	   - the store's path replaced after preflight's `stat` and before its open, and again during its copy: each is detected, the
+   222	     copy discarded and the request refused;
+   223	   - the writer's path replaced between its create and its open: the writer refuses;
+   224	   - the lock folder unwritable: both refuse and name it;
+   225	   - a held lock file deleted and recreated by hand: a second process can lock the new file, so exclusion is broken until the
+   226	     holder's next check. The writer rechecks its lock file's identity before each day and stops if it changed; preflight rechecks
+   227	     after its copy and discards it. The test shows detection at those points, not prevention;
+   228	   - it accepts a crashed store (lock released by the operating system), a store stopped in order with its WAL kept, a snapshot,
+   229	     and every historical input it accepts today;
+   230	   - a writer started while preflight holds the lock waits or refuses, and never writes under the copy.
+   421	- Inspect a path before writing to it; new stored data gets a new, dated name; chain guarded steps with `&&`. Deleting stored data needs
+   422	  Alex's request, a backup, exactly identified items and a log entry.
+   423	- Absolute paths. Commands run under zsh: pass a list as an array. No foreground `sleep`.
+   424	- Preserve existing and concurrent changes: never reset, clean or stash work that is not yours. Never run parallel agents that edit
+   425	  shared modules.
+   426	- When Alex names a step, the test is that step alone through its own harness (extraction: stored requests re-sent, answers sifted,
+   427	  scored against the gold). A full-pipeline run, a registered test, or a paid send beyond the probes of a few cents an agreed direction
+   428	  allows (§7.3) starts only on his explicit word (Alex, 2026-10-27: "我不是要你看下step 1抽取到底行不行？").
+   429	- A long paid run is launched detached in a new session with a log and pid file, after checking machine and network health; nothing heavy
+   430	  runs beside paid calls. A gate runs on a snapshot no one is editing.
+   431	- Never open a live run's databases: run `sh <run folder>/snapshot.sh` and query the snapshot.
+   432	- No edit to package code or prompt files while any run is live: the parallel day's manifest hashes every `.py` and prompt file and
+   433	  fails the day. Edit in another worktree or wait.
+
+codex
+**No-go:** version 8 detects the replacements named in its tests, but checking the path before and after opening does not prove which file SQLite opened.
+
+For example, the path can name A at the first check, B when SQLite opens it, and A again at the second check. Both checks match A’s lock, while the connection has opened B. The same gap applies to the writer’s create/open sequence. This is a counterexample to the contract’s guarantee, not a reproduced failure in this repository. [Contract, file identity](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:138).
+
+Before building, either specify a way to bind the opened SQLite database to the locked file and prove that case, or narrow the operating contract to forbid path replacement while a store is being opened or used, with the limits of detection stated. Add the A → B → A case to the proof if the stronger guarantee remains.
+
+One other check belongs in proof 8: after a crashed writer leaves committed data in a WAL, copy the store through a hard-link alias and compare it with a copy through the original path. Sharing the main file’s inode does not by itself establish that SQLite will find the same path-named WAL sidecars. Refuse that alias if the comparison cannot be guaranteed. [Contract, aliases and copies](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:135).
+
+The shared lock-folder lifecycle now states the manual-deletion limitation honestly, and the changed-text restoration test is included. P1 remains proposed; these would be test-store proofs, not authorization for live operation. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:124).
+
+CONSENSUS: no, because the identity checks do not establish which file SQLite opened, and copying a WAL store through a hard-link alias remains unproved.
+tokens used
+3,177,053
+**No-go:** version 8 detects the replacements named in its tests, but checking the path before and after opening does not prove which file SQLite opened.
+
+For example, the path can name A at the first check, B when SQLite opens it, and A again at the second check. Both checks match A’s lock, while the connection has opened B. The same gap applies to the writer’s create/open sequence. This is a counterexample to the contract’s guarantee, not a reproduced failure in this repository. [Contract, file identity](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:138).
+
+Before building, either specify a way to bind the opened SQLite database to the locked file and prove that case, or narrow the operating contract to forbid path replacement while a store is being opened or used, with the limits of detection stated. Add the A → B → A case to the proof if the stronger guarantee remains.
+
+One other check belongs in proof 8: after a crashed writer leaves committed data in a WAL, copy the store through a hard-link alias and compare it with a copy through the original path. Sharing the main file’s inode does not by itself establish that SQLite will find the same path-named WAL sidecars. Refuse that alias if the comparison cannot be guaranteed. [Contract, aliases and copies](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:135).
+
+The shared lock-folder lifecycle now states the manual-deletion limitation honestly, and the changed-text restoration test is included. P1 remains proposed; these would be test-store proofs, not authorization for live operation. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:124).
+
+CONSENSUS: no, because the identity checks do not establish which file SQLite opened, and copying a WAL store through a hard-link alias remains unproved.

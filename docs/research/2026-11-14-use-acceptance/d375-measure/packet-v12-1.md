@@ -1,0 +1,134 @@
+# Packet v12-1
+
+**The question:** At NVIDIA’s FY2027 annual report, what amount of purchase commitments for the Hugging Face acquisition will NVIDIA report in its commitments note?
+
+Due 2027-02-28. Possible answers:
+- 1 Strongly bullish: The reported amount is less than $5 billion.
+- 2 Bullish: The reported amount is at least $5 billion and less than $10 billion.
+- 3 Neutral: The reported amount is at least $10 billion and less than $15 billion.
+- 4 Bearish: The reported amount is at least $15 billion and less than $20 billion.
+- 5 Strongly bearish: The reported amount is at least $20 billion.
+
+**60 statements read on 2026-09-25:**
+
+- **v12-1-1** (stored attribution: NVIDIA management): NVIDIA management said it intends to return at least 50% of free cash flow to shareholders, net of strategic uses; no period was specified.
+  - Passage: "Management has stated an intention to return 50% or more of free cash flow to shareholders, net of strategic uses."
+- **v12-1-2** (stored attribution: TSMC): TSMC's gross margin rose to 67.7% from 58.6%, operating margin to 60.3% from 49.6%, and net profit margin to 55.6% from 42.7% over the past year, indicating increased supplier pricing power that could affect Nvidia's input costs.
+  - Passage: "Over the past year, its gross margin rose from 58.6% to 67.7%, operating margin from 49.6% to 60.3%, and net profit margin from 42.7% to 55.6%."
+- **v12-1-3** (stored attribution: NVIDIA): NVIDIA reported Data Center revenue of $89 billion in fiscal Q2 2027, up 117% year over year.
+  - Passage: "NVIDIA’s Data Center segment remained its key growth driver, with revenues surging 117% year over year to $89 billion in the fiscal second quarter of 2027, according to the company’s Aug. 26 press release."
+- **v12-1-4** (stored attribution: MarketBeat): MarketBeat estimates NVIDIA trades at about 24 times current-year earnings and judges that the valuation prices in neither a premium nor growth expectations.
+  - Passage: "Trading at about 24x current-year earnings, the market puts no premium on it, and no growth expectation is priced in."
+- **v12-1-5** (stored attribution: Anthony Di Pizio): The author forecast that additional manufacturing capacity would end semiconductor companies' elevated margins and pressure industry earnings over the next couple of years.
+  - Passage: "This won't last as additional manufacturing capacity comes online, so earnings will be under pressure across the industry over the next couple of years."
+- **v12-1-6** (stored attribution: NVIDIA): NVIDIA added $80 billion of share-repurchase authorization in May 2026, with roughly $99 billion still available at the end of FY2027 Q2.
+  - Passage: "Following an $80 billion repurchase authorization added in May, roughly $99 billion remained available at the end of the second quarter."
+- **v12-1-7** (stored attribution: Nvidia): Nvidia will supply the computing platform and AI tools for Einride’s planned expansion of driverless trucks.
+  - Passage: "Nvidia NVDA , the AI chipmaker, will supply the computing platform and AI tools behind Einride's push to put more driverless trucks on the road."
+- **v12-1-8** (stored attribution: NVIDIA): NVIDIA's gross margin reached 75% in FY2027 Q2, compared with 72.4% a year earlier.
+  - Passage: "NVIDIA's gross margin reached 75%, up from 72.4% a year ago, while both GAAP and non-GAAP net income increased, demonstrating the company's strong profitability."
+- **v12-1-9** (stored attribution: MarketBeat): MarketBeat identifies NVIDIA's self-financing of future sales, rather than deterioration in its credit quality, as the company's biggest credit-related risk.
+  - Passage: "NVIDIA's biggest risk is credit-related. It's not that NVIDIA's credit quality is eroding so much as the amount of future sales it is self-financing."
+- **v12-1-10** (stored attribution: Jensen Huang): Jensen Huang said fossil fuels are required for energy production in the near term.
+  - Passage: "Well, in the near term, energy production requires fossil fuel."
+- **v12-1-11** (stored attribution: Zacks Investment Research): Zacks said NVIDIA had regained its #1 rank after analysts raised their full-year earnings estimates.
+  - Passage: "NVIDIA has the coveted Zacks Rank of #1 (Strong Buy) again as analysts have raised their full year earnings estimates."
+- **v12-1-12** (stored attribution: NVIDIA): NVIDIA's GAAP operating income more than doubled year over year in FY2027 Q2.
+  - Passage: "GAAP operating income more than doubled year over year, underscoring significant operating leverage."
+- **v12-1-13** (stored attribution: zacks.com): The author says NVIDIA’s Vera Rubin platform is entering full production.
+  - Passage: "with the Vera Rubin platform entering full production, NVIDIA is well-poised to benefit from the next phase of demand for AI infrastructure."
+- **v12-1-14** (stored attribution: NVIDIA): NVIDIA guided fiscal Q3 2027 revenue to $108 billion, around 12% above fiscal Q2 revenue.
+  - Passage: "Guidance for the fiscal third quarter is $108 billion in revenue , around 12% above fiscal Q2."
+- **v12-1-15** (stored attribution: MarketBeat): MarketBeat says summer analyst revisions put NVIDIA's high-end price target around $515, more than 100% above a key resistance level, and suggests that target could be too low.
+  - Passage: "Summer revisions push the high end into the $515 range, representing more than 100% upside from the critical resistance point—and it could still prove to be a low-ball estimate."
+- **v12-1-16** (stored attribution: NVIDIA): NVIDIA reports Vera Rubin is in full production, with production shipments beginning in August and purchase orders from every major hyperscaler, AI cloud provider, and system OEM.
+  - Passage: "The platform is already in full production, with NVIDIA reporting production shipments beginning in August and purchase orders from every major hyperscaler, AI cloud and system original equipment manufacturer (OEM)."
+- **v12-1-17** (stored attribution: Anthony Di Pizio): The author judged AMD's MI450 GPU, configured in its Helios rack, a worthy alternative to Nvidia's Vera Rubin system.
+  - Passage: "Nvidia's Vera Rubin GPU system has set the benchmark, but AMD's new MI450 GPU has become a worthy alternative when configured in the company's specialized Helios rack."
+- **v12-1-18** (stored attribution: Elon Musk): Elon Musk said Colossus 2 should bring 220,000 NVIDIA GB300 GPUs online by the end of the week, another 220,000 by the end of November, and a final 220,000 by the end of December 2026.
+  - Passage: "Musk added that by the end of this week, the data center should bring 220,000 GB300 GPUs online and have another 220,000 operational by the end of November. Finally, before 2026 ends, the site should have the final batch of 220,000 GB300 GPUs online by December end, believes the executive."
+- **v12-1-19** (stored attribution: BusinessChief): BusinessChief reported that Jensen Huang would attend Thursday's state dinner with Donald Trump and Xi Jinping, where chip sales to China were on the table.
+  - Passage: "Jensen joins Trump and Chinese President Xi Jinping at Thursday's state dinner, with chip sales to China on the table"
+- **v12-1-20** (stored attribution: NVIDIA): NVIDIA guided to FY2027 Q3 revenue of $108 billion, plus or minus 2%.
+  - Passage: "NVIDIA expects revenues of $108 billion, plus or minus 2%, for the fiscal third quarter of 2027, indicating continued sequential growth."
+- **v12-1-21** (stored attribution: Elon Musk): Elon Musk said xAI’s Colossus 2 currently runs 110,000 Nvidia GB200 chips and 440,000 GB300s.
+  - Passage: "Colossus 2 currently runs 110,000 Nvidia GB200 chips and 440,000 GB300s, according to Musk."
+- **v12-1-22** (stored attribution: U.S. export-control authorities): The article reports that U.S. export controls ban exports to China of Nvidia's and AMD's most advanced AI chips; it gives no start date or specific chip models.
+  - Passage: "Nvidia and AMD's most advanced artificial intelligence chips are banned from being exported to China, although the country remains a key market and manufacturing hub for Cook's Apple and Musk's Tesla."
+- **v12-1-23** (stored attribution: NVIDIA): NVIDIA guided to fiscal Q3 2027 total revenue of $108 billion, plus or minus 2%.
+  - Passage: "Looking ahead, NVIDIA projects $108 billion, plus or minus 2%, in revenues for the fiscal third quarter of 2027, signaling continued sequential growth."
+- **v12-1-24** (stored attribution: NVIDIA): Zacks reported that NVIDIA's Vera Rubin platform was in full production as of the article's publication.
+  - Passage: "Profitability is also expected to remain strong, while the company's Vera Rubin platform is now in full production, positioning NVIDIA to capitalize on continued AI infrastructure demand."
+- **v12-1-25** (stored attribution: TSMC): TSMC reported second-quarter revenue of $40.2 billion, up 33.7% year over year, indicating growth at a key Nvidia supplier.
+  - Passage: "In the second quarter, TSMC's revenue rose 33.7% year over year to $40.2 billion"
+- **v12-1-26** (stored attribution: MarketBeat): MarketBeat estimates NVIDIA shares could rise as much as 500% over the next few years if the company meets or exceeds its earnings forecast.
+  - Passage: "If NVIDIA continues to fire on all cylinders and grows into or exceeds its earnings forecast, its stock price could rise by several hundred percentage points over the next few years, potentially as much as 500%."
+- **v12-1-27** (stored attribution: Elon Musk): Elon Musk said Colossus 2 was running 110,000 NVIDIA GB200 GPUs and 440,000 GB300 GPUs; no date was specified.
+  - Passage: "As of now, the data center is running on 110,000 GB200 GPUs and 440,000 GB300 GPUs, he outlined ."
+- **v12-1-28** (stored attribution: AMD): AMD's second-quarter data-center sales, mostly from GPU sales, rose 107% to $6.7 billion.
+  - Passage: "The company's second-quarter data center sales (which come mostly from GPU sales) increased 107% to $6.7 billion."
+- **v12-1-29** (stored attribution: MarketBeat): MarketBeat estimates NVIDIA's forward P/E at about 10 times earnings within two years and about 5 times earnings on a 10-year forecast, which it says is disconnected from the company's fundamentals.
+  - Passage: "Looking forward, the discount deepens to only 10x earnings within two years, and the 10-year forecast suggests this stock trades at pennies on the dollar, about 5x earnings, revealing a structural disconnection with the fundamental outlook."
+- **v12-1-30** (stored attribution: Jensen Huang): Jensen Huang said the United States has produced very little net new energy for a long time.
+  - Passage: "if you look at our country, we’ve produced very little net new energy for a long time."
+- **v12-1-31** (stored attribution: The estimates cited by The Motley Fool author): The latest estimates put global AI infrastructure spending at $1.3 trillion in calendar 2027, up from about $750 billion in 2026.
+  - Passage: "The latest estimates are for global AI infrastructure spending to reach $1.3 trillion in 2027 -- up from about $750 billion this year."
+- **v12-1-32** (stored attribution: TSMC): TSMC expects third-quarter revenue of $44.6 billion to $45.8 billion, up 34.7% to 38.4% from $33.1 billion in third-quarter 2025.
+  - Passage: "It expects Q3 revenue between $44.6 billion and $45.8 billion, which would be 34.7% to 38.4% higher than its $33.1 billion in revenue in Q3 2025."
+- **v12-1-33** (stored attribution: fool.com (analyst)): Analysts' consensus estimate for NVIDIA fiscal 2027 total revenue was around $412 billion.
+  - Passage: "Analysts' consensus already has fiscal 2027 revenue coming in around $412 billion."
+- **v12-1-34** (stored attribution: NVIDIA): NVIDIA Data Center revenue was $89 billion in fiscal Q2 2027.
+  - Passage: "The data center business made up $89 billion of the total."
+- **v12-1-35** (stored attribution: AMD CEO Lisa Su): AMD CEO Lisa Su said the GPU-to-CPU ratio in servers is shifting from 4:1 or 8:1 toward 1:1.
+  - Passage: "AMD CEO Lisa Su said on the company's first-quarter 2026 earnings call that the ratio of GPUs to CPUs in servers used to be 4:1, and sometimes even 8:1.
+Now, it's shifting close to a 1:1 ratio."
+- **v12-1-36** (stored attribution: MarketBeat): MarketBeat judges that much of Oracle's backlog is back-ended and awaiting the next-generation performance expected from Vera Rubin.
+  - Passage: "Many investors get it wrong that all the data centers are being built now; many, including much of Oracle's (NASDAQ: ORCL) backlog, are back-ended and waiting on the next-gen performance Vera Rubin promises."
+- **v12-1-37** (stored attribution: Zacks.com (analyst)): Zacks reported NVIDIA's forward price/earnings multiple at 24.39, versus Marvell's 62.25.
+  - Passage: "Per the price/earnings ratio, NVDA trades at 24.39 forward earnings compared with MRVL's forward earnings multiple of 62.25."
+- **v12-1-38** (stored attribution: NVIDIA): NVIDIA reported total revenue of $96 billion in fiscal Q2 2027, up 106% year over year and 18% sequentially.
+  - Passage: "Total revenues reached an exceptional $96 billion, representing a 106% year-over-year and 18% sequential jump."
+- **v12-1-39** (stored attribution: An unnamed user, as reported by Tom’s Hardware): Tom’s Hardware reported that at least one unnamed user allegedly experienced a 16-pin power connector meltdown while experimenting with DLSS 5.
+  - Passage: "At least one user has allegedly reported a 16-pin power connector meltdown while experimenting with DLSS 5."
+- **v12-1-40** (stored attribution: Zacks.com (analyst)): Zacks calculated NVIDIA's return on equity at 96%, compared with Marvell's 17.9%.
+  - Passage: "Moreover, NVIDIA appears more efficient than Marvell at generating profits from shareholders' equity. This is because NVIDIA's return on equity (ROE) of 96% exceeds Marvell's ROE of 17.9%."
+- **v12-1-41** (stored attribution: finance.biggo.com): The five largest AI hyperscalers are expected to spend nearly $800 billion on data centers in calendar 2026.
+  - Passage: "The five largest AI hyperscalers are expected to spend nearly $800 billion on data centers this year alone."
+- **v12-1-42** (stored attribution: fool.com (analyst)): The author calculated that applying roughly 70% growth to the $412 billion fiscal 2027 consensus estimate implies around $700 billion of NVIDIA fiscal 2028 revenue.
+  - Passage: "Grow that by roughly 70%, and fiscal 2028 lands somewhere around $700 billion."
+- **v12-1-43** (stored attribution: Colette Kress, NVIDIA CFO): NVIDIA CFO Colette Kress characterized the fiscal 2028 revenue outlook as supply-constrained, with manufacturing capacity limiting revenue rather than customer demand.
+  - Passage: "She called it "a supply-constrained outlook." Put another way, the limit is manufacturing capacity, not customer demand."
+- **v12-1-44** (stored attribution: fool.com (analyst)): The author expects NVIDIA's earnings to come in more or less as forecast.
+  - Passage: "I think the earnings will show up more or less as forecast."
+- **v12-1-45** (stored attribution: Anthony Di Pizio): The author said semiconductor companies are reporting inflated profit margins because supply shortages let them dictate prices.
+  - Passage: "Most semiconductor companies are currently reporting inflated profit margins because global supply shortages have enabled them to dictate prices."
+- **v12-1-46** (stored attribution: Elon Musk): Elon Musk said xAI expects 220,000 additional Nvidia GB300s to be fully operational next week and another 220,000 in November 2026.
+  - Passage: "Another 220,000 GB300s are expected to be fully operational next week, followed by another 220,000 in November."
+- **v12-1-47** (stored attribution: MarketBeat): MarketBeat says analyst consensus price targets for NVIDIA rose more than 50% over the trailing 12 months and implied about 45% upside from late-September 2026 share prices.
+  - Passage: "As it stands, 55 analysts cover this stock; new coverage is still emerging, and only one Hold rating. Price targets are the operative factor here, with the consensus up more than 50% over the trailing 12 months and forecasting about 45% upside relative to late-September price action."
+- **v12-1-48** (stored attribution: Einride): Einride expects demand for 1,500–2,000 vehicles by 2028, with about 80% potentially suitable for automation.
+  - Passage: "Einride expects demand for 1,500 to 2,000 vehicles by 2028 and says about 80% of that demand could suit automation."
+- **v12-1-49** (stored attribution: Jensen Huang): NVIDIA CEO Jensen Huang said AI supercomputers, despite being energy efficient, will still use a lot of power.
+  - Passage: "The A.I. supercomputers are super energy efficient, but they’re still going to use a lot of power."
+- **v12-1-50** (stored attribution: NVIDIA’s board): NVIDIA’s board approved raising the quarterly dividend from $0.01 to $0.25 per share in May 2026.
+  - Passage: "The chipmaker's board approved a quarterly dividend increase in May, lifting the payout from $0.01 to $0.25 per share."
+- **v12-1-51** (stored attribution: NVIDIA): NVIDIA spent roughly $19 billion on share repurchases in FY2027 Q1 and another $20 billion in FY2027 Q2.
+  - Passage: "The company spent roughly $19 billion on share repurchases in the first quarter and another $20 billion in the second."
+- **v12-1-52** (stored attribution: NVIDIA): NVIDIA Data Center revenue was $89 billion in FY2027 Q2, up 117% year over year.
+  - Passage: "Data Center remained the primary growth engine, with its revenues jumping 117% year over year to $89 billion, indicating continued strength in AI infrastructure demand."
+- **v12-1-53** (stored attribution: AMD management): AMD management forecast that server CPU revenue will grow 70% in 2027.
+  - Passage: "With demand for its CPUs already on the rise, AMD's management recently said the company's CPU server revenue will jump 70% in 2027."
+- **v12-1-54** (stored attribution: Zacks Investment Research): Zacks expected NVIDIA sales to grow 88% in FY2027; it also expected earnings to rise 93.9%.
+  - Passage: "Earnings are expected to rise 93.9% this fiscal year on sales growth of 88%."
+- **v12-1-55** (stored attribution: Elon Musk): Elon Musk said a further 220,000 Nvidia GB300s could come online at xAI by late December 2026, conditionally.
+  - Passage: "Musk added that a further 220,000 GB300s could come online by late December if we get lucky."
+- **v12-1-56** (stored attribution: NVIDIA): NVIDIA’s quarterly dividend cash outlay rose from about $243 million in FY2027 Q1 to approximately $6.0 billion after the increase took effect.
+  - Passage: "During Nvidia's fiscal 2027 first quarter, when the company was still paying the penny dividend, total cash outlays amounted to about $243 million. After the increase took effect, the quarterly dividend bill jumped to approximately $6.0 billion."
+- **v12-1-57** (stored attribution: NVIDIA): NVIDIA reported fiscal Q2 2027 revenue of $96.2 billion, up 106% year over year.
+  - Passage: "Revenue in the fiscal 2027 second quarter (the period ended July 26, 2026) came to $96.2 billion, up 106% over a year earlier."
+- **v12-1-58** (stored attribution: fool.com (analyst)): The author calculated that, if NVIDIA's forward earnings multiple stayed flat, expectations for fiscal 2029 earnings around 28% above fiscal 2028 would correspond to a $290 share price.
+  - Passage: "Hold that multiple of expected earnings flat, and shares hit $290 when expectations for fiscal 2029 are around 28% over fiscal 2028's."
+- **v12-1-59** (stored attribution: Colette Kress, NVIDIA CFO): NVIDIA CFO Colette Kress said the company expects fiscal 2028 revenue to grow roughly 70%.
+  - Passage: "And on the company's late-August earnings call, CFO Colette Kress said Nvidia expects revenue to rise roughly 70% in fiscal 2028, the year ending in January 2028."
+- **v12-1-60** (stored attribution: fool.com (analyst)): The author calculated that NVIDIA traded at around 14 times analysts' fiscal 2028 forward earnings, while a $290 share price would imply a multiple closer to 18, approximately Broadcom's current multiple on the same basis.
+  - Passage: "Nvidia's stock costs around 14 times forward earnings today, using analysts' fiscal 2028 estimates. At $290 per share, that forward price-to-earnings multiple would sit closer to 18 -- around what Broadcom gets today on the same basis."

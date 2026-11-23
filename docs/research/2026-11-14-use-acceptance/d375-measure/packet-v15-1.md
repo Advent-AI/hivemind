@@ -1,0 +1,96 @@
+# Packet v15-1
+
+**The question:** Will China's Ministry of Industry and Information Technology approve domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027?
+
+Due 2027-01-31. Possible answers:
+- 1 Yes: China's Ministry of Industry and Information Technology approves domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027.
+- 2 No: China's Ministry of Industry and Information Technology has not approved domestic firms' purchases of Nvidia RTX Pro 5500 GPUs by January 31, 2027.
+
+**43 statements read on 2026-09-27:**
+
+- **v15-1-1** (stored attribution: trefis.com): Trefis estimated that, on $303 billion of sales over the prior year, each percentage point of NVIDIA gross margin was worth about $3 billion.
+  - Passage: "At $303 billion of sales over the past year, each margin point is worth about $3 billion."
+- **v15-1-2** (stored attribution: LG Electronics): LG joined Nvidia’s global partner network as a preferred partner in power and cooling on 2026-09-27.
+  - Passage: "LG said Sunday that it has joined the Nvidia partner network, or NPN, as a preferred partner in the power and cooling category."
+- **v15-1-3** (stored attribution: Xu Zhijun): Huawei rotating chairman Xu Zhijun said Huawei’s AI-computing product capacity cannot meet all domestic demand in China.
+  - Passage: "Huawei's rotating chairman, Xu Zhijun, said at the Huawei Connect 2026 event in Shanghai that the company's AI computing product production capacity cannot even meet all domestic demand in China."
+- **v15-1-4** (stored attribution: ynetnews.com): The standard RTX 5090 is not officially sold in China; a more limited version is marketed there to comply with U.S. export restrictions.
+  - Passage: "In China, it is in demand for another reason. The standard RTX 5090 is not officially sold there. Instead, a more limited version is marketed to comply with U.S. export restrictions."
+- **v15-1-5** (stored attribution: NVIDIA management): NVIDIA management said its preliminary fiscal 2028 revenue-growth outlook was supply-constrained.
+  - Passage: "Management called that outlook supply-constrained."
+- **v15-1-6** (stored attribution: LG Electronics): LG’s 1-megawatt coolant distribution unit completed Nvidia qualification; the item gives no date.
+  - Passage: "Its 1-megawatt CDU subsequently completed Nvidia qualification as well."
+- **v15-1-7** (stored attribution: Huawei): Huawei began commercial shipments of the Ascend 950PR in March 2026 and targets output of up to 750,000 Ascend units in 2026.
+  - Passage: "The Ascend 950PR entered commercial shipment in March 2026, and Huawei has targeted output of up to 750,000 Ascend units this year."
+- **v15-1-8** (stored attribution: NVIDIA management): NVIDIA management's fiscal Q3 2027 gross-margin guidance had a 73.5% low end.
+  - Passage: "On November 17, watch fiscal Q3 2027 gross margin against 73.5%, the low end of management’s gross margin guide for that quarter."
+- **v15-1-9** (stored attribution: The Information): ByteDance is reportedly considering an order of roughly 1 million Nvidia RTX Pro 5500 chips for AI model operations.
+  - Passage: "ByteDance is considering an order of roughly 1 million RTX Pro 5500 chips to support AI model operations, according to the report."
+- **v15-1-10** (stored attribution: NVIDIA management): NVIDIA management said memory prices had risen more than it expected.
+  - Passage: "Management said memory prices rose more than it had expected."
+- **v15-1-11** (stored attribution: LG Electronics): LG’s 2.6-megawatt coolant distribution unit qualified as an Nvidia DSX Ready CDU earlier in September 2026.
+  - Passage: "Earlier this month, LG’s 2.6-megawatt CDU qualified as an Nvidia DSX Ready CDU, meeting reference design requirements for the chipmaker’s DSX platform, a blueprint for building and operating large-scale AI data centers."
+- **v15-1-12** (stored attribution: Macau customs authorities): Macau customs seized two Nvidia GeForce RTX 5090 graphics cards during an anti-smuggling operation carried out over several weeks before 2026-09-27.
+  - Passage: "During an anti-smuggling operation carried out over the past several weeks, local customs authorities seized, among other items, two Nvidia GeForce RTX 5090 graphics cards."
+- **v15-1-13** (stored attribution: LG Electronics): LG plans to pursue more megawatt-scale AI data center projects in North America, targeting hyperscalers and colocation operators; the item gives no deadline or project amount.
+  - Passage: "With its NPN status, LG plans to pursue more megawatt-scale AI data center projects, particularly in North America, targeting hyperscalers and colocation operators."
+- **v15-1-14** (stored attribution: Volcano Engine): ByteDance cloud unit Volcano Engine said daily token usage for its Doubao model exceeded 180 trillion in June 2026, more than ten times the year-earlier level.
+  - Passage: "Meanwhile, AI usage is surging. ByteDance's cloud unit, Volcano Engine, said in June that daily token usage for its self-developed "Doubao" AI model exceeded 180 trillion, a more than tenfold increase from a year earlier."
+- **v15-1-15** (stored attribution: NVIDIA management): NVIDIA management guided fiscal Q3 2027 revenue to $108 billion, plus or minus 2%.
+  - Passage: "Management has guided revenue to $108 billion , plus or minus 2%."
+- **v15-1-16** (stored attribution: Unnamed Chinese officials, as reported by finance.biggo.com): Chinese officials reportedly told some companies that purchases of Nvidia’s RTX Pro 5500 could be approved, with timing, volume limits and conditions unclear.
+  - Passage: "Officials have told some companies that purchases could be greenlit, though the timing, volume limits and exact conditions remain unclear."
+- **v15-1-17** (stored attribution: LG Electronics): LG secured Nvidia validation for its 600-kilowatt coolant distribution unit in July 2026.
+  - Passage: "In July, LG became the first Korean company to secure Nvidia validation for a 600-kilowatt CDU after the system met more than 100 technical requirements."
+- **v15-1-18** (stored attribution: NVIDIA): NVIDIA set price increases to take effect in fiscal Q1 2028.
+  - Passage: "NVIDIA has already set price increases that take effect in fiscal Q1 2028."
+- **v15-1-19** (stored attribution: finance.biggo.com for the H200 sales figure; Jensen Huang for the market-share statement): Nvidia’s China H200 sales are reported to remain below 1% of data-center revenue; CEO Jensen Huang said Nvidia’s share of China’s advanced AI chip market fell from around 95% to zero as restrictions tightened.
+  - Passage: "Nvidia's China H200 sales remain below 1% of data-center revenue, and CEO Jensen Huang has said the company's share of China's advanced AI chip market effectively fell from around 95% to zero as restrictions tightened."
+- **v15-1-20** (stored attribution: Nvidia): An Nvidia spokesperson said Nvidia continues to face constraints from U.S. export rules covering gaming products and Chinese restrictions on American imports.
+  - Passage: "An Nvidia spokesperson said the company continues to face "dual constraints" from outdated U.S. export rules that cover gaming products released nearly five years ago and Chinese restrictions on American imports."
+- **v15-1-21** (stored attribution: Jeffrey Kessler): In July 2026, Commerce under secretary Jeffrey Kessler told the House Foreign Affairs Committee that roughly $10 billion in approved China H200 licences had yielded only a “very small quantity of chips.”
+  - Passage: "In July, the under secretary of commerce for industry and security, Jeffrey Kessler, told the House Foreign Affairs Committee that roughly $10 billion in approved licences had yielded "a very small quantity of chips," which he called trivial."
+- **v15-1-22** (stored attribution: The Information): China’s Ministry of Industry and Information Technology asked Alibaba and ByteDance to report their planned RTX Pro 5500 purchase volumes and uses; the report says approval may follow.
+  - Passage: "The Ministry of Industry and Information Technology has asked Alibaba Group Holding Limited (BABA) and ByteDance Limited to report how many RTX Pro 5500 units they want to buy and how the chips would be used, signaling that it may approve the transactions, according to The Information."
+- **v15-1-23** (stored attribution: Nvidia, as reported by finance.biggo.com): Nvidia reportedly aims to begin RTX Pro 5500 shipments to China in late December 2026 and supply about 500,000 units per quarter.
+  - Passage: "Nvidia aims to begin shipments in late December and supply around 500,000 units per quarter to China, meaning a single ByteDance order could absorb approximately two quarters of planned output."
+- **v15-1-24** (stored attribution: Jamieson Greer): USTR Jamieson Greer told CNBC that export controls considered national-security issues were taken off the table during the U.S.–China trade talks.
+  - Passage: "USTR Jamieson Greer told CNBC that export controls deemed national security issues were "taken off the table" during trade talks,"
+- **v15-1-25** (stored attribution: NVIDIA management): NVIDIA management expected sales to its largest cloud-company customers to accelerate again in fiscal Q4 2027 as Vera Rubin supply grew.
+  - Passage: "Management expects sales to the largest cloud companies to speed up again in fiscal Q4 2027, as Vera Rubin supply grows."
+- **v15-1-26** (stored attribution: NVIDIA management): NVIDIA management expected supply to remain a bottleneck at least through the end of fiscal 2028.
+  - Passage: "Management expects supply to stay a bottleneck at least through the end of fiscal 2028."
+- **v15-1-27** (stored attribution: How-To Geek author Monica J. White): How-To Geek reported that the retail prices of NVIDIA’s RTX 5060 Ti 16GB and RTX 5070 Ti had risen to around $800 and $1,200, respectively, from launch MSRPs of $429 and $749; the article gives no specific date for the price observations.
+  - Passage: "Just to give you a couple of examples, the RTX 5060 Ti 16GB launched with a $429 MSRP, and it now costs around $800 , while the RTX 5070 Ti launched at $749 but now costs around $1,200 ."
+- **v15-1-28** (stored attribution: NVIDIA): NVIDIA began production shipments of its Vera Rubin data-center system in August 2026.
+  - Passage: "The company began production shipments of Vera Rubin, its newest data center system, in August 2026."
+- **v15-1-29** (stored attribution: NVIDIA): NVIDIA gross margin was 75% in fiscal Q2 2027.
+  - Passage: "It was 75% in fiscal Q2 2027."
+- **v15-1-30** (stored attribution: NVIDIA management): NVIDIA management expected gross margin to bottom at 71% to 72% in fiscal Q4 2027.
+  - Passage: "Management expects gross margin to hit its low in fiscal Q4 2027, at 71% to 72%."
+- **v15-1-31** (stored attribution: finance.biggo.com): Chinese buyers reportedly ordered more than 2 million Nvidia H200 chips for 2026, compared with Nvidia inventory of about 700,000 units.
+  - Passage: "Chinese buyers had ordered more than 2 million H200s for 2026 against Nvidia inventory of about 700,000 units."
+- **v15-1-32** (stored attribution: China’s Ministry of Industry and Information Technology): China’s Ministry of Industry and Information Technology asked Alibaba, ByteDance and other companies about plans to purchase Nvidia RTX Pro 5500 chips, including expected order volumes and uses; the inquiry was reported by The Information.
+  - Passage: "Chinese regulators have asked companies including Alibaba BABA and ByteDance ( BDNCE ) about their plans to purchase the high-end graphics processors, The Information reported, citing people familiar with the matter. The Ministry of Industry and Information Technology has sought details including expected order volumes and how the chips would be used."
+- **v15-1-33** (stored attribution: The Information, citing unnamed people familiar with the matter): China's Ministry of Industry and Information Technology reportedly asked some companies, including potential buyers Alibaba and ByteDance, for RTX Pro 5500 purchase plans and told some firms it intends to approve purchases; the report cited people familiar with the matter and gave no approval date or quantity.
+  - Passage: "The Chinese government has signalled it may allow companies such as Alibaba Group Holding Ltd and ByteDance Ltd to buy Nvidia Corp's new RTX Pro 5500 chips, The Information reported, citing people familiar with the matter. The Ministry of Industry and Information Technology recently asked some companies to report on their plans to purchase the high-end graphics processor released this month, including how many and what they would use the product for, The Information said. The ministry told some of the firms it intends to approve the purchases, it reported."
+- **v15-1-34** (stored attribution: NVIDIA): NVIDIA approved LG Electronics’ 2.5-megawatt coolant distribution unit for deployment on its DSX AI factory platform on Tuesday; the item does not specify the date.
+  - Passage: "LG previously earned Nvidia certification for a 600-kilowatt CDU and a 1-megawatt CDU, followed by its largest unit yet, a 2.5-megawatt CDU approved Tuesday for deployment on Nvidia's DSX AI factory platform."
+- **v15-1-35** (stored attribution: NVIDIA management): NVIDIA management said in August 2026 that rising memory costs would cut gross margin.
+  - Passage: "In August 2026, management said rising memory costs will cut NVIDIA’s gross margin, the share of sales kept after production costs."
+- **v15-1-36** (stored attribution: Chinese officials): Chinese officials reportedly indicated to some companies that purchases of Nvidia RTX Pro 5500 chips are likely to receive approval.
+  - Passage: "According to the report, officials have indicated to some companies that the purchases are likely to receive approval."
+- **v15-1-37** (stored attribution: LG Electronics): LG Electronics joined NVIDIA’s power and cooling partner network for data centers; the item gives no date for the announcement.
+  - Passage: "LG Electronics has joined Nvidia's partner network for the U.S. AI company's power and cooling business for data centers, the Korean company said Sunday."
+- **v15-1-38** (stored attribution: U.S. Justice Department): The U.S. Justice Department recently uncovered a smuggling network that authorities say transferred or attempted to transfer at least $160 million worth of Nvidia H100 and H200 chips to China from October 2024 through May 2025.
+  - Passage: "At the same time, the U.S. Justice Department recently uncovered a smuggling network that authorities say was involved in transferring or attempting to transfer at least $160 million worth of Nvidia H100 and H200 chips to China between October 2024 and May 2025."
+- **v15-1-39** (stored attribution: LG Electronics): LG Electronics plans to expand into building AI infrastructure for customers constructing data centers based on NVIDIA technology; no amount or date was given.
+  - Passage: "With the partnership, the Korean electronics maker plans to expand into building AI infrastructure for customers seeking to construct data centers based on Nvidia's technology."
+- **v15-1-40** (stored attribution: Unnamed people familiar with the matter, as reported by The Information): China’s tech ministry reportedly asked some firms about planned RTX Pro 5500 purchases and told some it intends to approve them; The Information reported the signal on September 27, 2026, citing two people familiar with the matter.
+  - Passage: "China’s government has signalled it may let firms such as Alibaba and ByteDance buy Nvidia’s new RTX Pro 5500 chip. The Information reported the news on Sunday, citing two people familiar with the matter. China’s tech ministry recently asked some firms how many of the chips they plan to buy, and what for, according to the report. The ministry told some of the companies it intends to approve the purchases."
+- **v15-1-41** (stored attribution: NVIDIA management): NVIDIA management expected Vera Rubin to contribute about 20% of data-center revenue in fiscal Q3 2027.
+  - Passage: "Management expects Vera Rubin to bring in about 20% of data center revenue in fiscal Q3 2027."
+- **v15-1-42** (stored attribution: NVIDIA management): NVIDIA management expected the price increases to lift gross margin to 72% to 73% in fiscal 2028.
+  - Passage: "Management expects those higher prices to lift margin to 72% to 73% in fiscal 2028."
+- **v15-1-43** (stored attribution: NVIDIA management): NVIDIA management's preliminary outlook called for total revenue growth of about 70% in fiscal 2028.
+  - Passage: "Management’s preliminary outlook is for revenue to grow about 70% in fiscal 2028."

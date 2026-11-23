@@ -1,0 +1,1077 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6d4-08c1-7c42-b647-d4d132004178
+--------
+user
+You are a blind second reader for a prompt audit. Read-only. Open ONLY these files:
+- docs/research/2026-11-14-use-acceptance/splitting/prompt-audit/split-request-r2.md (the whole request as the model reads it)
+- docs/research/2026-11-14-use-acceptance/splitting/prompt-audit/split-diff-r2.md (exactly what changed against the frozen request)
+- the sources: docs/DECISIONS-log.md entries D38, D397, D436 (search "## D38 ", "## D397 ", "## D436 "), and
+  docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md §2 (the boundary table) and §0b item 2.
+Do not open any other file in the splitting folder.
+
+The change is a new version of an answer-choice step. A topic that asks the value of one quantity for each of two years, this year
+and next, may be declined with a typed case (`one_quantity_two_periods`). Code then re-asks the step once for each year, adding the
+one line shown at the end of the closing check.
+
+The task: list every sentence of the request that decides whether the model declines, which decline case it names, which year it
+asks, or what it lists in `not_judged`. For each sentence, give one verdict against the sources:
+- consistent;
+- contradicts (with another sentence of the request, or with a source);
+- keeps wider than the source;
+- keeps narrower than the source;
+- has no source.
+
+Then check the procedure:
+- Can the model apply the new case without contradicting another sentence?
+- Is the boundary between "two open years asked independently" and "one year asked against the other as a base" clear?
+- Can a part that names the other year AND another limit (a mixed part) be lost under the yearly line?
+- Does any wording name a covered company, its products or its numbers, rather than read the same for every industry?
+
+Report a numbered list of findings, most serious first, each with the exact sentence quoted. End with a one-line summary.
+
+codex
+我会只读取你列出的请求、差异和指定来源，逐句核对拒绝、年份选择与 `not_judged` 的规则。
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/prompt-audit/split-request-r2.md docs/research/2026-11-14-use-acceptance/splitting/prompt-audit/split-diff-r2.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# The split version's request as the model reads it (topic c1/clean-4 of the week of 2026-10-06), revision 2
+
+## System text
+
+You are a senior hedge-fund analyst. A research topic was opened on the company from the item below. Write the one question the topic is judged on: what it asks, its answer ladder and its due day. The ladder is written once, from this item only, and is never rewritten. Write in English.
+
+What the question asks
+- A judged question concerns one figure for a named period or one event. Write a question, not an assertion. A figure or event must be able to determine the outcome on the due date. For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.
+- A topic's wording may ask about more than one thing. Judge the one the topic's outcome names as what is tracked. List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. Never fold two things into one ladder: "Will the regulator approve the drug for a second use, and how many patients will take it in the first year?" is judged on the approval when that is what its outcome names, and the patient count is listed; "How much will the carrier's fuel bill be next year, and will its pilots strike?" is judged on the fuel bill when that is what its outcome names, and the strike is listed.
+- Return no_ladder with the reason, and ladder null, in eight cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason; or the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison, which is this case rather than the first, since each year has its main figure: name the two years in periods, and each year is then asked as its own question. A retailer's store openings in 2026 and in 2027 are this case; its 2027 revenue measured against 2026's is not, and is judged on 2027. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+Whose question it is
+- A question about the company's revenue, profit, share, product progress or its own obligations is about the company: object is its ticker, even when policy or macroeconomics drives it. A question about what happens in the world, such as licensing, interest rates or aggregate spending, rather than the resulting effect on one company, belongs to a theme: object is a theme id from the request's themes. A question whose tracked outcome is a government's or regulator's decision to permit, restrict or ban a class of products or trade belongs to the theme that covers it, also when the product is the company's own: whether a health ministry lifts its import ban on one drug maker's vaccine belongs to the theme that covers that country's drug approvals. When the tracked outcome is the company's own sales, shipments or revenue under such a decision, the question is about the company, as is a proceeding against the company itself, such as an investigation of its conduct or a fine. A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.
+
+The ladder
+- Define concrete, verifiable conditions now. Do not write a ladder whose thresholds depend on an unspecified future target. Conditions must not overlap or leave gaps: exactly one must hold when resolved; avoid vague "partial" outcomes.
+- An event is answered in event, in at most three outcomes. happened is the condition under which the event the question asks about has happened by the due day. ruled_out says who can rule the event as a whole out before the due day, and how: by_whom names the company, authority, court or party whose decision it would be; decision is one full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. The due day arriving without the event is no one's decision and is never written there: it is what is left. ruled_out is null only when no one's decision can rule the event out before the due day. Write no other condition: what is left, neither of the two, needs none, and where both would hold the event counts as happened. A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged. A regulator reviewing a merger gives: happened, the regulator has cleared the merger by the due day; ruled_out, by_whom the regulator or the parties to the merger, decision the regulator blocks the merger or the parties withdraw the filing. An authority's investigation or examination that the question asks to end in a published decision or conclusion always has a ruling out: happened, the authority publishes that decision or conclusion by the due day, whatever it finds; ruled_out, by_whom the authority, decision the authority formally abandons or withdraws the proceeding without it. The proceeding still going on the due day is neither, and a decision to go on with it is not a ruling out. A safety agency examining a carmaker's defect gives: happened, the agency publishes its findings; ruled_out, by_whom the agency, decision the agency formally closes or withdraws the examination without publishing any.
+- A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure. Each range has an inclusive lower bound lo and an exclusive upper bound hi. Money amounts are written in full (12000000000, not 12 billion); percentages use 73, not 0.73. The lowest range has lo null, the highest hi null; every other bound is a number.
+- Fill exactly one of event and figure; the other is null.
+- reference is what this figure or event is measured against when the topic opens, quoted in the item's own words. Its kind is expected when the item states what the market expects: a consensus, the company's guidance, the stated plan or deadline. For a figure only, when the item states no expectation and gives the amount most recently reported for the same quantity (the same thing measured the same way: not a part of it, a ceiling on it or another quantity), that amount is the reference and its kind is last_reported; a reported amount is never called an expectation. Otherwise reference is null. value is the number the item states, with value_to its upper end when the item states a range; when the item gives it in words alone, value is null: never supply a number the item does not state. The ranges of a figure state the outcome against a reference that has a value: the middle range holds that value, or runs from at or below a stated range's lower end to at or above its upper end, and the ranges on either side are outcomes above and below it. When reference is null or has no value, the ranges are your own estimate of the outcomes that could happen.
+- favourable_end, for a figure about a company: higher when a higher outcome is good for its business, lower when a lower one is, with one sentence why. A result and its direction are separate: capital spending can build capacity or hurt returns. For an amount the company owes, guarantees or has committed to pay, when neither the topic nor the item settles which end is good for the business, because they argue both ends or say nothing on it, it is lower; when the topic's own words say that more of it is good, it is higher. A retailer's lease guarantees that the item says win store sites and also weigh on its credit are lower; an airline's aircraft purchase commitments that the topic tracks as the fleet growth its plan needs are higher. For a theme's figure it is n/a.
+
+The due day
+- Set the due day when the question can be resolved. It falls after the item's day, and on or after the day the material that settles the question is published.
+- For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published. Company figures use the company's fiscal year: "this year" contains the item's publication day, and "next year" follows it; convert fiscal years using the fiscal-year note. Other figures use calendar years.
+- For an event, name the date at which its outcome is assessed: stated when the topic or the item gives it; period_end when it is the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision that has no date.
+- When the topic's opens_as is binding_obligation, the due day is at most 548 days (18 months) after the item: for an obligation already taken on, its next annual filing; for one not yet signed, the day by which the signing can be checked.
+
+
+## User message (payload, then the closing check)
+
+{"company": "NVDA", "fiscal_year_note": "NVDA's fiscal year ends in month 1 and is named for the calendar year in which it ends: FY2027 runs from 2026-02 to 2027-01; the publication day 2026-10-06 falls in FY2027, so this year is FY2027 and next year is FY2028; FY2027's full-year figures are published in the annual report around 2027-02; use that day as the due date.", "themes": [{"id": "chip-export-controls", "name": "Chip export controls"}, {"id": "ai-capex", "name": "AI capital spending"}, {"id": "custom-silicon", "name": "Custom silicon at cloud providers"}, {"id": "semiconductor-cycle", "name": "Semiconductor cycle"}, {"id": "fed-policy-rate", "name": "Fed policy rate"}, {"id": "us-inflation", "name": "US inflation"}, {"id": "us-recession-risk", "name": "US recession risk"}, {"id": "us-china-tariffs", "name": "US–China tariffs"}, {"id": "taiwan-strait", "name": "Taiwan Strait"}, {"id": "middle-east-conflict", "name": "Middle East conflict and oil prices"}, {"id": "russia-ukraine-war", "name": "Russia–Ukraine war"}, {"id": "supply-chain-shift", "name": "Supply-chain shift and shipping"}], "thesis": {"id": "clean-4", "description": "How much combined capital expenditure will the five largest hyperscalers — Amazon, Alphabet, Microsoft, Meta Platforms and Oracle — spend in calendar 2026 and calendar 2027?", "outcome": "The big five hyperscalers' combined capex for calendar 2026 and calendar 2027, versus the approximately $800 billion for 2026 and roughly $1.3 trillion for 2027 the article reports they plan to spend.", "period": "Calendar 2026 and calendar 2027 (the two years the Oct. 6, 2026 article gives), settled at the hyperscalers' quarterly earnings releases reporting capex through the fourth quarter of 2027.", "opens_as": "shared_quantity", "settled_by": "The five hyperscalers' quarterly earnings releases and 10-Q/10-K cash-flow disclosures of purchases of property and equipment, aggregated by calendar year."}, "item": {"publication_date": "2026-10-06", "publisher": "fool.com", "title": "Prediction: $500 a Month Invested in Nvidia Stock Will Be Worth This Much by Year-end 2030", "text": "Artificial intelligence (AI) has created some enormous multibaggers for investors, but none are quite on the same level as Nvidia ( NVDA +2.48% ) . When ChatGPT helped ignite the generative AI boom in late 2022, Nvidia was worth less than $400 billion. Today, the chipmaker's market capitalization has ballooned to roughly $5.6 trillion -- making it the most valuable company in the world .\nThis parabolic ascent shows how Nvidia evolved from a generic semiconductor company known for gaming GPUs into the undisputed king of AI infrastructure. Let's assess what might happen if you invested $500 in Nvidia every month from now through the end of 2030. Spoiler alert: Big gains could be in store.\nHow big can Nvidia get?\nBefore crunching any numbers, I need to come up with a baseline of where Nvidia might be headed over the next several years. The company generated $96.2 billion in revenue during its most recent quarter, representing a staggering 106% increase from the prior year. Even more impressive, Nvidia's data center business generated $89 billion, growing 117% year over year.\nThe next chapter is already quietly unfolding. Nvidia's Vera Rubin architecture is moving into full production. The company says the platform can deliver 10x the agentic AI throughput of its previous generation Grace Blackwell architecture. This matters because AI spending is moving beyond simply training large language models (LLMs). Reasoning models, AI agents , robotics, and other inference workloads require enormous amounts of continuous computing power.\nMeanwhile, infrastructure commitments from big tech are getting larger. The big five hyperscalers -- Amazon , Alphabet , Microsoft , Meta Platforms , and Oracle -- plan to spend approximately $800 billion in capital expenditures (capex) in 2026 alone and roughly $1.3 trillion in 2027. Meanwhile, Anthropic has reportedly committed at least $518 billion to AI infrastructure over the next decade.\nNvidia is also expanding how it can monetize data centers. The company isn't merely selling GPUs anymore. AI factories now combine GPUs with other solutions from Nvidia, including CPUs, NVLink, networking, BlueField data processing units, storage infrastructure, and software platforms like CUDA .\nI think complementing the legacy GPU business with adjacent solutions should help Nvidia expand its market share in the data center realm. Against this backdrop, I think the company can rise from a $5.6 trillion market value today to $15 trillion by 2030.\nWhat investing $500 a month in Nvidia looks like\nAn investor putting $500 into Nvidia every month would invest $6,000 over the course of a full year. Assuming the strategy begins in October 2026 and continues through December 2030, the contributions would total $25,500.\nUnfortunately, calculating the ending value isn't as simple as multiplying $25,500 by Nvidia's expected return. The reason is because you will be using a dollar-cost averaging strategy over the lifetime of the investment. This means the initial $500 invested in October 2026 has more than four years to appreciate, while a $500 investment made near the end of 2030 has almost no time to compound.\nIf I assume Nvidia's market capitalization rises gradually from $5.6 trillion to $15 trillion by the end of 2030, that works out to a 163% cumulative increase, or roughly 26% annualized or 1.9% per month when compounded. While this is a bit aggressive, I think it is also a reasonable upside scenario considering it's nowhere near the returns Nvidia generated during earlier stages of the AI boom.\nIf I run the calculated return across all 51 monthly investments, the $25,500 investment could finish 2030 worth approximately $43,400. That represents roughly $17,900 in investment gains, or 70% upside.\nObviously, no one knows what Nvidia will be worth four years from now. If the company reaches a $10 trillion valuation by the end of 2030, the same $500 per month strategy would grow to roughly $34,400. If the AI infrastructure supercycle sends Nvidia all the way to $20 trillion, the investment could approach $51,600 -- nearly a 100% gain.\nThe first takeaway here is that Nvidia has enough structural tailwinds to support meaningful share price appreciation over the next several years. The second takeaway is to understand is that my estimates assume Nvidia's share price generally follows a smooth, compounded path toward the 2030 target.\nIn reality, the stock's movement will almost certainly be messier. This means the price could rise or fall significantly from month to month. That's actually the entire point of dollar-cost averaging: rather than trying to time the market and predict exactly when Nvidia's stock will rise or fall, investors consistently put the same amount of money to work. For someone investing consistently every month, patience will ultimately matter just as much as finding the right opportunities.\nBy Adam Spatacco – Oct 6, 2026 at 12:00PM EST"}}
+
+Before you return the answer, check it once. Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged? For a figure, check that each range starts exactly where the one below it ends. For an event, check that happened is the event the question asks about; that ruled_out names who decides and a decision of theirs against that event as a whole or its abandonment, never the due day arriving or the event merely being still awaited, and is null only when no one's decision can rule the event out; and that each can be checked on the due day. Check that a reference's kind says truly whether its words state an expectation or the amount already reported for the same quantity, that its value is the number its words state, and, for a figure, that the value falls in the middle range, or that the middle range runs from at or below a stated range's lower end to at or above its upper end, that every bound is a figure and not a future target, and that the due day follows the rules above. For an amount the company owes, guarantees or has committed to pay, check that favourable_end is lower unless the topic or the item settles the other end or the topic's own words say that more of it is good. Correct the answer where a check fails.
+
+## The yearly re-ask: the one line added after the closing check (for 2026; the 2027 one swaps the years)
+
+Write the question for 2026 only: this topic is split by year. The value for 2027 is asked as its own question, so the two-year decline case does not apply here, and that value is not a part this question leaves out; list every other part as before, including a condition or comparison that names 2027.
+
+## Response schema (strict)
+
+{
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "no_ladder",
+  "ladder"
+ ],
+ "properties": {
+  "no_ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "case",
+      "reason",
+      "periods"
+     ],
+     "properties": {
+      "case": {
+       "type": "string",
+       "enum": [
+        "no_main",
+        "not_checkable_on_a_date",
+        "quarter_or_half_year",
+        "not_one_year_period",
+        "year_ended",
+        "beyond_next_year",
+        "another_company_or_uncovered_matter",
+        "one_quantity_two_periods"
+       ]
+      },
+      "reason": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "Why this case applies, naming the words that decide it."
+      },
+      "periods": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       ],
+       "description": "The two years, for one_quantity_two_periods only; null for every other case."
+      }
+     }
+    }
+   ],
+   "description": "Why no judged question is written, as one case of this closed set, or null: no_main: the topic has no main figure or event (none, or several with none the main one); not_checkable_on_a_date: nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); quarter_or_half_year: a company's figure for a quarter or a half-year; not_one_year_period: a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; year_ended: a figure for a year that has already ended on the item's day; beyond_next_year: a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); another_company_or_uncovered_matter: the question belongs to another company or to a matter no listed theme covers (name it); one_quantity_two_periods: the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison (this case, not no_main): name the two years in periods, written as a figure's year is written (2026, or FY2027); each year is then asked as its own question. Exactly one of no_ladder and ladder is null (checked by code)."
+  },
+  "ladder": {
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "question",
+      "object",
+      "not_judged",
+      "event",
+      "figure",
+      "reference",
+      "due_day",
+      "due_day_basis"
+     ],
+     "properties": {
+      "question": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The one judged question: one figure for a named period, or one event. For a figure it names the period covered or the day measured at, and the material that settles it."
+      },
+      "object": {
+       "type": "string",
+       "pattern": "\\S",
+       "description": "The company's ticker, or a theme id from the themes listed in the request. Nothing else: a question with another object is returned as no_ladder."
+      },
+      "not_judged": {
+       "type": "array",
+       "description": "Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.",
+       "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+         "part",
+         "why"
+        ],
+        "properties": {
+         "part": {
+          "type": "string",
+          "pattern": "\\S"
+         },
+         "why": {
+          "type": "string",
+          "pattern": "\\S"
+         }
+        }
+       }
+      },
+      "event": {
+       "description": "For an event; else null. Exactly one of event and figure is not null (checked by code).",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "happened",
+          "ruled_out"
+         ],
+         "properties": {
+          "happened": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The condition under which the event the question asks about has happened by the due day."
+          },
+          "ruled_out": {
+           "description": "Who can rule the event as a whole out before the due day, and how. Null only when no one's decision can. No condition is written for what is left.",
+           "anyOf": [
+            {
+             "type": "null"
+            },
+            {
+             "type": "object",
+             "additionalProperties": false,
+             "required": [
+              "by_whom",
+              "decision"
+             ],
+             "properties": {
+              "by_whom": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "The company, authority, court or party whose decision it would be."
+              },
+              "decision": {
+               "type": "string",
+               "pattern": "\\S",
+               "description": "One full sentence that names them and says what they decide against the event as a whole, or that they formally abandon or withdraw it, after the item's day. Never the due day arriving without the event."
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "figure": {
+       "description": "For one figure: its unit, the year it covers, exactly five ranges and, for a company, the favourable end; else null.",
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "unit",
+          "year",
+          "ranges",
+          "favourable_end",
+          "favourable_why"
+         ],
+         "properties": {
+          "unit": {
+           "type": "string",
+           "enum": [
+            "USD",
+            "percent",
+            "count",
+            "GW",
+            "MW",
+            "TWD",
+            "multiple",
+            "other"
+           ],
+           "description": "other when the unit is none of the listed; the question then names it."
+          },
+          "year": {
+           "type": "string",
+           "pattern": "^(FY)?\\d{4}$",
+           "description": "The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year). Code refuses the other form."
+          },
+          "ranges": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+             "lo",
+             "hi"
+            ],
+            "properties": {
+             "lo": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Inclusive lower bound, a number; null for the lowest range only."
+             },
+             "hi": {
+              "anyOf": [
+               {
+                "type": "number"
+               },
+               {
+                "type": "null"
+               }
+              ],
+              "description": "Exclusive upper bound, a number; null for the highest range only."
+             }
+            }
+           }
+          },
+          "favourable_end": {
+           "type": "string",
+           "enum": [
+            "higher",
+            "lower",
+            "n/a"
+           ],
+           "description": "For a company's figure: higher or lower, the end that is good for its business (n/a is refused). For a theme's figure: n/a (higher or lower is refused)."
+          },
+          "favourable_why": {
+           "type": "string",
+           "description": "For a company's figure: one sentence on why that end is good for the business; it may not be empty. For a theme's figure: empty."
+          }
+         }
+        }
+       ]
+      },
+      "reference": {
+       "anyOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "additionalProperties": false,
+         "required": [
+          "words",
+          "kind",
+          "value",
+          "value_to"
+         ],
+         "properties": {
+          "words": {
+           "type": "string",
+           "pattern": "\\S",
+           "description": "The item's own words for what the figure or event is measured against."
+          },
+          "kind": {
+           "type": "string",
+           "enum": [
+            "expected",
+            "last_reported"
+           ],
+           "description": "expected: what the market expects. last_reported: for a figure only, the amount most recently reported for the same quantity, when the item states no expectation."
+          },
+          "value": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The number the item states, in the figure's unit; the lower end of a stated range. Null when the item gives it in words alone."
+          },
+          "value_to": {
+           "anyOf": [
+            {
+             "type": "number"
+            },
+            {
+             "type": "null"
+            }
+           ],
+           "description": "The upper end of a stated range; else null."
+          }
+         }
+        }
+       ]
+      },
+      "due_day": {
+       "type": "string",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "due_day_basis": {
+       "type": "string",
+       "enum": [
+        "stated",
+        "period_end",
+        "expected_publication"
+       ],
+       "description": "For a figure: stated or expected_publication. For an event: stated, or period_end (the last day of the period the topic names, or the company's current fiscal year-end for a pending regulatory decision with no date)."
+      }
+     }
+    }
+   ]
+  }
+ }
+}
+# What the split version changes in the frozen request (revision 2)
+
+## System text
+
+Before: Return no_ladder with the reason, and ladder null, in seven cases:
+
+After: Return no_ladder with the reason, and ladder null, in eight cases:
+
+## System text
+
+Before: covers, in which case name that company or matter in the reason. Do not rewrite
+
+After: covers, in which case name that company or matter in the reason; or the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison, which is this case rather than the first, since each year has its main figure: name the two years in periods, and each year is then asked as its own question. A retailer's store openings in 2026 and in 2027 are this case; its 2027 revenue measured against 2026's is not, and is judged on 2027. Do not rewrite
+
+## Schema `no_ladder`
+
+Before:
+
+{
+ "anyOf": [
+  {
+   "type": "string",
+   "pattern": "\\S"
+  },
+  {
+   "type": "null"
+  }
+ ],
+ "description": "Why no judged question is written, or null: the topic has no main figure or event (none, or several with none the main one); nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); a company's figure for a quarter or a half-year; a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; a figure for a year that has already ended on the item's day; a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); or the question belongs to another company or to a matter no listed theme covers (name it). Exactly one of no_ladder and ladder is null (checked by code)."
+}
+
+After:
+
+{
+ "anyOf": [
+  {
+   "type": "null"
+  },
+  {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "case",
+    "reason",
+    "periods"
+   ],
+   "properties": {
+    "case": {
+     "type": "string",
+     "enum": [
+      "no_main",
+      "not_checkable_on_a_date",
+      "quarter_or_half_year",
+      "not_one_year_period",
+      "year_ended",
+      "beyond_next_year",
+      "another_company_or_uncovered_matter",
+      "one_quantity_two_periods"
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "pattern": "\\S",
+     "description": "Why this case applies, naming the words that decide it."
+    },
+    "periods": {
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     ],
+     "description": "The two years, for one_quantity_two_periods only; null for every other case."
+    }
+   }
+  }
+ ],
+ "description": "Why no judged question is written, as one case of this closed set, or null: no_main: the topic has no main figure or event (none, or several with none the main one); not_checkable_on_a_date: nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); quarter_or_half_year: a company's figure for a quarter or a half-year; not_one_year_period: a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; year_ended: a figure for a year that has already ended on the item's day; beyond_next_year: a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); another_company_or_uncovered_matter: the question belongs to another company or to a matter no listed theme covers (name it); one_quantity_two_periods: the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison (this case, not no_main): name the two years in periods, written as a figure's year is written (2026, or FY2027); each year is then asked as its own question. Exactly one of no_ladder and ladder is null (checked by code)."
+}
+
+## The yearly re-ask's added line
+
+Write the question for {year} only: this topic is split by year. The value for {other} is asked as its own question, so the two-year decline case does not apply here, and that value is not a part this question leaves out; list every other part as before, including a condition or comparison that names {other}.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'from pathlib import Path
+p=Path(\"docs/DECISIONS-log.md\").read_text()
+for n in (38,397,436):
+ s=p.find(f\"## D{n} \"); e=p.find(\"\\n## D\",s+1); print(p[s:e if e"'!=-1 else None])
+p=Path("docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md").read_text()
+for line in p.splitlines():
+ if line.startswith("#"): print(line)
+print(p)'"'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+## D38 · 2026-10-20 · The views database rebuilt: a view is a question with a five-rung ladder and a due date
+
+- By: Alex, over the rebuild discussion logged in `docs/views-rebuild-log.md` (steps 1–13). On the unit: "这个 hypo 更像是一个
+  thesis with a state"; on rungs: "我们用 5 个 state 吧 very bullish, bullish, neutral, bearish, very bearish"; on kinds: "有些事情不一定对所有人都是
+  bull / bear，有可能完全相反！……这个需要明确分开来看"; on one layer: "一条观点一定是有一个明确的 ladder 和到期日，这样才构成一个观点呀";
+  on periods: "这个肯定要写清楚日期", then yes to one view per year (this year and next); on chains: "是不是用 linked list 来存储 lineage 就好";
+  on the reading rule and the remaining fixes: "looks right".
+- Decides:
+  - A view is one question, a ladder of five fixed rungs and a due date, never rewritten. It looks at one number (which
+    year, whether a period amount or a point-in-time value, and the source it is answered from) or the state of one
+    thing (scope and stage). An object view's identity is its object plus what it looks at; a theme view's identity is
+    only what it looks at (the theme is where it is filed), so theme views are compared across all themes. A view looks
+    at one thing: a question that needs a number and an event is two views joined by a dependency; a question whose
+    parts can move in opposite directions is two views, joined only if one really depends on the other.
+  - Object views (companies, crypto, commodities) have the rungs strongly bullish to strongly bearish, meaning good or
+    bad for the business, fixed at creation. Theme views have five outcomes on one axis, named by outcome, with no
+    bull or bear; each dependent object view's arrow says which end is bullish for it. The stance on the price is our
+    state against the consensus, which is not designed yet.
+  - Each rung is an observable yes-or-no condition; rungs do not overlap, cover every outcome, and exactly one holds at
+    the due date; there is no "partial". A number ladder is ranges of one number in its stated year, judged by code;
+    an event ladder is the states one thing can be in on the due date, judged by the model from "happened" evidence
+    only, citing it. The model sets the rungs when the view is created; they do not change before the due date.
+  - The due date is when the debate is settled, usually 6–12 months out; a number's due date is the day it is
+    published; quarterly reports in between are evidence. Number views carry their year (fiscal year for companies,
+    calendar year otherwise) and at most this year's and next year's are open at once. The year counts from the latest
+    publication day among the items processed so far, which only moves forward (never the wall clock); a year whose
+    period has ended gets no new view. An event view is one open view per thing. (Claude's reading of "this year", to be
+    confirmed by Alex.)
+  - Two positions on a ladder: where it is now (a fact; only "happened" evidence moves it; a point-in-time number takes
+    the latest published value, a period amount has none before it is published) and the state (where we think it
+    lands; re-judged by the model each time from all of the view's evidence and its dependencies' current state, never
+    stepped from the last state; citations checked by code; temperature set in Config). A replay reads the stored
+    judgements; it does not call the model again.
+  - Evidence is a sentence or number, stored once, with its source and tier (happened, said by a party, third-party
+    view, rumour); independent sources are counted by original source; the direction it pushes is written on the link
+    between evidence and view by each re-judgement.
+  - A dependency B → A carries one direction (which end of A is bullish for B; between themes, same or opposite). A
+    relation that looks good-then-bad means a middle view is missing. Notices pass, evidence never does; code marks
+    B's evidence that is also linked to A. A number dependency is pinned to its year (a closed A is read by its answer;
+    an A not yet created is waited for and connected when created; an unanswerable A is a missing input, never
+    neutral); an event dependency follows A's chain. A new view may depend on theme views (found by search) or on
+    another object's views (supply chain). B is told when A changes rung, when what B reads changes, or when A cannot
+    be answered. No cycles, checked on the graph each
+    round reads. A new theme view that succeeds nothing is checked against every open view for missing arrows.
+  - Succession: the next view on the same thing succeeds the last one, forming a chain that holds the lineage; no
+    forks; the successor keeps the rung orientation; a wrong succession is revoked by an appended record; a successor
+    proposes its predecessor's dependencies one year on.
+  - A view ends answered (the first published value from its stated source; the score compares it with the last state
+    committed before the item carrying the answer was processed), unanswerable (with its reason, not scored; a
+    processing failure is retried, not unanswerable) or merged. A view whose object leaves the universe is closed as
+    unanswerable for now; whether it is scored is open.
+    A number view past its period and waiting for its answer does not count against the two open years.
+- Replaces: D26's structure (object → driver → view with a claim, direction, horizon class, confirm and falsify
+  conditions and a premise); D30's add-only conditions, conflict trigger and consensus-by-code (open again); D31's
+  premise links with a seen version.
+- Enforced: `VIEW_TREE`, `VIEW_KINDS`, `KIND_NOTE`, `LADDER_EXAMPLES`, `LADDER_RULES`, `POSITIONS`, `TIERS`, `TIER_RULES`,
+  `DEPENDENCY_TREE`, `DEPENDENCY_RULES`, `CHAIN_RULES`, `LIFECYCLE_TREE`, `LIFECYCLE_NOTES`, `VIEW_FIELDS`, `EVIDENCE_FIELDS`
+  of `docs/system-design/new-facts.js`; the views node of `docs/system-design/new-design.js`; `docs/prd/06-views.md`.
+- Changed by D42: a yes-or-no question has two rungs; a re-judgement reads the view's evidence that has not been
+  replaced, and a round that brought only repeats and no dependency change does not re-judge; "replaced" also covers a
+  later statement by the same speaker and an official confirmation or denial of a rumour; a dependency links only an
+  input (B's answer uses A's answer), and a cycle is rewritten.
+- Changed by D45: what stands is what points to Alex's words or an earlier decision: a view as a question, a
+  ladder of five rungs (two for yes or no) and a due date where the debate resolves; object and theme views; the
+  state judged by the model from all evidence not replaced and from the dependencies; evidence stored once with its
+  push on the link; tiers (D30); dependencies with arrows read by kind; succession as a chain; this year's and next
+  year's number. Where it is now, how rungs are written and judged, answer sources, how the years are counted, the
+  details of log step 13, unanswered and waiting views, and how answers are scored are proposals (D45).
+- Changed by D51: B is re-judged when what it reads changed (its evidence, or a dependency's conclusion marked
+  changed), not only when A changes rung.
+## D397 · 2026-11-10 · A topic that asks more than one thing gets one judged question; the other parts are shown as not judged
+
+- **Asked**, after the review council on the Step 4 design (round log §69; two blind readers found 12 to 16 of the 34 opened theses
+  asking more than one thing): "新系统自己开的 34 道题里，有 12–16 道一题问了两件事（例如：英伟达会不会给 OpenAI 的俄亥俄数据中心签担保——金额多少？）。给这种题写答案分段时，怎么处理？"
+  - Options:
+    - judge only the main thing and show the rest as not judged (recommended). The option stated its costs: those parts have no
+      answer for now; three memory topics with no main part get no answer; and it departs from his 2026-10-20 rule that a question
+      looks at one thing and two things are two questions (D38), recorded as a gap to fill;
+    - split into two questions, each judged, as D38 says;
+    - do not judge such a topic until Step 1 opens it as one thing.
+  - Alex: "只判主要那件 (Recommended)".
+- **Decided:**
+  - In the clean Step 4's ladder step, a thesis gets at most one judged question: the part its `outcome` names. Every other part of
+    its wording is listed and shown beside the answer as not judged.
+  - A thesis with no main part gets no judged question, with the reason recorded.
+  - For a topic that holds two real bets this departs from D38 until splitting is built. It is an open defect, sized by the first
+    test: readers mark each part left out as a bet an analyst would hold or not.
+- **Scope:** the clean path's ladder step only. D38 stands for production.
+
+## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+
+- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+  - Alex: "算一个题，第三处不改 (Recommended)".
+- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+- **Scope:** clean Step 1; c8 stays in force.
+
+# The period split, design v4 (D615; v1 to v3 refused in council rounds 155 to 157), 2026-11-16, $0
+## 0. What changed from v1 (round 155)
+## 0b. What changed from v2 (round 156)
+## 0c. What changed from v3 (round 157); this section governs where earlier sections differ
+## 1. The unit, ownership and the writer path
+## 2. The boundary and every outcome
+## 3. The measurement (a product rule, apart from the official gate)
+## 4. The stop condition
+# The period split, design v4 (D615; v1 to v3 refused in council rounds 155 to 157), 2026-11-16, $0
+
+**What it repairs:** the open defect D397 names, for one kind only. A topic that tracks **one quantity in two years** (D38: "one view a
+year") is refused today as having "several figures, none the main one". Two worthwhile bets are lost. Example: the five largest
+hyperscalers' capex in calendar 2026 and in calendar 2027.
+
+**What it does not claim:**
+- it moves no gate: the official 44 hold no such topic;
+- it does not touch D436's second sides, two-thing stakes or several products;
+- it departs from D397's "at most one judged question per topic" for this one case only, as §1 names. That departure is recorded as a
+  council decision under D439 before any build, reversed on Alex's word.
+
+## 0. What changed from v1 (round 155)
+
+- **The split now needs both years open,** this year and next (D38's "at most this year's and next year's"). A topic naming an ended
+  year is never split, so v1's "an ended child equals an ordinary answer" is gone.
+- **Steps 1 to 3 are untouched.** The parent stays the only topic; the split is two yearly views of it. That is a named, narrow
+  departure from D397.
+- **The page sees two ordinary views and no new state.**
+- **Partial results, the measurement's denominators and the treatment of the 44 are specified.**
+
+## 0b. What changed from v2 (round 156)
+
+1. **Every yearly attempt has its own identity.** `clean_ladders` gains a non-null `period` column, and its key becomes (`thesis_id`,
+   `period`):
+   - an unsplit thesis keeps one row with `period = ''`, as today's rows are read;
+   - a split parent has its `''` row with status `split` and the two years in its answer;
+   - each yearly attempt has a row with `period = 'Y'`, whatever its outcome, and its view or none.
+   - **Every reader is specified:**
+     - `bundle.ladder_row` reads by `view_id`, unchanged, since a yearly view's row is unique;
+     - `stage_b/control_theses.py`, which reads one row per thesis, reads the `''` row. On status `split`, it reads the yearly rows and
+       treats each written yearly view as its own candidate for comparison with the ruler's question of that year, and an unwritten
+       year as having no view;
+     - the writer (`ladder_adapter.open_thesis`) writes the rows.
+     - A search of `clean_ladders` over `src/`, `scripts/` and `clean-arch/` finds no other code reader.
+2. **"Not judged" depends on the result:**
+   - **both years written:** neither view lists the other year;
+   - **one written (2026), the other refused:** the 2026 view lists "calendar 2027: no question written (<the refusal's reason>)" as
+     not judged;
+   - **neither written:** no view, and both refusals recorded on their rows.
+   - The list is fixed when the views are written, in the same article, and the bundle and page tests cover all three states.
+   - **Yearly view ids (D619):** `v`, 0, the topic's number and the four-digit year (`v042026`): digits only, as the frozen judge
+     reads `v\d+`, and never equal to an ordinary id, because the writer refuses a topic id that is not `clean-` and a number without
+     a leading zero (Step 1's counter; every stored id has that form). Readers that map a view to its topic by id refuse a split store
+     (BUILD-RESULT.md, "Round 160").
+   - **Who decides (D618):** whether a part is the other year's quantity is meaning, so the model is told in the yearly line ("{other}
+     is asked as its own question, so do not list it as a part this question leaves out"). Code passes the model's parts unchanged
+     and adds only the year that has no question. The probe's reading measures whether the model obeys.
+3. **The transaction and recovery boundary, from the code:**
+   - **The model calls** (the parent's, then each year's) run in the answer-choice step's runner. Each pass has its own archive, and
+     the thesis's outcome line is written to `outcomes.jsonl` only after both yearly calls have returned.
+   - The runner refuses an existing folder, and a stopped run is never started again (`stage_a.py` header). A crash after either call
+     therefore leaves an incomplete run that is not resumed: no paid call is repeated and no outcome line is half-written.
+   - **The writer** writes the parent's row, the yearly rows and their views in `open_thesis`, inside the article's commit, before
+     judging. Its replay refuses an existing output folder, and an incomplete draw is never continued.
+   - So a crash before the article's commit leaves none of these rows. A crash after it leaves the article's rows complete, in a run
+     marked incomplete and not continued.
+   - **The real-path proof** is a crash injected after the first yearly row's insert in `open_thesis`: the store then holds no row of
+     that article. v2's "day atomicity" wording was wrong; it is article-level.
+4. **The reading verdict is decisive.**
+   - **Vetoes:** on any yearly ladder of T or M, a failing Q, O, R, L or N settled by both families (the gate's hard lines), a base-year
+     question, or a lost qualification. On a C1 ladder, a hard-line fault that the frozen arm's ladders of that topic do not show.
+   - **Both countings:** a lead must hold with unresolved points counted for the answer and counted against it. A lead under one only
+     is inconclusive.
+   - **Incomplete readings:** a missing third ruling, a missing first-reader row or a missed plant voids the reading (no verdict).
+   - A refused yearly attempt counts in T's rule, not as a reading fault.
+   - A control whose frozen sends disagree on kind is reported as **unexercised** for the kind rule; the case rule still applies to it.
+5. **The spend bound:**
+   - parent calls: 14 topics × 3 sends × 2 arms = 84;
+   - yearly re-asks: up to 2 per new-version send that names the case, at most 84;
+   - one retry per call.
+   - That is at most about 336 calls at about $0.001 each, under a **ceiling of $0.40** on its own ledger, inside D439's remainder.
+
+## 0c. What changed from v3 (round 157); this section governs where earlier sections differ
+
+1. **The key is (`thesis_id`, `period`) everywhere,** with `period` non-null: `''` for an unsplit thesis and a split parent, `'Y'` for a
+   yearly attempt. **Every code reader of `clean_ladders`** (searched in `src/`, `scripts/`, `clean-arch/`, `docs/research/`):
+   - `src/hivemind/bundle.py` (`ladder_row`, by `view_id`): unchanged and applicable, since a yearly view's row is unique;
+   - `stage_b/ladder_adapter.py`: the writer, which writes the rows;
+   - `stage_b/control_theses.py` (one row by thesis), `stage_b/stage_b_count.py` (counts `status = 'ladder'`),
+     `stage-b-controls/control_census.py` and `not-judged-display/page_store.py` (research scripts reading one row by thesis or every
+     row): **these are the frozen Stage B accounting and research readers. Each refuses, by name, a store holding any row with
+     `period != ''`.** The split is not silently mapped onto the control line. In Stage B it stays a diagnostic until a separately
+     reviewed mapping (each yearly view to a frozen question, unmatched years, duplicates, denominators) exists.
+   - `stage_b/mutants.py` names the writer's insert line, and its mutant is updated with the line.
+   - The probe is of the answer-choice step only, and does not use these readers.
+2. **Failure display, truthful:**
+   - a yearly attempt the model declined shows "calendar Y: no question written (<the model's own reason>)";
+   - one whose answers failed the step's checks twice shows "calendar Y: no question written (the answers failed the step's checks
+     twice)", in code's words, never as the model's explanation.
+3. **One verdict rule:** §0b item 4's is authoritative and §3's older verdict is replaced by it.
+   - Counting **for:** an unresolved mark holds. Counting **against:** it fails.
+   - A lead must hold under both.
+4. **The population is 13 topics:** T 2, C1 6, C2 2, C3 2, M 1. **Spend:**
+   - parent calls: 13 × 3 sends × 2 arms = 78;
+   - yearly re-asks: at most 2 for each of the new version's 39 sends, so 78;
+   - with one retry per call, at most 312 calls.
+   - **The ceiling ($0.40)** is enforced by the answer-choice runner's existing spending limit: one limit for every request, reserved
+     before each call and charged from the returned tokens or the reserve, stopping every worker at the first refusal (`stage_a.py`
+     header; `budget`).
+   - The yearly re-asks go through the same caller and limit.
+   - **A $0 test** shows a cap below the parent and yearly total stopping before it is passed, with workers running concurrently.
+
+## 1. The unit, ownership and the writer path
+
+- **The topic:** the parent thesis stays the one topic Steps 1 to 3 know (its id, its links, Step 1's list of open theses, Step 3's
+  library, revisions). No child topic exists upstream, so later matching, revisions and links find the parent as today. This avoids
+  changing Step 3's frozen library (D427).
+- **The views:**
+  - the answer-choice step writes one view per year for the parent, `v12@2026` and `v12@2027`, each with its own year, question,
+    ladder and due day by the existing rules (D414);
+  - each yearly attempt has a ladder row keyed (`thesis_id`, `period`), as §0b item 1 and §0c item 1 specify;
+  - the writer's mapping is `mapping['clean-12'] = ['v12@2026', 'v12@2027']`.
+- **The departure from D397, named:** for this case only, one topic carries one judged question per open year.
+  - D38 (Alex) makes one quantity in two years two views.
+  - D397 (Alex) calls the present behaviour for such a topic "an open defect until splitting is built".
+  - Every other multi-part topic keeps D397's one judged question.
+  - Recorded as a council decision under D439 before any build, reversed on Alex's word.
+- **Evidence:** every statement linked to the parent reaches both yearly views' judges, as it reaches the one view today. Each judge
+  reasons for its own year. That a 2026 statement reaches the 2027 judge, and the reverse, is a property of this design. Its effect on
+  judgements is **not tested by the ladder probe**; it is named as an open question for any later judging test.
+- **Not judged:** as §0b item 2: it depends on which years were written.
+- **Closing:** per view, as today. A statement arriving after one year's view has closed reaches it as a closed view (linked, not
+  judged, counted: the existing behaviour and its test) and reaches the open sibling normally.
+- **Presentation:** the page and `bundle` read ladder rows by view, so each yearly view is an ordinary question with its year. No new
+  state reaches the page. The $0 checks show the library, the detail page and the Idea bundles on a store holding a split parent,
+  unchanged for unsplit topics.
+
+## 2. The boundary and every outcome
+
+| Case | Who decides | What happens |
+|---|---|---|
+| One quantity, both years asked independently, both open | **the model:** typed case `one_quantity_two_periods` with `periods: [Y1, Y2]` | **code:** two distinct years, both this year or next by the step's existing year rules, so the case is accepted; the step is re-asked once per year with the one-line restriction |
+| Either year ended, or beyond next year | — | **code:** the case is refused as malformed; re-asked once (the existing retry), then `refused twice`. Nothing is split |
+| One open year as the question and another open year as its base or reference ("2027 against 2026") | **the model:** it must answer the asked year with the other as reference, as it does in the 20 stored one-year topics | **if the model names the case anyway, code cannot tell.** That is the misuse the probe's controls measure, and it is a stop condition |
+| Two quantities, a second side (D436), a two-thing stake (Intel, Firmus) | the existing main-part rule | not this case; naming it without two open years is malformed (as above) |
+| Several products over two open years | the model may name the case | each yearly re-ask meets the main-part rule for its year and may refuse |
+
+**Every outcome of a split send:**
+- both years write valid ladders, giving two views;
+- one writes and the other refuses or fails validation twice, giving one view and the other year's refusal recorded on its row with its
+  reason. This is not claimed equal to today's behaviour;
+- both refuse or fail, giving no view and both refusals recorded;
+- a re-ask naming the case again is malformed, and `refused twice` (no recursion).
+- **Interrupted:** see §0b item 3. The boundary is article-level, with no resume.
+
+**The schema change is a behaviour change, and it is measured as a new version.** `no_ladder` becomes `{case, reason, periods?}`, with
+`case` a closed set: the existing prose decline cases, transcribed without a new rule, plus `one_quantity_two_periods`. The prompt
+audit and a request diff come before any send.
+
+## 3. The measurement (a product rule, apart from the official gate)
+
+**The probe** (separately reviewed; about $0.10). Topics:
+- T: the 2 development topics, one quantity over two open years;
+- C1: 6 stored topics naming two years and tracking one, including at least 2 with an open base year ("2027 against 2026");
+- C2: 2 second-side topics;
+- C3: the 2 guards, Intel and Firmus;
+- M: the several-products memory topic.
+
+**Arms:** frozen step, 3 sends a topic; new version, 3 sends a topic, with children re-asked as the design says. Same day.
+
+**Counts, fixed now:**
+1. **T, per topic:** a send succeeds when it names the case and both yearly re-asks write valid ladders. A missing, refused or invalid
+   re-ask fails the send. The topic passes with at least 2 of 3 sends succeeding. Both T topics must pass.
+2. **C1, C2, C3, per topic:**
+   - any send of the new version naming the case fails the topic;
+   - an outcome change also fails it: the frozen step's 3 sends agree on their kind (ladder or refusal) and at least 2 of the new
+     version's 3 sends have the other kind;
+   - when the frozen step's sends themselves disagree on kind, only the case rule applies.
+   - Every control topic must pass.
+3. **Readers:** two blind families read every yearly ladder of T and M and the C1 ladders, mixed, with the gate form's marks plus two
+   questions: does this question ask a year that was only a base or reference, and does it lose a qualification of the original
+   topic?
+   - Disagreements go to third readers of both families, as in the gate method.
+   - Planted: one yearly ladder that asks a base year, and one that drops a qualification. A missed plant voids the reading.
+   - A base-year question or a lost qualification settled by both families fails the probe.
+
+**Verdict:** as §0b item 4 and §0c item 3: lead, negative, or no verdict when the reading is void.
+
+**The 44:** the official gate's topics hold no one-quantity-two-open-years topic. Whether a no-change regression read of the 44 may be
+sent under D426's stop is **a council decision before any adoption**, not assumed. If it may not, adoption is decided with that limit
+stated.
+
+## 4. The stop condition
+
+Close the candidate if any of these happens:
+- the model names the case on any control;
+- a yearly question asks a base or reference year;
+- a qualification is lost;
+- the guards break;
+- the $0 checks show any reader of `clean_ladders`, the page or the Idea path changing what it shows for an unsplit topic.
+
+
+codex
+1. **The yearly instruction conflicts with the request’s own rule for omitted parts.**  
+   > “The value for 2027 is asked as its own question, so the two-year decline case does not apply here, and that value is not a part this question leaves out; list every other part as before, including a condition or comparison that names 2027.”
+
+   **Verdict: contradicts** the closing check and the `not_judged` schema description quoted in findings 2 and 3. They say to list *every* omitted part, while this sentence excludes the other year’s value. The design explicitly calls for that exclusion when both yearly questions are written, and for code to add the refused year when only one is written. But the model receives conflicting instructions.
+
+   The final clause helps protect a comparison or condition that mentions 2027. It does **not clearly say to separate an omitted value from another limit contained in the same part**. For example, if a topic asks for “2027 revenue from stores open for at least two years,” the model could treat the whole phrase as the other year’s value and omit the store-age limit. A mixed part can therefore be lost.
+
+2. **The closing check repeats the conflicting instruction.**  
+   > “Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged?”
+
+   **Verdict: contradicts** the yearly instruction above. It is consistent with D397 for the ordinary one-question path, but it does not acknowledge the design’s exception for the other year.
+
+3. **The schema gives the same conflicting instruction.**  
+   > “Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.”
+
+   **Verdict: contradicts** the yearly instruction. The other year is a second figure left out of an individual yearly question, yet the yearly instruction says not to list it when it is asked separately. The design’s treatment of a refused year is performed by code, so the unconditional schema text does not describe the yearly model response clearly.
+
+4. **The main instruction also makes the yearly exception unclear.**  
+   > “List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked.”
+
+   **Verdict: contradicts** the yearly instruction for the other year’s figure. It is consistent with D397 outside the specified split. The yearly instruction appears later, but the request never explicitly says it overrides this sentence and the schema for that one part.
+
+5. **The split case itself can be read as competing with the main-part rule.**  
+   > “A topic's wording may ask about more than one thing.”
+
+   **Verdict: consistent** with D397 and D38.
+
+   > “Judge the one the topic's outcome names as what is tracked.”
+
+   **Verdict: contradicts** the new case when the outcome names both years independently: it tells the model to judge the tracked thing, while the new case tells it to decline and name both years. The new case says it is “rather than the first,” but does not explicitly resolve this competition with the main-part instruction.
+
+   > “Never fold two things into one ladder: ‘Will the regulator approve the drug for a second use, and how many patients will take it in the first year?’ is judged on the approval when that is what its outcome names, and the patient count is listed; ‘How much will the carrier's fuel bill be next year, and will its pilots strike?’ is judged on the fuel bill when that is what its outcome names, and the strike is listed.”
+
+   **Verdict: consistent** with D38 and D397 for the examples given. It does not itself distinguish two independent years of the same quantity from two different things.
+
+6. **The new decline case expresses the intended boundary, but its example is not enough to remove ambiguity for mixed wording.**  
+   > “Return no_ladder with the reason, and ladder null, in eight cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason; or the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison, which is this case rather than the first, since each year has its main figure: name the two years in periods, and each year is then asked as its own question.”
+
+   **Verdict: consistent** for the new case with the design’s two-independent-open-years boundary and its named departure from D397. D38 supports one question per year. The “no main” part is consistent with D397; the ended-year and beyond-next-year parts are supported by D38’s stated year boundary, subject to D38’s own recorded qualification. The other inherited refusal cases are **not established by the specified sources**.
+
+   > “A retailer's store openings in 2026 and in 2027 are this case; its 2027 revenue measured against 2026's is not, and is judged on 2027.”
+
+   **Verdict: consistent** with the design’s boundary. It clearly illustrates independent values versus a base-year comparison. It does not show a case in which the other year is both a comparison and part of an additional condition, so that boundary remains less clear for mixed wording.
+
+   > “Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.”
+
+   **Verdict: has no source** among the specified sources for this rewrite rule. D38 supports the open-year limit, but does not state this instruction.
+
+7. **The schema names the cases and years consistently with the design, but inherits the same unresolved competition.**  
+   > “The two years, for one_quantity_two_periods only; null for every other case.”
+
+   **Verdict: consistent** with the design’s typed case and two-year output.
+
+   > “Why no judged question is written, as one case of this closed set, or null: no_main: the topic has no main figure or event (none, or several with none the main one); not_checkable_on_a_date: nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); quarter_or_half_year: a company's figure for a quarter or a half-year; not_one_year_period: a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; year_ended: a figure for a year that has already ended on the item's day; beyond_next_year: a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); another_company_or_uncovered_matter: the question belongs to another company or to a matter no listed theme covers (name it); one_quantity_two_periods: the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison (this case, not no_main): name the two years in periods, written as a figure's year is written (2026, or FY2027); each year is then asked as its own question.”
+
+   **Verdict: consistent** for `one_quantity_two_periods` and its distinction from `no_main` with the design. As in finding 6, the specified sources do not establish every inherited refusal case. The sentence does not settle a possible overlap with another refusal, such as an uncovered matter.
+
+   > “Exactly one of no_ladder and ladder is null (checked by code).”
+
+   **Verdict: consistent** with the design’s choice between a refusal and a written question.
+
+   > “Why this case applies, naming the words that decide it.”
+
+   **Verdict: consistent** with the design’s requirement to record the refusal reason; the specified sources do not prescribe this exact explanation format.
+
+8. **The yearly instruction selects the requested year, but the broader request still asks for the whole outcome.**  
+   > “Write the question for 2026 only: this topic is split by year.”
+
+   **Verdict: consistent** with the design’s yearly re-ask. It conflicts in practice with the unqualified instruction to judge what the outcome names when that outcome names both years; the request should make the yearly instruction’s precedence explicit.
+
+   > “A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure.”
+
+   **Verdict: consistent** with D38’s one figure and one year per question. The precise unit list is not established by the specified sources.
+
+   > “The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year).”
+
+   **Verdict: consistent** with D38’s stated fiscal/calendar distinction, subject to D38’s recorded qualification.
+
+   > “Code refuses the other form.”
+
+   **Verdict: has no source** in the specified decisions or design boundary; it is a claim about implementation enforcement.
+
+   > “For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published.”
+
+   **Verdict: consistent** with D38’s stated publication-date rule, subject to D38’s recorded qualification.
+
+   > “Company figures use the company's fiscal year: ‘this year’ contains the item's publication day, and ‘next year’ follows it; convert fiscal years using the fiscal-year note.”
+
+   **Verdict: has no source** for this exact conversion procedure in the specified sources. D38 expressly marks the details of how years are counted as a proposal.
+
+   > “Other figures use calendar years.”
+
+   **Verdict: consistent** with D38’s stated distinction, subject to its recorded qualification.
+
+9. **Other refusal and omitted-detail instructions apply outside the split.**  
+   > “A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.”
+
+   **Verdict: has no source** among the specified sources for this refusal boundary.
+
+   > “Nothing else: a question with another object is returned as no_ladder.”
+
+   **Verdict: has no source** among the specified sources for that refusal.
+
+   > “A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged.”
+
+   **Verdict: consistent** with D397’s treatment of omitted wording and D436’s treatment of a second side as context rather than another question.
+
+10. **The remaining question-shape instructions support one question per answer.**  
+    > “Write the one question the topic is judged on: what it asks, its answer ladder and its due day.”
+
+    **Verdict: consistent** with D38 for each yearly answer; read as a rule for the whole topic, it is narrower than the design’s split exception.
+
+    > “A judged question concerns one figure for a named period or one event.”
+
+    **Verdict: consistent** with D38.
+
+    > “For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.”
+
+    **Verdict: consistent** with D38.
+
+    > “The one judged question: one figure for a named period, or one event.”
+
+    **Verdict: consistent** with D38 for each answer; the singular wording does not explain that the split topic can have two yearly answers.
+
+    > “For a figure it names the period covered or the day measured at, and the material that settles it.”
+
+    **Verdict: consistent** with D38.
+
+11. **The examples in the instructions are general; the supplied article and topic necessarily name the covered company and its numbers.**  
+    > “A retailer's store openings in 2026 and in 2027 are this case; its 2027 revenue measured against 2026's is not, and is judged on 2027.”
+
+    **Verdict: consistent** as a general example: it names no covered company or product. The request payload does name NVDA, its products, other companies and their amounts because it supplies the actual topic and article. Those are source material, not a company-specific instruction. The fiscal-year note also names NVDA and its actual years; it is company-specific input used to interpret the date, rather than a general rule.
+
+**Summary:** The split boundary is stated and illustrated, but the yearly omission rule conflicts with three existing instructions and does not fully protect mixed parts containing another year and an additional limit.
+tokens used
+45,232
+1. **The yearly instruction conflicts with the request’s own rule for omitted parts.**  
+   > “The value for 2027 is asked as its own question, so the two-year decline case does not apply here, and that value is not a part this question leaves out; list every other part as before, including a condition or comparison that names 2027.”
+
+   **Verdict: contradicts** the closing check and the `not_judged` schema description quoted in findings 2 and 3. They say to list *every* omitted part, while this sentence excludes the other year’s value. The design explicitly calls for that exclusion when both yearly questions are written, and for code to add the refused year when only one is written. But the model receives conflicting instructions.
+
+   The final clause helps protect a comparison or condition that mentions 2027. It does **not clearly say to separate an omitted value from another limit contained in the same part**. For example, if a topic asks for “2027 revenue from stores open for at least two years,” the model could treat the whole phrase as the other year’s value and omit the store-age limit. A mixed part can therefore be lost.
+
+2. **The closing check repeats the conflicting instruction.**  
+   > “Read the question back: does it ask one thing, the one the topic's outcome names, and is every other part of the topic's wording listed in not_judged?”
+
+   **Verdict: contradicts** the yearly instruction above. It is consistent with D397 for the ordinary one-question path, but it does not acknowledge the design’s exception for the other year.
+
+3. **The schema gives the same conflicting instruction.**  
+   > “Every other part of the topic's wording that the question leaves out (a second figure or event, a condition, a comparison); empty only when the question leaves nothing of the wording out.”
+
+   **Verdict: contradicts** the yearly instruction. The other year is a second figure left out of an individual yearly question, yet the yearly instruction says not to list it when it is asked separately. The design’s treatment of a refused year is performed by code, so the unconditional schema text does not describe the yearly model response clearly.
+
+4. **The main instruction also makes the yearly exception unclear.**  
+   > “List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked.”
+
+   **Verdict: contradicts** the yearly instruction for the other year’s figure. It is consistent with D397 outside the specified split. The yearly instruction appears later, but the request never explicitly says it overrides this sentence and the schema for that one part.
+
+5. **The split case itself can be read as competing with the main-part rule.**  
+   > “A topic's wording may ask about more than one thing.”
+
+   **Verdict: consistent** with D397 and D38.
+
+   > “Judge the one the topic's outcome names as what is tracked.”
+
+   **Verdict: contradicts** the new case when the outcome names both years independently: it tells the model to judge the tracked thing, while the new case tells it to decline and name both years. The new case says it is “rather than the first,” but does not explicitly resolve this competition with the main-part instruction.
+
+   > “Never fold two things into one ladder: ‘Will the regulator approve the drug for a second use, and how many patients will take it in the first year?’ is judged on the approval when that is what its outcome names, and the patient count is listed; ‘How much will the carrier's fuel bill be next year, and will its pilots strike?’ is judged on the fuel bill when that is what its outcome names, and the strike is listed.”
+
+   **Verdict: consistent** with D38 and D397 for the examples given. It does not itself distinguish two independent years of the same quantity from two different things.
+
+6. **The new decline case expresses the intended boundary, but its example is not enough to remove ambiguity for mixed wording.**  
+   > “Return no_ladder with the reason, and ladder null, in eight cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason; or the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison, which is this case rather than the first, since each year has its main figure: name the two years in periods, and each year is then asked as its own question.”
+
+   **Verdict: consistent** for the new case with the design’s two-independent-open-years boundary and its named departure from D397. D38 supports one question per year. The “no main” part is consistent with D397; the ended-year and beyond-next-year parts are supported by D38’s stated year boundary, subject to D38’s own recorded qualification. The other inherited refusal cases are **not established by the specified sources**.
+
+   > “A retailer's store openings in 2026 and in 2027 are this case; its 2027 revenue measured against 2026's is not, and is judged on 2027.”
+
+   **Verdict: consistent** with the design’s boundary. It clearly illustrates independent values versus a base-year comparison. It does not show a case in which the other year is both a comparison and part of an additional condition, so that boundary remains less clear for mixed wording.
+
+   > “Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.”
+
+   **Verdict: has no source** among the specified sources for this rewrite rule. D38 supports the open-year limit, but does not state this instruction.
+
+7. **The schema names the cases and years consistently with the design, but inherits the same unresolved competition.**  
+   > “The two years, for one_quantity_two_periods only; null for every other case.”
+
+   **Verdict: consistent** with the design’s typed case and two-year output.
+
+   > “Why no judged question is written, as one case of this closed set, or null: no_main: the topic has no main figure or event (none, or several with none the main one); not_checkable_on_a_date: nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a pending regulatory decision, which is due at the company's current fiscal year-end); quarter_or_half_year: a company's figure for a quarter or a half-year; not_one_year_period: a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, with no publication day in the topic or the item; year_ended: a figure for a year that has already ended on the item's day; beyond_next_year: a figure for a year beyond next year (unless the topic's opens_as is binding_obligation); another_company_or_uncovered_matter: the question belongs to another company or to a matter no listed theme covers (name it); one_quantity_two_periods: the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as a base or a comparison (this case, not no_main): name the two years in periods, written as a figure's year is written (2026, or FY2027); each year is then asked as its own question.”
+
+   **Verdict: consistent** for `one_quantity_two_periods` and its distinction from `no_main` with the design. As in finding 6, the specified sources do not establish every inherited refusal case. The sentence does not settle a possible overlap with another refusal, such as an uncovered matter.
+
+   > “Exactly one of no_ladder and ladder is null (checked by code).”
+
+   **Verdict: consistent** with the design’s choice between a refusal and a written question.
+
+   > “Why this case applies, naming the words that decide it.”
+
+   **Verdict: consistent** with the design’s requirement to record the refusal reason; the specified sources do not prescribe this exact explanation format.
+
+8. **The yearly instruction selects the requested year, but the broader request still asks for the whole outcome.**  
+   > “Write the question for 2026 only: this topic is split by year.”
+
+   **Verdict: consistent** with the design’s yearly re-ask. It conflicts in practice with the unqualified instruction to judge what the outcome names when that outcome names both years; the request should make the yearly instruction’s precedence explicit.
+
+   > “A figure is answered in figure: its unit (USD, percent, count, GW, MW, TWD or multiple; other when it is none of these, the question then naming the unit), the one year it covers (written FY2027 for a company's figure, which uses its fiscal year; written 2026 for a theme's figure, which uses the calendar year) and exactly five ranges of that one figure.”
+
+   **Verdict: consistent** with D38’s one figure and one year per question. The precise unit list is not established by the specified sources.
+
+   > “The one year the figure covers: FY2027 for a company's figure (its fiscal year); 2026 for a theme's figure (a calendar year).”
+
+   **Verdict: consistent** with D38’s stated fiscal/calendar distinction, subject to D38’s recorded qualification.
+
+   > “Code refuses the other form.”
+
+   **Verdict: has no source** in the specified decisions or design boundary; it is a claim about implementation enforcement.
+
+   > “For a figure, use its publication date, which falls after the end of the period the figure covers: stated when the topic or the item gives it, expected_publication when you set the day you expect it to be published.”
+
+   **Verdict: consistent** with D38’s stated publication-date rule, subject to D38’s recorded qualification.
+
+   > “Company figures use the company's fiscal year: ‘this year’ contains the item's publication day, and ‘next year’ follows it; convert fiscal years using the fiscal-year note.”
+
+   **Verdict: has no source** for this exact conversion procedure in the specified sources. D38 expressly marks the details of how years are counted as a proposal.
+
+   > “Other figures use calendar years.”
+
+   **Verdict: consistent** with D38’s stated distinction, subject to its recorded qualification.
+
+9. **Other refusal and omitted-detail instructions apply outside the split.**  
+   > “A question about another company's own figure, or about a matter no listed theme covers, has no object here: return no_ladder.”
+
+   **Verdict: has no source** among the specified sources for this refusal boundary.
+
+   > “Nothing else: a question with another object is returned as no_ladder.”
+
+   **Verdict: has no source** among the specified sources for that refusal.
+
+   > “A difference inside an outcome, such as an approval with conditions against one without, is not an outcome of its own; when the topic's wording names it, list it in not_judged.”
+
+   **Verdict: consistent** with D397’s treatment of omitted wording and D436’s treatment of a second side as context rather than another question.
+
+10. **The remaining question-shape instructions support one question per answer.**  
+    > “Write the one question the topic is judged on: what it asks, its answer ladder and its due day.”
+
+    **Verdict: consistent** with D38 for each yearly answer; read as a rule for the whole topic, it is narrower than the design’s split exception.
+
+    > “A judged question concerns one figure for a named period or one event.”
+
+    **Verdict: consistent** with D38.
+
+    > “For a figure, the question names the period it covers or the day it is measured at, and the material that settles it.”
+
+    **Verdict: consistent** with D38.
+
+    > “The one judged question: one figure for a named period, or one event.”
+
+    **Verdict: consistent** with D38 for each answer; the singular wording does not explain that the split topic can have two yearly answers.
+
+    > “For a figure it names the period covered or the day measured at, and the material that settles it.”
+
+    **Verdict: consistent** with D38.
+
+11. **The examples in the instructions are general; the supplied article and topic necessarily name the covered company and its numbers.**  
+    > “A retailer's store openings in 2026 and in 2027 are this case; its 2027 revenue measured against 2026's is not, and is judged on 2027.”
+
+    **Verdict: consistent** as a general example: it names no covered company or product. The request payload does name NVDA, its products, other companies and their amounts because it supplies the actual topic and article. Those are source material, not a company-specific instruction. The fiscal-year note also names NVDA and its actual years; it is company-specific input used to interpret the date, rather than a general rule.
+
+**Summary:** The split boundary is stated and illustrated, but the yearly omission rule conflicts with three existing instructions and does not fully protect mixed parts containing another year and an additional limit.

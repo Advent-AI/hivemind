@@ -1,0 +1,13 @@
+**A bounded $0 audit is warranted; the proposed A2 rule is not yet supported as written.** The two accounts identify the decline rules and outcome text the model says it used, then call those applications mistakes. They are useful leads, but neither account says the new definition caused the refusal, and a retrospective explanation cannot establish that cause. [Accounts]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/refusal-accounts-output.txt:1)
+
+The proposed sentence—“a part only the outcome names is listed and is not by itself a reason to decline”—is too broad. D397 says the **main part is the part the outcome names**, and a topic with no main part is declined. An outcome-only clause could itself identify that main part or a period that legitimately triggers D417; its field alone cannot decide that it is an extra to set aside. The design question is how to identify the main thing before applying the decline rules, without ignoring relevant information in either field. [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326), [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606)
+
+I agree with the proposed next **audit**, with these boundaries:
+
+- Trace all seven decline cases against the whole request and their decisions. Count the stored topics with extra periods or figures in the outcome, including genuine refusals that must remain refusals and cases where the outcome supplies the main thing.
+- Map the disputed comparison and consequence cases against D397, D436 and the July rulings; keep H and XR’s strict-count regressions visible. Do not settle a reader disagreement by adopting whichever interpretation makes A2 look better. [July recount]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/fresh-ladders/PROMPT-AUDIT-LINE-2.md:103), [probe result]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT.md:48)
+- Return to the council with a sourced general rule **or no candidate**. A fresh-material probe would need its own reviewed design and decision; the accounts do not authorize it.
+
+A2 would be case-fitting if it simply exempts outcome-only periods and figures to recover these two answers. A general distinction backed by the decisions and tested against warranted refusals may be worth designing. Whether it needs one sentence or two is secondary to whether it preserves the rules.
+
+CONSENSUS: no, because the proposed outcome-only exemption is not established by D397; proceed with the bounded $0 audit and return before defining or sending A2.

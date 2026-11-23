@@ -1,0 +1,3 @@
+Control-line reference, version 1, for your signature: 15 questions, {agreed} agreed, {disputed} disputed, {unresolved} unresolved or invalid. The rules (D660): events are compared on their three outcomes; the system's quoted reference is removed from the rungs; the baselines are reported only. No answer of the system's judge appears on this page. Each disputed or unresolved question needs your choice; your signature confirms the agreed ones.
+
+对照标准答案第 1 版，请你签字：15 道题，其中 {agreed} 道两位审查者一致，{disputed} 道有分歧，{unresolved} 道未定或答卷不合格。规则（D660）："会不会发生"类题按三个选项比；题目里系统自己引的参照原话已删；闭眼乱选的成绩只作对照。本页不出现系统判答案那一步的任何答案。有分歧或未定的题每道都要你选；你签字即确认一致的那些。

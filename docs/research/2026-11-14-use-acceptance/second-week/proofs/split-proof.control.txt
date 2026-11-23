@@ -1,0 +1,22 @@
+the unbroken run: 235 articles; cut after article 120; mutant: none
+  ok    the proof's cut row is empty in the same columns as the real run's cut row | ['raw_response', 'result', 'after_state', 'error', 'retry_reason']
+  ok    the second part holds the remaining articles in order, the cut one first | 115 articles
+  ok    it starts from the library as it stood after the last complete article | 6 topics
+  ok    its limits are the run's less what the first part used | 178 calls, 25200 seconds
+  ok    the second part completes | {"status": "complete", "error": null, "reserved_usd": 13.781315000000003, "calls": 115}
+  ok    every request it sent is byte-identical to the stored request of the same article, in order, and none is unknown | 115 sent, 0 unknown
+  ok    every send was reserved and settled on the shared ledger | 115 attempts, spent 1.0359
+  ok    article by article, the second part equals the unbroken run: identity, library before, request, answer, result, library after | 115 articles, first differences []
+  ok    the merge refuses a second part that is truncated (its last ten articles missing) | the second part's trace does not hold every remaining article once and in order (105 rows for 115 articles)
+  ok    the merge refuses a second part that is stopped on a failure at its last article | article 115 of the second part is failed, not complete: TransportError: timed out
+  ok    the merge refuses a second part that is out of order (two articles exchanged) | the second part's trace does not hold every remaining article once and in order (115 rows for 115 articles)
+  ok    the two parts merge
+  ok    the merged run row is the unbroken run's (manifest, settings, article records, starting library)
+  ok    every row of the merged trace equals the unbroken trace (all columns but the running reservation) | 235 rows, first differences []
+  ok    the running reservation goes on from the first part's, the cut call counted once more | offset {0.119456}
+  ok    the stored calls of the merged trace equal the unbroken run's, in order (request, answer, sizes; the configuration checksum apart) | 236 calls
+  ok    the checksum stored with the second part's calls differs from the first part's through the limits alone | 115 calls of the second part
+  ok    the matching step reads the merged trace as it reads the unbroken one
+  ok    the topics built from the merged trace are the unbroken run's topics | 7 topics
+  ok    with a ledger below one reservation nothing is sent, the run stops on the ledger and the ledger is stopped | {"status": "failed", "input_id": "gnews:4c4c114117f5c7acb7be91f7", "error": "ValueError: live run limit reached before send: the shared ledger refused", "reserv
+20 expectations, 0 failed

@@ -1,0 +1,592 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f606-eda2-75b3-bce7-0b9ff6bb7c71
+--------
+user
+# Challenge round (read-only, $0). Mine is `claude-proposal.md`, written before I read yours.
+
+**Agreed:** the old system opens the questions and writes their choices, clean Steps 1–3 read and organise the evidence, and the frozen judge
+answers.
+
+**Where we differ**
+1. **Figures.** I had the old system open NVIDIA's own figures (revenue, margin), which is what it does. You keep D382/D505 and need Alex's
+   exception. I agree that this is his decision. The test should report both ceilings, 6 and 10.
+2. **The test.**
+   - Yours is a $0 trace of whether the clean passages exist and would reach the judge input for 2 matters × 2 pairs, using archived judge
+     calls. It shows the evidence exists. It does not show that c8 files it under the old question when the old question is the open
+     one: that is the merge's actual new wiring, and your main risk (meaning drift) lives exactly there.
+   - Mine re-judged everything, about $3–5, and is too big.
+   - **My middle proposal:**
+     - give c8 old-2's open questions (and old-3's), as they stood that day, as its open theses;
+     - re-send only the window articles behind M04 (four-hyperscaler 2026 capex) and M17 (Anthropic): about 10–20 sends a pair;
+     - then judge those two questions once with the evidence c8 filed, beside old's own judgement.
+   - **Lines:**
+     - c8 links the decisive statements to the old question, not to a 2027 total or a five-company total;
+     - talks stay distinct from a signed commitment;
+     - no standalone figure question opens;
+     - the judge's answer is supported, as read by the card readers, as old's is.
+   - Cost: about $0.50.
+
+**Reply with:**
+- which test, or a merged one;
+- its exact lines;
+- its attainable result;
+- what it cannot decide.
+
+Under 300 words. End `CONSENSUS: <test in one line>` or `DISAGREE: <point>`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+A small replay can test whether c8 files evidence under the old questions. I’ll use the codex-claude-council skill to review your proposal and check which inputs that replay needs.
+exec
+/opt/homebrew/bin/zsh -lc 'cat /Users/lchingen/.codex/skills/codex-claude-council/SKILL.md' in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+---
+name: codex-claude-council
+description: Run a multi-round research and challenge council between Codex and Claude Code on a specified objective, seeking evidence-backed agreement while preserving genuine disagreements. Use when the user requests a joint council, debate, or iterative co-review with Claude Code.
+---
+
+# Codex and Claude Code council
+
+Clarify the objective, scope, constraints, evidence and decision needed from the request and workspace. Apply the repository's instructions and existing authorization; a council does not authorize unrelated changes or override a user's decisions. State what each reviewer must leave out of scope.
+
+## Independent investigation
+
+- Codex investigates the primary sources, code and relevant prior decisions itself. Give Claude Code the same objective, scope and primary materials, but avoid supplying a preferred conclusion in its initial assignment where independence matters. Ask it to cite exact files and concrete evidence, distinguish facts from hypotheses, and propose the cheapest decisive checks and counterexamples.
+- Run Claude Code with the model the user chose or, if none, an available appropriate model. For read-only review restrict tools to `Read,Glob,Grep` and a read-only permission mode. Preserve the exact handoff, session ID, streaming output and terminal result in the task's work area. Never bypass permissions.
+- A typical local invocation is `claude -p --model <model> --permission-mode plan --tools Read,Glob,Grep --output-format stream-json --verbose < handoff.txt > round-1.jsonl 2> round-1.stderr`. Validate installed CLI options first. Continue the same session using `--resume <session-id>` with the next challenge. Check final result and exit status; tool activity or a partial stream is not completion. Poll the running process and surface meaningful progress; do not kill a working reviewer merely because it is taking minutes. Report actual failures or access limitations accurately.
+
+## Challenge and converge
+
+Compare independent findings against the underlying material yourself before presenting them as established. Send Claude the specific disagreements, counterexamples and your own analysis, and ask it to challenge its prior conclusions as well as yours. Repeat until each material claim and proposed next step is explicitly agreed with its supporting evidence, or the remaining uncertainty or disagreement is identified. Agreement is not proof: identify what would falsify the shared hypothesis and which claims remain untested. Do not force consensus or invent a reviewer response.
+
+Keep rounds proportionate and purposeful. A reviewer who is still investigating should be allowed to finish. If meaningful progress stops because of an actual failure or impasse, preserve the trace and tell the user what remains unresolved.
+
+## Deliver
+
+Give the user the conclusion in plain language, concrete source examples, agreed causes versus hypotheses, unresolved disagreements, priority and the next discriminating test. Preserve the exchange and a concise decision record where the task's existing documentation belongs. Update dependent human-readable views when the workspace requires it. Implement changes only within the user's authorized scope and after the applicable project diagnosis and review requirements; do not change frozen baselines or treat the council's agreement as approval for a new product decision.
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls -la && cat claude-proposal.md' in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'def .*open|before_state|open_theses|unresolved' ../../../clean-arch/step1/runner.py | head -55; rg -n 'D677|D505' ../../DECISIONS.md | tail -3" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+total 1176
+drwxr-xr-x@   9 lchingen  staff     288 Nov 19 15:00 .
+drwxr-xr-x@ 110 lchingen  staff    3520 Nov 19 14:56 ..
+-rw-r--r--@   1 lchingen  staff    2715 Nov 19 14:56 claude-proposal.md
+-rw-r--r--@   1 lchingen  staff    2096 Nov 19 14:56 council-a-brief.md
+-rw-r--r--@   1 lchingen  staff    3444 Nov 19 14:59 council-a-codex.md
+-rw-r--r--@   1 lchingen  staff  565664 Nov 19 14:59 council-a-codex.stream
+-rw-r--r--@   1 lchingen  staff    1838 Nov 19 15:00 council-b-brief.md
+-rw-r--r--@   1 lchingen  staff       0 Nov 19 15:00 council-b-codex.md
+-rw-r--r--@   1 lchingen  staff    3045 Nov 19 15:00 council-b-codex.stream
+# Claude's merge proposal, written before reading Codex's
+
+**The split.** The old system decides which questions exist; the new system handles the evidence.
+
+| Piece | From | Why (measured) |
+|---|---|---|
+| Opening questions | Old (poc-v118 extraction, matcher, collision judge) | It serves 10 of 32 frozen matters, against the new system's 2–3, and holds the core figures |
+| Extra questions the old system misses | New Step 1's own openings, only after fix 1 (a refused thesis is not open) | The census found the new system raises capex across five hyperscalers, DRAM, neocloud commitments and the Groq review, then loses them to the refusal cascade |
+| Answer choices | Old's rungs on old questions; the new ladder for new questions | Old questions are single-figure and already carry rungs; the new ladder drops bundled theses |
+| Reading articles and extracting evidence | New Step 1 (c8), with the old system's open questions shown as its open theses | It holds more of what matters (helpful 211–214 against 162–171 of 234) and keeps unlinked facts (D383) |
+| Earlier versions and repeats | New Steps 2 and 3 (Jev, grouping) | 141 of 143 earlier versions found; repeats grouped |
+| Judging | The frozen judge (the same in both systems) | Differences come only from what reaches it |
+
+**The wiring.** Each day, the old system's views opened up to that day are converted into Step 1's open-thesis shape (id, description, outcome,
+period) and given to Step 1 as `initial_theses` or added to its open list. Step 1 files the day's evidence under them. Steps 2 and 3 run as
+now. The judge judges the old questions with their old rungs, on the new evidence.
+
+**A small test** ($0 sources where possible)
+- **Questions:** taken from the stored old-1 run (`poc/data/comparison-2026-11-17/run/old-1/prod/views.sqlite`), each with its opening day
+  and rungs. The old system is not re-run.
+- **Window:** a slice, for example 09-07..09-20 (410 kept articles), with old-1's questions open as of 09-06.
+- **Evidence before 09-07:** the open problem is that the judge needs it.
+  - One option is to start the slice earlier.
+  - Another is to replay new Step 1 over July–August with old-1's open lists (about $21, too much for "small").
+- **Compare:** the hybrid's judgements against old-1's own, on the same questions, read by the same card readers. Is each judgement
+  supported, and is its material cleaner? Also count how many new-only questions the new system adds.
+
+**Questions for the council**
+1. Is the split right, or should the new system open everything with the old system's question rules added?
+2. The smallest honest test, and what it can decide.
+3. Its attainable outcome, computed before any send.
+
+ succeeded in 0ms:
+126:    unresolved = []
+177:                unresolved.append({'evidence_id': ev['local_id'], 'target_type': 'existing', 'target_id': target})
+180:                    unresolved.append({'evidence_id': ev['local_id'], 'target_type': 'new', 'target_id': target})
+183:    interpreted['unresolved_links'] = unresolved
+260:          create table trace (sequence integer primary key, input_id text not null, before_state text not null,
+277:            payload = {'current_entity': entity, 'company_tags': tags, 'open_theses': shown, 'source_item': {
+284:            conn.execute('insert into trace (sequence,input_id,before_state,request,status) values (?,?,?,?,?)',
+908:| D564 | 2026-11-16 | The fortnight read (council consensus): no held question re-opened; gate 1 still not met in the product condition (7 or 5 of 13 right); no last answer unsupported by both readers, 6 of 12 contested; the page fix (processing steps and completed days at the writer) accepted for completed replays; the due-date class is one matter; next a $0 sizing of D505's company-figure delivery gap, facts linked elsewhere included | in force | `docs/research/2026-11-14-use-acceptance/carried-run/RESULT.md` |
+953:| D609 | 2026-11-16 | Under D439 (reflection council, cold Codex read): the next production step is a $0 source-to-request trace of the company's own figures on the carried fortnight (D505), by member, with time, duplicate, population and relevance controls and an independent second reader on bearing cases; moves only on a shared, consequential delivery mechanism | in force | `reflection-5/codex-cold.md`, `reflection-5/codex-challenge-1.md` |
+1021:| D677 | 2026-11-19 | The release comparison's goal loop closed: the old system stays, no paid work continues; reversed only if Alex reverses D505 or funds a full run, with a written path to passing first (council consensus, D439/D544) | in force | `docs/research/2026-11-19-comparison-review/council-c-codex.md` |
+
+exec
+/opt/homebrew/bin/zsh -lc "p=../../../poc/data/comparison-2026-11-17
+python3 -B -c '
+import json
+from pathlib import Path
+p=Path(\"../../../poc/data/comparison-2026-11-17\")
+for f,ids in [(\"L1\",[\"Q5\",\"Q40\"]),(\"L2\",[\"Q6\",\"Q47\"])]:
+ for q in json.loads((p/f\"reading-diagnostic/mapping-out/library-{f}.json\").read_text()):
+  if q[\"question_id\"] in ids:
+   print(f,q[\"question_id\"],q[\"question\"],q[\"opened_from\"],q[\"reasons\"])
+   for e in q[\"material\"]:
+    s=e[\"summary\"]
+    if \"720\" in s or \"760\" in s or (\"Reuters\" in s and \"Anthropic\" in s): print(\"E\",e[\"day\"],e[\"input_id\"],s)
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+L1 Q5 How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026? gnews:92c7e54d38dc2916aa185568 The market reference is roughly $720–$745 billion for the four companies, which is rung 4. A direct four-hyperscaler estimate of $760 billion and tracking near $745 billion support an implied outcome around $750–$760 billion. Newer estimates of nearly $800 billion refer to the top five, not these four, so the fifth company cannot be counted in full; the four-company outcome remains below the $800 billion rung-5 boundary. The revised company guidance and Microsoft's reported capex growth support a high total, while the cancellation, grid-connection and sustainability concerns are not quantified as changes to the four-company 2026 total.
+E 2026-08-16 gnews:1219126db2e6631aa1264142 Microsoft, Amazon, Alphabet, Meta and other hyperscalers have guided to roughly $720 billion–$745 billion of capital spending in calendar 2026, about 77% above the prior year.
+E 2026-08-23 gnews:c8ea23246edff9fbbc981992 The four largest hyperscalers plan a combined $760 billion of capital expenditures in calendar 2026.
+E 2026-09-14 gnews:1d3bc1ba4c2df5e998884bdb Amazon, Alphabet, Microsoft and Meta Platforms are expected to spend a combined $720 billion to $745 billion on capital expenditures in calendar 2026, with a large portion directed toward AI infrastructure.
+L1 Q40 Will NVIDIA invest $10 billion to anchor Anthropic's IPO by 2026-09-20? gnews:4dca50e22bd9f158d2a04186 The reference is rung 2: no market consensus or company guidance is supplied, and the reported expectation that Anthropic's IPO would be completed before the November midterms does not put NVIDIA's investment by September 20. Reuters-linked reports that NVIDIA is considering up to $10 billion and that Anthropic is discussing an anchor role push toward Yes, but they describe consideration and discussion, not a commitment or a completed investment. With only three days to the deadline, the most likely outcome remains that NVIDIA does not complete a $10 billion anchor investment by then. The reported IPO scale and Anthropic's growth make the proposed transaction plausible, but do not establish that it will close within that window; no rung boundary is crossed.
+E 2026-09-14 gnews:4dca50e22bd9f158d2a04186 Reuters reported that NVIDIA was considering anchoring Anthropic's IPO with a $10 billion investment during the week of September 14, 2026.
+E 2026-09-15 gnews:a1af1bb8840fa4ec9e52bcb0 Reuters reported on September 13, 2026, that NVIDIA was considering investing up to $10 billion in Anthropic as an anchor investor in a potential IPO.
+E 2026-09-17 gnews:df74df86a5a6cfd06fe7cbb3 Reuters reported that Anthropic was discussing making Nvidia an anchor investor in its planned IPO, with Nvidia reportedly considering an investment of up to $10 billion.
+E 2026-09-17 gnews:df74df86a5a6cfd06fe7cbb3 Reuters reported that Anthropic was seeking to raise up to $100 billion in an IPO, potentially valuing the company at around $2 trillion.
+E 2026-09-17 gnews:df74df86a5a6cfd06fe7cbb3 Reuters reported that Anthropic expected its IPO to be completed before the U.S. midterm elections in November 2026, though Anthropic had not confirmed the timetable.
+L2 Q6 How much will the four largest AI hyperscalers spend on data-center capital expenditures in calendar 2026? gnews:92c7e54d38dc2916aa185568 The market reference is roughly $720–$745 billion for the four hyperscalers, which sits in rung 4 (e5014). The evidence still implies about $750 billion: the four-company tracking estimate near $745 billion and the separate top-four estimate of $760 billion bracket that level; company capex revisions and recent cloud-demand indicators support the upper part of the reference range. NVIDIA’s nearly $800 billion figure is for five hyperscalers, not these four, so it does not establish a four-company total at rung 5. The implied amount remains below the $800 billion boundary.
+E 2026-08-16 gnews:1219126db2e6631aa1264142 Microsoft, Amazon, Alphabet, Meta and other hyperscalers guided combined 2026 capital spending of roughly $720 billion to $745 billion, about 77% above the prior year.
+E 2026-08-23 gnews:c8ea23246edff9fbbc981992 The top four hyperscalers plan to spend $760 billion on capital expenditures in calendar 2026.
+E 2026-09-14 gnews:1d3bc1ba4c2df5e998884bdb Zacks estimated that Amazon, Alphabet, Microsoft and Meta would spend roughly $720 billion to $745 billion on capital expenditures in calendar 2026, with a large portion directed to AI infrastructure.
+L2 Q47 Will NVIDIA agree to anchor Anthropic’s IPO with an investment of $10 billion by September 20, 2026? gnews:4dca50e22bd9f158d2a04186 The reference is rung 2 (No): no market consensus, company guidance, or NVIDIA commitment is supplied. The reports of advanced talks and consideration of an investment of up to $10 billion this week raise the chance of Yes, but they do not report agreement to anchor the IPO for $10 billion. Given the short time to the deadline and the gap between considering an investment and agreeing to the exact commitment in the question, No remains the more likely outcome.
+E 2026-09-15 gnews:a1af1bb8840fa4ec9e52bcb0 Reuters reported on September 13 that NVIDIA was considering investing up to $10 billion as an anchor investor in Anthropic’s planned IPO, which could raise up to $100 billion at an approximately $2 trillion valuation.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import json
+p=Path(\"../2026-11-17-product-comparison/stage0\")
+for f in [p/\"kept-articles.json\",p/\"census/matters.json\"]:
+ v=json.loads(f.read_text());print(f,type(v),str(v)[:2200])
+' 
+sed -n '114,191p;269,308p' ../../../clean-arch/step1/runner.py
+rg -n 'def (.*open|.*snapshot)|open_view|open_as_of|view_switches' ../../../src/hivemind/views/store.py | head -65" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+../2026-11-17-product-comparison/stage0/kept-articles.json <class 'dict'> {'frozen': '2026-11-17 (D670), before any matter census or system output', 'window': ['2026-09-07', '2026-09-20'], 'rule': 'classify_reads.py (D669, D670)', 'census_sha256': '0181635e3283a64623493e90b3b07dfb3a0cc70706c534a2b3bb8088f7c96b7d', 'population': 502, 'kept': 410, 'kept_by_week': {'2026-09-07': 172, '2026-09-14': 238}, 'kept_ids': ['gnews:01327981056dc257b4ee2a4e', 'gnews:01edb4d1fa96705133b29207', 'gnews:02585a0410ec19f9359f15d3', 'gnews:049ed956b8239821871614cc', 'gnews:04c2471fa33743b56d7cce76', 'gnews:069dd81a68850f1e6923d3f7', 'gnews:06b55f52d782a58df06d9f4f', 'gnews:06cc27e61b0c12aa366748e4', 'gnews:07359b2b9bf313466954c9e9', 'gnews:0785b2a386dcfc3c9cb02b29', 'gnews:07e417049257d82b93891914', 'gnews:088ae5b30011a76744333371', 'gnews:089f44e073a5c6aff0be9d32', 'gnews:0aa51b53c570ec174d5a9f05', 'gnews:0ae0159ebec0676230f670fb', 'gnews:0ba93692dc5df4b999fe3729', 'gnews:0beb3ab08443b78b66485a72', 'gnews:0c19765ee99d1f808e0834ec', 'gnews:0c5749b10e712291b3d5f7a2', 'gnews:0dae2401555c4c2c02003315', 'gnews:0df245fbd1ed43950bff9bdf', 'gnews:0f0cade2e200de978df73b13', 'gnews:1013933014c7e41a36ca3009', 'gnews:106a61a1ef10fb3ba6adb1cd', 'gnews:109f18c7c26cea43b7907013', 'gnews:109fc9fd6937796c01c45a8c', 'gnews:11299d49d2bba45acf05282b', 'gnews:11bfa6cc662ef4fee00c211a', 'gnews:11c123c79afc3c31ffa5aed6', 'gnews:11f13514c1de829e7b70ea2b', 'gnews:12a943c49b0c41542e6110b5', 'gnews:130b10d800061fb842f5a823', 'gnews:13528d6d323fe455dc1484cb', 'gnews:13952dff579190ce77353acd', 'gnews:145e8986dda2283044f1ab1c', 'gnews:147e79a4a1f10279da449944', 'gnews:158d0dc25c8557d78c4ab7a8', 'gnews:17e013755472b00f3d2254a1', 'gnews:17eb5dc32c87ab9926a0bb7c', 'gnews:1a4b1674e45695144d4b8087', 'gnews:1c5579485d9c2df8463a5c96', 'gnews:1d3bc1ba4c2df5e998884bdb', 'gnews:1db458f8e1c55c73188f4d9d', 'gnews:1e729a69ce773c32c5a4dd11', 'gnews:2052184744bec4b89ecab744', 'gnews:20a59a9eeac11f324e00fefd', 'gnews:248b657ec28da438120b0752', 'gnews:255de72f24a65722d686f8ee', 'gnews:26fbf79730e3f1049f312ece', 'gnews:26fc2cd6c8f0e814e3300067', 'gnews:28eafda87919cbcc2d744118', 'gnews:29029acb1393c758eb8e342a', 'gnews:29261e892efef38906097afb', 'gnews:29482b6e982ef52a226620f7', 'gnews:29e1a877db5d1c
+../2026-11-17-product-comparison/stage0/census/matters.json <class 'dict'> {'frozen': 'stage 0, before any system output (D671)', 'entries_sha256': '4cb55c547ddad2f4f3bf40c561bcb423eda382a8ff01f062263fcb1cb5d32d17', 'rule': 'one matter per group of entries joined by a grouping both families made or a pair both blind adjudicators read as one bet (D248)', 'N': 32, 'company_figure_subgroup': 7, 'adjudicated_one_bet': [[3, 27]], 'adjudication_splits': {'2-26': {'codex': False, 'claude': True}, '12-37': {'codex': False, 'claude': True}}, 'matters': [{'matter': 'M01', 'question': "What will Broadcom's AI semiconductor revenue be in FY2027?", 'name': 'Broadcom FY2027 AI semiconductor revenue', 'entries': [1], 'entry_names': ['Broadcom FY2027 AI semiconductor revenue'], 'listed_by': ['both'], 'articles': [6, 14, 123, 130, 144, 203, 317, 343, 366], 'first_day': '2026-09-07', 'company_figure': False, 'company_figure_mixed': False}, {'matter': 'M02', 'question': "What will the five major hyperscalers' combined capital expenditure be in calendar 2026?", 'name': "Five major hyperscalers' combined 2026 capital expenditure", 'entries': [2], 'entry_names': ["Five major hyperscalers' combined 2026 capital expenditure"], 'listed_by': ['both'], 'articles': [40, 48, 114, 138, 223, 236, 254, 256, 267, 275, 344, 363], 'first_day': '2026-09-08', 'company_figure': False, 'company_figure_mixed': False}, {'matter': 'M03', 'question': "What will the five major hyperscalers' combined capital expenditure be in calendar 2027?", 'name': "Five major hyperscalers' combined 2027 capital expenditure", 'entries': [3, 27], 'entry_names': ["Five major hyperscalers' combined 2027 capital expenditure", "Five major hyperscalers' combined 2027 data-center capital expenditure"], 'listed_by': ['both', 'codex'], 'articles': [40, 42, 48, 114, 138, 223, 236, 254, 256, 267, 344, 363], 'first_day': '2026-09-08', 'company_figure': False, 'company_figure_mixed': False}, {'matter': 'M04', 'question': 'What will Amazon, Alphabet, Microsoft and Meta spend in aggregate on capital expenditures in calendar 2026?', 'name': "Four hyperscalers' combined 2026 capital expenditure", 'entries': [4], 'entry_names': ["Four hyperscalers' combined 2026 capital expenditure"], 'listed_by': ['both'], 'art
+    if errors:
+        raise ContractError('; '.join(errors))
+    thesis_ids = [x['local_id'] for x in answer['new_theses']]
+    evidence_ids = [x['local_id'] for x in answer['evidence']]
+    for name, ids in [('thesis', thesis_ids), ('evidence', evidence_ids)]:
+        if any(not x.strip() for x in ids) or len(ids) != len(set(ids)):
+            raise ContractError(f'{name} local IDs must be nonempty and unique')
+    for thesis in answer['new_theses']:
+        if not thesis['description'].strip() or not thesis['outcome'].strip():
+            raise ContractError('new thesis requires a question and outcome')
+    existing = {x['id'] for x in shown}
+    linked_new = set()
+    unresolved = []
+    lookup_index = None
+    index_failure = None
+    lookup_errors = []
+    interpreted = copy.deepcopy(answer)
+    for ev in interpreted['evidence']:
+        if not ev['summary'].strip():
+            raise ContractError('evidence requires a summary')
+        verified = []
+        repaired = []
+        for passage_number, quote in enumerate(ev['source_passages'], 1):
+            if not quote.strip():
+                raise ContractError('empty source passage')
+            exact = quote in item['text']
+            source = quote if exact else extraction.repair_quote(quote, item['text'])
+            if not exact and (not source or source not in item['text'] or not preserves_quote(quote, source)):
+                if lookup_index is None and index_failure is None:
+                    try:
+                        lookup_index = quote_lookup.build_index(item['text'])
+                    except Exception as error:
+                        index_failure = (type(error).__name__, str(error))
+                failure = index_failure
+                if failure is None:
+                    try:
+                        located = quote_lookup.find_quote(quote, item['text'], lookup_index)
+                        if located and preserves_quote(quote, located):
+                            source = located
+                    except Exception as error:
+                        failure = (type(error).__name__, str(error))
+                if failure is not None:
+                    lookup_errors.append({'evidence_id': ev['local_id'], 'passage_number': passage_number,
+                                          'error_type': failure[0], 'message': failure[1]})
+            if (not source or source not in item['text'] or not preserves_quote(quote, source)
+                    or (item.get('source_preparation') and source not in (item.get('text_page') or ''))):
+                verified.append(None)
+                repaired.append(False)
+                continue
+            verified.append(source)
+            repaired.append(source != quote)
+        ev['verified_source_passages'] = verified
+        ev['source_passages_repaired'] = repaired
+        if ev['statement_date'] is not None:
+            try:
+                datetime.date.fromisoformat(ev['statement_date'])
+            except ValueError as error:
+                raise ContractError('invalid original statement date') from error
+        for link in ev['links']:
+            if not link['relevance'].strip():
+                raise ContractError('evidence link requires relevance')
+            target = link['target_id']
+            if link['target_type'] == 'existing' and target not in existing:
+                unresolved.append({'evidence_id': ev['local_id'], 'target_type': 'existing', 'target_id': target})
+            if link['target_type'] == 'new':
+                if target not in thesis_ids:
+                    unresolved.append({'evidence_id': ev['local_id'], 'target_type': 'new', 'target_id': target})
+                else:
+                    linked_new.add(target)
+    interpreted['unresolved_links'] = unresolved
+    # A statement of the company's own financial performance lists its `figures` (STEP1-CONDITIONS-DESIGN.md §16). Each figure's value
+    # must be quoted in one of the item's verified passages; a figure that fails is removed and the reason recorded.
+    figure_issues = []
+    for ev in interpreted['evidence']:
+        valid = []
+        for figure in ev.get('figures') or []:
+            reason = None
+            if figure.get('kind') not in CONDITION_KINDS or not str(figure.get('measure') or '').strip():
+            checksum = hashlib.sha256(dump({'settings': settings, 'prompt': prompt, 'closing': closing, 'schema': schema}).encode()).hexdigest()
+            call_config = SimpleNamespace(provider=settings['provider'], version='clean-step1', checksum=checksum)
+        theses = copy.deepcopy(initial_theses)
+        outcome = {'status': 'complete', 'error': None}
+        failed_items = []
+        for sequence, item in enumerate(items, 1):
+            shown = [{k: t[k] for k in ('id', 'description', 'outcome', 'period')} for t in theses]
+            tags = [x['value'] for x in item['object_identifiers'] if x.get('kind') == 'ticker']
+            payload = {'current_entity': entity, 'company_tags': tags, 'open_theses': shown, 'source_item': {
+                'id': item['input_id'], 'publisher': item['publisher'], 'publication_date': item['publication_day'],
+                'published_at': item['published_at'], 'publisher_type': item.get('publisher_type'),
+                'authors': item.get('authors'), 'category': item.get('category'),
+                'source_uri': item['source_uri'], 'title': item['title'], 'text': item['text']}}
+            user = dump(payload) + (f'\n\n{closing}' if closing else '')
+            request = model.build_request(setting, prompt, user, schema, 'clean_step1', settings['provider'])
+            conn.execute('insert into trace (sequence,input_id,before_state,request,status) values (?,?,?,?,?)',
+                         (sequence, item['input_id'], dump(theses), json.dumps(request), 'in_flight'))
+            conn.commit()
+            if type(transport) is LiveTransport:
+                def record_reservation(amount):
+                    conn.execute('update trace set reserved_usd=? where sequence=?', (amount, sequence))
+                    conn.commit()
+                transport.on_reserve = record_reservation
+            response = None
+            notes = []          # this step's retries, network and format, in order: written to retry_reason, none overwriting another
+            try:
+                if type(transport) is LiveTransport:
+                    def capture(provider, built_request):
+                        nonlocal response
+                        try:
+                            response = transport(provider, built_request)
+                        except model.TransportError as error:
+                            if hasattr(error, 'response_body'):
+                                response = {'http_status': error.http_status, 'raw_body': error.response_body}
+                                if hasattr(error, 'response_body_base64'):
+                                    response['raw_body_base64'] = error.response_body_base64
+                            raise
+                        finally:
+                            notes.extend(f'network retry, {note}' for note in transport.network_errors)
+                            if notes:
+17:    'view_switches': 'id integer primary key autoincrement, view_id text, open integer, reason text, by_whom text, after_seq integer',
+50:    'create index if not exists switches_view on view_switches(view_id, id)',
+55:def open_db(path):
+86:    insert(conn, 'view_switches', view_id=view_id, open=1, reason='created', by_whom='matching', after_seq=seq)
+167:def open_views_with_key(conn, object_id, measure, scope_key, period_start, period_end, basis='n/a', unit='n/a', event_type=None):
+192:def is_open(conn, view_id):
+193:    row = conn.execute('select open from view_switches where view_id=? order by id desc limit 1', (view_id,)).fetchone()
+198:    insert(conn, 'view_switches', view_id=view_id, open=0, reason=reason, by_whom=by_whom, after_seq=seq)
+201:def open_views(conn):
+206:def views_of_object(conn, object_id, only_open=True):
+219:def open_read_only(path):
+286:def views_open_at_day_start(conn, object_ids, day):
+296:        switch = conn.execute('select open from view_switches where view_id=? and after_seq <= ? order by id desc limit 1', (v['view_id'], seq)).fetchone()
+
+exec
+/opt/homebrew/bin/zsh -lc "ls ../2026-11-17-product-comparison/stage0/census
+rg -n 'article.*(index|number)|enumerate\\(' ../2026-11-17-product-comparison/stage0/*.py ../2026-11-17-product-comparison/stage0/census/*.py | head -32
+sed -n '265,310p' ../../../src/hivemind/views/store.py
+rg -n 'PRICES|deepseek-flash' ../../../src/hivemind/model.py | head -8" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+__pycache__
+adjudicated
+answers
+batches
+census_merge.py
+census_readers.py
+dedup
+dedup-check-brief.md
+dedup-check-codex.md
+dedup-check-codex.stream
+launches.jsonl
+matters-dedup-either-superseded.json
+matters-dedup-either-superseded.json.sha256
+matters-entries.json
+matters-entries.json.sha256
+matters-final-list.md
+matters.json
+matters.json.sha256
+memory-probe.txt
+merge.log
+merged
+numbering.json
+prompts
+prompts.sha256
+read.log
+reconciled
+third
+../2026-11-17-product-comparison/stage0/d431_reading.py:387:    return {draw: f'r{n}' for n, draw in enumerate(order, 1)}
+../2026-11-17-product-comparison/stage0/d431_reading.py:393:             'period': f"year {v['year']}; due {v['due_day']}"} for n, v in enumerate(views, 1)]
+../2026-11-17-product-comparison/stage0/d431_reading.py:436:             for n, d in enumerate(disputes, 1)]
+../2026-11-17-product-comparison/stage0/d431_reading.py:585:                for n, dispute in enumerate(disputes, 1):
+../2026-11-17-product-comparison/stage0/d431_reading.py:637:        items = [control_item(n, self.frozen, question, view) for n, (_, question, view) in enumerate(controls, 1)]
+../2026-11-17-product-comparison/stage0/d431_reading.py:731:        control_of = {(draw, question): n for n, (draw, question, _) in enumerate(controls, 1)}
+../2026-11-17-product-comparison/stage0/slice_checks.py:82:            'new differs at': next((k for k, (a, b) in enumerate(zip(new_order, expected)) if a != b), None),
+../2026-11-17-product-comparison/stage0/slice_checks.py:83:            'old differs at': next((k for k, (a, b) in enumerate(zip(old_order, expected)) if a != b), None)})
+../2026-11-17-product-comparison/stage0/census/census_merge.py:31:articles of 2026-09-07 to 09-20 (article numbers are global). Merge them into one list across all batches:
+../2026-11-17-product-comparison/stage0/census/census_merge.py:226:        numbers = [int(n) for n in matter.get('articles', []) if str(n).isdigit() and int(n) in by_number][:12]
+../2026-11-17-product-comparison/stage0/census/census_merge.py:227:        articles = '\n\n'.join(f"### Article {n} · {by_number[n]['day']} · {by_number[n]['publisher']}\n{by_number[n]['title']}\n\n{by_number[n]['text']}"
+../2026-11-17-product-comparison/stage0/census/census_merge.py:304:    listing = '\n'.join(f"{i}. {m['name']} | e.g. {m.get('example_question') or ''}" for i, m in enumerate(entries, 1))
+../2026-11-17-product-comparison/stage0/census/census_merge.py:419:            numbers += [int(x) for x in m.get('articles', []) if str(x).isdigit() and int(x) in by_number][:4]
+../2026-11-17-product-comparison/stage0/census/census_merge.py:421:        articles = '\n\n'.join(f"### Article {n} · {by_number[n]['day']} · {by_number[n]['publisher']}\n{by_number[n]['title']}\n\n{by_number[n]['text']}"
+../2026-11-17-product-comparison/stage0/step2_lines.py:160:    """Each article's source text by its manifest position (as run_forward.step1_records numbers articles), and the manifest's length."""
+../2026-11-17-product-comparison/stage0/step2_lines.py:166:                position = {iid: n for n, iid in enumerate(json.loads(conn.execute('select manifest from run').fetchone()[0])['item_ids'], 1)}
+../2026-11-17-product-comparison/stage0/step2_lines.py:371:    for index, records in enumerate(articles):
+../2026-11-17-product-comparison/stage0/step2_lines.py:386:                  for stratum, ids in enumerate(shuffled) if round_index < len(ids)]
+../2026-11-17-product-comparison/stage0/step2_lines.py:420:    for number, record_id in enumerate(audited, 1):
+../2026-11-17-product-comparison/stage0/step2_lines.py:421:        for part, chunk in enumerate(packets(earlier_of(record_id), SCAN_CHUNK), 1):
+../2026-11-17-product-comparison/stage0/step2_lines.py:452:    for number, chunk in enumerate(packets(keys, LABEL_PACKET), 1):
+../2026-11-17-product-comparison/stage0/step2_lines.py:470:        for number, chunk in enumerate(packets(family_keys, LABEL_PACKET), 1):
+../2026-11-17-product-comparison/stage0/step2_lines.py:504:    article_start, index = {}, 0
+../2026-11-17-product-comparison/stage0/step2_lines.py:505:    for article_index, article in enumerate(articles):
+../2026-11-17-product-comparison/stage0/step2_lines.py:506:        article_start[article_index] = index
+../2026-11-17-product-comparison/stage0/step2_lines.py:508:    article_of = {record['id']: article_index for article_index, article in enumerate(articles) for record in article}
+../2026-11-17-product-comparison/stage0/step2_lines.py:509:    forward = {record['id']: position for position, record in enumerate(records)}
+../2026-11-17-product-comparison/stage0/step2_lines.py:584:    ids = {f'X{number}': pair for number, pair in enumerate(sample, 1)}
+../2026-11-17-product-comparison/stage0/step2_lines.py:588:    for number, chunk in enumerate(packets(list(ids), MERGE_PACKET), 1):
+../2026-11-17-product-comparison/stage0/step2_lines.py:605:        for number, chunk in enumerate(packets(family_ids, MERGE_PACKET), 1):
+../2026-11-17-product-comparison/stage0/step2_lines.py:671:    labels = {g: f'E{n}' for n, g in enumerate(others, 1)}
+../2026-11-17-product-comparison/stage0/step2_lines.py:676:    apart = [library.record_text(record, f'E{start + n}') for n, record in enumerate([group['original']] + group['members'])]
+    seen, stack = set(), [depends_on]
+    while stack:
+        current = stack.pop()
+        if current == view_id:
+            return True
+        if current in seen or not current:
+            continue
+        seen.add(current)
+        for dep in dependencies_of(conn, current):
+            if dep['resolved_to']:
+                stack.append(dep['resolved_to'])
+    return False
+
+
+def day_start_seq(conn, day):
+    """D251: the sequence number the start of `day` stands at: the seq of the last completed day before it, or 0 before the first
+    completed day, where the seed questions live (D253: seeds are created at seq 0, before any item)."""
+    row = conn.execute('select max(seq) from days_completed where day < ?', (day,)).fetchone()
+    return row[0] if row is not None and row[0] is not None else 0
+
+
+def views_open_at_day_start(conn, object_ids, day):
+    """D251: the questions open at the start of `day`, as every item of that day sees them: views created at or before the day's start
+    seq (day_start_seq) whose last switch at that seq is open, the objects' own and every theme, in creation order; before the first
+    completed day that is the seeds. Each row carries `snapshot_seq`, the seq its groups and aliases are read at (groups_of_view_at),
+    so the list is the same for every item of the day whatever the day's items write. Question, looks_at, kind, object and due day only."""
+    seq = day_start_seq(conn, day)
+    out = []
+    for v in conn.execute('select view_id, object_id, object_kind, kind, looks_at, question, due_day, year, created_seq from views where created_seq <= ? order by created_seq', (seq,)):
+        if v['kind'] != 'theme' and v['object_id'] not in object_ids:
+            continue
+        switch = conn.execute('select open from view_switches where view_id=? and after_seq <= ? order by id desc limit 1', (v['view_id'], seq)).fetchone()
+        if switch and switch['open']:
+            out.append(dict(v, snapshot_seq=seq))
+    return out
+
+
+def views_for_prompt(conn, object_ids, themes=False):
+    """05-extraction block 5: the objects' open views plus every view they depend on, open or closed, with who
+    depends on whom; question, looks_at and due day only. With themes, every open theme thesis follows the objects' own
+    (A, extraction v19): a company item's statement about a theme matter links to the theme thesis instead of being dropped."""
+    shown, order = {}, []
+    for object_id in object_ids:
+        for view_id in views_of_object(conn, object_id):
+            if view_id not in shown:
+                shown[view_id] = dict(view(conn, view_id), open=True, depends_on=[], dependencies=[])
+35:PRICES = {'gpt-6-luna': (0.10, 0.50), 'gpt-6.1-sol': (2.00, 10.00), 'gpt-6-astra': (10.00, 50.00), 'claude-opus-5-5': (4.00, 20.00), 'deepseek-flash': (0.30, 1.20), 'deepseek-v4-pro': (1.32, 3.96),
+277:    price_in, price_out = PRICES.get(setting.model, (0.0, 0.0))
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import json
+p=Path(\"../2026-11-17-product-comparison/stage0/census/numbering.json\")
+x=json.loads(p.read_text())
+print(type(x).__name__,len(x),str(list(x.items())[:2] if isinstance(x,dict) else x[:2])[:2100])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+dict 410 [('1', 'gnews:55bd4f62fbc2bc31b22958f6'), ('2', 'gnews:5879686876d153edd4342064')]
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+from collections import defaultdict
+import json,sqlite3
+root=Path(\"../2026-11-17-product-comparison/stage0/census\")
+base=Path(\"../../../poc/data/comparison-2026-11-17\")
+m={x[\"matter\"]:x for x in json.loads((root/\"matters.json\").read_text())[\"matters\"]}
+numbers=json.loads((root/\"numbering.json\").read_text())
+targets={n: numbers[str(n)] for key in (\"M04\",\"M17\") for n in m[key][\"articles\"]}
+def read(path):
+ db=sqlite3.connect(f\"file:{path}?mode=ro&immutable=1\",uri=True)
+ db.row_factory=sqlite3.Row
+ return db
+items=read(base/\"items-comparison.sqlite\")
+for n,i in sorted(targets.items()):
+ x=items.execute(\"select publication_day,title,length(text) as chars from items where input_id=?\",(i,)).fetchone()
+ print(n,i,tuple(x))
+print(\"same old M17 opening among source list\", \"gnews:4dca50e22bd9f158d2a04186\" in targets.values(),\"M06 overlap\",set(m[\"M06\"][\"articles\"]) & set(targets))
+total=0
+for draw in (\"new-2\",\"new-3\"):
+ db=read(base/f\"run/{draw}/step1/trace.sqlite\")
+ cost=0;uncached=0
+ for n,i in sorted(targets.items()):
+  x=db.execute(\"select sequence,request,raw_response,status from trace where input_id=?\",(i,)).fetchone()
+  r=json.loads(x[\"raw_response\"]);u=r[\"usage\"]
+  cached=(u.get(\"prompt_tokens_details\") or {}).get(\"cached_tokens\",0)
+  tokens=u[\"prompt_tokens\"];out=u[\"completion_tokens\"]
+  cost+=(.30*(tokens-cached)+.03*cached+1.20*out)/1e6
+  uncached+=(.30*tokens+1.20*out)/1e6
+ print(draw,len(targets),cost,uncached);total+=cost
+print(\"combined\",total)
+for draw,views in ((\"old-2\",(\"v5\",\"v40\")),(\"old-3\",(\"v6\",\"v47\"))):
+ db=read(base/f\"run/{draw}/prod/views.sqlite\")
+ a=read(base/f\"run/{draw}/prod/archive.sqlite\")
+ for v in views:
+  found=db.execute(\"select * from views where view_id=?\",(v,)).fetchone()
+  s=db.execute(\"select * from view_switches where view_id=? order by after_seq\",(v,)).fetchall()
+  j=db.execute(\"select call_id,publication_day,seq from judgements where view_id=? order by seq desc limit 4\",(v,)).fetchall()
+  print(draw,v,found[\"created_seq\"],found[\"due_day\"],\"switches\",[(z[\"open\"],z[\"after_seq\"],z[\"reason\"]) for z in s], \"judge\",[(tuple(z),tuple(a.execute(\"select purpose from model_calls where call_id=?\",(z[\"call_id\"],)).fetchone())) for z in j])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+13 gnews:8f88fc9618295df7639c0bf2 ('2026-09-07', "Not Nvidia, Not Micron. This Magnificent Warren Buffett Stock Could Be the Quiet Winner of the AI Arms Race -- Here's the Case.", 7731)
+167 gnews:b684ee96230158ba77d07066 ('2026-09-13', 'Can Alphabet Overtake Nvidia in 2027?', 3479)
+181 gnews:1d3bc1ba4c2df5e998884bdb ('2026-09-14', 'NVIDIA vs. Marvell: Which AI Infrastructure Stock Is the Better Buy?', 8229)
+189 gnews:4dca50e22bd9f158d2a04186 ('2026-09-14', 'NVIDIA Stock Forecast: Can NVDA Reclaim $235 and Push Toward $300?', 6068)
+190 gnews:5b5789904f4f73d216143129 ('2026-09-14', 'Nvidia’s Training Trade Hit a Speed Bump. Intel Could Win From What Comes Next', 3143)
+193 gnews:65814ac898f65c6b360be321 ('2026-09-14', "Nvidia Mulls $10B Role in Anthropic's Mega IPO", 3351)
+195 gnews:767d795fbdf40bc90ce11e15 ('2026-09-14', 'Anthropic’s $2 trillion IPO is taking shape as Nvidia considers a $10 billion investment', 4025)
+214 gnews:06b55f52d782a58df06d9f4f ('2026-09-15', 'Nvidia (NVDA) Is Discussing Up To $10 Billion For An AI IPO', 2909)
+233 gnews:a1af1bb8840fa4ec9e52bcb0 ('2026-09-15', 'Nvidia’s Anthropic Investment: Securing AI Demand Amid Rising Competition', 7369)
+300 gnews:81badd809629cf7b5ba30af9 ('2026-09-17', 'The Return-on-Capital Question Looming Over NVIDIA Corporation’s (NVDA) AI Investments', 4515)
+310 gnews:df74df86a5a6cfd06fe7cbb3 ('2026-09-17', 'Nvidia Is Named as a Potential Investor in Anthropic’s IPO. Here’s What to Know.', 5338)
+same old M17 opening among source list True M06 overlap {181}
+new-2 11 0.13903163999999998 0.1822662
+new-3 11 0.15862722 0.20020290000000002
+combined 0.29765885999999997
+old-2 v5 42 2027-03-31 switches [(1, 42, 'created')] judge [((8596, '2026-09-19', 1856), ('judge',)), ((8474, '2026-09-18', 1827), ('judge',)), ((8183, '2026-09-16', 1759), ('judge',)), ((8037, '2026-09-15', 1716), ('judge',))]
+old-2 v40 1664 2026-09-20 switches [(1, 1664, 'created'), (0, 1884, 'due 2026-09-20, frozen on 2026-09-20 at rung 2 No')] judge [((8718, '2026-09-20', 1884), ('judge',)), ((8619, '2026-09-19', 1856), ('judge',)), ((8482, '2026-09-18', 1827), ('judge',)), ((8297, '2026-09-17', 1788), ('judge',))]
+old-3 v6 42 2027-02-28 switches [(1, 42, 'created')] judge [((9043, '2026-09-19', 1856), ('judge',)), ((8931, '2026-09-18', 1827), ('judge',)), ((8719, '2026-09-17', 1788), ('judge',)), ((8594, '2026-09-16', 1759), ('judge',))]
+old-3 v47 1664 2026-09-20 switches [(1, 1664, 'created'), (0, 1884, 'due 2026-09-20, frozen on 2026-09-20 at rung 2 No')] judge [((9162, '2026-09-20', 1884), ('judge',)), ((9060, '2026-09-19', 1856), ('judge',)), ((8959, '2026-09-18', 1827), ('judge',)), ((8723, '2026-09-17', 1788), ('judge',))]
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import sqlite3,json,re
+p=Path(\"../2026-11-17-product-comparison/stage0/census\")
+num=json.loads((p/\"numbering.json\").read_text())
+db=sqlite3.connect(\"file:../../../poc/data/comparison-2026-11-17/items-comparison.sqlite?mode=ro&immutable=1\",uri=True)
+for n in [13,167,181,189,190,193,195,214,233,300,310]:
+ i=num[str(n)]
+ t=db.execute(\"select text from items where input_id=?\",(i,)).fetchone()[0]
+ want=r\"(?i)\\b(?:four |five |2027|revenue|\\"'$720|'"\\"'$745|'"\\"'$8'"\\d\\d billion)\\b\"
+ print(n, [\" \".join(t[max(0,m.start()-30):m.end()+54].split()) for m in list(re.finditer(want,t))[:12]])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+13 ['Wall Street has spent nearly four years treating all of that as a footnote. Warren Buffe', 'on. In the first quarter, its revenue rose 63% year over year to $20 billion, with operatin']
+167 ["se to the top of the world in 2027. That's a tall task, but is Alphabet up to it? Let's", 'th for 2026 and 23% growth in 2027. Those are strong projections, but are they enough to']
+181 ['Better Buy? NVIDIA Q2 fiscal 2027 revenues surged 106% to $96.22B, with data center sal', 'the second quarter of fiscal 2027, revenues surged 106% year over year to $96.22 billio', 'the second quarter of fiscal 2027, the data center business generated $89.02 billion in', 'e of the AI investment cycle. Four top hyperscalers — Amazon, Alphabet, Microsoft and Met', 'the fourth quarter of fiscal 2027 before recovering to 72%-73% in fiscal 2028. China re', 'the second quarter of fiscal 2027, Marvell’s revenues soared 36.5% year over year to a', 'n. The company expects fiscal 2027 revenues to grow approximately 45% year over year to', 'ate for NVDA’s current fiscal 2027 revenues and EPS indicates a year-over-year surge of', 'stimates for Marvell’s fiscal 2027 point to more modest 46.3% revenue growth and a 46.8%', '27 point to more modest 46.3% revenue growth and a 46.8% EPS increase. For fiscal 2028, rev', 'centage growth from a smaller revenue base, but its stock already reflects substantial opti', 'A is also delivering superior revenue growth and profitability while trading at a lower val']
+189 ['record fiscal Q2 results with revenue of $96.2 billion, and it projects $108 billion for fi', 'ontinue to support the stock. Revenue for fiscal Q2 stood at $96.2 billion, twice as much a', 'er than expected. Data center revenue rose to $89 billion, supported by $49 billion from hy', 'Q3, the company is projecting revenue of $108 billion and anticipates 70% growth for fiscal', 'pic, which saw its annualised revenue run rate rise from approximately $9 billion at the en', '53.3% year-over-year gain in revenue for TSMC in August indicated strong demand for advanc', '0% of anticipated data center revenue. Is NVIDIA stock still a buy? NVIDIA’s strong AI dema']
+190 ['billion of Data Center and AI revenue in its latest quarter, up 59% year over year. A shift']
+193 ['les. The company’s annualized revenue run rate eclipsed US$65 billion by late July, skyrock', 'billion to US$200 billion in revenue by 2028 to support the US$2 trillion public price tag']
+195 ['billion, while its annualized revenue has surged above $65 billion and adjusted operating i', 'pany with reported annualized revenue of more than $65 billion, while simultaneously commit', 'ove 80% before accounting for revenue shared with distribution partners such as Amazon and', 'combination of rapidly rising revenue, positive adjusted operating income and very high gro', 'ecome. Anthropic’s annualized revenue run rate surpassed $65 billion by the end of July, ac', 'that Anthropic is projecting revenue of roughly $190 billion to $200 billion in 2028. Nvid']
+214 []
+233 ["llion. Anthropic's annualized revenue run rate has reportedly increased from about $9 billi", 'ng as much as $200 billion of revenue by 2028. The strategic significance for Nvidia is gre', '$215.9 billion of fiscal 2026 revenue, up 65%, with Data Center revenue up 68%, demonstrati', 'nue, up 65%, with Data Center revenue up 68%, demonstrating the enormous economic leverage', "thropic's reported annualized revenue growth from $9 billion to more than $65 billion in ro", 'umulative Blackwell and Rubin revenue from the beginning of 2025 through 2027, with Anthrop', 'the beginning of 2025 through 2027, with Anthropic among the model developers contributi']
+300 ['nts are experiencing over 40% revenue growth yet are trading at similar valuations to the b', "d. Also, check the fund's top five holdings to see its best picks in 2026. In its second-"]
+310 ["llion. Anthropic's annualized revenue run rate surpassed $65 billion by the end of July, up", '90 billion to $200 billion in revenue by 2028. This public-market test will come down to wh']
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+from pathlib import Path
+import sqlite3,json,re
+p=Path(\"../2026-11-17-product-comparison/stage0/census\")
+num=json.loads((p/\"numbering.json\").read_text())
+db=sqlite3.connect(\"file:../../../poc/data/comparison-2026-11-17/items-comparison.sqlite?mode=ro&immutable=1\",uri=True)
+for n in [40,42,48,114,138,223,236,254,256,267,344,363]:
+ i=num[str(n)]
+ day,t=db.execute(\"select publication_day,text from items where input_id=?\",(i,)).fetchone()
+ hits=[\" \".join(t[max(0,x.start()-80):x.end()+170].split()) for x in re.finditer(r\"(?i)\\b(?:five hyperscale\\w*|five (?:largest|major|biggest)|top five|2027 capex|spend\\w* .*? in 2027)\\b\",t)]
+ if hits: print(n,day,i,hits[:2])
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+40 2026-09-08 gnews:b851795e16e32bc54280459b ["wth in the coming year, we can't, so we're saying around 70%. Unbelievable, the top five hyperscalars spending roughly 800 billion in capex this year. Many investors believe that's been unsustainable that pace, but Nvidia saying they expect the hyperscalers", "Nvidia is saying 1.3 trillion potentially in spending in the next year from the top five hyperscalers. Credo Technologies only has 1.3 billion in revenue right now, and it's tripled in the last year, expecting 80% growth in the coming year. I believe this st"]
+42 2026-09-08 gnews:db8c8fd4e7169aa6f4ac1c82 ["massive investments in AI infrastructure; capital expenditures by the company's top five customers are forecast to reach $1.3 trillion next year. Nvidia shared this and other news just last month during its fiscal 2027 second-quarter earnings report. Now, Se"]
+114 2026-09-11 gnews:3f69a17dc0ba27583e1dbd92 ["ong the top three. Alphabet is one of those big spenders, and estimates it will spend around $200 billion on data center capital expenditures this year. However, all of that spending is paying off. Alphabet is seeing huge success from its AI platform and is also seamlessly integrating AI overviews into Google Search to maintain its place as the top internet search tool in the world. Alphabet is also running a thriving cloud computing business in Google Cloud. This division is a direct beneficiary of increased computing capacity, and its revenue skyrocketed 82% last quarter. Alphabet has a lot of growth ahead (Wall Street projects 23% growth in 2027), and it's investing to ensure it can capture market share during this critical period. Apple's growth case is a bit less certain. It must continue to sell tech hardware"]
+138 2026-09-12 gnews:6ff9cd0726de49630ffec230 ["are running hotter than Nvidia's official outlook implies. First, capex for the top five hyperscalers -- Amazon , Alphabet , Microsoft , Meta Platforms , and Oracle -- is estimated to land around $800 billion this calendar year and $1.3 trillion in 2027. Nvi"]
+223 2026-09-15 gnews:5adb2372d28f9339f479435d ["computing and AI. Nvidia's own earnings call also highlighted the scale of the spending cycle. The company said the top five hyperscalers are expected to spend nearly $800 billion on capital expenditures in 2026 and $1.3 trillion in 2027. A coordinated slowdown would not necessarily eliminate that spending. Data centers will still need GPUs, existing AI applications will still run, and companies will sti"]
+236 2026-09-15 gnews:ca2f580191a4509ac38bc1cf ['ers cancelling chip orders or delaying their massive data-center buildouts. The spending backdrop remains enormous. Reuters cited BofA Global Research estimates showing Microsoft, Alphabet ( NASDAQ:GOOG ), Amazon ( NASDAQ:AMZN ), Meta ( NASDAQ:META ) and Oracle ( NYSE:ORCL ) could collectively pour roughly $795 billion into capital expenditures in 2026 before pushing that figure to $1.08 trillion in 2027. That would represent an increase of about 36% in a single year, keeping powerful demand underneath AI accelerators, networking equipment and memory. Tighter AI-safety r']
+254 2026-09-16 gnews:3f21db1f9791e20f80909da8 ['We see it differently." I take the risk seriously. I also weigh it against top-five hyperscaler CapEx management pegged at nearly $800 billion in 2026 and $1.3 trillion in 2027. The demand pool is wider than any one customer. Vera Rubin is shipping, and Huang says']
+256 2026-09-16 gnews:4fbadb3b4cb5846297a34b0a ["ory of just 10 days. Additionally, the aggressive jump in hyperscalers' capital spending on AI infrastructure suggests that memory demand will remain robust. Nvidia, for instance, estimates that the capex of the top five hyperscalers could increase to $1.3 trillion in 2027, up from $800 billion this year. So, there is a strong chance Micron's quarterly numbers will exceed expectations, as the severe memory shortage is likely to send prices"]
+267 2026-09-16 gnews:8cdef40aebf24cdc89f530ff ["od chance the company will deliver solid gains. For instance, AI infrastructure spending isn't slowing down. Nvidia points out that the annual capital spending by the top five hyperscalers is on track to reach $800 billion this year. The figure is expected to increase to $1.3 trillion in 2027. Importantly, annual data center spending could cross $3 trillion in 2030, according to market research firm Dell'Oro. The firm points out that a third of this spending,"]
+344 2026-09-18 gnews:ad94c78d09fe41fc3f29bbca ['ry bellwether Nvidia ( NVDA +2.55% ) noted on its August earnings call that the top five U.S. hyperscalers alone are on track to clock $800 billion in capital expenditure this year. Even better, Nvidia projects that this figure will jump to $1.3 trillion in']
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -B -c '
+import sqlite3,json
+from pathlib import Path
+p=Path(\"../../../poc/data/comparison-2026-11-17/run\")
+t=0
+for d in (\"new-2\",\"new-3\"):
+ db=sqlite3.connect(f\"file:{p/d}/step1/trace.sqlite?mode=ro&immutable=1\",uri=True)
+ row=db.execute(\"select raw_response from trace where input_id=?\",(\"gnews:5adb2372d28f9339f479435d\",)).fetchone()
+ u=json.loads(row[0])[\"usage\"];n,o=u[\"prompt_tokens\"],u[\"completion_tokens\"];c=(u.get(\"prompt_tokens_details\") or {}).get(\"cached_tokens\",0)
+ print(d,n,o,c,(.30*(n-c)+.03*c+1.2*o)/1e6,(.30*n+1.2*o)/1e6)
+'" in /Users/lchingen/hivemind/docs/research/2026-11-19-merge-council
+ succeeded in 0ms:
+new-2 17909 7060 14848 0.009835739999999999 0.013844700000000001
+new-3 17245 9097 14208 0.012253739999999999 0.0160899
+
+codex
+**I agree with the targeted replay.** Both clean runs found the $720–745B estimate. The replay should show whether c8 files it under the old four-company 2026 question while preserving that it measures total spending.
+
+**Test.** Use the 11 frozen September 7–20 articles for M04 and M17, plus article 223 as a five-company and 2027 control. Replay those 12 articles against each of old-2 and old-3’s day-start question lists. Keep the old answer choices and September 6 history. Build one frozen-judge request per question and run using the newly filed evidence. Have both card readers assess the four answers blind beside the archived old answers. [Frozen matters](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters.json)
+
+**Pass lines.** All four judge requests contain the decisive, source-verified passages filed by c8. Zero five-company, 2027, or total-spending figures are presented as direct answers to four-company 2026 data-center spending. Anthropic talks stay unconfirmed. Zero standalone NVIDIA financial questions are proposed, including on article 181, which contains NVIDIA revenue. Both readers support all four answers.
+
+**Attainable result.** The passages exist in both clean runs, so 4/4 deliveries and up to 4/4 supported answers are possible. The stored-results ceilings remain **6** under D382/D505 and **10** with Alex’s exception. Archived token usage prices 24 c8 calls and four judge calls at **$0.33–$0.42** before retries. This review cost $0. [Stored runs](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run)
+
+The test can show whether the changed filing works on these two matters. Automatic opening, repeat grouping, full-window performance, and release readiness remain untested.
+
+CONSENSUS: Replay 12 articles against two stored question lists and blind-read four answers, subject to Alex’s approval.
+tokens used
+156,571
+**I agree with the targeted replay.** Both clean runs found the $720–745B estimate. The replay should show whether c8 files it under the old four-company 2026 question while preserving that it measures total spending.
+
+**Test.** Use the 11 frozen September 7–20 articles for M04 and M17, plus article 223 as a five-company and 2027 control. Replay those 12 articles against each of old-2 and old-3’s day-start question lists. Keep the old answer choices and September 6 history. Build one frozen-judge request per question and run using the newly filed evidence. Have both card readers assess the four answers blind beside the archived old answers. [Frozen matters](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/census/matters.json)
+
+**Pass lines.** All four judge requests contain the decisive, source-verified passages filed by c8. Zero five-company, 2027, or total-spending figures are presented as direct answers to four-company 2026 data-center spending. Anthropic talks stay unconfirmed. Zero standalone NVIDIA financial questions are proposed, including on article 181, which contains NVIDIA revenue. Both readers support all four answers.
+
+**Attainable result.** The passages exist in both clean runs, so 4/4 deliveries and up to 4/4 supported answers are possible. The stored-results ceilings remain **6** under D382/D505 and **10** with Alex’s exception. Archived token usage prices 24 c8 calls and four judge calls at **$0.33–$0.42** before retries. This review cost $0. [Stored runs](/Users/lchingen/hivemind/poc/data/comparison-2026-11-17/run)
+
+The test can show whether the changed filing works on these two matters. Automatic opening, repeat grouping, full-window performance, and release readiness remain untested.
+
+CONSENSUS: Replay 12 articles against two stored question lists and blind-read four answers, subject to Alex’s approval.

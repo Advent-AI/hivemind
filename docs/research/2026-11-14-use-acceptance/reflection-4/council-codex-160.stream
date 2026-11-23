@@ -1,0 +1,452 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 160: your four findings of round 159, fixed (D618; `splitting/BUILD-RESULT.md`, "Round 159's findings")
+
+1. **Crash.**
+   - `stage_b/test_split_writer.py::test_a_writer_process_killed_after_the_first_yearly_row_leaves_nothing_of_that_day` runs
+     `ladder_adapter.replay('u1', …)` in its own process. The last u1 topic's outcome is replaced by a split outcome.
+   - The process SIGKILLs itself right after the first yearly row's insert.
+   - Preflight's locked copy then holds no ladder row, view or processing record of that day, and the completed days end before it.
+   - A mutant that commits the parent's row on its own is caught.
+   - **It found a real defect:** the writer could not import `ladder_split` outside the tests. Now fixed (`ladder_adapter.open_split`
+     appends the ladder folder last; no module name collides).
+2. **Not judged with both years written.**
+   - I first wrote code that annotated the model's parts naming the sibling year. I withdrew it after a census: 746 of 3,335 stored
+     parts name a year, and most are not the question's year ("the $3.20/hour peak in May 2026", "slipped from 2027 to 2028"). Whether a
+     part is the other year's quantity is meaning (AGENTS §2: code owns identity).
+   - The owner is now the yearly line: "Write the question for {year} only; {other} is asked as its own question, so do not list it as
+     a part this question leaves out." It is 124 characters, up from 64.
+   - Code passes the model's parts unchanged and adds only "{other}: no question written" when the sibling has no view.
+   - Tests cover both written (parts unchanged, including one naming 2027 and a mixed one) and one written (the parts plus code's
+     entry). The probe's reading measures obedience.
+   - Recorded in DESIGN.md v4 §0b item 2.
+3. **Readers.**
+   - The detail page (`view_bundle`) and the Idea bundles (`thesis_bundles`) are tested in both the two-year and the one-year state.
+   - Each Stage B reader's entry point is driven on a split store and refuses by name before writing anything: `control_theses.packets`,
+     `stage_b_count.main` (now before reading its arguments), `control_census.main`, and `page_store.main` (before replaying).
+   - On historical stores, through the same entry points:
+     - `page_store.py` replays the stored c1 draw with the current writer: 95 of 95 judgements and every ladder row equal the stored
+       draw's;
+     - `control_census.py`'s output is byte-identical to `control-census.txt`;
+     - `check_stage_b_count.py` gives 21 of 21 as expected.
+   - All five readers of `clean_ladders` select named columns.
+4. **Ids.** The writer refuses a topic number that is not digits or is ≥ 10,000, before writing. Ordinary ids have at most four digits;
+   a yearly id is the number plus a four-digit year, so at least five. Within a topic the years differ and are written alike.
+
+**Checks:** 35 split tests; the suite (346), the new system's folders (227) and the frozen checks pass; the frozen step's files are
+unchanged. Mutants: 14 of 14 (`split-mutants.txt`).
+
+**Asked:**
+
+1. Accept the build, or name what is still wrong.
+2. If accepted: the next step is the probe's $0 preparation. That means the 13 topics chosen by written rules from stored cases, a
+   runner beside `stage_a.py` sharing its limit, the frozen control rebuilt byte for byte, the reading packets with the two plants, the
+   full prompt audit, and the actual reservation sum against $0.40. It returns to you before any send.
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the four fixes in the code and tests, especially ID uniqueness, the crash path and what the updated prompt asks the model to do.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/BUILD-RESULT.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/splitting/split-mutants.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+control: 35 passed in 1.20s
+P1 any two years accepted: CAUGHT | 3 failed, 32 passed in 1.27s | ['test_the_two_periods_must_be_this_year_and_next_written_alike[periods3-False]', 'test_the_two_periods_must_be_this_year_and_next_written_alike[periods4-False]']
+P2 a yearly re-ask may write another year: CAUGHT | 2 failed, 33 passed in 1.23s | ['test_one_year_declining_and_one_failing_twice_are_recorded_truthfully', 'test_one_year_written_lists_the_other_as_not_judged_with_the_model_s_reason_or_code_s_word']
+P3 a yearly re-ask may split again: CAUGHT | 1 failed, 34 passed in 1.22s | ['test_a_year_naming_the_split_again_is_refused_with_no_recursion']
+P4 a failed validation shown as the model's reason: CAUGHT | 2 failed, 33 passed in 1.25s | ['test_one_year_declining_and_one_failing_twice_are_recorded_truthfully', 'test_one_year_written_lists_the_other_as_not_judged_with_the_model_s_reason_or_code_s_word']
+P5 the yearly line not sent: CAUGHT | 13 failed, 18 passed, 4 errors in 1.02s | ['test_a_valid_split_re_asks_once_per_year_with_one_added_line_and_writes_both_years', 'test_one_year_declining_and_one_failing_twice_are_recorded_truthfully']
+W1 the unwritten sibling not listed: CAUGHT | 3 failed, 32 passed in 1.23s | ['test_one_year_written_lists_the_other_as_not_judged_with_the_model_s_reason_or_code_s_word', 'test_one_year_written_lists_the_other_as_not_judged_with_the_model_s_reason_or_code_s_word']
+W2 only the first year receives the parent's statements: CAUGHT | 2 failed, 33 passed in 1.22s | ['test_both_years_written_give_two_views_and_one_row_per_attempt', 'test_a_statement_linked_to_the_parent_reaches_every_written_year']
+W3 the parent's row committed on its own: CAUGHT | 1 failed, 34 passed in 1.22s | ['test_a_writer_process_killed_after_the_first_yearly_row_leaves_nothing_of_that_day']
+W4 code drops the model's parts naming the other year: CAUGHT | 3 failed, 32 passed in 1.26s | ['test_with_both_years_written_the_model_s_own_parts_pass_unchanged_even_when_they_name_the_', 'test_one_year_written_lists_the_other_as_not_judged_with_the_model_s_reason_or_code_s_word']
+R1 the shared refusal never refuses: CAUGHT | 4 failed, 31 passed in 1.24s | ['test_control_theses_refuses_a_split_store_at_its_entry_point', 'test_stage_b_count_refuses_a_split_store_before_reading_its_arguments']
+R2 control_theses drops its refusal: CAUGHT | 1 failed, 34 passed in 1.19s | ['test_control_theses_refuses_a_split_store_at_its_entry_point']
+R3 stage_b_count drops its refusal: CAUGHT | 1 failed, 34 passed in 1.25s | ['test_stage_b_count_refuses_a_split_store_before_reading_its_arguments']
+R4 control_census drops its refusal: CAUGHT | 1 failed, 34 passed in 1.25s | ['test_control_census_refuses_a_split_store_at_its_entry_point']
+R5 page_store drops its refusal: CAUGHT | 1 failed, 34 passed in 1.23s | ['test_page_store_refuses_a_split_store_before_it_replays']
+
+ succeeded in 0ms:
+# The period split's $0 build (D616 → D617 → D618), 2026-11-16
+
+Nothing is sent. The frozen answer-choice step's files are unchanged (`git diff` empty on `ladder_step.py` and the candidate request
+files).
+
+## Built
+
+- **`clean-arch/step4-2026-11-10/ladder/ladder_split.py`** (scratch, beside the frozen step, which it imports):
+  - the schema, with only `no_ladder` changed to a closed set: the seven frozen decline cases, transcribed verbatim (a test checks
+    each phrase), plus `one_quantity_two_periods` with `periods`;
+  - the period check (identity only: two different years written alike, exactly this year and next as of the item's day);
+  - a yearly re-ask's check: its year's figure ladder, or another case, with no recursion;
+  - the split flow, which re-asks once per year with the one added line;
+  - truthful display: the model's reason for a decline, code's words for two failed validations.
+- **The writer** (`stage_b/ladder_adapter.py`):
+  - `clean_ladders` gains `period`, keyed (`thesis_id`, `period`): `''` for every unsplit row, as before;
+  - `open_split` writes the parent's `split` row and one row per year;
+  - one view per written year, its id digits only (`v42026`), because the frozen judge reads theme ids by `v\d+`;
+  - the parent's statements go to every written year;
+  - a written year lists an unwritten sibling as not judged.
+  - A view-id collision would need a store with more than ten thousand topics, and the views table's key refuses it rather than
+    overwriting.
+- **The frozen Stage B readers** (`control_theses.py`, `stage_b_count.py`, `control_census.py`, `page_store.py`) call one refusal
+  (`stored_judgements.refuse_split_store`) before any read of the table. A historical store without `period` passes unchanged.
+
+## Proven
+
+- `ladder/test_ladder_split.py` (17) on the real topic c1/clean-4 and its article, with the frozen step's own checks:
+  - the schema's only change;
+  - the period rule (9 cases);
+  - the re-asks, whose requests are byte-equal to the frozen request plus the one line;
+  - a declined year and a year failing twice;
+  - no recursion;
+  - an ended-year split refused with nothing split;
+  - every other answer passing through unchanged;
+  - malformed declines.
+- `stage_b/test_split_writer.py` (13):
+  - rows and views for both years, one year and no year;
+  - statements reaching every written year;
+  - not judged with the model's reason or code's words;
+  - a crash after the first yearly row leaving no row or view of the article;
+  - the library showing two ordinary yearly questions;
+  - an unsplit replay (u1) with every `period` empty;
+  - the readers refusing a split store and accepting a historical one;
+  - a structural check that each reader refuses before its first read.
+- `ladder/test_split_budget.py` (2):
+  - with three sends held in flight, the others are refused and the spend stays within the cap;
+  - **the bound's assumption exercised:** a provider reporting more tokens than the reserve assumed passes the cap by exactly the
+    excess of the sends in flight. The $0.40 ceiling holds while every charge stays within its worst-cost reserve (request bytes and
+    the output cap).
+- The suite passes (346), the new system's folders (224), and the frozen checks. Mutants: 8 of 8 caught (`split-mutants.txt`).
+
+## The request's growth (AGENTS §6)
+
+- The schema grows from 6,116 to 7,223 characters (+1,107); the refusal description from 824 to 1,298.
+- A yearly re-ask adds 124 characters to the closing text (64 before round 159; see below).
+- **The reason:** the decline cases become the closed set AGENTS §6 asks for, in place of the prose list, and the one new case and its
+  field are added. Nothing else in the request changes.
+
+## Not yet done (the probe, separately reviewed)
+
+- choosing its 13 topics from the stored cases (T 2, C1 6 with at least 2 open base years, C2 2, C3 2, M 1);
+- a probe runner beside `stage_a.py`, sharing its limit;
+- the frozen request rebuilt byte for byte as the control;
+- the reading packets with the two plants;
+- the full prompt audit of the changed request.
+
+## Round 159's findings and what changed (D618)
+
+The council did not accept the build. Three proofs claimed more than they showed, and one boundary was unstated. Each was checked
+against the code and fixed.
+
+1. **The crash proof called `rollback()` itself.**
+   - It now runs the real replay loop in its own process. The last u1 topic's stored outcome is replaced by the split outcome (a
+     stand-in: the transaction is tested, not the topic's wording).
+   - The process kills itself with SIGKILL right after the first yearly row's insert. Preflight's locked copy of the crashed store
+     holds no ladder row, view or processing record of that day, and every completed day ends before it.
+   - **The defect it found:** the writer, run on its own, could not import the split module, because only the tests put the ladder
+     folder on the path. The writer now appends that folder last. None of its modules shares a name with the writer's own folders.
+2. **"Neither view lists the other year" (DESIGN.md v4 §0b item 2) had no owner.**
+   - **Census:** 746 of the 3,335 stored left-out parts name a year, and most are not the question's year (a monthly peak, a slip to
+     a later year, a projection). So whether a part *is* the other year's quantity is meaning, and code cannot decide it.
+   - **The yearly line now tells the model:** "Write the question for {year} only; {other} is asked as its own question, so do not
+     list it as a part this question leaves out." It adds 124 characters to a yearly re-ask (it was 64).
+   - Code passes the model's parts unchanged and adds only what it knows: a year with no question. Tests cover both years written
+     (the model's parts unchanged, including one naming the other year and a mixed one) and one written (the model's parts plus
+     code's).
+   - Whether the model obeys is measured by the probe's reading, not by code.
+3. **The page and reader proofs were narrower than reported.**
+   - The detail page (`bundle.view_bundle`) and the Idea bundles (`bundle.thesis_bundles`) now show each written year as an
+     ordinary question with its year and its not-judged list, in both the two-year and the one-year state. An unwritten year has no
+     detail page.
+   - Each frozen Stage B reader is driven through its own entry point on a split store and refuses by name before any output:
+     `control_theses.packets`, `stage_b_count.main` (now before reading its arguments), `control_census.main`, and
+     `page_store.main` (before it replays).
+   - **Historical stores, through the same entry points:**
+     - `page_store.py` replays the stored c1 draw through the current writer: all 95 judge requests are answered from the archive,
+       and every judgement and every ladder row equals the stored draw's;
+     - `control_census.py`'s output is identical to its saved `control-census.txt` (49 lines);
+     - `check_stage_b_count.py` drives `stage_b_count.py` and `control_theses.py count` on its made-up readings over the completed
+       Stage B stores: 21 of 21 cases as expected.
+   - Every reader of `clean_ladders` (`bundle.py` and the four Stage B readers) selects named columns. None reads by position.
+4. **Yearly view ids could collide with ordinary ones** (`clean-4` in 2026 is `v42026`, as `clean-42026` would be).
+   - The writer now refuses any topic number of 10,000 or more, or one that is not digits, before writing.
+   - So an ordinary id has at most four digits, and a yearly id is the number followed by a four-digit year (at least five digits).
+     Within one topic the two years differ and are written alike.
+
+**Checks:** 35 split tests; the suite (346), the new system's folders (227) and the frozen checks pass; the frozen step's files are
+unchanged (0 diff lines). Mutants: 14 of 14 caught (`split-mutants.txt`): the period rules, the yearly line, the sibling entry, the
+statements, a commit of the parent row on its own (caught by the killed-process test), code dropping the model's parts, and each
+reader's refusal. The yearly-line mutant first failed through the fake model's empty queue (traceback read). The fake now fails with a
+named assertion, and the mutant is caught by it.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^def test_'"' clean-arch/step4-2026-11-10/stage_b/test_split_writer.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+90:def test_both_years_written_give_two_views_and_one_row_per_attempt(writer):
+100:def test_with_both_years_written_the_model_s_own_parts_pass_unchanged_even_when_they_name_the_other_year(writer):
+108:def test_a_statement_linked_to_the_parent_reaches_every_written_year(writer):
+118:def test_one_year_written_lists_the_other_as_not_judged_with_the_model_s_reason_or_code_s_words(writer, years, shown):
+133:def test_no_year_written_leaves_no_view_and_both_attempts_recorded(writer):
+165:def test_a_writer_process_killed_after_the_first_yearly_row_leaves_nothing_of_that_day(tmp_path):
+196:def test_the_library_shows_the_two_years_as_two_ordinary_questions(writer):
+209:def test_the_detail_page_and_the_idea_bundles_show_each_written_year_as_an_ordinary_question(writer, years):
+230:def test_an_unsplit_thesis_keeps_its_single_row_with_an_empty_period(tmp_path):
+246:def test_control_theses_refuses_a_split_store_at_its_entry_point(split_store, monkeypatch, tmp_path):
+254:def test_stage_b_count_refuses_a_split_store_before_reading_its_arguments(split_store, monkeypatch):
+262:def test_control_census_refuses_a_split_store_at_its_entry_point(split_store, monkeypatch, tmp_path):
+272:def test_page_store_refuses_a_split_store_before_it_replays(split_store, monkeypatch, tmp_path):
+282:def test_the_shared_refusal_passes_a_historical_stage_b_store_untouched():
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 4 '10000|year|isdigit|open_split|RESTRICTION' clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py clean-arch/step4-2026-11-10/ladder/ladder_split.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-1-"""The period split (docs/research/2026-11-14-use-acceptance/splitting/DESIGN.md v4; D616): a scratch version beside the frozen
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-2-answer-choice step (D426), which it imports and does not change.
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-3-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:4:A topic that asks one quantity for each of two years, this year and next (D38: one view a year), may be declined with the typed case
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:5:`one_quantity_two_periods` naming the two years. Code checks the years (identity only: two different years, exactly this year and
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:6:next, written alike) and re-asks the step once per year with one line restricting it to that year. A yearly re-ask must write a figure
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:7:ladder for its year or decline with another case. Whether the two years are asked independently, rather than one being a base or
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-8-comparison, is the model's judgement; code cannot tell, and the probe's controls measure it. Whether a part the model leaves out is
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:9:the other year's quantity is meaning too: the yearly line tells the model the other year is asked on its own, and code adds only what
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:10:it knows, that the other year has no question (`ladder_adapter.open_split`).
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-11-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-12-The refusal field becomes a closed set: the frozen description's decline cases, transcribed as they stand, plus the new case.
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-13-"""
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-14-import copy
+--
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-19-SPLIT_CASE = 'one_quantity_two_periods'
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-20-CASES = {
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-21-    'no_main': 'the topic has no main figure or event (none, or several with none the main one)',
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-22-    'not_checkable_on_a_date': 'nothing in it can be checked on a date (for an event: no date given and no period named, unless it is a '
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:23:                               "pending regulatory decision, which is due at the company's current fiscal year-end)",
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:24:    'quarter_or_half_year': "a company's figure for a quarter or a half-year",
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:25:    'not_one_year_period': "a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, "
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-26-                           'with no publication day in the topic or the item',
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:27:    'year_ended': "a figure for a year that has already ended on the item's day",
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:28:    'beyond_next_year': "a figure for a year beyond next year (unless the topic's opens_as is binding_obligation)",
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-29-    'another_company_or_uncovered_matter': 'the question belongs to another company or to a matter no listed theme covers (name it)',
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:30:    SPLIT_CASE: 'the topic asks the value of one quantity for each of two years, this year and next, and neither year is named only as '
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:31:                "a base or a comparison: name the two years in periods, written as a figure's year is written (2026, or FY2027); each "
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:32:                'year is then asked as its own question',
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-33-}
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:34:RESTRICTION = 'Write the question for {year} only; {other} is asked as its own question, so do not list it as a part this question leaves out.'
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-35-FAILED_TWICE = "the answers failed the step's checks twice"
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-36-CALENDAR = re.compile(r'\d{4}')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-37-FISCAL = re.compile(r'FY(\d{4})')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-38-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-39-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-40-def split_schema(frozen_schema):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:41:    """The frozen schema with only `no_ladder` changed: a case of the closed set, its reason, and the periods (two years for the split
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-42-    case, null otherwise), or null."""
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-43-    schema = copy.deepcopy(frozen_schema)
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-44-    listed = '; '.join(f'{name}: {meaning}' for name, meaning in CASES.items())
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-45-    schema['properties']['no_ladder'] = {
+--
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-48-            'properties': {
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-49-                'case': {'type': 'string', 'enum': list(CASES)},
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-50-                'reason': {'type': 'string', 'pattern': r'\S', 'description': 'Why this case applies, naming the words that decide it.'},
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-51-                'periods': {'anyOf': [{'type': 'null'}, {'type': 'array', 'minItems': 2, 'maxItems': 2, 'items': {'type': 'string'}}],
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:52:                            'description': f'The two years, for {SPLIT_CASE} only; null for every other case.'}}}],
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-53-        'description': f'Why no judged question is written, as one case of this closed set, or null: {listed}. Exactly one of no_ladder '
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-54-                       'and ladder is null (checked by code).'}
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-55-    return schema
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-56-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-57-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-58-def period_reasons(periods, article_day, company, research_list):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:59:    """Identity only: two different years, written alike, exactly this year and next as of the item's day (D38)."""
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-60-    if not isinstance(periods, list) or len(periods) != 2 or len(set(periods)) != 2 or not all(isinstance(p, str) for p in periods):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:61:        return ['periods names two different years']
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-62-    if all(CALENDAR.fullmatch(p) for p in periods):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-63-        this = int(article_day[:4])
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-64-        expected = {str(this), str(this + 1)}
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-65-    elif all(FISCAL.fullmatch(p) for p in periods):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:66:        this = research_list.fiscal_year_of(company, article_day)
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-67-        expected = {f'FY{this}', f'FY{this + 1}'}
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-68-    else:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:69:        return ['both periods are written the same way: two calendar years (2026) or two fiscal years (FY2027)']
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-70-    if set(periods) != expected:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:71:        return [f'the two periods are this year and next year as of the item\'s day ({" and ".join(sorted(expected))}); '
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:72:                f'{SPLIT_CASE} does not apply to an ended year or a year beyond next year']
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-73-    return []
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-74-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-75-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:76:def checker(frozen_check, *, article_day, company, research_list, year=None):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:77:    """The check for the topic (`year` None) or for one year's re-ask: the typed refusal's shape first, then the frozen checks."""
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-78-    def check(answer):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-79-        reasons = []
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-80-        no_ladder = answer.get('no_ladder')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-81-        if no_ladder is not None:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-82-            if not isinstance(no_ladder, dict) or no_ladder.get('case') not in CASES or not str(no_ladder.get('reason') or '').strip():
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-83-                reasons.append('no_ladder names one case of the closed set and gives its reason')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-84-            elif no_ladder['case'] == SPLIT_CASE:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:85:                if year is not None:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:86:                    reasons.append(f'this question is for {year} only: write its ladder for {year}, or decline with another case')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-87-                else:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-88-                    reasons += period_reasons(no_ladder.get('periods'), article_day, company, research_list)
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-89-            elif no_ladder.get('periods') is not None:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-90-                reasons.append(f'periods is null unless the case is {SPLIT_CASE}')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:91:        elif year is not None:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-92-            figure = (answer.get('ladder') or {}).get('figure')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:93:            if figure is None or str(figure.get('year')) != year:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:94:                reasons.append(f'this question is for {year} only: write a figure ladder whose year is {year}')
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-95-        frozen_reasons, passage = frozen_check(answer)
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-96-        return reasons + frozen_reasons, passage
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-97-    return check
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-98-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-99-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-100-def shown_reason(outcome):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:101:    """What a reader is shown for a year with no question: the model's own reason when it declined, code's words when its answers
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-102-    failed the checks twice; never one presented as the other."""
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-103-    if outcome['status'] == 'no ladder':
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-104-        return outcome['reason']['reason'] if isinstance(outcome['reason'], dict) else outcome['reason']
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-105-    return FAILED_TWICE
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-106-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-107-
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-108-def ladder_for_thesis_split(payload, *, system_text, closing_text, schema, call_model, check_for):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:109:    """The topic's outcome as the frozen step gives it; when it declines with a valid split case, the two years' re-asks are added as
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:110:    `children` and the status becomes `split`. `check_for(year)` returns the check for the topic (None) or for one year."""
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-111-    outcome = ladder_step.ladder_for_thesis(payload, system_text=system_text, closing_text=closing_text, schema=schema,
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-112-                                            call_model=call_model, check=check_for(None))
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-113-    reason = outcome['reason']
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-114-    if outcome['status'] != 'no ladder' or not isinstance(reason, dict) or reason.get('case') != SPLIT_CASE:
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-115-        return outcome
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-116-    periods = list(reason['periods'])
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-117-    children = {}
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:118:    for year, other in ((periods[0], periods[1]), (periods[1], periods[0])):
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:119:        children[year] = ladder_step.ladder_for_thesis(payload, system_text=system_text,
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:120:                                                       closing_text=closing_text + '\n\n' + RESTRICTION.format(year=year, other=other),
+clean-arch/step4-2026-11-10/ladder/ladder_split.py:121:                                                       schema=schema, call_model=call_model, check=check_for(year))
+clean-arch/step4-2026-11-10/ladder/ladder_split.py-122-    return dict(outcome, status='split', periods=periods, children=children)
+--
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-48-OUTPUT_ROOT = ROOT / 'poc/data/clean-stage-b-2026-11-11'
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-49-STATUS = {'ladder': 'ladder', 'no ladder': 'no ladder', 'refused twice': 'no ladder: refused'}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-50-LADDER_COLUMNS = ('thesis_id', 'period', 'view_id', 'status', 'reason', 'reference_status', 'checked_answer', 'outcome_record',
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-51-                  'config_checksum', 'article_seq', 'article_day')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:52:TOPIC_NUMBER_BOUND = 10_000       # ordinary view ids v1..v9999; a yearly view id is v<number><four-digit year> >= v12026 (DESIGN.md v4)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-53-SPLIT_STATUS = {'ladder': 'ladder', 'no ladder': 'no ladder', 'no ladder: refused': 'no ladder: refused', 'refused twice': 'no ladder: refused'}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-54-
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-55-
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-56-
+--
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-293-    def open_thesis(self, thesis_id, outcome, k, seq, day, input_id, source):
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-294-        """Write the thesis's ladder row and, for a written ladder, its view; not committed here. `k` is the trace's article number
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-295-        (kept in the row as the source article), `seq` the store's sequence the loop gave the article (CLOSING-DESIGN.md §1)."""
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-296-        number = thesis_id.split('-', 1)[1]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:297:        if not number.isdigit() or int(number) >= TOPIC_NUMBER_BOUND:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:298:            raise SystemExit(f'{thesis_id}: topic numbers stay below {TOPIC_NUMBER_BOUND}, so a yearly view id (the number followed by the '
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:299:                             'year, digits only) can never be an ordinary view id')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-300-        if outcome['status'] == 'split':                 # the period split (splitting/DESIGN.md v4)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:301:            return self.open_split(thesis_id, outcome, k, seq, day, input_id, source)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-302-        status = STATUS[outcome['status']]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-303-        view_id = f'v{number}' if status == 'ladder' else None
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-304-        answer = outcome['answer']
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-305-        reference_status = None
+--
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-323-            self.counts[f'theses with {status}'] += 1
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-324-            return
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-325-        view = outcome['view']
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-326-        store.create_view(self.conn, view_id=view_id, object_id=view['object_id'], object_kind=view['object_kind'], kind=view['kind'],
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:327:                          looks_at=view['looks_at'], question=view['question'], due_day=view['due_day'], year=view['year'],
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-328-                          rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-329-                                 for rung in view['rungs']],
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-330-                          seq=seq, input_id=input_id, created_at=f'{day}T00:00:00Z')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-331-        self.views.add(view_id)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-332-        self.mapping[thesis_id] = [view_id]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-333-        self.counts['views written from a ladder'] += 1
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-334-
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:335:    def open_split(self, thesis_id, outcome, k, seq, day, input_id, source):
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:336:        """A topic declined as one quantity over two open years and re-asked per year (splitting/DESIGN.md v4): the parent's row with
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:337:        status `split`; one row per year, whatever its outcome; one view per written year, its id the parent's number followed by the
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:338:        year (digits only, as the frozen judge reads view ids); every statement linked to the parent reaches every written year's view.
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:339:        A written year whose sibling has no view lists that year as not judged, with the model's own reason or code's words."""
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-340-        if str(STEP / 'ladder') not in sys.path:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-341-            sys.path.append(str(STEP / 'ladder'))       # last: none of its modules shares a name with the writer's own folders
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-342-        import ladder_split
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-343-        number = thesis_id.split('-', 1)[1]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-344-        store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period='', view_id=None, status='split', reason=None,
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-345-                     reference_status=None, checked_answer=json.dumps({'ladder': None, 'no_ladder': outcome['reason']}, ensure_ascii=False),
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-346-                     outcome_record=json.dumps(outcome['requests'], ensure_ascii=False), config_checksum=source, article_seq=k, article_day=day)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-347-        written = {}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:348:        for year in outcome['periods']:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:349:            child = outcome['children'][year]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-350-            if child['status'] == 'ladder':
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:351:                written[year] = f'v{number}{year[2:] if year.startswith("FY") else year}'
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:352:        for year in outcome['periods']:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:353:            child = outcome['children'][year]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-354-            status = SPLIT_STATUS[child['status']]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:355:            view_id = written.get(year)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-356-            checked = None
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-357-            if view_id is not None:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-358-                checked = json.loads(json.dumps(child['answer']))
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-359-                if checked['ladder'].get('reference') is not None and child['passage'] is not None:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-360-                    checked['ladder']['reference']['words'] = child['passage']
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:361:                for other in outcome['periods']:     # the model's own parts pass unchanged; code adds only a year with no question
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:362:                    if other != year and other not in written:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-363-                        checked['ladder']['not_judged'] = list(checked['ladder'].get('not_judged') or []) + [
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-364-                            {'part': f'{other}: no question written', 'why': ladder_split.shown_reason(outcome['children'][other])}]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-365-            elif child['status'] == 'no ladder':
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-366-                checked = {'ladder': None, 'no_ladder': child['reason']}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:367:            store.insert(self.conn, 'clean_ladders', thesis_id=thesis_id, period=year, view_id=view_id, status=status,
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-368-                         reason=None if view_id else ladder_split.shown_reason(child),
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-369-                         reference_status=(child.get('view') or {}).get('reference_status') if view_id else None,
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-370-                         checked_answer=None if checked is None else json.dumps(checked, ensure_ascii=False),
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-371-                         outcome_record=json.dumps(child['requests'], ensure_ascii=False), config_checksum=source, article_seq=k, article_day=day)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-372-            if view_id is None:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-373-                continue
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-374-            view = child['view']
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-375-            store.create_view(self.conn, view_id=view_id, object_id=view['object_id'], object_kind=view['object_kind'], kind=view['kind'],
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:376:                              looks_at=view['looks_at'], question=view['question'], due_day=view['due_day'], year=view['year'],
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-377-                              rungs=[{'label': rung['label'], 'condition': rung['condition'], 'lo': rung.get('lo'), 'hi': rung.get('hi')}
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-378-                                     for rung in view['rungs']],
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-379-                              seq=seq, input_id=input_id, created_at=f'{day}T00:00:00Z')
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-380-            self.views.add(view_id)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:381:            self.counts['views written from a yearly ladder'] += 1
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-382-        if written:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-383-            self.mapping[thesis_id] = [written[y] for y in outcome['periods'] if y in written]
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-384-        else:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-385-            self.unjudged.add(thesis_id)
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:386:            self.counts['split theses with no yearly view'] += 1
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-387-
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-388-    def _link(self, evidence_id, thesis_id, k, changed):
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-389-        if evidence_id is not None and thesis_id in self.unjudged:
+clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py-390-            self.counts['links to an unjudged thesis'] += 1
+
+codex
+The crash and reader checks address the earlier findings, but I cannot accept the build yet: **the new ID rule changes unsplit behavior and does not enforce the claimed boundary completely**.
+
+[The writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:293) now refuses *every* topic numbered 10,000 or more, including ordinary unsplit topics. That conflicts with the design’s requirement that unsplit behavior remain unchanged. Also, `isdigit()` and `int(number) < 10_000` permit leading-zero IDs longer than four digits, so the stated proof that every ordinary ID has at most four digits does not hold as written.
+
+Use a collision-free digit-only allocation that does not impose this new limit on ordinary topics, or establish and enforce an existing canonical ID contract with evidence that it covers every input. Test an ordinary/split collision and the boundary through the real writer.
+
+The revised yearly prompt is a sensible place to handle meaning, but it replaces a code guarantee with a model instruction. Its wording and the possibility of losing a mixed qualification must be assessed in the full prompt audit and blind reading; the passing fake-model test does not establish obedience.
+
+Once the ID issue is resolved, proceed with the proposed $0 probe preparation and return before any send. The reservation total remains conditional on charges staying within their reserves.
+
+CONSENSUS: no, because the ID fix introduces an unsplit limit and its uniqueness argument is incomplete.
+tokens used
+4,199,468
+The crash and reader checks address the earlier findings, but I cannot accept the build yet: **the new ID rule changes unsplit behavior and does not enforce the claimed boundary completely**.
+
+[The writer](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_b/ladder_adapter.py:293) now refuses *every* topic numbered 10,000 or more, including ordinary unsplit topics. That conflicts with the design’s requirement that unsplit behavior remain unchanged. Also, `isdigit()` and `int(number) < 10_000` permit leading-zero IDs longer than four digits, so the stated proof that every ordinary ID has at most four digits does not hold as written.
+
+Use a collision-free digit-only allocation that does not impose this new limit on ordinary topics, or establish and enforce an existing canonical ID contract with evidence that it covers every input. Test an ordinary/split collision and the boundary through the real writer.
+
+The revised yearly prompt is a sensible place to handle meaning, but it replaces a code guarantee with a model instruction. Its wording and the possibility of losing a mixed qualification must be assessed in the full prompt audit and blind reading; the passing fake-model test does not establish obedience.
+
+Once the ID issue is resolved, proceed with the proposed $0 probe preparation and return before any send. The reservation total remains conditional on charges staying within their reserves.
+
+CONSENSUS: no, because the ID fix introduces an unsplit limit and its uniqueness argument is incomplete.

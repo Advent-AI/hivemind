@@ -1,0 +1,3 @@
+Yes. D667 now makes v9 §1.2 govern the whole census and explicitly includes both missing exclusions: the whole-corpus search index and this comparison’s own files. The raw-copy and production-replay exclusions still match the plan. [D667 draft](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/D667-draft.md:9) · [Run plan §1.2](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:59)
+
+READY

@@ -1,0 +1,742 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-7
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Council round 40 (Alex active, 2026-11-17): plan the next step for astra on the answer-choice step. Be brief.
+
+Alex: "你测试吧，但是你跑一下council 稍微整一下下面一步该怎么做". He has authorized about $6: an outside-44 test (~$1) and a gate-1 rerun on the 44 (~$5).
+
+## State (read the files; out of scope: the frozen ruler, Steps 1-3, the judging stage)
+- D648/D649 (`docs/DECISIONS-log.md`, tail): astra-frozen on the 44 meets lines 1, 3 and 6. It misses line 4 by 7 answers: acc/clean-9 3/3, acc/clean-8 3/3 and
+  u3/clean-10 1/3. Each is a topic with a main figure plus a sub-part or a condition, declined as "no main one". Lines 2 and 5 depend on 20 unresolved points;
+  14 of them are one rule, the due day of an existing obligation (next annual report ~Feb vs code's 60 days after FY end, Apr 1; D403, Alex's call, unanswered).
+  Report: `poc/data/clean-ladder-stage-a-astra-2026-11-17/run-1/report-output.txt`.
+- D650: one 26-topic draw cannot rank models; luna's agreed count moved 7 to 1 between draws.
+- The candidate fix is D436 (Alex): a second side of the same bet is one question, context, listed as not judged. A2's text
+  (`docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py`, EDITS) adds:
+  "A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand
+  it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main
+  one, or when the main part itself meets a case below." It also changes "wording" to "description and outcome" in three places, the closing and the schema.
+  The A2 readings were VOID (D640, D641). audit-2.md says "NOT SOUND: 'The question leaves out' can include event alternatives already decided by the answer
+  choices".
+- **My concern:** two of A2's three examples mirror the two failing 44 topics: HBM growth plus "still short of demand", and total semiconductor revenue plus its
+  AI part. AGENTS §6: no example taken from a test article, no case-fitted fix, and the examples must read the same for a bank, a drug maker or a retailer.
+
+## My proposal (challenge it)
+1. **Edit (minimal):** only D436's sentence, with no examples, or with cross-domain examples not taken from the 44: "A second side of the same bet stays in the one
+   question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part
+   itself meets a case below." No "description and outcome" change, so audit-2's finding is not inherited.
+2. **Outside test (~$1), astra, both the frozen and the edited request,** 3 draws each, on topics outside the 44:
+   - targets: topics with a main figure plus a second side, from the 26 outside topics and the reference-control set;
+   - controls that must stay declined: week-10-06 clean-4 and clean-12 (two years with no main one) and fortnight clean-8 (no theme), all justified by both
+     families before;
+   - read blind by both families with planted controls.
+
+   Pass rule, fixed before the send: the target declines turn into questions the readers accept; no control flips to a question; no new agreed failure on
+   another topic.
+3. **If it passes:** gate 1 on the 44 with the edited request, read with the run-4 procedure, both countings reported. The due-day rule stays Alex's.
+
+## Ask
+Agree or correct, with the smallest change. In particular:
+- (a) the edit text: examples or none;
+- (b) whether the outside set has enough target cases (name them from the files);
+- (c) the pass rule;
+- (d) any reason the gate-1 rerun on the 44 is unsound after this, given the 44 were seen.
+
+End with CONSENSUS: <one line> or DISAGREE: <one line>.
+
+codex
+I’ll check the three failure traces, the proposed wording and the available outside cases, then give a bounded test and gate plan.
+exec
+/opt/homebrew/bin/zsh -lc 'tail -160 docs/DECISIONS-log.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat poc/data/clean-ladder-stage-a-astra-2026-11-17/run-1/report-output.txt' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+Council round 39 (`reflection-6/codex-challenge-39.md`) on a fifth Stage A with sol plus A2 plus v2 within the remaining $2.26:
+- **Authority:** D426's "no fifth Stage A is sent" is Alex's specific decision and "remains in force". D439's later general delegation
+  "does not explicitly reverse that decision".
+- **The configuration:** the pair is unmeasured. A2's evidence comes from a voided reading on another model.
+- **The cost:** an estimate. An incomplete run would read NOT MEASURED.
+- "CONSENSUS: no, because the proposed fifth Stage A lacks an explicit reversal of D426 and a sufficiently validated final
+  configuration."
+- The council's words: "no supported in-authority, in-budget step on the present record that would move the production decision".
+
+**The record stands at D643:**
+- the gate-1 launch is prepared and inert (`reflection-6/gate1-candidate/README.md`);
+- Alex's rulings are on his page;
+- D439 is at about $37.74 of $40.
+
+Work reopens on Alex's word, new material, or a new concrete reversible candidate (D612).
+
+## D645 · 2026-11-16 · Alex: astra is not used; the answer-choice step stays on luna
+
+- **Alex, 2026-11-16:** "我们不能用astra 啊，这个成本这么高怎么可能能work".
+- **Decided:**
+  - astra is not a candidate for the answer-choice step;
+  - the gate-1 handoff's two astra configurations (`reflection-6/gate1-candidate/`) are withdrawn;
+  - the step stays on luna, the frozen production model.
+- **What remains for luna:** its gate-1 shortfall on the 44 is lines 1, 3 and 4, missed by 1, 2 and 3 answers of 131 (D426).
+
+
+## D646 · 2026-11-16 · Alex: try Claude Opus 5.5 on the answer-choice step; prepared at $0, waiting on the Anthropic key
+
+- **Alex, 2026-11-16:** "为什么要用astra 不用claude opus 5.5?", then "你应该有我的anthropic key; 你试试看opus".
+- **Why it had not been tried:**
+  - the system connects only OpenAI and DeepSeek (`model.ENDPOINTS`);
+  - switching provider is his call (AGENTS §9).
+  - The D625 reference test had a Claude writer at 0 agreed hard-line failures on the 26 topics outside the 44 (one draw), against
+    the frozen step's 3 and the Codex writer's 8.
+- **Prepared ($0):**
+  - `reflection-6/opus/anthropic_adapter.py`: a probe transport. It sends the step's request to Anthropic's Messages API with:
+    - the same system and user texts;
+    - the same output cap and effort;
+    - the schema less its `pattern` keywords, which `model.call` checks client-side.
+
+    The production transport is unchanged.
+  - `reflection-6/opus/opus_probe.py`: luna against `claude-opus-5-5` on the 26 outside topics.
+    - One draw each, labelled one draw.
+    - Read blind by both reader families with D628's controls.
+    - The Opus arm stops after its first topic when that topic's cost projects above its cap.
+    - Caps: luna $0.10 and Opus $2.15, within D439's remaining $2.26.
+  - `model.PRICES` gains `claude-opus-5-5` at $4 input and $20 output per million tokens (the claude-api skill's model table, cached
+    2026-11-03).
+- **Checks:**
+  - The request check passes: each Opus request differs from luna's only in its model, and the adapter keeps the texts, cap, effort
+    and schema less its patterns.
+  - A dry run through the real runner, with stored answers and no network, writes 26 of 26 for each arm.
+  - Tests: 351 pass.
+  - Mutation runs were not done; Claude Code's permission check refused them earlier (D643 record).
+- **Verdict rule, fixed before the send (D628's):**
+  - "moves the candidate": Opus fails at most half as many sends as luna, at least 3 fewer, with no new harm, and the strict counting
+    points the same way;
+  - "closes it": Opus fails at least luna's count minus 1;
+  - "inconclusive": luna fails fewer than 3.
+- **Blocked:** no `ANTHROPIC_API_KEY` is found in the credentials file, this shell, Alex's login shell or launchd. Alex adds it to
+  `~/.config/hivemind/credentials.json`; then `opus_probe.py send` runs.
+
+## D647 · 2026-11-16 · The Opus trial reads "inconclusive": fewer failures, one real new failure, a sharp reader-family split, astra-level cost
+
+- **The run:** `poc/data/clean-opus-probe-2026-11-16/run-2`, one draw each, luna against `claude-opus-5-5` on the 26 topics outside the
+  44. Result: `reflection-6/opus/RESULT.md`.
+- **Failed sends:**
+
+  | Counting | luna | Opus |
+  |---|---|---|
+  | Agreed (both families) | 7 | 1 |
+  | Strict (either family) | 9 | 7 |
+  | Codex family alone | 7 | 7 |
+  | Claude family alone | 9 | 1 |
+
+- **Controls:** every planted control was caught by both families.
+- **The pre-registered verdict is "inconclusive".** The improvement and same-direction clauses hold. The no-harm clause fails on one
+  topic, H20: Opus leaves ruled_out null, a real error read against the request.
+- **Cost:** Opus is about $0.058 a topic, about 65 times luna and not below astra. It counts about 68% more input tokens. The pre-send
+  estimate was wrong.
+- **Not established:** whether Opus is better. One family sees a tie, and Claude-family leniency toward Claude's writing is not
+  excluded.
+- **Spending:** D439 stands at about $39.29 of $40, including run-1's $0.026.
+
+## D648 · 2026-11-17 · Alex reverses D645: the answer-choice step uses astra; gate 1 on the 44 is launched with astra-frozen
+
+- **Alex, 2026-11-17**, on the Opus result and the proposal to test Haiku 5.5: "不要。那就用astra 吧。你之前的实验可以跑，但你真的确定这个不会是一个很大的烧钱窟窿吗？我之后未来可能有1000个资产类别许啊哟process".
+- **Decided (his words):**
+  - astra is the candidate model for the answer-choice step, which reverses D645;
+  - Haiku 5.5 is not tested;
+  - the prepared gate-1 experiment runs, which lifts D426's "no fifth Stage A" for this run.
+- **Settled by Claude, and recorded as such:**
+  - **The configuration is `astra-frozen`.** It is the only one measured: 4 of 78 failed sends outside the 44 (D633, D634).
+    `astra-a2-v2` has never been measured as a pair.
+  - **The cap is $9.50,** the README's figure: expected $4.88 to $6.60, plus two attempts in flight at $1.21. The cap is
+    `gate1-candidate/authorization.json`, which quotes his words.
+- **Checked before the launch ($0):**
+  - the fourth Stage A's 148 stored attempts give the same verdicts under the current checks;
+  - the 132 requests are the frozen ones with only the model changed.
+- **The run:** `poc/data/clean-ladder-stage-a-astra-2026-11-17/run-1`, read with the fourth Stage A's brief, scoring and six lines.
+- **His cost question** is answered from the full clean run's measured spend (`poc/data/clean-e2e-full-2026-11-13/spend-by-component.json`,
+  NVDA, 2026-07-01 to 07-14):
+  - reading articles costs about $0.18 a day;
+  - matching costs about $0.03 a day;
+  - writing questions with astra would cost about $0.05 to $0.10 a day for one or two new questions;
+  - judging costs about $0.01 a day.
+  - Astra's share grows with new questions, not with articles: each question is written once.
+
+## D649 · 2026-11-17 · Gate 1 on the 44 with astra-frozen: lines 1, 3 and 6 met; line 4 missed by 7; lines 2 and 5 depend on unresolved due-day points
+
+- **The run:** `poc/data/clean-ladder-stage-a-astra-2026-11-17/run-1`, 132 of 132 sends, $4.74.
+  - Read with the fourth Stage A's procedure (`collect_readings.py`): both families, then two third readers on 32 disputed points.
+  - All 264 reader rows are valid. Output: `run-1/report-output.txt`.
+- **Line by line**, against the fourth Stage A (luna, `stage_a/result-4/report.txt`). Under the two countings, a line is met only when
+  it is met under both, and missed only when it is missed under both.
+
+  | Line | luna, run 4 | astra, this run |
+  |---|---|---|
+  | 1. a different question | missed (1 to 5) | met |
+  | 2. a part left unlisted | met | depends: met, or missed by 1 |
+  | 3. no matching answer, or two | missed (2 to 4) | met |
+  | 4. an unjustified refusal | missed (3) | missed (7) |
+  | 5. 35 of 44 right | depends (40, or 34) | depends (40, or 35 with 26 written below 28) |
+  | 6. direction and due day | met | met |
+
+- **Line 4's seven misses are one class,** read against the topics. astra declines a topic that names a main figure together with a
+  sub-part or a condition, calling them "two tracked figures without a main one":
+  - acc/clean-9: total semiconductor revenue, with the AI-chip part "of it", in 3 of 3 passes;
+  - acc/clean-8: HBM shipment growth, "still falling short of demand", in 3 of 3 passes;
+  - u3/clean-10: in 1 of 3 passes.
+
+  Every reader and both third readers mark these as unjustified. This is the main-part class (D631), and D436's second-side sentence is
+  written for it.
+- **The unresolved points:** 14 of the 20 are one rule. The two third readers split on the due day of an existing obligation: the next
+  annual report, which the fiscal-year note puts around 2027-02, against code's 2027-04-01. This is the due-day question pending with
+  Alex (D403), and the fourth Stage A had it too.
+- **The result:** gate 1 is not passed. Spending: about $44.03 with this run, inside Alex's authorization of the run.
+
+## D650 · 2026-11-17 · DeepSeek V4.1 Flash trial: no better than luna in one draw; luna's own count moves from 7 to 1 between draws
+
+- **Alex, 2026-11-17:** "你要不要用deepseek 4.1 flash 试试看".
+- **The run:** `deepseek-flash` (DeepSeek-V4.1-Flash, per its /models listing).
+  - It was sent as Step 1 sends it: the schema at the end of the system text, JSON mode, effort high. DeepSeek offers low, high and
+    max, but no "medium".
+  - Luna against flash on the 26 topics outside the 44, one draw each, with the Opus trial's instrument (D647).
+  - Run folder: `poc/data/clean-deepseek-probe-2026-11-17/run-1`; result: `reflection-6/deepseek/RESULT.md`.
+- **Failed sends:**
+
+  | Counting | luna | flash |
+  |---|---|---|
+  | Agreed (both families) | 1 | 3 |
+  | Strict (either family) | 3 | 4 |
+
+  - The families agree here.
+  - Flash's three failures: two ruled-out conditions written as a slip, and one send refused twice for format.
+- **The verdict is "inconclusive",** because luna failed fewer than 3 sends.
+- **Measured on the instrument:** on the same 26 topics, luna's agreed failures were 7 in D647's draw and 1 in this one. One draw of 26
+  cannot separate models a few sends apart. Only the three-draw screens (luna 13 of 78, astra 4 of 78; D628, D633, D634) and gate 1 on
+  the 44 (D649) separate them.
+- **Cost:** about $0.0077 a topic, about 6.7 times luna's measured cost in this trial and a fifth of astra's. $0.23 spent.
+
+ succeeded in 0ms:
+**The revised closing matches the system text and schema, but all three can still ask for an answer choice to be listed as “not judged.”** For example, “Will the acquisition close?” leaves withdrawal out of the question’s wording, even though the answer choices can already decide whether the parties withdrew.
+
+| Instruction | Verdict against the cited decisions |
+|---|---|
+| Ask one figure for a named period or one event; judge what the topic’s outcome names as tracked. | **Consistent** with D397. It adds no rule giving the description priority. |
+| Read the description and outcome together; list every other part **the question leaves out**. The schema repeats this. | **Keeps wider** than D397’s purpose when “leaves out” is read literally: an answer choice can decide something that the question itself does not name. |
+| Keep a second side of the same bet as context and list it as not judged. | **Consistent** with D436. Its examples do not establish which side is main in every case. |
+| A second side alone is no reason to decline; decline if no part is main or the main part meets a decline case. | **Consistent** with D436 and D397. It does not introduce the refused description-priority rule. |
+| Do not combine two things into one set of answer choices; list the omitted part in the examples. | **Consistent** with D397, provided the omitted part is not already decided by the answer choices. |
+| Decline when nothing can be checked on a date, including an undated event with no named period, subject to the regulatory exception. | **Consistent** with D403. |
+| Decline when there is no main part; decline another company’s figure or a matter no listed theme covers. | **Consistent** with D397 on no main part. **No source** for the company and theme boundaries in the three cited decisions; they are retained from the frozen request. |
+| The other period and year decline cases, and the rule against rewriting a distant-year figure as an event. | **No source** in the three cited decisions; retained from the frozen request. |
+| List a difference within an event outcome, such as approval with versus without conditions. | **Consistent** with D397 when the answer choices do not decide that difference. |
+| Revised closing: check every other part **the question leaves out**. | **Consistent with the system text and schema; it adds nothing beyond them.** It also repeats their ambiguity about parts the answer choices already decide. |
+
+Two equally presented years with no main one still meet the explicit decline instruction. Another company’s figure and a matter without a listed theme also still have explicit decline instructions. A model could misapply “second side” to any of these, but the text does not expressly override those boundaries. As the earlier audit found, the sources do not settle how to choose a main part when several candidates are named.
+
+NOT SOUND: “The question leaves out” can include event alternatives already decided by the answer choices.**The sources do not give a general rule for finding the main part when several parts are named.** They support judging one part and showing the rest, but they do not say when the topic’s description, a first-mentioned part, a later milestone, or a closely related second figure makes one part primary.
+
+For example, the CPO topic asks about **2027 shipments** in its description, but its outcome names shipments from **Q4 2026 through 2027**. Treating the full-year figure as primary is reasonable; treating the whole named span as the tracked figure is also consistent with the sources.
+
+1. **What the decisions say**
+
+   - [D397]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4326) records Alex’s choice: “只判主要那件.” It says to judge “the part its `outcome` names,” show the other parts as not judged, and give no question when there is “no main part.” It does not explain how to choose when the outcome names several candidates.
+   - [D436]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4847) says “a second side of the same bet” stays as context and is “shown as not judged.” Its examples include shortage beside shipments. It does not say how to identify the main side in every multi-part topic.
+   - [D417]( /Users/lchingen/hivemind/docs/DECISIONS-log.md:4606) declines a figure covering “a period which is not one fiscal or calendar year” when neither text gives a publication day. It does not say which period to select when the topic names several.
+
+   The [reader form]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:95) checks that the question asks what the outcome names, omitted parts are shown, and a refusal’s stated reason applies. It supplies no further selection rule.
+
+2. **The 24 declines**, grouped where all draws have the same source-level verdict. “Silent” means the available standard does not settle the disputed selection; it is not a finding that the decline is wrong.
+
+| Topic and sol draws | Main part and verdict |
+|---|---|
+| Fortnight **13**, d1–d3 | **Silent.** Full-year 2027 shipments may be main, with earlier checkpoints left out; alternatively the outcome tracks the Q4 2026–2027 span. D417 applies only if that span is the selected figure and has no publication day. |
+| Fortnight **3**, d1–d3 | **Silent.** US authorization may be main, with Chinese restrictions as another condition; alternatively both authorities’ actions are separately tracked with neither main. |
+| Fortnight **8**, d2–d3 | **Justified on the recorded theme finding.** The main figure is 2026 physical-AI venture funding; the refusal is about no matching theme, not multiple parts. Both readers held it. The case file itself does not contain the request’s theme list, so that finding rests on the recorded trace. |
+| Week **11**, d1–d3 | **Silent.** Signing may be main, with closing and terms left out; alternatively signing and closing are distinct tracked events with neither selected. |
+| Week **12**, d1–d3 | **Justified.** 2026 and 2027 global AI spending are presented together, with neither singled out. They are separate annual figures; choosing one would require an additional rule. |
+| Week **13**, d1–d3 | **Silent.** Remaining commitments may be main, with cash paid and changes left out; alternatively these are separately tracked figures with none selected. |
+| Week **3**, d1–d3 | **Silent.** Contract-price change may be main, with selling prices and margins left out; alternatively the named measures compete. Even if price change is main, the separate HBM-versus-DRAM series question remains. |
+| Week **4**, d1–d3 | **Justified.** 2026 and 2027 hyperscaler spending are presented together, with neither singled out; they are separate annual figures. |
+| Week **5**, d2 | **Unjustified.** Closing the already signed acquisition is the named event; termination is an alternative outcome, while consideration and regulatory conditions are other parts to show. Both readers rejected the refusal. |
+
+The reader disagreements and matched answers are in the [refusal trace]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/model/refusal-trace.txt:1). These verdicts are about the stated refusal reasons; they do not certify that a proposed answer would meet every other requirement.
+
+3. **Wording and boundary cases**
+
+The strongest sourced wording is already in the [request]( /Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/candidate-system.txt:5): “Judge the one the topic’s outcome names as what is tracked,” and list every other part. D436 adds “a second side of the same bet” as context. Applied to all nine topics above, that wording supports the week 5 correction, preserves the two two-year refusals and the separate theme refusal, and leaves the other five topics unresolved. It does **not** tell the model how to resolve those five; the stored trace also cannot establish that repeating it would change any model response.
+
+A ruling would need these boundaries, with both readings shown:
+
+- **CPO shipments:** description’s full-year figure is main / the outcome’s multi-period span is tracked.
+- **China restrictions:** US approval is main and Chinese acceptance is a condition / the two authorities’ decisions are separate candidates.
+- **Reflection acquisition:** signing is main and closing follows / signing and closing are separate candidates.
+- **Commitments:** remaining balance is main and funding/change are context / all are separate candidate figures.
+- **Memory:** contract-price change is main and company prices/margins are context / the figures compete; separately, whether HBM/DRAM denotes one usable figure or requires a series choice.
+
+These are the same unresolved distinctions identified by the [earlier rule review]( /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/rule-review.md:1). Neither “use the description” nor “use the first part” is sourced as a general tie-breaker.
+
+SOURCES SILENT: OWNER RULING NEEDED
+ succeeded in 0ms:
+===== every unresolved point counted for the answer =====
+sends: 132 {'event': 45, 'company figure': 27, 'refusal': 33, 'theme figure': 27}
+reading: complete | dispute share: (29, 807)
+line 1: ('met', [])
+line 2: ('met', [])
+line 3: ('met', [])
+line 4: ('missed', [('acc/clean-8', 1), ('acc/clean-9', 1), ('u3/clean-10', 2), ('acc/clean-8', 2), ('acc/clean-9', 2), ('acc/clean-8', 3), ('acc/clean-9', 3)])
+line 5: ('met', {'right': 40, 'right by a ladder': 31, 'of': 44})
+line 6, direction: ('met', {'theses': 9, 'direction differs': []})
+line 6, due day: ('met', {'theses': 33, 'same due day': 32})
+line 6, shape differs across sends: []
+shares:
+   Q: (99, 99)
+   O: (99, 99)
+   R: (99, 99)
+   D: (94, 99)
+   X: (99, 99)
+   L: (99, 99)
+   XR: (98, 99)
+   F: (27, 27)
+   Y: (53, 54)
+   N: (26, 33)
+   G, reader 1: {'not_assessable': 20, 'holds': 34}
+   B, reader 1: {'bet': 135, 'not_a_bet': 57}
+   G, reader 2: {'not_assessable': 18, 'holds': 36}
+   B, reader 2: {'bet': 64, 'not_a_bet': 128}
+refusals by the model, each with N as the two readers gave it and as ruled:
+   acc/clean-5 pass 1 | N holds / holds -> holds | The tracked outcome is Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027, a company figure for a single quarter. Quarterly figures are evidence for a yearly question and are not eligible for a standalone
+   acc/clean-5 pass 2 | N holds / holds -> holds | The tracked outcome is Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027, a company figure for a single quarter. Quarterly figures are evidence for a yearly question and are not eligible for their own la
+   acc/clean-5 pass 3 | N holds / holds -> holds | The tracked outcome is Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027, a company figure for a quarter. Quarterly figures are evidence for a yearly question and are not eligible for a standalone ladder
+   acc/clean-8 pass 1 | N holds / fails -> fails | The topic's outcome names two tracked quantities—global HBM shipment growth in calendar 2027 and whether HBM supply remains short of demand that year—without identifying either as the main one.
+   acc/clean-8 pass 2 | N holds / fails -> fails | The topic names two tracked outcomes—global HBM shipment growth in calendar 2027 and whether HBM supply remains short of demand that year—without identifying either as the main one. They cannot be combined into one judged figure o
+   acc/clean-8 pass 3 | N fails / fails -> fails | The topic's outcome names two independently tracked measures—global HBM shipment growth in calendar 2027 and whether HBM supply remains short of demand that year—without identifying either as the main one. A single judged question
+   acc/clean-9 pass 1 | N holds / fails -> fails | The topic's outcome names both calendar 2026 global semiconductor industry revenue and its AI-chip revenue portion as tracked figures, without identifying one as the main figure to judge.
+   acc/clean-9 pass 2 | N fails / fails -> fails | The topic's outcome tracks both calendar 2026 global semiconductor industry revenue and its AI-chip revenue portion without identifying either as the main figure to judge.
+   acc/clean-9 pass 3 | N fails / fails -> fails | The outcome names two tracked figures—calendar 2026 global semiconductor industry revenue and its AI-chip revenue portion—without identifying either as the main figure to judge.
+   u1/clean-10 pass 1 | N holds / holds -> holds | The tracked outcome is a U.S. legislative or regulatory ban or phase-out of Chinese-made lidar sensors, a matter no listed theme covers. It is not a chip export control or a tariff. The potential effect on NVIDIA's DRIVE Hyperion 
+   u1/clean-10 pass 2 | N holds / holds -> holds | The tracked outcome is a U.S. legislative or regulatory ban or phase-out of Chinese-made lidar sensors, not NVIDIA's own product progress or financial results. No listed theme covers these lidar restrictions: chip export controls 
+   u1/clean-10 pass 3 | N holds / holds -> holds | The tracked outcome is a U.S. legislative or regulatory ban or phase-out of Chinese-made lidar sensors, a matter no listed theme covers. It is neither chip export controls nor tariffs. Its potential effects on NVIDIA's DRIVE Hyper
+   u1/clean-5 pass 1 | N holds / holds -> holds | The topic tracks several distinct figures—DRAM, NAND and HBM contract prices and resulting per-rack memory content cost—without identifying one as the main judged quantity. It also spans calendar 2026–2027 rather than one year and
+   u1/clean-5 pass 2 | N holds / holds -> holds | The topic tracks several distinct quantities—DRAM, NAND and HBM contract prices and resulting per-rack memory content cost—without naming one main figure or a single defined price index. It also covers the two-year 2026–2027 contr
+   u1/clean-5 pass 3 | N holds / holds -> holds | The topic names several quantities without selecting one main tracked figure: contract prices for DRAM, NAND and HBM, their direction over 2026–2027, and the resulting memory cost per VR200 rack. Its outcome specifies neither a si
+   u1/clean-9 pass 1 | N holds / holds -> holds | The tracked figure is domestic products' share of surveyed Chinese enterprises' AI accelerator budgets over the rolling 12 months following the July 2026 survey, not one fiscal or calendar year. Neither the topic nor the item give
+   u1/clean-9 pass 2 | N holds / holds -> holds | The tracked figure is domestic products' share of surveyed Chinese enterprises' AI accelerator budgets over the rolling 12 months following the July 2026 survey, not one fiscal or calendar year. Neither the topic nor the item give
+   u1/clean-9 pass 3 | N holds / holds -> holds | The tracked figure is domestic products' share of surveyed Chinese enterprises' AI accelerator budgets over the rolling 12 months following the July 2026 survey, not one fiscal or calendar year. Neither the topic nor the item give
+   u2/clean-10 pass 1 | N holds / holds -> holds | The topic's outcome tracks both new HBM capacity coming online and the persistence of record-high HBM/memory prices through late 2027, without identifying either as the main figure or event. Selecting one would arbitrarily discard
+   u2/clean-10 pass 2 | N holds / holds -> holds | The topic's outcome tracks both whether meaningful new HBM capacity comes online before late 2027 and whether record-high HBM/memory prices persist, without identifying either as the main figure or event. Choosing one would arbitr
+   u2/clean-10 pass 3 | N holds / holds -> holds | The topic's outcome tracks both whether meaningful new HBM capacity comes online before late 2027 and whether record-high HBM/memory prices persist, without identifying either as the main figure or event. A single judged question 
+   u2/clean-8 pass 1 | N holds / holds -> holds | The tracked figure is the share of Chinese companies’ AI-accelerator spending allocated to domestic suppliers over the 12 months from July 7, 2026, to mid-2027, not one fiscal or calendar year. Neither the topic nor the item gives
+   u2/clean-8 pass 2 | N holds / holds -> holds | The tracked figure is the share of Chinese companies’ AI-accelerator budgets allocated to domestic suppliers over the next 12 months from July 7, 2026, rather than one fiscal or calendar year. Neither the topic nor the item gives 
+   u2/clean-8 pass 3 | N holds / holds -> holds | The tracked figure is the share of Chinese AI-accelerator budgets allocated to domestic suppliers over the 12 months from July 7, 2026, to mid-2027, not one fiscal or calendar year. Neither the topic nor the item gives a publicati
+   u3/clean-10 pass 1 | N holds / holds -> holds | The outcome names two tracked results without identifying a main one: the combined new HBM capacity SK Hynix, Micron and Samsung add in calendar 2027, and whether any arrives before late 2027 to ease the shortage. A single judged 
+   u3/clean-10 pass 2 | N fails / fails -> fails | The outcome names two distinct tracked results—combined new HBM production capacity added by SK Hynix, Micron and Samsung in calendar 2027, and whether any arrives before late 2027—without identifying either as the main result. Th
+   u3/clean-10 pass 3 | N holds / holds -> holds | The outcome tracks both the combined HBM capacity SK Hynix, Micron and Samsung add in calendar 2027 and whether any arrives before late 2027 to ease the shortage, without identifying either the annual capacity figure or the supply
+   u3/clean-2 pass 1 | N holds / holds -> holds | The tracked outcome is the industry-wide CPU-to-GPU attach ratio in AI inference workloads in calendar 2026, not NVIDIA's own figure. None of the listed themes covers inference-system CPU/GPU architecture or attach ratios; this is
+   u3/clean-2 pass 2 | N holds / holds -> holds | The tracked outcome is the industry-wide CPU-to-GPU attach ratio for AI inference workloads in 2026, not NVIDIA’s own figure. This concerns inference hardware architecture and processor mix, a matter not covered by any listed them
+   u3/clean-2 pass 3 | N holds / holds -> holds | The tracked figure is the industry-wide CPU:GPU attach ratio for AI inference workloads in calendar 2026, not NVIDIA's own figure. This AI server architecture mix is not covered by any listed theme.
+   u3/clean-4 pass 1 | N holds / holds -> holds | The tracked outcome is Huawei-designed AI chip output manufactured by SMIC in calendar 2026, a figure belonging to Huawei and SMIC rather than NVDA. Another company's own production figure cannot be assigned to NVDA or to a listed
+   u3/clean-4 pass 2 | N holds / holds -> holds | The tracked outcome is Huawei's calendar-2026 output of Huawei-designed AI chips manufactured at SMIC, an operating figure belonging to Huawei and SMIC rather than NVDA. Another company's own production figure cannot be assigned t
+   u3/clean-4 pass 3 | N holds / holds -> holds | The tracked outcome is Huawei-designed AI accelerator output manufactured by SMIC in calendar 2026, a production figure belonging to Huawei and SMIC rather than NVDA. Another company's own production figure cannot be assigned to N
+refused twice by code, with the reasons of each attempt:
+W named: 3; upheld: 0
+===== every unresolved point counted against it =====
+sends: 132 {'event': 45, 'company figure': 27, 'refusal': 33, 'theme figure': 27}
+reading: complete | dispute share: (29, 807)
+line 1: ('met', [])
+line 2: ('missed', [('u3/clean-11', 2)])
+line 3: ('met', [])
+line 4: ('missed', [('acc/clean-8', 1), ('acc/clean-9', 1), ('u3/clean-10', 2), ('acc/clean-8', 2), ('acc/clean-9', 2), ('acc/clean-8', 3), ('acc/clean-9', 3)])
+line 5: ('missed', {'right': 35, 'right by a ladder': 26, 'of': 44})
+line 6, direction: ('met', {'theses': 9, 'direction differs': []})
+line 6, due day: ('met', {'theses': 33, 'same due day': 32})
+line 6, shape differs across sends: []
+shares:
+   Q: (99, 99)
+   O: (99, 99)
+   R: (99, 99)
+   D: (79, 99)
+   X: (99, 99)
+   L: (98, 99)
+   XR: (97, 99)
+   F: (27, 27)
+   Y: (53, 54)
+   N: (26, 33)
+   G, reader 1: {'not_assessable': 20, 'holds': 34}
+   B, reader 1: {'bet': 135, 'not_a_bet': 57}
+   G, reader 2: {'not_assessable': 18, 'holds': 36}
+   B, reader 2: {'bet': 64, 'not_a_bet': 128}
+refusals by the model, each with N as the two readers gave it and as ruled:
+   acc/clean-5 pass 1 | N holds / holds -> holds | The tracked outcome is Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027, a company figure for a single quarter. Quarterly figures are evidence for a yearly question and are not eligible for a standalone
+   acc/clean-5 pass 2 | N holds / holds -> holds | The tracked outcome is Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027, a company figure for a single quarter. Quarterly figures are evidence for a yearly question and are not eligible for their own la
+   acc/clean-5 pass 3 | N holds / holds -> holds | The tracked outcome is Vera Rubin's share of Nvidia's data center segment revenue in fiscal Q3 2027, a company figure for a quarter. Quarterly figures are evidence for a yearly question and are not eligible for a standalone ladder
+   acc/clean-8 pass 1 | N holds / fails -> fails | The topic's outcome names two tracked quantities—global HBM shipment growth in calendar 2027 and whether HBM supply remains short of demand that year—without identifying either as the main one.
+   acc/clean-8 pass 2 | N holds / fails -> fails | The topic names two tracked outcomes—global HBM shipment growth in calendar 2027 and whether HBM supply remains short of demand that year—without identifying either as the main one. They cannot be combined into one judged figure o
+   acc/clean-8 pass 3 | N fails / fails -> fails | The topic's outcome names two independently tracked measures—global HBM shipment growth in calendar 2027 and whether HBM supply remains short of demand that year—without identifying either as the main one. A single judged question
+   acc/clean-9 pass 1 | N holds / fails -> fails | The topic's outcome names both calendar 2026 global semiconductor industry revenue and its AI-chip revenue portion as tracked figures, without identifying one as the main figure to judge.
+   acc/clean-9 pass 2 | N fails / fails -> fails | The topic's outcome tracks both calendar 2026 global semiconductor industry revenue and its AI-chip revenue portion without identifying either as the main figure to judge.
+   acc/clean-9 pass 3 | N fails / fails -> fails | The outcome names two tracked figures—calendar 2026 global semiconductor industry revenue and its AI-chip revenue portion—without identifying either as the main figure to judge.
+   u1/clean-10 pass 1 | N holds / holds -> holds | The tracked outcome is a U.S. legislative or regulatory ban or phase-out of Chinese-made lidar sensors, a matter no listed theme covers. It is not a chip export control or a tariff. The potential effect on NVIDIA's DRIVE Hyperion 
+   u1/clean-10 pass 2 | N holds / holds -> holds | The tracked outcome is a U.S. legislative or regulatory ban or phase-out of Chinese-made lidar sensors, not NVIDIA's own product progress or financial results. No listed theme covers these lidar restrictions: chip export controls 
+   u1/clean-10 pass 3 | N holds / holds -> holds | The tracked outcome is a U.S. legislative or regulatory ban or phase-out of Chinese-made lidar sensors, a matter no listed theme covers. It is neither chip export controls nor tariffs. Its potential effects on NVIDIA's DRIVE Hyper
+   u1/clean-5 pass 1 | N holds / holds -> holds | The topic tracks several distinct figures—DRAM, NAND and HBM contract prices and resulting per-rack memory content cost—without identifying one as the main judged quantity. It also spans calendar 2026–2027 rather than one year and
+   u1/clean-5 pass 2 | N holds / holds -> holds | The topic tracks several distinct quantities—DRAM, NAND and HBM contract prices and resulting per-rack memory content cost—without naming one main figure or a single defined price index. It also covers the two-year 2026–2027 contr
+   u1/clean-5 pass 3 | N holds / holds -> holds | The topic names several quantities without selecting one main tracked figure: contract prices for DRAM, NAND and HBM, their direction over 2026–2027, and the resulting memory cost per VR200 rack. Its outcome specifies neither a si
+   u1/clean-9 pass 1 | N holds / holds -> holds | The tracked figure is domestic products' share of surveyed Chinese enterprises' AI accelerator budgets over the rolling 12 months following the July 2026 survey, not one fiscal or calendar year. Neither the topic nor the item give
+   u1/clean-9 pass 2 | N holds / holds -> holds | The tracked figure is domestic products' share of surveyed Chinese enterprises' AI accelerator budgets over the rolling 12 months following the July 2026 survey, not one fiscal or calendar year. Neither the topic nor the item give
+   u1/clean-9 pass 3 | N holds / holds -> holds | The tracked figure is domestic products' share of surveyed Chinese enterprises' AI accelerator budgets over the rolling 12 months following the July 2026 survey, not one fiscal or calendar year. Neither the topic nor the item give
+   u2/clean-10 pass 1 | N holds / holds -> holds | The topic's outcome tracks both new HBM capacity coming online and the persistence of record-high HBM/memory prices through late 2027, without identifying either as the main figure or event. Selecting one would arbitrarily discard
+   u2/clean-10 pass 2 | N holds / holds -> holds | The topic's outcome tracks both whether meaningful new HBM capacity comes online before late 2027 and whether record-high HBM/memory prices persist, without identifying either as the main figure or event. Choosing one would arbitr
+   u2/clean-10 pass 3 | N holds / holds -> holds | The topic's outcome tracks both whether meaningful new HBM capacity comes online before late 2027 and whether record-high HBM/memory prices persist, without identifying either as the main figure or event. A single judged question 
+   u2/clean-8 pass 1 | N holds / holds -> holds | The tracked figure is the share of Chinese companies’ AI-accelerator spending allocated to domestic suppliers over the 12 months from July 7, 2026, to mid-2027, not one fiscal or calendar year. Neither the topic nor the item gives
+   u2/clean-8 pass 2 | N holds / holds -> holds | The tracked figure is the share of Chinese companies’ AI-accelerator budgets allocated to domestic suppliers over the next 12 months from July 7, 2026, rather than one fiscal or calendar year. Neither the topic nor the item gives 
+   u2/clean-8 pass 3 | N holds / holds -> holds | The tracked figure is the share of Chinese AI-accelerator budgets allocated to domestic suppliers over the 12 months from July 7, 2026, to mid-2027, not one fiscal or calendar year. Neither the topic nor the item gives a publicati
+   u3/clean-10 pass 1 | N holds / holds -> holds | The outcome names two tracked results without identifying a main one: the combined new HBM capacity SK Hynix, Micron and Samsung add in calendar 2027, and whether any arrives before late 2027 to ease the shortage. A single judged 
+   u3/clean-10 pass 2 | N fails / fails -> fails | The outcome names two distinct tracked results—combined new HBM production capacity added by SK Hynix, Micron and Samsung in calendar 2027, and whether any arrives before late 2027—without identifying either as the main result. Th
+   u3/clean-10 pass 3 | N holds / holds -> holds | The outcome tracks both the combined HBM capacity SK Hynix, Micron and Samsung add in calendar 2027 and whether any arrives before late 2027 to ease the shortage, without identifying either the annual capacity figure or the supply
+   u3/clean-2 pass 1 | N holds / holds -> holds | The tracked outcome is the industry-wide CPU-to-GPU attach ratio in AI inference workloads in calendar 2026, not NVIDIA's own figure. None of the listed themes covers inference-system CPU/GPU architecture or attach ratios; this is
+   u3/clean-2 pass 2 | N holds / holds -> holds | The tracked outcome is the industry-wide CPU-to-GPU attach ratio for AI inference workloads in 2026, not NVIDIA’s own figure. This concerns inference hardware architecture and processor mix, a matter not covered by any listed them
+   u3/clean-2 pass 3 | N holds / holds -> holds | The tracked figure is the industry-wide CPU:GPU attach ratio for AI inference workloads in calendar 2026, not NVIDIA's own figure. This AI server architecture mix is not covered by any listed theme.
+   u3/clean-4 pass 1 | N holds / holds -> holds | The tracked outcome is Huawei-designed AI chip output manufactured by SMIC in calendar 2026, a figure belonging to Huawei and SMIC rather than NVDA. Another company's own production figure cannot be assigned to NVDA or to a listed
+   u3/clean-4 pass 2 | N holds / holds -> holds | The tracked outcome is Huawei's calendar-2026 output of Huawei-designed AI chips manufactured at SMIC, an operating figure belonging to Huawei and SMIC rather than NVDA. Another company's own production figure cannot be assigned t
+   u3/clean-4 pass 3 | N holds / holds -> holds | The tracked outcome is Huawei-designed AI accelerator output manufactured by SMIC in calendar 2026, a production figure belonging to Huawei and SMIC rather than NVDA. Another company's own production figure cannot be assigned to N
+refused twice by code, with the reasons of each attempt:
+W named: 3; upheld: 3
+   upheld, item 5 (u2/clean-1 pass 1), reader 1: Counting no disclosed amount as zero can imply there is no exposure when its amount was not disclosed.
+   upheld, item 42 (u2/clean-1 pass 2), reader 1: The question counts no disclosure as zero exposure.
+   upheld, item 25 (u1/clean-8 pass 3), reader 2: Microsoft Maia and Meta MTIA are used in-house and Google does not report TPU revenue, so the combined revenue the question says is disclosed in the hyperscalers' filings is unlikely ever to be published, which leaves the question unresolvable on its due day.
+===== each line under both countings: met only when met under both, missed when missed under both =====
+line 1: met
+line 2: depends on the unresolved points: met / missed
+line 3: met
+line 4: missed
+line 5: depends on the unresolved points: met / missed
+===== unresolved: the two third readers differ on 20 points =====
+   item 112 (u1/clean-7 pass 1) D: claude: The thesis says only "likely filed early 2027" and the article gives no filing day, so 2027-04-01, 60 days after the FY2027 year-end, is the code-set  | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 45 (u1/clean-6 pass 1) D: claude: The thesis's outcome asks whether first shipments come 'in 2027 or is delayed to 2028', and the article says Kyber had 'originally been slated for rel | codex: The thesis names 2028 as its period, while the ladder uses December 31, 2027 and calls it the period end.
+   item 45 (u1/clean-6 pass 1) XR: claude: The article states Kyber 'had originally been slated for release in 2027' and NVIDIA answers 'Our roadmap is intact', so 2027 is the company's stated  | codex: The reference quotes the original 2027 plan even though the article reports that the release was pushed to 2028.
+   item 5 (u2/clean-1 pass 1) W of reader 1: claude: The question asks the amount NVIDIA 'has disclosed', 'counting zero if none is disclosed', as the thesis's outcome ('zero if none') sets it, so a read | codex: Counting an undisclosed amount as zero places it in the strongly bullish range even when exposure may exist but its amount is unknown.
+   item 52 (u2/clean-6 pass 1) D: claude: Neither the thesis ('the item gives no date') nor the article states the filing day, so the day code sets 60 days after the FY2027 year-end, 2027-04-0 | codex: The existing commitment is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 89 (u3/clean-8 pass 1) D: claude: Neither the thesis ("expected early 2027") nor the article gives a filing day, so 2027-04-01, 60 days after the late-January 2027 fiscal year-end, is  | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 94 (acc/clean-3 pass 1) D: claude: The thesis says only "filed in early 2027" and the article names no filing day, so 2027-04-01, 60 days after the FY2027 year-end, is the code-set day  | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 79 (u1/clean-6 pass 2) D: claude: The thesis's outcome asks whether first shipments come "in 2027" or are "delayed to 2028", so 2027-12-31, the last day of 2027 and the question's own  | codex: The thesis names 2028 as its period, so December 31, 2027 is not that period's end.
+   item 42 (u2/clean-1 pass 2) W of reader 1: claude: The question asks what NVIDIA 'will disclose as outstanding', 'counting zero if none is disclosed', as the thesis's outcome ('zero if none') sets it,  | codex: Counting no disclosed amount as zero places it in the strongly bullish range even when an outstanding exposure may exist but its amount is unknown.
+   item 1 (u2/clean-6 pass 2) D: claude: Neither the thesis ('the item gives no date') nor the article states the filing day, so the day code sets 60 days after the FY2027 year-end, 2027-04-0 | codex: The existing commitment is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 122 (u3/clean-11 pass 2) L: claude: Nvidia's side of the split is listed in not_judged as 'Whether custom ASIC gains come at Nvidia's expense', and its reason names 'Nvidia's correspondi | codex: The question leaves out NVIDIA GPU racks' share of accelerator spending, which is not listed in not_judged.
+   item 62 (acc/clean-1 pass 2) D: claude: The thesis says only "filed in early 2027" and the article gives no filing day, so 2027-04-01, 60 days after the late-January 2027 fiscal year-end, is | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 90 (acc/clean-3 pass 2) D: claude: The thesis says only "filed in early 2027" and the article names no filing day, so 2027-04-01, 60 days after the FY2027 year-end, is the code-set day  | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 106 (acc/clean-7 pass 2) D: claude: The thesis says only "filed in early 2027" and the article gives no 10-K date, so 2027-04-01, 60 days after the late-January 2027 fiscal year-end, is  | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 57 (u1/clean-6 pass 3) D: claude: The thesis's outcome asks whether first shipments come "in 2027" or are "delayed to 2028", so 2027-12-31, the last day of 2027 and the question's own  | codex: The thesis names 2028 as its period, so December 31, 2027 is not that period's end.
+   item 25 (u1/clean-8 pass 3) W of reader 2: claude: The thesis calls these 'in-house AI accelerators' and the article reports only that Amazon 'has disclosed Trainium is now a multi-billion-dollar busin | codex: The article gives no combined revenue figure, but it does not establish that the four companies cannot disclose one by the due day.
+   item 2 (u2/clean-6 pass 3) D: claude: Neither the thesis ('the item gives no date') nor the article states the filing day, so the day code sets 60 days after the FY2027 year-end, 2027-04-0 | codex: The existing commitment is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 59 (u3/clean-1 pass 3) D: claude: Neither the thesis ("expected early 2027") nor the article states a filing day, so the code-set day applies: 2027-04-01 is 60 days after the FY2027 ye | codex: The obligation is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 15 (u3/clean-8 pass 3) D: claude: Neither the thesis ('expected early 2027', no day) nor the article states the filing day, so the day code sets 60 days after the FY2027 year-end, 2027 | codex: The existing commitment is due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+   item 127 (acc/clean-7 pass 3) D: claude: Neither the thesis ('filed in early 2027') nor the article states a day for the FY2027 10-K, so code's day of 60 days after the 2027-01-31 fiscal year | codex: The existing investment commitments are due at the next annual filing, which the fiscal-year note places around February 2027, not April 1.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'hivemind.*council|production.readiness' /Users/lchingen/.codex/memories/MEMORY.md | head" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+110:# Task Group: Hivemind Step 2 failed revision probe and downstream impact council
+119:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+129:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+139:- rollout_summaries/2026-11-08T21-48-16-mrpc-hivemind_claude_progress_step2_failed_probe_council.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/08/rollout-2026-11-08T13-48-16-01a1bd22-2d12-7ce1-8ca0-4355be8eea56.jsonl, updated_at=2026-11-09T22:59:52+00:00, thread_id=01a1bd22-2d12-7ce1-8ca0-4355be8eea56)
+163:# Task Group: Hivemind clean-pipeline production-readiness assessment
+165:scope: assess Claude Code progress and measured production readiness across clean architecture Steps 1–4, with baselines and evidence limitations.
+168:## Task 1: Assess latest Claude Code progress and production readiness, success
+172:- rollout_summaries/2026-11-06T03-33-43-AzGn-claude_code_production_readiness_metrics.md (cwd=/Users/lchingen/hivemind, rollout_path=/Users/lchingen/.codex/sessions/2026/11/05/rollout-2026-11-05T19-33-43-01a1aeeb-6002-79d1-ae31-f6f8e03a228f.jsonl, updated_at=2026-11-08T00:40:03+00:00, thread_id=01a1aeeb-6002-79d1-ae31-f6f8e03a228f, frozen reader scorer rerun; production readiness not established)
+176:- Claude Code, production readiness, clean-pipeline, K6b, DeepSeek Flash, golden-v5, Step 1, Step 2, Step 3, Jev, reader test, CURRENT_STATE
+
+exec
+/opt/homebrew/bin/zsh -lc "ls docs/research/2026-11-14-use-acceptance/reflection-7 && rg -n -i 'target|second side|shortage|main part' docs/research/2026-11-14-use-acceptance/reflection-7" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+challenge-40.md
+codex-challenge-40.stream
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:11:- The candidate fix is D436 (Alex): a second side of the same bet is one question, context, listed as not judged. A2's text
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:13:  "A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:14:  it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:15:  one, or when the main part itself meets a case below." It also changes "wording" to "description and outcome" in three places, the closing and the schema.
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:22:1. **Edit (minimal):** only D436's sentence, with no examples, or with cross-domain examples not taken from the 44: "A second side of the same bet stays in the one
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:23:   question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:26:   - targets: topics with a main figure plus a second side, from the 26 outside topics and the reference-control set;
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:31:   Pass rule, fixed before the send: the target declines turn into questions the readers accept; no control flips to a question; no new agreed failure on
+docs/research/2026-11-14-use-acceptance/reflection-7/challenge-40.md:38:- (b) whether the outside set has enough target cases (name them from the files);
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:23:- The candidate fix is D436 (Alex): a second side of the same bet is one question, context, listed as not judged. A2's text
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:25:  "A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:26:  it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:27:  one, or when the main part itself meets a case below." It also changes "wording" to "description and outcome" in three places, the closing and the schema.
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:34:1. **Edit (minimal):** only D436's sentence, with no examples, or with cross-domain examples not taken from the 44: "A second side of the same bet stays in the one
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:35:   question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:38:   - targets: topics with a main figure plus a second side, from the 26 outside topics and the reference-control set;
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:43:   Pass rule, fixed before the send: the target declines turn into questions the readers accept; no control flips to a question; no new agreed failure on
+docs/research/2026-11-14-use-acceptance/reflection-7/codex-challenge-40.stream:50:- (b) whether the outside set has enough target cases (name them from the files);
+
+exec
+/opt/homebrew/bin/zsh -lc 'head -c 900 poc/data/clean-reference-control-2026-11-16/cases.json' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT.md docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT-REST.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-A2.md | head -32' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+[
+ {
+  "case": "frozen|fortnight:c1/clean-1",
+  "thesis": {
+   "id": "clean-1",
+   "description": "What total of credit support and minimum-revenue guarantees to AI labs and cloud partners will NVIDIA disclose at its next annual report?",
+   "outcome": "The disclosed amount of guarantees, credit-support commitments and revenue backstops NVIDIA has extended to AI labs and cloud partners (including the credit support for nearly 2 gigawatts of computing capacity for one additional AI lab), versus the equity investments it has made, at NVIDIA's next annual report.",
+   "period": "Fiscal 2027 annual report (fiscal year ending late January 2027; Form 10-K expected around February 2027) — set as the next annual report following this 22 September 2026 item, per section 3 (obligation already undertaken tracked by its amount at the next annual report; the additional AI lab's credit support is no
+ succeeded in 0ms:
+# The Astra screen (D632): result, 2026-11-16
+
+**Run:** six interleaved arm-draws on the 12 seeded topics (`poc/data/clean-astra-screen-2026-11-16/`), with no stop and no charge
+above its reserve.
+- **Spend:** sol $0.216, astra $1.334, $1.55 in all.
+- The first astra request cost $0.079 (uncached); the astra average was $0.037 a send.
+
+**Reading:** 78 blind items read by both families.
+- One Codex row on the planted wrong-question control was invalid (Y "n/a" on a theme figure). It was re-asked of a fresh Codex reader
+  under the same brief and packet (`reader-codex-packet-2-again-1.jsonl`).
+- All six controls then behaved as fixed.
+
+**Verdict under the rule fixed before: promising (a screen; a separate decision follows).**
+
+| | sol | astra |
+|---|---:|---:|
+| Failed sends of 36 (agreed) | **4** | **1** |
+| Failed sends of 36 (strict: unresolved points counted against) | 11 | 9 |
+| Model refusals | 18 | 18 |
+| Unjustified refusals (agreed) | 4 | 1 |
+| Ladders with any agreed or disputed hard-line fault | 0 of 18 | 0 of 18 |
+| New-harm topics | | none |
+
+**My hand-read of every send either family failed** (all are refusals; no ladder in either arm drew a hard-line mark):
+- **Hugging Face** (week c1/clean-5):
+  - sol declined in 2 of 3, both agreed unjustified. The independent audit (`model/rule-audit.md`) also calls this decline unjustified
+    on the sources.
+  - astra wrote the closing question in 3 of 3, each clean.
+- **Memory prices** (week c1/clean-3):
+  - sol declined 3 of 3 (2 agreed unjustified, 1 disputed);
+  - astra declined 2 of 3 (1 agreed, 1 disputed) and wrote one ladder, unflagged by both families. That ladder defines its own
+    aggregation: "the equal-weighted mean of the Q4 2027 versus Q4 2026" change.
+  - The audit calls this topic **silent** on the sources.
+- **Reflection AI and the equity commitments** (week c1/clean-11 and -13): both models declined 3 of 3. Claude's family fails every
+  decline and Codex's holds every one. These are two of the five boundary topics on Alex's page.
+- **Supply commitments** (week c1/clean-2): one new astra decline (d1, "total against the cancellable portion"), disputed. I read it as
+  unjustified: the description asks the $279 billion total.
+- **Robotics venture funding** (fortnight c1/clean-8): astra declined 3 of 3 (no listed theme) and sol wrote 2 ladders. Neither family
+  failed either behaviour.
+
+**What it means:**
+- On these 12 topics, astra's advantage is the Hugging Face recovery, a sourced unjustified decline that it does not make, plus one
+  fewer decline on the silent memory topic.
+- On the other boundary topics it declines exactly as sol does. A stronger model does not remove the boundary class (D631); only a
+  ruling would.
+- **The sample holds none of the topics where ladder faults occurred** (fortnight c1/clean-3, -7, -13; week c1/clean-1, -7). So the
+  screen says nothing about astra's ladders where the frozen step and sol wrote faulted ones.
+# The complementary Astra screen (D633): result, 2026-11-16
+
+**Run:** six interleaved arm-draws on the other 14 topics (`poc/data/clean-astra-rest-2026-11-16/`), with no stop and no charge above
+its reserve.
+- **Spend:** sol $0.368, astra $1.800, $2.17 in all.
+- **D439:** about $34.7 of $40 used.
+
+**Reading:** 90 blind items, both families, all six controls as fixed, no invalid row.
+
+**Verdict under the rule fixed before: closes this candidate under this test** (astra has 3 failures).
+
+| | sol | astra |
+|---|---:|---:|
+| Failed sends of 42 (agreed) | **5** | **3** |
+| Failed sends of 42 (strict) | 10 | 11 |
+| Model refusals | 7 | 9 |
+| Unjustified refusals (agreed) | 3 | 3 |
+| Ladders with an agreed hard-line fault | 2 of 35 | 0 of 33 |
+
+**My hand-read of every agreed fault:**
+- **H20 export licence** (week c1/clean-6): astra declined 3 of 3 and sol 2 of 3, all agreed unjustified. Both families read the
+  description as asking whether the U.S. licence requirement is lifted, with resumed China revenue as its consequence.
+  - Today D629's luna and sol wrote 3 clean ladders each on this topic.
+  - It is a sixth topic of the main-part class (D631).
+- **CPO shipments** (fortnight c1/clean-13): both declined 3 of 3 ("Q4 2026 through calendar 2027 … not one year"). One sol decline
+  is agreed unjustified; the others are disputed.
+- **Two sol Q faults:**
+  - fortnight c1/clean-1 d1 names "the additional AI lab" without identifying it;
+  - week c1/clean-7 d1 asks shipments "by 31 January" where the outcome is a ramp "this quarter".
+- **A reader inconsistency, disclosed:** astra's week c1/clean-7 d1 asks nearly the same as sol's d1 ("commercial volume shipments by
+  January 31, 2027"). Both families held it. One send is favoured to astra.
+
+**Both halves, side by side (not pooled into a verdict):**
+
+| | first 12 (D633) | other 14 | |
+|---|---|---|---|
+| **sol**, agreed failed sends | 4 of 36 | 5 of 42 | 9 of 78 |
+| **astra**, agreed failed sends | 1 of 36 | 3 of 42 | 4 of 78 |
+| **astra's failures** | 1 decline (memory) | 3 declines (H20) | every one a main-part decline |
+| **ladders with an agreed fault**, sol | 0 of 18 | 2 of 35 | |
+| **ladders with an agreed fault**, astra | 0 of 18 | 0 of 33 | |
+
+**What it means:**
+- With the strongest model, the answer-choice step's written questions drew no agreed hard-line fault in 51 ladders.
+- Every remaining failure is a decline on a topic whose outcome names several parts, where the readers find the main one in the
+  description.
+- **The request and the reader brief are both silent on that choice:**
+  - the request says "Judge the one the topic's outcome names";
+  - the brief says a step may decline when the outcome names "several things and none is the main one".
+- **The model route closes by its rule:** astra still fails 4 of 78. The class it fails on is the one D631 sent to Alex as unsourced.
+
+ succeeded in 0ms:
+# Arm A2's probe: result (D582, D583), 2026-11-16, $0.15
+
+**The decision, under the rule fixed before the send: negative, under both countings** (`score-output-a2.txt`).
+
+| Line | Unresolved points counted for the answer | Counted against it |
+|---|---|---|
+| L on the 7 motivating topics: control / A2 (A2's refusals count as failures) | control fails on 6 topics; **A2 on 0, with no refusal** | the same |
+| Refusal controls kept (control exercises all 4) | **all 4 kept** | all 4 kept |
+| Correct written recoveries, control / A2 (bar: control + 3) | 5 / 8: **met** | 2 / 1: missed |
+| Rule 2: marks above control + 1 | motivating Y 3/1, H 5/0; harm-control XR 2/0, W 3/1 | the same, plus more on unresolved points |
+| Planted controls | 6 of 6 marks as expected | |
+
+Spend $0.15 (control $0.069, A2 $0.081). Readers: both families, with third readers on 113 marks and faults and 44 H points.
+
+## Every rule-2 failure, read against its sends (the rejection checked, AGENTS §7.3)
+
+| Mark | Sends | From the change? |
+|---|---|---|
+| H, motivating (5 against 0) | Hugging Face: "delay past the check date" and "termination" listed, which the Still open and Ruled out choices decide; both readers or both third readers mark them `already_judged`. CPO: "Nvidia networking revenue" and "supplier laser shipments" listed, the outcome's "as reflected in …"; both readers mark them `settlement` | **Yes.** With the outcome part of the topic's wording, the step also lists the outcome's own alternatives and its settlement route |
+| Y, motivating (3 against 1) | All three on the CPO topic: the year field is FY2028 for a calendar-2027 question. The control's CPO sends carry the same fault (one settled, two disputed) | No. It is a fault already in the frozen step's year rule, and it varies by sample |
+| XR, harm controls (2 against 0) | clean-10 p2 (Huang's pace not carried as the reference); clean-12 p2 (one reader) | No. The clause does not touch the reference; the same fault is common in earlier readings |
+| W, harm controls (3 against 1) | clean-4 p2 and p3 (the 10-K comes after the due day: the control's p2 has the same fault); clean-1 p3 (a cut-off date before the due day) | No. These are standing faults of the step that recur in the control |
+
+**What A2 established on these preselected topics.** It removed the unlisted parts, and it did so without arm A's wrong refusals and
+without losing a refusal that should stand. It also lists two kinds of item that are not parts of the question: the event's own
+alternatives, which the answer choices already decide, and the route by which the answer will be known. That is a reading of the
+sends, not a re-scoring: the decision stays negative.
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 24 '"'^## D436 '"' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+4847:## D436 · 2026-11-13 · One bet seen from two sides is one question; change 3 is dropped; G1-a and G1-b run without it
+4848-
+4849-- **Asked**, after two blind source readers agreed on none of six cases (`clean-arch/step1-diagnosis-2026-11-12/gate1/PREREAD-RESULT.md`):
+4850-  "例子：同一篇文章里有'2027 年 HBM 出货增长多少'和'2027 年 HBM 是否仍然供不应求'。两位读者对照原文判：一位说这是两个能分别押注的题，另一位说是同一件事的两面，放一张卡就够。…你怎么看：这类情况应该算一个题还是两个题？"
+4851-  - Options: one question, change 3 dropped (recommended): "第二件事作为同一题的背景留着（后面判断时显示为'不判'），第三处改动作废。理由：都是同一个押注的不同侧面；我们的原则是偏谨慎、不要把一件事拆成碎题。"; two questions, change 3 continues; case by case.
+4852-  - Alex: "算一个题，第三处不改 (Recommended)".
+4853-- **Asked:** "第三处停下后，这两处的小测试（42 次发送，约 0.6 美元，上限 2 美元）要不要照常跑？" Options: run (recommended): "这两处不依赖第三处。任何一项不过就停，报给你。"; wait. Alex: "照常跑 (Recommended)".
+4854-- **Decided:** a second side of the same bet (the shortage beside the shipments, the AI-chip share beside the chip total, the capacity keeping pace beside the demand) is one question; it stays as context in that question and is shown as not judged (D397). Change 3 (the `outcome` definition) is dropped, and the "two bets in one thesis" class is closed as not a Step 1 defect under this ruling. G1-a and G1-b run as fixed in `COMBINED-PLAN.md`; the candidate for later gates is c8 with changes 1 and 2 only.
+4855-- **Scope:** clean Step 1; c8 stays in force.
+4856-
+4857-## D437 · 2026-11-13 · Carry changes 1 and 2 to gate 2 although the year line was missed
+4858-
+4859-- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/gate1/G1A-READING.md` and `G1B-READING.md`: "第一关的结果：'客户那句'的改动过了；'今年明年各开一题'没过。…新版 9 次里只有 5 次把两年分开开题，事先定的线是 9 次至少 8 次。旧版 c8 是 0 次。…新写法 26 次里 20 次分开，旧版 26 次里 0 次。没分开的那几次，模型都读到了规则，但觉得'两年都开太多了'，只留一年。下一步怎么走？"
+4860-  - Options: carry both changes to gate 2 (recommended by Claude): "分年虽然没达线，但从 0 次升到大约四分之三，而且'两年塞一题'完全消失，没发现带坏别的东西。第二关在存档上查它会不会弄坏周边情况（重复文章、同一量的另一种口径、延期的事等，约 1.5 美元，线先给你看）。代价：等于在看到结果后放宽了我自己定的线。"; stop the year change and carry only the customer sentence (the reviewer, `council/lx-codex.md`, recommended stopping the year change and keeping c8); stop both and keep c8.
+4861-  - Alex: "带着两处改动进第二关 (Recommended)".
+4862-- **Decided:** the candidate for gate 2 is c15yc (c8 with the year boundary and the scoped capacity counterexample). The year line's failure stays recorded as a failure (5 of 9 against 8 of 9); it is not presented as a pass. Gate 2's lines are written, reviewed and shown to Alex before any send. c8 stays in force.
+4863-- **Scope:** clean Step 1.
+4864-
+4865-## D438 · 2026-11-13 · Send gate 2
+4866-
+4867-- **Asked**, with `clean-arch/step1-diagnosis-2026-11-12/GATE2.md` (version 11, reviewed clean in `council/mi-codex.md`): "第二关审完了，要发吗？…新版做错的次数比旧版多 3 次以上（9 次里），就停下报给你。共 126 次发送，约 1.8 美元，上限 2.2 美元。" Options: send (recommended): "先跑完 126 次。我和一位盲读者各自逐条读，有分歧的一律算新版错。任何一条停止线被触发就停下报给你；全过的话再设计第三关（在新文章上新旧版对比），也先给你看。"; do not send.
+4868-- Alex: "发 (Recommended)".
+4869-- **Decided:** gate 2 is sent as written; a fired stop or an unexercised control goes to Alex; a pass leads to gate 3's design, shown to him before any send. c8 stays in force.
+4870-
+4871-## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json; p=\"poc/data/clean-reference-control-2026-11-16/cases.json\"; a=json.load(open(p));
+for r in a:
+ if r[\"case\"].startswith(\"frozen|\"):
+  t=r[\"thesis\"]; print(r[\"case\"],\"|\",t[\"description\"],\"|\",t[\"outcome\"])'" in /Users/lchingen/hivemind
+ succeeded in 1770ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-Uejpzhss' (errno=Operation not permitted)
+2026-11-17 00:15:27.090 xcodebuild[61978:55152861]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-17 00:15:27.309 xcodebuild[61978:55152860] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-KK4OrdxE' (errno=Operation not permitted)
+2026-11-17 00:15:27.727 xcodebuild[61980:55152913]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-17 00:15:27.853 xcodebuild[61980:55152912] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+frozen|fortnight:c1/clean-1 | What total of credit support and minimum-revenue guarantees to AI labs and cloud partners will NVIDIA disclose at its next annual report? | The disclosed amount of guarantees, credit-support commitments and revenue backstops NVIDIA has extended to AI labs and cloud partners (including the credit support for nearly 2 gigawatts of computing capacity for one additional AI lab), versus the equity investments it has made, at NVIDIA's next annual report.
+frozen|fortnight:c1/clean-2 | How much will NVIDIA disclose in purchase and supply commitments (obligations to buy capacity, components or services) at its next annual report? | The amount of purchase obligations/supply commitments NVIDIA reports in its contractual obligations and purchase commitment disclosures in the Form 10-K, versus the prior year, given the analyst report that NVIDIA is taking on larger supply commitments.
+frozen|fortnight:c1/clean-3 | Will Nvidia be permitted to sell its current Blackwell-generation AI chips into China — through U.S. export approval and Chinese acceptance of shipments — by the end of fiscal 2027? | Whether U.S. authorities extend export approval beyond the older H200 to Nvidia's current Blackwell-generation chips for approved Chinese customers, and whether Chinese authorities stop restricting Nvidia chip shipments, so that China data-center revenue can resume; the item reports H200 shipments are already U.S.-permitted while Chinese authorities still restrict them.
+frozen|fortnight:c1/clean-4 | Will NVIDIA's next-generation Vera Rubin AI platform, which the company says has entered full production, reach volume customer shipments (first revenue recognition) by the end of fiscal 2027? | Whether Vera Rubin moves from full production to volume customer shipments and first revenue recognition within NVIDIA's fiscal 2027, as shown in the company's quarterly results and Form 10-K.
+frozen|fortnight:c1/clean-5 | How much will the five largest AI hyperscalers spend in total on data centers in calendar 2026? | The big five AI hyperscalers' combined calendar-2026 data center capital expenditure, compared with the nearly $800 billion the article says they will spend this year.
+frozen|fortnight:c1/clean-6 | Will NVIDIA complete its approximately $12.9 billion acquisition of Hugging Face, agreed in 2026, by the check date? | Whether the agreed ~$12.9 billion Hugging Face acquisition is signed and closed (completed) as disclosed in NVIDIA's filings, versus being repriced, delayed past the check date or terminated.
+frozen|fortnight:c1/clean-7 | Will China's Ministry of Industry and Information Technology formally approve purchases of Nvidia's new RTX Pro 5500 high-end GPU by Alibaba, ByteDance and other Chinese firms by the end of Nvidia's fiscal 2027, allowing those sales to proceed? | Whether MIIT moves from signaling intent and collecting purchase plans to actually approving Alibaba's, ByteDance's and other Chinese firms' purchases of the RTX Pro 5500 (versus blocking, delaying or capping quantities), so that Nvidia can ship the product into China and book related revenue.
+frozen|fortnight:c1/clean-8 | How much venture funding will physical AI (robotics) companies raise globally in calendar 2026? | Total global venture capital raised by physical AI/robotics startups in calendar 2026, versus the $28.7 billion raised in all of 2025 and the $33.4 billion already raised in the first half of 2026, per PitchBook data.
+frozen|fortnight:c1/clean-9 | How much will the five largest AI hyperscalers spend in total on data centers in calendar 2027? | The big five AI hyperscalers' combined calendar-2027 data-center capital expenditure, versus the $1.3 trillion Nvidia projects for next year (as cited in the item) and the nearly $800 billion expected for calendar 2026.
+frozen|fortnight:c1/clean-10 | How many gigawatts of new data-center capacity will be added in the United States in calendar 2026? | US data-center capacity additions in gigawatts for calendar 2026, versus the pace of 'somewhere between 10, 20 gigawatts a year' that Nvidia CEO Jensen Huang described, and against how far labour availability constrains that pace.
+frozen|fortnight:c1/clean-11 | How much will average DRAM (including HBM) contract prices rise in calendar 2026, as Nvidia reports substantially higher memory and component costs across the industry? | The change in average DRAM/HBM contract prices in calendar 2026 versus calendar 2025, per TrendForce/DRAMeXchange data.
+frozen|fortnight:c1/clean-12 | Will Nvidia finalize its proposed sharing of up to $125 billion in risk by guaranteeing hardware residual values for its AI infrastructure financing platform by the check date? | Whether the proposed up-to-$125 billion hardware residual-value guarantee is signed and disclosed, and at what amount, versus remaining a proposal or being reduced or withdrawn.
+frozen|fortnight:c1/clean-13 | Will Nvidia's co-packaged-optics (CPO) switch shipments reach volume in calendar 2027 — approaching the 30,000 units by mid-2027 and the 100,000 units for the full year that GF Securities forecasts? | Nvidia's CPO switch shipment volume from Q4 2026 through calendar 2027 (GF Securities: 15,000 units in Q4 2026, 16,000 in early 2027, 30,000 by mid-2027, 100,000 for all of 2027), as reflected in Nvidia's networking revenue disclosures and suppliers' CPO/NPO laser shipments.
+frozen|week-10-06:c1/clean-1 | How much will Nvidia's maximum potential guarantee liability under the SB Energy/OpenAI affiliate infrastructure leases be at its next annual report? | The maximum potential amount guaranteed, any amounts paid or accrued, and the remaining term of the guarantees disclosed in Nvidia's next annual report.
+frozen|week-10-06:c1/clean-2 | How much of Nvidia's $279 billion of supply and capacity commitments will remain outstanding or unconditional at its next annual report? | The total supply and capacity purchase commitments and the portion that is adjustable or cancelable at a cost, as disclosed in Nvidia's next annual report.
+frozen|week-10-06:c1/clean-3 | By how much will contract prices for AI-server memory (HBM/DRAM) — the memory input cost embedded in Nvidia's GPUs — rise or fall in calendar 2027? | The change in HBM/DRAM contract prices over calendar 2027, and the memory makers' reported average selling prices and memory gross margins for the periods covering 2027.
+frozen|week-10-06:c1/clean-4 | How much combined capital expenditure will the five largest hyperscalers — Amazon, Alphabet, Microsoft, Meta Platforms and Oracle — spend in calendar 2026 and calendar 2027? | The big five hyperscalers' combined capex for calendar 2026 and calendar 2027, versus the approximately $800 billion for 2026 and roughly $1.3 trillion for 2027 the article reports they plan to spend.
+frozen|week-10-06:c1/clean-5 | Will Nvidia complete its approximately $12.93 billion acquisition of Hugging Face — and at what final cost and regulatory conditions — by the check date? | Closing or termination of the signed Hugging Face acquisition, the final consideration paid (roughly $11.9 billion to shareholders plus up to $1 billion of equity-based retention awards), and any conditions regulators impose.
+frozen|week-10-06:c1/clean-6 | Will the U.S. licence requirement on Nvidia's data center chips still bar it from China's data center compute market at Nvidia's fiscal 2027 year-end, or will it be lifted before then? | Whether the U.S. export-licence requirement on Nvidia's H20-class data center products remains in force or is lifted, and whether Nvidia resumes recognizing data center compute revenue from China.
+frozen|week-10-06:c1/clean-7 | Will Nvidia's Rubin data center GPU — the next generation of the product that carries Nvidia's data center revenue — reach volume ramp in the quarter management describes, or slip into calendar 2027 because of memory shortages? | Whether Rubin's volume ramp and shipments occur in the quarter Nvidia describes (about 20% of data center revenue) or are pushed into calendar 2027, and whether reported sales timing slips.
+frozen|week-10-06:c1/clean-8 | How much residual-value/loss-share exposure has Nvidia taken on under its customer data center financing support — the commitment to cover up to 25% of the loss if financed chips lose value — and how much is disclosed at its next annual report? | The maximum potential amount of Nvidia's loss coverage on customer data center chip values, any amounts paid or accrued, and the terms and remaining duration of that support, as disclosed in Nvidia's next annual report.
+frozen|week-10-06:c1/clean-9 | Will Nvidia's Groq 3 LPX rack-scale LPU system — the first product built on the Groq technology it paid about $20 billion to license and staff — reach volume shipments and commercial scale in the quarter Nvidia describes (its fiscal Q3 FY2027), or slip? | Whether Groq 3 LPX volume shipments occur 'later this quarter' as Nvidia stated, and whether the system begins contributing to reported data center revenue or slips into fiscal Q4 FY2027/calendar 2027.
+frozen|week-10-06:c1/clean-10 | What will the hourly spot rental price for Nvidia B200 GPUs be at the end of calendar 2026, after more than doubling from March 2026 to October 2026? | The hourly spot rental price for Nvidia B200 GPUs at year-end 2026 and whether it remains above its March 2026 level.
+frozen|week-10-06:c1/clean-11 | Will Nvidia sign and complete an acquisition of Reflection AI — and at what consideration and terms — by the check date? | A definitive agreement to acquire Reflection AI, its closing (or the talks' collapse), and the final consideration paid and any regulatory conditions imposed.
+frozen|week-10-06:c1/clean-12 | How much will global AI capital spending total in calendar 2026 and calendar 2027? | Global AI capex for calendar 2026 and calendar 2027, measured against Goldman Sachs' forecast of $1 trillion of global AI spend this year and AI spend equal to 1.8% of U.S. GDP in 2026, 2.5% in 2027 (and 2.8% in 2028).
+frozen|week-10-06:c1/clean-13 | How much of Nvidia's $25 billion of equity-investment commitments outstanding at July 26, 2026 will be funded or remain outstanding at its next annual report? | The remaining balance of Nvidia's equity-investment commitments, the cash paid to fund them, and any change in the committed amounts, as disclosed in Nvidia's next annual report.
+
+exec
+/opt/homebrew/bin/zsh -lc "python3 -c 'import json,pathlib; targets=[\"week-10-06:c1/clean-2\",\"week-10-06:c1/clean-3\",\"week-10-06:c1/clean-6\",\"fortnight:c1/clean-10\",\"week-10-06:c1/clean-10\"];
+for d in [\"clean-astra-screen-2026-11-16\",\"clean-astra-rest-2026-11-16\"]:
+ for p in sorted((pathlib.Path(\"poc/data\")/d).glob(\"astra-d*/outcomes.jsonl\")):
+  for x in map(json.loads,p.read_text().splitlines()):
+   if any(x[\"case\"].endswith(t) for t in targets): print(x[\"case\"],x[\"status\"],str(x.get(\"reason\"))[:220])'" in /Users/lchingen/hivemind
+ succeeded in 1291ms:
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-QuXIdEBu' (errno=Operation not permitted)
+2026-11-17 00:15:34.686 xcodebuild[62013:55153208]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-17 00:15:34.810 xcodebuild[62013:55153207] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+python3: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+python3: error: couldn't create cache file '/tmp/xcrun_db-HkTJZZ8I' (errno=Operation not permitted)
+2026-11-17 00:15:35.134 xcodebuild[62015:55153241]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-11-17 00:15:35.250 xcodebuild[62015:55153240] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+astra-d1|week-10-06:c1/clean-2 no ladder The outcome names two figures—the total supply and capacity purchase commitments and the portion adjustable or cancelable at a cost—without identifying either as the main figure tracked. A single judged figure cannot be 
+astra-d1|week-10-06:c1/clean-3 no ladder The topic does not specify one main measurable figure: HBM and DRAM contract prices comprise multiple price series, with no series selected or combined measure defined. Its outcome also tracks memory makers’ average sell
+astra-d2|week-10-06:c1/clean-2 ladder None
+astra-d2|week-10-06:c1/clean-3 no ladder The topic does not identify one uniquely measurable contract-price figure: HBM and DRAM have distinct contract-price series, but no benchmark, product specification or aggregation method is named. The outcome also names 
+astra-d3|week-10-06:c1/clean-2 ladder None
+astra-d3|week-10-06:c1/clean-3 ladder None
+astra-d1|fortnight:c1/clean-10 ladder None
+astra-d1|week-10-06:c1/clean-6 no ladder The outcome names two distinct tracked events—lifting the U.S. export-licence requirement on Nvidia's H20-class products and Nvidia resuming recognition of China data center compute revenue—without designating either as 
+astra-d1|week-10-06:c1/clean-10 ladder None
+astra-d2|fortnight:c1/clean-10 ladder None
+astra-d2|week-10-06:c1/clean-6 no ladder The outcome names two independently tracked events without identifying a main one: whether the U.S. H20-class export-licence requirement is lifted and whether Nvidia resumes recognizing China data center compute revenue.
+astra-d2|week-10-06:c1/clean-10 ladder None
+astra-d3|fortnight:c1/clean-10 ladder None
+astra-d3|week-10-06:c1/clean-6 no ladder The topic's outcome names two distinct events without designating either as primary: lifting the U.S. export-licence requirement on Nvidia's H20-class products and Nvidia resuming recognition of China data center compute
+astra-d3|week-10-06:c1/clean-10 ladder None
+
+codex
+**Use the minimal D436 wording, then run a controlled outside test before the authorized gate rerun.** The outside set is thin for the exact failure class, so its result must be called a diagnostic.
+
+- **Wording:** omit the case-matching examples. Add only the two proposed D436 sentences, subject to the whole-request audit. Keeping the frozen wording does **not** remove the existing ambiguity about listing an outcome already decided by an answer; it avoids A2’s additional wording changes. [Audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md>)
+- **Outside cases:** `week-10-06:c1/clean-2` is the closest total-plus-part case; frozen Astra declined it once in three draws. `week-10-06:c1/clean-6` is an event-plus-consequence case, declined three times, but is not a figure. `week-10-06:c1/clean-3` is unsuitable as a clean target: HBM and DRAM may need an undefined combined measure. I found no established outside target for the shortage-plus-growth shape, so **there are not enough confirmed close matches to prove the full class**. [Stored cases](</Users/lchingen/hivemind/poc/data/clean-reference-control-2026-11-16/cases.json>), [Astra screens](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT.md>)
+- **Pass rule:** require the fresh frozen arm to exercise the target failure; otherwise **inconclusive**. Require at least two fewer failed sends in the edited arm, accepted replacements under both agreed and strict counts, all justified-decline controls retained, and no new hard-line or material defect by topic. Read both arms blind, including the previously observed over-listing harm. A stopped draw or missed planted control is not measured. Price the chosen population and retries before sending; three draws of both arms may exceed the $1 estimate.
+- **Gate rerun:** Alex authorized it, but the 44 have now informed the proposed change. It is therefore a **reused, exposed acceptance set**, not an independent generalization test. Keep the six lines and both unresolved-point countings unchanged, report that limitation and the unresolved due-day ruling, and use fresh material later to assess generalization. The outside diagnostic must pass its prewritten rule first. [D649](</Users/lchingen/hivemind/docs/DECISIONS-log.md:1>)
+
+CONSENSUS: test the example-free D436 wording outside the 44 with exercised controls and a fixed comparative rule; rerun the authorized gate only if that diagnostic passes.
+tokens used
+1,495,955
+**Use the minimal D436 wording, then run a controlled outside test before the authorized gate rerun.** The outside set is thin for the exact failure class, so its result must be called a diagnostic.
+
+- **Wording:** omit the case-matching examples. Add only the two proposed D436 sentences, subject to the whole-request audit. Keeping the frozen wording does **not** remove the existing ambiguity about listing an outcome already decided by an answer; it avoids A2’s additional wording changes. [Audit](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md>)
+- **Outside cases:** `week-10-06:c1/clean-2` is the closest total-plus-part case; frozen Astra declined it once in three draws. `week-10-06:c1/clean-6` is an event-plus-consequence case, declined three times, but is not a figure. `week-10-06:c1/clean-3` is unsuitable as a clean target: HBM and DRAM may need an undefined combined measure. I found no established outside target for the shortage-plus-growth shape, so **there are not enough confirmed close matches to prove the full class**. [Stored cases](</Users/lchingen/hivemind/poc/data/clean-reference-control-2026-11-16/cases.json>), [Astra screens](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra/RESULT.md>)
+- **Pass rule:** require the fresh frozen arm to exercise the target failure; otherwise **inconclusive**. Require at least two fewer failed sends in the edited arm, accepted replacements under both agreed and strict counts, all justified-decline controls retained, and no new hard-line or material defect by topic. Read both arms blind, including the previously observed over-listing harm. A stopped draw or missed planted control is not measured. Price the chosen population and retries before sending; three draws of both arms may exceed the $1 estimate.
+- **Gate rerun:** Alex authorized it, but the 44 have now informed the proposed change. It is therefore a **reused, exposed acceptance set**, not an independent generalization test. Keep the six lines and both unresolved-point countings unchanged, report that limitation and the unresolved due-day ruling, and use fresh material later to assess generalization. The outside diagnostic must pass its prewritten rule first. [D649](</Users/lchingen/hivemind/docs/DECISIONS-log.md:1>)
+
+CONSENSUS: test the example-free D436 wording outside the 44 with exercised controls and a fixed comparative rule; rerun the authorized gate only if that diagnostic passes.

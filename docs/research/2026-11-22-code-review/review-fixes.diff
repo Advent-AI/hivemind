@@ -1,0 +1,218 @@
+diff --git a/clean-arch/e2e-comparison-2026-11-13/budget_replay.py b/clean-arch/e2e-comparison-2026-11-13/budget_replay.py
+index ab36627b..25be807c 100644
+--- a/clean-arch/e2e-comparison-2026-11-13/budget_replay.py
++++ b/clean-arch/e2e-comparison-2026-11-13/budget_replay.py
+@@ -354,6 +354,7 @@ def main():
+     scripts_replay = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(scripts_replay)
+     scripts_replay.refuse_links_engine(cfg)                   # the same refusals scripts/replay.py makes
++    scripts_replay.refuse_unadopted_judging(cfg)
+     scripts_replay.refuse_seeded_ledger(args.views)
+     scripts_replay.refuse_harness_ledger(args.views)
+     uni = universe.load(args.universe)
+diff --git a/docs/CURRENT_STATE.md b/docs/CURRENT_STATE.md
+index b7f70ce0..6c7878a1 100644
+--- a/docs/CURRENT_STATE.md
++++ b/docs/CURRENT_STATE.md
+@@ -451,7 +451,7 @@ $2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
+ - Why (D721): the frozen gold's q01 lists the Vera CPU target among the drivers above consensus, so the diagnosis's premise was
+   not the ruler's. D711's H4 is corrected to four unsupported increments. D721's findings are recorded, not worked on.
+ - The citation line stays stopped (D719).
+-- judging-v12 and poc-v121 stay in the working tree, uncommitted and unused.
++- judging-v12 and poc-v121 are committed locally (3ba40d8f) and unused: the ordinary launchers refuse judging-v12 (D723).
+ 
+ The record behind it (D718):
+ - **The probe:** $0.274 of $0.50; registered verdict NOT READY (`research/2026-11-21-citation-lists/PROBE-RESULT.md`). One repeated
+diff --git a/docs/DECISIONS-log.md b/docs/DECISIONS-log.md
+index 71d2285f..1da47367 100644
+--- a/docs/DECISIONS-log.md
++++ b/docs/DECISIONS-log.md
+@@ -10901,3 +10901,29 @@ Work reopens on Alex's word, new material, or a new concrete reversible candidat
+   - poc-v118 remains the product and no judge version is opened.
+   - D721's findings stay a list, not a work order.
+   - Nothing is queued or being spent.
++
++## D723 · 2026-11-22 · Code review of 95cf8da7..3ba40d8f: two defects fixed, eight findings recorded
++
++- **Alex's words** (2026-11-22): "做code review clean up".
++- **Fixed** (working tree, not committed; each with a test that fails on its mutant, checked by Claude on scratch copies):
++  1. **The ordinary launchers ran judging-v12.** D719 says no product launcher enables it. `scripts/replay.py` and `budget_replay.py`
++     now refuse it (`refuse_unadopted_judging`), and the harnesses keep calling the library.
++  2. **A link-step error other than a refusal escaped the round unrecorded.** `round.run` now records it in `link_selections` and fails
++     the article as `linking_failed`, as matching does. A budget stop inside the link step is therefore an article failure, as in
++     matching, and the ledger's `stopped` state still refuses later calls.
++- **Clean-ups:**
++  - preflight's dead judge schema entry is removed and its docstring updated;
++  - the one-letter names in `judging._dependency_lines_full` are renamed (the rendered text is unchanged; the frozen pins pass);
++  - a history comment in `research_context.py` now states behaviour.
++- **Recorded, not fixed:**
++  - a code-built setting can leave `link_questions` empty; the crash is now recorded;
++  - `unbound_waits` is checked store-wide;
++  - a dead pair re-check sits in `writing.py`;
++  - links-v2's missing full stop, pinned by its sha;
++  - engine strings are special-cased in several places;
++  - Jev link calls are serial;
++  - `current_state` runs PRAGMA on every call;
++  - the round's cost omits link calls.
++
++  None is in the product path (poc-v118), and each fix would change pinned text or tested records, or redesign the linking version.
++- **Checks:** suite 390 passed; frozen-piece tests 21 passed.
+diff --git a/docs/DECISIONS.md b/docs/DECISIONS.md
+index 11cafe41..5d3b327f 100644
+--- a/docs/DECISIONS.md
++++ b/docs/DECISIONS.md
+@@ -1064,4 +1064,5 @@ Every decision number, its date, its title as recorded, its status today and the
+ | D720 | 2026-11-22 | Alex opens the double-count design ("开"; Claude's reading, the citation follow-up stays stopped); the $0 diagnosis finds the class in the frozen product too (old-1: 32 total-revenue answers add the stand-alone CPU target filed under them, 4 rung decisions; linked-1: 4 through the link); the owner is the judge text | in force | `docs/research/2026-11-22-whole-and-part/DIAGNOSIS.md` |
+ | D721 | 2026-11-22 | Council round 43/43b: the double-count premise is partly falsified by the frozen gold (q01 lists the Vera CPU target among the drivers above consensus; a sentence either way has no source); recommend closing the design with nothing built; D711's H4 corrected to "four unsupported increments, overlap unresolved" (only 07-15 differs in rung from the control); findings listed for Alex | in force | `docs/research/2026-11-22-whole-and-part/codex-r43b.md` |
+ | D722 | 2026-11-22 | Alex closes the double-count design with nothing changed ("收尾，不改 (推荐)"): poc-v118 stays, no judge version opened, D721's findings recorded only; nothing queued | in force | `docs/DECISIONS-log.md` |
++| D723 | 2026-11-22 | Code review of 95cf8da7..3ba40d8f ("做code review clean up"): ordinary launchers now refuse judging-v12 (D719); a non-refusal link-step error is recorded as linking_failed; small clean-ups; eight findings recorded, not fixed; suite 390 | in force | `docs/DECISIONS-log.md` |
+ 
+diff --git a/scripts/preflight.py b/scripts/preflight.py
+index 161699fa..b1d54608 100644
+--- a/scripts/preflight.py
++++ b/scripts/preflight.py
+@@ -10,10 +10,11 @@ the cases judged, the cases refused and the reasons with examples:
+   C. matching's code checks (matching.check) over every stored matching record, with the lists shown at the time
+   D. every schema enum value appears verbatim in the prompt that asks for it
+ 
+-It replays the answers of the versions the code builds (extraction v74i, judging-v7); a row of a retired version, or one whose
+-configuration file is gone, is counted as not replayed and named. Usage: python3 scripts/preflight.py [--archive A] [--items I]
+-[--views DB ...] (defaults: draw 1 of the frozen v108 run, poc/data/e2e-r9-frozen-v108-2026-11-03/d1, and the NVDA items database).
+-Exit status 1 when a check judged no case.
++It replays the answers of the versions the code builds (extraction v74i; a judge answer against the format saved with its own
++request); a row of a retired version, or one whose configuration file is gone, is counted as not replayed and named. Usage:
++python3 scripts/preflight.py [--archive A] [--items I] [--views DB ...] (defaults: draw 1 of the frozen v108 run,
++poc/data/e2e-r9-frozen-v108-2026-11-03/d1, and the NVDA items database). Exit status 1 when a check judged no case, or when a
++refused judge row carries no saved answer format.
+ """
+ import argparse
+ import collections
+@@ -32,7 +33,7 @@ sys.path.insert(0, os.path.join(ROOT, 'src'))
+ from hivemind import config, extraction, live_lock, model, testdb, universe, vocabulary  # noqa: E402
+ from hivemind.views import judging, matching  # noqa: E402
+ 
+-SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA, 'judge': judging.schema_for(judging.SUPPORTED_VERSIONS[0])}
++SCHEMAS = {'extract': extraction.schema_for(extraction.SUPPORTED_VERSIONS[0]), 'match': matching.SCHEMA}     # judge rows: the format saved with each request
+ # the stored requests of both prompt languages (D163): Chinese headers up to extraction v5 / matching-v1, English from v6 / matching-v2
+ ITEM_ID = re.compile(r'【信息】编号 (\S+?)，类别 |\[Item\] id (\S+?), category ')
+ MATCH_SHOWN = re.compile(r'^· (v\d+)\s?[（(]', re.M)
+diff --git a/scripts/replay.py b/scripts/replay.py
+index d742766f..4732b4e3 100644
+--- a/scripts/replay.py
++++ b/scripts/replay.py
+@@ -69,6 +69,16 @@ def refuse_links_engine(cfg):
+         raise SystemExit(f'config {cfg.version}: matching engine jev-links is not a product entry point in this version (D694)')
+ 
+ 
++NOT_ADOPTED_JUDGING = ('judging-v12',)     # D719: built and kept, not adopted; no product launcher runs it
++
++
++def refuse_unadopted_judging(cfg):
++    """D719: a configuration whose re-judging names a version that is built but not adopted (judging-v12, poc-v121) is refused by an
++    ordinary launcher; its harnesses call the library directly."""
++    if cfg.rejudging.prompt_version in NOT_ADOPTED_JUDGING:
++        raise SystemExit(f'config {cfg.version}: {cfg.rejudging.prompt_version} is not adopted; an ordinary launcher does not run it (D719)')
++
++
+ def main():
+     parser = argparse.ArgumentParser()
+     parser.add_argument('--from', dest='from_day', required=True)
+@@ -99,6 +109,7 @@ def main():
+     if cfg.baseline is not None:
+         raise SystemExit(f'config {cfg.version} uses retired seeded-question baseline; select a configuration without it')
+     refuse_links_engine(cfg)
++    refuse_unadopted_judging(cfg)
+     refuse_seeded_ledger(args.views)
+     refuse_harness_ledger(args.views)
+     uni = universe.load(args.universe)
+diff --git a/src/hivemind/research_context.py b/src/hivemind/research_context.py
+index a831730c..cf8f3a6f 100644
+--- a/src/hivemind/research_context.py
++++ b/src/hivemind/research_context.py
+@@ -33,7 +33,7 @@ class Reader:
+ 
+     def dependencies(self, vid):
+         result = self.rows('select dependency_id, view_id, depends_on, wait_chain_view_id, wait_year, direction, seq from dependencies '
+-                           'where view_id=? and seq<? order by seq,dependency_id', (vid,self.seq))     # the response shape kept as before D694's kind column
++                           'where view_id=? and seq<? order by seq,dependency_id', (vid,self.seq))     # these columns only: the response carries no kind
+         for dep in result:
+             res = self.rows('select * from dependency_resolutions where dependency_id=? and seq<? order by seq desc,id desc limit 1', (dep['dependency_id'],self.seq))
+             dep['resolved_to'] = res[0]['resolved_to'] if res else dep['depends_on']
+diff --git a/src/hivemind/views/judging.py b/src/hivemind/views/judging.py
+index 380be694..c284280f 100644
+--- a/src/hivemind/views/judging.py
++++ b/src/hivemind/views/judging.py
+@@ -158,12 +158,12 @@ def _indented(text, indent='        '):
+     return str(text).replace('\r\n', '\n').replace('\n', '\n' + indent)
+ 
+ 
+-def _dependency_lines_full(conn, target, d, state, rung_label, tv, flag):
++def _dependency_lines_full(conn, target, dependency, state, rung_label, target_view, flag):
+     """judging-v8 (D694, design §3): the read judgement's comparison point and the system's forecast in full, labelled as ours, beside
+     the reasons excerpt; the read question not judged yet shows only that."""
+     if not state:
+-        return [f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now not judged yet']
+-    return [f'- {target} ({flag}; {d["direction"]}) {tv["question"]}: now rung {state["rung"]} {rung_label}, judged {state["publication_day"]}',
++        return [f'- {target} ({flag}; {dependency["direction"]}) {target_view["question"]}: now not judged yet']
++    return [f'- {target} ({flag}; {dependency["direction"]}) {target_view["question"]}: now rung {state["rung"]} {rung_label}, judged {state["publication_day"]}',
+             f'    Comparison point stated by that judgement: {_indented(state.get("reference") or "not stated")}',
+             f'    The system\'s forecast for it (our own judgement, not evidence): {_indented(state.get("implied_outcome") or "not stated")}',
+             f'    Reasons (excerpt): {_indented((state.get("reasons") or "")[:600])}']
+diff --git a/src/hivemind/views/round.py b/src/hivemind/views/round.py
+index 0bf70e72..1d885329 100644
+--- a/src/hivemind/views/round.py
++++ b/src/hivemind/views/round.py
+@@ -160,6 +160,9 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
+         except links.Refused as error:
+             links.record(conn, attempt, seq, item, cfg, 'failed', error.record)
+             return _fail(conn, item, seq, result, 'matched', 'linking_refused', 'linking: ' + str(error), 'linking')
++        except Exception as error:                     # any other failure of the link step is recorded like a matching failure
++            links.record(conn, attempt, seq, item, cfg, 'failed', {'error': repr(error)[:300]})
++            return _fail(conn, item, seq, result, 'matched', 'linking_failed', 'linking: ' + repr(error), type(error).__name__)
+         links.record(conn, attempt, seq, item, cfg, 'proposed', chosen)
+     dispatch.mark(conn, item, seq, 'matched', 'ok', f'{len(checked.outcomes)} candidates placed')
+     # write, and record what changed in the same commit (a resume at 'judged' reads it)
+diff --git a/tests/test_citation_lists.py b/tests/test_citation_lists.py
+index 341fec85..6f4e6f69 100644
+--- a/tests/test_citation_lists.py
++++ b/tests/test_citation_lists.py
+@@ -125,6 +125,17 @@ def test_an_answer_outside_the_lists_is_refused_by_the_format_before_the_check(t
+     assert store.current_state(conn, 'v1') is None
+ 
+ 
++def test_ordinary_launchers_refuse_the_unadopted_citation_version():
++    """D719: judging-v12 and poc-v121 are enabled by no product launcher; the product configuration passes."""
++    import importlib.util
++    spec = importlib.util.spec_from_file_location('scripts_replay_d719', os.path.join(ROOT, 'scripts', 'replay.py'))
++    scripts_replay = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(scripts_replay)
++    with pytest.raises(SystemExit, match='judging-v12'):
++        scripts_replay.refuse_unadopted_judging(V121)
++    scripts_replay.refuse_unadopted_judging(config.load(os.path.join(ROOT, 'poc', 'config', 'poc-v118.json')))
++
++
+ def test_preflight_fails_on_a_refused_judge_row_without_its_saved_format(tmp_path, capsys):
+     """T5: judge rows are checked against the format saved with their request; one without a format is named and fails preflight."""
+     import preflight
+diff --git a/tests/test_links.py b/tests/test_links.py
+index 0ea2adcd..7145b183 100644
+--- a/tests/test_links.py
++++ b/tests/test_links.py
+@@ -496,6 +496,17 @@ def test_a_jev_failure_records_failed_alone_with_the_failing_request(tmp_path):
+     assert call['stage'] == 'reads' and len(call['request_sha256']) == 64 and 'error' in json.loads(rows[0][1])
+ 
+ 
++def test_a_link_step_failure_that_is_not_a_refusal_is_recorded_and_fails_the_article(tmp_path):
++    """round.run: the attempt is recorded whatever happens next; a configuration built without its link question version fails the
++    article with its record instead of escaping the round."""
++    conn = ledger(tmp_path, [('v1', KEY, RUNGS, 'Data Center revenue FY2027?')])
++    unnamed = dataclasses.replace(CFG, matching=dataclasses.replace(CFG.matching, link_questions=''))
++    result, _ = run_article(tmp_path, unnamed, {'reads__v1': (links.THESIS_READS, 0.8), 'sign__v1': (links.TOGETHER, 0.8)}, conn)
++    assert result.failed.startswith('linking: KeyError')
++    assert [r[0] for r in conn.execute('select status from link_selections')] == ['failed']
++    assert conn.execute("select result from processing_steps where step='matched'").fetchone()[0] == 'failed'
++
++
+ def test_a_write_conflict_after_the_proposal_records_proposed_then_failed(tmp_path, monkeypatch):
+     conn = ledger(tmp_path, [('v1', KEY, RUNGS, 'Data Center revenue FY2027?')])
+     monkeypatch.setattr(links, 'label_for', lambda *args: None)           # the stored rungs give no label: the write refuses

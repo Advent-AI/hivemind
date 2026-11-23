@@ -1,0 +1,130 @@
+# Packet v9-1
+
+**The question:** Will NVIDIA's Vera Rubin platform begin shipping by January 31, 2027?
+
+Due 2027-01-31. Possible answers:
+- 1 Yes: NVIDIA begins shipping the Vera Rubin platform on or before January 31, 2027.
+- 2 No: NVIDIA has not begun shipping the Vera Rubin platform by January 31, 2027.
+
+**60 statements read on 2026-09-24:**
+
+- **v9-1-1** (stored attribution: NVIDIA): NVIDIA reported that Data Center segment revenue grew 92% year over year in fiscal 2027 Q1.
+  - Passage: "Data Center revenues jumped 92%."
+- **v9-1-2** (stored attribution: Dave Blundin): Dave Blundin said he had written custom kernels for Fable 5 himself over the preceding few weeks, work he said previously required a team of specialists and could now be done with a prompt.
+  - Passage: "Dave confirmed he’s been writing custom kernels for Fable 5 himself over the last few weeks. Work that used to require a team of specialists is now done with a prompt."
+- **v9-1-3** (stored attribution: Ramez Naam): Ramez Naam said on August 4, 2026, that NVIDIA’s CUDA moat is broken in 2026 and 2027.
+  - Passage: "“The CUDA moat is broken this year and next.”"
+- **v9-1-4** (stored attribution: Zacks.com): Zacks reports that estimates for NVIDIA FY2027 and FY2028 earnings were revised upward over the prior 30 days.
+  - Passage: "Estimates for fiscal 2027 and 2028 have been revised upward over the past 30 days."
+- **v9-1-5** (stored attribution: NVIDIA): NVIDIA reported Data Center sales of $89 billion, about 92.5% of total revenue, for the quarter; the quarter is not specified in the item.
+  - Passage: "data center sales were $89B, about 92.5% of total — key revenue driver for the quarter."
+- **v9-1-6** (stored attribution: Zacks.com): Zacks reported that its consensus estimate for NVIDIA fiscal 2027 earnings rose 3.8% to $9.25 over 30 days, with earnings expected to grow 93.5% year over year.
+  - Passage: "The Zacks Consensus Estimate for fiscal 2027 earnings has risen 3.8% to $9.25 over the past 30 days. Earnings are now expected to increase 93.5% year over year"
+- **v9-1-7** (stored attribution: NVIDIA): NVIDIA has invested nearly $50 billion in frontier AI labs.
+  - Passage: "NVIDIA has invested nearly $50 billion in frontier AI labs."
+- **v9-1-8** (stored attribution: Einride and Nvidia): Einride and Nvidia announced a collaboration on 2026-09-21 under which Einride will build the next generation of its Driver on Nvidia Hyperion and adapt Hyperion for heavy-duty trucks and highway and suburban autonomous operations.
+  - Passage: "Einride ( Nasdaq: ENRD ) will build the next generation of the Einride Driver on Nvidia’s Hyperion platform under a collaboration announced Monday. The Swedish company will adapt Hyperion, a compute and sensor reference architecture for Level 4 autonomy , to heavy-duty trucks as it pushes into highway and suburban autonomous operations."
+- **v9-1-9** (stored attribution: NVIDIA): NVIDIA guided FY2027 Q3 revenue to $108 billion, plus or minus 2%, indicating 89.5% year-over-year growth and 12.2% sequential growth.
+  - Passage: "The company expects third-quarter revenues of $108 billion (+/- 2%), indicating 89.5% year-over-year growth and a 12.2% sequential increase."
+- **v9-1-10** (stored attribution: AMD): AMD reported second-quarter 2026 Data Center revenue of $6.7 billion, up 107% year over year, while Instinct sales more than doubled.
+  - Passage: "In the second quarter of 2026, AMD's Data Center revenues rose 107% year over year to $6.7 billion, while Instinct sales more than doubled."
+- **v9-1-11** (stored attribution: NVIDIA CFO): NVIDIA’s CFO expected supply to remain a bottleneck through at least the end of FY2028 and described memory pricing as extreme.
+  - Passage: "The CFO expects supply to stay a bottleneck at least through the end of fiscal 2028 and calls memory pricing extreme."
+- **v9-1-12** (stored attribution: Zankore): Zankore secured up to $3.1 billion in financing in September 2026 for Nvidia-powered AI infrastructure.
+  - Passage: "Zankore secured up to $3.1 billion in financing in September for Nvidia-powered AI infrastructure, another sign of accelerated-computing investment spreading across Southeast Asia."
+- **v9-1-13** (stored attribution: fool.com (analyst)): The author estimates the five largest AI hyperscalers will spend nearly $800 billion on data centers in calendar 2026.
+  - Passage: "Considering the big five AI hyperscalers will spend nearly $800 billion on data centers this year, that's huge growth still to come."
+- **v9-1-14** (stored attribution: NVIDIA and IonQ): NVIDIA plans to host IonQ’s Superion 256 quantum co-processor at its Accelerated Quantum Research Center; the item says the system ships next year and connects through NVQLink and CUDA-Q.
+  - Passage: "NVIDIA will host IonQ’s Superion 256 quantum co‑processor in its Accelerated Quantum Research Center. Superion 256 connects via NVQLink and CUDA‑Q; ships next year and scales with added qubits."
+- **v9-1-15** (stored attribution: Jensen Huang): Nvidia CEO Jensen Huang said Nvidia’s chip sales would double next year; the item does not specify the sales measure or year.
+  - Passage: "Huang, who said that Nvidia would double its chip sales next year"
+- **v9-1-16** (stored attribution: Nscale): Nscale reported a net loss of $1.02 billion for the six months ended June 30, 2026, and its management flagged substantial doubt about its ability to continue as a going concern.
+  - Passage: "Per the S-1, the company posted a net loss of $1.02 billion in the six months to June 30, 2026—and at one point, its own management flagged “substantial doubt” about its ability to continue as a going concern."
+- **v9-1-17** (stored attribution: Intel): Intel launched Xeon 6+ and expanded its OpenVINO Physical AI framework for AI and robotics applications.
+  - Passage: "Intel also launched Xeon 6+ and expanded its open-source OpenVINO Physical AI framework, giving developers tools for AI and robotics applications."
+- **v9-1-18** (stored attribution: Nvidia): Nvidia qualified battery energy storage system offerings from Hitachi Energy, LG Energy Solution and Tesla for its DSX Ready program.
+  - Passage: "At launch, Nvidia has qualified BESS offerings from Hitachi Energy, LG Energy Solution and Tesla."
+- **v9-1-19** (stored attribution: NVIDIA): NVIDIA raised its dividend 25-fold in June; the item gives no year or dividend amount.
+  - Passage: "NVIDIA (NVDA) in June raised its dividend 25-fold"
+- **v9-1-20** (stored attribution: NVIDIA): NVIDIA reported revenue of $96.2 billion for the quarter; the quarter is not specified in the item.
+  - Passage: "NVIDIA (NVDA) posted $96.2B revenue;"
+- **v9-1-21** (stored attribution: NVIDIA): NVIDIA began production shipments of Vera Rubin in FY2027 Q3.
+  - Passage: "Vera Rubin began production shipments in the third quarter."
+- **v9-1-22** (stored attribution: Zacks.com): The Zacks consensus estimate for NVIDIA FY2027 revenue was $406.05 billion, implying 88% year-over-year growth.
+  - Passage: "The Zacks Consensus Estimate for fiscal 2027 revenues is currently pegged at $406.05 billion, indicating an 88% year-over-year increase."
+- **v9-1-23** (stored attribution: fool.com (analyst)): The author says Nvidia trades at 29 times trailing earnings.
+  - Passage: "It trades for a very reasonable 29 times earnings."
+- **v9-1-24** (stored attribution: NVIDIA): NVIDIA had $279 billion of supply and production-capacity commitments at the end of FY2027 Q2, up from $119 billion in Q1.
+  - Passage: "At the end of the second quarter of fiscal 2027, the company had committed $279 billion to secure supply and production capacity, up from $119 billion in the first quarter."
+- **v9-1-25** (stored attribution: Einride): Einride expects its vehicle footprint to reach 1,500 to 2,000 vehicles by 2028, based on customer demand captured on its platform.
+  - Passage: "It expects that footprint to reach 1,500 to 2,000 vehicles by 2028, based on customer demand captured on its platform so far."
+- **v9-1-26** (stored attribution: Einride): Einride said about 80% of the customer demand captured on its platform is suitable for automation in the medium term.
+  - Passage: "About 80% of that demand is suitable for automation in the medium term, the company said."
+- **v9-1-27** (stored attribution: Nscale): Nscale’s IPO filing describes $103 billion in contracts, many not yet firm, that it expects to turn into revenue on schedule.
+  - Passage: "Despite those losses, Nscale is asking Wall Street to value it at as much as $35 billion on the promise that $103 billion in contracts, much of them not yet firm, will turn into revenue on schedule."
+- **v9-1-28** (stored attribution: Amazon Robotics and NVIDIA): Amazon Robotics plans to integrate NVIDIA’s full-stack physical AI platform into its robotics projects.
+  - Passage: "On the physical AI side, Amazon Robotics will work with NVIDIA to integrate its full-stack physical AI platform, helping ramp up the development of Amazon’s robotics projects."
+- **v9-1-29** (stored attribution: Intel): Intel reported second-quarter 2026 revenue of $16.13 billion, up 25%, and Data Center and AI revenue of $6.26 billion, up 59%.
+  - Passage: "Its second-quarter revenues rose 25% to $16.13 billion, while Data Center and AI revenues surged 59% to $6.26 billion."
+- **v9-1-30** (stored attribution: Intel): Intel's purpose-built silicon revenue increased about 20% sequentially and nearly tripled year over year in 2026 Q2.
+  - Passage: "In the second quarter of 2026, purpose-built silicon revenues increased about 20% sequentially and nearly tripled year over year."
+- **v9-1-31** (stored attribution: Nscale and Nvidia): Nvidia agreed to take $1 billion in convertible notes or non-voting shares in Nscale’s $3.1 billion financing round under a subscription agreement signed September 15, 2026.
+  - Passage: "On Sept. 15, Nscale signed a subscription agreement for a $3.1 billion financing round, of which Nvidia itself is taking $1 billion in convertible notes or non-voting shares."
+- **v9-1-32** (stored attribution: SpaceX): SpaceX reported Q2 revenue of $7.8 billion, up 92% year over year, while revenue growth for its AI division was 213% year over year.
+  - Passage: "During Q2, SpaceX's revenue rose 92% year over year to $7.8 billion. Its AI division showcased particular strength, rising 213% year over year."
+- **v9-1-33** (stored attribution: Nvidia): The author says Nvidia estimates global data-center capital expenditures will reach $3 trillion–$4 trillion by 2030.
+  - Passage: "Nvidia estimates that global data center capital expenditures will rise to between $3 trillion and $4 trillion by 2030."
+- **v9-1-34** (stored attribution: AWS and NVIDIA): AWS and NVIDIA announced a plan to deploy 2 million additional NVIDIA GPUs across AWS infrastructure between 2027 and 2028.
+  - Passage: "Now, the two powerhouses have announced a staggering expansion of this existing partnership which will, among other things — but this is certainly the standout headline — include the deployment of 2 million additional NVIDIA GPUs across AWS infrastructure between 2027 and 2028."
+- **v9-1-35** (stored attribution: Nvidia): Nvidia launched its DSX Ready qualification program for AI-factory infrastructure products, initially covering battery energy storage systems and cooling products.
+  - Passage: "The world’s foremost AI chip company, Nvidia, has launched a new “DSX Ready” qualification program for products and solutions that have completed “category-specific qualification requirements for AI factory infrastructure,” initially focusing on battery energy storage systems and cooling products."
+- **v9-1-36** (stored attribution: TCM Multi Cap Core Equity Strategy): TCM Multi Cap Core Equity Strategy said AMD customer sampling of new products was underway, with a continued ramp planned for the second half of 2026 and into 2027.
+  - Passage: "Customer sampling of new products is underway with a continued ramp cadence planned for the second half of 2026 and into 2027."
+- **v9-1-37** (stored attribution: AMD): AMD expects its Data Center segment revenue to more than double year over year in 2027.
+  - Passage: "Advanced Micro Devices expects Data Center segment revenues to more than double year over year in 2027."
+- **v9-1-38** (stored attribution: NVIDIA management): NVIDIA management said its investments in frontier AI labs may be characterized as circular financing and that the compute can be redeployed to other customers.
+  - Passage: "Management concedes some will call this circular financing and says the compute can be redeployed to other customers."
+- **v9-1-39** (stored attribution: Nvidia): Nvidia bought warrants for more than 157,945 Nscale shares for $60 million and agreed to guarantee up to $860.3 million of Nscale’s lease obligations at its Ward County, Texas facility, according to Nscale filings from October 2025.
+  - Passage: "Previous filings from Nscale’s own U.K. company accounts in October 2025 showed that Nvidia bought warrants for over 157,945 Nscale shares for $60 million—and in exchange, agreed to guarantee up to $860.3 million of Nscale’s lease obligations at a facility in Ward County, Texas."
+- **v9-1-40** (stored attribution: Anthropic): Anthropic plans to deploy up to 2 GW of AMD MI450-series GPUs on Helios, with the first 1 GW planned to begin in the first half of 2027.
+  - Passage: "Anthropic plans to deploy up to 2 gigawatts of MI450-series GPUs using the AMD Helios rack-scale platform, with the first gigawatt beginning in the first half of 2027."
+- **v9-1-41** (stored attribution: Trefis, the article’s author): Trefis reported that consensus estimates had NVIDIA earnings and revenue growing at a similar pace from FY2027 to FY2028, implying roughly steady profit margins.
+  - Passage: "Consensus has earnings and revenue growing at a similar pace between fiscal 2027 and fiscal 2028, so analysts assume profit margins hold roughly steady."
+- **v9-1-42** (stored attribution: Elon Musk, SpaceX CEO): SpaceX CEO Elon Musk said SpaceX had decided to build exclusively on Nvidia hardware, citing the Vera Rubin architecture.
+  - Passage: "We've decided to build exclusively on NVIDIA because we think the Vera Rubin architecture is the best architecture. We think it's the best AI computer, and we greatly value our close cooperation and partnership on many levels with NVIDIA. So, we're exclusive to NVIDIA."
+- **v9-1-43** (stored attribution: NVIDIA CEO): NVIDIA’s CEO said demand supports revenue growth well above 70% for FY2028, but supply limits the guidance to about 70%.
+  - Passage: "The CEO says demand is much greater than 70%, and that supply is what holds the guide there."
+- **v9-1-44** (stored attribution: NVIDIA): NVIDIA reported FY2027 Q2 revenue of $96.22 billion, up 106% year over year, and Data Center revenue of $89.02 billion, up 117%.
+  - Passage: "NVIDIA generated $96.22 billion in second-quarter fiscal 2027 revenues, up 106% year over year, while Data Center revenues surged 117% to $89.02 billion."
+- **v9-1-45** (stored attribution: NVIDIA): Trefis reported that NVIDIA began Vera Rubin production shipments in August and already had purchase orders from every major hyperscaler, AI cloud, and system OEM.
+  - Passage: "Production shipments began in August, with purchase orders already in from every major hyperscaler, AI cloud, and system OEM."
+- **v9-1-46** (stored attribution: Jensen Huang): Nvidia CEO Jensen Huang said Nvidia’s support was important to the existence and development of Nscale and CoreWeave.
+  - Passage: "“ If we didn’t support CoreWeave to exist, these neoclouds, these AI clouds, wouldn’t exist… If we didn’t support Nscale, they wouldn’t be where they are today. “"
+- **v9-1-47** (stored attribution: NVIDIA management): NVIDIA guided FY2028 gross margin to 72%–73%, lower than previously expected as memory prices rose more than management expected; the guidance included the benefit of price increases NVIDIA had already implemented.
+  - Passage: "Gross margin is guided lower. Memory prices have risen more than management expected, and the guide has that margin settling in the 72% to 73% range in fiscal 2028, helped by price increases NVIDIA has already executed."
+- **v9-1-48** (stored attribution: AWS and NVIDIA): AWS and NVIDIA plan to build AI factories for the U.S. government, enabling delivery of 100,000 GPUs on AWS secure infrastructure for federal and national-security workloads.
+  - Passage: "AWS and NVIDIA will build AI factories for the U.S. government, enabling the delivery of “100,000 GPUs on AWS’s secure infrastructure for federal and national-security workloads.”"
+- **v9-1-49** (stored attribution: NVIDIA management): NVIDIA management estimated a revenue opportunity of about $40 billion per gigawatt of capacity for Vera Rubin, versus $25 billion per gigawatt for Blackwell.
+  - Passage: "Management puts NVIDIA’s revenue opportunity at about $40 billion per gigawatt of capacity with Vera Rubin, against $25 billion with Blackwell."
+- **v9-1-50** (stored attribution: Trefis, the article’s author): Trefis calculated that NVIDIA’s share price of about $225 equated to 24.1 times analysts’ expected FY2027 earnings and 14.5 times expected FY2028 earnings.
+  - Passage: "On the earnings analysts expect for fiscal 2027, the same price is about 24.1 times. On what they expect for fiscal 2028, it is about 14.5 times."
+- **v9-1-51** (stored attribution: fool.com (analyst)): The author calculates that Nvidia trades at less than 15 times next year's earnings and says this implies almost no growth is priced into the stock.
+  - Passage: "At less than 15 times next year's earnings, Nvidia's stock has almost no growth priced into it today."
+- **v9-1-52** (stored attribution: AMD): AMD's Helios platform is in production, with initial shipments expected late in 2026 Q3 and a larger ramp-up expected in Q4 2026 and 2027.
+  - Passage: "Helios is in production, with initial shipments expected late in the third quarter and a larger ramp-up in the fourth quarter and 2027."
+- **v9-1-53** (stored attribution: Dave Blundin): Dave Blundin estimated that 90–95% of AI workload is moving to inference.
+  - Passage: "Ninety to ninety-five percent of the AI workload is moving to inference."
+- **v9-1-54** (stored attribution: NVIDIA): NVIDIA reported that total revenue grew 85% year over year in fiscal 2027 Q1.
+  - Passage: "NVIDIA reported fiscal 2027 first-quarter revenue growth of 85% year over year"
+- **v9-1-55** (stored attribution: Microsoft): Microsoft plans to deploy AMD's Helios platform at scale on Azure.
+  - Passage: "Microsoft plans to deploy Helios at scale on Azure."
+- **v9-1-56** (stored attribution: NVIDIA): NVIDIA expects FY2028 revenue growth of about 70%; the article says supply constraints could limit the pace of meeting demand.
+  - Passage: "NVIDIA also expects fiscal 2028 revenue growth of about 70%, although supply constraints could limit how quickly it meets demand."
+- **v9-1-57** (stored attribution: Dave Blundin): Dave Blundin judged that CUDA no longer provides an inference-time moat and has only a limited remaining lifespan as a training-time moat.
+  - Passage: "Dave’s conclusion: CUDA as an inference-time moat is already dead. As a training-time moat, limited lifespan."
+- **v9-1-58** (stored attribution: Einride): Einride plans to deploy Nvidia Blackwell architecture at scale for model training through an unnamed Nvidia Exemplar Cloud partner; no deployment date or amount was given.
+  - Passage: "For model training, Einride plans to deploy Nvidia’s Blackwell architecture at scale through an Nvidia Exemplar Cloud partner, a provider whose infrastructure Nvidia has validated for large-scale AI training performance. The release did not name the provider."
+- **v9-1-59** (stored attribution: NVIDIA): NVIDIA set a policy to return at least 50% of free cash flow to shareholders; the disclosures were in June, with no year specified.
+  - Passage: "set a policy to return at least 50% of free cash flow to shareholders, per its public June disclosures."
+- **v9-1-60** (stored attribution: Nvidia): Nvidia reported Q2 total revenue of $96.2 billion, up 106% year over year.
+  - Passage: "Nvidia posted an even stronger quarter; revenue was up 106% year over year to $96.2 billion."

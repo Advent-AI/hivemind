@@ -1,0 +1,78 @@
+judging-v13 $0 gate (DESIGN.md v5 §6)
+
+PASS  R1a    C3 on Q4
+        C5: v9: the reference prior414 rests on the system's own forecast or an estimate
+        C3: FY2027 Q4 base: v9 dcq4 (146.0–146.0) exceeds v14 q4f (127.1–127.1)
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3') base: v9 reaches g3 without passing the forecast node q3f
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1b    C4 on the Q3 bypass, no C3
+        C4: ('NVIDIA', 'revenue', 'company', 'FY2027 Q3') base: v9 reaches g3 without passing the forecast node q3f
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R1c    passes
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  R2     overlap recorded; ~35 crosses 50
+        recorded: {"type": "overlap", "figure": "end", "outcome": "v29", "value": 53.0, "alternate": 35.0, "alternate_bound": null, "boundaries_crossed": [50], "certainty": "definite"}
+PASS  R3a    C1 on both stripped qualifiers
+        C1: a730: "$730 billion" is not a complete numeric expression of e1786
+        C1: b800: "$800 billion" is not a complete numeric expression of e2535
+        C8: share45: converts a730, b800 to four largest AI hyperscalers combined CY2026 share of top-five capex with no bridge naming those operands
+        C8: cap27: converts c1300 to four largest AI hyperscalers combined CY2027 data-center capex with no bridge naming those operands
+PASS  R3b    passes C1, C8 without bridges
+        C8: share45: converts a730, b800 to four largest AI hyperscalers combined CY2026 share of top-five capex with no bridge naming those operands
+        C8: cap27: converts c1300 to four largest AI hyperscalers combined CY2027 data-center capex with no bridge naming those operands
+PASS  R3c    bridges recorded, undetermined
+        recorded: {"type": "bridge", "figure": "share45", "bridge": "br1", "alternate": "undetermined"}
+        recorded: {"type": "bridge", "figure": "cap27", "bridge": "br2", "alternate": "undetermined"}
+PASS  R4     trim definitely crosses 40
+        recorded: {"type": "adjustment", "figure": "vera28", "outcome": "v41", "value": 38.5, "alternate": 40.0, "alternate_bound": ">", "boundaries_crossed": [40], "certainty": "definite"}
+PASS  G1     passes, estimates visible
+PASS  G2     passes, estimates visible
+PASS  G3     passes, estimates visible
+        recorded: {"type": "adjustment", "figure": "gvera", "outcome": "v19", "value": 13.0, "alternate": 20.0, "alternate_bound": null, "boundaries_crossed": [20], "certainty": "definite"}
+PASS  G4     passes, estimates visible
+PASS  P1     C1 only, on gq1
+        C1: gq1: value 81.9 USD bn bound None does not equal "$81.6 billion" as component value
+PASS  P2     C2 only, on gfy
+        C2: gfy: declared 450.0–480.0 but sum of ['gh1', 'gh2'] gives 400.60–434.60
+PASS  P3a    C5 only
+        C5: v1: the reference pri rests on the system's own forecast or an estimate
+PASS  P3c    C10: a prior figure the earlier answer does not state
+        C5: v1: the reference pri rests on the system's own forecast or an estimate
+        C10: pri: no earlier answer of v1 on 2026-07-13 shown in the request states 431.0
+PASS  P3b    C5 only
+        C5: v1: the reference wrap rests on the system's own forecast or an estimate
+PASS  P4     C8 only, on gunits: the per-unit identity needs one scope
+        C8: gunits: converts gt20, gasp to NVIDIA Vera CPU FY2027 units with no bridge naming those operands
+        recorded: {"type": "adjustment", "figure": "gvera", "outcome": "v19", "value": 13.0, "alternate": 20.0, "alternate_bound": null, "boundaries_crossed": [20], "certainty": "definite"}
+PASS  G3inv  the per-unit inverse gives $20B
+        recorded: {"type": "adjustment", "figure": "gvera", "outcome": "v19", "value": 13.0, "alternate": 20.0, "alternate_bound": null, "boundaries_crossed": [20], "certainty": "definite"}
+PASS  G4m    C9: FY2028 rests on consensus, not q01's forecast
+        C9: v22 does not rest on v1's forecast gfy
+        C9: v22 reaches gc392 for ('NVIDIA', 'revenue', 'company', 'FY2027') without v1's forecast gfy
+PASS  R4m    C2: the bound direction reversed
+        C2: cpu28: its inputs make it a lower bound, but it is declared <
+        recorded: {"type": "adjustment", "figure": "vera28", "outcome": "v41", "value": 38.5, "alternate": 40.0, "alternate_bound": "<", "boundaries_crossed": [40], "certainty": "possible"}
+PASS  T1     accepted
+PASS  T2     accepted
+PASS  T3a    accepted
+PASS  T3b    accepted
+PASS  T4     accepted
+PASS  T5a    refused
+        C1: t: "$730 billion" is not a complete numeric expression of e1786
+PASS  T5b    refused
+        C1: t: "$800 billion" is not a complete numeric expression of e2535
+PASS  T6     refused
+        C1: t: "double" is not a complete numeric expression of e3660
+PASS  T7     refused
+        C1: t: value 108.5 USD bn bound None does not equal "$108.0 billion, plus or minus 2%" as component midpoint
+PASS  T8     refused
+        C1: t: value 730.0 USD bn bound None does not equal "more than $730 billion" as component value
+PASS  T9     refused
+        C1: t: "$800 billion" is not a complete numeric expression of e2535
+PASS  U1     decision held
+        recorded: {"type": "bridge", "figure": "q4f", "bridge": "carry", "alternate": "undetermined"}
+PASS  U2     two refusals give unresolved
+        C2: gfy: declared 450.0–480.0 but sum of ['gh1', 'gh2'] gives 400.60–434.60
+
+34 items, 34 pass, misses: none
+GATE PASS

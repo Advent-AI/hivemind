@@ -1,0 +1,120 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1f5a4-8ad4-7341-8f91-1b5676ea2d72
+--------
+user
+# Council under D439 and D544 (read-only, $0). Under 150 words, ending `CONSENSUS: SEND` or `CONSENSUS: HOLD <reason>`.
+
+The goal says "no need to ask my feedback"; D544 says the council decides reversibly. This is one cents-level probe of fix 1's hypothesis,
+with nothing built and no production or PRD change.
+- **Cases:** for new-2, two window articles each for M02 and M03 (five-hyperscaler capex), M16 (DRAM) and M25 (DOJ and Groq).
+- **What is sent:** Step 1 c8, unchanged, with that row's stored `before_state` minus the theses the ladder dropped. Each article is sent
+  once.
+- **The ladder:** every opened thesis is laddered once by the frozen ladder, one case per invocation, so its cap holds one reservation.
+- **Measured:** whether a well-formed thesis opens and is accepted for each matter.
+- **Lines, written before the send:**
+  - at least 2 of the 4 matters get an accepted thesis;
+  - no thesis opens on an article's other, already-open matters.
+- **Cost:** under $1, within D439's $40.
+
+Is this a fair test of "a refused thesis is not open"? Does it break D677's condition? D677 bars paid work beyond cents until Alex funds
+a run; this is cents.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check D677’s exact wording and whether the probe can separate the effect of hiding refused questions from variation on a resend.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba PATH-TO-PASS.md | sed -n '37,58p'; rg -n 'probe|after Alex|test|replay' DESIGN-refused-not-open.md | tail -18; rg --files -g '*probe*' -g '*council*brief*' | tail -14" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+    37	## The order and the cost
+    38	1. **A** on stored cases: cents.
+    39	2. **B** probe on stored states: cents, but only if Alex lifts D505.
+    40	3. **C:** a $0 census of why each of the 14 is framed off or never opened, then cents probes.
+    41	4. **One full comparison:** about $150 for six draws, run only after 1–3 pass on stored data and only on Alex's word, as it exceeds D439's
+    42	   $40.
+    43	
+    44	## Census C ($0), 2026-11-19: why the 14 rule-allowed matters are lost
+    45	- **No new thesis opens in the window.** On the articles behind these matters in 09-07..09-20, new-2 opened 0 new theses, and new-3 the
+    46	  same.
+    47	- **The evidence is filed under questions the ladder dropped.** Step 1 runs over the whole window before the ladder, so its open-thesis
+    48	  state still holds theses the ladder later refuses. It files the window's evidence under them, and so never opens a well-formed one.
+    49	  - M02 and M03, five-hyperscaler capex 2026 and 2027: about 25 evidence links per draw go to dropped theses (new-2 clean-26, clean-7,
+    50	    clean-5; new-3 clean-29, clean-6, clean-12, clean-4).
+    51	  - M25, DOJ and Groq, is even filed under a dropped capex thesis.
+    52	  - M16 and M32 are mostly unlinked, or linked to dropped theses.
+    53	- **A refusal loses its matter for the rest of the run:** the cascade, a refusal plus a stale open-thesis state.
+    54	- **The structural fix is code-owned identity:** a thesis with no ladder is not open. The ladder runs when a thesis opens, and a
+    55	  refused thesis leaves Step 1's open-thesis state, so a later item can open a well-formed one.
+    56	  - This is an identity rule, not a judgement.
+    57	  - In the batch replay it needs the ladder interleaved with Step 1 by day.
+    58	
+55:**The test, after Alex's word:** a cents probe that replays new-2's July–September items over the capex, DRAM and Groq matters with the
+110:  the item that opened it and before that day's judging". The batch replay, which ran Step 1 over the whole window first, is what
+council-d-brief.md
+council-e-brief.md
+council-c-brief.md
+council-b-brief.md
+council-g-brief.md
+council-f-brief.md
+council-a-brief.md
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D(439|544|674|676|677|678|679|680|681) '"' ../../DECISIONS-log.md; rg -n 'D677|D678|D679|D680' ../../DECISIONS.md ../../CURRENT_STATE.md | tail -24; nl -ba ../../DECISIONS-log.md | sed -n '10033,10118p'" in /Users/lchingen/hivemind/docs/research/2026-11-19-comparison-review
+ succeeded in 0ms:
+4871:## D439 · 2026-11-13 · While Alex is not active, the council decides by consensus and the loop iterates to the PRD's production goals
+6616:## D544 · 2026-11-15 · Under D439: the work toward production carries forward on the new system; the old system stays the running default until the new one passes its gates (council consensus; D543's deferral of the choice is withdrawn)
+9659:## D674 · 2026-11-17 · Alex's goal for the comparison: run, and keep tackling until the set criteria pass
+10007:## D676 · 2026-11-19 · The release comparison: the new system loses for two known mechanisms; keep the old system; the outcome was computable before the run (council consensus)
+10042:## D677 · 2026-11-19 · The release comparison's goal loop is closed; the old system stays; no paid work continues (council consensus, D439/D544)
+../../CURRENT_STATE.md:447:  - **The goal loop is closed (D677, council).** The old system stays and no paid work continues. It reopens only if Alex reverses D505
+../../DECISIONS.md:1021:| D677 | 2026-11-19 | The release comparison's goal loop closed: the old system stays, no paid work continues; reversed only if Alex reverses D505 or funds a full run, with a written path to passing first (council consensus, D439/D544) | in force | `docs/research/2026-11-19-comparison-review/council-c-codex.md` |
+ 10033	  - **Process failure:** the attainable verdict was computable in minutes before the run, from the frozen list, D505, D432 and the D489
+ 10034	    week. Neither the council (D665–D667) nor Claude computed it (AGENTS §7.2); two days and about $145 measured a knowable result.
+ 10035	- **Decided (council consensus):**
+ 10036	  - The old system stays for release.
+ 10037	  - No further comparison run.
+ 10038	  - The new path continues only on Alex's word, and only after two things: his D382 call for such a comparison, and a cents-level test
+ 10039	    of the one-outcome hand-off repair on the stored no-ladder cases.
+ 10040	  - Before any future paid comparison, its attainable verdict is computed first.
+ 10041	
+ 10042	## D677 · 2026-11-19 · The release comparison's goal loop is closed; the old system stays; no paid work continues (council consensus, D439/D544)
+ 10043	
+ 10044	- **Context:** Alex's goal (D674) is to keep tackling until the comparison passes, without asking him. He has not answered the closing
+ 10045	  question. D544 says the council decides reversibly, not "Alex's choice".
+ 10046	- **Facts:**
+ 10047	  - A pass needs at least 9 of 14 rule-allowed matters only the new system serves, under D382; it serves 0–1 today.
+ 10048	  - The one-outcome probe failed its line 1.
+ 10049	  - The $0 census found three loss points that no wording fix reaches.
+ 10050	  - A verdict needs a full comparison, about $110, above D439's $40 ceiling.
+ 10051	  - Two decisions stand: D493 (no further Step 1 request change) and D505 (figures are not questions).
+ 10052	- **Council:** `docs/research/2026-11-19-comparison-review/council-c-codex.md`: "CONSENSUS: (a) Close the comparison loop, keep the old
+ 10053	  system running, and stop paid work … Reconsider if Alex reverses D505 or funds a full run. Before spending, show a path to passing the
+ 10054	  frozen criteria."
+ 10055	- **Decided:**
+ 10056	  - The loop is closed and the old system stays.
+ 10057	  - No paid work continues.
+ 10058	  - **Reversal conditions:** Alex reverses D505, or funds a full run. Either way, a written path to passing the frozen criteria comes
+ 10059	    first.
+
+codex
+**Hold.** Removing refused questions from the saved open list is a useful test of whether they block new questions. A single resend can also produce a different answer by chance. Send each article with and without the refused questions on the same day. Count a recovery only when the filtered version produces an accepted question and the unchanged version does not.
+
+D677 says **“No paid work continues.”** It has no cents exception. D439’s $40 ceiling limits authorized spending. It does not authorize this probe. [D677](/Users/lchingen/hivemind/docs/DECISIONS-log.md:10042)
+
+CONSENSUS: HOLD D677 still bars paid sends, and the probe needs a matched control.
+tokens used
+336,813
+**Hold.** Removing refused questions from the saved open list is a useful test of whether they block new questions. A single resend can also produce a different answer by chance. Send each article with and without the refused questions on the same day. Count a recovery only when the filtered version produces an accepted question and the unchanged version does not.
+
+D677 says **“No paid work continues.”** It has no cents exception. D439’s $40 ceiling limits authorized spending. It does not authorize this probe. [D677](/Users/lchingen/hivemind/docs/DECISIONS-log.md:10042)
+
+CONSENSUS: HOLD D677 still bars paid sends, and the probe needs a matched control.

@@ -1,0 +1,736 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 23: the review fixed as round 22 asked (`reflection-6/due-day/`)
+
+Read `dueday_probe.py` (`CONTROLS`, `reading`, `material`, `final`), `review-brief.md`, `test_dueday_probe.py` and `mutants.txt`.
+
+**Your four points:**
+1. **The packet and brief:**
+   - each item now uses the gate readers' own form (`build_reader_packets.item_of`), so it shows opens_as, the fiscal-year note, and
+     the question, rungs and due day as the product stores them;
+   - the brief lists the themes and quotes the step's decline rule verbatim (all seven cases, including the binding_obligation
+     exception and the publication-day case) instead of my summary.
+2. **The rendered view** is what the reviewers see. The raw ladder appears only in `other_fields`, as the gate packet has it.
+3. **Strict validation:** exactly two review files, each holding every item once, with valid verdict, class and material fields.
+   Otherwise the probe is NOT SCORED. Tests cover a missing row, one reviewer alone and a malformed verdict.
+4. **Four known controls** are mixed in blind, taken from stored answers outside the probe's sends. A reviewer who misses one voids
+   the reading.
+   - **Planted defects:** sol's 2027-02-28 completion on fortnight c1/clean-6, and sol's Hugging Face decline (week c1/clean-5 d2,
+     agreed unjustified).
+   - **Sound:** astra's guarantee at 2028-04-03, and astra's justified two-year capex decline.
+
+**Proofs:** tests 16 of 16. Eleven mutants, each caught by a failing assertion or an expected refusal that did not raise.
+
+**Cost:** about $1.5, capped at $3.20. About $5.3 remains.
+
+**Asked:** send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll verify the revised packet, control checks and verdict validation against the code, then give the send decision.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/check-output.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/test_dueday_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/review-brief.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/DESIGN.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+9 topics; the requests are the stored frozen ones and differ only in the clause: True; worst-case reserve of one attempt $1.13; cap $3.20
+check passed
+
+ succeeded in 0ms:
+"""The due-day probe at $0 (council round 20): the check, the four arm-draws through the real runner and limit with a fake transport,
+the v2 requests carrying the changed clause and nothing else, and the verdict fixed before."""
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parent / 'astra'), str(HERE.parent / 'model'), str(HERE.parent / 'effort')]
+import dueday_probe as probe  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 2000, 'completion_tokens': 400}      # about astra's measured $0.04 a send
+
+
+def transport():
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    systems = []
+
+    def send(provider, request):
+        systems.append(request['messages'][0]['content'])
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+    send.systems = systems
+    return send
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('dueday')
+    original, probe.RECORD = probe.RECORD, folder / 'check-passed.json'
+    try:
+        probe.check()
+        fake = transport()
+        probe.send(folder / 'run', transport=fake)
+        yield folder, fake
+    finally:
+        probe.RECORD = original
+
+
+def test_each_arm_sends_its_own_system_text_and_nothing_else_differs(run):
+    _, fake = run
+    frozen = [text for text in fake.systems if probe.FROZEN_CLAUSE in text]
+    changed = [text for text in fake.systems if probe.V2_CLAUSE in text]
+    assert len(frozen) >= 18 and len(changed) >= 18 and len(frozen) + len(changed) == len(fake.systems)
+    assert {text.replace(probe.V2_CLAUSE, probe.FROZEN_CLAUSE) for text in changed} == set(frozen)
+
+
+def test_the_check_refuses_a_v2_text_that_changes_more_than_the_clause(tmp_path, monkeypatch):
+    edited = tmp_path / 'v2.txt'
+    edited.write_text(probe.V2_SYSTEM.read_text().replace('Write in English.', 'Write in plain English.'))
+    monkeypatch.setattr(probe, 'V2_SYSTEM', edited)
+    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+    with pytest.raises(SystemExit, match='CHECK FAILED'):
+        probe.check()
+
+
+def rewrite(folder, changes):
+    """Copy the run and set the stored due day (or a decline) of the arm-draw and topic given."""
+    import shutil
+    copy = folder.parent / (folder.name + '-copy')
+    shutil.rmtree(copy, ignore_errors=True)
+    shutil.copytree(folder / 'run', copy)
+    for (arm_draw, topic), day in changes.items():
+        path = copy / arm_draw / 'outcomes.jsonl'
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        for row in rows:
+            if row['case'] == f'{arm_draw}|{topic}':
+                if day == 'decline':
+                    row.update(status='no ladder', answer=None, view=None, passage=None, reason='made up')
+                else:
+                    row['answer']['ladder']['due_day'] = day
+                    row['view']['due_day'] = day
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    return copy
+
+
+HF, HF_WEEK = 'fortnight:c1/clean-6', 'week-10-06:c1/clean-5'
+FIXED = {('frozen-d1', HF): '2027-02-28', ('v2-d1', HF): '2028-03-24', ('v2-d2', HF): '2028-03-24',
+         ('v2-d1', HF_WEEK): '2027-06-30', ('v2-d2', HF_WEEK): '2027-06-30'}
+
+
+def reviews(copy, tmp_path, flags=(), one_reader_flags=(), damage=None):
+    """Two made-up reviewers over the copy's packet: every send sound, except those given (both reviewers, or the first only); each
+    control as expected. `damage(reader, lines)` may spoil a reviewer's file."""
+    keys = tmp_path / 'keys'
+    probe.reading(copy, keys)
+    key = json.loads((keys / 'key.json').read_text())
+    files = []
+    for reader in probe.READERS:
+        lines = []
+        for item, send in key.items():
+            bad = send in flags or (reader == 'codex' and send in one_reader_flags) or \
+                (send in probe.CONTROLS and probe.CONTROLS[send][2] == 'material')
+            lines.append({'item': int(item), 'verdict': 'defect' if bad else 'sound', 'class': 'other' if bad else None,
+                          'material': bad, 'evidence': '', 'why': ''})
+        if damage:
+            lines = damage(reader, lines)
+        path = tmp_path / f'review-{reader}.jsonl'
+        path.write_text('\n'.join(json.dumps(line) for line in lines) + '\n')
+        files.append(path)
+    return keys, files
+
+
+def verdict_of(run, tmp_path, changes, flags=(), one_reader_flags=(), damage=None, files_used=None):
+    folder, _ = run
+    copy = rewrite(folder, changes)
+    keys, files = reviews(copy, tmp_path, flags, one_reader_flags, damage)
+    return probe.final(copy, keys, files if files_used is None else files[:files_used])
+
+
+def test_a_fixed_completion_with_every_control_kept_and_sound_reviews_moves(run, tmp_path):
+    assert verdict_of(run, tmp_path, FIXED) == 'moves'
+
+
+def test_a_completion_still_at_the_annual_filing_closes(run, tmp_path):
+    assert verdict_of(run, tmp_path, FIXED | {('v2-d2', HF): '2027-02-28'}) == 'closes'
+
+
+def test_an_amount_control_whose_stored_day_moves_closes(run, tmp_path):
+    assert verdict_of(run, tmp_path, FIXED | {('v2-d1', 'fortnight:c1/clean-2'): '2027-07-31'}) == 'closes'
+
+
+def test_a_new_decline_both_reviewers_call_unjustified_closes(run, tmp_path):
+    changes = FIXED | {('v2-d1', 'week-10-06:c1/clean-11'): 'decline'}
+    assert verdict_of(run, tmp_path, changes, flags=('v2-d1|week-10-06:c1/clean-11',)) == 'closes'
+
+
+def test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive(run, tmp_path):
+    assert verdict_of(run, tmp_path, FIXED, one_reader_flags=('v2-d1|' + HF,)).startswith('inconclusive')
+
+
+def test_no_annual_filing_date_in_the_frozen_arm_is_inconclusive(run, tmp_path):
+    changes = {key: day for key, day in FIXED.items() if key[0] != 'frozen-d1'}
+    assert verdict_of(run, tmp_path, changes).startswith('inconclusive')
+
+
+def test_a_flagged_fixed_completion_question_closes_even_when_the_frozen_ones_are_flagged_too(run, tmp_path):
+    flags = ('frozen-d1|' + HF, 'frozen-d2|' + HF, 'v2-d1|' + HF)          # the topic count alone would pass: 1 against 2
+    assert verdict_of(run, tmp_path, FIXED | {('frozen-d2', HF): '2027-02-28'}, flags=flags) == 'closes'
+
+
+def test_an_unjustified_new_decline_closes_even_where_the_frozen_ladder_was_flagged(run, tmp_path):
+    topic = 'week-10-06:c1/clean-11'
+    flags = ('frozen-d1|' + topic, 'v2-d1|' + topic)                       # the topic count alone would pass: 1 against 1
+    assert verdict_of(run, tmp_path, FIXED | {('v2-d1', topic): 'decline'}, flags=flags) == 'closes'
+
+
+def test_a_new_material_fault_on_another_topic_closes(run, tmp_path):
+    assert verdict_of(run, tmp_path, FIXED, flags=('v2-d1|fortnight:c1/clean-2',)) == 'closes'
+
+
+def test_a_reviewer_missing_a_row_is_not_scored(run, tmp_path):
+    with pytest.raises(SystemExit, match='NOT SCORED: .* does not hold each of the 40 items once'):
+        verdict_of(run, tmp_path, FIXED, damage=lambda reader, lines: lines[1:] if reader == 'claude' else lines)
+
+
+def test_one_reviewer_alone_is_not_scored(run, tmp_path):
+    with pytest.raises(SystemExit, match='NOT SCORED: 2 review files are needed, got 1'):
+        verdict_of(run, tmp_path, FIXED, files_used=1)
+
+
+def test_a_malformed_verdict_is_not_scored(run, tmp_path):
+    def spoil(reader, lines):
+        return [dict(line, verdict='maybe') if line['item'] == 3 else line for line in lines] if reader == 'codex' else lines
+    with pytest.raises(SystemExit, match='NOT SCORED: .* item 3 is not a valid row'):
+        verdict_of(run, tmp_path, FIXED, damage=spoil)
+
+
+def test_a_reviewer_who_misses_a_planted_defect_voids_the_reading(run, tmp_path):
+    def miss(reader, lines):
+        key = json.loads((tmp_path / 'keys' / 'key.json').read_text())
+        target = next(int(item) for item, send in key.items() if send == 'control|completion-at-filing')
+        return [dict(line, verdict='sound', material=False, **{'class': None}) if line['item'] == target else line for line in lines] \
+            if reader == 'claude' else lines
+    with pytest.raises(SystemExit, match='VOID: .* misses the control\\|completion-at-filing'):
+        verdict_of(run, tmp_path, FIXED, damage=miss)
+
+
+def test_the_packet_shows_the_rendered_question_and_the_four_controls(run, tmp_path):
+    folder, _ = run
+    copy = rewrite(folder, FIXED)
+    probe.reading(copy, tmp_path / 'keys')
+    items = json.loads((copy / 'review' / 'packet.json').read_text())
+    assert len(items) == 40 and all('opens_as' in item['thesis'] and 'fiscal_year_note' in item for item in items)
+    shown = [item['ladder_as_the_judge_is_shown_it'] for item in items]
+    assert sum('rungs' in ladder for ladder in shown) >= 30 and sum('no_ladder' in ladder for ladder in shown) >= 2
+
+ succeeded in 0ms:
+# A source-backed product review of 40 answers (read-only)
+
+Each item in the packet holds:
+- **`thesis`:** a research topic an analyst system opened on NVIDIA: `description` (the question asked), `outcome` (what is tracked),
+  `period`, `opens_as` (its kind) and `settled_by`;
+- **`article`:** the article the topic came from;
+- **`fiscal_year_note`:** NVIDIA's fiscal calendar;
+- **`ladder_as_the_judge_is_shown_it`:** what a step wrote and the product stores. It is either one judged question with its answer
+  choices (`rungs`) and the stored `due_day`, the day the judge records the answer on (code sets it for a year's figure), or
+  `{"no_ladder": <the reason>}` when the step declined;
+- **`other_fields`:** the parts the question leaves out (`not_judged`), the reference quoted from the article, and the basis of the
+  due day.
+
+The listed themes are: chip-export-controls, ai-capex, custom-silicon, semiconductor-cycle, fed-policy-rate, us-inflation,
+us-recession-risk, us-china-tariffs, taiwan-strait, middle-east-conflict, russia-ukraine-war, supply-chain-shift.
+
+**The step's own rule for declining,** quoted from its instructions:
+
+> - Return no_ladder with the reason, and ladder null, in seven cases: the topic has no main figure or event, naming none, or naming several with none of them the main one; nothing in the topic can be checked on a date, which for an event means that neither the topic nor the item gives a date and the topic names no period, unless it is a pending regulatory decision, for which use the company's current fiscal year-end; the figure is a company's figure for a quarter or a half-year, which is evidence to a yearly question; the figure covers a period that is not one fiscal or calendar year, such as a survey's rolling twelve months, and neither the topic nor the item gives the day it is published; the figure is for a year that has already ended on the item's day; the figure is for a year beyond next year, unless the topic's opens_as is binding_obligation; or the question belongs to another company or to a matter that no theme in the request's themes covers, in which case name that company or matter in the reason. Do not rewrite a figure for a year beyond next year as an event to keep it; a numeric completion target may define the state of an event that is itself the topic.
+
+**The rule for the due day:**
+- an event's day is the date the topic or the article gives for assessing it, or the last day of the period the topic names (the
+  company's fiscal year-end for a pending regulatory decision with no date);
+- a figure's day falls after the period it covers, when the figure is published.
+
+**For each item, judge it against the topic and the article:**
+1. **A written question:**
+   - **period:** does it keep the topic's period or check date?
+   - **measure:** is the thing measured the one the topic tracks, and is any constructed measure supported by the topic or the
+     article?
+   - **conditions:** are they kept or listed as not judged?
+   - **choices:** can the judge apply them on the due day (no overlap, no gap, right unit and scale)?
+   - **record day:** is the stored due day the right day for what the topic tracks?
+2. **A decline:** is its reason one of the cases above, truly applying to this topic? If not, it is an `unjustified_decline`,
+   material.
+
+**Return one JSON line per item, in item order:**
+- `item`;
+- `verdict`: `"sound"` or `"defect"`;
+- `class`: `null`, or one of `unjustified_decline`, `period_changed`, `measure_invented`, `measure_changed`, `condition_lost`,
+  `condition_added`, `choices_unusable`, `other`;
+- `material`: true only if the defect would change what the judge records or what an analyst concludes;
+- `evidence`: the exact words that show it, quoted;
+- `why`: one sentence.
+
+Judge each item on its own text; similar items may differ. Return exactly 40 lines, nothing else.
+
+ succeeded in 0ms:
+# The due-day probe (council rounds 19 to 22): design
+
+**The candidate.** `candidate-system-v2.txt` is the frozen system text with one clause changed. "for an obligation already taken on,
+its next annual filing" becomes "for the **amount** of an obligation already taken on, its next annual filing".
+- **Sources:** D210 (the next-annual-filing rule is for "a financing_amount question on the amount") and D403 (an event takes its
+  stated date or period end, and "the model chooses no other day").
+- **Blind audit** (`audit.md`): the changed clause is consistent; the frozen one keeps wider than D210 and conflicts with D403.
+- **Outside the change, recorded:** the reader brief's D row still holds the wide rule (the reading form stays unchanged), and a
+  pre-existing D414 tension.
+
+**The arms.** Astra on the frozen request (a fresh control) against astra on v2, interleaved, 2 draws.
+- **The 9 topics:**
+  - a signed completion, with a stated date and with a closing window (one matter, two forms);
+  - a guarantee with a stated date;
+  - three obligation amounts;
+  - an unsigned acquisition;
+  - two period-end events.
+- **Spend:** a cap of $3.20, against an estimate of about $1.5.
+
+**The verdict, fixed before.** It is read on the **stored** day, the view's due_day, which code sets for a year's figure (D414).
+- **Inconclusive** when the frozen arm does not store the fortnight completion in Feb or Mar 2027.
+- **Moves**, when all of these hold:
+  - v2 stores 2028-03-24 and 2027-06-30 for the two completion forms, in both draws;
+  - the guarantee stays at 2028-04-03 and the amounts at 2027-04-01 (basis expected_publication), in both arms;
+  - the event controls stay within every stored draw's outcomes.
+- **The review,** two blind reviewers, Codex and Claude, over all 36 answers mixed (`review-brief.md`, key outside the repository):
+  - no topic has more material defects in v2 than in the frozen arm;
+  - v2's completion questions have none;
+  - no new v2 decline is flagged unjustified.
+- **Counting:** "agreed" (both reviewers) and "either" (one reviewer). When they lead to different verdicts, the result is
+  inconclusive.
+- **Closes:** otherwise.
+- **What it is:** one matter in two forms, a small diagnostic, not a gate pass.
+
+**Proofs:** tests 11 of 11; seven mutants each caught by a failing assertion (`mutants.txt`); the check passes (`check-output.txt`).
+
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/mutants.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+D0 control (unmutated): 16 passed in 0.23s
+D1 the raw day read instead of the stored one: 2 failed, 14 passed in 0.28s | failed: ['test_a_fixed_completion_with_every_control_kept_and_sound_reviews_moves', 'test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive'] | first: ["E       AssertionError: assert 'closes' == 'moves'"]
+D2 the frozen mechanism not required: 1 failed, 15 passed in 0.27s | failed: ['test_no_annual_filing_date_in_the_frozen_arm_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D3 new declines not reviewed: 1 failed, 15 passed in 0.27s | failed: ['test_an_unjustified_new_decline_closes_even_where_the_frozen_ladder_was_flagged'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D4 completion questions not reviewed: 1 failed, 15 passed in 0.27s | failed: ['test_a_flagged_fixed_completion_question_closes_even_when_the_frozen_ones_are_flagged_too'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+D5 a reviewer disagreement not made inconclusive: 1 failed, 15 passed in 0.27s | failed: ['test_a_material_fault_in_a_fixed_completion_question_that_one_reviewer_sees_is_inconclusive'] | first: ['E       AssertionError: assert False']
+D6 the v2 arm sends the frozen text: 1 failed, 15 passed in 0.27s | failed: ['test_each_arm_sends_its_own_system_text_and_nothing_else_differs'] | first: ['E       AssertionError: assert (36 >= 18 and 0 >= 18)']
+D7 per-topic comparison dropped: 1 failed, 15 passed in 0.27s | failed: ['test_a_new_material_fault_on_another_topic_closes'] | first: ["E       AssertionError: assert 'moves' == 'closes'"]
+V1 one reviewer accepted: 1 failed, 15 passed in 0.28s | failed: ['test_one_reviewer_alone_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V2 controls not checked: 1 failed, 15 passed in 0.27s | failed: ['test_a_reviewer_who_misses_a_planted_defect_voids_the_reading'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V3 missing rows accepted: 1 failed, 15 passed in 0.30s | failed: ['test_a_reviewer_missing_a_row_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+V4 malformed rows accepted: 1 failed, 15 passed in 0.30s | failed: ['test_a_malformed_verdict_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+
+ succeeded in 0ms:
+"""The due-day probe (council rounds 19 and 20): astra on the frozen request against astra on the request whose binding-obligation clause
+is narrowed to amounts (`candidate-system-v2.txt`), on nine topics covering the due-day cases, two interleaved draws each.
+
+  python3 dueday_probe.py check                  # $0: the requests differ only in the clause; spend; writes check-passed.json
+  python3 dueday_probe.py send <new run folder>  # frozen d1, v2 d1, frozen d2, v2 d2
+  python3 dueday_probe.py tally <run folder>     # each topic's stored due days per arm
+  python3 dueday_probe.py reading <run folder> <key folder>      # the blind review packet of both arms
+  python3 dueday_probe.py final <run folder> <key folder> <review files...>   # the verdict fixed before
+"""
+import collections
+import dataclasses
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE.parent / 'astra'), str(HERE.parents[4] / 'clean-arch' / 'step4-2026-11-10' / 'stage_a')]
+import astra_probe as base  # noqa: E402   (Stage A's runner, the limit, the breach guard, the population)
+from astra_probe import budget, model, probe_split, refcontrol, stage_a  # noqa: E402
+
+FROZEN_CLAUSE = 'for an obligation already taken on, its next annual filing;'
+V2_CLAUSE = 'for the amount of an obligation already taken on, its next annual filing;'
+V2_SYSTEM = HERE / 'candidate-system-v2.txt'
+ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+ARMS = ('frozen', 'v2')
+ORDER = [('frozen', 1), ('v2', 1), ('frozen', 2), ('v2', 2)]
+CAP_USD = 3.20                     # both arms, 36 sends at about $0.04 measured; about $5.3 remains of D439's $40
+WORKERS = 1
+RECORD = HERE / 'check-passed.json'
+TOPICS = {   # topic: the case it covers and the due day each arm must give (`stated`, `period_end`, `annual_filing` or `any`)
+    'fortnight:c1/clean-6': ('a signed deal completing, stated check date 24 March 2028', '2028-03-24'),
+    'week-10-06:c1/clean-5': ('the same deal, its closing window the first half of 2027', '2027-06-30'),
+    'fortnight:c1/clean-12': ('a guarantee becoming final, stated check date 3 April 2028', '2028-04-03'),
+    'fortnight:c1/clean-2': ('purchase commitments: an amount at the next annual filing', 'annual_filing'),
+    'week-10-06:c1/clean-1': ('a guarantee amount at the next annual filing', 'annual_filing'),
+    'week-10-06:c1/clean-8': ('a loss-coverage amount at the next annual filing', 'annual_filing'),
+    'week-10-06:c1/clean-11': ('an unsigned acquisition', 'any'),
+    'fortnight:c1/clean-4': ('an event at the fiscal year-end', 'any'),
+    'fortnight:c1/clean-7': ('an approval event by a stated day', 'any'),
+}
+ALLOWED = {   # the outcomes every stored draw gave on the event controls (D629 and both screens, census of 2026-11-16)
+    'week-10-06:c1/clean-11': {'decline', '2028-04-10'},
+    'fortnight:c1/clean-4': {'2027-01-31', '2027-02-28'},
+    'fortnight:c1/clean-7': {'2027-01-31'},
+}
+
+
+def texts_of(arm):
+    texts = stage_a.request_texts()
+    if arm == 'v2':
+        texts = dict(texts, system=V2_SYSTEM.read_text())
+    return texts
+
+
+def population():
+    entries = [entry for entry in refcontrol.population() if f'{entry[0]}:{entry[1]}' in TOPICS]
+    if len(entries) != len(TOPICS):
+        raise SystemExit('a probe topic is not in the population')
+    return entries
+
+
+def built(case, arm, rl):
+    texts = texts_of(arm)
+    user = base.ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(Path(__file__).read_bytes() + V2_SYSTEM.read_bytes()).hexdigest()
+
+
+def check():
+    frozen_text, v2_text = stage_a.request_texts()['system'], V2_SYSTEM.read_text()
+    if frozen_text.count(FROZEN_CLAUSE) != 1 or v2_text != frozen_text.replace(FROZEN_CLAUSE, V2_CLAUSE):
+        raise SystemExit('CHECK FAILED: the v2 system text is not the frozen one with the one clause changed')
+    rl = refcontrol.research_list()
+    failures, shas = [], {arm: {} for arm in ARMS}
+    for source, name, case, stored in population():
+        frozen = built(case, 'frozen', rl)
+        luna = model.build_request(stage_a.SETTING, frozen_text, frozen['messages'][1]['content'], stage_a.request_texts()['schema'],
+                                   'clean_ladder', 'openai')
+        if model.request_identity(luna)[1] != stored['requests'][0]['request_sha256']:
+            failures.append(f'{source}:{name}: the frozen request is not the stored one')
+        sent_frozen, sent_v2 = json.dumps(frozen, ensure_ascii=False), json.dumps(built(case, 'v2', rl), ensure_ascii=False)
+        if sent_v2 != sent_frozen.replace(FROZEN_CLAUSE, V2_CLAUSE):
+            failures.append(f'{source}:{name}: the v2 request differs in more than the clause')
+        for arm in ARMS:
+            shas[arm][f'{source}:{name}'] = model.request_identity(built(case, arm, rl))[1]
+    worst = max(budget.worst_cost(built(case, 'frozen', rl)) for *_, case, _ in population())
+    print(f'{len(TOPICS)} topics; the requests are the stored frozen ones and differ only in the clause: {not failures}; '
+          f'worst-case reserve of one attempt ${worst:.2f}; cap ${CAP_USD:.2f}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    entries = population()
+    for arm in ARMS:
+        if {f'{s}:{n}': model.request_identity(built(c, arm, rl))[1] for s, n, c, _ in entries} != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent = 0.0
+    original = stage_a.request_texts
+    try:
+        for arm, draw in ORDER:
+            stage_a.request_texts = lambda arm=arm: texts_of_frozen_or_v2(original, arm)
+            cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in entries]
+            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', CAP_USD - spent, ASTRA, rl, transport=guard, workers=WORKERS)
+            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            spent += known + in_full
+            over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            print(f'{arm} d{draw}: {len(written)} of {len(entries)} written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+            if over or guard.breaches or limit.stopped or len(written) != len(entries):
+                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    finally:
+        stage_a.request_texts = original
+    print(f'spent ${spent:.4f}')
+
+
+def texts_of_frozen_or_v2(original, arm):
+    texts = original()
+    return dict(texts, system=V2_SYSTEM.read_text()) if arm == 'v2' else texts
+
+
+RENDERED = {   # the day the product stores (the view's due_day, code-set for a year's figure by D414) that each arm must give
+    'fortnight:c1/clean-6': '2028-03-24', 'week-10-06:c1/clean-5': '2027-06-30', 'fortnight:c1/clean-12': '2028-04-03',
+    'fortnight:c1/clean-2': '2027-04-01', 'week-10-06:c1/clean-1': '2027-04-01', 'week-10-06:c1/clean-8': '2027-04-01',
+}
+AMOUNTS = ('fortnight:c1/clean-2', 'week-10-06:c1/clean-1', 'week-10-06:c1/clean-8')
+COMPLETION = ('fortnight:c1/clean-6', 'week-10-06:c1/clean-5')
+REVIEW_SEED = 20261128
+
+
+def outcomes(folder):
+    rows = {}
+    for arm, draw in ORDER:
+        for line in (Path(folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines():
+            row = json.loads(line)
+            rows[row['case']] = row
+    return rows
+
+
+def stored_day(row):
+    """The day the product stores for a send, or `decline`."""
+    return 'decline' if row['status'] != 'ladder' else row['view']['due_day']
+
+
+def tally(folder):
+    """Each topic's stored days per arm, and the date conditions of the verdict: (mechanism seen, completion fixed, controls kept,
+    new declines as (arm-draw case, matched frozen topic) pairs)."""
+    rows = outcomes(folder)
+    days = {(topic, arm): [stored_day(rows[f'{arm}-d{draw}|{topic}']) for draw in (1, 2)] for topic in TOPICS for arm in ARMS}
+    mechanism = any(day[:7] in ('2027-02', '2027-03') for day in days[('fortnight:c1/clean-6', 'frozen')])
+    fixed = all(days[(topic, 'v2')] == [RENDERED[topic]] * 2 for topic in COMPLETION)
+    kept = all(days[(topic, arm)] == [RENDERED[topic]] * 2 for topic in ('fortnight:c1/clean-12',) + AMOUNTS for arm in ARMS) and all(
+        rows[f'{arm}-d{draw}|{topic}']['answer']['ladder']['due_day_basis'] == 'expected_publication'
+        for topic in AMOUNTS for arm in ARMS for draw in (1, 2) if rows[f'{arm}-d{draw}|{topic}']['status'] == 'ladder')
+    kept = kept and all(set(days[(topic, 'v2')]) <= ALLOWED[topic] for topic in ALLOWED)
+    new_declines = [f'v2-d{draw}|{topic}' for topic in TOPICS for draw in (1, 2)
+                    if days[(topic, 'v2')][draw - 1] == 'decline' and days[(topic, 'v2')].count('decline') > days[(topic, 'frozen')].count('decline')]
+    for (topic, arm), stored in days.items():
+        print(f'{topic:24} {arm:6} {stored}')
+    return {'mechanism': mechanism, 'fixed': fixed, 'kept': kept, 'new_declines': new_declines, 'days': days}
+
+
+CONTROLS = {   # stored answers outside the probe's sends, each with the verdict both reviewers must give (or the reading is void)
+    'control|completion-at-filing': ('clean-astra-rest-2026-11-16', 'sol-d1|fortnight:c1/clean-6', 'material'),
+    'control|unjustified-decline': ('clean-model-probe-2026-11-16', 'sol-d2|week-10-06:c1/clean-5', 'material'),
+    'control|sound-stated-date': ('clean-astra-rest-2026-11-16', 'astra-d1|fortnight:c1/clean-12', 'sound'),
+    'control|justified-decline': ('clean-astra-screen-2026-11-16', 'astra-d1|week-10-06:c1/clean-12', 'sound'),
+}
+VERDICTS, CLASSES = {'sound', 'defect'}, {None, 'unjustified_decline', 'period_changed', 'measure_invented', 'measure_changed',
+                                           'condition_lost', 'condition_added', 'choices_unusable', 'other'}
+READERS = ('codex', 'claude')
+
+
+def control_rows():
+    rows = {}
+    for control, (run, send, _) in CONTROLS.items():
+        found = [json.loads(line) for line in (base.ROOT / 'poc' / 'data' / run / send.split('|')[0] / 'outcomes.jsonl').read_text().splitlines()
+                 if json.loads(line)['case'] == send]
+        if len(found) != 1:
+            raise SystemExit(f'{control}: the stored send {send} is not found once')
+        rows[control] = dict(found[0], case=control)
+    return rows
+
+
+def reading(folder, key_folder):
+    """The blind review packet: the 36 sends of both arms and the four controls in a fixed shuffle, each as the gate's readers see an
+    item (the topic with opens_as, the article, the fiscal-year note, the question and rungs as the product shows them, the stored due
+    day, the other fields); the key outside the repository."""
+    import random
+    import build_reader_packets
+    folder, key_folder = Path(folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(base.ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    cases = {f'{s}:{n}': c for s, n, c, _ in refcontrol.population()}
+    rows = outcomes(folder) | control_rows()
+    sources = {send: send.split('|', 1)[1] for send in outcomes(folder)} | {control: CONTROLS[control][1].split('|', 1)[1] for control in CONTROLS}
+    order = sorted(rows)
+    random.Random(REVIEW_SEED).shuffle(order)
+    rl = refcontrol.research_list()
+    items, key = [], {}
+    for number, send in enumerate(order, start=1):
+        key[str(number)] = send
+        items.append({'item': number, **build_reader_packets.item_of(rows[send], cases[sources[send]], rl)})
+    (folder / 'review').mkdir(exist_ok=False)
+    (folder / 'review' / 'packet.json').write_text(json.dumps(items, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    print(f'{len(items)} items ({len(CONTROLS)} controls)')
+
+
+def material(review_files, key):
+    """{send: [True for a material defect, per reviewer]} over the 36 sends, after checking two complete valid readings and the
+    controls; refuses anything else."""
+    if len(review_files) != len(READERS):
+        raise SystemExit(f'NOT SCORED: {len(READERS)} review files are needed, got {len(review_files)}')
+    marks = {}
+    for path in review_files:
+        rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+        items = [row.get('item') for row in rows]
+        if sorted(items) != list(range(1, len(key) + 1)):
+            raise SystemExit(f'NOT SCORED: {path} does not hold each of the {len(key)} items once')
+        for row in rows:
+            if row.get('verdict') not in VERDICTS or not isinstance(row.get('material'), bool) or row.get('class') not in CLASSES:
+                raise SystemExit(f'NOT SCORED: {path} item {row.get("item")} is not a valid row')
+            send = key[str(row['item'])]
+            flagged = row['verdict'] == 'defect' and row['material']
+            if send in CONTROLS and flagged != (CONTROLS[send][2] == 'material'):
+                raise SystemExit(f'VOID: {path} misses the {send}')
+            marks.setdefault(send, []).append(flagged)
+    return {send: values for send, values in marks.items() if send not in CONTROLS}
+
+
+def final(folder, key_folder, review_files):
+    """The verdict fixed before the send (council rounds 20 and 21)."""
+    dates = tally(folder)
+    key = json.loads((Path(key_folder) / 'key.json').read_text())
+    marks = material(review_files, key)
+    verdicts = {}
+    for counting in ('agreed', 'either'):
+        flagged = {send for send, values in marks.items() if (all(values) if counting == 'agreed' else any(values))}
+        per_topic = all(sum(f'v2-d{d}|{topic}' in flagged for d in (1, 2)) <= sum(f'frozen-d{d}|{topic}' in flagged for d in (1, 2))
+                        for topic in TOPICS)
+        completion_sound = not any(f'v2-d{d}|{topic}' in flagged for topic in COMPLETION for d in (1, 2))
+        declines_justified = not any(send in flagged for send in dates['new_declines'])
+        if not dates['mechanism']:
+            verdicts[counting] = 'inconclusive (the frozen arm did not date the signed completion at the annual filing)'
+        elif dates['fixed'] and dates['kept'] and per_topic and completion_sound and declines_justified:
+            verdicts[counting] = 'moves'
+        else:
+            verdicts[counting] = 'closes'
+    verdict = verdicts['agreed'] if verdicts['agreed'] == verdicts['either'] else 'inconclusive (the reviewers disagree on a deciding item)'
+    print(f'mechanism {dates["mechanism"]}; completion fixed {dates["fixed"]}; controls kept {dates["kept"]}; new declines {dates["new_declines"]}')
+    print(f'by counting: {verdicts}')
+    print(f'VERDICT: {verdict}')
+    return verdict
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'tally':
+        tally(sys.argv[2])
+    elif command == 'reading':
+        reading(*sys.argv[2:4])
+    elif command == 'final':
+        final(sys.argv[2], sys.argv[3], sys.argv[4:])
+    else:
+        sys.exit(__doc__)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 100 '"'^def item_of'"' clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+30:def item_of(outcome, case, research_list):
+31-    """One outcome as the form describes an item (without its number)."""
+32-    thesis, article = case['thesis'], case['item']
+33-    item = {'thesis': {field: thesis[field] for field in ('description', 'outcome', 'period', 'opens_as', 'settled_by')},
+34-            'article': {field: article[field] for field in ('publication_date', 'title', 'text')},
+35-            'fiscal_year_note': research_list.fiscal_note(COMPANY, article['publication_date'], english=True)}
+36-    if outcome['status'] == 'no ladder':
+37-        item['ladder_as_the_judge_is_shown_it'] = {'no_ladder': outcome['reason']}
+38-        item['other_fields'] = {'not_judged': None, 'reference': None, 'favourable_end': None, 'favourable_why': None, 'ruled_out_by': None, 'due_day_basis': None}
+39-        return item
+40-    ladder, view = outcome['answer']['ladder'], outcome['view']
+41-    item['ladder_as_the_judge_is_shown_it'] = {
+42-        'object': view['object_id'], 'kind': view['kind'], 'focus': view['looks_at'], 'question': view['question'], 'year': view['year'],
+43-        'due_day': view['due_day'], 'rungs': [{'label': rung['label'], 'condition': rung['condition']} for rung in view['rungs']]}
+44-    reference = ladder['reference']
+45-    figure = ladder.get('figure')
+46-    ruled_out = ladder['event']['ruled_out'] if ladder.get('event') else None
+47-    item['other_fields'] = {
+48-        'not_judged': ladder['not_judged'],
+49-        'reference': None if reference is None else {'words': outcome['passage'], 'kind': reference.get('kind', 'expected'), 'value': reference['value'],
+50-                                                    'value_to': reference.get('value_to')},
+51-        'favourable_end': figure['favourable_end'] if figure else None, 'favourable_why': figure['favourable_why'] if figure else None,
+52-        'ruled_out_by': ruled_out['by_whom'] if isinstance(ruled_out, dict) else None,
+53-        'due_day_basis': ladder['due_day_basis']}
+54-    return item
+55-
+56-
+57-def arguments():
+58-    """(runs as [(run folder, cases file)], key path, readers folder): the stored form or the full run's."""
+59-    if '--run' not in sys.argv:
+60-        run_folder, key_path = Path(sys.argv[1]), Path(sys.argv[2])
+61-        return [(run_folder, HERE / 'cases.json')], key_path, run_folder / 'readers'
+62-    import argparse
+63-    parser = argparse.ArgumentParser()
+64-    parser.add_argument('key')
+65-    parser.add_argument('--run', action='append', required=True)
+66-    parser.add_argument('--readers', required=True)
+67-    parsed = parser.parse_args()
+68-    runs = [(Path(pair.split('=', 1)[0]), Path(pair.split('=', 1)[1])) for pair in parsed.run]
+69-    return runs, Path(parsed.key), Path(parsed.readers)
+70-
+71-
+72-def main():
+73-    runs, key_path, readers_folder = arguments()
+74-    if key_path.resolve().is_relative_to(readers_folder.resolve()):
+75-        raise SystemExit('the key must not sit in the readers\' folder')
+76-    cases, outcomes = {}, []
+77-    for run_folder, cases_path in runs:
+78-        run_cases = {case['case']: case for case in json.loads(cases_path.read_text())}
+79-        if set(run_cases) & set(cases):
+80-            raise SystemExit(f'{cases_path}: a case name already given by another run: refused')
+81-        cases.update(run_cases)
+82-        outcomes += [json.loads(line) for pass_folder in sorted(run_folder.glob('send-*'))
+83-                     for line in (pass_folder / 'outcomes.jsonl').read_text().splitlines()]
+84-    if any(outcome['case'] not in cases for outcome in outcomes):
+85-        raise SystemExit('an outcome names a case no cases file holds: refused')
+86-    research_list = universe.load(str(ROOT / 'poc' / 'universe.json'))
+87-    to_read = [outcome for outcome in outcomes if outcome['status'] in ('ladder', 'no ladder')]
+88-    order = sorted(to_read, key=lambda outcome: (outcome['case'], outcome['pass']))
+89-    random.Random(SHUFFLE_SEED).shuffle(order)
+90-    readers_folder.mkdir(exist_ok=False)
+91-    key, packets = {}, []
+92-    for number, outcome in enumerate(order, start=1):
+93-        key[str(number)] = [outcome['case'], outcome['pass']]
+94-        if (number - 1) % ITEMS_A_PACKET == 0:
+95-            packets.append([])
+96-        packets[-1].append({'item': number, **item_of(outcome, cases[outcome['case']], research_list)})
+97-    for packet_number, packet in enumerate(packets, start=1):
+98-        (readers_folder / f'packet-{packet_number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+99-    key_path.parent.mkdir(parents=True, exist_ok=True)
+100-    key_path.write_text(json.dumps(key, indent=1) + '\n')
+101-    if sorted(map(tuple, key.values())) != sorted((outcome['case'], outcome['pass']) for outcome in to_read) or \
+102-            len(set(map(tuple, key.values()))) != len(to_read) or sum(len(packet) for packet in packets) != len(to_read):
+103-        raise SystemExit('check failed: not every written ladder and refusal is an item exactly once')
+104-    refused_twice = len(outcomes) - len(to_read)
+105-    print(f'{len(outcomes)} outcomes; {len(to_read)} to read in {len(packets)} packets of at most {ITEMS_A_PACKET}; {refused_twice} refused twice, not read')
+106-    print('items a packet:', [len(packet) for packet in packets])
+107-
+108-
+109-if __name__ == '__main__':
+110-    main()
+
+codex
+**Do not send yet: one outcome the real runner can produce will crash the blind packet builder.**
+
+If an answer is refused twice by code, its status is `no ladder: refused` and its `answer` is `None`. The new `reading()` passes every outcome to `build_reader_packets.item_of()`, which handles only a written ladder or a model’s `no ladder`; for a code refusal it tries to read `answer['ladder']`. The recorded preflight saw contract refusals that were repaired on resend, so a twice-refused answer is a relevant path. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py), [packet builder](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py:30)
+
+Before sending, handle code-refused outcomes separately from model declines: count them as lost answers in the matched comparison, exclude them from semantic review, and prevent a new loss in v2 from producing “moves.” Adjust the expected packet and review counts, then prove the actual path with a $0 test that produces a twice-refused answer.
+
+The other requested corrections are present: rendered views, the fuller decline brief, two-file validation and four blind controls. Once the code-refusal path is proven and preflight is refreshed, the probe is ready for its send decision.
+
+**CONSENSUS: no, because a twice-refused answer currently breaks the review and must be accounted for before spending.**
+tokens used
+1,009,228
+**Do not send yet: one outcome the real runner can produce will crash the blind packet builder.**
+
+If an answer is refused twice by code, its status is `no ladder: refused` and its `answer` is `None`. The new `reading()` passes every outcome to `build_reader_packets.item_of()`, which handles only a written ladder or a model’s `no ladder`; for a code refusal it tries to read `answer['ladder']`. The recorded preflight saw contract refusals that were repaired on resend, so a twice-refused answer is a relevant path. [Probe](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/due-day/dueday_probe.py), [packet builder](/Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py:30)
+
+Before sending, handle code-refused outcomes separately from model declines: count them as lost answers in the matched comparison, exclude them from semantic review, and prevent a new loss in v2 from producing “moves.” Adjust the expected packet and review counts, then prove the actual path with a $0 test that produces a twice-refused answer.
+
+The other requested corrections are present: rendered views, the fuller decline brief, two-file validation and four blind controls. Once the code-refusal path is proven and preflight is refreshed, the probe is ready for its send decision.
+
+**CONSENSUS: no, because a twice-refused answer currently breaks the review and must be accounted for before spending.**

@@ -1,0 +1,796 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Review round 4 of the comparison's run plan (read-only, $0)
+
+**Read** in this folder:
+- `RUN-PLAN-v4.md`;
+- `ROUND-LOG.md` (round 3 lists the gaps both reviewers raised and what v4 changed);
+- `freeze-review-notes.md` (build-level items carried to the stage-0 freeze review).
+
+**Governing records:**
+- `/Users/lchingen/hivemind/docs/DECISIONS-log.md` (D665, D666, D505, D431, D449, D428, D427, D400, D613);
+- `/Users/lchingen/hivemind/clean-arch/PRD.md` §1.5 and §5.
+
+Do not open anything under `/private/tmp` or `~/.codex/memories`, or any `review-claude-*` file.
+
+**Rule:** report only design-level gaps. A design-level gap is a requirement that is:
+- missing;
+- wrong against D665 or the decisions it rests on; or
+- one that lets the result move after outputs are seen.
+
+Build-level items belong in the freeze review.
+
+For each round-3 gap: resolved, or still open (cite the line). Then any new design-level gap v4's changes introduced.
+
+End with `READY` or `NOT READY: <the design gaps>`. Under about 400 words.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check each round-three gap against v4 and flag any changes that affect the comparison’s result or when it must stop.
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba clean-arch/PRD.md | sed -n '126,161p;312,345p'; nl -ba docs/DECISIONS-log.md | sed -n '4381,4389p;4738,4748p;4756,4769p;4795,4804p;4937,4950p;5835,5846p;8197,8202p;9410,9458p'" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba docs/research/2026-11-17-product-comparison/ROUND-LOG.md; nl -ba docs/research/2026-11-17-product-comparison/freeze-review-notes.md; diff -u docs/research/2026-11-17-product-comparison/RUN-PLAN-v3.md docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   126	### 1.5 What decides that it replaces the running pipeline (D665, superseding D548's gate order)
+   127	
+   128	Alex asked the council to determine whether the six lines still make sense and what decides readiness (D664: "does it make sense now run your
+   129	council to determine"). The council's consensus is D665.
+   130	
+   131	**The release decision is one product comparison against the running pipeline.**
+   132	- **The systems.** poc-v118 is replayed against the new system as configured and hashed (astra-frozen; v5.5 excluded). Both start from empty
+   133	  over 2026-07-01 to 07-19, three draws each, and are scored on the unread weeks from 07-20 up to 09-20, as far as the full exposure census
+   134	  supports.
+   135	- **The main quantity: big matters served.**
+   136	  - Both reader families list the scored weeks' big matters from the articles, blind to any output, and freeze the list.
+   137	  - A system serves a matter when, in at least two of three draws, it holds a question both families mark worth tracking and whose latest
+   138	    answer both mark supported. The cards are read by the council (D663), with Alex spot-checking splits.
+   139	  - With a = matters served only by the new system, b = only by the old, and N = all listed matters, written before the first send and computed
+   140	    under both split countings:
+   141	    - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both
+   142	      countings.
+   143	    - **Practical loss:** the mirror of the lead, or a guardrail breach confirmed under both countings.
+   144	    - **No practical winner:** everything else, including a verdict a split could change, or a guardrail that was not exercised.
+   145	    - **Too small:** fewer than 20 distinct matters, or fewer than 30 distinct questions per system per draw.
+   146	    - **Invalid:** a planted wrong answer accepted, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same.
+   147	- **The guardrails:** the unsupported share for figures, the unsupported share for yes/no questions, and the not-worth-tracking share, none
+   148	  more than 10 points above the old system's. D428's original limits are printed beside them.
+   149	- **Printed beside the verdict, not deciding:** a sign test and an interval (illustrative unless the frozen grouping supports them); the
+   150	  frozen-reference reading of 07-01 to 07-14 (D431, superseded on this point only); and the proposed absolute floors.
+   151	- **Kept from the earlier gates:**
+   152	  - **The six lines of D400** are measured and reported on every ladder run. They no longer block release.
+   153	  - **The parts code decides stay hard checks:** figure ranges meet end to end; the favourable end is the same across sends; the due day is
+   154	    consistent in at least nine of ten.
+   155	  - **Step 2's three checks stay,** as D427 and D431 set them.
+   156	  - **Stage B's control line waits** with D658.
+   157	- **Back to Alex,** before any release engineering resumes:
+   158	  - a practical lead, with the split cards for his spot check;
+   159	  - a practical loss, at once (D544);
+   160	  - no practical winner, too small, or invalid, with the counts;
+   161	  - no verdict by 2026-12-01.
+   312	- An unlinked record also searches by its own text.
+   313	- `figures` never enter a search or comparison text.
+   314	- Jev is asked the clean path's own piece question, aligned with line 2's test: a repeat reports the stored piece's main statement, and
+   315	  an official's denial of a report is a revision.
+   316	- When a thesis opens, every stored unlinked group from earlier articles is judged against it in batches of ten (a yes/no question; the
+   317	  company's overall results inform only a revenue or earnings thesis). Each judged pair is recorded once.
+   318	- On c6's records: search 97.9%, wrong merges 1.9% (2 of 104), both lines met; line 3 not re-measured. At the acceptance on 50 fresh
+   319	  articles (D386, one draw): search 141 of 143, clear wrong merges 1 of 57 plus 2 overlaps.
+   320	- Known weakness, recorded and not tuned (D423): "later version" relations. In one saved end-to-end draw, two source readers found 9
+   321	  of 30 such relations join two different statements, most of them NVIDIA's answer to a report linked to a neighbouring statement of
+   322	  the same story; a wording change failed its line (Step 2 log §14).
+   323	
+   324	Jev compares the new evidence with the returned evidence. The intended outcomes are:
+   325	
+   326	| Outcome | Meaning | Example |
+   327	|---|---|---|
+   328	| Repeat | The new material presents the same statement again. | Another article reports the same company forecast. |
+   329	| Revision | A later account changes the same statement. | The company revises its forecast from 12% to 25%. |
+   330	| New evidence | It is not identified as a repeat or revision of the evidence compared. | A different analyst offers a separate forecast. |
+   331	
+   332	The words, amount, speaker, source and time can matter to the comparison. A later statement about the same subject is not necessarily a revision. A matching amount alone does not prove that two statements are the same.
+   333	
+   334	The result “new evidence” is the outcome of the comparison performed; it is not proof that no matching evidence exists elsewhere in the library. When the incoming evidence is judged a repeat of several candidates, it joins only the group Jev judges it most like: the highest same-statement probability, with ties going to the earliest group (Alex, 2026-11-08). A comparison that fails is not saved and is reported.
+   335	
+   336	**Repeat handoff:** when Jev identifies a repeat, the comparison must retain the identity of the existing evidence record it was compared against. Step 3 uses that identity to place the incoming record in the existing record's group, adding its source and any missing thesis link. The typed Jev response need not generate the record ID: the caller can associate the choice with the candidate it supplied. The rule for several matching candidates is stated above.
+   337	
+   338	**Step 2 acceptance (Alex, 2026-11-08).** Three lines apply:
+   339	1. For incoming evidence whose earlier version is in the library, search returns it at least 90% of the time.
+   340	2. At most 2% of merges are clearly wrong.
+   341	3. Grouped dossiers keep no fewer details added by later reports than no merging does.
+   342	
+   343	The first measurement against these lines is in the [Step 2 log](step2-validation-2026-11-07/LOG.md) §12; the isolated modules are `step2/compare.py` and `step3/library.py`.
+   344	
+   345	**Frozen (D427, Alex, 2026-11-11: "好jev 收尾冻结").** Step 2 and Step 3's grouping library stay as accepted and measured (Step 2 log §§12–18); `tests/test_frozen_clean_step2.py` fails the suite when one of their files moves. They go to production only with the whole clean path, after Step 4 meets its lines, through an end-to-end comparison against production on the frozen ruler (three draws each), with these three lines checked on that run. A change is a new version that only Alex opens; while he is not active, the council may open it (D439), never the frozen ruler. Five open defects are carried with the freeze (Step 2 log §17).
+  4381	- **Decided:**
+  4382	  - Stage A of the clean ladder step sends the candidate only. This is an exception, by his word, to AGENTS §7.3's "beside a fresh
+  4383	    control", for this first measurement of a step production does not have as its own call.
+  4384	  - Its lines are his: no ladder that asks another question, leaves a part unlisted, or has an outcome with no rung or two; no
+  4385	    refusal without a justified reason; at least 35 of the 44 theses right in at least two of three sends, at least 28 of them by a
+  4386	    written ladder; the favourable end the same in all three sends for every company figure and the due day the same for at least
+  4387	    nine in ten theses.
+  4388	  - Every report of Stage A says that it does not compare the step with production; the $0 reading of the 36 ladders production
+  4389	    wrote is printed beside it as a reference.
+  4738	## D427 · 2026-11-11 · Clean Step 2 is closed and frozen; it goes to production only with the whole clean path
+  4739	
+  4740	- **Asked** (on "那你jev这边可以收尾上production 了吗"): "还不能上 production。… A（我建议）：等整套新系统一起上。Step 4 过线后，跑一次“新系统对现生产”的端到端比较（冻结的尺子，各 3 次），
+  4741	  同一次运行里顺带核对 Step 2 的三条线。过了再整体上线。在那之前 Jev 不再动。 B：现在只把新 Step 2 移植进现有生产。… 我建议 A：Jev 收尾、冻结，不单独上线；先把精力放在 Step 4。"
+  4742	  - Alex: "饿、好jev 收尾冻结".
+  4743	- **Decided:** option A. The clean path's Step 2 is closed and frozen as accepted (D381) and measured (Step 2 log §§12–18): the
+  4744	  search over the entity's evidence, the Jev comparison and its request text, the rule that a repeat joins the group it is most like,
+  4745	  the forward runner, and Step 3's grouping library. It is not moved into production on its own. It goes to production with the whole
+  4746	  clean path, after Step 4 meets its lines, through an end-to-end comparison of the clean path against production on the frozen
+  4747	  ruler (three draws each), with Step 2's three lines checked on that run. A change to it is a new version that only Alex opens.
+  4748	- **Done:** `tests/test_frozen_clean_step2.py` holds the sha256 of `clean-arch/step2/compare.py`, `run_forward.py`, their tests,
+  4756	## D428 · 2026-11-11 · Stage B's lines compare figure and yes/no questions apart with the baseline
+  4757	
+  4758	- **Asked:** "第二段（让老判断程序每天去判新系统自己出的题）怎么算通过？基准里老程序在人工写的题上：数字题站不住 8%，是非题 0%，16 道题最后一天全部站得住。"
+  4759	  - Options: compare figure and yes/no questions apart (recommended): "数字题站不住的比例不超过基准再加 5 个百分点（约 13%–14%）；是非题不超过 5%；三轮共约 30 道题里，最后一天站不住的不超过 3 道，“证据不足”的另外列出。不看总体比例，因为总体会随题型比例变化。代价：判断程序没变差时，数字题这条也有 6%–17% 的机会被误判不过。"; apart with 10 points; the design's original lines (overall 8%, last at least 90%).
+  4760	  - Alex: "数字题和是非题分开比 (Recommended)".
+  4761	- **Decided:** Stage B passes when, over its three draws, (1) the share of decided figure-question judgements that are
+  4762	  UNSUPPORTED is at most 5 points above the baseline's (4 of 52 with the unresolved left out, 7.7%; 5 of 53 counted
+  4763	  against, 9.4%: so at most 12.7% to 14.4% on the same three readings); (2) the share of decided yes/no judgements that are
+  4764	  UNSUPPORTED is at most 5%; (3) of the judged theses whose last judgement in the window is decided, at most 3 in 30 (scaled
+  4765	  to the number judged) are UNSUPPORTED, with the INSUFFICIENT last judgements reported beside. No overall line. The
+  4766	  design's other lines (no draw incomplete after one redo; nine in ten laddered theses judged at least once; the control
+  4767	  theses) and its NOT MEASURED conditions stand. Baseline: `clean-arch/step4-2026-11-10/stage_b/RESULT.md`; the lines'
+  4768	  chance behaviour: `stage_b/result/line-chance.txt`.
+  4769	- **Scope:** the clean path's Step 4, Stage B.
+  4795	## D431 · 2026-11-12 · The clean path is compared end to end with production as it now runs, with no preset questions on either side
+  4796	
+  4797	- **Asked:** "整条新线路要和谁比，才算“比线上好”（你定的上线门槛 D427）？新系统不开公司财务指标题；线上版本自 11 月 5 日起也不再预设题目。"
+  4798	  - Options: current production (recommended): "双方都不预设题目，条件相同；用冻结的标准、同一天、各跑三轮。“可评分的 7 道题”的结果单独列出。"; the seeded version with 22 preset questions ("新系统每轮天然少约 11 道公司财务指标题，几乎不可能赢"); the seven graded questions only.
+  4799	  - Alex: "和现在的线上版本比 (Recommended)".
+  4800	- **Decided:** D427's end-to-end comparison is the clean path against production as it now runs (no preset questions, D370),
+  4801	  on the frozen ruler, the same day, three draws each; the seven graded questions (D395) are reported beside. The seeded
+  4802	  comparison (D392) remains a diagnostic, not the gate. Raised by the council's read of where the path stands
+  4803	  (`clean-arch/step1-unfiled-2026-11-08/council/kr-consensus.md`).
+  4804	- **Scope:** the clean path's end-to-end acceptance (D427).
+  4937	- **Decided (rules):** R1, a stop is shared where it is decided (the ladder step's and the judge's final stops and local cap refusals stop
+  4938	  the shared ledger), and every actual send in a budgeted process reads it first (a stop gate on `urllib.request.urlopen`, installed by
+  4939	  each entry point; a 403 no component retries); an attempt admitted before a stop may finish. R2, the draw record holds its identity (kind,
+  4940	  label, ledger, options; a differing launch is refused) and the outcome class (a signal exit is a crash); the launcher is alive while it
+  4941	  holds its lock, registered on the ledger (the registration is checked under the ledger's lock before the launcher takes its own lock,
+  4942	  and the gate stops the ledger when a registered lock is free, so an orphaned child's next send and every other draw's are refused).
+  4943	  R3, every shared language-model reservation is the agreed bound, and the ledger settles a missing, zero, negative or non-finite charge
+  4944	  at the reservation. R4, the proof runs the real orchestration with a trap in every child process.
+  4945	- **Decided (changes to WIRING-DESIGN.md §D, not readings of it):** (a) the one redo of Step 1, Step 2 and production is a relaunch with
+  4946	  `--redo` and a required `--redo-reason` written to the record, made only when the component's output shows an eligible failure (a
+  4947	  transport failure after its own retries, an answer refused or not fitting its schema); otherwise the run stops; the ladder step and the
+  4948	  judge have no outer redo (the judge keeps its own inside `run_stage_b`). (b) A crash stops the whole run. `run_stage_b.py`'s inner
+  4949	  path (a first folder with no outcome, then the redo folder) is unreachable through `run_fresh.py` and is not claimed to satisfy the crash
+  4950	  rule on its own.
+  5835	## D505 · 2026-11-15 · Alex: the kept financial figures should reach the judgements of related questions; first a $0 check
+  5836	
+  5837	- **Asked** (after D504, his reply to this exact question, several answers allowed): "对公司的主要财务数字（营收、毛利率的指引、市场预期、实际业绩），新系统已经存下来了，但现在既不展示也不判断。
+  5838	  你希望读者能用它们做什么？（可多选）" Options: reach the judgements of related questions (recommended); be looked up in a table; tracked questions
+  5839	  with judgements; none for now.
+  5840	- **Alex:** "进入相关问题的判断 (Recommended)" (the only option he chose). The option as shown: "符合你定的规则：财务数字是观点的证据，不单独开成问题。第一步不花钱（$0）：检查现有问题做
+  5841	  判断时，有没有系统存了、本该用到、却没送进去的财务数字。有就报给你，没有就停。"
+  5842	- **Decided:** the company's kept financial figures are evidence for the judgements of related questions; they are not opened as
+  5843	  questions of their own (D382 and D384 stand), and he did not choose the table or tracked financial questions. The first step is a
+  5844	  $0 check on the stored fresh-week run of the new system: for each existing question's judgement, is a kept financial figure it
+  5845	  should have received absent from its request. A finding is reported to him; none ends the line. Nothing is sent to a model;
+  5846	  nothing changes in the system by this check.
+  8197	## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+  8198	
+  8199	- **Correction:** matched against every new-system Step 1 trace (1,437 articles), the selected weeks 2026-07-20 to 08-24 have no article
+  8200	  read, and 09-07 and 09-14 have 10 and 4. D611's "no exposure-free week" held only for 09-21 to 10-26. Its conclusion stands on power
+  8201	  and on the old library's end. The check covers Step 1 traces only, not every other activity.
+  8202	- **Nothing reopens:**
+  9410	- **Decided:** as written in `clean-arch/PRD.md` §1.5, which now owns the rule.
+  9411	  1. **The product comparison is the release decision.**
+  9412	     - poc-v118 is replayed against the hashed new system (astra-frozen; v5.5 excluded). Both start from empty over 07-01 to 07-19, three draws
+  9413	       each, and are scored on unread weeks from 07-20 up to 09-20, as far as the full exposure census supports. The exclusion list is frozen.
+  9414	     - **The main quantity:** big matters served, paired per matter.
+  9415	     - **Verdicts:**
+  9416	       - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both split
+  9417	         countings.
+  9418	       - **Practical loss:** the mirror, or a guardrail breach confirmed under both countings.
+  9419	       - **No practical winner, too small or invalid**, as written.
+  9420	     - **Guardrails:** unsupported shares (figure and yes/no apart) and the not-worth-tracking share, each within 10 points of the old system's.
+  9421	       D428's limits are printed beside them.
+  9422	     - **Illustrative only:** a sign test and an interval.
+  9423	     - **Frozen and hashed before the first send:** the matter list (blind), the credit rules (one cutoff per matter, the grouping of repeats,
+  9424	       what counts as the same question), the controls, the versions and the rule.
+  9425	  2. **What changes, explicitly:**
+  9426	     - D548's use of D400's six lines as a release gate is superseded. The lines are reported on every ladder run.
+  9427	     - The parts code decides stay hard: figure ranges meet end to end; the favourable end is stable; the due day is consistent at D400's 90%.
+  9428	     - D431's frozen-reference reading of 07-01 to 07-14 is still produced and printed beside the comparison, not deciding. D665 supersedes D431
+  9429	       on that point only.
+  9430	     - Step 2's three checks stay as D427 and D431 set them.
+  9431	     - Gate 2's unsupported lines become the guardrails, and its control line waits (D658).
+  9432	     - Gate 4 folds in.
+  9433	     - Gate 5 waits for a practical lead and Alex's word.
+  9434	     - The absolute floors stay proposals, reported beside.
+  9435	  3. **Back to Alex,** before any release engineering resumes: a practical lead (with the split cards for his spot check), a practical loss at
+  9436	     once, no practical winner, too small or invalid, or no verdict by 2026-12-01.
+  9437	- **Next:**
+  9438	  - the comparison's design at $0: the exposure census, the frozen matter list and credit rules, the cards and controls, the replay plan and
+  9439	    its spend guard;
+  9440	  - council review;
+  9441	  - then a send on Alex's word. No budget is required (D664).
+  9442	
+  9443	## D666 · 2026-11-17 · Alex: write a run plan for the release comparison, monitor it carefully, no scope drift
+  9444	
+  9445	- **Alex** (after D665): "okay then you should write a run plan and monitor it carefully and don't scope drift".
+  9446	- **Read as:** his word to run D665's comparison once its run plan passes a council review. As D563 and D439 read "his word", this covers that one
+  9447	  comparison and nothing outside it. No budget is set (D664). The shared ledger carries a $250 runaway guard, which is not a budget; reaching it
+  9448	  goes to him.
+  9449	- **The plan:** `docs/research/2026-11-17-product-comparison/RUN-PLAN.md` (version 1 under review).
+  9450	  - stage 0, at $0: the systems hashed, with astra for the answer-choice step as one named variant accepted by `run_fresh.py`; the generalised
+  9451	    article list; the full exposure census; the frozen verdict rule; the reading instruments; preflight;
+  9452	  - stage 1: a one-week slice of each system;
+  9453	  - stage 2: three draws each, 07-01 to the end of the scored span;
+  9454	  - stage 3: the blind matter census;
+  9455	  - stages 4 and 5: the council's reading and the verdict;
+  9456	  - monitoring and stop rules, and a run log.
+  9457	- **Out of scope during the run,** recorded in `FINDINGS.md` and not acted on: prompt or answer-choice changes, model trials, live-store, planner or
+  9458	  integration work, D658, other weeks or companies.
+
+ exited 1 in 0ms:
+     1	# Council rounds on the run plan: what each round taught
+     2	
+     3	## Round 1 (v1, 2026-11-17)
+     4	
+     5	- **Codex:** NOT READY, 5 points. **Claude reviewer:** NOT READY, 5 changes.
+     6	- **Taught:**
+     7	  - I wrote the plan from memory of the launchers, not from their code. Four launch blockers would each have stopped or skewed a paid run:
+     8	    - Step 1 stopping at 300 calls;
+     9	    - the answer-choice step still on luna;
+    10	    - production ignoring the exclusions;
+    11	    - the judge stopping at the last article.
+    12	  - The time estimate (15 s an article) came from the old system's extraction, not the new system's Step 1 (26 to 34 s).
+    13	  - A carve-out (the company's figures outside N) came from one reader's position, not from D665's text.
+    14	  - **Lesson:** read every launcher a plan names before the plan is written, and cite a measured rate for every estimate.
+    15	
+    16	## Round 2 (v2, 2026-11-17)
+    17	
+    18	- **Codex:** NOT READY. **Claude reviewer:** NOT READY, 7 changes.
+    19	- **Taught:**
+    20	  - Fixes named in prose still failed against the code:
+    21	    - the astra check would refuse every retried request (`ladder_step.py:378` appends the refusal note);
+    22	    - `rg` skips SQLite files when searching a directory;
+    23	    - the runaway rule would stop a healthy production draw, since the sealed v34 run's cost per article rose from $0.0026 in early July to
+    24	      $0.0077 by August;
+    25	    - one shared ledger lets an old-system stop end three 20-hour new-system draws.
+    26	  - Two points promised in `triage-1.md` (a long-run checkpoint, and a rule for a draw that cannot finish) were missing from v2.
+    27	  - D665 items dropped between versions: D428's limits, the sign test, D431 for both systems, and the versions manifest.
+    28	- **Lesson:**
+    29	  - A fix stated in a plan is not a fix. One mechanism (prose fixes checked by readers rather than by the code they describe) has drawn
+    30	    findings for two rounds.
+    31	  - **The structural rule** (AGENTS §1, "stop answering findings: propose one structural rule"):
+    32	    - v3 states each requirement and its proof.
+    33	    - Prose review ends when a round finds no design-level gap.
+    34	    - Everything build-level is checked on the built artifacts at the stage-0 freeze review: code with its tests and mutants, the frozen
+    35	      files and the dry runs. That review gates the first paid send.
+    36	
+    37	## Round 3 (v3, 2026-11-17)
+    38	
+    39	- **Codex:** NOT READY, 5 design gaps. **Claude reviewer:** NOT READY, 5 design gaps. Under the new rule, both reported design-level gaps
+    40	  only. Every round-2 point was resolved except as below.
+    41	- **Agreed gaps** (both reviewers, or one with no counter):
+    42	  - an unfinished draw could still produce a verdict;
+    43	  - a shared ledger lets one draw's stop end its siblings (a change to D449 and D666 that needs a recorded replacement);
+    44	  - the replay exception was by kind, not by actual use;
+    45	  - the guardrail share departed from D428's decided-only measure;
+    46	  - there was no absolute late-stage stop;
+    47	  - "same question" and duplicates were undefined;
+    48	  - Step 2's lines had no pass rule;
+    49	  - the matching was not blind.
+    50	- **Taught:** the findings narrowed from launch blockers (round 1), to prose fixes contradicted by code (round 2), to rule definitions
+    51	  (round 3). The structural rule held: no build-level churn this round.
+    52	- **v4:**
+    53	  - one ledger per draw with absolute guards;
+    54	  - no release verdict without six complete draws;
+    55	  - the exception by actual use, classified per folder before the hits are read;
+    56	  - D428's measure, with the other marks reported beside;
+    57	  - the same-question rule, with `duplicate` as a worth mark;
+    58	  - Step 2's lines as hard checks with their pass lines;
+    59	  - blind X/Y mapping.
+     1	# Build-level notes carried to the stage-0 freeze review
+     2	
+     3	From the reviews of rounds 2 and 3. Each is checked on the built artifact, not in prose.
+     4	
+     5	- §1.2: the input proof runs through both real entry points in order, with an excluded control and a kept control.
+     6	- §1.5 E: the judge's cutoff for each invocation, proved on a trailing day with no articles.
+     7	- §1.5 C: the 12,000-call bound, the shared-ledger reservations, and the stop gate kept on every attempt.
+     8	- §1.5 D: the astra check at the transport on every request, retries included (`ladder_step.py:378` appends the refusal note), with a
+     9	  refused-then-retried case in the test and the dry run.
+    10	- §1.5 F:
+    11	  - the card's "neutral form" against "as its request shows it": a blind reader must not be able to tell the systems apart from the form alone;
+    12	  - Deck 1's output must reproduce under the generalised `council_mark.py`.
+    13	- §1.6: D431 "as they stood at 07-14". Prove both systems' state at 07-14 can be read from the stored outputs, or snapshot it during the run.
+    14	- §1.4:
+    15	  - the guardrail shares pool the three draws;
+    16	  - a library under 35 questions is read whole;
+    17	  - the "median of running siblings" when a sibling has stopped.
+    18	- §1.7: the request-size check on stored data; the figure is reported, never a stop.
+    19	- §6: completed-article and completed-day counts come from SQLite online-backup snapshots, never the live file.
+    20	- D666's record describes one $250 ledger. The decision recording the six-ledger replacement updates it.
+--- docs/research/2026-11-17-product-comparison/RUN-PLAN-v3.md	2026-11-17 17:22:40
++++ docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md	2026-11-17 17:28:51
+@@ -1,5 +1,7 @@
+-# The product comparison that decides release (D665): run plan, version 3
++# The product comparison that decides release (D665): run plan, version 4
+ 
++v4 answers round 3: `review-codex-3.md` and the Claude reviewer's five gaps (`ROUND-LOG.md`).
++
+ **Alex:**
+ - D664: "no need for budget … run your council to determine".
+ - D666: "okay then you should write a run plan and monitor it carefully and don't scope drift".
+@@ -64,11 +66,15 @@
+    Search goes inside binary files (`rg -a`, and SQL over every SQLite table for the ids). Its controls:
+    - a known hit: one of D613's 10 Step 1 reads in the week of 09-07;
+    - a known miss: one id written only into a scratch control file outside the searched roots.
+-4. **Any read excludes the article, with one exception by kind,** recorded as a council decision before the hits are read:
+-   - **The exception:** an old-system production replay's own run folder (a `scripts/replay.py` or `budget_replay` run: its ledger, archive and
+-     logs) and its byte copies (sealed or served). A read from such a folder is listed but excludes nothing.
+-   - **Why:** a replay runs the old product; it tunes neither system. D665's own council used the sealed run as the old system's output.
++4. **Any read excludes the article, with one exception by actual use,** classified per folder and frozen before any hit is read:
++   - **The exception:** an old-system replay run folder and its byte copies, **only when** its decision record or run note shows it ran the
++     then-production configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a
++     case behind a change.
++   - **Development replays are reads:** arms, probes, configuration trials and week tests.
++   - **Why:** a replay of the product as it ran tunes neither system. D665's own council used the sealed run as the old system's output.
+    - **Still a read:** any research artifact built from such a run (for example, the 2026-10-28 quality review).
++   - **Recorded:** the per-folder classification (`replay-folders.json`, with each folder's record) and the council decision on it, both before
++     the hits are read.
+ 5. **One input.**
+    - A filtered copy of the items database without the excluded articles is made once and hashed.
+    - **Code change A:** `run_fresh.py --items` hands it to both children (clean `--source`; production `--testdb`).
+@@ -102,40 +108,53 @@
+ 1. **The cutoff:** one for every matter, the end of the invocation's last day (09-20 in the full run). Libraries are read as they stand then.
+    - Closed questions still count.
+    - Timeliness is not scored. The days from first source to opening are printed beside.
+-2. **Covers (mapping, A2's form):** both families mark the question `opened`, or `narrower` with both saying it carries the matter's main
+-   outcome (ACCEPTANCE-DESIGN A; `tally_week.covered`). `broader` and `missed` do not cover.
+-   - Disagreements go to two third readers, one per family.
+-   - A remaining split is a split.
+-3. **The cards and their marks:**
+-   - **Worth tracking:** yes or no.
++2. **Covers (mapping, A2's form, blind):**
++   - **The rule:** both families mark the question `opened`, or `narrower` with both saying it carries the matter's main outcome
++     (ACCEPTANCE-DESIGN A; `tally_week.covered`). `broader` and `missed` do not cover.
++   - **Blinding:** the readers see each draw's library under a random X/Y label, the key outside the repository, and are told to ignore
++     style.
++   - **Disagreements:** two third readers, one per family. A remaining split is a split.
++3. **Same question:**
++   - **A question** is an id in a system-draw's library at the cutoff, the system's own identity. Distinct questions are distinct ids.
++   - **Matter to question:** the mapping rule above.
++   - **Question to question:** two questions of one library are the same bet when the same outcome settles both and their answers cannot move
++     apart (A1's rule; D248).
++   - A second question on a bet the library already holds is marked `duplicate` (below). It stays in every count as a question, and only the
++     worth mark records it.
++4. **The cards and their marks:**
++   - **Worth tracking:** worth, trivia or duplicate. Each card shows the titles of the other questions in its library, so `duplicate` can
++     be judged.
+    - **Answer:** supported, unsupported, insufficient, or no answer (a question not judged by the cutoff).
+    - **Cannot tell:** a split after the debate rounds.
+-4. **Served in a draw:** at least one covering question is marked worth tracking and supported. A matter **served by a system** is served in
++5. **Served in a draw:** at least one covering question is marked `worth` and supported. A matter **served by a system** is served in
+    at least 2 of its 3 draws.
+-5. **The quantities:** a = served only by the new system; b = served only by the old; N = all listed matters.
+-6. **The two countings:** every split resolved for the new system, or every split for the old.
+-7. **The guardrails,** on the random guardrail sample only (35 questions per system-draw by seed 20261117; covering cards are not in these
+-   shares):
+-   - the not-supported share (unsupported, insufficient or no answer) among figure questions;
+-   - the same among yes/no questions;
+-   - the not-worth-tracking share.
+-
+-   The new system's share may not be more than 10 points above the old system's. Each subgroup needs at least 10 marked cards per system, or
+-   it is "not exercised".
+-8. **The controls,** outside every product count:
++6. **The quantities:** a = served only by the new system; b = served only by the old; N = all listed matters.
++7. **The two countings:** every split resolved for the new system, or every split for the old.
++8. **The guardrails** (D428's measure, which D665 turns into these guardrails):
++   - **The sample:** the random guardrail sample only, 35 questions per system-draw by seed 20261117, or all of them when a library holds
++     fewer. Covering cards are not in these shares. The three draws are pooled per system.
++   - **The shares:**
++     - the share of **decided** figure-question answers (supported or unsupported) that are unsupported;
++     - the same for yes/no questions;
++     - the share of decided worth marks that are trivia or duplicate.
++   - **Reported beside, not in the shares:** insufficient, no answer and cannot tell.
++   - **The bar:** the new system's share may not be more than 10 points above the old system's.
++   - **Exercised:** each subgroup needs at least 10 decided cards per system, or it is "not exercised".
++9. **The controls,** outside every product count:
+    - 6 planted wrong answers (a rung moved, 3 per system). Each needs an explicit unsupported or insufficient mark, or the reading is invalid.
+    - 4 supported controls, confirmed first by a separate reader.
+    - 3 hidden repeats.
+-9. **A draw that cannot finish** (stopped after D449's one redo) holds no question from its stop onward. It is scored as it then stood, and the
+-   verdict carries the label "with an incomplete draw". The cause goes to Alex with the verdict.
+-10. **The verdicts, tested in this order:**
++10. **No release verdict without six complete draws.** A draw that cannot finish (stopped after D449's one redo, or by its guard) gives no
++    release verdict. Whatever was finished goes to Alex as a diagnostic, with the cause. A relaunch of that one draw on a fresh ledger needs a
++    recorded council decision.
++11. **The verdicts, tested in this order:**
+     1. **Invalid:** a plant without an explicit rejection, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked
+        the same.
+     2. **Too small:** N < 20, or fewer than 30 distinct questions in any system-draw.
+     3. **Practical lead:** a − b ≥ max(3, ⌈0.15·N⌉) and a ≥ 2b under both countings, with every guardrail exercised and passing under both.
+     4. **Practical loss:** the mirror under both countings, or a guardrail breach under both.
+     5. **No practical winner:** everything else.
+-11. **Printed beside, not deciding:**
++12. **Printed beside, not deciding:**
+     - D428's limits next to the guardrails;
+     - a sign test and an interval, labelled illustrative;
+     - the company-figure subgroup;
+@@ -167,7 +186,7 @@
+ | What | Status | Tool and input |
+ |---|---|---|
+ | D400 accounting, all three passes (`stage_a/accounting.py`) | **Hard:** figure ranges meet end to end; the favourable end is stable; the due day agrees across all three sends for ≥ 90% of eligible questions. A failure is a release blocker reported with the verdict. Lines 1–5: reported | The new system's three draws. The reader lines use the October two-family Stage A reading on every draw |
+-| Step 2's three lines (D427) | Kept | The Step 2 log §12 method, on draw 1 of the new system: recall over labelled earlier versions (a stratified random 100 records with an earlier version); blind review of a random 200 merges; the no-merge dossier comparison on 30 groups. Reported with intervals. The sample sizes are a design choice, recorded |
++| Step 2's three lines (D427; PRD §5) | **Hard**, like D400's code-decided parts: a failed line is a release blocker reported with the verdict. Pass: earlier version found ≥ 90%; clearly wrong merges ≤ 2%; no fewer later details than no merging. Each decided on its point estimate, intervals printed | The Step 2 log §12 method on draw 1 of the new system: recall over 100 records with a labelled earlier version (stratified random); blind review of 200 random merges; the no-merge dossier comparison on 30 groups. The sample sizes are a recorded design choice |
+ | D431's frozen-reference reading, 07-01 to 07-14 | Printed beside | The D395 method (`clean-arch/unseeded-2026-11-10/MATCHING-v2.md`: the seven graded questions against the frozen judgement gold) on **both** systems' draws as they stood at 07-14 |
+ | Proposed absolute floors | Printed beside | Coverage ≥ 80%, trivia ≤ 20% and supported ≥ 90% come from this comparison's cards. Wrong citations ≤ 5% and zero answer-changing omissions need source-first readings this plan does not run: printed as **not measured** (agreed in the council before the send) |
+ 
+@@ -201,15 +220,15 @@
+ ## 3. Stage 2: the full run
+ 
+ - **What runs:** three draws of each system, 07-01 to 09-20, detached, each with a log and a pid.
+-- **Two ledgers,** so a stop in one system never ends the other's draws:
+-  - P for the old system (runaway guard $50);
+-  - C for the new system ($200).
+-
+-  Neither guard is a budget.
+-- **D449 unchanged:**
++- **One ledger per draw** (six), so a stop ends only that draw.
++  - **Absolute guards** (stops, not a budget): $65 per new-system draw, about 1.6 × the upper estimate; $25 per old-system draw, about
++    1.7 ×. That is $270 in all.
++  - This replaces, for this run only, D449's whole-run stop across draws and D666's single $250 ledger. It is recorded as a council decision
++    before the send.
++- **D449 within each draw, unchanged:**
+   - a redo is launched only on an eligible failure shown in the component's output, with its reason written;
+   - once per component;
+-  - a second stop ends that draw, scored under §1.4 item 9.
++  - a second stop ends that draw (§1.4 item 10).
+ - **The measured risk:**
+   - the 4 stored Step 1 failures (of 2,549 articles) were dropped connections from before the network retry;
+   - 0 failures in 624 articles since;
+@@ -273,10 +292,12 @@
+   - an old-system draw with no new day line for 45 minutes.
+ 
+   I read the logs and the process state within one heartbeat.
+-- **The only stops I make,** through the ledger's own stop, with the reason recorded:
+-  - a runaway: a draw spending over 2 times the median of its siblings at the same progress, over at least 50 articles or 5 days;
+-  - a hang: 0% CPU beyond the stall limit;
+-  - a judge request above the size found in §1.7.
++- **The stops,** each through that draw's own ledger, with the reason recorded:
++  - **automatic:** its absolute guard ($65 or $25);
++  - **mine:**
++    - a runaway: a draw spending over 2 times the median of its running siblings at the same progress, over at least 50 articles or 5 days;
++    - a hang: 0% CPU beyond the stall limit.
++- **Watched and reported, never a stop:** the largest judge request and refused judge answers. A day the judge halts on is D449's to handle.
+ - **`RUN-LOG.md`:** a dated row per event and per check that changes anything, reported to Alex as results land.
+ 
+ ## 7. Returns to Alex
+@@ -284,7 +305,7 @@
+ - the verdict, whichever it is;
+ - N < 20 at the census;
+ - a stop that is not a launcher wiring fault;
+-- a ledger guard reached;
+-- a failed hard check;
+-- an incomplete draw;
++- a draw's guard reached;
++- a failed hard check (D400's code-decided parts, or Step 2's lines);
++- a draw that cannot finish (a diagnostic, not a verdict);
+ - no verdict by 2026-12-01.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md | sed -n '44,218p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    44	The launchers refuse a file that differs.
+    45	
+    46	### 1.2 Exposure census, exclusions, one input
+    47	
+    48	1. **The population.** The clean selection rule's articles from 07-20 to 09-20: 1,619 articles (by week: 185, 164, 62, 114, 109, 265, 218, 229,
+    49	   273). The warm-up from 07-01 to 07-19 has 357 articles.
+    50	2. **What counts as a read** (the closed set, frozen before any hit is read). The article's id or its text sha appears in any of:
+    51	   - a run's trace, archive or ledger (either system);
+    52	   - a probe;
+    53	   - a gold or reference;
+    54	   - a reader packet, answer or tally;
+    55	   - a design, result or log document;
+    56	   - a report.
+    57	
+    58	   **Not reads:**
+    59	   - the source copies (`items-*.sqlite`, `*.page.sqlite`, `items-window*.sqlite`, `search-index.sqlite`);
+    60	   - this comparison's own files.
+    61	3. **Where it is searched:**
+    62	   - this checkout's `poc/data`, `poc/reports`, `reports/`, `docs/research`, `clean-arch` and `research_notes`;
+    63	   - the same folders in every worktree `git worktree list` shows;
+    64	   - the archived runs in `docs/research/2026-10-25-english/data-manifest.md`.
+    65	
+    66	   Search goes inside binary files (`rg -a`, and SQL over every SQLite table for the ids). Its controls:
+    67	   - a known hit: one of D613's 10 Step 1 reads in the week of 09-07;
+    68	   - a known miss: one id written only into a scratch control file outside the searched roots.
+    69	4. **Any read excludes the article, with one exception by actual use,** classified per folder and frozen before any hit is read:
+    70	   - **The exception:** an old-system replay run folder and its byte copies, **only when** its decision record or run note shows it ran the
+    71	     then-production configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a
+    72	     case behind a change.
+    73	   - **Development replays are reads:** arms, probes, configuration trials and week tests.
+    74	   - **Why:** a replay of the product as it ran tunes neither system. D665's own council used the sealed run as the old system's output.
+    75	   - **Still a read:** any research artifact built from such a run (for example, the 2026-10-28 quality review).
+    76	   - **Recorded:** the per-folder classification (`replay-folders.json`, with each folder's record) and the council decision on it, both before
+    77	     the hits are read.
+    78	5. **One input.**
+    79	   - A filtered copy of the items database without the excluded articles is made once and hashed.
+    80	   - **Code change A:** `run_fresh.py --items` hands it to both children (clean `--source`; production `--testdb`).
+    81	   - **Code change B:** `fresh_week_inputs.py` takes the dates and the items path as arguments.
+    82	   - **Proof through the real entry points:** both launchers run dry with fake answers over the whole span on the copy. Each records the
+    83	     ordered ids it actually processes and their text sha. The two must be equal in order. Controls:
+    84	     - an excluded article appears in neither;
+    85	     - a kept article appears in both.
+    86	
+    87	### 1.3 Blind matter census (articles only; frozen before any send)
+    88	
+    89	1. **Sample.** For each scored week, 40 kept articles drawn by seed 20261117, or all of them when a week has fewer. Read with week reading A1's
+    90	   brief (`../2026-11-14-use-acceptance/week/brief-A1.md`), unchanged except for the file names.
+    91	2. **Readers.** Codex (memories off, closed, D661) and Claude (closed command line), apart. Nine weeks × 2 families, in fresh sessions.
+    92	3. **Merge.** One matter is one bet. Two entries are one matter only when the same outcome settles both and their answers cannot move apart.
+    93	   Another year of a figure is another matter.
+    94	   - Each family merges its own nine lists in one session.
+    95	   - Two reconcilers, one per family, map every matter across the two families' lists (`same` or `none`). A matter is listed by both when
+    96	     both reconcilers say `same`.
+    97	   - A one-family matter goes to two third readers (one per family) with its articles. It joins the list when both say it is worth a question.
+    98	4. **The company-figure flag.** Each family marks every listed matter `company figure` or not, using D505's own list: 营收、毛利率的指引、市场预期、实际业绩.
+    99	   The flag is set when both say yes; a split is listed.
+   100	5. **N** is every listed matter (D665). The flagged subgroup is printed beside the verdict with its own a, b and N, because by D505 the new
+   101	   system does not open such questions. Alex sees how much of any gap that rule makes. (D431: the comparison is of the products as
+   102	   configured.)
+   103	6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+   104	7. **Too small at once:** if N < 20, the verdict is "too small" and goes to Alex before any paid send.
+   105	
+   106	### 1.4 The verdict rule (`verdict-rule.json`, hashed; `score_comparison.py` with a test and a mutant per rule)
+   107	
+   108	1. **The cutoff:** one for every matter, the end of the invocation's last day (09-20 in the full run). Libraries are read as they stand then.
+   109	   - Closed questions still count.
+   110	   - Timeliness is not scored. The days from first source to opening are printed beside.
+   111	2. **Covers (mapping, A2's form, blind):**
+   112	   - **The rule:** both families mark the question `opened`, or `narrower` with both saying it carries the matter's main outcome
+   113	     (ACCEPTANCE-DESIGN A; `tally_week.covered`). `broader` and `missed` do not cover.
+   114	   - **Blinding:** the readers see each draw's library under a random X/Y label, the key outside the repository, and are told to ignore
+   115	     style.
+   116	   - **Disagreements:** two third readers, one per family. A remaining split is a split.
+   117	3. **Same question:**
+   118	   - **A question** is an id in a system-draw's library at the cutoff, the system's own identity. Distinct questions are distinct ids.
+   119	   - **Matter to question:** the mapping rule above.
+   120	   - **Question to question:** two questions of one library are the same bet when the same outcome settles both and their answers cannot move
+   121	     apart (A1's rule; D248).
+   122	   - A second question on a bet the library already holds is marked `duplicate` (below). It stays in every count as a question, and only the
+   123	     worth mark records it.
+   124	4. **The cards and their marks:**
+   125	   - **Worth tracking:** worth, trivia or duplicate. Each card shows the titles of the other questions in its library, so `duplicate` can
+   126	     be judged.
+   127	   - **Answer:** supported, unsupported, insufficient, or no answer (a question not judged by the cutoff).
+   128	   - **Cannot tell:** a split after the debate rounds.
+   129	5. **Served in a draw:** at least one covering question is marked `worth` and supported. A matter **served by a system** is served in
+   130	   at least 2 of its 3 draws.
+   131	6. **The quantities:** a = served only by the new system; b = served only by the old; N = all listed matters.
+   132	7. **The two countings:** every split resolved for the new system, or every split for the old.
+   133	8. **The guardrails** (D428's measure, which D665 turns into these guardrails):
+   134	   - **The sample:** the random guardrail sample only, 35 questions per system-draw by seed 20261117, or all of them when a library holds
+   135	     fewer. Covering cards are not in these shares. The three draws are pooled per system.
+   136	   - **The shares:**
+   137	     - the share of **decided** figure-question answers (supported or unsupported) that are unsupported;
+   138	     - the same for yes/no questions;
+   139	     - the share of decided worth marks that are trivia or duplicate.
+   140	   - **Reported beside, not in the shares:** insufficient, no answer and cannot tell.
+   141	   - **The bar:** the new system's share may not be more than 10 points above the old system's.
+   142	   - **Exercised:** each subgroup needs at least 10 decided cards per system, or it is "not exercised".
+   143	9. **The controls,** outside every product count:
+   144	   - 6 planted wrong answers (a rung moved, 3 per system). Each needs an explicit unsupported or insufficient mark, or the reading is invalid.
+   145	   - 4 supported controls, confirmed first by a separate reader.
+   146	   - 3 hidden repeats.
+   147	10. **No release verdict without six complete draws.** A draw that cannot finish (stopped after D449's one redo, or by its guard) gives no
+   148	    release verdict. Whatever was finished goes to Alex as a diagnostic, with the cause. A relaunch of that one draw on a fresh ledger needs a
+   149	    recorded council decision.
+   150	11. **The verdicts, tested in this order:**
+   151	    1. **Invalid:** a plant without an explicit rejection, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked
+   152	       the same.
+   153	    2. **Too small:** N < 20, or fewer than 30 distinct questions in any system-draw.
+   154	    3. **Practical lead:** a − b ≥ max(3, ⌈0.15·N⌉) and a ≥ 2b under both countings, with every guardrail exercised and passing under both.
+   155	    4. **Practical loss:** the mirror under both countings, or a guardrail breach under both.
+   156	    5. **No practical winner:** everything else.
+   157	12. **Printed beside, not deciding:**
+   158	    - D428's limits next to the guardrails;
+   159	    - a sign test and an interval, labelled illustrative;
+   160	    - the company-figure subgroup;
+   161	    - the floors (§1.6).
+   162	
+   163	### 1.5 The new system as run: code changes C to F, each with a test and a mutant
+   164	
+   165	- **C: `run_fresh.py --limits`.** The frozen `stage2-limits.json` stays the default and stays frozen. The comparison's file sets
+   166	  max_calls 12,000 (1,976 articles × 2 format tries × 3 network attempts, the true bound) and max_seconds 172,800. It is hashed.
+   167	- **D: astra.**
+   168	  - `stage_a_astra.py` sets `SETTING` to gpt-6-astra.
+   169	  - At the transport, for **every** request (first sends and retries with the refusal note), it builds the luna request from the same system
+   170	    text, user text and schema through the same code, and refuses any difference other than the model string.
+   171	  - Reservations and the stop gate stay stage_a's own, on the shared ledger.
+   172	  - `run_fresh --ladder-variant astra-frozen` calls it and checks every pass's archive.
+   173	  - The test includes a refused-then-retried send.
+   174	  - `stage_a.py` is not edited.
+   175	- **E: `run_stage_b.py --end-day`,** threaded from `run_fresh._judge` as the invocation's last day (07-07 for the slice, 09-20 for the run).
+   176	  It is proved on a stored run with a trailing day that has no articles.
+   177	- **F: the cards.**
+   178	  - `build_cards.py` renders both systems' questions in one neutral form: the question, its latest answer, and the material that answer was
+   179	    given, as its request shows it.
+   180	  - It is tested on stored draws of both systems (`clean-e2e-full` c1 and p1).
+   181	  - `council_mark.py` takes the deck and its card count as arguments, and adds `insufficient` and `no answer`. Deck 1's recorded output must
+   182	    reproduce under the change.
+   183	
+   184	### 1.6 What D665 prints beside, with its tool and input
+   185	
+   186	| What | Status | Tool and input |
+   187	|---|---|---|
+   188	| D400 accounting, all three passes (`stage_a/accounting.py`) | **Hard:** figure ranges meet end to end; the favourable end is stable; the due day agrees across all three sends for ≥ 90% of eligible questions. A failure is a release blocker reported with the verdict. Lines 1–5: reported | The new system's three draws. The reader lines use the October two-family Stage A reading on every draw |
+   189	| Step 2's three lines (D427; PRD §5) | **Hard**, like D400's code-decided parts: a failed line is a release blocker reported with the verdict. Pass: earlier version found ≥ 90%; clearly wrong merges ≤ 2%; no fewer later details than no merging. Each decided on its point estimate, intervals printed | The Step 2 log §12 method on draw 1 of the new system: recall over 100 records with a labelled earlier version (stratified random); blind review of 200 random merges; the no-merge dossier comparison on 30 groups. The sample sizes are a recorded design choice |
+   190	| D431's frozen-reference reading, 07-01 to 07-14 | Printed beside | The D395 method (`clean-arch/unseeded-2026-11-10/MATCHING-v2.md`: the seven graded questions against the frozen judgement gold) on **both** systems' draws as they stood at 07-14 |
+   191	| Proposed absolute floors | Printed beside | Coverage ≥ 80%, trivia ≤ 20% and supported ≥ 90% come from this comparison's cards. Wrong citations ≤ 5% and zero answer-changing omissions need source-first readings this plan does not run: printed as **not measured** (agreed in the council before the send) |
+   192	
+   193	### 1.7 Long-run risk, checked at $0
+   194	
+   195	- **The old judge's request size.** poc-v118's `evidence_in_view` (`views/judging.py:41`) shows every arrival since the fifth most recent
+   196	  judgement, which is unbounded.
+   197	  - Proxy: the sealed v34 ledger (07-01 to 08-28, 8 halt files).
+   198	  - Code computes the size of every request v118's rule would build on it.
+   199	  - If any exceeds the model's input limit or v34's halting size (292 KB), the risk is reported before the send.
+   200	- **The same for the new judge,** on the carried fortnight, scaled.
+   201	
+   202	### 1.8 Preflight
+   203	
+   204	- Every stored answer of the latest runs of both systems goes through the current checks (AGENTS §5).
+   205	- Both launchers run dry over two days with every code change in place.
+   206	
+   207	**Freeze review:** the council reads §1's artifacts, proofs and outputs. A finding is fixed and the review repeated. The paid stages start
+   208	when it finds nothing serious.
+   209	
+   210	## 2. Stage 1: the slice
+   211	
+   212	- **What runs:** one draw of each system, 07-01 to 07-07 (about 98 articles), each on its own ledger.
+   213	- **Passes when:**
+   214	  - both draws complete;
+   215	  - the new system's Step 1 averages ≤ 51 s and ≤ $0.0153 an article (1.5 × the measured 34 s and $0.0102);
+   216	  - every answer-choice request was checked at the transport, and every archive shows astra;
+   217	  - production's days are complete.
+   218	- **On a failure:** fix the launcher only, then rerun. Anything else goes to the council, and then to Alex.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md | sed -n '220,316p'; rg -n '"'^## D66[7-9]|270|six-ledger'"' docs/DECISIONS-log.md docs/research/2026-11-17-product-comparison/ROUND-LOG.md; nl -ba clean-arch/e2e-comparison-2026-11-13/WIRING-DESIGN.md | sed -n '7,13p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+   220	## 3. Stage 2: the full run
+   221	
+   222	- **What runs:** three draws of each system, 07-01 to 09-20, detached, each with a log and a pid.
+   223	- **One ledger per draw** (six), so a stop ends only that draw.
+   224	  - **Absolute guards** (stops, not a budget): $65 per new-system draw, about 1.6 × the upper estimate; $25 per old-system draw, about
+   225	    1.7 ×. That is $270 in all.
+   226	  - This replaces, for this run only, D449's whole-run stop across draws and D666's single $250 ledger. It is recorded as a council decision
+   227	    before the send.
+   228	- **D449 within each draw, unchanged:**
+   229	  - a redo is launched only on an eligible failure shown in the component's output, with its reason written;
+   230	  - once per component;
+   231	  - a second stop ends that draw (§1.4 item 10).
+   232	- **The measured risk:**
+   233	  - the 4 stored Step 1 failures (of 2,549 articles) were dropped connections from before the network retry;
+   234	  - 0 failures in 624 articles since;
+   235	  - 9 of 9 format retries recovered.
+   236	- **A stopped ledger** refuses later launches. A relaunch needs a recorded council decision.
+   237	
+   238	## 4. Stage 3: reading and verdict
+   239	
+   240	1. The libraries at the cutoff, read by snapshot.
+   241	2. The mapping (§1.4 item 2).
+   242	3. The cards (`build_cards.py`), with labels hidden and order shuffled (the key outside the repository).
+   243	4. The council's marks.
+   244	5. `score_comparison.py`.
+   245	6. The §1.6 table.
+   246	7. **The report to Alex,** in plain words:
+   247	   - the verdict first;
+   248	   - a, b and N under both countings;
+   249	   - the company-figure subgroup;
+   250	   - every split card for his spot check;
+   251	   - the §1.6 table;
+   252	   - `FINDINGS.md`;
+   253	   - the cost and the time.
+   254	
+   255	   No release engineering resumes until he answers.
+   256	
+   257	## 5. Estimates (measured rates; checked at the slice)
+   258	
+   259	**New system, per draw:**
+   260	- Step 1: 1,976 articles at 26 to 34 s (measured) is 14 to 19 h, at $0.0089 to $0.0102 an article: $18 to $20.
+   261	- Step 2: about $3.
+   262	- The answer-choice step: about 55 theses × 3 passes × $0.037 to $0.050, about $6 to $8.
+   263	- The judge: about $5 to $10 (the least certain).
+   264	- **About $32 to $41 and about 20 h a draw.**
+   265	
+   266	**Old system, per draw:** poc-v118's own $0.53 to $0.66 for 243 articles, scaled up, is about $5. But cost per article rises as the library
+   267	grows: the sealed v34 run went from $0.0026 to $0.0077. So about $5 to $15, over 2 to 4 h.
+   268	
+   269	**In all:** about $110 to $170 and about 20 h of wall clock.
+   270	
+   271	**The reading:** the census takes a few hours. About 330 to 450 cards, marked by the council in about 6 to 10 h. The §1.6 readings come after
+   272	the verdict reading.
+   273	
+   274	## 6. Monitoring
+   275	
+   276	- **Sources** (never a live database):
+   277	  - each ledger's `ledger.json` and attempt log;
+   278	  - each draw's `run.json`;
+   279	  - production's `replay.log` day and cost lines;
+   280	  - **a snapshot of each live trace and archive** every heartbeat (SQLite online backup, as `snapshot.sh` does), counting completed articles,
+   281	    completed judge days, the largest judge request and refused judge answers.
+   282	- **Monitor:** one `Monitor` raises an event on:
+   283	  - every component state change, stop, crash, refusal or redo;
+   284	  - every 100 completed articles per new-system draw;
+   285	  - every 7 replay days per old-system draw.
+   286	- **Heartbeat:** every 20 minutes, spend per completed article (Step 1) and per completed day (judges and production), compared like with
+   287	  like:
+   288	  - each draw against its two sibling draws at the same progress;
+   289	  - the old system against the sealed v34 curve scaled by the slice.
+   290	- **Stalls:**
+   291	  - a new-system draw with no ledger attempt for 35 minutes (one call can wait 3 × 600 s plus 90 s);
+   292	  - an old-system draw with no new day line for 45 minutes.
+   293	
+   294	  I read the logs and the process state within one heartbeat.
+   295	- **The stops,** each through that draw's own ledger, with the reason recorded:
+   296	  - **automatic:** its absolute guard ($65 or $25);
+   297	  - **mine:**
+   298	    - a runaway: a draw spending over 2 times the median of its running siblings at the same progress, over at least 50 articles or 5 days;
+   299	    - a hang: 0% CPU beyond the stall limit.
+   300	- **Watched and reported, never a stop:** the largest judge request and refused judge answers. A day the judge halts on is D449's to handle.
+   301	- **`RUN-LOG.md`:** a dated row per event and per check that changes anything, reported to Alex as results land.
+   302	
+   303	## 7. Returns to Alex
+   304	
+   305	- the verdict, whichever it is;
+   306	- N < 20 at the census;
+   307	- a stop that is not a launcher wiring fault;
+   308	- a draw's guard reached;
+   309	- a failed hard check (D400's code-decided parts, or Step 2's lines);
+   310	- a draw that cannot finish (a diagnostic, not a verdict);
+   311	- no verdict by 2026-12-01.
+docs/DECISIONS-log.md:3120:## D270 · 2026-11-03 · The structural fix built three ways (v78, v79, v80): the keep decision as closed-set fields the model fills and code applies; what it carries and what it does not; a whole-bench draw of poc-v100 against v94 proposed, Alex's call
+docs/DECISIONS-log.md:3132:- Alex (after the D270 second amendment and the Codex review): "那你根据这份报告，在之前的基础上改动，然后直接测试。不要跑大规模了，真的很浪费时间，你用最直接的办法验证有效性先".
+docs/DECISIONS-log.md:7633:- **Population (b)** (`population/population.json`, sha256 3a6270f6…): my classes were written before I read the blind Codex
+     7	a type test, a patched attribute) are settled in code and its $0 tests, which the next review reads instead of prose. **Purpose:** run the clean path end to end on fresh articles (Step 1 c8 → frozen Steps 2–3 → the ladder step as it ran in the
+     8	fourth Stage A → the frozen judge) and, the same day, production v118, as a diagnostic under D442; never D427's acceptance while Step 4's
+     9	lines are unmet. Nothing frozen changes: the ruler, Steps 2–3 (D427), the ladder step's configuration (D426), the judge. "Same day" means
+    10	the model sends of both systems on one calendar day; the article window (v108's 243 items, 2026-07-01..07-14) is a fixed input.
+    11	
+    12	## A. The wiring: every input and authorization that must follow a fresh run
+    13	
+
+codex
+**V4 closes most round-three gaps, but a fresh replacement draw can still change which results count and how much the comparison can spend.** V4 requires six complete draws, yet permits a stopped draw to be replaced on a new ledger without specifying how that fits the six-draw limit, the $270 total, or D431’s same-day rule. [V4 completion rule](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:147) · [V4 spend guards](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:220) · [D431](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4795)
+
+**Round-three gaps**
+
+- **Incomplete draws:** resolved for the original six. Partial results go to Alex as diagnostics. **Ledger authority:** the replacement is explicit in the design. Record it before launch as required. **Absolute stop:** resolved by the per-draw guards. [Completion](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:147) · [Ledger change](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:223) · [Monitoring](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:295)
+- **Exposure and blind mapping:** resolved. The exemption requires documented production use, and readers get randomly labelled libraries. **Guardrail denominator:** decided-only is restored. The plan still needs to distinguish disagreements resolved in the two countings from marks that stay “cannot tell” and leave the denominator. That distinction can change whether a subgroup reaches ten cards. [Exposure](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:69) · [Mapping](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:111) · [Guardrails](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:127)
+- **Same question and duplicates:** the identity rule is defined, but duplicates still count toward the 30-question minimum. Under v4, 29 different questions plus one repeated bet under another ID clears it. Count the bet once for the minimum and retain the duplicate in the worth guardrail. **Step 2:** thresholds are restored. Specify that a check without enough eligible cases remains unmeasured and cannot clear release. [Identity](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:117) · [D665 minimum](/Users/lchingen/hivemind/clean-arch/PRD.md:145) · [Step 2 checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:189)
+
+**NOT READY: keep any fresh replacement outside the original verdict unless its eligibility, timing and spend are agreed before launch. Freeze the treatment of unresolved marks, duplicates in the minimum, and unmeasured Step 2 checks.**
+tokens used
+1,262,651
+**V4 closes most round-three gaps, but a fresh replacement draw can still change which results count and how much the comparison can spend.** V4 requires six complete draws, yet permits a stopped draw to be replaced on a new ledger without specifying how that fits the six-draw limit, the $270 total, or D431’s same-day rule. [V4 completion rule](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:147) · [V4 spend guards](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:220) · [D431](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4795)
+
+**Round-three gaps**
+
+- **Incomplete draws:** resolved for the original six. Partial results go to Alex as diagnostics. **Ledger authority:** the replacement is explicit in the design. Record it before launch as required. **Absolute stop:** resolved by the per-draw guards. [Completion](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:147) · [Ledger change](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:223) · [Monitoring](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:295)
+- **Exposure and blind mapping:** resolved. The exemption requires documented production use, and readers get randomly labelled libraries. **Guardrail denominator:** decided-only is restored. The plan still needs to distinguish disagreements resolved in the two countings from marks that stay “cannot tell” and leave the denominator. That distinction can change whether a subgroup reaches ten cards. [Exposure](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:69) · [Mapping](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:111) · [Guardrails](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:127)
+- **Same question and duplicates:** the identity rule is defined, but duplicates still count toward the 30-question minimum. Under v4, 29 different questions plus one repeated bet under another ID clears it. Count the bet once for the minimum and retain the duplicate in the worth guardrail. **Step 2:** thresholds are restored. Specify that a check without enough eligible cases remains unmeasured and cannot clear release. [Identity](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:117) · [D665 minimum](/Users/lchingen/hivemind/clean-arch/PRD.md:145) · [Step 2 checks](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v4.md:189)
+
+**NOT READY: keep any fresh replacement outside the original verdict unless its eligibility, timing and spend are agreed before launch. Freeze the treatment of unresolved marks, duplicates in the minimum, and unmeasured Step 2 checks.**

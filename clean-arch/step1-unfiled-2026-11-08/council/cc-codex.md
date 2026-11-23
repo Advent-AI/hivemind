@@ -1,0 +1,3 @@
+**READY / SEND.** The revised field no longer permits figures from outside the item, and it asks the model to acknowledge missing amounts.
+
+Ohio remains a test risk: the article gives a potential project cost, not the guarantee amount. The model must judge from the available context without treating that cost as the guarantee. The planned probe should check whether it preserves the signing question and both relevant links.

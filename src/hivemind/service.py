@@ -6,6 +6,7 @@ daily round dated on or before that day. Nothing here writes.
 """
 import json
 import re
+import sqlite3
 from decimal import Decimal
 
 from . import vocabulary
@@ -21,7 +22,64 @@ def open_ledger(path):
 
 
 def default_as_of(conn):
+    """Today's default day: the last completed day, or a legacy ledger's last judgement day. Read only through `resolve_bound`."""
     return store.last_completed_day(conn) or conn.execute('select max(publication_day) from judgements').fetchone()[0]
+
+
+class FirstDayNotCompleted(ValueError):
+    """The store holds processing steps and no completed day: its first day is still in progress, and nothing is served from it
+    (live-service/OPERATING-CONTRACT.md, row 4; open defect 10)."""
+
+    def __init__(self):
+        super().__init__("the store's first day has not completed")
+
+
+class BoundNotCompleted(ValueError):
+    """An explicit upper bound later than the store's last completed day: refused, naming that day (OPERATING-CONTRACT.md, row 3)."""
+
+    def __init__(self, requested, last_completed_day):
+        self.requested, self.last_completed_day = requested, last_completed_day
+        super().__init__(f'day not completed: {requested} is after the last completed day {last_completed_day}')
+
+
+class RangeNotOrdered(ValueError):
+    """A range whose start is after its resolved end: a window reaching into days not yet completed (council round 124)."""
+
+    def __init__(self, start, end):
+        self.start, self.end = start, end
+        super().__init__(f'range start after its end: {start} to {end}')
+
+
+def first_day_unfinished(conn):
+    return store.last_completed_day(conn) is None and conn.execute('select 1 from processing_steps limit 1').fetchone() is not None
+
+
+def resolve_bound(conn, bound, *, unfiltered=False):
+    """The one owner of an upper date bound, explicit or omitted (OPERATING-CONTRACT.md, row 3).
+
+    A store whose first day is in progress is refused. An omitted bound is today's default day; with `unfiltered` (the bundle
+    functions, whose omitted bound read every record), it is the last completed day, or None (no filter, as before) on a store with
+    none. An explicit bound later than the last completed day is refused, whatever the store holds after it; one on or before it
+    passes. Idempotent: a bound it passed passes again."""
+    if first_day_unfinished(conn):
+        raise FirstDayNotCompleted()
+    last = store.last_completed_day(conn)
+    if not bound:
+        return last if unfiltered else default_as_of(conn)
+    if last is not None and bound > last:
+        raise BoundNotCompleted(bound, last)
+    return bound
+
+
+def resolve_range(conn, start, end):
+    """A range's end resolved by `resolve_bound` (an explicit future end is refused there); a start after the end is refused. A start
+    equal to the end reads as before: an empty window for `changes`, whose start is excluded, and that one day for `history`, whose
+    start is included; a client polling "what changed since the day I last saw" keeps its empty answer until a day completes
+    (council round 124). An end that resolves to None (an empty store) is compared with nothing, as before."""
+    end = resolve_bound(conn, end)
+    if start and end is not None and start > end:
+        raise RangeNotOrdered(start, end)
+    return end
 
 
 _SEQ_DAYS = {}      # id(connection) → (connection, (max sequence, rows), map); a sqlite3 connection cannot carry attributes
@@ -88,7 +146,7 @@ def summaries(conn, as_of=None, include_closed=False):
     """Every view as of the day as a light record (id, object, kind, what it looks at, the question, due day, open,
     dependency and dependant ids): what a search ranks. The full record with its evidence counts is `view`; listing
     92 of those cost 0.29 s per search (1,205 evidence reads), measured 2026-10-24."""
-    as_of = as_of or default_as_of(conn)
+    as_of = resolve_bound(conn, as_of)
     out = []
     for record in conn.execute('select * from views order by created_seq'):
         record = dict(record)
@@ -104,7 +162,7 @@ def summaries(conn, as_of=None, include_closed=False):
 
 
 def views(conn, object_id=None, as_of=None, include_closed=False):
-    as_of = as_of or default_as_of(conn)
+    as_of = resolve_bound(conn, as_of)
     rows = conn.execute('select * from views' + (' where object_id=?' if object_id else '') + ' order by created_seq', (object_id,) if object_id else ()).fetchall()
     out = []
     for record in rows:
@@ -140,7 +198,7 @@ def dependants(conn, view_id, as_of):
 
 
 def view(conn, view_id, as_of=None, record=None):
-    as_of = as_of or default_as_of(conn)
+    as_of = resolve_bound(conn, as_of)
     record = record or store.view(conn, view_id)
     if not record or not view_exists(conn, record, as_of):
         return None
@@ -179,7 +237,7 @@ def evidence_record(conn, evidence_id, as_of, arrived_seq=None):
 
 def evidence(conn, view_id, as_of=None, tier=None):
     """Evidence linked to the view on or before the day and not replaced on or before it, with its sources."""
-    as_of = as_of or default_as_of(conn)
+    as_of = resolve_bound(conn, as_of)
     out = []
     for link in conn.execute('select evidence_id, seq from evidence_links where view_id=? order by id', (view_id,)):
         if not visible(conn, link['seq'], as_of):
@@ -197,7 +255,7 @@ def evidence(conn, view_id, as_of=None, tier=None):
 # ---------- history
 
 def history(conn, view_id, from_day=None, to_day=None):
-    to_day = to_day or default_as_of(conn)
+    to_day = resolve_range(conn, from_day, to_day)
     from_day = from_day or '0000-00-00'
     judgements = []
     previous = None
@@ -230,6 +288,27 @@ class LedgerError(ValueError):
     """A ledger record the service cannot read (corrupt JSON): refused, never read as empty."""
 
 
+class StoreUnreadable(LedgerError):
+    """The store could not be opened, or its read transaction begun and pinned (live-service/OPERATING-CONTRACT.md, row 1): named by
+    its path, never answered with an empty or stale state."""
+
+
+def open_pinned(path):
+    """A reader's connection with its committed state pinned (row 2: `BEGIN`, then a first read, which in WAL mode fixes the state
+    every later read of the request sees). A SQLite failure in these three steps closes what was opened and raises `StoreUnreadable`
+    naming the path; a later SQLite error is not covered here."""
+    conn = None
+    try:
+        conn = open_ledger(path)
+        conn.execute('begin')
+        conn.execute('select 1 from sqlite_master limit 1').fetchone()
+        return conn
+    except sqlite3.Error as error:
+        if conn is not None:
+            conn.close()
+        raise StoreUnreadable(f'{path}: {error}') from error
+
+
 def _unique(ids):
     """A judgement's cites as the UI contract reads them: each id once, first occurrence kept. The writer stores the set from
     2026-10-28; the sealed ledger sealed-2026-10-28-v34-nvda-3m-through-0828 holds one judgement (v2, id 736) that cites an id twice."""
@@ -254,7 +333,7 @@ def _json(text):
 
 def record(conn, view_id, as_of=None):
     """The last check of the view on or before the day: when, by which round, how much came in that day."""
-    as_of = as_of or default_as_of(conn)
+    as_of = resolve_bound(conn, as_of)
     row = conn.execute('select input_id, publication_day, seq from judgements where view_id=? and publication_day<=? order by judgement_id desc limit 1', (view_id, as_of)).fetchone()
     if not row:
         return {'view_id': view_id, 'as_of': as_of, 'last_check': None}
@@ -268,7 +347,7 @@ def record(conn, view_id, as_of=None):
 
 def changes(conn, since_day, to_day=None):
     """Judgements that said 'changed' after since_day (exclusive) up to to_day, with their cited evidence."""
-    to_day = to_day or default_as_of(conn)
+    to_day = resolve_range(conn, since_day, to_day)
     out = []
     previous = {}
     for row in conn.execute('select * from judgements order by judgement_id'):
@@ -464,7 +543,7 @@ def evaluate(conn, view_id, comparator, value_usd, as_of=None):
     """A claim "quantity >= / < / = value" against the view's ladder as of the day: the rung the threshold sits in,
     the judged rung, and whether every value of the judged band satisfies the claim (holds), none does (not_yet), or
     only some do (borderline). Only a ladder whose rungs read as one unbroken partition by amount is evaluated."""
-    as_of = as_of or default_as_of(conn)
+    as_of = resolve_bound(conn, as_of)
     if comparator not in COMPARATORS:
         raise ValueError(f'comparator must be one of {COMPARATORS}')
     record = view(conn, view_id, as_of)

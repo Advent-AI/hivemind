@@ -1,0 +1,21 @@
+# Council: the fresh Step 2 wrong merge (X22)
+
+Read-only council, 2026-11-09. Codex and Claude Code independently traced the sources, the stored Jev request and answer, the Step 3 group and the reader's text; challenge round in `round2.jsonl`. Original user-requested scope: this one error, no product or ruler edits, no paid model calls.
+
+## What happened
+
+The earlier 2026-09-05 Motley Fool source reported that Vera Rubin was in production and that management expected it to represent about 20% of Q3 data-centre revenue. The later 2026-09-06 Calcalist source reported that Nvidia said Vera Rubin systems were commercially delivered in August. The two source articles are preserved in `reports/step2-score-council-2026-11-08/blind-packets.json`, case 9 candidate C7 (key in blind-key.json); these are media reports, not the primary earnings-call transcript.
+
+Archived request for incoming 22:ev-11 against 13:e4 asked Jev to compare their source-backed text. It chose same_statement at 0.49, different 0.36, supersedes 0.15. `clean-arch/step2/compare.py:109` acts on the chosen label without a 0.5 floor, so the incoming record joined 13:e4. Retrieval found this candidate. The model provides no textual explanation; the reason for the choice is unproven.
+
+The fresh merge review classified the two as different, and a third classified the merge wrong. Independent Codex review agrees; earlier Claude blind review called it overlap, and a separate Claude adjudicator called it different. Thus whether it is a clearly wrong merge rather than an overlap depends on reader judgment. We agree the delivery is not a straightforward repeat of the production statement and revenue forecast. The prior acceptance reference grouped underlying article matters as a later step and marked the delivery revision; that reference uses a broader revision concept than Step 2's comparison, and its unit is the article matter, not necessarily the system record. The most natural reading under the current comparison contract is a separate new statement; revision is a plausible interpretation of the milestone depending on the meaning of 'changed event-progress statement'. The primary statement of the original bundled production-and-forecast record is not formally identified. No change to the reference or contract is proposed.
+
+## Actual and potential impact
+
+The clean prototype group retains the delivery record's own summary, quote and source as a member. Offline calling `group_text` on the saved group produces the label 'Later reports of the same statement' above that member: misleading grouping and label, not observed text deletion. The acceptance did not test whether this group changed a reader's investment judgment; Step 4 of this clean path was not built for this run. The production writer and live application were not changed. If a future reader treats group members as restatements, it could underweight a new milestone; that downstream consequence is a risk, not an observed result. The first article attributes the 20% forecast to management but does not explicitly attribute production status to Nvidia; its stored summary does, an attribution difference in this case without an established census.
+
+## A tempting threshold
+
+An offline read of the 57 saved merges showed 2 selected repeats below 0.5: X22 at 0.49 (judged wrong by the original merge readers) and X47 at 0.47 (accepted by both original readers; Broadcom revenue forecasts). A 0.5 floor on this fixed draw would remove one wrong merge and one accepted merge. This is not a root cause proof or general performance measurement. No threshold change is recommended from this single comparison; old production code uses such a floor, while the clean prototype does not, and no decision about adding it to the clean path was established here.
+
+Relevant records: `poc/data/clean-acceptance-2026-11-09/step2/decisions.json`, `library.json`, `jev.sqlite`, `merge-third-answer.json`; `poc/data/clean-acceptance-2026-11-09/settled.json` and `prerun-prompt.md`; `clean-arch/step3/library.py`; `clean-arch/step1-unfiled-2026-11-08/LOG.md` §§43–44. The independent Codex review is `codex-review.md`. One full fresh test produced 1 clear wrong merge of 57 by its readers; this council did not reclassify its immutable result.

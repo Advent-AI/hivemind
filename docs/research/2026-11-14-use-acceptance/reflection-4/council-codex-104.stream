@@ -1,0 +1,205 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e2a0-5733-7770-85d6-c91368a72345
+--------
+user
+# Round 104: your objection checked; the cause read from the reasons; D414's own words; a narrower sentence and your diagnostic
+
+## What I checked after your no
+
+- **The Codex D failures by reason** (all 133, read; list in the session's scratch file, recounted by the census script's
+  functions):
+  - **128 are binding-obligation figures,** basis `expected_publication`, shown day 2027-04-01. Every reason says the day should be
+    "the next annual filing, around February 2027". For example: "The obligation is due at the next annual filing, around February
+    2027, rather than April 1."
+  - None of the 128 cites a day the topic or the article states.
+  - **The other 5 are a real model error:** a calendar-2027 product question labelled FY2028, with its day set from FY2028. Codex
+    fails them and Claude passes them. So the Claude family has false passes too, which is why your controls matter.
+- **D414's record is Alex's own answer to this exact question** (`DECISIONS-log.md` l.4568). He was asked
+  "同一道“年报里的数字”题…年度数字题的到期日由谁定？" and shown the cost, "公司年报类的题比模型估的日子晚约一个月结案". He chose
+  "由程序统一定 (Recommended)".
+- **D210 places these figures inside D414:** an obligation already taken on "opens as an amount at the next annual filing". That is
+  a figure in the annual report, whose day the step estimates.
+- **So the reading is settled by Alex, not by me:** with no day stated, the next annual filing is dated by D414, about a month after
+  the note's month. The 128 failures apply the note's month against his decision.
+- **Your second point stands:** the sentence must not touch a stated day, nor N's use of the note.
+
+## The narrower sentence (only inside the D row's binding-obligation clause)
+
+> "An obligation's next annual filing is its annual report. Where neither the thesis nor the article states that report's day, the
+> due day is the one code sets for the year's figure (60 days after the fiscal year-end, D414), even where the fiscal-year note
+> names an earlier month."
+
+- It is silent on stated days, so the brief's existing "a day the thesis or the article states" rule keeps precedence.
+- It is silent on events, theme figures and N.
+
+## Your diagnostic, built from stored items ($0 in dollars; four reader sessions, unpriced)
+
+- **A blinded sample of 24 items** copied from stored packets, shuffled, keyed outside the repository:
+  - 8 class items: an obligation, `expected_publication`, Codex failed D and Claude passed it;
+  - 4 of the same class where both families passed D;
+  - 4 agreed D failures (2 obligation figures with a stated basis, 2 non-obligation figures), where D should still fail;
+  - 4 of the year-label errors (calendar 2027 named FY2028), where D should still fail under D414's "that year's figure";
+  - 4 days stated in the topic or article that both families passed (2 obligation, 2 not), where D should still hold.
+- **Four fresh readers, D only, under the whole brief:** Codex and Claude, each under the unchanged brief and under the brief with
+  the sentence. The two readings are shown side by side.
+- **Written now:**
+  - **Adopt** the sentence only if, under it, Codex holds D on at least 10 of the 12 class items, and both families still fail D
+    on at least 7 of the 8 fail controls and hold it on at least 3 of the 4 stated controls.
+  - **Do not adopt** if any fail control flips to holds in both families, or the stated controls move. Then the D role goes to
+    Alex with the census.
+  - **If it passes:** the sentence goes into the brief as a dated change. The latest readings' class points are re-ruled by fresh
+    third readers of both families and reported beside the unchanged counts. No stored ruling is overwritten.
+- **The postponement class** follows by its stored census, as you said.
+
+End with `CONSENSUS: yes` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the obligation and date decisions, then examine whether the proposed controls can distinguish a clearer instruction from an overly broad one.
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '65,82p;94,99p' clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md; sed -n '4568,4584p' docs/DECISIONS-log.md; rg -n -A 32 '"'^## D210'"\\b' docs/DECISIONS-log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  reported amount is never called an expectation (D411). When the article states a number, the field carries it and a
+  figure's middle rung holds it; a stated range is carried by its two ends, and the middle rung runs from at or below its lower end to at or above its upper end. When the
+  article states it in words alone, the field carries the words and no number, and the ranges are the step's own estimate.
+- The due day is when the question can be resolved: a figure's publication date; for an event, the date its outcome is assessed. Where
+  the thesis or the article states the day a figure is published, that day is right. Where neither does (`due_day_basis` is
+  `expected_publication`), code sets the day and the step's own estimate is not shown: 60 days after the company's fiscal
+  year-end for a company's figure, 90 days after the calendar year-end for a theme's (D414). That day is right when the figure
+  is a figure for that year; it is wrong when the figure the question asks for is not a year's figure (a quarter, a survey's
+  rolling twelve months), which is then a fault of the question's period and of the due day both.
+- A company's figure for a quarter or a half-year is never a judged question: the step must decline it. A ladder written for
+  one is wrong even when it asks exactly what the thesis names (mark `Y`). An annual figure that only names quarterly reports as
+  the material that settles it is not such a case.
+- A step may decline (`no_ladder`) only in the seven cases its instructions allow: the thesis has no main figure or event (its
+  outcome names none, or several things and none is the main one); nothing in it can be checked on a date (for an event:
+  neither the thesis nor the article gives a date, and the thesis names no period, unless it is a pending regulatory decision,
+  which is due at the company's fiscal year-end); it is the company's figure for a
+  quarter or a half-year; it is a figure for a period that is not one fiscal or calendar year, such as a survey's rolling twelve
+  months, and neither the thesis nor the article gives the day it is published (D417); it is a figure for a year that had already
+| `item` | the item number | |
+| `Q` | `holds`, `fails`, `n/a` | the judged question is worded as a question, not as an assertion, and asks the thing the thesis's `outcome` names. For a figure it also names the period the figure covers, or the day it is measured at, and the material that settles it. And it does not ask something other than its `focus` line (a focus that also names parts listed in `not_judged` is expected and is not a conflict). It can be understood by a reader who never sees the article: it never says "this item" or leans on a figure or a name it does not give. A group named as the trade names it ("the big four AI hyperscalers", "the top five hyperscalers") is a name the question gives: a question is not failed for not listing the group's members. `n/a` for a `no_ladder` |
+| `O` | `holds`, `fails`, `n/a` | the object is the question's own company or the right theme, by the rule above: a tracked government decision on a class of products is the theme's; the company's own sales under it, and a proceeding against the company, are the company's |
+| `R` | `holds`, `fails`, `n/a` | exactly one rung holds for every outcome. For a figure: the ranges meet end to end. For an event, where code writes the last rung: the `Yes` condition is the event the question asks about; the first sentence of the `Ruled out` condition, when there is one, is a decision against that event as a whole, or its abandonment or withdrawal as a whole, taken after the article's day and standing on the due day, and not the event's merely being still awaited, the refusal of one part of it, or a bar already in place when the article appeared (it need not list every way: code's sentence takes the others); and where the event can plainly be ruled out before the due day (a formal refusal, a block, an announced abandonment; for an authority's proceeding, its formal abandonment or withdrawal without the asked-for decision or conclusion) and the answer has no `Ruled out` rung, the mark fails; it fails too when `ruled_out_by` names no one who decides, or when the decision named is the day arriving, the event not having happened, or a decision to go on with a proceeding. Every condition is concrete and can be checked on the due day: none rests on a target or a threshold that is not yet set |
+| `D` | `holds`, `fails`, `n/a` | the due day follows the rule for its kind. A figure: the day the thesis or the article states, or, where neither states one, the day code sets from the year the figure covers (60 days after the company's fiscal year-end; 90 days after the calendar year-end for a theme's figure), which holds when the figure asked for is that year's figure. An event: the date the thesis or the article gives for assessing it, or the last day of the period it names, or the company's fiscal year-end for a pending regulatory decision with no date. It fails when the day contradicts a date the thesis or the article gives, falls before the figure's period ends, or, for an event, is a date none of these gives And `due_day_basis` says truly where the day comes from: `stated` only when the thesis or the article gives that day; `period_end` only when it is the last day of the period the thesis names, or the fiscal year-end for a pending regulatory decision; `expected_publication` when the step set the day it expects the figure to be published. For a thesis whose `opens_as` is binding_obligation: an obligation already taken on is due at its next annual filing, and one not yet signed on the day by which the signing can be checked; another day fails |
+| `X` | `holds`, `fails`, `n/a` | a figure: a number the `reference` carries lies in the middle rung, as the judge will read it (for a stated range: the middle rung runs from at or below its lower end to at or above its upper end); a reference with no number, or none, has nothing to place and holds, unless the ladder presents as expected something the article does not state. An event: the ladder presents as expected only what the article states |
+## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+
+- **Asked:** "同一道“年报里的数字”题，模型三次估的到期日常差几天（比如 2 月 24 日和 2 月 28 日），34 道题里只有 18 道三次一致，你定的线是九成。年度数字题的到期日由谁定？"
+  - Options: code sets it (recommended): "公司财年结束后 60 天（美国大公司年报的法定期限）、行业日历年结束后 90 天（约定值）。回放结果 34 道里 32 道一致。代价：公司年报类的题比模型估的日子晚约一个月结案；行业数据偶尔可能比 90 天更晚；不是整年的数字（滚动 12 个月的调查、季度数）不能套这条规则，要先单独处理。"; as now (the test still fails under line 6 and the work stays at this step).
+  - Alex: "由程序统一定 (Recommended)".
+- **Decided:** for a figure that covers one year and whose due day the model would estimate, code sets the day: the company's
+  fiscal year-end plus 60 days for a company's figure, the calendar year-end plus 90 days for a theme's figure. A day the topic
+  or the item states is kept. A figure that is not a year's (a survey's rolling twelve months, a quarter) is not given a day by
+  this rule and is dealt with first, on its own. The costs he was shown: a company's annual figure closes about a month after
+  the day the model expects it; an industry figure may come later than 90 days.
+- **Evidence behind the question:** `clean-arch/step4-2026-11-10/stage_a/result-2/due-day-rule-60-90.txt`.
+- **Scope:** the clean path's ladder step.
+
+## D415 · 2026-11-10 · The third Stage A is sent without asking again once each change is proved small and reviewed; a failure stops and goes to Alex
+
+- **Asked:** "上面两项按你的选择做好、并各自小额验证通过之后，第三次正式测试（同样 44 道题各发三次，约 0.15 美元，在你批的 3 美元上限内；目前累计花了约 0.48 美元）怎么发？"
+  - Options: send once the checks pass (recommended): "每项改动先单独小额验证并过评审；任何一项没通过就停下来找你，不发正式测试。发完照旧：我自己读完全部答案，两类读者再读，六条线按宽、严两种读法一起报。"; ask again before the send.
+2664:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+2665-
+2666-- Alex, after the arm ("go 但是你不要只是看什么acp好不？你需要解决的是抽取质量问题 … 有用的，你得一条一条看是不是真的值得抽才知道你这些改动的抽取效果").
+2667-  Mechanism (two stored accounts, `docs/research/2026-10-28-extraction-quality/results/ask_admission.json`): D184/D185's sentence
+2668-  "due when its signing can be checked, at most 18 months out" is written for a deal not yet signed; for a programme already announced
+2669-  and signed (the AI Compute Partnership) the model proposes nothing or dates the question on the item day, which the code refuses.
+2670-  Over the acceptance week the twelve ACP articles produced one proposal per run and none survived in `poc-v36`; 96 statements had no home.
+2671-- Decided: role-v21 replaces that one sentence. Not yet signed: a yes/no question due after the item within 18 months (D185 unchanged).
+2672-  Already taken on, one deal or a programme: a financing_amount question on the amount the obligation reaches at the company's next
+2673-  annual filing, settled by its commitments note; the announcement is evidence to it. Entries and code checks as v20; `poc-v37` is the
+2674-  replay default. Role 10,089 → 10,434 characters; the growth is the second form, which no other sentence covered.
+2675-- Measured before the decision (`admission_arm.py`, production bytes as control, frozen reference, three draws): on the six ACP articles
+2676-  whose text carries the obligation, control opened 0/18, the arm proposed 17/18 and the code kept 13/18 (two refused by the ladder-label
+2677-  rule, D186); the four articles that report only the revenue share open nothing under both, rightly; the Reuters Ohio signing event
+2678-  still opens (2/3, one refusal at the 548-day boundary). Acceptance: the same week replayed as `english-v37-nvda-1w-2026-10-28`, then
+2679-  every dropped statement of the week read one by one against the analyst's standard (results.md).
+2680-
+2681-## D211 · 2026-10-28 · The extraction request shows no thesis and no group: one sample per item, filing at the turn (role-v22, `poc-v38`)
+2682-
+2683-- Alex chose option 1 after the D210 week ("1"): the admission judgement sat in the extraction call, whose request carried the open
+2684-  theses and groups of the moment, so the same article was a different request on every day and after every commit of the parallel
+2685-  day; a re-sent item (34 of 98 that week) was a fresh sample and the first sample's candidates vanished (9, the Kyber story's home
+2686-  among them). Two samples of the same article agreed on 2 of 11 proposals.
+2687-- Decided: from extraction v22 the request depends on the item alone (code, `extraction.LEDGER_BLIND_FROM`): no [Existing theses]
+2688-  block, the research-groups block carries only the standing instruction to declare the matter, links name the answer's own
+2689-  candidates or nothing, `folds_into` and `lost_if_folded` leave the schema. What the shown list did is owned elsewhere: the placement
+2690-  call files statements under the open theses at the item's turn (`extraction.read` early, `extraction.file` at the turn, in both the
+2691-  serial and the parallel path), matching folds a candidate into an open thesis (D190), a declared group with a stored group's names
+2692-  is that group (D166). The parallel day never finds a v22 request stale. Role 10,434 → 9,456 characters (the sentences that assumed a
+2693-  shown list are cut).
+2694-- Measured before the decision's acceptance (`blind_arm.py`, three draws over 39 items): the Kyber question proposed in 6 of 21 sends
+2695-  over seven articles, at least one per draw (v21: one in ten, erased by the re-send); the ACP amount question 3/3; about 10 of 25
+2696-  distinct questions are re-proposals of open ones, to fold at matching; per-sample agreement unchanged (3 of 25 in all draws).
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n '"'^## D(210|414|400|426)'"' docs/DECISIONS-log.md; rg -n '128|133|year.label|D414|D210|annual filing' docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2 --glob '*.md' --glob '*.txt' | tail -45; ls docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+2664:## D210 · 2026-10-28 · A binding obligation already taken on opens as an amount at the next annual filing (role-v21, `poc-v37`)
+4376:## D400 · 2026-11-10 · Stage A is read against absolute lines, with no paid control arm
+4568:## D414 · 2026-11-10 · Code sets the due day of a year's figure whose day is an estimate
+4721:## D426 · 2026-11-10 · The ladder step is not tuned further on the 44 theses; the preparation of Stage B opens on the step as it ran in the fourth Stage A, its $0 baseline reading first
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt:9:poc/data/clean-ladder-stage-a-2026-11-10/run-rechecked: items 128; in the class 4; D fails on them {'codex': 0, 'claude': 0}; third rulings {'codex': {}, 'claude': {}}
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt:15:TOTAL {'items': 1559, 'in the class': 225, 'codex D fails': 133, 'claude D fails': 0}
+__pycache__
+check-passed-fresh.json
+d-split-census-output.txt
+d_split_census.py
+fresh-mutants.txt
+fresh_a2.py
+fresh_a2_proof.py
+fresh_probe.py
+fresh_score.py
+inputs
+launcher-proof-output.txt
+launcher_proof.py
+population-brief.md
+population.py
+proof-output.txt
+seen-before-10-13.json
+test_fresh.py
+
+exec
+/opt/homebrew/bin/zsh -lc "rg --files docs/research/2026-11-14-use-acceptance/unlisted-parts | rg -i 'd[-_]split|day[-_]read|due.*brief|d[-_]mark|precedence|diagnostic' ; rg -n '128.*binding|next annual filing.*2027|133.*128|D414.*precedence' docs/research/2026-11-14-use-acceptance --glob '*.md' | head -12" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d_split_census.py
+docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt
+docs/research/2026-11-14-use-acceptance/unlisted-parts/prompt-audit-a3-blind-whole.md:13:One further conflict: the system says a figure’s due day must follow publication, but also says a binding obligation’s due day is **at most 548 days** after the item. If the next annual filing falls later, both cannot be met. The **payload’s `fiscal_year_note`** also directs “use that day as the due date” for FY2027, which can conflict with a topic tracking a different period.
+docs/research/2026-11-14-use-acceptance/reflection-4/challenge-103.md:7:  - **128 are binding-obligation figures,** basis `expected_publication`, shown day 2027-04-01. Every reason says the day should be
+docs/research/2026-11-14-use-acceptance/reflection-4/challenge-103.md:8:    "the next annual filing, around February 2027". For example: "The obligation is due at the next annual filing, around February
+docs/research/2026-11-14-use-acceptance/reflection-4/challenge-102.md:55:- **The fix:** the D row of the reader brief gains one sentence that states D414's precedence, so the form has one ruler. Proposed
+
+codex
+**No-go on the diagnostic as specified.** D210 and D414 support using the code-set day for an already-taken obligation **when the question asks for a yearly figure and neither the topic nor article states the filing day**. The proposed sentence omits the yearly-figure condition, and the diagnostic’s expected answers are not yet supported for every control. [D210](</Users/lchingen/hivemind/docs/DECISIONS-log.md:2664>), [D414](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4568>)
+
+The narrower sentence should retain both conditions explicitly: *where the question asks for that year’s figure and neither source states the report day*. That preserves the brief’s existing rule for a non-annual figure and avoids treating `expected_publication` alone as proof that the basis or year is correct. [Reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:67>)
+
+The four FY2028 examples need individual D adjudication before they become fail controls. A wrong year label is a clear **Y** concern; D fails only if the date itself violates the D rule in the item, not automatically because the year label is wrong. Freeze each control’s full topic, article, choices and expected D reason, with an independent reader checking those expectations before the diagnostic. [Brief’s D and Y marks](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98>)
+
+I also cannot verify the reported **128/5** breakdown or the selected 24-item packet from the cited record: the saved census reports 133 failures but not their reasons, and the list is described as a session scratch file. Preserve the breakdown and keyed sample as reviewable evidence before reading. [Saved census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt>)
+
+The paired, blinded reading with both families and unchanged results retained is a useful next diagnostic once those points are fixed. A pass could support a dated clarification; it would not establish the readers’ overall error rate or prove the note caused all 128 marks.
+
+CONSENSUS: no, because the sentence needs D414’s yearly-figure boundary and the proposed fail controls and reason breakdown are not yet independently reviewable.
+tokens used
+2,915,146
+**No-go on the diagnostic as specified.** D210 and D414 support using the code-set day for an already-taken obligation **when the question asks for a yearly figure and neither the topic nor article states the filing day**. The proposed sentence omits the yearly-figure condition, and the diagnostic’s expected answers are not yet supported for every control. [D210](</Users/lchingen/hivemind/docs/DECISIONS-log.md:2664>), [D414](</Users/lchingen/hivemind/docs/DECISIONS-log.md:4568>)
+
+The narrower sentence should retain both conditions explicitly: *where the question asks for that year’s figure and neither source states the report day*. That preserves the brief’s existing rule for a non-annual figure and avoids treating `expected_publication` alone as proof that the basis or year is correct. [Reader brief](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:67>)
+
+The four FY2028 examples need individual D adjudication before they become fail controls. A wrong year label is a clear **Y** concern; D fails only if the date itself violates the D rule in the item, not automatically because the year label is wrong. Freeze each control’s full topic, article, choices and expected D reason, with an independent reader checking those expectations before the diagnostic. [Brief’s D and Y marks](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/ladder/stage-a-reader-brief.md:98>)
+
+I also cannot verify the reported **128/5** breakdown or the selected 24-item packet from the cited record: the saved census reports 133 failures but not their reasons, and the list is described as a session scratch file. Preserve the breakdown and keyed sample as reviewable evidence before reading. [Saved census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-a2/d-split-census-output.txt>)
+
+The paired, blinded reading with both families and unchanged results retained is a useful next diagnostic once those points are fixed. A pass could support a dated clarification; it would not establish the readers’ overall error rate or prove the note caused all 128 marks.
+
+CONSENSUS: no, because the sentence needs D414’s yearly-figure boundary and the proposed fail controls and reason breakdown are not yet independently reviewable.

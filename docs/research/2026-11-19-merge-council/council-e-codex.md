@@ -1,0 +1,9 @@
+**The evidence reached the judge on all four questions. The test missed two of its written pass conditions.** Both capex answers used total spending to answer a data-center spending question without labeling it as a proxy, so P2 missed. Both readers rejected the rebuilt control’s v47 answer, so V missed. Both readers supported all four hybrid answers. [Execution plan](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/EXECUTION-PLAN.md#L78)
+
+**What the judge actually saw.** The final capex requests contained **26 c8 items and 20 old items** for old-2 v5, and **27 c8 items and 16 old items** for old-3 v6. Both cited c8’s $720–745B estimate. Both were already in the $700–800B band on September 6, so c8’s contribution is visible and its effect on the selected band remains unmeasured. The two Anthropic answers cited 12 and seven c8 items respectively, with zero direct evidence from old history. [Stored requests](/Users/lchingen/hivemind/poc/data/merge-test-2026-11-19/judge-hybrid)
+
+**The v47 trace.** I confirmed that the September 16 evidence was identical. The theme context and previous-answer wording both differed. The reported `2, 1, 2` shows the rebuilt request can produce either answer. Three sends cannot establish the odds or rule out a reconstruction effect. Later requests carried forward the control’s Yes, so repeating the final request leaves that earlier difference in place.
+
+**Next step.** Correct `RESULT.md` at $0. Its headline could leave readers thinking the test passed, capex scope was preserved, and the control miss was explained away. Record the delivery success and both misses, then close this test. [Result](/Users/lchingen/hivemind/docs/research/2026-11-19-merge-council/RESULT.md)
+
+CONSENSUS: Delivery verified on all four questions, but the registered test did not pass.

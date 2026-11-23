@@ -1,0 +1,3 @@
+**CONSENSUS.** Make one sentence explicit before the first send: **“A practical lead requires every guardrail subgroup to meet its frozen minimum and pass under both split countings.”**
+
+For example, if there are too few yes/no answers to check their guardrail, report **No practical winner** and name the shortfall, unless a practical loss is independently established under the written rule. That closes the gap between “no breach observed” and “the check was exercised.” [D428](/Users/lchingen/hivemind/docs/DECISIONS-log.md:4761) · [Empty-denominator rule](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/ACCEPTANCE-DESIGN.md:41)

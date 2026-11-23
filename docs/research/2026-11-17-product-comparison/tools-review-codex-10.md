@@ -1,0 +1,7 @@
+Confirmed all four round-nine fixes at `547ea98e`.
+
+- **D400** skips exhausted sessions on later invocations. Any missing session makes the draw’s lines 1–5 `not measured`, and the collector’s partial results are discarded. [Sessions](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:391) · [Report](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d400_reader_lines.py:448)
+- **Step 2** includes `CONTENT_ONLY` in both key prompts. The design removes the leftover attribution sentence and matches the content-only key and two-reader eligibility adjudication. [Prompts](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/step2_lines.py:124) · [Key design](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:92) · [Eligibility wording](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/DESIGN-1.6.md:131)
+- **D431** uses the same packet fields for both systems and keeps `split_year` out of reader packets. A missing-session marker prevents another send. [Packet parity test](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/test_d431_reading.py:262) · [Terminal sessions](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/d431_reading.py:314)
+
+READY

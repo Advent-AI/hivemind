@@ -1,0 +1,1307 @@
+OpenAI Codex v0.169.1
+--------
+workdir: /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+model: gpt-6.2-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1ebfe-4f67-7c72-af87-7830055e0f09
+--------
+user
+# Council: one amendment to the census sample, before any hit or article is read (read-only, $0)
+
+**Done:** `replay-folders.json` is frozen (sha in `replay-folders.json.sha256`).
+- Two independent readers (a fresh Codex session, `classify-codex.md`, and a closed Claude reader) both chose reading (a), and both classed
+  every folder a read.
+- My own lean was (b) (`classify-own.md`). I concede: (b) cannot be decided before the hits, and the records show run-wide and unnamed trace
+  reading behind D198, D199, D201–D204, D206 and D358.
+
+**What (a) leaves, by date only** (no hit has been read):
+- v34-3m read up to 08-28;
+- the split-v3 trial and the v117 smoke read 08-29 and 08-30.
+- So the scored span can only be **08-31 to 09-20**: three weeks of 218, 229 and 273 articles (720), less whatever the census finds (D613
+  already found 10 in the week of 09-07 and 4 in the week of 09-14).
+
+**The amendment:**
+- Plan §1.3 item 1 samples 40 kept articles a week. Over three weeks that is about 120 articles. The fresh week's reading (40 articles)
+  gave 8 matters, 5 listed by both families. Across weeks many matters recur and merge, so N may fall below 20 by sampling alone.
+- **Proposed:** read **every** kept article in the scored span instead of 40 a week. Same brief (A1), same two families, same merge and
+  reconciliation, in batches of about 40 articles per session.
+- Decided now: no hit has been read, the census has not started, and no system has run.
+- The rest of the plan is unchanged. The systems still run from empty at 07-01, so the warm-up is now 07-01 to 08-30, and the cutoff stays
+  09-20.
+
+**Questions:**
+1. Is this amendment faithful to D665 and D667? D665: "scored on unread weeks from 07-20 up to 09-20, as far as the full exposure census
+   supports". Does it move any finish line after outputs are seen?
+2. Anything else (a) changes in the plan that must be fixed before the census starts?
+
+End with `AGREE`, or `DISAGREE: <the smallest change>`. Under about 300 words. Do not open anything under `/private/tmp` or
+`~/.codex/memories`.
+
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: `[features].multi_agent` is deprecated. It still controls the V1 fallback. `[agents].enabled = false` disables subagent tools even when the model selects a subagent version, unless `[features].multi_agent_v2` is enabled.
+warning: Loaded only 32768 of 54029 bytes from `/Users/lchingen/hivemind/AGENTS.md` in environment `local` under the 32768-byte project instruction budget. Trim your project instructions to fit the budget. If you need to keep them all, increase `project_doc_max_bytes`.
+codex
+I’ll check the all-article reading against D665 and D667, and trace what the shorter scored span changes in the run plan.
+exec
+/opt/homebrew/bin/zsh -lc "rg --files -g 'replay-folders.json*' -g 'classify-*.md' -g 'AGENTS.md' .; rg -n '"'^## D(665|666|667|668|613) '"' ../../../DECISIONS-log.md" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+./classify-own.md
+./classify-codex.md
+./replay-folders.json
+./replay-folders.json.sha256
+8197:## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+9398:## D665 · 2026-11-17 · Council (D664, Alex's "run your council to determine"): the six lines stop blocking release; one product comparison against the running pipeline decides readiness, its verdict written before the first send (council consensus)
+9443:## D666 · 2026-11-17 · Alex: write a run plan for the release comparison, monitor it carefully, no scope drift
+9460:## D667 · 2026-11-17 · Under D666 and D439 (council, run-plan rounds 1–10): the release comparison's run plan and the rules it takes for this run
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba RUN-PLAN-v9.md | sed -n '35,123p;158,194p;219,225p;243,271p;289,307p'; nl -ba D667-draft.md | sed -n '1,56p'" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison
+ succeeded in 0ms:
+    35	## 1. Stage 0 ($0): built, proved, frozen, then reviewed
+    36	
+    37	### 1.1 Versions manifest
+    38	
+    39	`manifest.json` holds the sha256 of:
+    40	- every file either system runs, including poc-v118's configuration and the frozen ladder request;
+    41	- the filtered items copy;
+    42	- every instrument below.
+    43	
+    44	The launchers refuse a file that differs.
+    45	
+    46	### 1.2 Exposure census, exclusions, one input
+    47	
+    48	1. **The population.** The clean selection rule's articles from 07-20 to 09-20: 1,619 articles (by week: 185, 164, 62, 114, 109, 265, 218, 229,
+    49	   273). The warm-up from 07-01 to 07-19 has 357 articles.
+    50	2. **What counts as a read** (the closed set, frozen before any hit is read). The article's id or its text sha appears in any of:
+    51	   - a run's trace, archive or ledger (either system);
+    52	   - a probe;
+    53	   - a gold or reference;
+    54	   - a reader packet, answer or tally;
+    55	   - a design, result or log document;
+    56	   - a report;
+    57	   - a test fixture, mock or UI-check data file.
+    58	
+    59	   **Not reads:**
+    60	   - **documented corpus storage, by content:**
+    61	     - `corpus-builds.json`, frozen before any hit is read, lists the documented corpus builds: the current source, `items-window.sqlite`,
+    62	       `items-window-tags2-2026-10-24.sqlite`, the page store, and any other build the decision log or `data-manifest.md` records as a corpus.
+    63	       Each comes with its record and its set of input ids.
+    64	     - A table is exempt only when it is a **verified raw copy** of a listed build: the same rows, by `input_id` and `content_sha256`. That
+    65	       covers renamed copies.
+    66	     - Any other such table (a probe's or fixture's selection) is searched like everything else.
+    67	     - The exemption covers stored rows only. Whatever a probe, run or fixture actually used, even from a whole-corpus copy, is a read
+    68	       through its trace, packet or fixture text.
+    69	     - Every other table in the same file, and every other file, is searched;
+    70	   - the search index built over the whole corpus;
+    71	   - this comparison's own files.
+    72	
+    73	   Git-ignored files are searched.
+    74	3. **Where it is searched:**
+    75	   - the whole of this checkout, and of every worktree `git worktree list` shows, except `.git` (`tests/`, `poc/mock` and `poc/ui`
+    76	     included). The exempt rows are handled as above;
+    77	   - the archived runs in `docs/research/2026-10-25-english/data-manifest.md`.
+    78	
+    79	   Search goes inside binary files (`rg -a`, and SQL over every SQLite table for the ids). Its controls:
+    80	   - a known hit: one of D613's 10 Step 1 reads in the week of 09-07;
+    81	   - a known miss: one id written only into a scratch control file outside the searched roots.
+    82	4. **Any read excludes the article, with one exception by actual use,** classified per folder and frozen before any hit is read:
+    83	   - **The exception:** an old-system replay run folder and its byte copies, **only when** its decision record or run note shows it ran the
+    84	     then-production configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a
+    85	     case behind a change.
+    86	   - **Development replays are reads:** arms, probes, configuration trials and week tests.
+    87	   - **Why:** a replay of the product as it ran tunes neither system. D665's own council used the sealed run as the old system's output.
+    88	   - **Still a read:** any research artifact built from such a run (for example, the 2026-10-28 quality review).
+    89	   - **Recorded:** the per-folder classification (`replay-folders.json`, with each folder's record) and the council decision on it, both before
+    90	     the hits are read.
+    91	5. **One input.**
+    92	   - A filtered copy of the items database without the excluded articles is made once and hashed.
+    93	   - **Code change A:** `run_fresh.py --items` hands it to both children (clean `--source`; production `--testdb`).
+    94	   - **Code change B:** `fresh_week_inputs.py` takes the dates and the items path as arguments.
+    95	   - **Proof through the real entry points:** both launchers run dry with fake answers over the whole span on the copy. Each records the
+    96	     ordered ids it actually processes and their text sha. The two must be equal in order. Controls:
+    97	     - an excluded article appears in neither;
+    98	     - a kept article appears in both.
+    99	
+   100	### 1.3 Blind matter census (articles only; frozen before any send)
+   101	
+   102	1. **Sample.** For each scored week, 40 kept articles drawn by seed 20261117, or all of them when a week has fewer. Read with week reading A1's
+   103	   brief (`../2026-11-14-use-acceptance/week/brief-A1.md`), unchanged except for the file names.
+   104	2. **Readers.** Codex (memories off, closed, D661) and Claude (closed command line), apart. Nine weeks × 2 families, in fresh sessions.
+   105	3. **Merge.** One matter is one bet. Two entries are one matter only when the same outcome settles both and their answers cannot move apart.
+   106	   Another year of a figure is another matter.
+   107	   - Each family merges its own nine lists in one session.
+   108	   - Two reconcilers, one per family, map every matter across the two families' lists (`same` or `none`). A matter is listed by both when
+   109	     both reconcilers say `same`.
+   110	   - A one-family matter goes to two third readers (one per family) with its articles. It joins the list when both say it is worth a question.
+   111	4. **The company-figure flag.** Each family marks every listed matter `company figure` or not, using D505's own list: 营收、毛利率的指引、市场预期、实际业绩.
+   112	   The flag is set when both say yes; a split is listed.
+   113	5. **N** is every listed matter (D665). The flagged subgroup is printed beside the verdict with its own a, b and N, because by D505 the new
+   114	   system does not open such questions. Alex sees how much of any gap that rule makes. (D431: the comparison is of the products as
+   115	   configured.)
+   116	6. **Frozen:** `matters.json`. Each entry holds the matter, an example question, its source articles, its first source day and its flag.
+   117	7. **Too small at once:** if N < 20, the verdict is "too small" and goes to Alex before any paid send.
+   118	
+   119	### 1.4 The verdict rule (`verdict-rule.json`, hashed; `score_comparison.py` with a test and a mutant per rule)
+   120	
+   121	1. **The cutoff:** one for every matter, the end of the invocation's last day (09-20 in the full run). Libraries are read as they stand then.
+   122	   - Closed questions still count.
+   123	   - Timeliness is not scored. The days from first source to opening are printed beside.
+   158	8. **The guardrails** (D428's measure, which D665 turns into these guardrails):
+   159	   - **The sample:** the random guardrail sample only, 35 questions per system-draw by seed 20261117, or all of them when a library holds
+   160	     fewer. Covering cards are not in these shares. The three draws are pooled per system.
+   161	   - **The shares:**
+   162	     - the share of **decided** figure-question answers (supported or unsupported) that are unsupported;
+   163	     - the same for yes/no questions;
+   164	     - the share of decided worth marks that are trivia or duplicate.
+   165	   - **Reported beside, not in the shares:** insufficient and no answer, with the number of splits and how each counting resolved them.
+   166	   - **The bar:** the new system's share may not be more than 10 points above the old system's.
+   167	   - **Exercised:** each subgroup needs at least 10 cards per system decided without a split (item 7), or it is "not exercised".
+   168	9. **The controls,** outside every product count:
+   169	   - 6 planted wrong answers (a rung moved, 3 per system). Each needs an explicit unsupported or insufficient mark, or the reading is invalid.
+   170	   - 4 supported controls, confirmed first by a separate reader.
+   171	   - 3 hidden repeats.
+   172	10. **No release verdict without six complete draws.** A draw that cannot finish (stopped after D449's one redo, or by its guard) gives no
+   173	    release verdict. What finished goes to Alex as a diagnostic, with the cause.
+   174	    - **D431's "same day" for a run longer than one day:** a new-system draw takes about 20 h, so one calendar day cannot hold it.
+   175	      - The six counted draws are launched within one hour of each other and run concurrently.
+   176	      - A D449 redo inside a draw counts as part of that draw.
+   177	      - Every counted send falls within 72 h of the first launch.
+   178	      - A breach makes the result a diagnostic.
+   179	      - Recorded as decision D667 before any paid send, replacing D431's one-calendar-day reading for this run only.
+   180	    - No replacement draw counts toward the verdict. The reviewers read "same day" differently (Codex: the send day; the Claude reviewer:
+   181	      the window), so the council took the cheaper, reversible course (D439): a later replacement would be a diagnostic only.
+   182	11. **The verdicts, tested in this order:**
+   183	    1. **Invalid:** a plant without an explicit rejection, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked
+   184	       the same.
+   185	    2. **Too small:** N < 20, or fewer than 30 distinct questions in any system-draw.
+   186	    3. **Practical lead:** a − b ≥ max(3, ⌈0.15·N⌉) and a ≥ 2b under both countings, with every guardrail exercised and passing under both.
+   187	    4. **Practical loss:** b − a ≥ max(3, ⌈0.15·N⌉) and b ≥ 2a under both countings (needing no guardrail exercised), or a breach in an
+   188	       exercised guardrail under both.
+   189	    5. **No practical winner:** everything else.
+   190	12. **Printed beside, not deciding:**
+   191	    - D428's limits next to the guardrails;
+   192	    - a sign test and an interval, labelled illustrative;
+   193	    - the company-figure subgroup;
+   194	    - the floors (§1.6).
+   219	| What | Status | Tool and input |
+   220	|---|---|---|
+   221	| D400 accounting, all three passes (`stage_a/accounting.py`) | **Hard:** figure ranges meet end to end; the favourable end is stable; the due day agrees across all three sends for ≥ 90% of eligible questions. A failure is a release blocker reported with the verdict. Lines 1–5: reported | The new system's three draws. The reader lines use Stage A's two-family reading (`clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py` and its tally, D400) on every draw |
+   222	| Step 2's three lines (D427; PRD §5) | **Hard**, like D400's code-decided parts: a failed line is a release blocker reported with the verdict. Pass: earlier version found ≥ 90%; clearly wrong merges ≤ 2%; no fewer later details than no merging. Each decided on its point estimate, intervals printed. A line with fewer eligible cases than its frozen sample is **not measured** and cannot clear release | The Step 2 log §12 method on draw 1 of the new system: recall over 100 records with a labelled earlier version (stratified random); blind review of 200 random merges; the no-merge dossier comparison on 30 groups. The sample sizes are a recorded design choice |
+   223	| D431's frozen-reference reading, 07-01 to 07-14 | Printed beside | The D395 method (`clean-arch/unseeded-2026-11-10/MATCHING-v2.md`: the seven graded questions against the frozen judgement gold) on **both** systems' draws as they stood at 07-14 |
+   224	| Proposed absolute floors | Printed beside | Coverage ≥ 80%, trivia ≤ 20% and supported ≥ 90% come from this comparison's cards. Wrong citations ≤ 5% and zero answer-changing omissions need source-first readings this plan does not run: printed as **not measured** (agreed in the council before the send) |
+   225	
+   243	## 2. Stage 1: the slice
+   244	
+   245	- **What runs:** one draw of each system, 07-01 to 07-07 (about 98 articles), each on its own ledger.
+   246	- **Passes when:**
+   247	  - both draws complete;
+   248	  - the new system's Step 1 averages ≤ 51 s and ≤ $0.0153 an article (1.5 × the measured 34 s and $0.0102);
+   249	  - every answer-choice request was checked at the transport, and every archive shows astra;
+   250	  - production's days are complete.
+   251	- **On a failure:** fix the launcher only, then rerun. Anything else goes to the council, and then to Alex.
+   252	
+   253	## 3. Stage 2: the full run
+   254	
+   255	- **What runs:** three draws of each system, 07-01 to 09-20, detached, each with a log and a pid.
+   256	- **One ledger per draw** (six), so a stop ends only that draw.
+   257	  - **Absolute guards** (stops, not a budget): $65 per new-system draw, about 1.6 × the upper estimate; $25 per old-system draw, about
+   258	    1.7 ×. That is $270 in all.
+   259	  - This replaces, for this run only, D449's whole-run stop across draws and D666's single $250 ledger. It is recorded as a council decision
+   260	    before the send.
+   261	- **D449 within each draw, unchanged:**
+   262	  - a redo is launched only on an eligible failure shown in the component's output, with its reason written;
+   263	  - once per component;
+   264	  - a second stop ends that draw (§1.4 item 10).
+   265	- **The measured risk:**
+   266	  - the 4 stored Step 1 failures (of 2,549 articles) were dropped connections from before the network retry;
+   267	  - 0 failures in 624 articles since;
+   268	  - 9 of 9 format retries recovered.
+   269	- **A stopped ledger** refuses later launches. A relaunch would be a diagnostic only (§1.4 item 10).
+   270	
+   271	## 4. Stage 3: reading and verdict
+   289	
+   290	## 5. Estimates (measured rates; checked at the slice)
+   291	
+   292	**New system, per draw:**
+   293	- Step 1: 1,976 articles at 26 to 34 s (measured) is 14 to 19 h, at $0.0089 to $0.0102 an article: $18 to $20.
+   294	- Step 2: about $3.
+   295	- The answer-choice step: about 55 theses × 3 passes × $0.037 to $0.050, about $6 to $8.
+   296	- The judge: about $5 to $10 (the least certain).
+   297	- **About $32 to $41 and about 20 h a draw.**
+   298	
+   299	**Old system, per draw:** poc-v118's own $0.53 to $0.66 for 243 articles, scaled up, is about $5. But cost per article rises as the library
+   300	grows: the sealed v34 run went from $0.0026 to $0.0077. So about $5 to $15, over 2 to 4 h.
+   301	
+   302	**In all:** about $110 to $170 and about 20 h of wall clock.
+   303	
+   304	**The reading:** the census takes a few hours. About 330 to 450 cards, marked by the council in about 6 to 10 h. The §1.6 readings come after
+   305	the verdict reading.
+   306	
+   307	## 6. Monitoring
+     1	## D667 · 2026-11-17 · Under D666 and D439 (council, run-plan rounds 1–10): the release comparison's run plan and the rules it takes for this run
+     2	
+     3	- **Council:** `docs/research/2026-11-17-product-comparison/`: `RUN-PLAN-v1.md` … `RUN-PLAN-v9.md`, `review-codex-1..10.md` (thread
+     4	  01a1ebfe-4f67-7c72-af87-7830055e0f09, memories off), a fresh Claude reviewer each round (READY at v7), and `ROUND-LOG.md` (what each round
+     5	  taught).
+     6	- **Decided**, for this comparison only; D665's rule is unchanged:
+     7	  1. **The plan** is `RUN-PLAN.md` v9, frozen as `RUN-PLAN-v9.md`. Build-level checks run at the stage-0 freeze review
+     8	     (`freeze-review-notes.md`), which gates the first paid send.
+     9	  2. **Exposure.**
+    10	     - Plan §1.2 governs the whole census: the closed set of read kinds, the search roots and every exclusion. Any read excludes an article.
+    11	     - **Not reads,** and only these:
+    12	       - the search index built over the whole corpus;
+    13	       - this comparison's own files (its census, reader packets and outputs are not prior exposure);
+    14	       - **An old-system replay folder and its byte copies.** Only when its decision record or run note shows it ran the then-production
+    15	         configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a case
+    16	         behind a change. Development replays (arms, probes, configuration trials, week tests) are reads, and so is any research artifact
+    17	         built from an exempt run. Classified per folder in `replay-folders.json` before any hit is read.
+    18	       - **Stored rows that are verified raw copies of a corpus build** listed in `corpus-builds.json` (the same rows by `input_id` and
+    19	         `content_sha256`). Whatever a probe, run or fixture actually used is still a read through its trace, packet or fixture text.
+    20	     - D613's "unread" was a Step 1 census; this is the full census D665 asks for.
+    21	  3. **The company's own figures** (D505's list) count in N, as D665 says. Their subgroup is flagged blind at the census and printed beside
+    22	     the verdict. The new system does not open such questions by D505, and Alex sees how much of any gap that makes (D431 compares the
+    23	     products as configured).
+    24	  4. **One ledger per draw.**
+    25	     - Absolute guards: $65 per new-system draw and $25 per old-system draw, $270 in all. They are stops, not a budget (D664).
+    26	     - For this run, this replaces D449's whole-run stop across draws and D666's single $250 ledger. D449's one redo within a draw is
+    27	       unchanged.
+    28	  5. **D431's "same day," for a run longer than one day.** A new-system draw takes about 20 h, so one calendar day cannot hold it.
+    29	     - The six counted draws are launched within one hour of each other and run concurrently.
+    30	     - A redo within a draw counts as part of that draw.
+    31	     - Every counted send falls within 72 h of the first launch.
+    32	     - A breach makes the result a diagnostic.
+    33	     - This replaces, for this run only, the one-calendar-day reading in `WIRING-DESIGN.md`.
+    34	  6. **No replacement draw counts.** A draw that cannot finish gives no release verdict; what finished goes to Alex as a diagnostic. The
+    35	     reviewers read "same day" differently, so the council took the cheaper, reversible course (D439).
+    36	  7. **The credit and scoring rules** are plan §1.4:
+    37	     - one cutoff, the span's last day;
+    38	     - "covers" in A2's form, blind;
+    39	     - the earlier-opened question of a same-bet pair is the original;
+    40	     - distinct bets for the 30-question minimum;
+    41	     - D428's decided-only guardrail shares;
+    42	     - splits resolved per counting to a mark the readers gave;
+    43	     - an unexercised subgroup blocks only a lead;
+    44	     - the verdicts tested in order: invalid, too small, lead, loss, no winner.
+    45	  8. **Step 2's three lines** (D427) are hard checks, each decided on its point estimate over frozen samples: 100 records, 200 merges, 30
+    46	     groups. A line with too few cases is not measured and cannot clear release.
+    47	  9. **Two proposed floors** (wrong citations, answer-changing omissions) are printed as not measured. Measuring them needs source-first
+    48	     readings outside this comparison.
+    49	- **Out of scope during the run** (to `FINDINGS.md`): D662's holds, D658, and any fix, except a launcher-only repair after a failed slice,
+    50	  followed by a slice rerun (plan §2).
+    51	- **Back to Alex:**
+    52	  - the verdict, or a diagnostic;
+    53	  - N < 20 at the census;
+    54	  - a stop that is not a wiring fault;
+    55	  - a guard reached;
+    56	  - a failed hard check;
+
+exec
+/opt/homebrew/bin/zsh -lc "wc -l docs/prd/10-filing-phase.md; rg -n '"'^## |''^## D(198|199|201|202|203|204|206|358|613|665|667) '"' docs/prd/10-filing-phase.md docs/DECISIONS-log.md | rg '10-filing|D(198|199|201|202|203|204|206|358|613|665|667) '" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     201 docs/prd/10-filing-phase.md
+docs/prd/10-filing-phase.md:12:## 0. Checklist before every start (Alex: "每次开始前都需要revisit")
+docs/prd/10-filing-phase.md:25:## 1. Goal (end to end)
+docs/prd/10-filing-phase.md:31:## 2. The core blocker (proven)
+docs/prd/10-filing-phase.md:57:## 3. Ruled out or secondary (outside this phase's scope, each recorded separately)
+docs/prd/10-filing-phase.md:70:## 4. Constraints (what must not move, and why)
+docs/prd/10-filing-phase.md:93:## 5. What to do
+docs/prd/10-filing-phase.md:120:## 6. How to measure (the ruler does not move; the method does not change again)
+docs/prd/10-filing-phase.md:168:## 7. Process (no drift)
+docs/prd/10-filing-phase.md:179:## 8. Steps and where we are
+docs/prd/10-filing-phase.md:193:## 9. Alex's own words on this matter (in time order)
+docs/DECISIONS-log.md:2559:## D198 · 2026-10-27 · A judgement reads the evidence in view, not everything in force
+docs/DECISIONS-log.md:2568:## D199 · 2026-10-27 · One extraction call stays; its gate rule becomes decidable and the empty-answer exit goes (v16, poc-v32)
+docs/DECISIONS-log.md:2585:## D201 · 2026-10-27 · Steps 3 and 4: Jev gives opinions only, the library keeps sources and research arguments, a new question needs an independent investment judgement; gold first, small scope, root cause before any change
+docs/DECISIONS-log.md:2594:## D202 · 2026-10-27 · The writer retires nothing on a matching label: a replacement is recorded as a revision and both pieces stay in force
+docs/DECISIONS-log.md:2602:## D203 · 2026-10-28 · A statement day is an ISO day or unknown; the writer never fills it with the publication day
+docs/DECISIONS-log.md:2610:## D204 · 2026-10-28 · A repeat is stored as its own source record; the merge becomes a labelled relation
+docs/DECISIONS-log.md:2625:## D206 · 2026-10-28 · Every open theme thesis is shown to every item's extraction (extraction v19, `poc-v35`)
+docs/DECISIONS-log.md:3783:## D358 · 2026-10-28 (carried 2026-11-04) · The three-month run stops at 2026-08-28 and is sealed; evidence bloat is the next problem to solve
+docs/DECISIONS-log.md:8197:## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+docs/DECISIONS-log.md:9398:## D665 · 2026-11-17 · Council (D664, Alex's "run your council to determine"): the six lines stop blocking release; one product comparison against the running pipeline decides readiness, its verdict written before the first send (council consensus)
+docs/DECISIONS-log.md:9460:## D667 · 2026-11-17 · Under D666 and D439 (council, run-plan rounds 1–10): the release comparison's run plan and the rules it takes for this run
+
+exec
+/opt/homebrew/bin/zsh -lc 'nl -ba replay-folders.json; shasum -a 256 -c replay-folders.json.sha256; nl -ba classify-codex.md; nl -ba classify-own.md' in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+     1	{
+     2	 "frozen": "2026-11-17, before any article hit was read",
+     3	 "rule": "D667 item 2; reading (a), folder level",
+     4	 "readers": [
+     5	  "classify-codex.md (fresh Codex, memories off)",
+     6	  "Claude reader (closed, read-only; report quoted in ROUND-LOG.md stage 0)"
+     7	 ],
+     8	 "own": "classify-own.md leaned (b); conceded: (b) cannot be decided before hits, and the records show run-wide and unnamed trace reading behind D198, D199, D201-D204, D206, D358",
+     9	 "folders": [
+    10	  {
+    11	   "folder": "poc/data/english-2026-10-25",
+    12	   "class": "read",
+    13	   "reason": "Staged poc-v17 English build, each stage read and corrected before the next",
+    14	   "record": "D164; build-log.md"
+    15	  },
+    16	  {
+    17	   "folder": "poc/data/english-groups*, english-jev*, english-v23-llm, english-v25-admission*, english-v26-collision-r4, english-v29-theme-r5",
+    18	   "class": "read",
+    19	   "reason": "Grouping, Jev, admission, collision and theme arms",
+    20	   "record": "D165-D169, D184-D196"
+    21	  },
+    22	  {
+    23	   "folder": "poc/data/english-v23-jev-2026-10-25",
+    24	   "class": "read",
+    25	   "reason": "Served UI default before 1f2835b, but a D167 arm on which D168's corrections were found",
+    26	   "record": "D167-D169; commit 1f2835b"
+    27	  },
+    28	  {
+    29	   "folder": "poc/data/pinned-shared-2026-10-27/arm-v29-shared",
+    30	   "class": "read",
+    31	   "reason": "D197 pinned-extraction validation arm",
+    32	   "record": "D197"
+    33	  },
+    34	  {
+    35	   "folder": "poc/data/old-2026-10-23-run1, run2, run3b, run3c",
+    36	   "class": "read",
+    37	   "reason": "First runs and stopped restarts (run3c's bootstrap and day-0 snapshot differ from the sealed run's)",
+    38	   "record": "CURRENT_STATE at 7033c87; pipeline-plan history"
+    39	  },
+    40	  {
+    41	   "folder": "poc/data/replay.log (root)",
+    42	   "class": "read",
+    43	   "reason": "Not a byte copy of run3: its tail is the poc-v14 week and poc-v15 test replays",
+    44	   "record": "D151; byte comparison"
+    45	  },
+    46	  {
+    47	   "folder": "poc/data/sealed-2026-10-24-run3-through-0728, -through-0815",
+    48	   "class": "read",
+    49	   "reason": "Product run, sealed, but D151 adopted poc-v14 from cases verified on it",
+    50	   "record": "D63, D104, D151"
+    51	  },
+    52	  {
+    53	   "folder": "poc/data/english-v29-nvda-3m-2026-10-27 (+ snapshots, served via service-3m-2026-10-27)",
+    54	   "class": "read",
+    55	   "reason": "Served, but its traces drove D198, D199 (a quoted national-lab case) and D201-D204 (gold built from its ledger)",
+    56	   "record": "D198, D199, D201-D204"
+    57	  },
+    58	  {
+    59	   "folder": "poc/data/english-v34-nvda-3m-2026-10-28 + sealed-2026-10-28-v34-nvda-3m-through-0828 + served-2026-10-28-v34-nvda-3m-through-0828",
+    60	   "class": "read",
+    61	   "reason": "Sealed and served, but its traces drove D205, D206 (26-article gold from its snapshot), D207 and D358's writer fix",
+    62	   "record": "D205-D207, D358"
+    63	  },
+    64	  {
+    65	   "folder": "hivemind-no-preseed-evidence-review/poc/data/split-v3-prod-0829-0830*",
+    66	   "class": "read",
+    67	   "reason": "Split-path benchmark arm, not adopted",
+    68	   "record": "that worktree's CURRENT_STATE"
+    69	  },
+    70	  {
+    71	   "folder": "hivemind-no-preseed-evidence-review/poc/data/v117-one-day-smoke-2026-11-05",
+    72	   "class": "read",
+    73	   "reason": "One-day smoke test",
+    74	   "record": "that worktree's CURRENT_STATE"
+    75	  },
+    76	  {
+    77	   "folder": "docs/research/2026-10-28-quality-review/",
+    78	   "class": "read",
+    79	   "reason": "Research built from the v34 run",
+    80	   "record": "D358; plan §1.2 item 4"
+    81	  }
+    82	 ],
+    83	 "exempt": []
+    84	}
+replay-folders.json: OK
+     1	**Use (a), the folder-level reading. All listed replay families are reads.** Both three-month runs supplied product libraries and also drove changes. For example, D199 used a missed story about a national lab buying servers to explain why v29 dropped whole articles and to change what the system kept. [D199](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2568) · [D667](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9460) · [Run plan §1.2](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:82)
+     2	
+     3	- **(a), folder level.** Within the scored span, exclude articles v29 read from 07-20 through 08-24 and articles v34 read from 07-20 through 08-28. Earlier-corpus runs can add exclusions through 08-15. The split tests and smoke test can add exclusions on 08-29 and 08-30.
+     4	- **(b), article level.** Exempting the two production replays themselves would keep 07-20 through 08-28 eligible, less articles used in decisions, derived research, or other reads. The 08-29 and 08-30 tests still count. Under either reading, 08-31 through 09-20 is beyond these folders’ reach, and the full census determines eligibility.
+     5	
+     6	I used decision records and run notes only, with no article-ID search and no paid calls.
+     7	
+     8	```jsonl
+     9	{"folder":"poc/data/english-2026-10-25","class":"read","reason":"Staged English rebuild with review before each next stage. D169 still records the service on the older sealed library.","record":"D164, lines 2313–2315; D169, line 2349"}
+    10	{"folder":"english-groups*, english-jev*, english-v23-jev, english-v23-llm","class":"read","reason":"Grouping iterations and matching comparisons, including the Jev and generative matching trials.","record":"English data manifest, lines 20–27; D165–D169"}
+    11	{"folder":"english-v25-admission*, english-v26-collision-r4, english-v29-theme-r5","class":"read","reason":"Tests of which questions open, whether questions merge, and how themes affect judgements. Default adoption followed measurement.","record":"D184, lines 2468–2470; D190, lines 2498–2501; D195–D196, lines 2544–2549"}
+    12	{"folder":"pinned-shared-2026-10-27/arm-v29-shared","class":"read","reason":"Validation of a new matching rule using fixed extraction answers.","record":"D197, line 2556"}
+    13	{"folder":"old-2026-10-23-run1, run2, run3b, run3c","class":"read","reason":"Superseded build attempts. The run notes tie the third-run restarts to fixes for rejected source material.","record":"docs/poc/pipeline-plan-history-2026-10-25.zh.md, lines 131, 170–180"}
+    14	{"folder":"poc/data/replay.log and sealed-2026-10-24-run3-through-{0728,0815}","class":"read","reason":"D63 sealed and continued the library after a cost review. D151 then used stored article cases and July 27 and August judgement examples to change prompts.","record":"D63, lines 1687–1689; D151, lines 2191–2192; pipeline plan history, lines 42–46 and 184–188"}
+    15	{"folder":"hivemind-no-preseed-evidence-review/poc/data/split-v3-prod-0829-0830*","class":"read","reason":"Two-day configuration trial against an earlier split run through the production entry point.","record":"Both folders’ predictions.md, lines 3–9"}
+    16	{"folder":"hivemind-no-preseed-evidence-review/poc/data/v117-one-day-smoke-2026-11-05","class":"read","reason":"One-day end-to-end smoke test.","record":"docs/CURRENT_STATE.md, line 114"}
+    17	{"folder":"english-v29-nvda-3m-2026-10-27 and snapshots","class":"read","reason":"The API served its 0736 snapshot. D198 changed judging using run results, and D199 used a missed article to change extraction.","record":"service-3m-2026-10-27/api.log, line 4; D466, lines 5243–5245; D198–D199"}
+    18	{"folder":"english-v34-nvda-3m-2026-10-28, sealed and served copies","class":"read","reason":"D358 confirms production use. Run cases drove the output-cap increase and library fixes. The served ledger also has rows removed from the seal.","record":"D205, lines 2620–2622; D358, lines 3792–3796"}
+    19	{"folder":"docs/research/2026-10-28-quality-review/","class":"read","reason":"Derived research counts under either reading.","record":"D358, line 3793; run plan §1.2 item 4"}
+    20	```
+    21	
+    22	**Choice (a).** D667 makes the absence of a cited tuning case a condition for exempting the whole folder. Reading (b) would preserve more dates, but an article can shape a change through a sample or an aggregate finding without being named. The folder-level reading gives D665’s claim of unread weeks the firmer basis.     1	# My own classification, written before reading either reader's answer
+     2	
+     3	**Leaning: reading (b), article level.** My confidence is moderate, and the council decides.
+     4	
+     5	## Why (b)
+     6	
+     7	- **The purpose.** D667 states it: "a replay of the product as it ran tunes neither system". Exposure is a property of an article: was its
+     8	  content used to shape either system or the readers?
+     9	- **v29-3m.** D199 rewrote the extraction rule from an aggregate count over the run: 493 empty answers in 1,553 calls, 65% of the first
+    10	  week's items. That is a census of a behaviour, not the content of the scored-week articles.
+    11	- **v34-3m.**
+    12	  - D205 doubled an output cap after one judgement hit it. That is generic.
+    13	  - D206's writer change came from a judgement's duplicate id.
+    14	  - The served-copy edit removed v68's rows from data, not from either system.
+    15	- **Later freezes.** The old extraction prompt was later rebuilt and frozen (v74i) on golden-v5, which covers 07-01 to 07-14. The new system
+    16	  never read these runs as input.
+    17	
+    18	## The risk Codex named
+    19	
+    20	An article can inform tuning without being named. Under (b), that risk is held by three things:
+    21	- every research artifact built from these runs is a read, including the 2026-10-28 quality review and any trace census document that
+    22	  quotes articles;
+    23	- every decision's quoted passages count;
+    24	- the full census reads documents, not only run folders.
+    25	
+    26	## What each reading leaves, by date only
+    27	
+    28	| | (a) Folder level | (b) Article level |
+    29	|---|---|---|
+    30	| v29-3m and v34-3m | reads | exempt |
+    31	| First possible scored day | about 08-29 (v34 ran to 08-28) | 07-20 |
+    32	| Scored weeks | about 3: 08-31, 09-07 and 09-14 (the split-v3 trial also read 08-29 and 08-30) | 07-20 to 09-20 |
+    33	| Articles left | about 700 | about 1,619, less the dev arms' `items-window` reads (about 527 by the earlier reviewer's count, if all are reads), the research reads, and D613's 14 |
+    34	| N | at 40 articles a week, about 120 articles are read, and N may fall below 20 | — |
+    35	
+    36	## Classification
+    37	
+    38	- **Every configuration trial, arm, week test and day smoke** listed in the brief: read.
+    39	- **The run3 family:** production use at the time (D63: sealed, window to 08-15). Its in-span reads are all in `items-window`, which the dev
+    40	  arms also read, so the class does not change the outcome. Exempt.
+    41	- **v29-3m:** exempt under (b), read under (a).
+    42	- **v34-3m, sealed and served:** exempt under (b), read under (a).
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/prd/10-filing-phase.md | sed -n '1,201p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+     1	# Core PRD for the next phase: filing must recognise indirect relations the way an analyst does
+     2	
+     3	> Status: in progress (opened 2026-11-04). Alex: "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做".
+     4	> This page is the single source for this phase. In a conflict: Alex's words → `docs/DECISIONS.md` → this page → the other design documents. This page's
+     5	> conclusions, evidence, constraints, measuring method and process are not rewritten to follow test results;
+     6	> test results go into `docs/research/2026-11-04-filing-end-to-end/log.md`, and changing this page first needs Alex's word.
+     7	> Amended 2026-11-04 (Alex replied "go" to the proposed amendment; D360): §5.2 drops "also file under the other party's question" and puts two
+     8	> sentences in its place, one on choosing and one on splitting; §6's decision rule is rewritten. How it came about:
+     9	> `docs/research/2026-11-04-filing-end-to-end/prd-amendment-proposal.md` and `log.md` rows 11–16.
+    10	> 2026-11-05 (D368): translated into English on Alex's word ("不，用英文吧"); §4 corrected to name the frozen standard's version 5 and §5 given a status line, on his delegation ("你要来帮我看到底做不做").
+    11	
+    12	## 0. Checklist before every start (Alex: "每次开始前都需要revisit")
+    13	
+    14	Before starting any step, finish these in order; if one cannot be done, do not start:
+    15	
+    16	1. Read §§1–8 of this page in full; read the last three rows of `log.md`, and confirm where the previous step stopped and why.
+    17	2. Check against §3, "not in scope": what this step does is not in that table. If it is in the table, stop and take it to Alex.
+    18	3. Check against §4, "constraints": this step changes nothing frozen; a change to the frozen extraction prompt is the one place §5 names, and Alex's
+    19	   word for it is already given.
+    20	4. If this step costs money: its predictions and stop conditions are written down and frozen as §7 says (with their sha256 recorded beside them); the
+    21	   requests are rebuilt byte for byte as §6 says; the control is re-sent the same day.
+    22	5. What goes to Alex: one conclusion, one recommendation, one test, after §7's rounds of review; no menu of options; in plain words (the opening of
+    23	   AGENTS, "Explain and answer as to a sixteen-year-old").
+    24	
+    25	## 1. Goal (end to end)
+    26	
+    27	Each question's judgement must receive the facts that can change its answer; facts that no question receives, those that bear on no question, must
+    28	not be piled into some one question. What is measured is the final judgement (the frozen judgement ruler, reader B, at the window end 2026-07-14), not
+    29	any one step's own score.
+    30	
+    31	## 2. The core blocker (proven)
+    32	
+    33	**The system uses a fact for a question only when the fact "states exactly this question's own figure". An analyst also reasons onward from a fact: the other party's figure in a deal, price and volume for a product's revenue, a product's variants for its launch, and so on. The filing step cannot do this; the judging step reasons onward once it has the facts.**
+    34	
+    35	This one blocker has two faces (described earlier as "two problems"):
+    36	
+    37	- **The parking lot.** Filing does not recognise facts that bear on a question indirectly, so no question takes them; yet to be kept, a fact must
+    38	  first be filed (D209, D264). So D273 added the fallback sentence, which parks them in NVIDIA's total-revenue question. Of the reports under the
+    39	  total-revenue question, in the part the gold read, 32–39% are ones the standard does not keep, 31–44% are kept but used by none of the 22 questions,
+    40	  and only 7–10% are what the gold actually uses to judge total revenue (three draws); 24–44% of the total-revenue question's judgement citations are
+    41	  news about other companies or the whole market (Intel graphics-card retail prices, a gas-fired power plant in Taiwan).
+    42	- **Narrow questions starve.** Questions that only indirect facts can answer do not receive them: the custom-chip question received none of Broadcom's
+    43	  figures in any of the three draws, and judged "below $40 billion" in all three; the operating-margin and NVIDIA capital-spending questions received
+    44	  nothing at all and were never judged.
+    45	
+    46	**Evidence:**
+    47	
+    48	| Evidence | Content | Source |
+    49	|---|---|---|
+    50	| Filing recognises only "its own figure" | The model says "Broadcom's AI chip revenue is not cloud providers' spending on custom chips" and "Google Cloud's backlog is not capital spending"; on a neutral refiling (no question id named, the rule not shown), 23 of 42 facts that matter are still not filed | `probe-filing-account-d1.md`, `refile-no_fallback.json` |
+    51	| The judgement reasons onward once it has the facts | The custom-chip question's request of 7-14, sent 3 times in each of the three draws: as it was, 9/9 "below $40 billion"; with the Broadcom, Trainium and other facts written in that draw's ledger added, 9/9 left the lowest rung (6 times $40–60 billion, 3 times $60–80 billion), reasoning as the two readers did ("guidance $16 billion, about $64 billion annualised, less networking chips") | `predictions-one-test.md`, `one-test-result.json`, `log.md` row 8 |
+    52	| Where the parking lot came from | D273: with the fallback sentence added, the core items on the extraction ruler went 64 → 68; the extraction ruler does not look at which question a fact is filed under (AGENTS §7.1, "What it does not measure") | `docs/DECISIONS.md` D273 |
+    53	| What the parking lot holds | The figures above; an independent reader on 12 random articles: of 25 misfilings as it was, 21 were parked in the revenue question; 8 and 5 with the fallback deleted | `sink_by_standard.py`, the independent reader's report (`log.md` row 8) |
+    54	
+    55	All files above are in `docs/research/2026-11-04-filing-end-to-end/` unless noted otherwise.
+    56	
+    57	## 3. Ruled out or secondary (outside this phase's scope, each recorded separately)
+    58	
+    59	| Matter | Conclusion | Source |
+    60	|---|---|---|
+    61	| The argument card | Not built; its code is deleted (Alex: "好，删掉卡片代码") | `docs/research/2026-11-04-argument-record/log.md` rows 4–11 |
+    62	| The arrows of the question graph | Really wired backwards: a seed question's arrow means "supports" (D208), while the judging code reads it as "whose conclusion to read" (PRD 06). As a result themes are judged only after the total-revenue question, so the total-revenue question reads the themes' conclusions of the previous day, and in draw 3 a chain of questions went wrong in turn. But it does not explain the misfiling (filing comes before judging), and the gold itself judges data-center revenue as "total revenue × 92%". A topic of its own; settled by D368 (item 4: the arrow means "supports"), its fix to be built and measured | `core-problem.md`, `review-core-codex.md` |
+    63	| Code removes the total-revenue question's own figures | True ("keep only the narrowest question" takes a seed arrow for "a narrower sub-question"), but each draw it costs the total-revenue question only 0–2 of the facts it needs | `log.md` row 8 |
+    64	| A filing re-check added at the end | Recovers some, and misfiles about as many (independent reader: about one misfiled for each one filed right); not the solution | The independent reader's report |
+    65	| One general sentence, "the other party's figure in a deal counts too" | The custom-chip question gains, but it pulls Morgan Stanley's price for a Rubin rack from the Rubin revenue question to the capital-spending question, and leaves some facts with no home | `answers.json` (the two arms definition and definition_no_fallback), `measure-corrected.txt` |
+    66	| Tightening D259's "leeway" | Alex's own decision; this phase does not overturn it | D259 |
+    67	| Opening questions (the Ohio guarantee was not opened); the two readers' disagreement on the China-share question | Another class of problem, not in this phase | `docs/research/2026-11-04-filing-end-to-end/diagnosis.md` §0 |
+    68	| Model drift | With the same requests, today about half as many facts go into the total-revenue question as on 11-03; the cause is not proven. Compare only with a control re-sent the same day, never with the archive | `log.md` row 6 |
+    69	
+    70	## 4. Constraints (what must not move, and why)
+    71	
+    72	- **The frozen ruler** (AGENTS §7.1, D261, D262): the extraction standard, version 5 (the signed version 3 with D248's seven boundaries and D250's four
+    73	  evidence boundaries and counting unit), golden-v5, the seed questions and the judgement gold; not a word changes; a disagreement is a gap in the
+    74	  system (D263).
+    75	- **The frozen extraction prompt** (D274): v74i (`poc-v108`) does not change by a word; what this phase changes is the one place that holds the filing
+    76	  rule (the description of the `links` field), made into a new version with a new configuration and compared with v74i. Alex has given his word for this
+    77	  work (2026-11-04: "好你去解决问题", "开始做"); making it the default needs his word again.
+    78	- **Frozen opening and judging** (D354): this phase does not touch them.
+    79	- **The standard's text** (in translation): §6, "file under the narrowest open question; when no question takes it, record no home and drop it, and read
+    80	  each one at evaluation"; §5.1, "makes the answer to some question more or less likely", with four paths, "demand, supply, competition, pricing"; §5.3,
+    81	  "another company's matter is not kept when one cannot say which question about the covered company it moves through a path such as demand, supply,
+    82	  competition or pricing".
+    83	- **Decisions**: D207 (one home per fact, the narrowest question), D209 (no home means dropped, each one read), D259 (leeway: a figure question takes
+    84	  "the demand, supply, competition and pricing that make it more or less likely"; the total-revenue question taking more is an accepted cost, "bounded by
+    85	  the narrowest-question rule and the driver questions"), D265 (code keeps only the narrowest), D273 (the fallback sentence), D355 (the two failed tests
+    86	  of the previous filing topic).
+    87	- **Prompt principles** (AGENTS §6): carry only the standard and add no new rule; a general hedge-fund analyst: every rule and example reads the same
+    88	  for a bank, a drug maker, a retailer or a chip company, names neither NVIDIA nor its products or figures, and is not taken from a test article; a
+    89	  classification is written as a closed set with two or three examples per class, replacing the abstract wording; quality is not fixed by lengthening
+    90	  the prompt: remove as much as is added, or write down the reason.
+    91	- **Code decides only "is it the same thing", never "does it matter"** (AGENTS §2).
+    92	
+    93	## 5. What to do
+    94	
+    95	Status: the links-rule version that carried items 1–3 (v74l) failed its one test (§8 step 5); D361 keeps the fallback sentence, so item 3 is not carried out. The plan below is kept as written.
+    96	
+    97	1. **Replace the abstract sentence "makes the answer more or less likely through demand, supply, competition or pricing" with the few classes in which an analyst recognises an indirect relation, written as a closed set, each class with two or three examples from other industries** (AGENTS §6: one
+    98	   abstract sentence is a coin flip on every send; examples replace it). A first draft of the classes (checked against the standard line by line at
+    99	   design time; it holds only meanings the standard already has):
+   100	   - The question's own figure: this question's figures, guidance, estimates and revisions (estimates for another period or another population follow
+   101	     the existing rule).
+   102	   - The other side of the same money: a seller's revenue from the buyers the question counts; those buyers' orders and backlog with these sellers.
+   103	   - Price and volume: a product's price or shipments, for the question on that product's revenue.
+   104	   - Variants and parts: a product's variants, alternatives, key parts and schedule changes, for the question on that product's launch.
+   105	   - Demand, supply and competition moves with a number: customers' orders and capital-spending plans, suppliers' capacity and prices, competitors'
+   106	     sales and share, for the question they affect.
+   107	2. **State how to file a fact when two specific questions both bear on it** (the problem the `definition_no_fallback` arm exposed: Morgan Stanley's rack
+   108	   price was filed under the buyers' capital-spending question, and the seller's Rubin revenue question lost it). One home per fact (D207): file it under
+   109	   the question its figure measures most directly (for example, a hotel's room rate goes under its room-revenue question, not under the
+   110	   travellers'-spending question; a parts maker's revenue from carmakers goes under the carmakers' parts-spending question, not under a rival parts
+   111	   maker's share question); when one sentence gives a separate figure for each of two questions, write two items, each filed under its own question
+   112	   (code stores two items that quote the same sentence as one record linked to both questions); never also file it under a broader question about the
+   113	   same company (the failure of D355's test 2: the model filed it under an NVIDIA revenue question as well). The original draft's "when the other
+   114	   party's question is open … file it there as well" conflicted with D207 and was deleted on 2026-11-04 with Alex's agreement (D360).
+   115	3. **Delete the fallback sentence** and return to the standard's §6: when no question takes a fact, it is not filed; code drops it as "no home" and
+   116	   records it (D209), and evaluation reads each one.
+   117	4. Change only the one place that holds the filing rule; report its length in characters before and after, and write down the reason for any growth
+   118	   (this time's reason: examples replace one abstract sentence).
+   119	
+   120	## 6. How to measure (the ruler does not move; the method does not change again)
+   121	
+   122	- **Requests**: rebuild each stored request byte for byte with the production code, changing only the one place that holds the filing rule; the
+   123	  rebuilt request's archive id must equal the original's, or it is not sent (`resend_filing.py`, AGENTS §5). Never re-send the archive's copy whose
+   124	  keys were sorted alphabetically.
+   125	- **Articles**: development set = the 54 articles of `selection.json` (already read many times); held-out set = articles the extraction gold read and
+   126	  the judgement gold uses that are not among those 54, drawn once before the test, with the list frozen and never changed afterwards. Both sets are
+   127	  measured and reported apart.
+   128	- **Control**: the unchanged requests re-sent 3 times the same day. No comparison with the archive (model drift).
+   129	- **Each answer**: goes through the production code checks and filing first (including "keep only the narrowest" and "no home means dropped"), and is
+   130	  counted after.
+   131	- **What is counted** (`measure_filing.py`, with its matching rule fixed: items are matched on the distinct numbers and the proper nouns other than
+   132	  NVIDIA in the source text; a source passage the system quotes that overlaps the gold's passage also counts as the same matter; "optional" counts as
+   133	  optional; the citations in the body of the gold's answers are read):
+   134	  - whether each fact that matters (one the gold uses to judge any question) reached the question that uses it, counted per fact, not per "fact ×
+   135	    question";
+   136	  - per question: the facts that matter that reached it and the new noise that appeared, counted by the decision rule below;
+   137	  - the parking lot: how many facts the total-revenue question (v1, together with v22) takes in, and what they are;
+   138	  - noise: how many of the sentences the standard does not keep are kept; per question, how noise is filed (links on facts the standard does not keep
+   139	    or no question uses);
+   140	  - how many core and supporting facts appear; the facts that matter that are dropped; how many questions each fact is filed under on average.
+   141	  - Matching still has a small error (spot check: the new rule mismatches a few and misses a few); say so when reporting the numbers, and read the
+   142	    ones that matter one by one.
+   143	- **Decision rule** (rewritten on 2026-11-04 with Alex's agreement, D360. The original draft required "every draw above the highest of the control's
+   144	  three" and the like, which the control itself fails when measured again, so it cannot tell good from bad. Script `decide.py`; written down and frozen
+   145	  before each test; each draw's numbers and the totals are all reported):
+   146	  - **Totals, with luck ruled out first**: each article's 6 answers from the new and the old arm are randomly reassigned between the two arms 4,000
+   147	    times (with a fixed random seed); the new rule's difference counts as a real change only when fewer than 5% of the reassignments reach it.
+   148	    - Development set: facts that matter reaching the question that uses them must rise; the count under the total-revenue questions (v1, v22) must
+   149	      fall; sentences the standard does not keep must not rise; core facts must not fall.
+   150	    - Held-out set: facts that matter reaching the question that uses them must not fall; sentences the standard does not keep must not rise; core
+   151	      facts must not fall.
+   152	  - **Per question, counted by code against the gold** (development and held-out sets together):
+   153	    - A fact that matters which reaches the question at least two fewer times under the new rule than under the control counts as "one fewer" for that
+   154	      question; in under the control all three times and under the new rule none of the three, it counts as "lost outright". A move to another question
+   155	      that the gold also uses it for and that is no broader than the original (one home per fact, D207) does not count as fewer; a move to a broader
+   156	      question counts. "One more" in the opposite direction offsets it.
+   157	    - A noise sentence (not kept by the standard, or kept but used by no question) that the new rule files under the question at least twice while the
+   158	      control never does counts as "new noise"; filed all three times, it counts as "outright new noise". The opposite direction offsets it.
+   159	    - Any question with a net 3 fewer, a net 2 lost outright, a net 5 more new noise, or a net 3 more outright new noise fails. These thresholds are the
+   160	      smallest values that keep "misjudged when new and old are exactly the same" within about one in ten; at the test, first compute the
+   161	      misjudgement rate from the reassignments; if it is above one in ten, raise the threshold most prone to misjudgement by one step, then compare with
+   162	      what was measured.
+   163	  - **Smaller changes** (a question 2 fewer, two or three more noise) cannot be told from luck in three measurements: all are listed, given to a reader
+   164	    who did not write the rule to read against the raw answers, and written into the report; they do not decide pass or fail.
+   165	  Only when everything passes does it become a candidate; a candidate runs end to end three times on the 14-day window (extraction re-sent, matching and
+   166	  judging run as usual, scored on the frozen judgement ruler), and that step needs Alex's word.
+   167	
+   168	## 7. Process (no drift)
+   169	
+   170	- **One recommendation and one test at a time** (AGENTS §7.3, Alex: "就测试一种，一次"): write the design first and put it through rounds of review (own
+   171	  checks, Codex read-only, a reader who did not write it reading the raw records) until a round finds nothing serious; write down and freeze the
+   172	  predictions and stop conditions; test once; if it does not match, stop and take it to Alex (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估").
+   173	- **A review's report is a lead**: each finding counts only once it is checked against the records (AGENTS §1).
+   174	- **A prompt audit before any prompt change** (`.claude/skills/prompt-audit/SKILL.md`): check the whole request against the standard sentence by
+   175	  sentence, in both directions.
+   176	- **Every step goes into `log.md`**: what was done, what came of it, the files; mistakes and overturned results stay in it too.
+   177	- **Do not repeat what was ruled out** (§3).
+   178	
+   179	## 8. Steps and where we are
+   180	
+   181	| # | Step | Output | Status |
+   182	|---|---|---|---|
+   183	| 1 | Design: the classes of indirect relation (a closed set + examples from other industries), how to file when a fact measures both sides, deleting the fallback; checked against the standard sentence by sentence; length before and after | `docs/research/2026-11-04-filing-end-to-end/design-links.md` | Done (draft 3, v74l / poc-v115) |
+   184	| 2 | Checks at no cost: a sample answer written by the new rule goes through every code check; the new rule's text goes through the prompt audit | Same as above | Done |
+   185	| 3 | Review rounds (Codex, independent readers, own), until nothing serious remains | `review-links-*.md` | Done (Codex 7 rounds, independent readers 3 times; round 7 found nothing serious) |
+   186	| 4 | Draw and freeze the held-out set; write down and freeze this test's predictions and decision rule | `heldout.json`, `predictions-links.md` | Done (sha256 recorded for both) |
+   187	| 5 | Test once: development set + held-out set, the new rule and the same-day control 3 times each | `answers-links.json`, `log.md` | Done (2026-11-04): failed: facts that matter reaching the right question, development set +7 (p 0.26); every other condition passed |
+   188	| 6 | If passed: to Alex, to decide whether to run three 14-day end-to-end draws; if failed: stop, to Alex | `design-links.md` §8 | Stopped, to Alex |
+   189	| 7 | (D361, Alex: "按照你的提以来，但是你一定是自己反思多轮之后才给出的行动") Measure the ceiling first: hand the source passages the gold cites straight to the frozen judgement; the custom-chip, operating-margin and capital-spending questions judged 3 times each at the window end, the custom-chip question as it was 3 times as the control; the fallback sentence is not deleted for now | `reflection-v74l.md`, `oracle-design.md` | Done: operating margin grounded 3/3, capital spending 2/3, custom chips 0/3 (the gap is in interpretation); the next step waits for Alex |
+   190	| 8 | (D362, Alex: "你继续啊不要scope drift and strongly follow evidence of your discovery and learning") Two small changes where facts are not delivered, one at a time: ① when a quote is rewritten, code matches it back to the source sentence (changing nothing the model sees; verified by replaying the archive); ② a figure question's description states which figures it is derived from by definition (first sent 3 times each on the article that motivated it) | `delivery-fixes.md` | Stopped: an independent check overturned the first change's code (it would take in wrong figures); the second failed its trial send (1/3). The root: the signed standard's §5.3 does not keep two key facts, treating them as "a restatement of known facts" (proposal 6, awaiting approval); to Alex |
+   191	| 9 | **Historical; superseded by D370.** (D363, Alex: "乙") At coverage start, record each question's starting figure once from the company's latest earnings report; the daily path still takes no restatements: design, rounds of self-checks and independent checks, validated first on the archive in the simplest way | `baseline-design.md` | Validated on two questions: the frozen extraction does not read the report's tables (0/3); with each question reading the report once on its own, the operating-margin question read its starting figure 2/3 and the capital-spending question 3/3, and the judgement then judged right (2/3, 3/3), about 2.5 cents. All 22 questions tested once (2026-11-05, Alex: "你充分验证"; files chosen by code, a same-day control, about $0.43): v10 and v12 judged right 9/9 each; no question already judged right turned wrong; but 5 of the 53 figures read were other quantities (the Vera CPU question and the Blackwell and Rubin question took a larger or neighbouring revenue line), so it failed condition 3, written beforehand. The model itself pointed to the reading instructions' sentence "write the lines it is computed from, or the line the report uses for it"; stopped, to Alex. Alex: "改"; only this sentence was changed ("write only the lines it is computed from, or the same quantity under another name; never a broader line or a line next to it"), tried on 4 questions first, then tested on all 22 (about $0.36): all three conditions passed: v10 and v12 9/9 each, no question judged right turned wrong, and all 46 figures were the questions' own quantities. Checked after an independent reader's challenge: the new sentence made the reading miss the capital-spending line in 3 of 12 reads, and it had been tested only on the one May report; the fourth version (a line-by-line re-check after writing) removed too much and failed; after a census of every failure trace (Alex: "我需要你深度看完所有失败trace给我准信"), the third version with the repaired quote check was chosen (D365): 0 wrong figures on the held-out August report; built into the production system (poc-v116; the $0 checks and the tests all pass). The full acceptance, three 14-day draws (Alex: "跑验收"; a same-day control; about $4.79): all passed: operating margin and capital spending judged right 3/3 each (the control never judged them), 53 against 45 in total (of 57); for the China-share question, the only one two fewer, both readers found the starting figures did not lead it astray. Alex: "都做": poc-v116 became the default (D366); the code was committed and a PR opened |
+   192	
+   193	## 9. Alex's own words on this matter (in time order)
+   194	
+   195	- "你这个单独开一个专题出来解决 … 是promot，是系统结构设计还是到底哪里有问题挂错一堆东西，机制是不是有问题（一定要挂吗？有没有可能是杂音" (2026-11-03)
+   196	- "So if it's a customer problem or other companies that you think is relating NVIDIA and it's the wrong evidence, then what is the standard for it? … from a hedge fund analyst standpoint, are these even relevant? Do you think your ruler is wrong in this aspect?" (2026-11-04)
+   197	- "你确定下你接下来要改进的量化目标，以及你要看到端到端我们的管线是要做什么的，不要乱硬优化，要看到目标" (2026-11-04)
+   198	- "就测试一种，一次 … 能不能自己有个超级自信的定论和证据再给我提建议" (2026-11-04)
+   199	- "这些只是类型题，你需要抽象拔高我们现在的核心问题和卡点。这个很重要这样改下去才是对的" (2026-11-04)
+   200	- "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做" (2026-11-04)
+   201	- "go" (2026-11-04, on the proposed amendments to §5.2 and §6 and on this test)
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '8197,8202p;9398,9441p;9460,9525p'; nl -ba clean-arch/PRD.md | sed -n '126,160p'; rg -n '40 |8 matters|five|5 of|scope|D667|census' docs/research/2026-11-14-use-acceptance/week/brief-A1.md docs/research/2026-11-14-use-acceptance/week/RESULT.md docs/CURRENT_STATE.md" in /Users/lchingen/hivemind
+ exited 2 in 0ms:
+  8197	## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+  8198	
+  8199	- **Correction:** matched against every new-system Step 1 trace (1,437 articles), the selected weeks 2026-07-20 to 08-24 have no article
+  8200	  read, and 09-07 and 09-14 have 10 and 4. D611's "no exposure-free week" held only for 09-21 to 10-26. Its conclusion stands on power
+  8201	  and on the old library's end. The check covers Step 1 traces only, not every other activity.
+  8202	- **Nothing reopens:**
+  9398	## D665 · 2026-11-17 · Council (D664, Alex's "run your council to determine"): the six lines stop blocking release; one product comparison against the running pipeline decides readiness, its verdict written before the first send (council consensus)
+  9399	
+  9400	- **Council** (`docs/research/2026-11-14-use-acceptance/reflection-10/`):
+  9401	  - Claude's own position, written first (`own-position.md`);
+  9402	  - the Codex reading (`codex-1.md`, thread 01a1ebfe-4f67-7c72-af87-7830055e0f09, memories off);
+  9403	  - the Claude-family reading (`claude-1.md`);
+  9404	  - challenge rounds (`codex-2.md`: disagree, four corrections; `codex-3.md`: "CONSENSUS", with one sentence added).
+  9405	- **Why the six lines stop blocking:**
+  9406	  - D400 wrote them for "this first measurement" and told Alex they "不能证明它比老系统好". D548, a council decision, made them gate 1.
+  9407	  - D560 found no measured link between them and the final answer.
+  9408	  - Their zero-fault forms are a poor target at the measured luna-era rates (D623): zero faults in 131 sends has even odds only near 0.5% a send.
+  9409	  - Reader agreement on disputed points is 21 of 70 and 29 of 53, and draws move from 7 failures to 1 (D650).
+  9410	- **Decided:** as written in `clean-arch/PRD.md` §1.5, which now owns the rule.
+  9411	  1. **The product comparison is the release decision.**
+  9412	     - poc-v118 is replayed against the hashed new system (astra-frozen; v5.5 excluded). Both start from empty over 07-01 to 07-19, three draws
+  9413	       each, and are scored on unread weeks from 07-20 up to 09-20, as far as the full exposure census supports. The exclusion list is frozen.
+  9414	     - **The main quantity:** big matters served, paired per matter.
+  9415	     - **Verdicts:**
+  9416	       - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both split
+  9417	         countings.
+  9418	       - **Practical loss:** the mirror, or a guardrail breach confirmed under both countings.
+  9419	       - **No practical winner, too small or invalid**, as written.
+  9420	     - **Guardrails:** unsupported shares (figure and yes/no apart) and the not-worth-tracking share, each within 10 points of the old system's.
+  9421	       D428's limits are printed beside them.
+  9422	     - **Illustrative only:** a sign test and an interval.
+  9423	     - **Frozen and hashed before the first send:** the matter list (blind), the credit rules (one cutoff per matter, the grouping of repeats,
+  9424	       what counts as the same question), the controls, the versions and the rule.
+  9425	  2. **What changes, explicitly:**
+  9426	     - D548's use of D400's six lines as a release gate is superseded. The lines are reported on every ladder run.
+  9427	     - The parts code decides stay hard: figure ranges meet end to end; the favourable end is stable; the due day is consistent at D400's 90%.
+  9428	     - D431's frozen-reference reading of 07-01 to 07-14 is still produced and printed beside the comparison, not deciding. D665 supersedes D431
+  9429	       on that point only.
+  9430	     - Step 2's three checks stay as D427 and D431 set them.
+  9431	     - Gate 2's unsupported lines become the guardrails, and its control line waits (D658).
+  9432	     - Gate 4 folds in.
+  9433	     - Gate 5 waits for a practical lead and Alex's word.
+  9434	     - The absolute floors stay proposals, reported beside.
+  9435	  3. **Back to Alex,** before any release engineering resumes: a practical lead (with the split cards for his spot check), a practical loss at
+  9436	     once, no practical winner, too small or invalid, or no verdict by 2026-12-01.
+  9437	- **Next:**
+  9438	  - the comparison's design at $0: the exposure census, the frozen matter list and credit rules, the cards and controls, the replay plan and
+  9439	    its spend guard;
+  9440	  - council review;
+  9441	  - then a send on Alex's word. No budget is required (D664).
+  9460	## D667 · 2026-11-17 · Under D666 and D439 (council, run-plan rounds 1–10): the release comparison's run plan and the rules it takes for this run
+  9461	
+  9462	- **Council:** `docs/research/2026-11-17-product-comparison/`: `RUN-PLAN-v1.md` … `RUN-PLAN-v9.md`, `review-codex-1..10.md` (thread
+  9463	  01a1ebfe-4f67-7c72-af87-7830055e0f09, memories off), a fresh Claude reviewer each round (READY at v7), and `ROUND-LOG.md` (what each round
+  9464	  taught).
+  9465	- **Decided**, for this comparison only; D665's rule is unchanged:
+  9466	  1. **The plan** is `RUN-PLAN.md` v9, frozen as `RUN-PLAN-v9.md`. Build-level checks run at the stage-0 freeze review
+  9467	     (`freeze-review-notes.md`), which gates the first paid send.
+  9468	  2. **Exposure.**
+  9469	     - Plan §1.2 governs the whole census: the closed set of read kinds, the search roots and every exclusion. Any read excludes an article.
+  9470	     - **Not reads,** and only these:
+  9471	       - the search index built over the whole corpus;
+  9472	       - this comparison's own files (its census, reader packets and outputs are not prior exposure);
+  9473	       - **An old-system replay folder and its byte copies.** Only when its decision record or run note shows it ran the then-production
+  9474	         configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a case
+  9475	         behind a change. Development replays (arms, probes, configuration trials, week tests) are reads, and so is any research artifact
+  9476	         built from an exempt run. Classified per folder in `replay-folders.json` before any hit is read.
+  9477	       - **Stored rows that are verified raw copies of a corpus build** listed in `corpus-builds.json` (the same rows by `input_id` and
+  9478	         `content_sha256`). Whatever a probe, run or fixture actually used is still a read through its trace, packet or fixture text.
+  9479	     - D613's "unread" was a Step 1 census; this is the full census D665 asks for.
+  9480	  3. **The company's own figures** (D505's list) count in N, as D665 says. Their subgroup is flagged blind at the census and printed beside
+  9481	     the verdict. The new system does not open such questions by D505, and Alex sees how much of any gap that makes (D431 compares the
+  9482	     products as configured).
+  9483	  4. **One ledger per draw.**
+  9484	     - Absolute guards: $65 per new-system draw and $25 per old-system draw, $270 in all. They are stops, not a budget (D664).
+  9485	     - For this run, this replaces D449's whole-run stop across draws and D666's single $250 ledger. D449's one redo within a draw is
+  9486	       unchanged.
+  9487	  5. **D431's "same day," for a run longer than one day.** A new-system draw takes about 20 h, so one calendar day cannot hold it.
+  9488	     - The six counted draws are launched within one hour of each other and run concurrently.
+  9489	     - A redo within a draw counts as part of that draw.
+  9490	     - Every counted send falls within 72 h of the first launch.
+  9491	     - A breach makes the result a diagnostic.
+  9492	     - This replaces, for this run only, the one-calendar-day reading in `WIRING-DESIGN.md`.
+  9493	  6. **No replacement draw counts.** A draw that cannot finish gives no release verdict; what finished goes to Alex as a diagnostic. The
+  9494	     reviewers read "same day" differently, so the council took the cheaper, reversible course (D439).
+  9495	  7. **The credit and scoring rules** are plan §1.4:
+  9496	     - one cutoff, the span's last day;
+  9497	     - "covers" in A2's form, blind;
+  9498	     - the earlier-opened question of a same-bet pair is the original;
+  9499	     - distinct bets for the 30-question minimum;
+  9500	     - D428's decided-only guardrail shares;
+  9501	     - splits resolved per counting to a mark the readers gave;
+  9502	     - an unexercised subgroup blocks only a lead;
+  9503	     - the verdicts tested in order: invalid, too small, lead, loss, no winner.
+  9504	  8. **Step 2's three lines** (D427) are hard checks, each decided on its point estimate over frozen samples: 100 records, 200 merges, 30
+  9505	     groups. A line with too few cases is not measured and cannot clear release.
+  9506	  9. **Two proposed floors** (wrong citations, answer-changing omissions) are printed as not measured. Measuring them needs source-first
+  9507	     readings outside this comparison.
+  9508	- **Out of scope during the run** (to `FINDINGS.md`): D662's holds, D658, and any fix, except a launcher-only repair after a failed slice,
+  9509	  followed by a slice rerun (plan §2).
+  9510	- **Back to Alex:**
+  9511	  - the verdict, or a diagnostic;
+  9512	  - N < 20 at the census;
+  9513	  - a stop that is not a wiring fault;
+  9514	  - a guard reached;
+  9515	  - a failed hard check;
+  9516	  - no verdict by 2026-12-01.
+  9517	- **Recorded** after consensus: Codex READY at round 10 (`review-codex-10.md`); the Claude reviewer READY at round 7. Rounds 8–10 changed only the record's wording and the corpus-copy rule Codex raised. The Claude reviewer's build-level notes are carried in `freeze-review-notes.md`.
+   126	### 1.5 What decides that it replaces the running pipeline (D665, superseding D548's gate order)
+   127	
+   128	Alex asked the council to determine whether the six lines still make sense and what decides readiness (D664: "does it make sense now run your
+   129	council to determine"). The council's consensus is D665.
+   130	
+   131	**The release decision is one product comparison against the running pipeline.**
+   132	- **The systems.** poc-v118 is replayed against the new system as configured and hashed (astra-frozen; v5.5 excluded). Both start from empty
+   133	  over 2026-07-01 to 07-19, three draws each, and are scored on the unread weeks from 07-20 up to 09-20, as far as the full exposure census
+   134	  supports.
+   135	- **The main quantity: big matters served.**
+   136	  - Both reader families list the scored weeks' big matters from the articles, blind to any output, and freeze the list.
+   137	  - A system serves a matter when, in at least two of three draws, it holds a question both families mark worth tracking and whose latest
+   138	    answer both mark supported. The cards are read by the council (D663), with Alex spot-checking splits.
+   139	  - With a = matters served only by the new system, b = only by the old, and N = all listed matters, written before the first send and computed
+   140	    under both split countings:
+   141	    - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both
+   142	      countings.
+   143	    - **Practical loss:** the mirror of the lead, or a guardrail breach confirmed under both countings.
+   144	    - **No practical winner:** everything else, including a verdict a split could change, or a guardrail that was not exercised.
+   145	    - **Too small:** fewer than 20 distinct matters, or fewer than 30 distinct questions per system per draw.
+   146	    - **Invalid:** a planted wrong answer accepted, fewer than 3 of 4 supported controls accepted, or fewer than 2 of 3 repeats marked the same.
+   147	- **The guardrails:** the unsupported share for figures, the unsupported share for yes/no questions, and the not-worth-tracking share, none
+   148	  more than 10 points above the old system's. D428's original limits are printed beside them.
+   149	- **Printed beside the verdict, not deciding:** a sign test and an interval (illustrative unless the frozen grouping supports them); the
+   150	  frozen-reference reading of 07-01 to 07-14 (D431, superseded on this point only); and the proposed absolute floors.
+   151	- **Kept from the earlier gates:**
+   152	  - **The six lines of D400** are measured and reported on every ladder run. They no longer block release.
+   153	  - **The parts code decides stay hard checks:** figure ranges meet end to end; the favourable end is the same across sends; the due day is
+   154	    consistent in at least nine of ten.
+   155	  - **Step 2's three checks stay,** as D427 and D431 set them.
+   156	  - **Stage B's control line waits** with D658.
+   157	- **Back to Alex,** before any release engineering resumes:
+   158	  - a practical lead, with the split cards for his spot check;
+   159	  - a practical loss, at once (D544);
+   160	  - no practical winner, too small, or invalid, with the counts;
+rg: docs/research/2026-11-14-use-acceptance/week/RESULT.md: No such file or directory (os error 2)
+docs/research/2026-11-14-use-acceptance/week/brief-A1.md:4:`docs/research/2026-11-14-use-acceptance/week/packet-A1.json` (40 articles, 2026-09-22 to 09-28, in publication order) and the signed standard
+docs/research/2026-11-14-use-acceptance/week/brief-A1.md:19:- per question: {"article": n, "matter": "<short key>", "question": "<the question, with its period or check date>", "quote": "<= 40 words from
+docs/CURRENT_STATE.md:52:  Blackwell and Rubin visibility", five infrastructure-demand records), not isolated which matters; FY2028 is the question whose filed
+docs/CURRENT_STATE.md:73:**Clean Step 1 source investigation (2026-11-07):** A [source-loss census](../clean-arch/STEP1-SOURCE-LOSS-CENSUS.md) traces two separate losses in the historical cleaner and records reproducible corpus observations. Offline candidate comparisons expose both recovered content and source-identity or contamination risks. A subsequent [full-page diagnostic](../clean-arch/STEP1-FULL-PAGE-RESULTS.md) completed 102 calls on 17 selected articles and independent source-backed review. It exposes examples of both missing or misattributed source text and model errors that persist despite the right text being present. A Codex–Claude council is reviewing the results and earlier attempts; no source-cleaning candidate is adopted, and the source corpus and production defaults are unchanged.
+docs/CURRENT_STATE.md:75:Alex has authorized correcting the test-source cleaner and test data when their defects are confirmed, while the frozen production configuration and ruler remain intact. The cleaner switched 615 originally fed articles off; a replay reproduces all 615, and direct inspection confirms an actual article excluded because its 9,874-character body was flattened to one line. Other examples include a wrong-site shell, paywall and long challenge code, so the false-exclusion count and a general article-identification repair remain to be established. The [council regroup](../clean-arch/STEP1-SOURCE-REGROUP-COUNCIL.md) and [source-preservation design](../clean-arch/STEP1-SOURCE-PRESERVATION-DESIGN.md) describe an isolated candidate checked against all 34,084 records, with a fake-answer actual-runner handoff and provenance display in the replay renderer. The [five source-control calls](../clean-arch/STEP1-CAPTURE-CONTROLS-RESULTS.md) completed and were source-reviewed; two items contain summary details absent from their attached quotations, and one source-visible risk explanation was not returned. This is selected-case evidence, not a general quality result. Broader source-quality comparison, citation completeness and actual writer integration remain open.
+docs/CURRENT_STATE.md:77:**Clean architecture Step 1 (2026-11-06, isolated work on `clean-arch`):** Alex reopened work with the clean architecture. An experimental prepared-source handoff now preserves the archived page, prior cleaned text, source-role decisions and selected-line mapping without changing the original database; quotations for prepared items must also occur contiguously in the original captured page. Two seven-item runs are available in the [clean architecture PRD](../clean-arch/PRD.md), one in the earlier selection order and one in recorded page-timestamp order. The source selector is not a production service and source ordering is not established event-arrival ordering. The runs expose unresolved semantic problems: citations can omit supporting facts despite an exact location match; model output can change a benchmark into a deployment, reverse a backup relation, omit a named customer or assign an unstated currency. A blinded 84-call check-placement/wording comparison and a 27-call same-article citation-completion diagnostic did not give a clean semantic fix and are not adopted. The latter missed an omitted connectivity condition and a reversed backup relationship, and left six expected evidence reviews unaddressed. A further five-round Codex–Claude council produced a narrowly scoped Step 1 link candidate, independently checked for prompt-contract drift. A six-article, 36-call blind comparison completed; the candidate still produced an explicitly self-contradictory link and both arms consistently omitted the same Kyber report and company response. It is not adopted and has not changed the active PRD prompt. A trace confirms that both the Kyber report and open Kyber thesis were supplied, and the raw model answers omitted the report and denial; the reason is not established. See ../poc/data/clean-step1-kyber-trace-2026-11-06/TRACE.md. An isolated six-call comparison showed that hiding the Kyber thesis did not recover the report or denial in any draw. A second six-call comparison returned them in 3/3 draws with the original Kyber paragraph alone and 0/3 with the full article; length, position and surrounding content changed together, so the reason is not isolated. Excerpt outputs have source-attribution limitations. Neither experiment changed state or established a production fix. (Superseded: the next task then was a whole-article coverage approach; the current next task is under "One next task".) See ../clean-arch/STEP1-IMPLEMENTATION-COUNCIL.md. The earlier four-round council agreed that no tested semantic fix is ready; its next investigation is a source-backed review of the 49-item historical run and its 160 evidence records, with overlapping issue flags and separate article-level omissions, then a separate comparison of the seven-item replays. See ../clean-arch/STEP1-COUNCIL-REVIEW.md. Preserve relevant evidence while identifying the next intervention; production/frozen history remains as described below. See [Step 1 run log](../clean-arch/STEP1-RUN-LOG.md) and [English reading page](../clean-arch/architecture.html).
+docs/CURRENT_STATE.md:85:**Question-catalog limit removed (D377, 2026-11-05):** Alex also directed removal of the separate 150 KB catalog rejection. The research reader in this worktree now has neither the catalog nor evidence byte limit; it retains full scoped questions, historical boundaries, dependencies and evidence. A portable 326,996-byte catalog test returns all 400 new questions and expands evidence both after reading the catalog and directly; the old 150 KB guard fails the same test in a scratch copy. The saved 69-question pilot catalog and all 69 saved evidence expansions match their original content hashes. Details: `docs/research/2026-11-05-catalog-limit/`. The full suite remains pending until the paid seven-day run no longer competes for resources. The run remains in its isolated worktree and does not call this research reader.
+docs/CURRENT_STATE.md:114:**One-day smoke completed (2026-11-05 UTC):** Alex requested a quick 1–2 day end-to-end test. One day, 2026-08-29, ran in `/Users/lchingen/hivemind-no-preseed-evidence-review/poc/data/v117-one-day-smoke-2026-11-05/`: config v117, an 8/28 historical library, 40 extraction calls, 93 evidence records written, four new questions, 54 judged and zero terminal failures. Two judgement attempts were refused and corrected. A Microsoft revenue forecast of $391.1bn was assigned to a rung whose upper bound excludes $391.1bn; the same article's actual quarterly revenue and next-quarter guidance were dropped with no home. Some source dates and bodies are not verified, and an independent 14-article sample review was incomplete due to truncated text. This is not semantic or production acceptance. Findings and scope: `docs/research/2026-11-05-real-input-evidence/one-day-v117-smoke-2026-11-05.zh.md` in that worktree. The clean source-text comparison and its condition-hidden review are complete; council discussion of next steps is ongoing.
+docs/CURRENT_STATE.md:116:**D371, in progress:** Alex directed that present and forward-looking revenue and financial information should be tracked. Diagnose the same-day extraction and filing losses before designing a general change. No new financial tracking implementation has been accepted yet. The old frozen standard and gold are unchanged. The original prompt-only pilot failed design review. The user approved an exact prompt addition for an experiment; it is not a production implementation. Four paired real-article diagnostic calls per arm completed for the exact approved sentence: v74i versus experimental role-d371-pilot. Microsoft next-quarter guidance and NVIDIA FY2028 guidance still dropped in the treatment; a single draw is not acceptance or proof of causation. Details: docs/research/2026-11-05-real-input-evidence/d371-prompt-pilot-results.zh.md (isolated worktree). The requested full prompt audit and restructure were drafted experimentally; five real-article paired diagnostic requests per arm completed. Microsoft revenue guidance was missed in both arms, and the draft produced unsupported original dates, a quote refusal and suspect links. No production prompt change or acceptance; see restructure-pilot-results.zh.md in the isolated worktree.
+docs/CURRENT_STATE.md:122:**Clean Step 1 fidelity council (2026-11-07):** Codex and Claude Code completed five rounds on source attribution, conditions, dates and meaning. No tested fix or root cause is established. The agreed source-to-record review of 49 articles / 160 evidence items and the subsequent isolated field-order comparison are complete; the later 54-answer / 217-record repeated sample remains separate. Prior source-first, quote-first and follow-up-review experiments and their limits are recorded in [the fidelity council](../clean-arch/STEP1-FIDELITY-COUNCIL.md). No Luna experiment or production change was made in this council.
+docs/CURRENT_STATE.md:126:**Clean Step 1 source handoff council (2026-11-07):** The ongoing [council and offline checks](../clean-arch/STEP1-SOURCE-HANDOFF-COUNCIL.md) reconstructed 16 matching article-34 controls, all omitting a Kyber report and denial; the cause remains unknown. The 20-article saved source-role overlap review distinguished previously cited AI-generated summary lines and an unrelated recommendation from authored body. The clean runner does not send the saved source-role labels; the council chose to first compare original and previously selected source text on ten known articles. The isolated 60-call source-text comparison and condition-hidden review are complete; [results](../clean-arch/STEP1-SOURCE-TEXT-RESULTS.md) show specific contamination reductions alongside persistent omissions and changed meaning. It did not advance state or write production. The isolated six-article low-versus-medium source-fidelity diagnostic completed 36/36 calls and condition-hidden review. [Results](../clean-arch/STEP1-REASONING-FIDELITY-RESULTS.md) show partial improvements alongside persistent source-qualification and attribution concerns; no production setting is changed. The [prompt audit](../clean-arch/STEP1-FIDELITY-PROMPT-AUDIT.md) maps the observed failures to the full request and signed standard. The six-article isolated schema-description comparison completed 36/36 calls and condition-hidden review; the candidate did not preserve the repeated example qualification and is not adopted. [Results](../clean-arch/STEP1-SUMMARY-FIDELITY-RESULTS.md). A further six-article 36-call low-versus-medium comparison used corpus-cleaned sources outside the original 49-item clean replay and a fixed exploratory context; results were mixed, including unsupported links and incorrect attribution/date fields. [Results and replay](../clean-arch/STEP1-ADDITIONAL-SOURCES-RESULTS.md). The structured-claims candidate was not sent after review revealed scope and complexity concerns. Council review of the next action is ongoing. The date-text schema-description diagnostic completed 48/48 calls on eight known cases, with mixed results; the candidate is not adopted. A selected-run census found twelve literal "null" strings in date-text fields, but no production writer impact is established. [Results and replay](../clean-arch/STEP1-DATE-DESCRIPTION-RESULTS.md). A further preregistered eight-source date comparison completed 48/48 calls; the candidate lost a supported company-article statement date in all three draws on one source and is not adopted. [Results and replay](../clean-arch/STEP1-DATE-NEW-SOURCES-RESULTS.md). A bounded corpus census confirmed 163 source pages across three explicit generated-summary structures whose labels were removed while some summary text was retained; two NVIDIA cases were reproduced through the cleaner. [Source provenance investigation](../clean-arch/STEP1-SOURCE-PROVENANCE-CENSUS.md). A read-only source-lineage replay reproduced 363/363 cleaned pages with current inputs, preserved ambiguous original-line locations, and surfaced the generated-summary label loss for review. [Source investigation and lineage replay](../clean-arch/STEP1-SOURCE-PROVENANCE-CENSUS.md). An offline neighboring-context observation exposed only 144 or 149 of 163 known labels and introduced many other page lines; it is not adopted as a general source fix. [Observations and viewer](../clean-arch/STEP1-SOURCE-CONTEXT-OBSERVATIONS.md). A new [saved-quote integrity investigation](../clean-arch/STEP1-QUOTE-INTEGRITY-CENSUS.md) reconstructed 360 saved answers across eight overlapping cohorts, including 78 prepared-source calls. Five saved unverified passage instances were complete matches under the existing normalization; an in-memory candidate recovered their original slices, while ten others remained unverified. The normalized source-slice lookup is now installed only in the isolated clean Step 1 runner; saved-answer and entry-point checks are recorded there. Page provenance, Unicode completeness, production resource budgets and writer integration remain open. The existing writer stores only one quote, whereas 63 of 160 evidence items in the 49-article exploratory trace have multiple passages. A [source-first 49-article coverage review](../clean-arch/STEP1-COVERAGE-CENSUS.md) separates material missing from the model input from source-visible omissions in the saved answers, with uncertain matter boundaries labeled. (Superseded: the next investigation then was why supplied material is missed; the current next task is under "One next task".) The canonical prompt and production configuration remain unchanged. Adding fallible role annotations remains a separate untested candidate. Council streams and handoffs are in `poc/data/clean-step1-ongoing-council-2026-11-07/`.
+docs/CURRENT_STATE.md:143:2. **One bet opened twice** about one encounter in five: the collision judge splits a seed question from an identical candidate on a fine detail (D354).
+docs/CURRENT_STATE.md:148:7. **What a judgement reads grows with the window** (D358). Argument records (D201) were measured as the remedy on 2026-11-04 and not built: judging-v8 agreed 12 of 17 against 15 of 17, judging-v9's card added little at about half again the judging cost; their code was removed at Alex's request ([log rows 4–11](research/2026-11-04-argument-record/log.md)).
+docs/CURRENT_STATE.md:163:committed; paid calls stay within D439's $40 ceiling (about $18.42 recorded; $0.0134 sent in this period, the ten judge calls of
+docs/CURRENT_STATE.md:181:   ([census](research/2026-11-14-use-acceptance/delivery-class/CLASS-CENSUS-RESULT.md)); one six-call test of its effect was
+docs/CURRENT_STATE.md:186:   [census](research/2026-11-14-use-acceptance/unsupported/UNSUPPORTED-CENSUS.md)). Three of the ten settled unsupported answers
+docs/CURRENT_STATE.md:208:  [census](research/2026-11-14-use-acceptance/dependency-selection/DEPENDENCY-SELECTION-CENSUS.md), D537). As the code stands
+docs/CURRENT_STATE.md:226:and D439's scope names its steps; it follows the product rule on financial figures he last confirmed (D505); the fresh week
+docs/CURRENT_STATE.md:231:checkpoint: $5 of further spending without a candidate that passes its prewritten small test returns the direction to the
+docs/CURRENT_STATE.md:238:  the first filed amount on two questions (the old system shares this). A census of 49 amount questions and an audit of the
+docs/CURRENT_STATE.md:259:for what a topic tracks. Ledger $3.67 of the run's $3.95; paid calls under D439 about $22.10 of $40 (Claude's ceiling). D544's
+docs/CURRENT_STATE.md:263:(`clean-arch/step1/live.py`, `CALL_WAIT_SECONDS`; five tests). Before it, a machine that slept during a call stopped the run for
+docs/CURRENT_STATE.md:284:families found 18 matters: the same judged question in every run that opened it on 3 (a fourth disputed), delivered but
+docs/CURRENT_STATE.md:310:**Where it stands (2026-11-16; D563 to D567; Alex not active, D439 in force; about $26.07 of D439's $40 spent):**
+docs/CURRENT_STATE.md:311:- **The two-week product-condition run (D563, D564):** read in five ways; gate 1 (Alex's six lines) is not met there either (7 or
+docs/CURRENT_STATE.md:312:  5 of 13 topics right); no last answer is unsupported by both reader families and 6 of 12 are contested, for too little
+docs/CURRENT_STATE.md:433:**The one next task (D665, D666, D667): stage 0 of the release comparison, at $0** (`docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md`).
+docs/CURRENT_STATE.md:434:- **The plan** passed the council (D667): Codex READY at round 10, the Claude reviewer READY at round 7. Lessons by round are in `ROUND-LOG.md`.
+docs/CURRENT_STATE.md:436:  - the exposure census and the frozen exclusions;
+docs/CURRENT_STATE.md:438:  - the blind matter census (N < 20 goes to Alex);
+docs/CURRENT_STATE.md:448:- **Monitored** in `RUN-LOG.md`. Out-of-scope findings go to `FINDINGS.md`.
+docs/CURRENT_STATE.md:509:  carries D186 in full (D398); the request may teach how to build an event's five states (D399); Stage A is read against his six
+docs/CURRENT_STATE.md:514:- **How the build was reached:** twenty single reviews and five rounds by angle did not reach zero findings (15, 9, 15, 11, 11);
+docs/CURRENT_STATE.md:529:  | 5. 35 of 44 theses right in two of three sends, 28 by a ladder | missed, 21 and 16 | 36 and 30 if every differing mark held |
+docs/CURRENT_STATE.md:533:  stricter one, so the count as ruled is the strict reading. The 25 ladders both families fault are the firm set: five states
+docs/CURRENT_STATE.md:535:- **The classes** (result page): an event's five states (gaps, overlaps, labels, the object); a Yes that needs a confirmation
+docs/CURRENT_STATE.md:562:  closed by one structural rule (code writes the scope of a ruling out: new, whole and standing) and read by two families on
+docs/CURRENT_STATE.md:589:  so that the scope governs the model's own sentence; proved on six real answers shown with the sentence as it was and as it
+docs/CURRENT_STATE.md:606:  the same run shows both. It also showed the quotation refused in 15 of 34 first answers of the old request against 5 of 35.
+docs/CURRENT_STATE.md:630:  was diagnosed first: a wait written as the ruling out, 7 of 140 stored event answers read in full, six on product-deadline
+docs/CURRENT_STATE.md:639:  (40 right, 31 by a ladder) and missed on the strict one (34 and 25). **Lines 1, 3 and 4 are missed**, by 1, 2 and 3
+docs/CURRENT_STATE.md:661:  judgements, $0.42; the reading plan reviewed five times; trial 6 of 6; both families caught 6 of 6 planted answers. Line 3
+docs/CURRENT_STATE.md:680:- **Gate 1 done** (`clean-arch/step1-diagnosis-2026-11-12/gate1/`, D435, D436): change 2 (the capacity counterexample scoped) passes
+docs/CURRENT_STATE.md:681:  G1-b; changes 1 and 2 together fail G1-a, separating the two years of hyperscaler capex in 5 of 9 sends against a line of 8 (c8: 0 of
+docs/CURRENT_STATE.md:687:  citing D439. Paid spending in this period: $0.83 (gate 1) of a $40 ceiling (Claude's setting); gate 2 sent on Alex's word (D438).
+docs/CURRENT_STATE.md:690:  2027-against-2026 shape to 2026; c8 stays. Spend so far $4.77 of the $40 D439 ceiling.
+docs/CURRENT_STATE.md:691:- **The next step (D442–D444): an exploratory end-to-end census.** The clean path's stored chain (unseeded draws 2026-11-10, Stage A
+docs/CURRENT_STATE.md:696:- **The census result** (`clean-arch/e2e-comparison-2026-11-13/RESULT.md`): on the seven graded questions both systems agree with
+docs/CURRENT_STATE.md:698:  loss is at opening (event deadlines against the standard's rules, the memory comparison never opened, scope). A measuring-stick concern
+docs/CURRENT_STATE.md:700:- **After the census (D445–D447):** the trace of the clean path's 17 graded opening losses found no single mechanism; a typed-unit
+docs/CURRENT_STATE.md:719:- **The full run, read (D452–D455):** Stage A on the 40 fresh theses misses lines 1–5 and meets line 6 (`STAGE-A-FULL-RESULT.md`); the
+docs/CURRENT_STATE.md:720:  census (`CENSUS-FULL-RESULT.md`): settled agreements on the seven graded questions clean 2/1/0, production 1/1/1 (2/2/1 and 2/2/2 with
+docs/CURRENT_STATE.md:729:  next year's capex folded into this year's question (five of six clean draws), and show the standard's keep-apart line for unsigned deals
+docs/CURRENT_STATE.md:761:  Recorded spend under D439 at that point: about $18.4 of $40 (about $7.26 before the run; the run's ledger $11.43, somewhat above its cost at the
+docs/CURRENT_STATE.md:767:  the second bet of a topic that holds two has no answer; five-state event ladders failed by hand three times before a construction now in the request
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/prd/10-filing-phase.md | sed -n '70,201p'; tail -n 12 docs/research/2026-11-04-filing-end-to-end/log.md" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+    70	## 4. Constraints (what must not move, and why)
+    71	
+    72	- **The frozen ruler** (AGENTS §7.1, D261, D262): the extraction standard, version 5 (the signed version 3 with D248's seven boundaries and D250's four
+    73	  evidence boundaries and counting unit), golden-v5, the seed questions and the judgement gold; not a word changes; a disagreement is a gap in the
+    74	  system (D263).
+    75	- **The frozen extraction prompt** (D274): v74i (`poc-v108`) does not change by a word; what this phase changes is the one place that holds the filing
+    76	  rule (the description of the `links` field), made into a new version with a new configuration and compared with v74i. Alex has given his word for this
+    77	  work (2026-11-04: "好你去解决问题", "开始做"); making it the default needs his word again.
+    78	- **Frozen opening and judging** (D354): this phase does not touch them.
+    79	- **The standard's text** (in translation): §6, "file under the narrowest open question; when no question takes it, record no home and drop it, and read
+    80	  each one at evaluation"; §5.1, "makes the answer to some question more or less likely", with four paths, "demand, supply, competition, pricing"; §5.3,
+    81	  "another company's matter is not kept when one cannot say which question about the covered company it moves through a path such as demand, supply,
+    82	  competition or pricing".
+    83	- **Decisions**: D207 (one home per fact, the narrowest question), D209 (no home means dropped, each one read), D259 (leeway: a figure question takes
+    84	  "the demand, supply, competition and pricing that make it more or less likely"; the total-revenue question taking more is an accepted cost, "bounded by
+    85	  the narrowest-question rule and the driver questions"), D265 (code keeps only the narrowest), D273 (the fallback sentence), D355 (the two failed tests
+    86	  of the previous filing topic).
+    87	- **Prompt principles** (AGENTS §6): carry only the standard and add no new rule; a general hedge-fund analyst: every rule and example reads the same
+    88	  for a bank, a drug maker, a retailer or a chip company, names neither NVIDIA nor its products or figures, and is not taken from a test article; a
+    89	  classification is written as a closed set with two or three examples per class, replacing the abstract wording; quality is not fixed by lengthening
+    90	  the prompt: remove as much as is added, or write down the reason.
+    91	- **Code decides only "is it the same thing", never "does it matter"** (AGENTS §2).
+    92	
+    93	## 5. What to do
+    94	
+    95	Status: the links-rule version that carried items 1–3 (v74l) failed its one test (§8 step 5); D361 keeps the fallback sentence, so item 3 is not carried out. The plan below is kept as written.
+    96	
+    97	1. **Replace the abstract sentence "makes the answer more or less likely through demand, supply, competition or pricing" with the few classes in which an analyst recognises an indirect relation, written as a closed set, each class with two or three examples from other industries** (AGENTS §6: one
+    98	   abstract sentence is a coin flip on every send; examples replace it). A first draft of the classes (checked against the standard line by line at
+    99	   design time; it holds only meanings the standard already has):
+   100	   - The question's own figure: this question's figures, guidance, estimates and revisions (estimates for another period or another population follow
+   101	     the existing rule).
+   102	   - The other side of the same money: a seller's revenue from the buyers the question counts; those buyers' orders and backlog with these sellers.
+   103	   - Price and volume: a product's price or shipments, for the question on that product's revenue.
+   104	   - Variants and parts: a product's variants, alternatives, key parts and schedule changes, for the question on that product's launch.
+   105	   - Demand, supply and competition moves with a number: customers' orders and capital-spending plans, suppliers' capacity and prices, competitors'
+   106	     sales and share, for the question they affect.
+   107	2. **State how to file a fact when two specific questions both bear on it** (the problem the `definition_no_fallback` arm exposed: Morgan Stanley's rack
+   108	   price was filed under the buyers' capital-spending question, and the seller's Rubin revenue question lost it). One home per fact (D207): file it under
+   109	   the question its figure measures most directly (for example, a hotel's room rate goes under its room-revenue question, not under the
+   110	   travellers'-spending question; a parts maker's revenue from carmakers goes under the carmakers' parts-spending question, not under a rival parts
+   111	   maker's share question); when one sentence gives a separate figure for each of two questions, write two items, each filed under its own question
+   112	   (code stores two items that quote the same sentence as one record linked to both questions); never also file it under a broader question about the
+   113	   same company (the failure of D355's test 2: the model filed it under an NVIDIA revenue question as well). The original draft's "when the other
+   114	   party's question is open … file it there as well" conflicted with D207 and was deleted on 2026-11-04 with Alex's agreement (D360).
+   115	3. **Delete the fallback sentence** and return to the standard's §6: when no question takes a fact, it is not filed; code drops it as "no home" and
+   116	   records it (D209), and evaluation reads each one.
+   117	4. Change only the one place that holds the filing rule; report its length in characters before and after, and write down the reason for any growth
+   118	   (this time's reason: examples replace one abstract sentence).
+   119	
+   120	## 6. How to measure (the ruler does not move; the method does not change again)
+   121	
+   122	- **Requests**: rebuild each stored request byte for byte with the production code, changing only the one place that holds the filing rule; the
+   123	  rebuilt request's archive id must equal the original's, or it is not sent (`resend_filing.py`, AGENTS §5). Never re-send the archive's copy whose
+   124	  keys were sorted alphabetically.
+   125	- **Articles**: development set = the 54 articles of `selection.json` (already read many times); held-out set = articles the extraction gold read and
+   126	  the judgement gold uses that are not among those 54, drawn once before the test, with the list frozen and never changed afterwards. Both sets are
+   127	  measured and reported apart.
+   128	- **Control**: the unchanged requests re-sent 3 times the same day. No comparison with the archive (model drift).
+   129	- **Each answer**: goes through the production code checks and filing first (including "keep only the narrowest" and "no home means dropped"), and is
+   130	  counted after.
+   131	- **What is counted** (`measure_filing.py`, with its matching rule fixed: items are matched on the distinct numbers and the proper nouns other than
+   132	  NVIDIA in the source text; a source passage the system quotes that overlaps the gold's passage also counts as the same matter; "optional" counts as
+   133	  optional; the citations in the body of the gold's answers are read):
+   134	  - whether each fact that matters (one the gold uses to judge any question) reached the question that uses it, counted per fact, not per "fact ×
+   135	    question";
+   136	  - per question: the facts that matter that reached it and the new noise that appeared, counted by the decision rule below;
+   137	  - the parking lot: how many facts the total-revenue question (v1, together with v22) takes in, and what they are;
+   138	  - noise: how many of the sentences the standard does not keep are kept; per question, how noise is filed (links on facts the standard does not keep
+   139	    or no question uses);
+   140	  - how many core and supporting facts appear; the facts that matter that are dropped; how many questions each fact is filed under on average.
+   141	  - Matching still has a small error (spot check: the new rule mismatches a few and misses a few); say so when reporting the numbers, and read the
+   142	    ones that matter one by one.
+   143	- **Decision rule** (rewritten on 2026-11-04 with Alex's agreement, D360. The original draft required "every draw above the highest of the control's
+   144	  three" and the like, which the control itself fails when measured again, so it cannot tell good from bad. Script `decide.py`; written down and frozen
+   145	  before each test; each draw's numbers and the totals are all reported):
+   146	  - **Totals, with luck ruled out first**: each article's 6 answers from the new and the old arm are randomly reassigned between the two arms 4,000
+   147	    times (with a fixed random seed); the new rule's difference counts as a real change only when fewer than 5% of the reassignments reach it.
+   148	    - Development set: facts that matter reaching the question that uses them must rise; the count under the total-revenue questions (v1, v22) must
+   149	      fall; sentences the standard does not keep must not rise; core facts must not fall.
+   150	    - Held-out set: facts that matter reaching the question that uses them must not fall; sentences the standard does not keep must not rise; core
+   151	      facts must not fall.
+   152	  - **Per question, counted by code against the gold** (development and held-out sets together):
+   153	    - A fact that matters which reaches the question at least two fewer times under the new rule than under the control counts as "one fewer" for that
+   154	      question; in under the control all three times and under the new rule none of the three, it counts as "lost outright". A move to another question
+   155	      that the gold also uses it for and that is no broader than the original (one home per fact, D207) does not count as fewer; a move to a broader
+   156	      question counts. "One more" in the opposite direction offsets it.
+   157	    - A noise sentence (not kept by the standard, or kept but used by no question) that the new rule files under the question at least twice while the
+   158	      control never does counts as "new noise"; filed all three times, it counts as "outright new noise". The opposite direction offsets it.
+   159	    - Any question with a net 3 fewer, a net 2 lost outright, a net 5 more new noise, or a net 3 more outright new noise fails. These thresholds are the
+   160	      smallest values that keep "misjudged when new and old are exactly the same" within about one in ten; at the test, first compute the
+   161	      misjudgement rate from the reassignments; if it is above one in ten, raise the threshold most prone to misjudgement by one step, then compare with
+   162	      what was measured.
+   163	  - **Smaller changes** (a question 2 fewer, two or three more noise) cannot be told from luck in three measurements: all are listed, given to a reader
+   164	    who did not write the rule to read against the raw answers, and written into the report; they do not decide pass or fail.
+   165	  Only when everything passes does it become a candidate; a candidate runs end to end three times on the 14-day window (extraction re-sent, matching and
+   166	  judging run as usual, scored on the frozen judgement ruler), and that step needs Alex's word.
+   167	
+   168	## 7. Process (no drift)
+   169	
+   170	- **One recommendation and one test at a time** (AGENTS §7.3, Alex: "就测试一种，一次"): write the design first and put it through rounds of review (own
+   171	  checks, Codex read-only, a reader who did not write it reading the raw records) until a round finds nothing serious; write down and freeze the
+   172	  predictions and stop conditions; test once; if it does not match, stop and take it to Alex (D355: "如果有什么不符合hypothesis 的地方你需要终止然后和我说我们重新评估").
+   173	- **A review's report is a lead**: each finding counts only once it is checked against the records (AGENTS §1).
+   174	- **A prompt audit before any prompt change** (`.claude/skills/prompt-audit/SKILL.md`): check the whole request against the standard sentence by
+   175	  sentence, in both directions.
+   176	- **Every step goes into `log.md`**: what was done, what came of it, the files; mistakes and overturned results stay in it too.
+   177	- **Do not repeat what was ruled out** (§3).
+   178	
+   179	## 8. Steps and where we are
+   180	
+   181	| # | Step | Output | Status |
+   182	|---|---|---|---|
+   183	| 1 | Design: the classes of indirect relation (a closed set + examples from other industries), how to file when a fact measures both sides, deleting the fallback; checked against the standard sentence by sentence; length before and after | `docs/research/2026-11-04-filing-end-to-end/design-links.md` | Done (draft 3, v74l / poc-v115) |
+   184	| 2 | Checks at no cost: a sample answer written by the new rule goes through every code check; the new rule's text goes through the prompt audit | Same as above | Done |
+   185	| 3 | Review rounds (Codex, independent readers, own), until nothing serious remains | `review-links-*.md` | Done (Codex 7 rounds, independent readers 3 times; round 7 found nothing serious) |
+   186	| 4 | Draw and freeze the held-out set; write down and freeze this test's predictions and decision rule | `heldout.json`, `predictions-links.md` | Done (sha256 recorded for both) |
+   187	| 5 | Test once: development set + held-out set, the new rule and the same-day control 3 times each | `answers-links.json`, `log.md` | Done (2026-11-04): failed: facts that matter reaching the right question, development set +7 (p 0.26); every other condition passed |
+   188	| 6 | If passed: to Alex, to decide whether to run three 14-day end-to-end draws; if failed: stop, to Alex | `design-links.md` §8 | Stopped, to Alex |
+   189	| 7 | (D361, Alex: "按照你的提以来，但是你一定是自己反思多轮之后才给出的行动") Measure the ceiling first: hand the source passages the gold cites straight to the frozen judgement; the custom-chip, operating-margin and capital-spending questions judged 3 times each at the window end, the custom-chip question as it was 3 times as the control; the fallback sentence is not deleted for now | `reflection-v74l.md`, `oracle-design.md` | Done: operating margin grounded 3/3, capital spending 2/3, custom chips 0/3 (the gap is in interpretation); the next step waits for Alex |
+   190	| 8 | (D362, Alex: "你继续啊不要scope drift and strongly follow evidence of your discovery and learning") Two small changes where facts are not delivered, one at a time: ① when a quote is rewritten, code matches it back to the source sentence (changing nothing the model sees; verified by replaying the archive); ② a figure question's description states which figures it is derived from by definition (first sent 3 times each on the article that motivated it) | `delivery-fixes.md` | Stopped: an independent check overturned the first change's code (it would take in wrong figures); the second failed its trial send (1/3). The root: the signed standard's §5.3 does not keep two key facts, treating them as "a restatement of known facts" (proposal 6, awaiting approval); to Alex |
+   191	| 9 | **Historical; superseded by D370.** (D363, Alex: "乙") At coverage start, record each question's starting figure once from the company's latest earnings report; the daily path still takes no restatements: design, rounds of self-checks and independent checks, validated first on the archive in the simplest way | `baseline-design.md` | Validated on two questions: the frozen extraction does not read the report's tables (0/3); with each question reading the report once on its own, the operating-margin question read its starting figure 2/3 and the capital-spending question 3/3, and the judgement then judged right (2/3, 3/3), about 2.5 cents. All 22 questions tested once (2026-11-05, Alex: "你充分验证"; files chosen by code, a same-day control, about $0.43): v10 and v12 judged right 9/9 each; no question already judged right turned wrong; but 5 of the 53 figures read were other quantities (the Vera CPU question and the Blackwell and Rubin question took a larger or neighbouring revenue line), so it failed condition 3, written beforehand. The model itself pointed to the reading instructions' sentence "write the lines it is computed from, or the line the report uses for it"; stopped, to Alex. Alex: "改"; only this sentence was changed ("write only the lines it is computed from, or the same quantity under another name; never a broader line or a line next to it"), tried on 4 questions first, then tested on all 22 (about $0.36): all three conditions passed: v10 and v12 9/9 each, no question judged right turned wrong, and all 46 figures were the questions' own quantities. Checked after an independent reader's challenge: the new sentence made the reading miss the capital-spending line in 3 of 12 reads, and it had been tested only on the one May report; the fourth version (a line-by-line re-check after writing) removed too much and failed; after a census of every failure trace (Alex: "我需要你深度看完所有失败trace给我准信"), the third version with the repaired quote check was chosen (D365): 0 wrong figures on the held-out August report; built into the production system (poc-v116; the $0 checks and the tests all pass). The full acceptance, three 14-day draws (Alex: "跑验收"; a same-day control; about $4.79): all passed: operating margin and capital spending judged right 3/3 each (the control never judged them), 53 against 45 in total (of 57); for the China-share question, the only one two fewer, both readers found the starting figures did not lead it astray. Alex: "都做": poc-v116 became the default (D366); the code was committed and a PR opened |
+   192	
+   193	## 9. Alex's own words on this matter (in time order)
+   194	
+   195	- "你这个单独开一个专题出来解决 … 是promot，是系统结构设计还是到底哪里有问题挂错一堆东西，机制是不是有问题（一定要挂吗？有没有可能是杂音" (2026-11-03)
+   196	- "So if it's a customer problem or other companies that you think is relating NVIDIA and it's the wrong evidence, then what is the standard for it? … from a hedge fund analyst standpoint, are these even relevant? Do you think your ruler is wrong in this aspect?" (2026-11-04)
+   197	- "你确定下你接下来要改进的量化目标，以及你要看到端到端我们的管线是要做什么的，不要乱硬优化，要看到目标" (2026-11-04)
+   198	- "就测试一种，一次 … 能不能自己有个超级自信的定论和证据再给我提建议" (2026-11-04)
+   199	- "这些只是类型题，你需要抽象拔高我们现在的核心问题和卡点。这个很重要这样改下去才是对的" (2026-11-04)
+   200	- "你把这个写好成下一阶段核心PRD然后不要drift, 把所有需要的context 全部充分记录，每次开始前都需要revisit, 然后开始做" (2026-11-04)
+   201	- "go" (2026-11-04, on the proposed amendments to §5.2 and §6 and on this test)
+| 30 | 11-05 | Alex："你充分验证"。乙的全部 22 道题验证：设计（`baseline-design.md` 第 8 轮）——文件由代码选（开始跟踪前最近一个财报日的财报类材料：5 月 20 日新闻稿和 CFO 说明）；读法和第二版一字不差，每题每份文件 3 次；判断照 PRD 10 §4 当天原样重发：三遍各自拿窗口末最后一次判断的存档请求，对照原样 3 次，起点组只在证据块最前面加上读到的数；过关三条事先写下（v10、v12 各 ≥ 6/9；不弄坏：同一遍里重排的精确检验显著少、或少 2 次以上且两人读理由认定是起点数带偏；读到的数五类分类，读错、别的量、不是数一个都不能有） | 发之前修了两处：读法的检查原来要求"引用的最后一个数就是读到的数"，照抄整句的正常引用会被拒（4 句全拒），改成"读到的数印在引用里"（对照 32 例全对，两个弄坏的版本分别抓出 5、1 个错；试点重放只有 v10 第 3 次那两条整行变成收下，v10 变 3/3）；发送脚本按冻结尺子补上是非题判法、"档动了"对着请求里那次上一次结论查（三遍存档 57 个结论和 `score_judgement.py` 逐题一致，弄坏的判法被抓出）。审查：Codex 4 轮（第 1 轮 5 条严重、第 2 轮 3 条严重，都属实都改；第 3、4 轮无严重问题），独立读者 1 次（请求干净、没有金标泄漏；挪档看不见、单位后缀、口径错等照改） | 设计和 8 个脚本锁定（`baseline-all.sha256`）；发读数 132 次 |
+| 31 | 11-05 | 乙的全部 22 道题验证，照锁定的设计测一次：读 132 次（0.083 美元）、两人分类（第二位盲分）、判断 144 次（0.344 美元），三遍各自和当天原样重发的对照比 | **第 1 条过**：v10、v12 各 9/9 判对。**第 2 条过**：读到数的 7 道判过的题两组选档逐次一样，只有 v22 第 2 遍少 1 次（7/9 对 6/9，理由显示是本来的抽样起伏，起点组写明"没有把一季度乘 4"）。**第 3 条没过**：53 个收下的数里 5 个是别的量——v19（Vera CPU 收入）两次收了"数据中心计算收入 604 亿"，v20（Blackwell 和 Rubin 收入）两次收了"数据中心收入 752 亿"和"网络收入 148 亿"；判断都没被带偏（v19 理由写明计算收入里没有单列 Vera CPU） | 照登记停，交 Alex |
+| 32 | 11-05 | 问模型自己为什么收那 5 个数（3 次，约 0.3 美分，`probe-baseline-account.md`） | 3 次都指向读法任务里那一句"报告没用题目的名字写这个量时，写出组成它的行、或报告记它的那一行"，并自己说这些数不是这道题的量、不该写。这一句是 v10、v12 要用的，在报告根本没有这个量的题上把模型推去写更大或旁边的行 | 建议：只改这一句的边界（只收"由它算出的那几行"和"换了名字的同一个量"，更大的、旁边的行不算），按提示词审计改，再在 22 道题上测一次；等 Alex 的话 |
+| 33 | 11-05 | Alex："改"。只改读法里那一句：原句"写出组成它的行、或报告记它的那一行"→ 新句"只写算出它的那几行，或换了名字的同一个量；更大的行、旁边的行都不写"（任务 790 → 889 字符，理由：抽象说法换成闭合两类加边界）。提示词审计、Codex 只读审 1 轮（1 条严重：发送失败会被当成白卷，已改成"不完整、不下结论"）；先在 v19、v20、v10、v12 上试发 24 次（1.6 美分） | 试发过：v19、v20 三次都白卷，v10 3/3；v12 2/3——问模型（2 次）：新句的"更大的行"半句让它把"购置固定资产和无形资产"当成比资本开支宽的一行，其中一次重想后改口"就是资本开支" | 照登记测全部 22 道题 |
+| 34 | 11-05 | 第三版的登记测试：和第 8 轮一样，只换这一句；读 132 次（0.078 美元）、两人分类（第二位盲分）、读到数的 7 道题三遍重判、当天对照（108 次，0.268 美元） | **三条全过**：v10、v12 各 9/9；判对的题一道没变错（只有 v22 第 2 遍反过来对照 0/3、起点组 3/3，理由是在 41% 和 32% 两个增长估计间摇摆，和第 13 轮方向相反，与起点数无关）；46 个数全是自己的量（2 条是标明的二季度指引），两人分类全一致；v19、v20 的错数全没了，其余 15 道白卷、没冒出新错。没盖住：资本开支那一行试发时漏过 1 次；指引也被写成"事实"；一路判下来的效果和跨题效果要端到端才量得到 | 交 Alex：要不要做进生产、跑 14 天三遍端到端 |
+| 35 | 11-05 | 独立读者挑战"现在做进生产、跑 14 天三遍"的建议 | 核实属实的：资本开支那一行在新句子下 12 次读漏 3 次（旧句子 9/9，模型两次都怪"更大的行"半句）；句子照 5 月财报改、又只在 5 月财报上量，没有留出的财报；做进生产前的记录写法（同一个数挂几道题、指引不该写成"事实"、第二个提示词）要 Alex 定；分类和判断同时跑、说明里还引着旧句子，照实记下 | 建议撤回；下一步：修掉资本开支漏读（改成"写完逐条复核"），在 5 月和留出的 8 月两份财报上各测一遍，约 0.5 美元 |
+| 36 | 11-05 | Alex："好开始做到production 上，完整的更新所有系统设计等"；同一个数挂几道题，他选"存一条，挂到每道读到它的题"（D364）。做进生产前先修资本开支漏读：第四版把"是不是这道题的量"挪到最后逐条复核（并删掉别的期间），文件规则补"有申报的只读申报的"；Codex 审 3 轮（共 6 条严重，都改）；试发 7 道题过；然后 5 月登记读法、8 月留出读法 | **没过**：5 月"不能删掉该留的"——v22 只留住 1/3、资本开支 3/6 读；8 月资本开支二季度 0/3（选了上半年、引用跳格被拒）。机理：复核里"别的期间删掉"让全年题删掉最近一季；"最近一期"在本季和年初至今两栏间没说清。好消息：8 月 v9 找到了新披露的担保 1,085 亿和承诺 560 亿 | 停，交 Alex：第三版是唯一过了 5 月三条的版本 |
+| 37 | 11-05 | Alex："为什么没过？…你确定是正确的rejection 吗？你又下去看trace吗？"；"我需要你深度看完所有失败trace给我准信下一步你要跑什么才能收敛"。普查全部 7 次读法、606 次文件读（`census_all_reads.py`，$0） | 第三版 0 个错数、156 次读漏 3 次（全是资本开支）；第二版 2 个错数；第四版漏 24 次（5 月）、16 次（8 月）。我自己判错的：6 个对的数被我的引用检查拒（漏星号、跳格），8 月"只认本季"规则错，第 13 轮 3 条"有争议"的数是标准答案自己用的行，第三版全过后又改第四版 | 收敛方案：提示词定为第三版不再改；修引用检查（$0 重放全部 606 次读核对）；在 8 月财报上用第三版读一次（约 8 美分，只有"收错数"能叫停）；然后做进生产 |
+| 38 | 11-05 | Alex："好，按这三步做，你不要再搬石头砸自己脚了，你要收敛上生产"。第 1 步：引用检查搬进正式代码 `src/hivemind/baseline.py`，加"行名是报告的、数在同一行就存原文那一整行"的修复（漏脚注记号、跳格）；对照 36 例全对，三个弄坏的版本各抓出 1 个错；重放全部存下的读法，改变的正好是那 6 个被拒的对数。第 2 步：第三版加修好的检查读 8 月留出财报 132 次（0.096 美元），两人分类 | 第 1 步：只改了那 6 条。第 2 步过：44 个数 0 个错（3 条"剩余资本开支承诺 70 亿"两人不一致，对着原文定为"自己的量，别的期间"）；v10 3/3、v12 2/3 | 读法定为第三版加修好的检查，不再改；第 3 步写正式代码 |
+| 39 | 11-05 | 第 3 步：做进正式系统（设计四张表，Codex 审 3 轮：第 1 轮 4 条严重、第 2 轮 2 条严重，都改；第 3 轮无严重问题） | 建成 `baseline.run` + poc-v116 + baseline-v3 提示词文件；$0 核对：44 份请求和验证时逐字节相同，3 次存下的回答走正式代码写出的记录完全一样，第一天判断正好判这些题，网页从开始跟踪那天可见；新测试 12 条、6 个弄坏版本都抓出、全套 272 条通过；设计页和 PRD 00/03/04/05/06 更新，`docs/check.py` 通过 | 交 Alex：要不要跑 14 天三遍完整验收（约 5 美元） |
+| 40 | 11-05 | Alex："跑验收"。14 天三遍完整验收：poc-v116（开始跟踪时读财报）三遍、当天重跑 poc-v108 三遍作对照，冻结尺子打分（事先锁定 `acceptance-design.md`）；电脑中途在电池上睡了约 5 小时，6 遍被暂停，插电后自己接着跑完 | **全过**：v10、v12 各 3/3（对照从没判过）；合计 53 对 45（满分 57，+8）；唯一少两次的 v17（0/3 对 2/3）两人都认定不是起点数：同一份抽取请求，新配置两遍碰巧留下"中国份额归零"那句，对照没留；约 4.79 美元 | 交 Alex：poc-v116 是否成为默认 |
+| 41 | 11-05 | Alex："都做"（poc-v116 设成默认；提交代码、开 PR）。默认配置改成 poc-v116，默认的条目数据库换成带财报网页原文的那一份（旧的没有原文，新默认会在它上面拒跑）；测试按用户的用法补上：不给种子题就拒绝，给了就先读财报再跑第一天 | 测试全过，5 个弄坏的版本都抓出；配置的设置和验收三遍记下的校验码一致（只改了配置里的注释）；花钱前的检查脚本在新配置的运行数据上照常跑完，但不复查读财报那一步的引用检查（记为未补的缺口）；D366 | 提交、开 PR；下一类问题等 Alex |
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '9410,9436p;9460,9518p'; nl -ba docs/CURRENT_STATE.md | sed -n '429,453p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  9410	- **Decided:** as written in `clean-arch/PRD.md` §1.5, which now owns the rule.
+  9411	  1. **The product comparison is the release decision.**
+  9412	     - poc-v118 is replayed against the hashed new system (astra-frozen; v5.5 excluded). Both start from empty over 07-01 to 07-19, three draws
+  9413	       each, and are scored on unread weeks from 07-20 up to 09-20, as far as the full exposure census supports. The exclusion list is frozen.
+  9414	     - **The main quantity:** big matters served, paired per matter.
+  9415	     - **Verdicts:**
+  9416	       - **Practical lead:** a − b ≥ max(3, 15% of N) and a ≥ 2b. Every guardrail subgroup must meet its frozen minimum and pass under both split
+  9417	         countings.
+  9418	       - **Practical loss:** the mirror, or a guardrail breach confirmed under both countings.
+  9419	       - **No practical winner, too small or invalid**, as written.
+  9420	     - **Guardrails:** unsupported shares (figure and yes/no apart) and the not-worth-tracking share, each within 10 points of the old system's.
+  9421	       D428's limits are printed beside them.
+  9422	     - **Illustrative only:** a sign test and an interval.
+  9423	     - **Frozen and hashed before the first send:** the matter list (blind), the credit rules (one cutoff per matter, the grouping of repeats,
+  9424	       what counts as the same question), the controls, the versions and the rule.
+  9425	  2. **What changes, explicitly:**
+  9426	     - D548's use of D400's six lines as a release gate is superseded. The lines are reported on every ladder run.
+  9427	     - The parts code decides stay hard: figure ranges meet end to end; the favourable end is stable; the due day is consistent at D400's 90%.
+  9428	     - D431's frozen-reference reading of 07-01 to 07-14 is still produced and printed beside the comparison, not deciding. D665 supersedes D431
+  9429	       on that point only.
+  9430	     - Step 2's three checks stay as D427 and D431 set them.
+  9431	     - Gate 2's unsupported lines become the guardrails, and its control line waits (D658).
+  9432	     - Gate 4 folds in.
+  9433	     - Gate 5 waits for a practical lead and Alex's word.
+  9434	     - The absolute floors stay proposals, reported beside.
+  9435	  3. **Back to Alex,** before any release engineering resumes: a practical lead (with the split cards for his spot check), a practical loss at
+  9436	     once, no practical winner, too small or invalid, or no verdict by 2026-12-01.
+  9460	## D667 · 2026-11-17 · Under D666 and D439 (council, run-plan rounds 1–10): the release comparison's run plan and the rules it takes for this run
+  9461	
+  9462	- **Council:** `docs/research/2026-11-17-product-comparison/`: `RUN-PLAN-v1.md` … `RUN-PLAN-v9.md`, `review-codex-1..10.md` (thread
+  9463	  01a1ebfe-4f67-7c72-af87-7830055e0f09, memories off), a fresh Claude reviewer each round (READY at v7), and `ROUND-LOG.md` (what each round
+  9464	  taught).
+  9465	- **Decided**, for this comparison only; D665's rule is unchanged:
+  9466	  1. **The plan** is `RUN-PLAN.md` v9, frozen as `RUN-PLAN-v9.md`. Build-level checks run at the stage-0 freeze review
+  9467	     (`freeze-review-notes.md`), which gates the first paid send.
+  9468	  2. **Exposure.**
+  9469	     - Plan §1.2 governs the whole census: the closed set of read kinds, the search roots and every exclusion. Any read excludes an article.
+  9470	     - **Not reads,** and only these:
+  9471	       - the search index built over the whole corpus;
+  9472	       - this comparison's own files (its census, reader packets and outputs are not prior exposure);
+  9473	       - **An old-system replay folder and its byte copies.** Only when its decision record or run note shows it ran the then-production
+  9474	         configuration as the product (its library sealed or served as the product's), and no decision cites one of its articles as a case
+  9475	         behind a change. Development replays (arms, probes, configuration trials, week tests) are reads, and so is any research artifact
+  9476	         built from an exempt run. Classified per folder in `replay-folders.json` before any hit is read.
+  9477	       - **Stored rows that are verified raw copies of a corpus build** listed in `corpus-builds.json` (the same rows by `input_id` and
+  9478	         `content_sha256`). Whatever a probe, run or fixture actually used is still a read through its trace, packet or fixture text.
+  9479	     - D613's "unread" was a Step 1 census; this is the full census D665 asks for.
+  9480	  3. **The company's own figures** (D505's list) count in N, as D665 says. Their subgroup is flagged blind at the census and printed beside
+  9481	     the verdict. The new system does not open such questions by D505, and Alex sees how much of any gap that makes (D431 compares the
+  9482	     products as configured).
+  9483	  4. **One ledger per draw.**
+  9484	     - Absolute guards: $65 per new-system draw and $25 per old-system draw, $270 in all. They are stops, not a budget (D664).
+  9485	     - For this run, this replaces D449's whole-run stop across draws and D666's single $250 ledger. D449's one redo within a draw is
+  9486	       unchanged.
+  9487	  5. **D431's "same day," for a run longer than one day.** A new-system draw takes about 20 h, so one calendar day cannot hold it.
+  9488	     - The six counted draws are launched within one hour of each other and run concurrently.
+  9489	     - A redo within a draw counts as part of that draw.
+  9490	     - Every counted send falls within 72 h of the first launch.
+  9491	     - A breach makes the result a diagnostic.
+  9492	     - This replaces, for this run only, the one-calendar-day reading in `WIRING-DESIGN.md`.
+  9493	  6. **No replacement draw counts.** A draw that cannot finish gives no release verdict; what finished goes to Alex as a diagnostic. The
+  9494	     reviewers read "same day" differently, so the council took the cheaper, reversible course (D439).
+  9495	  7. **The credit and scoring rules** are plan §1.4:
+  9496	     - one cutoff, the span's last day;
+  9497	     - "covers" in A2's form, blind;
+  9498	     - the earlier-opened question of a same-bet pair is the original;
+  9499	     - distinct bets for the 30-question minimum;
+  9500	     - D428's decided-only guardrail shares;
+  9501	     - splits resolved per counting to a mark the readers gave;
+  9502	     - an unexercised subgroup blocks only a lead;
+  9503	     - the verdicts tested in order: invalid, too small, lead, loss, no winner.
+  9504	  8. **Step 2's three lines** (D427) are hard checks, each decided on its point estimate over frozen samples: 100 records, 200 merges, 30
+  9505	     groups. A line with too few cases is not measured and cannot clear release.
+  9506	  9. **Two proposed floors** (wrong citations, answer-changing omissions) are printed as not measured. Measuring them needs source-first
+  9507	     readings outside this comparison.
+  9508	- **Out of scope during the run** (to `FINDINGS.md`): D662's holds, D658, and any fix, except a launcher-only repair after a failed slice,
+  9509	  followed by a slice rerun (plan §2).
+  9510	- **Back to Alex:**
+  9511	  - the verdict, or a diagnostic;
+  9512	  - N < 20 at the census;
+  9513	  - a stop that is not a wiring fault;
+  9514	  - a guard reached;
+  9515	  - a failed hard check;
+  9516	  - no verdict by 2026-12-01.
+  9517	- **Recorded** after consensus: Codex READY at round 10 (`review-codex-10.md`); the Claude reviewer READY at round 7. Rounds 8–10 changed only the record's wording and the corpus-copy rule Codex raised. The Claude reviewer's build-level notes are carried in `freeze-review-notes.md`.
+   429	- a same-news comparison from established libraries (D611: underpowered, and no unread week left).
+   430	
+   431	The council's reversible decisions on Alex's page are recorded in D606 and D607.
+   432	
+   433	**The one next task (D665, D666, D667): stage 0 of the release comparison, at $0** (`docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md`).
+   434	- **The plan** passed the council (D667): Codex READY at round 10, the Claude reviewer READY at round 7. Lessons by round are in `ROUND-LOG.md`.
+   435	- **Stage 0, all $0:**
+   436	  - the exposure census and the frozen exclusions;
+   437	  - one filtered input for both systems;
+   438	  - the blind matter census (N < 20 goes to Alex);
+   439	  - `verdict-rule.json` and the scorer;
+   440	  - code changes A to F, each with a test and a mutant;
+   441	  - the stored-data size check;
+   442	  - preflight;
+   443	  - the freeze review of the built artifacts.
+   444	- **Then:**
+   445	  - stage 1, a one-week slice of each system;
+   446	  - stage 2, three draws each, launched together, one ledger per draw ($270 of guards, not a budget);
+   447	  - stage 3, the council's reading and the verdict.
+   448	- **Monitored** in `RUN-LOG.md`. Out-of-scope findings go to `FINDINGS.md`.
+   449	- **Held** (D662): answer-choice changes, model trials, and live-store, planner and integration work. D658 waits (D664).
+   450	- **Open:** D661 (past Codex readers ran with memories on); D656's listing omission; the 589 uncommitted paths (his call).
+   451	
+   452	**After D638:** the stop hook rejected the hold, so the council opened D612's fourth condition with a new candidate, astra with arm A2
+   453	(D436's second-side sentences; D639).
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba brief-A1.md | sed -n '1,110p'; rg -n '8 matters|5 listed|five|8 big' -g '*.md' ." in /Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/week
+ succeeded in 0ms:
+     1	# Blind reader, reading A1: which big questions do these articles raise? (read-only)
+     2	
+     3	Repository `/Users/lchingen/hivemind`. You are a senior hedge-fund analyst covering NVIDIA. Read ONLY:
+     4	`docs/research/2026-11-14-use-acceptance/week/packet-A1.json` (40 articles, 2026-09-22 to 09-28, in publication order) and the signed standard
+     5	`docs/prd/05-extraction-standard.html` §3 (the opening reasons and "问题怎么写") and §4 (the opening tests: the answer can change a position; a date
+     6	and public material can settle it; no question already asks the same). Open no other file in that folder or anywhere else: system answers and
+     7	reference answers exist and you must not see them.
+     8	
+     9	Read every article in full, first paragraph to last. For each article, list every question worth tracking on its own that it raises: a big
+    10	matter (it can change NVIDIA's revenue, profit, cash, credit risk or competitive position, or it is a quantity or decision in the world that
+    11	many companies depend on), with an outcome a dated public release, filing or official decision can settle. Small matters, background, a
+    12	repeat of what an earlier article already raised (list it again only under the same matter key), a stock-price or valuation view, and anything
+    13	no public material can settle are not questions. Most articles raise none or one; say "none" when none qualifies.
+    14	
+    15	Then merge: one matter = one underlying bet, whichever articles raise it; another year of a figure is another matter; two questions are one
+    16	matter only when the same outcome would settle both and their answers cannot move apart.
+    17	
+    18	Write one JSON object per line:
+    19	- per question: {"article": n, "matter": "<short key>", "question": "<the question, with its period or check date>", "quote": "<= 40 words from
+    20	  the article>", "reason": "<the §3 reason and why it is big, <= 30 words>", "settled_by": "<the public material and when>"}
+    21	- per article with none: {"article": n, "matter": null}
+    22	- finally, per matter: {"matter": "<key>", "name": "<one line>", "articles": [n, ...]}
+./WEEK-RESULT.md:3:**Answer: by the rule written before reading, the difference is not clear.** Production covers two more of the five big matters both reader
+./WEEK-RESULT.md:27:## A. Big questions (40 sampled articles; eight matters, five listed by both families)
+./WEEK-RESULT.md:40:The families give the same status on 14 of 16 cells and on all ten cells of M01–M05. **Covered, of the five: clean 2, production 4.**
+./WEEK-RESULT.md:91:How each system treats the company's own revenue and margin: three of the five matters, 145 kept statements no judgement reads on one side;
+./WEEK-RESULT.md:98:for M01–M03 and every article production opened its five such questions from:
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'guardrail|warm-up|08-30|08-31' -g '*.md' -g '*.py' -g '"'!review-claude-*'"' . | cut -c1-245" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+./classify-own.md:32:| Scored weeks | about 3: 08-31, 09-07 and 09-14 (the split-v3 trial also read 08-29 and 08-30) | 07-20 to 09-20 |
+./amend-census-brief.md:11:- the split-v3 trial and the v117 smoke read 08-29 and 08-30.
+./amend-census-brief.md:12:- So the scored span can only be **08-31 to 09-20**: three weeks of 218, 229 and 273 articles (720), less whatever the census finds (D613
+./amend-census-brief.md:21:- The rest of the plan is unchanged. The systems still run from empty at 07-01, so the warm-up is now 07-01 to 08-30, and the cutoff stays
+./classify-codex.md:3:- **(a), folder level.** Within the scored span, exclude articles v29 read from 07-20 through 08-24 and articles v34 read from 07-20 through 08-28. Earlier-corpus runs can add exclusions through 08-15. The split tests and s
+./classify-codex.md:4:- **(b), article level.** Exempting the two production replays themselves would keep 07-20 through 08-28 eligible, less articles used in decisions, derived research, or other reads. The 08-29 and 08-30 tests still count. Un
+./replay-folders-brief.md:23:- In the worktree `/Users/lchingen/hivemind-no-preseed-evidence-review`: `poc/data/split-v3-prod-0829-0830*` (08-29 to 08-30) and
+./replay-folders-brief.md:43:- `english-v32-nvda-3m-2026-10-27` replayed only within the warm-up; it is not in scope.
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba docs/DECISIONS-log.md | sed -n '8168,8202p;3783,3797p'; nl -ba docs/research/2026-11-17-product-comparison/stage0/classify-codex.md | sed -n '1,7p'" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+  3783	## D358 · 2026-10-28 (carried 2026-11-04) · The three-month run stops at 2026-08-28 and is sealed; evidence bloat is the next problem to solve
+  3784	
+  3785	Recorded on 2026-10-28 as D206 of `feat/thesis-admission-v12` in that worktree's uncommitted decision log, and never merged; carried into
+  3786	`main` on 2026-11-04 when the worktree was removed (D359), its text unchanged below. Its D206 is a different decision on `main`.
+  3787	Its quality review is carried as `docs/research/2026-10-28-quality-review/` (documents and scripts; the comparison databases stay in
+  3788	the backup). The writer fix it names was not carried: `main` reads cited ids as a set where it serves them (`bundle.library`,
+  3789	`service`), which covers the same defect. The succession gap it records was not checked against today's code.
+  3790	
+  3791	- Alex, 16:30: "你先停止吧，把这个db 封存，替换成最新的FE可以读取然后把这个 bloating evidence 的问题给记录下来，很严重，需要解决". Earlier (16:12): "证据膨胀是一个问题，我们之后要想办法deal".
+  3792	- The run (`english-v34-nvda-3m-2026-10-28`, poc-v34, the D202–D205 writer) completed 59 days, 2026-07-01 to 08-28: 1,232 items, 69 theses, 7,091 calls, $5.80. It is sealed read-only as `poc/data/sealed-2026-10-28-v34-nvda-3m-through-0828/` (SQLite online backups, SHA256SUMS, logs and scripts; the run folder is left resumable). The front end reads it from 16:35: the served defaults switched in the five places the README names (main checkout), `poc/mock/index.html` rebuilt, the API restarted in `service-3m-2026-10-28/` (`/days` 2026-07-01..08-28, 69 theses).
+  3793	- Why it stops: evidence bloat. The Data Center revenue thesis (v10) carried 1,768 linked pieces by 08-27 and FY2027 revenue (v2) 1,733; v10's judging request was 292 KB with 698 evidence ids shown; the model mislabels one id among dozens of pushes about every other attempt, the code refuses the answer, two refusals halt the day. Today: 14 judge answers refused by code, 10 on v10/v2/v13, two days halted on v10 alone in 16:05–16:21. Of 25 pieces linked to v2, 10 bear on the question (Claude's reading); the judge ever cited 23–27% of what is linked. The census, the one-case traces and the rule candidates are in `docs/research/2026-10-28-quality-review/report.md` §2 D (and A–C, measured first); the step is Alex's to pick.
+  3794	- Found while switching the front end: one judgement (v2, id 736) cited an id twice and the UI contract (`thesis-ui/2`, uniqueItems) refused the dataset. The writer now stores each cited id once (`judging._record`, test `test_a_judgement_stores_each_cited_id_once`, red on the old writer); the two readers of sealed ledgers (`bundle.library`, `service` thesis bundles, main checkout) read the set, since a sealed ledger does not change.
+  3795	- The other halts of the day, each resumed by the run's `watch.sh` and recorded in the cost ledger: the judging output cap (D205), the Mac sleeping, three transport errors, one "database is locked" (a reader held the ledger over the 5 s busy timeout), one hung call (55 min at 0% CPU under the VPN; a stall detector was added to the watcher).
+  3796	- Amendment, 17:05. Alex, on seeing an empty thesis in the front end ("why is this here? there is no evidence and why is this a thesis"; then "你直接把它移除，这是我们自己的失误"): v68, "What stand-alone CPU revenue will NVIDIA report for calendar 2027?", opened on the run's last day by the succession rule (D168: same quantity, next period, after v24) from one statement ("$20 billion in 2026 and more than $40 billion in 2027"); the writer linked that statement to v7 and v24 (as a repeat of the $20 billion piece) and not to the successor it opened, so v68 stood with no evidence and, judging running only on arrivals, no judgement. Class: 1 of 69 theses with no evidence; 1 of 2 successions (v9 after v8 has 59 pieces). The sealed folder stays untouched; the front end, the API and the page build now read `poc/data/served-2026-10-28-v34-nvda-3m-through-0828/views.sqlite`, the same ledger with v68's rows removed (views, view_keys, rungs, successions, view_switches, views_fts; the append-only triggers dropped in that copy only; its README lists this). The writer gap (a succession's opening evidence is not linked to the successor) is an open defect in `writing.py` for the next slice.
+  3797	
+  8168	  - **It closes if** the libraries are not comparable or the sample cannot decide an important difference. Nothing is run that cannot
+  8169	    decide.
+  8170	
+  8171	## D611 · 2026-11-16 · Under D439: the same-news comparison from established libraries is not feasible within D439's remainder and closes by D610's condition
+  8172	
+  8173	- **The review** (`comparison-feasibility/RESULT.md`, $0):
+  8174	  - D517's power arithmetic stands (about 31 points detectable for about $9); a starting library does not change it.
+  8175	  - The old system's library ends 2026-08-28, so about $3.50 of replay would come first.
+  8176	  - Every week from 09-21 to 10-26 has been read by a new-system run or by Step 1's development runs, so no exposure-free week
+  8177	    remains.
+  8178	- **Nothing is run.** This does not show the systems equal.
+  8179	
+  8180	## D612 · 2026-11-16 · Under D439 (council round 151): paid work is held on the candidates the evidence now supports; the running system stays the default; work reopens on four named conditions
+  8181	
+  8182	- **Why:** every bounded route on record has closed with evidence this session: line 5 (D605), the postponement repair (D607), the
+  8183	  fiscal note (D608), figure delivery (D610), the comparison (D611). Earlier: A to A3, edge tuning (D586), Stage B's eighth control
+  8184	  (D592).
+  8185	  - Checked before proposing it, and closed: deciding A2 on more stored topics is impossible. The fresh-A2 design (D587) counts every
+  8186	    stored topic as a development matter, and no exposure-free week remains (D611).
+  8187	- **The council (round 151):** "The standing instruction to make progress does not make an uninformative send productive." The hold is
+  8188	  on the candidates the evidence now supports, not a claim that no improvement exists.
+  8189	- **Reopen work when:**
+  8190	  1. new source-backed cases show a shared delivery mechanism with a consequential effect, including on confidence;
+  8191	  2. unread material and enough budget allow a comparison whose decision rule can resolve a product question;
+  8192	  3. Alex's marks or decisions change the acceptance question or authorize a new reference;
+  8193	  4. the council identifies another concrete, reversible candidate, with a result that could move a gate and one that would close it.
+  8194	- **Kept current meanwhile:** the open evidence (the look-back boundary, the Kyber window mismatch, the due-day cleanup), the decision
+  8195	  page and the status.
+  8196	
+  8197	## D613 · 2026-11-16 · Under D439 (council round 152): D611's exposure claim corrected; D612's hold stands; no code check or send on gate 1's six failing sends
+  8198	
+  8199	- **Correction:** matched against every new-system Step 1 trace (1,437 articles), the selected weeks 2026-07-20 to 08-24 have no article
+  8200	  read, and 09-07 and 09-14 have 10 and 4. D611's "no exposure-free week" held only for 09-21 to 10-26. Its conclusion stands on power
+  8201	  and on the old library's end. The check covers Step 1 traces only, not every other activity.
+  8202	- **Nothing reopens:**
+     1	**Use (a), the folder-level reading. All listed replay families are reads.** Both three-month runs supplied product libraries and also drove changes. For example, D199 used a missed story about a national lab buying servers to explain why v29 dropped whole articles and to change what the system kept. [D199](/Users/lchingen/hivemind/docs/DECISIONS-log.md:2568) · [D667](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9460) · [Run plan §1.2](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:82)
+     2	
+     3	- **(a), folder level.** Within the scored span, exclude articles v29 read from 07-20 through 08-24 and articles v34 read from 07-20 through 08-28. Earlier-corpus runs can add exclusions through 08-15. The split tests and smoke test can add exclusions on 08-29 and 08-30.
+     4	- **(b), article level.** Exempting the two production replays themselves would keep 07-20 through 08-28 eligible, less articles used in decisions, derived research, or other reads. The 08-29 and 08-30 tests still count. Under either reading, 08-31 through 09-20 is beyond these folders’ reach, and the full census determines eligibility.
+     5	
+     6	I used decision records and run notes only, with no article-ID search and no paid calls.
+     7	
+
+exec
+/opt/homebrew/bin/zsh -lc "nl -ba amend-census-brief.md | sed -n '1,35p'; nl -ba replay-folders.json.sha256" in /Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0
+ succeeded in 0ms:
+     1	# Council: one amendment to the census sample, before any hit or article is read (read-only, $0)
+     2	
+     3	**Done:** `replay-folders.json` is frozen (sha in `replay-folders.json.sha256`).
+     4	- Two independent readers (a fresh Codex session, `classify-codex.md`, and a closed Claude reader) both chose reading (a), and both classed
+     5	  every folder a read.
+     6	- My own lean was (b) (`classify-own.md`). I concede: (b) cannot be decided before the hits, and the records show run-wide and unnamed trace
+     7	  reading behind D198, D199, D201–D204, D206 and D358.
+     8	
+     9	**What (a) leaves, by date only** (no hit has been read):
+    10	- v34-3m read up to 08-28;
+    11	- the split-v3 trial and the v117 smoke read 08-29 and 08-30.
+    12	- So the scored span can only be **08-31 to 09-20**: three weeks of 218, 229 and 273 articles (720), less whatever the census finds (D613
+    13	  already found 10 in the week of 09-07 and 4 in the week of 09-14).
+    14	
+    15	**The amendment:**
+    16	- Plan §1.3 item 1 samples 40 kept articles a week. Over three weeks that is about 120 articles. The fresh week's reading (40 articles)
+    17	  gave 8 matters, 5 listed by both families. Across weeks many matters recur and merge, so N may fall below 20 by sampling alone.
+    18	- **Proposed:** read **every** kept article in the scored span instead of 40 a week. Same brief (A1), same two families, same merge and
+    19	  reconciliation, in batches of about 40 articles per session.
+    20	- Decided now: no hit has been read, the census has not started, and no system has run.
+    21	- The rest of the plan is unchanged. The systems still run from empty at 07-01, so the warm-up is now 07-01 to 08-30, and the cutoff stays
+    22	  09-20.
+    23	
+    24	**Questions:**
+    25	1. Is this amendment faithful to D665 and D667? D665: "scored on unread weeks from 07-20 up to 09-20, as far as the full exposure census
+    26	   supports". Does it move any finish line after outputs are seen?
+    27	2. Anything else (a) changes in the plan that must be fixed before the census starts?
+    28	
+    29	End with `AGREE`, or `DISAGREE: <the smallest change>`. Under about 300 words. Do not open anything under `/private/tmp` or
+    30	`~/.codex/memories`.
+     1	0aa44d48b0066dd9fb8d4e2c116a103c25a801d3599bfd3c0c162b824fccb17c  replay-folders.json
+
+codex
+Reading every eligible article is faithful to D665. It changes how the matter list is built, while leaving the 20-matter minimum and verdict rules intact. D667 froze the 40-per-week plan, so record this as a narrow amendment before opening any census hits or articles. No comparison output has been seen. [D665](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9411) · [D667](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9465) · [Amendment brief](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/amend-census-brief.md:15)
+
+Before the census starts, write down two details:
+
+- **Freeze August 31–September 20 as the candidate scoring window.** The earlier replay dates justify that conservative boundary. They do not prove which individual articles were read. The full exposure census still decides which articles survive within the window. [Folder review](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/classify-codex.md:3) · [D667 exposure rule](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9468)
+- **Make the longer warm-up explicit in the shared input.** Both systems start empty July 1 and replay the same July 1–August 30 history. Apply the exposure filter to the scored window. Keep the September 20 cutoff, and have each family merge across all batches and weeks before reconciling and counting matters. If fewer than 20 remain, stop before any paid send. [Shared input](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:91) · [Matter census and cutoff](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:105)
+
+AGREE
+tokens used
+1,914,668
+Reading every eligible article is faithful to D665. It changes how the matter list is built, while leaving the 20-matter minimum and verdict rules intact. D667 froze the 40-per-week plan, so record this as a narrow amendment before opening any census hits or articles. No comparison output has been seen. [D665](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9411) · [D667](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9465) · [Amendment brief](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/amend-census-brief.md:15)
+
+Before the census starts, write down two details:
+
+- **Freeze August 31–September 20 as the candidate scoring window.** The earlier replay dates justify that conservative boundary. They do not prove which individual articles were read. The full exposure census still decides which articles survive within the window. [Folder review](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/stage0/classify-codex.md:3) · [D667 exposure rule](/Users/lchingen/hivemind/docs/DECISIONS-log.md:9468)
+- **Make the longer warm-up explicit in the shared input.** Both systems start empty July 1 and replay the same July 1–August 30 history. Apply the exposure filter to the scored window. Keep the September 20 cutoff, and have each family merge across all batches and weeks before reconciling and counting matters. If fewer than 20 remain, stop before any paid send. [Shared input](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:91) · [Matter census and cutoff](/Users/lchingen/hivemind/docs/research/2026-11-17-product-comparison/RUN-PLAN-v9.md:105)
+
+AGREE

@@ -7,7 +7,7 @@ import dataclasses
 import json
 
 from .. import dispatch, extraction, vocabulary
-from . import jev_matching, judging, matching, store, writing
+from . import jev_matching, judging, links, matching, store, writing
 
 
 @dataclasses.dataclass
@@ -36,7 +36,7 @@ def _match(conn, archive, cfg, universe, item, seq, result, candidates, evidence
     """One matching call with one retry on a refused check. Returns Checked, or None after marking the failure."""
     note = ''
     checked = None
-    engine = jev_matching if cfg.matching.engine == 'jev' else matching      # Jev answers once; a retry would be the same answer
+    engine = jev_matching if cfg.matching.engine in ('jev', links.ENGINE) else matching      # Jev answers once; a retry would be the same answer
     for attempt in range(1 if engine is jev_matching else 2):
         try:
             options = {'workers': workers, 'llm_transport': transport} if engine is jev_matching else {}     # the collision judge sends with the caller's transport too
@@ -150,12 +150,27 @@ def run(conn, archive, cfg, universe, item, seq, *, resume_from=None, transport=
         if checked2 is None:
             return result
         second_pass = checked2.evidence
+    # D694, D695: under the engine jev-links, the reading links between a newly opened number question and the number questions it was
+    # shown, chosen once matching has settled what opens (views/links.py); recorded per attempt whatever happens next
+    proposed, attempt = None, None
+    if cfg.matching.engine == links.ENGINE:
+        attempt = links.attempt_id(conn, item)
+        try:
+            proposed, chosen = links.choose(archive, cfg, conn, handover, checked, lists, shown, transport=transport)
+        except links.Refused as error:
+            links.record(conn, attempt, seq, item, cfg, 'failed', error.record)
+            return _fail(conn, item, seq, result, 'matched', 'linking_refused', 'linking: ' + str(error), 'linking')
+        links.record(conn, attempt, seq, item, cfg, 'proposed', chosen)
     dispatch.mark(conn, item, seq, 'matched', 'ok', f'{len(checked.outcomes)} candidates placed')
     # write, and record what changed in the same commit (a resume at 'judged' reads it)
     try:
-        written = writing.write(conn, universe, seq, item, handover, checked, second_pass)
+        written = writing.write(conn, universe, seq, item, handover, checked, second_pass, proposed_links=proposed)
     except Exception as error:
+        if attempt:
+            links.record(conn, attempt, seq, item, cfg, 'failed', {'error': repr(error)[:300]})
         return _fail(conn, item, seq, result, 'written', 'writing_failed', 'writing: ' + repr(error), type(error).__name__)
+    if attempt:
+        links.record(conn, attempt, seq, item, cfg, 'committed', {'links': written.links})
     result.new_views = len(set(written.new_views.values()))
     dispatch.mark(conn, item, seq, 'written', 'ok', json.dumps({'changed': sorted(written.changed_views), 'new': written.new_views, 'notes': written.notes[:20]}, ensure_ascii=False))
     dispatch.mark(conn, item, seq, 'handed_over', 'ok', '')

@@ -1,0 +1,11 @@
+**No-go on v2 as written.** The revised design is clearer about the library and exposure, but its decision rule still leaves two important cases undefined.
+
+- **The different-matter population has no minimum size.** Population (a) must have at least five topics, but population (b) could have only two. If both control topics fail L and A2 fixes one, the rule could call that a lead on the supposedly more independent subset. Set a minimum and an exercise condition for **each** population; report the rest without a verdict when either is too small. [Fresh comparison design](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/FRESH-A2-DESIGN.md>)
+
+- **The control spread is not yet a defined bar for this population.** The saved comparison reports separate spreads by mark, group and treatment of unresolved points on the earlier 18 topics. V2 does not say which group’s spread applies to a new topic, how an absent mark is handled, or how the different population size affects the comparison. One observed difference is an exploratory reference, not an estimated error bound. Define the mapping before building and report every mark and send regardless of the bar. [Control comparison](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/control-vs-control.txt>)
+
+The unchanged accounting also uses **35 of 44** and **28 of 44** for line 5. On a different-sized population, show the raw counts and label that original threshold as not applicable to this comparison; do not call its result Alex’s gate verdict. [Accounting](</Users/lchingen/hivemind/clean-arch/step4-2026-11-10/stage_a/accounting.py:191>)
+
+The exposure output supports the reported counts within its searched scope. Say “searched `poc/data`, `clean-arch` and `docs/research`, with stated exclusions,” rather than “every stored file.” The proposed $5 ceiling is at the high end of the estimate, so the $0 proof should also show what an incomplete run reports if reservations stop it; reader costs remain unpriced. [Exposure census](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/fresh-exposure-2026-11-16/exposure-census.json>)
+
+CONSENSUS: no, because the independent subset can produce a lead with too few topics, and the prior control spread is not yet defined for this comparison.

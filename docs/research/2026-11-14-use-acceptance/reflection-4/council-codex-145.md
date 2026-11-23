@@ -1,0 +1,14 @@
+**The next step should be a $0 trace of what makes the fresh topics fail line 5**, before designing another candidate. Line 5 counts whole topics as right only when their applicable marks hold; it is not a separate fault with one obvious repair. The fresh reading gives 2 of 5 right under one counting and 1 of 5 under the other, with the reference and due-day disputes moving much of the result. [Fresh result](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/unlisted-parts/RESULT-FRESH-A2.md), [score](/Users/lchingen/hivemind/poc/data/clean-fresh-a2-2026-11-16/choices/score-output-fresh.txt).
+
+Read each of the five topics’ three control answers beside the topic, source and settled marks. For every topic that is not right, show which mark changes its status under each counting, whether the families agree, and whether the issue reaches the question, answer choices, date or visible explanation. Then map each proposed cause to the existing censuses and decisions before considering a repair.
+
+- **A result that moves the question:** a recurrent, product-visible failure with a sourced general mechanism and a bounded test that could reduce it without fitting the five topics. Bring that design back before a send.
+- **A result that closes this particular investigation:** the missing rights reduce to already stopped classes, unresolved reader or policy disagreements, or no common sourced mechanism. Record the table and leave the gate unmet; that closes this *route to a candidate*, not the possibility of a later one.
+
+I would not design the eighth Stage B control first. The record says it would require changes to two steps to make a reference comparison possible; exercising the line would not show that the changes improve the product. Stage B also has a last-answer reading that missed its line, so the four-versus-eight control shortfall is not its only recorded obstacle. [Control shortfall](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/stage-b-controls/DESIGN-SHORTFALL.md), [clean PRD](/Users/lchingen/hivemind/clean-arch/PRD.md:134).
+
+Two qualifications to the re-rank: the slice 5 record supports the named test-store proofs, with Idea and route coverage excluded from 7′; it does not establish live operation. And D544 keeps the old system running while work proceeds on the rebuild—it does not establish that the rebuild is better or authorize a switch. [Slice 5 evidence](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:665), [D544](/Users/lchingen/hivemind/docs/DECISIONS-log.md:6616).
+
+I inspected the saved records and code; I did not rerun the reported suites.
+
+CONSENSUS: trace the fresh line-5 failures at $0.

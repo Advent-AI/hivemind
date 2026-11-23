@@ -1,0 +1,7 @@
+1. The proceeding sentence implements D420 for a question seeking a published conclusion: it supplies an outcome that can rule the event out, so it is consistent with “null only when nothing can rule the event out.” Its carmaker example is not from a test article. The word **“always”** assumes the proceeding can be formally abandoned without the requested conclusion; that is the boundary Alex decided. Applying it to an examination that cannot end that way remains a judgment the model may make inconsistently.
+
+   The object sentence follows D418 and clarifies the preceding general rule: it distinguishes the government’s decision from the company’s sales under it. A mixed topic may still leave the model uncertain about which outcome it tracks.
+
+2. The registered cases cover the named risks and require enough readable controls. One limit: the proceeding stop checks for a missing ruling out or a wait, but a **non-null wrong condition**—for example, treating a published conclusion without a penalty as “ruled out”—would not trigger that stop. The promised full reading can identify it and bring it to council; it must not be reported as correct merely because the stop did not fire. One tolerated fault in nine is a probe criterion, not D420’s definition of a correct answer.
+
+**Send.**

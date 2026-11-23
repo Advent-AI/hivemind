@@ -1,0 +1,949 @@
+OpenAI Codex v0.166.0
+--------
+workdir: /Users/lchingen/hivemind
+model: gpt-6.1-terra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1e6f3-1679-73c3-84d5-502fd0f5add8
+--------
+user
+# Challenge 31: round 30's four fixes are done; send or not? (`reflection-6/astra-a2/`)
+
+**What changed:**
+1. **The second blind audit** (`audit-2.md`) of the whole revised request: the aligned closing is "consistent with the system text and
+   schema; it adds nothing beyond them". Its one remaining "NOT SOUND" is that "the question leaves out" can include event
+   alternatives the answer choices already decide.
+   - **The frozen system text carries the same phrase** ("that the question leaves out", line 5). So the ambiguity is shared by both
+     arms, not introduced by A2.
+   - It is the over-listing class D586 stopped adjusting. A3's removal instruction failed (D584, D585).
+   - Here it is measured, not assumed: the harm bound is in the verdict, and point 2 tests the readers' ability to see it.
+2. **A planted listing control in the gate reading:** the stored Hugging Face question with its two true parts, plus a planted
+   termination (its own ruled-out outcome, already judged) and a planted settlement route. Both families must give
+   `part, part, already_judged, settlement`, or the reading is void. Tested, and mutant M10 is caught.
+3. **The sent bytes compared:** each A2 request equals the frozen request's sent JSON with only the recorded text and schema edits
+   applied. An unrecorded change is refused (tested; M11 caught).
+4. **One review file given twice** is NOT SCORED (tested; M12 caught).
+
+**Proofs:** tests 15 of 15; 12 mutants caught; the check passes; the preflight agrees on 200 attempts.
+
+**Cost:** about $2.0, capped at $3.40. D439 is at about $36.43, so at most $39.83.
+
+**Asked:** send or not?
+
+End with `CONSENSUS: <decision>` or `CONSENSUS: no, because …`.
+
+codex
+I’ll check the revised audit and the four safeguards against the actual launcher and tests, then give a send decision.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/DESIGN.md' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/test_a2_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/preflight.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/mutants.txt' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md' in /Users/lchingen/hivemind
+ succeeded in 0ms:
+# Astra with A2: design (council rounds 29 and 30; D639 when sent)
+
+**What it tests.** On astra, does arm A2's request reduce the step's gate-line failures against a fresh frozen-request arm, without A2's
+known harm?
+- **A2:** D436's second-side sentences, and "the topic's wording" read as its description and outcome.
+- **Not tested:** any rule for choosing the main part. The blind audit (`audit.md`) finds A2 adds none.
+- **One alignment after the audit:** A2's closing check said "every other part … listed", wider than its own system text and schema
+  ("that the question leaves out"). The closing is aligned to them; nothing is added. A3's removal instruction was not used: it
+  failed (D584, D585).
+
+**Topics** (exposed, outside the 44; a diagnostic, not a production claim):
+- astra's agreed failures: H20 and memory;
+- the disputed main-part topics: Reflection, equity commitments, Blackwell into China, CPO;
+- Hugging Face, which astra writes;
+- three declines both families justify: the two-year capex topics and robotics funding.
+
+**Arms and spend.** Frozen and A2, interleaved, 2 draws, 40 sends.
+- **Requests:** the frozen ones are the stored ones, and A2's differ only by the recorded edits (`check-passed.json`).
+- **Cap:** $3.40, one attempt in flight ($1.14 reserve). A draw starts only if its arm's last draw and the reserve fit.
+- **D439:** about $36.43 used, so at most about $39.83.
+
+**Two blind readings, both families each:**
+1. **The gate form with A2's H field** (`unlisted-parts/run_readers.py`, first kind), with six known controls. A missed control
+   voids it.
+2. **The source-backed product review** (`review-brief.md`), with the due-day probe's four known controls. A missed control voids it.
+
+**Verdict, fixed before.** It is counted twice: with unresolved points held, and with them failed (one reviewer suffices for a
+material flag). When the two countings differ, the verdict is inconclusive.
+- **Moves (a diagnostic),** when all of these hold:
+  - failed sends (agreed hard-line faults plus lost answers) are at least 2 fewer in A2 than in the frozen arm;
+  - no topic is worse;
+  - the three justified declines stay declined in both draws;
+  - harmful listings (already decided, or a settlement route) are at most the frozen count plus 1;
+  - every A2 question written where the frozen arm declined is free of material defects;
+  - no topic has more material defects in A2.
+- **Closes:** A2 fails as many sends as the frozen arm or more, flips or loses a justified decline, exceeds the harm bound, or a
+  replacement question is flagged.
+- **Otherwise:** inconclusive.
+
+**Proofs:**
+- tests 12 of 12;
+- nine mutants, each caught (`mutants.txt`);
+- the preflight: 200 stored attempts on the 10 topics, the current checks agreeing with every stored verdict (`preflight.txt`);
+- the check passes.
+
+ succeeded in 0ms:
+"""The astra-with-A2 probe at $0 (council round 29): the check, the four arm-draws through the real runner and limit with a fake
+transport, both blind readings built from the run, made-up reader rows, and every condition of the verdict fixed before."""
+import json
+import shutil
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parent / 'astra'), str(HERE.parent / 'due-day'), str(HERE.parent / 'model'), str(HERE.parent / 'effort')]
+import a2_probe as probe  # noqa: E402
+import accounting  # noqa: E402
+import refcontrol  # noqa: E402
+
+USAGE = {'prompt_tokens': 2000, 'completion_tokens': 400}
+
+
+def transport():
+    stored = {case['thesis']['description']: row['requests'][-1]['answer_text'] for _, _, case, row in refcontrol.population()}
+    systems = []
+
+    def send(provider, request):
+        systems.append(request['messages'][0]['content'])
+        user = request['messages'][1]['content']
+        text = next(answer for description, answer in stored.items() if json.dumps(description, ensure_ascii=False)[1:-1] in user)
+        return {'choices': [{'message': {'content': text}}], 'usage': USAGE}
+    send.systems = systems
+    return send
+
+
+@pytest.fixture(scope='module')
+def run(tmp_path_factory):
+    folder = tmp_path_factory.mktemp('a2')
+    original, probe.RECORD = probe.RECORD, folder / 'check-passed.json'
+    try:
+        probe.check()
+        fake = transport()
+        probe.send(folder / 'run', transport=fake)
+        yield folder, fake
+    finally:
+        probe.RECORD = original
+
+
+def test_each_arm_sends_its_own_request_and_a2_differs_only_by_its_edits(run):
+    _, fake = run
+    a2_text = probe.a2_texts()['system']
+    frozen_text = probe.FROZEN_TEXTS()['system']
+    assert fake.systems.count(frozen_text) >= 20 and fake.systems.count(a2_text) >= 20 and set(fake.systems) == {frozen_text, a2_text}
+
+
+def copy_with(run, tmp_path, changes):
+    """A copy of the run with the given sends rewritten: `decline`, `lost`, or a dict of fields."""
+    folder, _ = run
+    copy = tmp_path / 'run'
+    shutil.copytree(folder / 'run', copy)
+    for send, change in changes.items():
+        path = copy / send.split('|')[0] / 'outcomes.jsonl'
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        for row in rows:
+            if row['case'] == send:
+                if change == 'decline':
+                    row.update(status='no ladder', answer=None, view=None, passage=None, reason='made up: several parts, none the main one')
+                elif change == 'lost':
+                    row.update(status='no ladder: refused', answer=None, view=None, passage=None)
+        path.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    return copy
+
+
+def gate_rows(copy, keys, fail=(), harm=(), harm_one_reader=()):
+    """Both families' gate rows: every hard line holds except `fail` sends (L for a ladder, N for a decline); every listed part is
+    `part` except the sends in `harm` (both families mark their first part already_judged) or `harm_one_reader` (Codex only)."""
+    key = json.loads((keys / 'key.json').read_text())
+    expected = json.loads((keys / 'controls-expected.json').read_text())
+    outcomes = {row['case']: row for row in map(json.loads, (copy / 'gate-reading' / 'send-1' / 'outcomes.jsonl').read_text().splitlines())}
+    answers = copy / 'gate-reading' / 'readers-answers'
+    answers.mkdir(exist_ok=True)
+    for family in ('codex', 'claude'):
+        lines = []
+        for item, (send, _) in key.items():
+            outcome = outcomes[send]
+            kind = accounting.kind_of(outcome)
+            applicable = accounting.marks_that_apply(kind)
+            row = {'item': int(item), 'W': '', 'why': 'made up for the test'}
+            for mark in accounting.ALL_MARKS:
+                row[mark] = ('not_assessable' if kind in ('company figure', 'theme figure') else 'n/a') if mark == 'G' \
+                    else 'holds' if mark in applicable else 'n/a'
+            listed = 0 if kind == 'refusal' else len(outcome['answer']['ladder']['not_judged'])
+            row['B'] = ['not_a_bet'] * listed
+            row['H'] = ['part'] * listed
+            if listed and (send in harm or (family == 'codex' and send in harm_one_reader)):
+                row['H'][0] = 'already_judged'
+            for mark, value in expected.get(send, {}).items():
+                if mark != 'all':
+                    row[mark] = value
+            if send in fail:
+                row['N' if kind == 'refusal' else 'L'] = 'fails'
+            lines.append(json.dumps(row))
+        (answers / f'reader-{family}-packet-1.jsonl').write_text('\n'.join(lines) + '\n')
+
+
+def review_rows(copy, keys, flags=()):
+    key = json.loads((keys / 'key.json').read_text())
+    files = []
+    for reader in ('codex', 'claude'):
+        lines = []
+        for item, send in key.items():
+            bad = send in flags or (send in probe.dueday_probe.CONTROLS and probe.dueday_probe.CONTROLS[send][2] == 'material')
+            lines.append(json.dumps({'item': int(item), 'verdict': 'defect' if bad else 'sound', 'class': 'other' if bad else None,
+                                     'material': bad, 'evidence': '', 'why': f'made up by the {reader} reviewer'}))
+        path = copy / f'review-{reader}.jsonl'
+        path.write_text('\n'.join(lines) + '\n')
+        files.append(path)
+    return files
+
+
+TARGET_FAILS = tuple(f'frozen-d{d}|{t}' for t in probe.TARGETS for d in (1, 2))      # frozen fails both targets in both draws
+
+
+def verdict(run, tmp_path, changes=None, fail=TARGET_FAILS, harm=(), harm_one_reader=(), flags=()):
+    copy = copy_with(run, tmp_path, changes or {})
+    gate_keys, review_keys = tmp_path / 'gate-keys', tmp_path / 'review-keys'
+    probe.gate_reading(copy, gate_keys)
+    gate_rows(copy, gate_keys, fail, harm, harm_one_reader)
+    probe.review_reading(copy, review_keys)
+    return probe.final(copy, gate_keys, review_keys, review_rows(copy, review_keys, flags))
+
+
+def first_ladder(run, arm):
+    folder, _ = run
+    rows = [json.loads(line) for draw in (1, 2) for line in (folder / 'run' / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines()]
+    return next(row['case'] for row in rows if row['status'] == 'ladder' and row['answer']['ladder']['not_judged'])
+
+
+def test_two_fewer_failures_with_every_guard_kept_moves(run, tmp_path):
+    assert verdict(run, tmp_path).startswith('moves')
+
+
+def test_no_fewer_failures_closes(run, tmp_path):
+    assert verdict(run, tmp_path, fail=()) == 'closes'
+
+
+def test_an_answer_code_refuses_twice_counts_as_a_failure(run, tmp_path):
+    one = (f'frozen-d1|{probe.TARGETS[0]}',)
+    assert verdict(run, tmp_path, changes={f'a2-d1|{probe.TARGETS[1]}': 'lost'}, fail=one) == 'closes'
+
+
+def test_a_justified_decline_lost_in_a2_closes(run, tmp_path):
+    assert verdict(run, tmp_path, changes={f'a2-d2|{probe.JUSTIFIED[0]}': 'lost'}) == 'closes'
+
+
+def test_harmful_listings_beyond_one_more_than_frozen_close(run, tmp_path):
+    send = first_ladder(run, 'a2')
+    other = send.replace('-d1|', '-d2|') if '-d1|' in send else send.replace('-d2|', '-d1|')
+    assert verdict(run, tmp_path, harm=(send, other)) == 'closes'
+
+
+def test_a_replacement_question_flagged_by_both_reviewers_closes(run, tmp_path):
+    topic = probe.DISPUTED[0]
+    changes = {f'frozen-d1|{topic}': 'decline'}
+    assert verdict(run, tmp_path, changes=changes, flags=(f'a2-d1|{topic}',)) == 'closes'
+
+
+def test_countings_that_disagree_are_inconclusive(run, tmp_path):
+    send = first_ladder(run, 'a2')
+    other = send.replace('-d1|', '-d2|') if '-d1|' in send else send.replace('-d2|', '-d1|')
+    assert verdict(run, tmp_path, harm_one_reader=(send, other)).startswith('inconclusive')
+
+
+def test_a_topic_where_a2_fails_more_than_frozen_blocks_a_move(run, tmp_path):
+    clean = f'a2-d1|{probe.RECOVERED[0]}'
+    result = verdict(run, tmp_path, fail=TARGET_FAILS + (clean,))
+    assert not result.startswith('moves')
+
+
+def test_a_missed_gate_control_voids_the_reading(run, tmp_path):
+    copy = copy_with(run, tmp_path, {})
+    gate_keys, review_keys = tmp_path / 'gate-keys', tmp_path / 'review-keys'
+    probe.gate_reading(copy, gate_keys)
+    gate_rows(copy, gate_keys, TARGET_FAILS)
+    path = copy / 'gate-reading' / 'readers-answers' / 'reader-claude-packet-1.jsonl'
+    key = json.loads((gate_keys / 'key.json').read_text())
+    item = next(int(item) for item, (send, _) in key.items() if send == 'control|unlisted-part')
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    path.write_text('\n'.join(json.dumps(dict(row, L='holds') if row['item'] == item else row) for row in rows) + '\n')
+    probe.review_reading(copy, review_keys)
+    with pytest.raises(SystemExit, match='VOID: a family missed the planted control\\|unlisted-part'):
+        probe.final(copy, gate_keys, review_keys, review_rows(copy, review_keys))
+
+
+def test_a_draw_whose_estimate_does_not_fit_is_not_started(tmp_path, monkeypatch):
+    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+    monkeypatch.setattr(probe, 'CAP_USD', 2.6)        # four draws of about $0.40 and a $1.14 reserve: the fourth does not fit
+    probe.check()
+    with pytest.raises(SystemExit, match='a2 d2 STOPPED before sending'):
+        probe.send(tmp_path / 'run', transport=transport())
+    assert (tmp_path / 'run' / 'frozen-d2').exists() and not (tmp_path / 'run' / 'a2-d2').exists()
+
+
+def test_one_fewer_failure_is_inconclusive_not_a_move(run, tmp_path):
+    target = probe.TARGETS[0]
+    fail = (f'frozen-d1|{target}', f'frozen-d2|{target}', f'a2-d1|{target}')
+    assert verdict(run, tmp_path, fail=fail) == 'inconclusive'
+
+
+def test_a_family_that_misses_the_planted_already_judged_listing_voids_the_reading(run, tmp_path):
+    copy = copy_with(run, tmp_path, {})
+    gate_keys, review_keys = tmp_path / 'gate-keys', tmp_path / 'review-keys'
+    probe.gate_reading(copy, gate_keys)
+    gate_rows(copy, gate_keys, TARGET_FAILS)
+    path = copy / 'gate-reading' / 'readers-answers' / 'reader-codex-packet-1.jsonl'
+    key = json.loads((gate_keys / 'key.json').read_text())
+    item = next(int(item) for item, (send, _) in key.items() if send == 'control|listings')
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    path.write_text('\n'.join(json.dumps(dict(row, H=['part'] * 4) if row['item'] == item else row) for row in rows) + '\n')
+    probe.review_reading(copy, review_keys)
+    with pytest.raises(SystemExit, match='VOID: a family missed the planted control\\|listings'):
+        probe.final(copy, gate_keys, review_keys, review_rows(copy, review_keys))
+
+
+def test_the_check_refuses_an_a2_request_with_an_unrecorded_change(tmp_path, monkeypatch):
+    real = probe.built
+
+    def built(case, arm, rl):
+        request = real(case, arm, rl)
+        if arm == 'a2':
+            request['max_completion_tokens'] = request['max_completion_tokens'] + 1
+        return request
+    monkeypatch.setattr(probe, 'built', built)
+    monkeypatch.setattr(probe, 'RECORD', tmp_path / 'check-passed.json')
+    with pytest.raises(SystemExit, match='CHECK FAILED.*more than the recorded edits'):
+        probe.check()
+    assert not (tmp_path / 'check-passed.json').exists()
+
+
+def test_one_review_file_given_twice_is_not_scored(run, tmp_path):
+    copy = copy_with(run, tmp_path, {})
+    gate_keys, review_keys = tmp_path / 'gate-keys', tmp_path / 'review-keys'
+    probe.gate_reading(copy, gate_keys)
+    gate_rows(copy, gate_keys, TARGET_FAILS)
+    probe.review_reading(copy, review_keys)
+    files = review_rows(copy, review_keys)
+    with pytest.raises(SystemExit, match='NOT SCORED: the review files are not two distinct readings'):
+        probe.final(copy, gate_keys, review_keys, [files[0], files[0]])
+
+ succeeded in 0ms:
+stored attempts on the 10 topics: judged 200; refused by the current checks 12; verdicts that differ from the stored ones 0
+  7 x the reference's words are not in the item: copy one unbroken passage from the item exactly
+  4 x due_day_basis 'expected_publication' does not fit an event: use one of stated, period_end
+  1 x a company's figure carries its fiscal year as FY and four digits; got '2027'
+  1 x The question or a condition refers to the item or the article ("this item", "in the item")
+
+ succeeded in 0ms:
+"""Astra with arm A2's request against astra with the frozen request (council round 29): a diagnostic on 12 exposed topics outside
+the 44, two interleaved draws, read twice blind (the gate form with the H field; a source-backed product review), and the verdict
+fixed before. A2 is the frozen request plus D436's second-side sentences, with "the topic's wording" read as its description and outcome.
+
+  python3 a2_probe.py check                                  # $0: A2 differs from the frozen request only by its recorded edits
+  python3 a2_probe.py send <new run folder>                  # frozen d1, a2 d1, frozen d2, a2 d2
+  python3 a2_probe.py gate-reading <run folder> <key folder> # the gate form's packets (+ six controls)
+  python3 a2_probe.py review-reading <run folder> <key folder>   # the product review's packet (+ four controls)
+  python3 a2_probe.py final <run folder> <gate key folder> <review key folder> <review files...>
+"""
+import collections
+import dataclasses
+import hashlib
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[4]
+sys.path[:0] = [str(HERE.parent / 'astra'), str(HERE.parent / 'due-day'), str(ROOT / 'clean-arch' / 'step4-2026-11-10' / 'stage_a')]
+import astra_probe as base  # noqa: E402
+from astra_probe import budget, collector, model, probe_split, refcontrol, stage_a  # noqa: E402
+import build_reader_packets  # noqa: E402
+import dueday_probe  # noqa: E402   (the product review's controls and row checks)
+
+A2 = ROOT / 'docs' / 'research' / '2026-11-14-use-acceptance' / 'unlisted-parts' / 'arm-a2'
+EDITS = {   # file: the exact replacements that turn the frozen text into A2's (checked byte for byte)
+    'system': [
+        ("- A topic's wording may ask about more than one thing.", "- A topic's description and outcome together may ask about more than one thing."),
+        ("List every other part of the topic's wording that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked.",
+         "List every other part of the topic's description and outcome that the question leaves out, a second figure or event, a condition or a comparison, in not_judged, each with one sentence on why it is not the one tracked. A second side of the same bet, for example a market's tightness beside the volume shipped, a share beside the total it is part of, or capacity beside the demand it serves, stays in the one question as context: list it in not_judged. A second side is not by itself a reason to decline; decline only when no part is the main one, or when the main part itself meets a case below."),
+        ("when the topic's wording names it, list it in not_judged.", "when the topic's description or outcome names it, list it in not_judged."),
+    ],
+    'closing': [("is every other part of the topic's wording listed in not_judged?",
+                 "is every other part of the topic's description and outcome that the question leaves out listed in not_judged?")],
+}
+SCHEMA_EDITS = [("the topic's wording that the question leaves out", "the topic's description and outcome that the question leaves out"),
+                ('the question leaves nothing of the wording out', 'the question leaves nothing of either out')]
+CLOSING_ALIGNMENT = ("is every other part of the topic's description and outcome listed in not_judged?",
+                     "is every other part of the topic's description and outcome that the question leaves out listed in not_judged?")
+# the blind audit (audit.md): A2's closing check keeps wider than its own system text and schema ("that the question leaves out");
+# aligned to them, nothing added
+ASTRA = dataclasses.replace(stage_a.SETTING, model='gpt-6-astra')
+ARMS = ('frozen', 'a2')
+ORDER = [('frozen', 1), ('a2', 1), ('frozen', 2), ('a2', 2)]
+CAP_USD = 3.40                     # 40 sends at about $0.05 measured; D439 (about $36.43 used) then at most about $39.83 of $40
+WORKERS = 1
+RECORD = HERE / 'check-passed.json'
+TARGETS = ('week-10-06:c1/clean-6', 'week-10-06:c1/clean-3')                                   # astra's agreed failures (H20, memory)
+DISPUTED = ('week-10-06:c1/clean-11', 'week-10-06:c1/clean-13', 'fortnight:c1/clean-3', 'fortnight:c1/clean-13')
+RECOVERED = ('week-10-06:c1/clean-5',)                                                         # Hugging Face: astra writes it
+JUSTIFIED = ('week-10-06:c1/clean-4', 'week-10-06:c1/clean-12', 'fortnight:c1/clean-8')         # declines both families justify
+TOPICS = TARGETS + DISPUTED + RECOVERED + JUSTIFIED
+HARD = refcontrol.HARD
+H_VALUES, H_HARM = ('part', 'already_judged', 'settlement', 'cannot_tell'), ('already_judged', 'settlement')
+GATE_SEED, REVIEW_SEED = 20261129, 20261130
+FROZEN_TEXTS = stage_a.request_texts          # held here: `send` re-points stage_a.request_texts at a2_texts during A2's draws
+
+
+def a2_texts():
+    frozen = FROZEN_TEXTS()
+    system, closing = frozen['system'], frozen['closing']
+    for old, new in EDITS['system']:
+        system = system.replace(old, new)
+    for old, new in EDITS['closing']:
+        closing = closing.replace(old, new)
+    return dict(frozen, system=system, closing=closing, schema=json.loads((A2 / 'candidate-schema.json').read_text()))
+
+
+def texts_of(arm):
+    return FROZEN_TEXTS() if arm == 'frozen' else a2_texts()
+
+
+def population():
+    entries = [entry for entry in refcontrol.population() if f'{entry[0]}:{entry[1]}' in TOPICS]
+    if len(entries) != len(TOPICS):
+        raise SystemExit('a probe topic is not in the population')
+    return entries
+
+
+def built(case, arm, rl):
+    texts = texts_of(arm)
+    user = base.ladder_step.user_text(stage_a.payload_for(case, rl), texts['closing'])
+    return model.build_request(ASTRA, texts['system'], user, texts['schema'], 'clean_ladder', 'openai')
+
+
+def code_digest():
+    return hashlib.sha256(Path(__file__).read_bytes() + b''.join((A2 / name).read_bytes() for name in
+                                                                  ('candidate-system.txt', 'candidate-closing.txt', 'candidate-schema.json'))).hexdigest()
+
+
+def check():
+    frozen, a2 = FROZEN_TEXTS(), a2_texts()
+    failures = []
+    for name in ('system', 'closing'):
+        if any(frozen[name].count(old) != 1 for old, _ in EDITS[name]):
+            failures.append(f'an edit of the {name} text is not found once in the frozen text')
+        stored = (A2 / f'candidate-{name}.txt').read_text()
+        if name == 'closing':           # the step strips the closing check as it loads it; the audit's alignment (CLOSING_ALIGNMENT)
+            stored = stored.strip().replace(*CLOSING_ALIGNMENT)
+        if a2[name] != stored:
+            failures.append(f"the {name} text with A2's recorded edits is not A2's stored file")
+    schema_edit = json.dumps(frozen['schema'])
+    for old, new in SCHEMA_EDITS:
+        schema_edit = schema_edit.replace(old, new)
+    if json.loads(schema_edit) != a2['schema']:
+        failures.append("A2's schema is not the frozen schema with its recorded not_judged description")
+    rl = refcontrol.research_list()
+    shas = {arm: {} for arm in ARMS}
+    replacements = [(json.dumps(old)[1:-1], json.dumps(new)[1:-1]) for name in ('system', 'closing') for old, new in EDITS[name]] + SCHEMA_EDITS
+    for source, name, case, stored in population():
+        sent_frozen = json.dumps(built(case, 'frozen', rl), ensure_ascii=False)            # the bytes as sent
+        expected = sent_frozen
+        for old, new in replacements:
+            expected = expected.replace(old, new)
+        if json.dumps(built(case, 'a2', rl), ensure_ascii=False) != expected:
+            failures.append(f'{source}:{name}: the A2 request differs from the frozen one in more than the recorded edits')
+        luna = model.build_request(stage_a.SETTING, frozen['system'], built(case, 'frozen', rl)['messages'][1]['content'], frozen['schema'],
+                                   'clean_ladder', 'openai')
+        if model.request_identity(luna)[1] != stored['requests'][0]['request_sha256']:
+            failures.append(f'{source}:{name}: the frozen request is not the stored one')
+        for arm in ARMS:
+            shas[arm][f'{source}:{name}'] = model.request_identity(built(case, arm, rl))[1]
+    worst = max(budget.worst_cost(built(case, 'a2', rl)) for *_, case, _ in population())
+    print(f'{len(TOPICS)} topics; A2 is the frozen request with its recorded edits, the frozen requests are the stored ones: {not failures}; '
+          f'worst-case reserve of one attempt ${worst:.2f}; cap ${CAP_USD:.2f}')
+    if failures:
+        raise SystemExit(f'CHECK FAILED: {failures}')
+    RECORD.write_text(json.dumps({'code_sha256': code_digest(), 'requests': shas}, indent=1) + '\n')
+    print('check passed')
+
+
+def send(folder, *, transport=None):
+    record = json.loads(RECORD.read_text()) if RECORD.exists() else None
+    if record is None or record['code_sha256'] != code_digest():
+        raise SystemExit('no check record for these files: run `check` first')
+    rl = refcontrol.research_list()
+    entries = population()
+    for arm in ARMS:
+        if {f'{s}:{n}': model.request_identity(built(c, arm, rl))[1] for s, n, c, _ in entries} != record['requests'][arm]:
+            raise SystemExit('REFUSED: the requests differ from the checked record')
+    folder, guard = Path(folder), probe_split.BreachGuard(transport)
+    spent, last = 0.0, {}
+    worst = max(budget.worst_cost(built(c, 'a2', rl)) for *_, c, _ in entries)
+    original = stage_a.request_texts
+    try:
+        for arm, draw in ORDER:
+            if last.get(arm, 0.0) + WORKERS * worst > CAP_USD - spent:        # the same arm's last draw estimates this one
+                raise SystemExit(f'{arm} d{draw} STOPPED before sending: the arm\'s last draw and the attempt in flight pass what is left. NOT MEASURED.')
+            stage_a.request_texts = original if arm == 'frozen' else a2_texts
+            cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in entries]
+            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', CAP_USD - spent, ASTRA, rl, transport=guard, workers=WORKERS)
+            stage_a.request_texts = original
+            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            spent += known + in_full
+            last[arm] = known + in_full
+            over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            print(f'{arm} d{draw}: {len(written)} of {len(entries)} written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+            if over or guard.breaches or limit.stopped or len(written) != len(entries):
+                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    finally:
+        stage_a.request_texts = original
+    print(f'spent ${spent:.4f}')
+
+
+def outcomes(folder):
+    rows = {}
+    for arm, draw in ORDER:
+        for line in (Path(folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines():
+            row = json.loads(line)
+            rows[row['case']] = row
+    return rows
+
+
+def readable(folder):
+    return {send: row for send, row in outcomes(folder).items() if row['status'] != 'no ladder: refused'}
+
+
+H_CONTROL = ('control|listings', ROOT / 'poc' / 'data' / 'clean-dueday-probe-2026-11-16' / 'v2-d1' / 'outcomes.jsonl', 'week-10-06:c1/clean-5')
+H_PLANTED = [   # appended to the stored Hugging Face question's two true parts; both families must classify all four
+    {'part': 'Nvidia or Hugging Face formally terminating the signed acquisition before it closes.',
+     'why': 'The question tracks completion, not termination.'},
+    {'part': "Nvidia's closing announcement and regulatory filings that will report the outcome.",
+     'why': 'The filings are where the answer will be known.'},
+]
+H_EXPECTED = ['part', 'part', 'already_judged', 'settlement']
+
+
+def listing_control():
+    """(row, case, expected marks): a stored Hugging Face question with two true parts and two planted listings, one its own
+    ruled-out outcome (already judged) and one a settlement route."""
+    name, path, topic = H_CONTROL
+    row = next(json.loads(line) for line in path.read_text().splitlines() if json.loads(line)['case'].endswith('|' + topic))
+    if row['status'] != 'ladder' or len(row['answer']['ladder']['not_judged']) != 2:
+        raise SystemExit('the listing control is not the stored two-part Hugging Face question')
+    row = json.loads(json.dumps(row))
+    row['answer']['ladder']['not_judged'] += H_PLANTED
+    case = next(c for s, n, c, _ in refcontrol.population() if f'{s}:{n}' == topic)
+    return dict(row, case=name), case, {'H': H_EXPECTED}
+
+
+def gate_reading(folder, key_folder):
+    """The gate form's blind packets: every readable send and the six known controls of the model comparison, as Stage A's readers
+    see an item; the key and the controls' expected marks outside the repository."""
+    folder, key_folder = Path(folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    cases = {f'{s}:{n}': c for s, n, c, _ in population()}
+    rows, item_cases, expected = dict(readable(folder)), {}, {}
+    for send in rows:
+        item_cases[send] = cases[send.split('|', 1)[1]]
+    for row, case, marks in base.controls() + [listing_control()]:
+        rows[row['case']], item_cases[row['case']], expected[row['case']] = row, case, marks
+    order = sorted(rows)
+    random.Random(GATE_SEED).shuffle(order)
+    rl = refcontrol.research_list()
+    reading = folder / 'gate-reading'
+    (reading / 'send-1').mkdir(parents=True)
+    (reading / 'send-1' / 'outcomes.jsonl').write_text(''.join(json.dumps(dict(rows[send], **{'pass': 1}), ensure_ascii=False) + '\n' for send in order))
+    (reading / 'readers').mkdir()
+    key, packets = {}, []
+    for number, send in enumerate(order, start=1):
+        key[str(number)] = [send, 1]
+        if (number - 1) % build_reader_packets.ITEMS_A_PACKET == 0:
+            packets.append([])
+        packets[-1].append({'item': number, **build_reader_packets.item_of(rows[send], item_cases[send], rl)})
+    for number, packet in enumerate(packets, start=1):
+        (reading / 'readers' / f'packet-{number}.json').write_text(json.dumps(packet, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    (key_folder / 'controls-expected.json').write_text(json.dumps(expected, indent=1) + '\n')
+    print(f'{len(order)} items in {len(packets)} packets')
+
+
+def gate_marks(folder, key_folder):
+    """{counting: {send: True for a hard-line fault}} and {counting: {send: number of harmful listings}}, after the controls."""
+    reading = Path(folder) / 'gate-reading'
+    key, item_of, outcomes_read, readers, problems = collector.read_rows(reading, Path(key_folder) / 'key.json')
+    if any(found['rows'] or found['unreadable lines'] for found in problems.values()):
+        raise SystemExit(f'VOID: rows missing or not valid: {problems}')
+    for control, marks in json.loads((Path(key_folder) / 'controls-expected.json').read_text()).items():
+        for mark, value in marks.items():
+            if mark != 'all' and any(readers[reader][(control, 1)][mark] != value for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: a family missed the planted {control} ({mark})')
+            if mark == 'all' and all(any(readers[reader][(control, 1)].get(hard) == 'fails' for hard in HARD) for reader in collector.FAMILIES):
+                raise SystemExit(f'VOID: both families fail a hard line on the sound {control}')
+    faults, harm = {}, {}
+    for counting in ('holds', 'fails'):
+        faults[counting], harm[counting] = {}, {}
+        for send_key, outcome in outcomes_read.items():
+            send = send_key[0]
+            if send.startswith('control|'):
+                continue
+            rows = [readers[reader][send_key] for reader in collector.FAMILIES]
+            kind = base.accounting.kind_of(outcome)
+            faults[counting][send] = any(refcontrol.settled(rows, mark, counting) == 'fails'
+                                         for mark in base.accounting.marks_that_apply(kind) if mark in HARD)
+            listed = len(outcome['answer']['ladder']['not_judged']) if outcome['status'] == 'ladder' else 0
+            for row in rows:
+                if not isinstance(row.get('H'), list) or len(row['H']) != listed or any(value not in H_VALUES for value in row['H']):
+                    raise SystemExit(f'VOID: an H list of {send} does not hold one value for each of its {listed} listed parts')
+            values = list(zip(*[row['H'] for row in rows])) if listed else []
+            harm[counting][send] = sum((all(v in H_HARM for v in pair) if counting == 'holds' else any(v in H_HARM for v in pair)) for pair in values)
+    return faults, harm
+
+
+def review_reading(folder, key_folder):
+    """The product review's blind packet: every readable send and the due-day probe's four known controls."""
+    folder, key_folder = Path(folder), Path(key_folder)
+    if key_folder.resolve().is_relative_to(ROOT.resolve()):
+        raise SystemExit('the key folder must sit outside the repository')
+    cases = {f'{s}:{n}': c for s, n, c, _ in refcontrol.population()}
+    rows = readable(folder) | dueday_probe.control_rows()
+    sources = {send: send.split('|', 1)[1] for send in readable(folder)} | \
+        {control: dueday_probe.CONTROLS[control][1].split('|', 1)[1] for control in dueday_probe.CONTROLS}
+    order = sorted(rows)
+    random.Random(REVIEW_SEED).shuffle(order)
+    rl = refcontrol.research_list()
+    items, key = [], {}
+    for number, send in enumerate(order, start=1):
+        key[str(number)] = send
+        items.append({'item': number, **build_reader_packets.item_of(rows[send], cases[sources[send]], rl)})
+    (folder / 'review').mkdir(exist_ok=False)
+    (folder / 'review' / 'packet.json').write_text(json.dumps(items, indent=1, ensure_ascii=False) + '\n')
+    key_folder.mkdir(parents=True, exist_ok=True)
+    (key_folder / 'key.json').write_text(json.dumps(key, indent=1) + '\n')
+    print(f'{len(items)} items')
+
+
+def final(folder, gate_keys, review_keys, review_files):
+    """The verdict fixed before the send (council round 29)."""
+    rows = outcomes(folder)
+    faults, harm = gate_marks(folder, gate_keys)
+    paths = [Path(path).resolve() for path in review_files]
+    if len(set(paths)) != len(paths) or len({path.read_bytes() for path in paths}) != len(paths):
+        raise SystemExit('NOT SCORED: the review files are not two distinct readings')
+    review = dueday_probe.material(review_files, json.loads((Path(review_keys) / 'key.json').read_text()))
+    verdicts = {}
+    for counting, review_rule in (('holds', all), ('fails', any)):
+        failed = {send: rows[send]['status'] == 'no ladder: refused' or faults[counting].get(send, False) for send in rows}
+        flagged = {send for send, values in review.items() if review_rule(values)}
+        total = {arm: sum(failed[f'{arm}-d{d}|{t}'] for t in TOPICS for d in (1, 2)) for arm in ARMS}
+        per_topic = all(sum(failed[f'a2-d{d}|{t}'] for d in (1, 2)) <= sum(failed[f'frozen-d{d}|{t}'] for d in (1, 2)) for t in TOPICS)
+        justified_kept = all(rows[f'a2-d{d}|{t}']['status'] == 'no ladder' for t in JUSTIFIED for d in (1, 2))
+        harm_total = {arm: sum(harm[counting].get(f'{arm}-d{d}|{t}', 0) for t in TOPICS for d in (1, 2)) for arm in ARMS}
+        replacements = [f'a2-d{d}|{t}' for t in TOPICS for d in (1, 2)
+                        if rows[f'a2-d{d}|{t}']['status'] == 'ladder' and rows[f'frozen-d{d}|{t}']['status'] != 'ladder']
+        replacements_sound = not any(send in flagged for send in replacements)
+        material_per_topic = all(sum(f'a2-d{d}|{t}' in flagged for d in (1, 2)) <= sum(f'frozen-d{d}|{t}' in flagged for d in (1, 2)) for t in TOPICS)
+        improved = total['a2'] <= total['frozen'] - 2
+        if improved and per_topic and justified_kept and harm_total['a2'] <= harm_total['frozen'] + 1 and replacements_sound and material_per_topic:
+            verdicts[counting] = 'moves (a diagnostic on exposed topics)'
+        elif total['a2'] >= total['frozen'] or not justified_kept or harm_total['a2'] > harm_total['frozen'] + 1 or not replacements_sound:
+            verdicts[counting] = 'closes'
+        else:
+            verdicts[counting] = 'inconclusive'
+        print(f'{counting}: failed sends {total}; per topic {per_topic}; justified declines kept {justified_kept}; harmful listings {harm_total}; '
+              f'replacements {len(replacements)}, sound {replacements_sound}; material per topic {material_per_topic} -> {verdicts[counting]}')
+    verdict = verdicts['holds'] if verdicts['holds'] == verdicts['fails'] else 'inconclusive (the countings disagree)'
+    print(f'VERDICT: {verdict}')
+    return verdict
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'check':
+        check()
+    elif command == 'send':
+        send(sys.argv[2])
+    elif command == 'gate-reading':
+        gate_reading(*sys.argv[2:4])
+    elif command == 'review-reading':
+        review_reading(*sys.argv[2:4])
+    elif command == 'final':
+        final(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5:])
+    else:
+        sys.exit(__doc__)
+
+ succeeded in 0ms:
+M0 control (unmutated): 15 passed in 0.42s
+M1 one fewer failure is enough: 1 failed, 14 passed in 0.46s | failed: ['test_one_fewer_failure_is_inconclusive_not_a_move'] | first: ["E       AssertionError: assert 'moves (a dia...posed topics)' == 'inconclusive'"]
+M2 per-topic comparison dropped: 1 failed, 14 passed in 0.46s | failed: ['test_a_topic_where_a2_fails_more_than_frozen_blocks_a_move'] | first: ['E       AssertionError: assert not True']
+M3 justified declines not required: 1 failed, 14 passed in 0.46s | failed: ['test_a_justified_decline_lost_in_a2_closes'] | first: ["E       AssertionError: assert 'inconclusive' == 'closes'"]
+M4 harmful listings not counted: 2 failed, 13 passed in 0.46s | failed: ['test_harmful_listings_beyond_one_more_than_frozen_close', 'test_countings_that_disagree_are_inconclusive'] | first: ["E       AssertionError: assert 'moves (a dia...posed topics)' == 'closes'"]
+M5 replacements not reviewed: 1 failed, 14 passed in 0.46s | failed: ['test_a_replacement_question_flagged_by_both_reviewers_closes'] | first: ["E       AssertionError: assert 'inconclusive' == 'closes'"]
+M6 countings that disagree not inconclusive: 1 failed, 14 passed in 0.47s | failed: ['test_countings_that_disagree_are_inconclusive'] | first: ['E       AssertionError: assert False']
+M7 a lost answer not a failure: 1 failed, 14 passed in 0.57s | failed: ['test_an_answer_code_refuses_twice_counts_as_a_failure'] | first: ["E       AssertionError: assert 'inconclusive' == 'closes'"]
+M8 gate controls not checked: 2 failed, 13 passed in 0.49s | failed: ['test_a_missed_gate_control_voids_the_reading', 'test_a_family_that_misses_the_planted_already_judged_listing_voids_the_reading'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+M9 draw-start check dropped: 1 failed, 14 passed in 0.47s | failed: ['test_a_draw_whose_estimate_does_not_fit_is_not_started'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+M10 the listing control left out: 1 failed, 14 passed in 0.43s | failed: ['test_a_family_that_misses_the_planted_already_judged_listing_voids_the_reading'] | first: ['E       StopIteration']
+M11 the byte comparison dropped: 1 failed, 14 passed in 0.46s | failed: ['test_the_check_refuses_an_a2_request_with_an_unrecorded_change'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+M12 one review file accepted twice: 1 failed, 14 passed in 0.48s | failed: ['test_one_review_file_given_twice_is_not_scored'] | first: ["E       Failed: DID NOT RAISE <class 'SystemExit'>"]
+
+ succeeded in 0ms:
+**The revised closing matches the system text and schema, but all three can still ask for an answer choice to be listed as “not judged.”** For example, “Will the acquisition close?” leaves withdrawal out of the question’s wording, even though the answer choices can already decide whether the parties withdrew.
+
+| Instruction | Verdict against the cited decisions |
+|---|---|
+| Ask one figure for a named period or one event; judge what the topic’s outcome names as tracked. | **Consistent** with D397. It adds no rule giving the description priority. |
+| Read the description and outcome together; list every other part **the question leaves out**. The schema repeats this. | **Keeps wider** than D397’s purpose when “leaves out” is read literally: an answer choice can decide something that the question itself does not name. |
+| Keep a second side of the same bet as context and list it as not judged. | **Consistent** with D436. Its examples do not establish which side is main in every case. |
+| A second side alone is no reason to decline; decline if no part is main or the main part meets a decline case. | **Consistent** with D436 and D397. It does not introduce the refused description-priority rule. |
+| Do not combine two things into one set of answer choices; list the omitted part in the examples. | **Consistent** with D397, provided the omitted part is not already decided by the answer choices. |
+| Decline when nothing can be checked on a date, including an undated event with no named period, subject to the regulatory exception. | **Consistent** with D403. |
+| Decline when there is no main part; decline another company’s figure or a matter no listed theme covers. | **Consistent** with D397 on no main part. **No source** for the company and theme boundaries in the three cited decisions; they are retained from the frozen request. |
+| The other period and year decline cases, and the rule against rewriting a distant-year figure as an event. | **No source** in the three cited decisions; retained from the frozen request. |
+| List a difference within an event outcome, such as approval with versus without conditions. | **Consistent** with D397 when the answer choices do not decide that difference. |
+| Revised closing: check every other part **the question leaves out**. | **Consistent with the system text and schema; it adds nothing beyond them.** It also repeats their ambiguity about parts the answer choices already decide. |
+
+Two equally presented years with no main one still meet the explicit decline instruction. Another company’s figure and a matter without a listed theme also still have explicit decline instructions. A model could misapply “second side” to any of these, but the text does not expressly override those boundaries. As the earlier audit found, the sources do not settle how to choose a main part when several candidates are named.
+
+NOT SOUND: “The question leaves out” can include event alternatives already decided by the answer choices.
+exec
+/opt/homebrew/bin/zsh -lc 'cat docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2-prompt.md 2>/dev/null' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "sed -n '150,205p' docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+You are an independent, read-only auditor of a model request. No conclusion is preferred. Do not edit files or start runs.
+
+**The request.**
+- **Frozen:** `clean-arch/step4-2026-11-10/ladder/candidate-system.txt`, `candidate-closing.txt` and `candidate-schema.json`.
+- **Proposed (arm A2):** `docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/request/` (system.txt, closing.txt, schema.json). It differs from the frozen request in
+  "the topic's wording" read as "the topic's description and outcome", and in two added sentences: a second side of the same bet
+  stays in the question as context, and is not by itself a reason to decline.
+
+**The standard.** Read D436, D397 and D403 in `docs/DECISIONS-log.md` (search "## D436 ", "## D397 ", "## D403 "), and
+`docs/research/2026-11-14-use-acceptance/reflection-6/model/rule-audit.md`, the earlier finding that the sources are silent on which
+part is main.
+
+**Audit the whole proposed request**, every sentence that decides what is asked, what is listed as not judged, or when to decline. Give
+each a verdict against the standard: consistent, contradicts, keeps wider, keeps narrower, or no source. In particular:
+1. Does A2 add a rule for choosing the main part that the sources do not hold (the description-priority rule the council refused)?
+   Or does it only keep D436's second sides from being a reason to decline?
+2. Could A2 make the step answer a topic that should be declined: two years each asked, another company's figure, or no listed
+   theme?
+3. Could it make the step list as "not judged" things the answer choices already decide? Earlier, A2 on another model listed an
+   event's own alternatives.
+
+Be concise. End with one line: SOUND TO PROBE, or NOT SOUND: <the reason>.
+
+This is the second audit. The first (`docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit.md`) found the closing check
+wider than the system text and schema. The closing now reads "is every other part of the topic's description and outcome that the
+question leaves out listed in not_judged?". Audit the whole revised request again, closing included, and say whether the closing
+alignment is consistent and adds nothing.
+
+ succeeded in 0ms:
+                raise SystemExit(f'{arm} d{draw} STOPPED before sending: the arm\'s last draw and the attempt in flight pass what is left. NOT MEASURED.')
+            stage_a.request_texts = original if arm == 'frozen' else a2_texts
+            cases = [dict(case, case=f'{arm}-d{draw}|{source}:{name}') for source, name, case, _ in entries]
+            written, limit = base.run_arm(cases, folder / f'{arm}-d{draw}', CAP_USD - spent, ASTRA, rl, transport=guard, workers=WORKERS)
+            stage_a.request_texts = original
+            known, in_full, _ = stage_a.ledger_total(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            spent += known + in_full
+            last[arm] = known + in_full
+            over = probe_split.over_reserve(folder / f'{arm}-d{draw}' / 'spend.jsonl')
+            print(f'{arm} d{draw}: {len(written)} of {len(entries)} written; spent ${known + in_full:.4f}; over reserve {len(over)}', flush=True)
+            if over or guard.breaches or limit.stopped or len(written) != len(entries):
+                raise SystemExit(f'{arm} d{draw} STOPPED: {limit.stop_reason or over or guard.breaches}. NOT MEASURED.')
+    finally:
+        stage_a.request_texts = original
+    print(f'spent ${spent:.4f}')
+
+
+def outcomes(folder):
+    rows = {}
+    for arm, draw in ORDER:
+        for line in (Path(folder) / f'{arm}-d{draw}' / 'outcomes.jsonl').read_text().splitlines():
+            row = json.loads(line)
+            rows[row['case']] = row
+    return rows
+
+
+def readable(folder):
+    return {send: row for send, row in outcomes(folder).items() if row['status'] != 'no ladder: refused'}
+
+
+H_CONTROL = ('control|listings', ROOT / 'poc' / 'data' / 'clean-dueday-probe-2026-11-16' / 'v2-d1' / 'outcomes.jsonl', 'week-10-06:c1/clean-5')
+H_PLANTED = [   # appended to the stored Hugging Face question's two true parts; both families must classify all four
+    {'part': 'Nvidia or Hugging Face formally terminating the signed acquisition before it closes.',
+     'why': 'The question tracks completion, not termination.'},
+    {'part': "Nvidia's closing announcement and regulatory filings that will report the outcome.",
+     'why': 'The filings are where the answer will be known.'},
+]
+H_EXPECTED = ['part', 'part', 'already_judged', 'settlement']
+
+
+def listing_control():
+    """(row, case, expected marks): a stored Hugging Face question with two true parts and two planted listings, one its own
+    ruled-out outcome (already judged) and one a settlement route."""
+    name, path, topic = H_CONTROL
+    row = next(json.loads(line) for line in path.read_text().splitlines() if json.loads(line)['case'].endswith('|' + topic))
+    if row['status'] != 'ladder' or len(row['answer']['ladder']['not_judged']) != 2:
+        raise SystemExit('the listing control is not the stored two-part Hugging Face question')
+    row = json.loads(json.dumps(row))
+    row['answer']['ladder']['not_judged'] += H_PLANTED
+    case = next(c for s, n, c, _ in refcontrol.population() if f'{s}:{n}' == topic)
+    return dict(row, case=name), case, {'H': H_EXPECTED}
+
+
+def gate_reading(folder, key_folder):
+    """The gate form's blind packets: every readable send and the six known controls of the model comparison, as Stage A's readers
+    see an item; the key and the controls' expected marks outside the repository."""
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'json.dumps|urlopen|json=' poc/model.py clean-arch/step4-2026-11-10/stage_a/model.py poc | head -25" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+rg: poc/model.py: No such file or directory (os error 2)
+rg: clean-arch/step4-2026-11-10/stage_a/model.py: No such file or directory (os error 2)
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:49:                     shown_json=json.dumps({'candidates': lists.candidate_lists, 'evidence': {f'{k[0]}|{k[1]}': v for k, v in lists.evidence_lists.items()}}),
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:50:                     request_sha256=answer.request_sha256, call_id=answer.call_id, decisions_json=json.dumps(answer.data, ensure_ascii=False),
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:51:                     checks_json=json.dumps({'refusals': checked.refusals, 'not_opened': checked.not_opened, 'notes': checked.notes}, ensure_ascii=False), written_json=None)
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:127:                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped}, ensure_ascii=False))
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/round.py:166:    dispatch.mark(conn, item, seq, 'written', 'ok', json.dumps({'changed': sorted(written.changed_views), 'new': written.new_views, 'notes': written.notes[:20]}, ensure_ascii=False))
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/judging.py:113:                                reasons=data['reasons'], cited_evidence_json=json.dumps(data['cites']), cited_views_json=json.dumps(data['cites_views']),
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/judging.py:114:                                pushes_json=json.dumps(data['pushes'], ensure_ascii=False), changed=1 if data['changed'] else 0,
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/views/store.py:326:    insert(conn, 'review_pool_entries', kind=kind, key=key, example_json=json.dumps(example, ensure_ascii=False)[:4000], seq=seq)
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:57:    body = json.dumps({'model': embedding_model, 'input': texts}).encode('utf-8')
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:62:            with urllib.request.urlopen(urllib.request.Request(EMBEDDINGS_URL, data=body, headers=headers, method='POST'), timeout=timeout) as response:
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:108:                          [(view_id, digest, embedding_model, json.dumps(vector), used // max(1, len(chunk)), now) for (view_id, digest, _), vector in zip(chunk, vectors)])
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:143:                  (digest, embedding_model, json.dumps(vectors[0]), tokens, time.strftime('%Y-%m-%dT%H:%M:%S')))
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/search.py:164:                      [(digest, embedding_model, json.dumps(vector), tokens // len(wanted), now) for digest, vector in zip(wanted, vectors)])
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/extraction.py:53:    schema = json.loads(json.dumps(SCHEMA))
+poc/reports/2026-10-25-ohio-grouping-01/wrong_reference-test.txt:34:>       return {'choices': [{'message': {'content': json.dumps(next(stream), ensure_ascii=False)}}],
+poc/reports/2026-10-25-ohio-grouping-01/wrong_reference-test.txt:70:>       return {'choices': [{'message': {'content': json.dumps(next(stream), ensure_ascii=False)}}],
+poc/reports/2026-10-25-ohio-grouping-01/wrong_reference-test.txt:106:>       return {'choices': [{'message': {'content': json.dumps(next(stream), ensure_ascii=False)}}],
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/replay.py:54:                     handover_json=json.dumps({'evidence': handover.evidence, 'candidates': handover.candidates, 'dropped': handover.dropped}, ensure_ascii=False))
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:116:    body = json.dumps(request).encode('utf-8')
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:121:            with urllib.request.urlopen(urllib.request.Request(url, data=body, headers=headers, method='POST'), timeout=timeout) as response:
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:186:    request_json = json.dumps(request, sort_keys=True, ensure_ascii=False)
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:201:                       request_sha256=sha + ':malformed:' + uuid.uuid4().hex[:8], request_json=request_json,
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:202:                       response_json=json.dumps(response)[:200000], answer_json=None, prompt_chars=prompt_chars,
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:212:                             request_sha256=sha if not errors else sha + ':schema:' + uuid.uuid4().hex[:8], request_json=request_json,
+poc/reports/2026-10-25-grouping-repair-01/baseline/src/hivemind/model.py:213:                             response_json=json.dumps(response)[:200000], answer_json=json.dumps(data, ensure_ascii=False),
+
+exec
+/opt/homebrew/bin/zsh -lc 'ls docs/research/2026-11-14-use-acceptance/unlisted-parts/arm-a2' in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -i 'audit|whole request' docs/research/2026-11-14-use-acceptance/unlisted-parts/DESIGN-A2.md" in /Users/lchingen/hivemind
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -C 3 'def item_of|not_judged|other_fields' clean-arch/step4-2026-11-10/ladder/build_reader_packets.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+candidate-closing.txt
+candidate-schema.json
+candidate-system.txt
+
+ exited 1 in 0ms:
+ exited 2 in 0ms:
+rg: clean-arch/step4-2026-11-10/ladder/build_reader_packets.py: IO error for operation on clean-arch/step4-2026-11-10/ladder/build_reader_packets.py: No such file or directory (os error 2)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n 'json.dumps\\(request|def openai_transport' src/hivemind/model.py" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+129:def openai_transport(provider, request, timeout=180, max_attempts=3):   # the default preserves the production retry behavior
+131:    body = json.dumps(request).encode('utf-8')
+245:    encoded = json.dumps(request, sort_keys=True, ensure_ascii=False)
+
+exec
+/opt/homebrew/bin/zsh -lc "rg -n -A 55 '"'^def item_of'"' clean-arch docs/research/2026-11-14-use-acceptance | head -70" in /Users/lchingen/hivemind
+ succeeded in 0ms:
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py:30:def item_of(outcome, case, research_list):
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-31-    """One outcome as the form describes an item (without its number)."""
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-32-    thesis, article = case['thesis'], case['item']
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-33-    item = {'thesis': {field: thesis[field] for field in ('description', 'outcome', 'period', 'opens_as', 'settled_by')},
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-34-            'article': {field: article[field] for field in ('publication_date', 'title', 'text')},
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-35-            'fiscal_year_note': research_list.fiscal_note(COMPANY, article['publication_date'], english=True)}
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-36-    if outcome['status'] == 'no ladder':
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-37-        item['ladder_as_the_judge_is_shown_it'] = {'no_ladder': outcome['reason']}
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-38-        item['other_fields'] = {'not_judged': None, 'reference': None, 'favourable_end': None, 'favourable_why': None, 'ruled_out_by': None, 'due_day_basis': None}
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-39-        return item
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-40-    ladder, view = outcome['answer']['ladder'], outcome['view']
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-41-    item['ladder_as_the_judge_is_shown_it'] = {
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-42-        'object': view['object_id'], 'kind': view['kind'], 'focus': view['looks_at'], 'question': view['question'], 'year': view['year'],
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-43-        'due_day': view['due_day'], 'rungs': [{'label': rung['label'], 'condition': rung['condition']} for rung in view['rungs']]}
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-44-    reference = ladder['reference']
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-45-    figure = ladder.get('figure')
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-46-    ruled_out = ladder['event']['ruled_out'] if ladder.get('event') else None
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-47-    item['other_fields'] = {
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-48-        'not_judged': ladder['not_judged'],
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-49-        'reference': None if reference is None else {'words': outcome['passage'], 'kind': reference.get('kind', 'expected'), 'value': reference['value'],
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-50-                                                    'value_to': reference.get('value_to')},
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-51-        'favourable_end': figure['favourable_end'] if figure else None, 'favourable_why': figure['favourable_why'] if figure else None,
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-52-        'ruled_out_by': ruled_out['by_whom'] if isinstance(ruled_out, dict) else None,
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-53-        'due_day_basis': ladder['due_day_basis']}
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-54-    return item
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-55-
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-56-
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-57-def arguments():
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-58-    """(runs as [(run folder, cases file)], key path, readers folder): the stored form or the full run's."""
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-59-    if '--run' not in sys.argv:
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-60-        run_folder, key_path = Path(sys.argv[1]), Path(sys.argv[2])
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-61-        return [(run_folder, HERE / 'cases.json')], key_path, run_folder / 'readers'
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-62-    import argparse
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-63-    parser = argparse.ArgumentParser()
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-64-    parser.add_argument('key')
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-65-    parser.add_argument('--run', action='append', required=True)
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-66-    parser.add_argument('--readers', required=True)
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-67-    parsed = parser.parse_args()
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-68-    runs = [(Path(pair.split('=', 1)[0]), Path(pair.split('=', 1)[1])) for pair in parsed.run]
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-69-    return runs, Path(parsed.key), Path(parsed.readers)
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-70-
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-71-
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-72-def main():
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-73-    runs, key_path, readers_folder = arguments()
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-74-    if key_path.resolve().is_relative_to(readers_folder.resolve()):
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-75-        raise SystemExit('the key must not sit in the readers\' folder')
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-76-    cases, outcomes = {}, []
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-77-    for run_folder, cases_path in runs:
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-78-        run_cases = {case['case']: case for case in json.loads(cases_path.read_text())}
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-79-        if set(run_cases) & set(cases):
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-80-            raise SystemExit(f'{cases_path}: a case name already given by another run: refused')
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-81-        cases.update(run_cases)
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-82-        outcomes += [json.loads(line) for pass_folder in sorted(run_folder.glob('send-*'))
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-83-                     for line in (pass_folder / 'outcomes.jsonl').read_text().splitlines()]
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-84-    if any(outcome['case'] not in cases for outcome in outcomes):
+clean-arch/step4-2026-11-10/stage_a/build_reader_packets.py-85-        raise SystemExit('an outcome names a case no cases file holds: refused')
+
+codex
+**Do not send yet.** The listing control and duplicate-review checks address the issues I raised. Two material checks remain:
+
+1. **The second audit is not a whole-request audit.** Its [instructions](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2-prompt.md>) restrict review to what is asked, listed or declined, and cite only three decisions. The [result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md>) leaves decline rules unsourced and does not cover the full ladder, reference, due-day and schema instructions. Complete the audit or explicitly carry forward a prior whole-request audit for unchanged clauses, including the known D210/D403 conflict. The shared listing ambiguity can remain a measured risk; it should not be called sound.
+
+2. **The byte check uses a different serialization from transport.** [The check](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py>) uses `ensure_ascii=False`; [production transport](</Users/lchingen/hivemind/src/hivemind/model.py:129>) uses the default `json.dumps`. Compare the actual transport serialization. Also fix M10: its reported `StopIteration` is an error, not an assertion demonstrating that the missing control is caught.
+
+The revised closing itself is consistent with the surrounding text. The probe remains a diagnostic on exposed topics, with its harm bound and spending cap intact.
+
+CONSENSUS: no send until the full request audit and actual-byte check are complete and the control mutant is caught by an assertion.
+tokens used
+1,145,889
+**Do not send yet.** The listing control and duplicate-review checks address the issues I raised. Two material checks remain:
+
+1. **The second audit is not a whole-request audit.** Its [instructions](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2-prompt.md>) restrict review to what is asked, listed or declined, and cite only three decisions. The [result](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/audit-2.md>) leaves decline rules unsourced and does not cover the full ladder, reference, due-day and schema instructions. Complete the audit or explicitly carry forward a prior whole-request audit for unchanged clauses, including the known D210/D403 conflict. The shared listing ambiguity can remain a measured risk; it should not be called sound.
+
+2. **The byte check uses a different serialization from transport.** [The check](</Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/reflection-6/astra-a2/a2_probe.py>) uses `ensure_ascii=False`; [production transport](</Users/lchingen/hivemind/src/hivemind/model.py:129>) uses the default `json.dumps`. Compare the actual transport serialization. Also fix M10: its reported `StopIteration` is an error, not an assertion demonstrating that the missing control is caught.
+
+The revised closing itself is consistent with the surrounding text. The probe remains a diagnostic on exposed topics, with its harm bound and spending cap intact.
+
+CONSENSUS: no send until the full request audit and actual-byte check are complete and the control mutant is caught by an assertion.

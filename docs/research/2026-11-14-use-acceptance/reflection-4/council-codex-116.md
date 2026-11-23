@@ -1,0 +1,13 @@
+**Not yet. The lock is a better signal, but the proposed path-based lock does not support the promise that preflight refuses a live store under any path.**
+
+1. **Aliases bypass the lock.** The writer locks `<store>.writer.lock`. If preflight receives a symlink or hard link to that database under another name, the corresponding `<alias>.writer.lock` can be absent, so the “no lock file” rule accepts it. The planned alias test should catch this, but the contract does not say how it can pass. Define a shared identity and lock location that both entry points resolve *before opening the database*, and state how unsupported aliases are refused. [Contract, row 7 and proof 8](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:114).
+
+2. **The missing-lock rule leaves a start race.** If preflight checks for a lock file, finds none and proceeds as for a historical store, a new-system writer can create and acquire that file immediately afterwards. The rule must ensure that preflight holds the same lock through the copy even when the file did not previously exist, or establish from trusted external information that the input cannot be a new-system writer’s target. Test preflight arriving just before the writer creates its lock. [Contract](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:118).
+
+3. **Replacement needs to invalidate published vectors too.** The new random identifier distinguishes separately created stores, and the staged-row key is now clear. The contract says to discard *staged* rows from another identity, but must also require search to reject the **published** day and vectors from the prior store until the replacement’s index is published. Specify what happens when a replacement is copied from a snapshot that retains the original identifier. [Contract, index](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:72).
+
+There is also a stale proof item: proof 8 still requires a manifest hash even though version 6 removes the manifest. [Proof plan](/Users/lchingen/hivemind/docs/research/2026-11-14-use-acceptance/live-service/OPERATING-CONTRACT.md:183).
+
+The busy-reader shutdown now has a defined outcome, and the revised retry key resolves the earlier contradiction. The production writer remains outside the new lock’s protection, as the contract says; §9 still applies to it.
+
+CONSENSUS: no, because the lock identity and startup race are unresolved, and index replacement must cover published as well as staged vectors.
