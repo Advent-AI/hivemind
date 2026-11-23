@@ -448,12 +448,9 @@ $2.13 ([result](research/2026-11-19-merge-council/RESULT.md)).
 **The one next task: Alex decides how the "Forecast unavailable" release ships (D760).** Both slices are built and accepted at $0, and
 only Alex can launch what remains. Nothing is committed, published or deployed, and the POC is unchanged.
 - **Waiting on Alex:**
-  1. commit the release work. It is uncommitted on `clean-arch`; the exact set, prepared and not committed:
-     - code: `src/hivemind/release.py`, `scripts/release_build.py`, `tests/test_release.py`;
-     - documents: `README.md` (section "Build the 'Forecast unavailable' release"), `docs/CURRENT_STATE.md`, `docs/DECISIONS.md`,
-       `docs/DECISIONS-log.md` (D725–D760 since the last commit `a70bada9`);
-     - research: `docs/research/2026-11-22-number-answers/`, 46 MB, 31 MB of it council stream files, kept as the earlier commit
-       `3ba40d8f` kept its streams. `__pycache__` is ignored, and the run outputs under `poc/data/` are ignored by `.gitignore`;
+  1. ~~commit the release work~~ **done on Alex's word ("commit, push", 2026-11-23):** commit `2af5178f` (D725–D761) on `clean-arch`,
+     pushed as the new remote branch `origin/clean-arch`, together with the 78 earlier local commits it carries above `origin/main`.
+     Merging into `main` (a pull request) is still Alex's;
   2. where the release page is served: it is one static `index.html` per package and needs no service;
   3. whether it replaces the page colleagues use;
   4. whether to open the idea path in the release. It needs a running service and a paid model; council 74 deferred it.
